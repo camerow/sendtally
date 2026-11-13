@@ -6,7 +6,7 @@ import { t } from "@sendtally/features/i18n";
 import { Button } from "../components/Button";
 import { IconButton } from "../components/IconButton";
 import { Label } from "../components/Label";
-import { ON_DARK, ON_DARK_LINE, ON_DARK_MUTED, ON_DARK_SOFT } from "../components/onDark";
+import { ON_DARK, ON_DARK_LINE, ON_DARK_MUTED, ON_DARK_SOFT } from "@sendtally/features/workouts";
 import { type } from "../type";
 import { useAnimatedColor } from "./useAnimatedColor";
 

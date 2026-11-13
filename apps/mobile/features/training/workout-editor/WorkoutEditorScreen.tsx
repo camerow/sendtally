@@ -39,10 +39,10 @@ import {
   withEditorIds,
   withItemMoved,
   withoutItem,
-} from "./editorState";
-import { doseMeasureOf } from "./doseFields";
+} from "@sendtally/features/workouts";
+import { doseMeasureOf } from "@sendtally/features/workouts";
 import { ItemEditor } from "./ItemEditor";
-import type { AddFlow } from "../planning/flowParams";
+import type { AddFlow } from "@sendtally/features/training";
 import { useAddTo } from "../planning/useAddTo";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
@@ -75,7 +75,7 @@ function initialDraft(
 ): WorkoutDraft | null {
   const base = library.workout(id ?? from ?? "");
   if (base !== undefined) {
-    const draft = withEditorIds(draftOf(base));
+    const draft = withEditorIds(draftOf(base), randomUUID);
     return id === undefined ? { ...draft, name: copyName(draft.name) } : draft;
   }
   return kind === undefined ? null : { ...newWorkoutDraft(kind), focus };
@@ -222,7 +222,7 @@ function Editor({
           onPick={(picked) =>
             setState((s) =>
               picking === "add"
-                ? withItemsAdded(s, picked)
+                ? withItemsAdded(s, picked, randomUUID)
                 : withExerciseSwapped(s, picking.swap, picked[0] ?? { exercise: "" })
             )
           }

@@ -68,13 +68,17 @@ function type(input: HTMLInputElement, value: string): void {
   });
 }
 
-const settle = (): Promise<void> => act(() => new Promise<void>((r) => setTimeout(r, 400)));
+const settle = (): Promise<void> =>
+  act(async () => {
+    await vi.advanceTimersByTimeAsync(400);
+  });
 
 const nameInput = (): HTMLInputElement =>
   container.querySelector<HTMLInputElement>('input[placeholder="Name (optional)"]') ??
   [...container.querySelectorAll<HTMLInputElement>("input[role=combobox]")].pop()!;
 
 beforeEach(() => {
+  vi.useFakeTimers();
   window.matchMedia = vi.fn(() => ({
     matches: false,
     addEventListener: () => undefined,
@@ -88,6 +92,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
+  vi.useRealTimers();
 });
 
 function render(api: SendtallyApi, editing: LogSessionDraft = draft): void {
@@ -122,6 +127,7 @@ async function save(): Promise<void> {
   await act(async () => button.click());
 }
 
+vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
 describe("LogSessionForm with Areas", () => {
   it("searches Areas climbs in the crag and sends the pick as a link", async () => {
     const api = fakeApi();

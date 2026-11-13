@@ -1,4 +1,4 @@
-export { ACTIVITY_KINDS, type ActivityKind } from "./overview";
+export { TRAINED_KINDS } from "./overview";
 export {
   trainingInsightsVM,
   type ExerciseGroupKind,
@@ -22,6 +22,7 @@ export {
 } from "./workouts";
 export {
   epley,
+  exerciseByKey,
   exerciseKey,
   exerciseSeries,
   exerciseSummary,
@@ -37,3 +38,14 @@ export {
 } from "./exercises";
 export { useExerciseSeries } from "./useExerciseSeries";
 export { useExercises } from "./useExercises";
+export { area, dots, paddedRange, plot, polyline, type Point } from "./chartGeometry";
+export { focusColor } from "./focusColors";
+export {
+  SPARK_HEIGHT,
+  SPARK_WIDTH,
+  insightsLine,
+  mixRows,
+  sparkPoints,
+  trendChange,
+  type MixRowVM,
+} from "./insightsView";

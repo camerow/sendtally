@@ -10,7 +10,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
-import { ON_DARK, ON_DARK_MUTED, ON_DARK_TRACK } from "../components/onDark";
+import { ON_DARK, ON_DARK_MUTED, ON_DARK_TRACK } from "@sendtally/features/workouts";
 import { type } from "../type";
 import { useAnimatedColor } from "./useAnimatedColor";
 

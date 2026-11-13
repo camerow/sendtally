@@ -1,18 +1,16 @@
 import React from "react";
 import { Text, View } from "react-native";
-import type { HangKind, HangSetup } from "@sendtally/core/hang";
+import type { HangSetup } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import type { TodayEntry } from "@sendtally/features/workouts";
 import { Label } from "../components/Label";
 import { SheetHeader } from "../components/SheetHeader";
 import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
 import { SetupFields } from "../setup/SetupFields";
 import { type } from "../type";
-
-/** One item of the run: its grip, whether it hangs, and the setup its plan gives it. */
-export type TodayEntry = { gripId: string; kind: HangKind; planned: HangSetup };
 
 export type ForTodaySheetProps = {
   kicker: string;

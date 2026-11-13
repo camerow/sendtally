@@ -4,7 +4,7 @@ import { colors, radius } from "@sendtally/design/tokens";
 import type { StravaState } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { type } from "../type";
-import { postedTime } from "./summaryText";
+import { postedTime } from "@sendtally/features/activities";
 
 const STRAVA_ORANGE = "#fc5200";
 

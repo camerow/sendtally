@@ -1,22 +1,26 @@
-import { useClerk, useUser } from "@clerk/react-router";
+import { useAuth, useUser } from "@clerk/react-router";
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
-import {
-  NavLink,
-  Outlet,
-  useLocation,
-  useNavigate,
-  useRouteError,
-  useRouteLoaderData,
-} from "react-router";
+import { NavLink, Outlet, useLocation, useRouteError } from "react-router";
 import { Logo } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
-import { queries, useQuery } from "@sendtally/features/query";
 import { ErrorPage } from "../components/ErrorPage";
 import { Icon, type IconName } from "../components/Icon";
 import { requireApi } from "../lib/api.server";
 import { cloudflareContext } from "../lib/cloudflare-context";
-import { useClientApi } from "../lib/useClientApi";
+import { AccountButton } from "../components/AccountButton";
+import { LiveBar } from "../components/LiveBar";
+import { AlreadyRunningSheet } from "../live-session/components/AlreadyRunningSheet";
+import { LIVE_PATH } from "../live-session/startLive";
+import { useLiveSessionStorage } from "../lib/useLiveSessionStorage";
+import { useLiveRunStore } from "../lib/useLiveRun";
+import { useLiveRun } from "@sendtally/features/workouts";
+import { LiveRunTones } from "../components/LiveRunTones";
+import { useLiveSession } from "@sendtally/features/log-session";
+import { ToastProvider } from "../components/Toast";
+import { useAppApi } from "../lib/useAppApi";
+import { useIsModerator } from "../lib/useIsModerator";
+import { WebOutboxProvider } from "../lib/WebOutboxProvider";
 import { GradeScalesProvider } from "@sendtally/features/settings";
 import appShellStyles from "../styles/app-shell.css?url";
 import { pageMeta } from "../lib/seo";
@@ -36,10 +40,10 @@ export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string
 type NavItem = { label: () => string; to: string; icon: IconName };
 
 const NAV_ITEMS: NavItem[] = [
+  { label: () => t("plan.tab"), to: "/app/plan", icon: "today" },
   { label: () => t("journal.log"), to: "/app", icon: "sessions" },
-  { label: () => t("common.projects"), to: "/app/projects", icon: "projects" },
-  { label: () => t("common.trends"), to: "/app/trends", icon: "trends" },
-  { label: () => t("common.settings"), to: "/app/settings", icon: "settings" },
+  { label: () => t("training.train"), to: "/app/train", icon: "train" },
+  { label: () => t("statistics.tab"), to: "/app/stats", icon: "insights" },
 ];
 
 const MODERATION_ITEM: NavItem = {
@@ -48,33 +52,40 @@ const MODERATION_ITEM: NavItem = {
   icon: "moderation",
 };
 
-/** Moderators see one more entry. Convenience only: the API is what refuses everyone else. */
-function useNavItems(): NavItem[] {
-  const apiUrl = useRouteLoaderData<typeof loader>("routes/app")?.apiUrl ?? "";
-  const api = useClientApi(apiUrl);
-  const { state } = useQuery({ ...queries.status(api), enabled: apiUrl !== "" });
-  const moderator = state.status === "ready" && state.data.role !== "user";
-  return moderator ? [...NAV_ITEMS, MODERATION_ITEM] : NAV_ITEMS;
-}
-
 /** Screens reached by a back link, whose own action bar owns the bottom edge. */
-const FOCUSED_ROUTES = ["/app/sessions/new"];
+const FOCUSED_ROUTES = [
+  "/app/sessions/new",
+  "/app/log/climbs/new",
+  "/app/sessions/live",
+  "/app/workout/sets",
+  "/app/workout/checklist",
+  "/app/workout/timer",
+  "/app/workout/intervals",
+  "/app/workout/tally",
+];
+
+/** Pages that are the live thing itself, where the live bar would only point back at them; so is a live run's review. */
+const LIVE_ROUTES = [
+  LIVE_PATH,
+  "/app/workout/sets",
+  "/app/workout/checklist",
+  "/app/workout/timer",
+  "/app/workout/intervals",
+  "/app/workout/tally",
+];
 
 function Shell({ children }: { children: React.ReactNode }): React.ReactElement {
-  const clerk = useClerk();
-  const { user } = useUser();
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const email = user?.primaryEmailAddress?.emailAddress ?? "";
+  const { pathname, search } = useLocation();
   const focused = FOCUSED_ROUTES.includes(pathname);
-  const navItems = useNavItems();
-  useReportGoogleSignUp(user);
-
-  const signOut = (
-    <button onClick={() => void clerk.signOut(() => navigate("/"))} className="app-sign-out">
-      {t("common.signOut")}
-    </button>
-  );
+  const onLive =
+    LIVE_ROUTES.includes(pathname) ||
+    (pathname === "/app/activity/new" && new URLSearchParams(search).get("live") === "1") ||
+    (pathname === "/app/workout/done" && new URLSearchParams(search).has("run"));
+  const session = useLiveSession(useLiveSessionStorage()).stored;
+  const run = useLiveRun(useLiveRunStore());
+  const live = session !== null || run !== null;
+  const moderator = useIsModerator();
+  useReportGoogleSignUp(useUser().user);
 
   return (
     <div className="app-shell">
@@ -82,11 +93,11 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
         <a href="/" className="app-logo-link">
           <Logo tone="on-light" size={24} />
         </a>
-        {navItems.map(({ label, to, icon }) => (
+        {(moderator ? [...NAV_ITEMS, MODERATION_ITEM] : NAV_ITEMS).map(({ label, to, icon }) => (
           <NavLink
             key={to}
             to={to}
-            end
+            end={to === "/app"}
             style={({ isActive }) => ({
               display: "flex",
               alignItems: "center",
@@ -114,45 +125,53 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
           </NavLink>
         ))}
         <div className="app-sidebar-spacer" />
+        {!onLive && <LiveBar />}
         <div className="app-sidebar-footer">
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11,
-              color: "rgba(64,63,76,0.55)",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {email}
-          </span>
-          {signOut}
+          <AccountButton withName />
         </div>
       </div>
-      <div className={focused ? "app-content app-content--focused" : "app-content"}>{children}</div>
+      <div
+        className={
+          focused
+            ? "app-content app-content--focused"
+            : live && !onLive
+              ? "app-content app-content--live"
+              : "app-content"
+        }
+      >
+        {children}
+      </div>
       {!focused && (
-        <nav className="app-tabbar" aria-label={t("common.sectionsAria")}>
-          {navItems.map(({ label, to, icon }) => (
-            <NavLink key={to} to={to} end className="app-tab">
-              <Icon name={icon} />
-              {label()}
-            </NavLink>
-          ))}
-        </nav>
+        <div className="app-bottom">
+          {!onLive && <LiveBar />}
+          <nav className="app-tabbar" aria-label={t("common.sectionsAria")}>
+            {NAV_ITEMS.map(({ label, to, icon }) => (
+              <NavLink key={to} to={to} end={to === "/app"} className="app-tab">
+                <Icon name={icon} />
+                {label()}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
       )}
+      <AlreadyRunningSheet />
+      <LiveRunTones />
     </div>
   );
 }
 
 export default function AppLayout(): React.ReactElement {
-  const apiUrl = useRouteLoaderData<typeof loader>("routes/app")?.apiUrl ?? "";
-  const api = useClientApi(apiUrl);
+  const api = useAppApi();
+  const { userId } = useAuth();
   return (
     <GradeScalesProvider api={api}>
-      <Shell>
-        <Outlet />
-      </Shell>
+      <ToastProvider>
+        <WebOutboxProvider api={api} userId={userId ?? ""}>
+          <Shell>
+            <Outlet />
+          </Shell>
+        </WebOutboxProvider>
+      </ToastProvider>
     </GradeScalesProvider>
   );
 }

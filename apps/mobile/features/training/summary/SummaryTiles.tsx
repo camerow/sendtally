@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { colors, radius } from "@sendtally/design/tokens";
-import type { Stat } from "../components/types";
+import type { Stat } from "@sendtally/features/activities";
 import { type } from "../type";
 
 export type SummaryTilesProps = { stats: readonly Stat[] };

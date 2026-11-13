@@ -1,24 +1,13 @@
 import { useKeepAwake } from "expo-keep-awake";
-import React from "react";
 import type { SharedValue } from "react-native-reanimated";
-import type { Phase, Run } from "@sendtally/core/hang";
+import type { Phase } from "@sendtally/core/hang";
+import type { HangTimer } from "@sendtally/features/workouts";
 import { usePhaseProgress } from "./usePhaseProgress";
-import { useRun, type RunControls } from "./useRun";
-import { useTimerSounds, type Sound } from "./useTimerSounds";
 
-export type Timer<P extends Phase = Phase> = RunControls<P> & {
-  progress: SharedValue<number>;
-  play: (sound: Sound) => void;
-  muted: boolean;
-  toggleMute: () => void;
-};
+export type Timer<P extends Phase = Phase> = HangTimer<P> & { progress: SharedValue<number> };
 
-/** Everything a timer screen runs on: the clock, the live progress, the sounds, and the screen kept awake. */
-export function useTimer<P extends Phase>(start: (now: number) => Run<P>): Timer<P> {
+/** A player's timer on the phone: its live progress, with the screen kept awake. */
+export function useTimer<P extends Phase>(timer: HangTimer<P>): Timer<P> {
   useKeepAwake();
-  const [muted, setMuted] = React.useState(false);
-  const controls = useRun(start);
-  const progress = usePhaseProgress(controls.run);
-  const play = useTimerSounds(controls.run, controls.secondsLeft, muted);
-  return { ...controls, progress, play, muted, toggleMute: () => setMuted((m) => !m) };
+  return { ...timer, progress: usePhaseProgress(timer.run) };
 }

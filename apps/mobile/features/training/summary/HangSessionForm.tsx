@@ -3,8 +3,8 @@ import React from "react";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
-import { shortDate } from "@sendtally/features/hang";
-import { percentOf, protocolDose, type ItemDone } from "@sendtally/core/hang";
+import { hangResult, shortDate } from "@sendtally/features/hang";
+import { protocolDose, type ItemDone } from "@sendtally/core/hang";
 import { hangGrid, hangSets, keptSets } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
@@ -20,9 +20,9 @@ import { useHangData } from "../data/HangDataContext";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { DoneDetails } from "../activity/DoneDetails";
 import { SetupPill } from "../done/SetupPill";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
-import { hangCount } from "./hangCount";
+import { hangCount } from "@sendtally/features/activities";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { Toast } from "../../../components/Toast";
 
@@ -62,25 +62,24 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
     ],
     off: [],
   }));
-  const kept = keptSets(sets.done, sets.off).map((d) => ({
-    ...d,
-    exercise: draft.gripId,
-    sets: d.sets.map((set) => ({
-      ...set,
-      ...(kind === "hang" && { edgeMm: draft.edgeMm }),
-      weightKg: set.weightKg ?? draft.loadKg,
-    })),
-  }));
-  const grid = hangGrid({ ...draft, done: kept });
+  const result = hangResult(
+    keptSets(sets.done, sets.off),
+    [{ exercise: session.gripId, dose: protocolDose(session.protocol) }],
+    () => ({
+      exercise: draft.gripId,
+      setup: { edgeMm: draft.edgeMm, loadKg: draft.loadKg },
+      hang: kind === "hang",
+    })
+  );
+  const grid = hangGrid({ ...draft, done: result.done });
 
   const save = (): void => {
     const { stravaActivityId: _s, postState: _p, postError: _e, updatedAt: _u, ...fields } = draft;
-    const planned = session.protocol.sets * session.protocol.reps;
     void actions.saveSession({
       ...fields,
-      done: kept,
-      pct: percentOf(grid.held, planned),
-      misses: Math.max(0, planned - grid.held),
+      done: result.done,
+      pct: result.pct,
+      misses: result.misses,
     });
     router.back();
   };

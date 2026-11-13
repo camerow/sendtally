@@ -4,7 +4,7 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import Svg, { Path, Polyline } from "react-native-svg";
 import { colors } from "@sendtally/design/tokens";
 import { type } from "../type";
-import { dots, paddedRange, plot, polyline } from "./chartGeometry";
+import { dots, paddedRange, plot, polyline } from "@sendtally/features/statistics";
 
 const HEIGHT = 120;
 const PAD = 12;

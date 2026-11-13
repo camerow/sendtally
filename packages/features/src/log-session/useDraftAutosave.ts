@@ -44,21 +44,15 @@ export type DraftAutosave = {
  * Editing while an older draft is on offer overwrites that draft: the user saw the offer and
  * typed anyway, and what they are typing now is the session worth keeping.
  *
- * `autoResume` is the form opened by tapping the draft itself: the form starts on that draft
- * (see `storedDraft`), so there is nothing to offer - the user already chose it. A draft with
- * a fingerprint is already a server session, so resuming it here would log it twice.
+ * A draft with a fingerprint is already a server session, so resuming it here would log it twice.
  */
 export function useDraftAutosave(
   storage: DraftStorage | null,
   draft: LogSessionDraft,
-  onResume: (draft: LogSessionDraft) => void,
-  autoResume = false
+  onResume: (draft: LogSessionDraft) => void
 ): DraftAutosave {
   const [dismissed, setDismissed] = React.useState(false);
-  const [savedAt, setSavedAt] = React.useState<Date | null>(
-    () =>
-      (autoResume ? parseStoredDraft(storage?.read() ?? null, new Date()) : null)?.savedAt ?? null
-  );
+  const [savedAt, setSavedAt] = React.useState<Date | null>(null);
   /** Whether this form has autosaved yet - what makes a stored draft ours rather than an offer. */
   const [saved, setSaved] = React.useState(false);
   const [saver] = React.useState<Autosaver | null>(() => {
@@ -79,9 +73,7 @@ export function useDraftAutosave(
    * it - sometimes after the next form is already up, which silently swallowed the offer.
    */
   const offered =
-    dismissed || saved || autoResume || stored === null || stored.fingerprint !== undefined
-      ? null
-      : stored;
+    dismissed || saved || stored === null || stored.fingerprint !== undefined ? null : stored;
 
   React.useEffect(() => {
     saver?.update(draft);

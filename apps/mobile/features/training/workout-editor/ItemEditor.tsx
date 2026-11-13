@@ -10,7 +10,7 @@ import type { DetailMenuRow } from "../components/types";
 import { type } from "../type";
 import { DoseNameTile } from "./DoseNameTile";
 import { DoseInput } from "./DoseInput";
-import { doseFieldsFor, type DoseMeasure } from "./doseFields";
+import { doseFieldsFor, type DoseMeasure } from "@sendtally/features/workouts";
 import {
   MAX_DOSES,
   withAlternates,
@@ -20,7 +20,7 @@ import {
   withoutLastDose,
   withLapUnit,
   withSetRest,
-} from "./editorState";
+} from "@sendtally/features/workouts";
 import { LetterBadge } from "../components/LetterBadge";
 import { UnitToggle } from "../../log-session/UnitToggle";
 import { TimeField } from "../../../components/TimeField";

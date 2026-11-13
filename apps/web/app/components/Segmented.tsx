@@ -1,35 +1,48 @@
 import React from "react";
+import { t } from "@sendtally/features/i18n";
+import { Icon } from "./Icon";
 
-export type SegmentedOption<T extends string> = { value: T; label: string };
+export type SegmentedOption<T extends string> = { value: T; label: string; locked?: boolean };
 
+export type SegmentedProps<T extends string> = {
+  label: string;
+  options: readonly SegmentedOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  /** A locked option wears a lock and calls this instead of being chosen. */
+  onLocked?: (value: T) => void;
+  /** The chosen option white on a soft track, for a switch inside a card or filter row. */
+  soft?: boolean;
+};
+
+/** Mobile's switch: the chosen option dark on a white track. */
 export function Segmented<T extends string>({
   label,
   options,
   value,
   onChange,
-}: {
-  label: string;
-  options: readonly SegmentedOption<T>[];
-  value: T;
-  onChange: (value: T) => void;
-}): React.ReactElement {
+  onLocked,
+  soft = false,
+}: SegmentedProps<T>): React.ReactElement {
   return (
-    <div role="radiogroup" aria-label={label} className="segmented">
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className={soft ? "segmented segmented--soft" : "segmented"}
+    >
       {options.map((option) => {
-        const active = option.value === value;
+        const locked = option.locked === true;
         return (
           <button
             key={option.value}
             type="button"
             role="radio"
-            aria-checked={active}
-            onClick={() => onChange(option.value)}
+            aria-checked={option.value === value}
+            aria-label={locked ? t("common.membersOnly", { label: option.label }) : undefined}
+            onClick={() => (locked ? onLocked?.(option.value) : onChange(option.value))}
             className="segmented-option"
-            style={{
-              background: active ? "var(--bs-gold)" : "transparent",
-              color: active ? "var(--bs-gunmetal)" : "rgba(64,63,76,0.65)",
-            }}
           >
+            {locked && <Icon name="lock" size={13} strokeWidth={2.2} />}
             {option.label}
           </button>
         );

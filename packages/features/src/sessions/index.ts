@@ -44,7 +44,6 @@ export {
 } from "./tags";
 export { sessionTitle } from "./title";
 export { hangAt, hangEffortLabel, hangGripLabel, hangMetaLabel, hangTitle } from "./hang";
-export { useSessionTags, type SessionTagsEditor } from "./useSessionTags";
 export { useTagVocabulary, type TagVocabulary } from "./useTagVocabulary";
 export {
   countLabel,

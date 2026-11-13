@@ -3,13 +3,9 @@ import type { SessionNameCount } from "@sendtally/features/import";
 import type { TagOption } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { TagPicker } from "../../components/TagPicker";
-import {
-  bodyText,
-  monoMuted,
-  sectionLabel,
-  underlineButton,
-} from "../../settings/components/styles";
+import { bodyText, monoMuted, underlineButton } from "../../settings/components/styles";
 import { select } from "../styles";
+import { sectionLabel } from "../../components/styles";
 
 const linkButton: React.CSSProperties = { ...underlineButton, alignSelf: "center" };
 

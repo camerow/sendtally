@@ -2,58 +2,36 @@ import { router } from "expo-router";
 import React from "react";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { doneAsPrescribed, type ItemDone, type SetDone } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import {
-  changeSet,
-  climbingLastTime,
-  climbsLine,
-  lapPlanOf,
-  lapsLine,
-  previousSets,
-  useActivities,
-  useWeightUnit,
-  wallLine,
-} from "@sendtally/features/activities";
-import { eachSideOf, tallyMeasuresOf, type TallyMeasure } from "@sendtally/features/exercises";
+import { useActivities, useWeightUnit } from "@sendtally/features/activities";
+import type { TallyMeasure } from "@sendtally/features/exercises";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import {
-  exerciseSets,
-  lapSets,
-  startExercise,
-  useLiveSession,
-} from "@sendtally/features/log-session";
+import { useLiveSession } from "@sendtally/features/log-session";
 import { useExercises } from "@sendtally/features/statistics";
-import { exerciseName } from "@sendtally/features/workouts";
+import {
+  afterKey,
+  heldSeconds,
+  setKey,
+  useSetsPlayer,
+  type SetAt,
+  type WorkoutRun,
+} from "@sendtally/features/workouts";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { useApi } from "../../../lib/api";
 import { exerciseTallyStorage } from "../../../lib/exerciseTallyStorage";
+import { liveRun } from "../../live-session/liveRun";
 import { Button } from "../components/Button";
 import { PlayerHeader } from "../components/PlayerHeader";
-import { logRun, runParams, type WorkoutRun } from "../data/workoutRunParams";
-import { resumedRun, writeHold, writeLiveRun } from "../../live-session/liveRun";
+import { logRun } from "../data/workoutRunParams";
 import { HoldButton } from "../hold/HoldButton";
-import { heldSeconds, type Hold } from "../hold/holdClock";
 import { HoldRow } from "../hold/HoldRow";
-import { useHold } from "../hold/useHold";
 import { RestPreview } from "../rest/RestPreview";
-import { type } from "../type";
 import { RestRow } from "../rest/RestRow";
-import { useRest } from "../rest/useRest";
+import { type } from "../type";
 import { ClimbingCard } from "./ClimbingCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
 import { SET_COLUMNS } from "./setColumns";
 import { SetsCard } from "./SetsCard";
-import {
-  afterKey,
-  allSets,
-  isLifting,
-  itemDone,
-  restAfterTick,
-  setKey,
-  withPrevious,
-  type SetAt,
-} from "./setsRun";
 
 /**
  * A lifting workout as a set table on a clock from Start: tick each set as it is done, rest
@@ -69,71 +47,19 @@ export function SetsScreen({
   end?: boolean;
 }): React.ReactElement {
   const api = useApi();
-  const [resumed] = React.useState(() => {
-    const live = resumedRun("/workout/sets", run.workoutId);
-    return live?.state.player === "sets" ? { ...live.state, startedAt: live.startedAt } : null;
-  });
   const unit = useWeightUnit(api);
   const { state: activities } = useActivities(api);
   const exercises = useExercises(api).state;
   const tally = useLiveSession(exerciseTallyStorage);
-  const climbs = tally.stored?.draft.climbs ?? [];
-  const [startedAt] = React.useState(() => resumed?.startedAt ?? Date.now());
-  const [done, setDone] = React.useState<ItemDone[]>(
-    () => resumed?.done ?? doneAsPrescribed(run.items)
-  );
-  const [ticked, setTicked] = React.useState<ReadonlySet<string>>(() => new Set(resumed?.ticked));
-  const [opened, setOpened] = React.useState<ReadonlySet<number>>(new Set());
   const [keypad, setKeypad] = React.useState(false);
-  const rest = useRest();
-  React.useEffect(() => {
-    writeLiveRun({
-      title: run.title,
-      workoutId: run.workoutId,
-      pathname: "/workout/sets",
-      params: runParams(run),
-      startedAt,
-      state: { player: "sets", done, ticked: [...ticked] },
-    });
-  }, [run, startedAt, done, ticked]);
-  const tallyMeasure = tallyMeasuresOf(
-    exercises.status === "ready" ? exercises.data : [],
-    run.kind
-  );
-  const tallyOf = (item: number): TallyMeasure | null =>
-    tallyMeasure(run.items[item]?.exercise ?? "");
-  const sets = allSets(run.items).filter((at) => tallyOf(at.item) === null);
-  const previous = (exercise: string): SetDone[] =>
-    activities.status === "ready" ? previousSets(activities.data, run.workoutId, exercise) : [];
-  const lifting = (item: number): boolean => isLifting(run.kind, run.items[item]);
-  const shown = withPrevious(done, lifting, previous);
-  const current = sets.find((at) => !ticked.has(setKey(at))) ?? null;
-  const nameOf = (item: number): string => exerciseName(run.items[item]?.exercise ?? "");
-
-  const toggle = (at: SetAt): void => {
-    const key = setKey(at);
-    const next = new Set(ticked);
-    const ticking = !next.delete(key);
-    if (ticking) next.add(key);
-    setTicked(next);
-    setOpened((was) => new Set([...was].filter((i) => i !== at.item)));
-    const after = ticking ? restAfterTick(run.items, next, at, run.exerciseRestS) : null;
-    if (after === null) rest.skip();
-    else rest.tick(after.at, after.seconds, after.next === null ? undefined : nameOf(after.next));
-  };
-  const change = (item: number, set: number, value: SetDone): void =>
-    setDone((all) => changeSet(all, item, set, value));
-  const sided = eachSideOf(exercises.status === "ready" ? exercises.data : []);
-  // What the hold counted is what the set records, and it ticks itself.
-  const endHold = (h: Hold, seconds: number | null): void => {
-    writeHold(null);
-    const at = sets.find((x) => setKey(x) === h.at);
-    const set = at === undefined ? undefined : shown[at.item]?.sets[at.set];
-    if (at === undefined || set === undefined || seconds === null) return;
-    change(at.item, at.set, { ...set, onS: seconds });
-    if (!ticked.has(h.at)) toggle(at);
-  };
-  const hold = useHold((h) => endHold(h, h.targetS));
+  const player = useSetsPlayer({
+    run,
+    store: liveRun,
+    tally,
+    activities: activities.status === "ready" ? activities.data : null,
+    exercises: exercises.status === "ready" ? exercises.data : null,
+  });
+  const { shown, ticked, current, rest, hold, previous, nameOf } = player;
 
   const holdRow = (at: SetAt): React.ReactNode =>
     hold.hold?.at === setKey(at) && (
@@ -148,26 +74,15 @@ export function SetsScreen({
         onPause={hold.pause}
         onResume={hold.resume}
         onDone={() => {
-          if (hold.hold !== null) endHold(hold.hold, heldSeconds(hold.hold, Date.now()));
+          if (hold.hold !== null) player.endHold(hold.hold, heldSeconds(hold.hold, Date.now()));
         }}
       />
     );
   const go = (at: SetAt): React.ReactNode => {
-    const targetS = run.items[at.item]?.dose.onS;
-    const name = nameOf(at.item);
+    const targetS = player.holdTarget(at);
     return (
-      hold.hold === null &&
-      current?.item === at.item &&
-      current.set === at.set &&
-      targetS !== undefined &&
-      targetS > 0 && (
-        <HoldButton
-          name={name}
-          targetS={targetS}
-          onPress={() =>
-            hold.start(setKey(at), name, targetS, sided(run.items[at.item]?.exercise ?? ""))
-          }
-        />
+      targetS !== null && (
+        <HoldButton name={nameOf(at.item)} targetS={targetS} onPress={() => player.startHold(at)} />
       )
     );
   };
@@ -180,23 +95,9 @@ export function SetsScreen({
     (item < run.items.length - 1 && run.exerciseRestS > 0 && (
       <RestPreview seconds={run.exerciseRestS} />
     ));
-  const climbedSets = (item: number): SetDone[] =>
-    tallyOf(item) === "laps"
-      ? lapSets(climbs, item)
-      : exerciseSets(
-          climbs,
-          item,
-          tallyOf(item) === "wallTime" ? run.items[item]?.dose.onS : undefined
-        );
   const finish = (): void => {
-    rest.skip();
-    hold.stop();
-    logRun(
-      run,
-      shown.map((d) => (tallyOf(d.item) === null ? d : { ...d, sets: climbedSets(d.item) })),
-      startedAt,
-      sets.map(setKey).filter((key) => !ticked.has(key))
-    );
+    const { done, off } = player.finished();
+    logRun(run, done, player.startedAt, off);
   };
   const ending = React.useRef(end);
   const loaded = exercises.status !== "loading" && activities.status !== "loading";
@@ -206,25 +107,7 @@ export function SetsScreen({
     finish();
   });
   const startClimbing = (item: number, measure: TallyMeasure): void => {
-    const at = run.items[item];
-    if (at === undefined) return;
-    if (tally.stored?.draft.exercise?.item !== item)
-      tally.replace(
-        startExercise(
-          tally.stored?.draft ?? null,
-          {
-            item,
-            name: nameOf(item),
-            sets: at.dose.sets,
-            ...(measure === "climbs" && at.dose.reps !== undefined ? { climbs: at.dose.reps } : {}),
-            ...(measure === "wallTime" ? { onS: at.dose.onS ?? 0 } : {}),
-            ...(measure === "laps" ? { lap: lapPlanOf(at.dose) } : {}),
-            restS: at.dose.setRestS ?? 0,
-          },
-          new Date()
-        )
-      );
-    rest.skip();
+    player.startClimbing(item, measure);
     router.push("/workout/tally");
   };
 
@@ -242,54 +125,42 @@ export function SetsScreen({
             kind={run.kind}
             title={run.title}
             workoutId={run.workoutId}
-            startedAt={startedAt}
+            startedAt={player.startedAt}
           />
           {run.items.map((item, i) => {
             const d = shown[i];
             if (d === undefined) return null;
-            const measure = tallyOf(i);
-            if (measure !== null) {
-              const logged = climbedSets(i);
+            const climbing = player.climbing(i);
+            if (climbing !== null)
               return (
                 <ClimbingCard
                   key={i}
                   item={item}
-                  measure={measure}
-                  lastTime={climbingLastTime(previous(d.exercise), measure, item.dose)}
-                  logged={
-                    logged.length === 0
-                      ? null
-                      : measure === "laps"
-                        ? lapsLine(logged, item.dose)
-                        : measure === "wallTime"
-                          ? wallLine(logged)
-                          : climbsLine(logged)
-                  }
-                  live={tally.stored?.draft.exercise?.item === i}
-                  onStart={() => startClimbing(i, measure)}
+                  {...climbing}
+                  onStart={() => startClimbing(i, climbing.measure)}
                 />
               );
-            }
-            const folded = itemDone(run.items, ticked, i) && !opened.has(i);
+            const folded = player.folded(i);
             return (
               <React.Fragment key={i}>
                 {folded ? (
                   <FoldedSetsCard
                     name={nameOf(i)}
                     sets={item.dose.sets}
-                    onOpen={() => setOpened((was) => new Set([...was, i]))}
+                    onOpen={() => player.open(i)}
                   />
                 ) : (
                   <SetsCard
                     item={item}
                     done={d}
+                    target={(set) => player.target({ item: i, set })}
                     previous={previous(d.exercise)}
-                    lifting={lifting(i)}
+                    lifting={player.lifting(i)}
                     ticked={ticked}
                     current={current}
                     unit={unit}
-                    onChange={(set, value) => change(i, set, value)}
-                    onToggle={(set) => toggle({ item: i, set })}
+                    onChange={(set, value) => player.change(i, set, value)}
+                    onToggle={(set) => player.toggle({ item: i, set })}
                     holdRow={(set) => holdRow({ item: i, set })}
                     go={(set) => go({ item: i, set })}
                     restUnder={(set) => restAt(setKey({ item: i, set }))}

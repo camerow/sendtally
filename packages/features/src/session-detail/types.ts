@@ -39,19 +39,6 @@ export type ClimbFilter = "all" | "sent" | "flash" | "project";
 
 export type ClimbSort = "order" | "gradeDesc" | "gradeAsc" | "attempts";
 
-export type PostStatusKind = "posted" | "pending" | "failed" | "before-start" | "off" | "legacy";
-
-export type PostAction = "retry" | "post";
-
-export type PostStatusVM = {
-  kind: PostStatusKind;
-  label: string;
-  detail: string | null;
-  alert: boolean;
-  action: PostAction | null;
-  actionLabel: string | null;
-};
-
 export type PostingStatus = { connected: boolean; active: boolean; since: string | null };
 
 export type SessionDetailVM = {
@@ -75,8 +62,6 @@ export type SessionDetailVM = {
   bars: GradeBarVM[];
   pyramid: PyramidRow[];
   filterCounts: Record<ClimbFilter, number>;
-  post: PostStatusVM;
-  stravaUrl: string | null;
 };
 
 export const CLIMB_SORTS: readonly ClimbSort[] = ["order", "gradeDesc", "gradeAsc", "attempts"];

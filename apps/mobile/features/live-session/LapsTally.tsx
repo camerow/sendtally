@@ -6,30 +6,17 @@ import type { ClimbVocabulary } from "@sendtally/features/climbs";
 import type { Gym } from "@sendtally/features/gyms";
 import { t } from "@sendtally/features/i18n";
 import {
-  allLapsDone,
-  enduranceLapValueLabel,
-  FELL_AFTER_START,
-  isCleanLap,
-  lapClockLabel,
-  lapElapsed,
-  lapLine,
-  lapsClimb,
-  withLapAdded,
-  withLapLogged,
-  withLapRest,
-  withLapStarted,
+  useLapsTally,
   type GradePrefs,
   type LiveSession,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
-import { elapsedClock } from "@sendtally/features/sessions";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { LIVE_HEADER, MinimiseButton } from "../../components/MinimiseButton";
 import { press } from "../../lib/press";
 import { Button } from "../training/components/Button";
 import { RestRow } from "../training/rest/RestRow";
-import { MORE_REST_S } from "../training/rest/restCountdown";
-import type { RestClock } from "../training/rest/useRest";
+import type { RestClock } from "@sendtally/features/workouts";
 import { LiveClimbEditor } from "./LiveClimbEditor";
 
 export type LapsTallyProps = {
@@ -43,8 +30,6 @@ export type LapsTallyProps = {
   gyms: readonly Gym[];
   onDone: () => void;
 };
-
-const restKey = (lap: number): string => `lap-${lap}`;
 
 const faint = "rgba(255,255,255,0.55)";
 
@@ -65,57 +50,10 @@ export function LapsTally({
   onDone,
 }: LapsTallyProps): React.ReactElement | null {
   const [editing, setEditing] = React.useState(false);
-  const ex = draft.exercise;
-  const timed = ex?.lap?.unit === "seconds";
-  const elapsed = ex === undefined ? null : lapElapsed(ex, now);
-  const target = ex?.lap?.target ?? 0;
-  const timeUp = timed && elapsed !== null && elapsed >= target;
-  React.useEffect(() => {
-    if (timeUp) live.replace(withLapLogged(draft, target));
-  }, [timeUp, draft, live, target]);
+  const laps = useLapsTally(draft, live, rest, now);
+  if (laps === null) return null;
+  const { circuit } = laps;
 
-  if (ex?.lap === undefined) return null;
-  const circuit = lapsClimb(draft.climbs, ex.item);
-  const laps = circuit?.endurance?.laps ?? [];
-  const done = allLapsDone(draft);
-  const last = laps.length - 1;
-  const restS = ex.restS;
-  const running = rest.rest !== null && rest.rest.at === restKey(last) ? rest.rest : null;
-
-  /** A rest still running when the next lap goes keeps the time it took so far. */
-  const endRest = (d: LogSessionDraft): LogSessionDraft => {
-    if (running === null) return d;
-    rest.skip();
-    return withLapRest(d, last, running.seconds - rest.left);
-  };
-  const log = (value: number): LogSessionDraft => {
-    const next = withLapLogged(endRest(draft), value);
-    live.replace(next);
-    return next;
-  };
-  const sent = (): void => {
-    log(ex.lap?.target ?? 0);
-  };
-  const fell = (): void => {
-    if (timed) {
-      log(elapsed ?? 0);
-      return;
-    }
-    log(FELL_AFTER_START);
-    setEditing(true);
-  };
-  const startLap = (): void => live.replace(withLapStarted(endRest(draft), new Date()));
-  const startRest = (): void => {
-    rest.tick(restKey(last), restS);
-    live.replace(withLapRest(draft, last, restS));
-  };
-  const moreRest = (): void => {
-    rest.more();
-    live.replace(withLapRest(draft, last, (ex.rests?.[last] ?? restS) + MORE_REST_S));
-  };
-  const skipRest = (): void => live.replace(endRest(draft));
-
-  const footerOff = done || (timed && elapsed === null);
   const lapText = { fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.white, width: 60 };
 
   return (
@@ -144,10 +82,10 @@ export function LapsTally({
             color: colors.white,
           }}
         >
-          {lapClockLabel(draft)}
+          {laps.clock}
         </Text>
         <Text style={{ fontFamily: fonts.mono, fontSize: 13, color: "rgba(255,255,255,0.75)" }}>
-          {lapLine(draft)}
+          {laps.line}
         </Text>
       </View>
 
@@ -155,78 +93,72 @@ export function LapsTally({
         style={{ flex: 1 }}
         contentContainerStyle={{ gap: 6, paddingHorizontal: 18, paddingBottom: 24 }}
       >
-        {circuit?.endurance !== undefined &&
-          laps.map((lap, i) => {
-            const e = circuit.endurance;
-            if (e === undefined) return null;
-            const took = ex.rests?.[i];
-            return (
-              <Pressable
-                key={i}
-                onPress={() => setEditing(true)}
-                accessibilityRole="button"
-                accessibilityLabel={`${t("tally.lapLabel", { lap: i + 1 })}, ${enduranceLapValueLabel(e, i)}`}
-                style={press({
-                  height: 48,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                  paddingLeft: 12,
-                  paddingRight: 6,
-                  borderRadius: 10,
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                })}
-              >
-                <Text style={lapText}>{t("tally.lapLabel", { lap: i + 1 })}</Text>
-                <View
-                  style={{
-                    flex: 1,
-                    height: 10,
-                    borderRadius: 5,
-                    overflow: "hidden",
-                    backgroundColor: "rgba(255,255,255,0.12)",
-                  }}
-                >
-                  <View
-                    style={{
-                      width: `${Math.round((Math.min(lap, e.target) / e.target) * 100)}%`,
-                      height: 10,
-                      borderRadius: 5,
-                      backgroundColor: isCleanLap(e, i) ? colors.fern : colors.watermelonInk,
-                    }}
-                  />
-                </View>
-                <Text style={{ fontFamily: fonts.monoMedium, fontSize: 13, color: colors.white }}>
-                  {enduranceLapValueLabel(e, i)}
-                </Text>
-                <Text
-                  style={{
-                    width: 72,
-                    textAlign: "right",
-                    fontFamily: fonts.mono,
-                    fontSize: 11.5,
-                    color: faint,
-                  }}
-                >
-                  {took === undefined || (i === last && running !== null)
-                    ? ""
-                    : t("tally.restTook", { time: elapsedClock(took) })}
-                </Text>
-              </Pressable>
-            );
-          })}
+        {laps.rows.map((row, i) => (
+          <Pressable
+            key={i}
+            onPress={() => setEditing(true)}
+            accessibilityRole="button"
+            accessibilityLabel={`${row.label}, ${row.value}`}
+            style={press({
+              height: 48,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              paddingLeft: 12,
+              paddingRight: 6,
+              borderRadius: 10,
+              backgroundColor: "rgba(255,255,255,0.05)",
+            })}
+          >
+            <Text style={lapText}>{row.label}</Text>
+            <View
+              style={{
+                flex: 1,
+                height: 10,
+                borderRadius: 5,
+                overflow: "hidden",
+                backgroundColor: "rgba(255,255,255,0.12)",
+              }}
+            >
+              <View
+                style={{
+                  width: `${Math.round(row.share * 100)}%`,
+                  height: 10,
+                  borderRadius: 5,
+                  backgroundColor: row.clean ? colors.fern : colors.watermelonInk,
+                }}
+              />
+            </View>
+            <Text style={{ fontFamily: fonts.monoMedium, fontSize: 13, color: colors.white }}>
+              {row.value}
+            </Text>
+            <Text
+              style={{
+                width: 72,
+                textAlign: "right",
+                fontFamily: fonts.mono,
+                fontSize: 11.5,
+                color: faint,
+              }}
+            >
+              {row.took}
+            </Text>
+          </Pressable>
+        ))}
 
-        {!done &&
-          laps.length > 0 &&
-          restS > 0 &&
-          (running !== null || ex.rests?.[last] === undefined) &&
-          (running !== null ? (
-            <RestRow rest={running} left={rest.left} onMore={moreRest} onSkip={skipRest} />
+        {laps.rest !== null &&
+          ("running" in laps.rest ? (
+            <RestRow
+              rest={laps.rest.running}
+              left={laps.rest.left}
+              onMore={laps.moreRest}
+              onSkip={laps.skipRest}
+            />
           ) : (
-            <RestRow rest={null} seconds={restS} onStart={startRest} />
+            <RestRow rest={null} seconds={laps.rest.seconds} onStart={laps.startRest} />
           ))}
 
-        {!done && (
+        {laps.next !== null && (
           <View
             style={{
               height: 48,
@@ -240,33 +172,26 @@ export function LapsTally({
               borderColor: "rgba(255,255,255,0.35)",
             }}
           >
-            <Text style={lapText}>{t("tally.lapLabel", { lap: laps.length + 1 })}</Text>
-            {timed && elapsed === null ? (
+            <Text style={lapText}>{laps.next.label}</Text>
+            {laps.next.startable ? (
               <View style={{ flex: 1, alignItems: "flex-end" }}>
                 <Button
                   label={t("tally.startLap")}
-                  onPress={startLap}
+                  onPress={laps.startLap}
                   variant="goldText"
                   height={40}
                 />
               </View>
             ) : (
               <Text style={{ flex: 1, fontFamily: fonts.mono, fontSize: 13, color: colors.white }}>
-                {timed
-                  ? `${elapsedClock(elapsed ?? 0)} / ${elapsedClock(target)}`
-                  : t("tally.onTheWall")}
+                {laps.next.text}
               </Text>
             )}
           </View>
         )}
 
         <View style={{ alignItems: "flex-start" }}>
-          <Button
-            label={t("tally.addLap")}
-            onPress={() => live.replace(withLapAdded(draft))}
-            variant="goldText"
-            height={44}
-          />
+          <Button label={t("tally.addLap")} onPress={laps.addLap} variant="goldText" height={44} />
         </View>
       </ScrollView>
 
@@ -282,10 +207,10 @@ export function LapsTally({
         }}
       >
         <Pressable
-          onPress={fell}
-          disabled={footerOff}
+          onPress={() => setEditing(laps.fell())}
+          disabled={laps.off}
           accessibilityRole="button"
-          accessibilityState={{ disabled: footerOff }}
+          accessibilityState={{ disabled: laps.off }}
           style={press({
             flex: 1,
             height: 72,
@@ -294,19 +219,19 @@ export function LapsTally({
             borderColor: "rgba(255,255,255,0.5)",
             alignItems: "center",
             justifyContent: "center",
-            opacity: footerOff ? 0.35 : 1,
+            opacity: laps.off ? 0.35 : 1,
           })}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 18, color: colors.white }}>
             {t("tally.fell")}
           </Text>
         </Pressable>
-        {!timed && (
+        {!laps.timed && (
           <Pressable
-            onPress={sent}
-            disabled={done}
+            onPress={laps.sent}
+            disabled={laps.done}
             accessibilityRole="button"
-            accessibilityState={{ disabled: done }}
+            accessibilityState={{ disabled: laps.done }}
             style={press({
               flex: 1,
               height: 72,
@@ -314,7 +239,7 @@ export function LapsTally({
               backgroundColor: colors.gold,
               alignItems: "center",
               justifyContent: "center",
-              opacity: done ? 0.35 : 1,
+              opacity: laps.done ? 0.35 : 1,
             })}
           >
             <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 18, color: colors.gunmetal }}>

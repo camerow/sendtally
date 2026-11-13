@@ -12,7 +12,7 @@ import {
 import { sessionTitle } from "@sendtally/features/sessions";
 import { EntryRowItem } from "../../sessions/components/EntryRowItem";
 import { SessionRowItem } from "../../sessions/components/SessionRowItem";
-import { TrendTile } from "../../trends/components/TrendTile";
+import { TrendTile } from "./TrendTile";
 import { TripClimbs } from "./TripClimbs";
 import { useDisplayScales } from "@sendtally/features/settings";
 
@@ -42,7 +42,7 @@ export function TripDetail({
         <StatStrip stats={tripStats(days, scales)} />
       </div>
       {pyramid !== null && (
-        <div className="trends trip-pyramid">
+        <div className="trip-pyramid">
           <TrendTile tile={pyramid} />
         </div>
       )}

@@ -20,8 +20,10 @@ const mockPlan = {
 };
 
 const mockWorkouts = { saveWorkout: jest.fn(), deleteWorkout: jest.fn() };
+const mockPrompt = jest.fn();
 
 jest.mock("../plan/usePlanActions", () => ({ usePlanActions: () => mockPlan }));
+jest.mock("../reminders/ReminderPromptProvider", () => ({ useReminderPrompt: () => mockPrompt }));
 jest.mock("@sendtally/features/workouts", () => ({
   ...jest.requireActual<typeof Workouts>("@sendtally/features/workouts"),
   useWorkoutActions: () => mockWorkouts,
@@ -93,6 +95,7 @@ describe("adding to the plan", () => {
       start: "2026-10-01",
       position: 0,
     });
+    expect(mockPrompt).toHaveBeenCalledTimes(1);
     await fireEvent.press(screen.getByText("Gym, legs"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/[id]",
@@ -242,6 +245,7 @@ describe("adding to the plan", () => {
       start: "2026-10-01",
       position: 0,
     });
+    expect(mockPrompt).toHaveBeenCalledTimes(1);
     expect(router.dismissTo).toHaveBeenCalledWith({
       pathname: "/(tabs)/today",
       params: expect.objectContaining({ date: "2026-10-01" }),

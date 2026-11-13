@@ -1,27 +1,19 @@
 import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
-import {
-  itemIdOf,
-  blockEnded,
-  blockWeekOn,
-  doseIndex,
-  isDated,
-  letterOf,
-  sessionItems,
-  turnsOf,
-  type Dose,
-} from "@sendtally/core/hang";
+import { letterOf, type Dose } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import {
-  blockOfMembership,
-  blockRecap,
   loadColumns,
   useTrainingLog,
+  KIND_LOOK,
+  ladderView,
+  loadSummary,
+  toggleIn,
 } from "@sendtally/features/training";
-import { bodySummary, doseSummary, exerciseName } from "@sendtally/features/workouts";
+import { exerciseName } from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
@@ -33,22 +25,12 @@ import { Segmented } from "../components/Segmented";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { useRunWorkout } from "../library/useLibrary";
-import { workoutLines } from "../plan/planGridRows";
 import { usePlanActions } from "../plan/usePlanActions";
-import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 import { LoadTable } from "./LoadTable";
 import { LoadSection } from "./LoadSection";
 import { usePlanDraft } from "./usePlanDraft";
 import { WeekDaysGrid } from "./WeekDaysGrid";
-
-/** "changes W5, W6"; nothing when no week changes it. */
-const changedWeeks = (changes: readonly Partial<Dose>[]): string[] => {
-  const weeks = changes.flatMap((c, i) =>
-    Object.keys(c).length > 0 ? [t("plan.weekShort", { n: i + 1 })] : []
-  );
-  return weeks.length === 0 ? [] : [t("plan.changesWeeks", { weeks: weeks.join(", ") })];
-};
 
 export type LadderScreenProps = {
   id: string;
@@ -70,44 +52,12 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
   const [turn, setTurn] = React.useState(0);
   const [open, setOpen] = React.useState<readonly number[]>([0]);
   const { plan } = draft;
-  const m = plan.memberships.find((x) => x.id === id);
-  const block = m === undefined ? null : blockOfMembership(plan, m);
-  const w = m === undefined ? undefined : log.workout(m.workoutId);
-  const library = useRunWorkout(m?.workoutId ?? null);
-  if (m === undefined || w === undefined || block === null) return null;
+  const view = ladderView(plan, log, model, id, turn, today);
+  const library = useRunWorkout(view?.workout.id ?? null);
+  if (view === null) return null;
+  const { membership: m, block, workout: w, turns, items, current, ended, done, lines } = view;
   const look = KIND_LOOK[w.kind];
-  const turns = turnsOf(w.items);
-  const items = sessionItems(w.items, turn);
-  const itemIdAt = (index: number): string => itemIdOf(w.items[index] ?? {}, index);
-  const doseOf = (index: number): number => doseIndex(w.items[index] ?? { doses: [] }, turn);
-  const weeks = Array.from({ length: block.weeks }, (_, i) => i + 1);
-  const changesOf = (index: number): Partial<Dose>[] =>
-    weeks.map(
-      (week) =>
-        plan.weekChanges.find(
-          (c) =>
-            c.membershipId === id &&
-            c.week === week &&
-            c.dose === doseOf(index) &&
-            c.itemId === itemIdAt(index)
-        )?.change ?? {}
-    );
-  const current = blockWeekOn(block, today);
-  const dated = isDated(block) ? block : null;
-  const ended = blockEnded(block, today);
-  const ran =
-    dated === null
-      ? undefined
-      : blockRecap(log, dated, today).workouts.find((r) => r.membershipId === id)?.weeks;
-  // A template has no runs to count.
-  const done =
-    dated === null
-      ? null
-      : weeks.map((week) =>
-          ended || (current !== null && week <= current) ? (ran?.[week - 1] ?? null) : null
-        );
-  const lines =
-    w.kind === "hangboard" ? (bodySummary(w)?.split(" · ") ?? []) : workoutLines(w, model);
+  const changesOf = (index: number): Partial<Dose>[] => view.changes[index] ?? [];
   const mine = library?.source === "mine";
   const editing = draft.editing && !ended;
 
@@ -130,8 +80,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
           draft.setChange({
             membershipId: id,
             week,
-            dose: doseOf(index),
-            itemId: itemIdAt(index),
+            ...view.at(index),
             change,
           })
         }
@@ -242,13 +191,9 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
               <LoadSection
                 key={`${turn}:${i}`}
                 name={exerciseName(it.exercise, model.gripName)}
-                summary={[doseSummary(w.kind, it.dose, unit), ...changedWeeks(changesOf(i))].join(
-                  " · "
-                )}
+                summary={loadSummary(w.kind, it.dose, unit, changesOf(i))}
                 open={open.includes(i)}
-                onToggle={() =>
-                  setOpen(open.includes(i) ? open.filter((x) => x !== i) : [...open, i])
-                }
+                onToggle={() => setOpen(toggleIn(open, i))}
               >
                 {loadOf(i)}
               </LoadSection>

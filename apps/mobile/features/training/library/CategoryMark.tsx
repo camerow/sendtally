@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import type { WorkoutKind } from "@sendtally/core/hang";
 import { DayMark } from "../today/DayMark";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 
 export type CategoryMarkProps = { kind: WorkoutKind; size?: number };
 

@@ -4,12 +4,12 @@ export const settings = {
     "The scale you log in. Climbs you have already logged keep the scale they were entered in.",
   "settings.stravaActive":
     "Linked to your Strava account. Sessions you log can post to your feed as Rock Climbing activities.",
-  "settings.stravaLapsedMobile":
+  "settings.stravaLapsed":
     "Strava access has lapsed. Re-link it and your sessions can post to your feed again.",
-  "settings.stravaNotConnectedMobile":
+  "settings.stravaConnectBody":
     "Each logged session can post to your feed as a Rock Climbing activity. You approve it on strava.com and can revoke it there any time.",
   "settings.postingOn": "Logged sessions post to your feed as Rock Climbing activities.",
-  "settings.postingOffMobile": "Off. Each session page keeps its own Post to Strava button.",
+  "settings.postingOff": "Off. Each session page keeps its own Post to Strava button.",
   "settings.postSince": "Post sessions logged from",
   "settings.postSinceBody": "Anything earlier stays in sendtally only.",
   "settings.postSinceAny": "Any date",
@@ -21,17 +21,7 @@ export const settings = {
   "settings.stravaNotConnected": "Not connected",
   "settings.stravaConnected": "Connected",
   "settings.stravaReconnectNeeded": "Reconnect needed",
-  "settings.relink": "Re-link",
-  "settings.stravaLapsed":
-    "Strava access has lapsed. Re-link it to start posting your sessions again.",
-  "settings.stravaConnectBody":
-    "Connect Strava and your logged sessions can post to your feed as Rock Climbing activities.",
   "settings.relinkStrava": "Re-link Strava",
-  "settings.postToStrava": "Post sessions to Strava",
-  "settings.postingOff":
-    "Off. Sessions stay in sendtally, and each one keeps a Post to Strava action on its own page.",
-  "settings.membershipPitch": "A membership unlocks trends and insights in your climbing habits.",
-  "settings.billedThrough": "Billed through {store}. Manage it there.",
   "settings.openingStrava": "Opening Strava…",
   "settings.stravaUnreachable": "Could not reach Strava. Try again.",
   "settings.embeddedBundle": "Embedded",

@@ -31,22 +31,26 @@ function Badge({ href, src, alt, pending }: BadgeProps): React.ReactElement {
 }
 
 export function AppStores({ prominent = false }: AppStoresProps): React.ReactElement {
-  const { copy } = useLanding();
+  const { copy, platform } = useLanding();
   return (
     <div className={prominent ? "l-stores l-stores--hero" : "l-stores"}>
       {!prominent && <span className="l-stores-lead">{copy.stores.lead}</span>}
-      <Badge
-        href={STORE_LINKS.android}
-        src="/images/badges/google-play.png"
-        alt={copy.stores.android}
-        pending={copy.stores.pending}
-      />
-      <Badge
-        href={STORE_LINKS.ios}
-        src="/images/badges/app-store.svg"
-        alt={copy.stores.ios}
-        pending={copy.stores.pending}
-      />
+      {platform !== "ios" && (
+        <Badge
+          href={STORE_LINKS.android}
+          src="/images/badges/google-play.png"
+          alt={copy.stores.android}
+          pending={copy.stores.pending}
+        />
+      )}
+      {platform !== "android" && (
+        <Badge
+          href={STORE_LINKS.ios}
+          src="/images/badges/app-store.svg"
+          alt={copy.stores.ios}
+          pending={copy.stores.pending}
+        />
+      )}
     </div>
   );
 }

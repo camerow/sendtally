@@ -7,17 +7,10 @@ import {
   spanLabel,
   tripDays,
   tripEffort,
+  tripMeta,
   type LogItem,
 } from "@sendtally/features/journal";
 import type { ClimbingSessionVM } from "@sendtally/features/climbs";
-import {
-  logCountLabel,
-  sessionGradeLabel,
-  sessionTotals,
-  sessionsIn,
-  type GradeScales,
-} from "@sendtally/features/sessions";
-import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { press } from "../../lib/press";
@@ -67,15 +60,6 @@ export function tripGroupHeight(item: TripItem): number {
 
 const sessionsOf = (items: LogItem[]): SessionRowData[] =>
   items.flatMap((i) => (i.type === "session" ? [i.session] : []));
-
-/** What the trip holds and the hardest thing in it - the duration would not fit beside them. */
-const tripMeta = (inside: LogItem[], scales: GradeScales): string => {
-  const totals = sessionTotals(sessionsIn(inside));
-  if (totals.topGrade < 0) return logCountLabel(inside);
-  const label = sessionGradeLabel(totals.topGradeLabel, totals.topGrade, scales);
-  const grade = t("sessions.topGrade", { grade: label });
-  return `${logCountLabel(inside)} · ${grade}`;
-};
 
 const entriesOf = (items: LogItem[]): JournalEntry[] =>
   items.flatMap((i) => (i.type === "entry" ? [i.entry] : []));

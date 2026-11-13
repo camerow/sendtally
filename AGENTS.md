@@ -64,8 +64,9 @@ sendtally/
 │   ├── core/            ported session/effort/grades logic - pure, no I/O, no platform deps
 │   ├── api/             Hono Worker: API + D1 schema/migrations (cron/queue handlers are legacy, being removed)
 │   ├── api-client/      hono/client (hc<AppType>) wrapper consumed by mobile and web
-│   ├── design/          design tokens (CSS variables) + React component library
-│   └── ui-native/       NativeWind component kit for mobile
+│   ├── features/        shared feature logic, hooks, i18n catalogs and query keys for web and mobile
+│   ├── design/          design tokens (CSS variables + TS) and the web React component library
+│   └── auth-native/     Clerk sign-in helpers for the mobile app
 ├── infra/
 │   ├── terraform/       Cloudflare account resources (zone, DNS, D1)
 │   └── scripts/         operator scripts (secret push, D1 copy)
@@ -179,9 +180,9 @@ Three layers; the tokens file is the contract between platforms.
 
 1. `@sendtally/design`: CSS-variable tokens (`styles.css` + `tokens/`) and a typed React component library (Logo, Button, Badge, Label, Card, StatStrip, GradeBars), both synced from the "Sendtally Design System" project on claude.ai/design via the DesignSync tool. That project is the design source of truth - read its `readme.md` (voice, contrast rules, iconography, layout) before designing anything new. Note: its internal copy still says "boardsync"; the code here is renamed to sendtally.
 2. Web: consumes `@sendtally/design` components directly (inline styles driven by the tokens - no Tailwind, no shadcn; the design system ships its own components). Clerk headless hooks get skinned with these.
-3. Native: NativeWind 4 + a small hand-rolled kit in `@sendtally/ui-native` (button, card, list row, stat tile, sheet, input, ...). No pre-built RN component library.
+3. Native: React Native `style` props driven by the TypeScript tokens in `@sendtally/design/tokens` (`colors`, `radius`, `fonts`), with a small hand-rolled kit in `apps/mobile/components` (sheet, chip, segmented control, select row, keypad, ...). No NativeWind and no pre-built RN component library.
 
-`bg-primary` must mean the same color on both platforms.
+A token must mean the same colour on both platforms: `tokens.ts` and the CSS variables carry the same values.
 
 Red (watermelon) is only for destructive actions, and those use the `danger` red outline Button.
 A call to action that is not destructive (Become a member, Create account, Save) uses the blue `azure` Button, never a red fill.
@@ -218,6 +219,9 @@ Google Analytics still runs on the marketing pages for aggregate traffic; PostHo
   Account creation: `signup_started` / `auth_code_sent` / `signup_completed` on the web form, and `account_created` from the Clerk webhook as the canonical, all-channel one.
   Membership: `membership_started` with `channel` = `web` (the Clerk checkout redirect) or the store (a new RevenueCat entitlement, never a renewal).
 - The logbook itself never goes to PostHog - event properties stay counts and enum-ish strings.
+- Google Analytics for Firebase runs in the mobile app only so Google Ads can attribute installs (`first_open`) and the in-app `account_created` and `membership_started`, named after their PostHog twins.
+  It is not a second product analytics tool: no user id, no email, no other events of ours, and on iOS no IDFA, so no tracking prompt.
+  Runbook: `docs/mobile-release.md`, "Install attribution for Google Ads".
 - Anything added here has to be reflected in `apps/web/app/routes/privacy.tsx`.
 
 ## Copy

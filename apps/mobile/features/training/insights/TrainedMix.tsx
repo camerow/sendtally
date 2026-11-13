@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
-  focusKey,
+  mixRows,
   type TrainedBy,
   type TrainedFocusVM,
   type TrainedKindVM,
@@ -13,8 +13,6 @@ import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { Segmented } from "../components/Segmented";
 import { type } from "../type";
-import { focusColor } from "./focusColors";
-import { KIND_COLORS } from "./kindColors";
 
 export type TrainedMixProps = {
   trained: TrainedKindVM[];
@@ -37,10 +35,7 @@ export function TrainedMix({
   picked,
   onPick,
 }: TrainedMixProps): React.ReactElement {
-  const rows =
-    by === "category"
-      ? trained.map((k) => ({ ...k, key: k.kind, color: KIND_COLORS[k.kind] }))
-      : byFocus.map((f) => ({ ...f, key: focusKey(f.focus), color: focusColor(f.focus) }));
+  const rows = mixRows({ trained, byFocus }, by);
   return (
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>

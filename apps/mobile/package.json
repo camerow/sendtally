@@ -21,6 +21,8 @@
     "@gorhom/bottom-sheet": "5.2.14",
     "@posthog/react-native-plugin": "^2.6.0",
     "@react-native-community/datetimepicker": "9.1.0",
+    "@react-native-firebase/analytics": "^27.1.1",
+    "@react-native-firebase/app": "^27.1.1",
     "@sendtally/api-client": "workspace:*",
     "@sendtally/auth-native": "workspace:*",
     "@sendtally/core": "workspace:*",

@@ -7,6 +7,8 @@ import {
   type Membership,
   type Weekday,
 } from "@sendtally/core/hang";
+import { daysList, shortDate } from "../hang/format";
+import { t } from "../i18n";
 import { daysInWeek, withWeekDays, type DaySchedule } from "./weekDays";
 
 /** Every week on some weekdays, or once on each of some dates. */
@@ -100,4 +102,18 @@ export function blockDates(
     },
     { membershipId, weekdays: [], weeks: [] } as DaySchedule
   );
+}
+
+/** The schedule page's Add: every week on the days picked, or on the one date or the count of them. */
+export function scheduleAddLabel(
+  d: ScheduleDraft,
+  count: number,
+  first: string | undefined
+): string {
+  if (d.mode === "repeat")
+    return d.weekdays.length === 0
+      ? t("hang.add")
+      : t("plan.addEvery", { days: daysList(d.weekdays) });
+  if (count === 1 && first !== undefined) return t("plan.addOn", { date: shortDate(first) });
+  return count === 0 ? t("hang.add") : t("plan.addOnDays", { count });
 }

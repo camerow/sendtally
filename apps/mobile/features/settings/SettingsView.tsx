@@ -101,8 +101,8 @@ export function SettingsView({
             {vm.stravaActive
               ? t("settings.stravaActive")
               : vm.stravaConnected
-                ? t("settings.stravaLapsedMobile")
-                : t("settings.stravaNotConnectedMobile")}
+                ? t("settings.stravaLapsed")
+                : t("settings.stravaConnectBody")}
           </Text>
           {vm.stravaActive ? (
             <StravaPostingSection posting={posting} />

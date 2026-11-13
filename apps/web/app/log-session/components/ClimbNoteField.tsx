@@ -1,6 +1,6 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
-import { inputStyle } from "./styles";
+import { inputStyle } from "../../components/styles";
 
 export type ClimbNoteFieldProps = {
   id?: string;

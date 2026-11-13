@@ -1,0 +1,79 @@
+import React from "react";
+import { addDays, monthStart, type Block, type CalendarDate } from "@sendtally/core/hang";
+import { dayTitle } from "@sendtally/features/hang";
+import { t } from "@sendtally/features/i18n";
+import { bandText, calendarDay, monthWeeks } from "@sendtally/features/training";
+import { MonthHead } from "./MonthHead";
+
+export type MonthCalendarProps = {
+  /** The date it opens on, marked as picked unless `picked` lists several. */
+  selected: CalendarDate;
+  picked?: readonly CalendarDate[];
+  min: CalendarDate | null;
+  max?: CalendarDate | undefined;
+  today: CalendarDate;
+  /** Blocks to band across the weeks they cover, as the plan calendar shows them. */
+  blocks?: readonly Block[];
+  /** Days tinted as a run, such as the rest of a block's first week. */
+  shaded?: (d: CalendarDate) => boolean;
+  onPick: (d: CalendarDate) => void;
+};
+
+/** An inline month grid, Monday first, opening on the selected date's month. */
+export function MonthCalendar({
+  selected,
+  picked,
+  min,
+  max,
+  today,
+  blocks,
+  shaded,
+  onPick,
+}: MonthCalendarProps): React.ReactElement {
+  const [month, setMonth] = React.useState(() => monthStart(selected));
+  const inMonth = (d: CalendarDate): boolean => d.slice(0, 7) === month.slice(0, 7);
+  return (
+    <div className="month-calendar">
+      <MonthHead month={month} onMonth={setMonth} />
+      {monthWeeks(month).map((monday) => {
+        const band = blocks === undefined ? null : bandText(blocks, monday);
+        return (
+          <div key={monday}>
+            {blocks !== undefined && (
+              <span className={band === null ? "block-band" : "block-band block-band--on"}>
+                {band}
+              </span>
+            )}
+            <div className="month-calendar-row">
+              {Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((d) => {
+                if (!inMonth(d)) return <span key={d} className="month-calendar-day" />;
+                const { off, on } = calendarDay(d, { selected, picked, min, max });
+                const inBlock = !off && shaded?.(d) === true;
+                const tone = on
+                  ? " is-on"
+                  : inBlock
+                    ? " is-shaded"
+                    : d === today
+                      ? " is-today"
+                      : "";
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    className={`month-calendar-day${tone}`}
+                    disabled={off}
+                    aria-pressed={on}
+                    aria-label={inBlock ? t("hang.inBlock", { date: dayTitle(d) }) : dayTitle(d)}
+                    onClick={() => onPick(d)}
+                  >
+                    <span>{Number(d.slice(8))}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

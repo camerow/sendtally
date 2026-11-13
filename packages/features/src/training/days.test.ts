@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { Activity, HangSessionRecord, Plan, SessionRow } from "@sendtally/api-client";
 import type { Protocol, Workout } from "@sendtally/core/hang";
-import { dayEntries, dayMarks, trainingDay, trainingWeek, type TrainingLog } from "./days";
+import {
+  dayEntries,
+  dayMarks,
+  loggedKey,
+  oncePerKind,
+  trainingDay,
+  trainingWeek,
+  type TrainingLog,
+} from "./days";
 
 const TODAY = "2026-10-01";
 
@@ -338,5 +346,28 @@ describe("dayEntries", () => {
       ["done", "x1"],
       ["done", "x2"],
     ]);
+  });
+});
+
+describe("day marks and keys", () => {
+  it("keeps one mark per kind, filled if any of that kind happened", () => {
+    expect(
+      oncePerKind([
+        { kind: "hangboard", filled: false },
+        { kind: "hangboard", filled: true },
+        { kind: "strength", filled: false },
+      ])
+    ).toEqual([
+      { kind: "hangboard", filled: true },
+      { kind: "strength", filled: false },
+    ]);
+  });
+
+  it("keys what was logged by its own id", () => {
+    expect(loggedKey({ kind: "activity", activity: { id: "a1" } } as never)).toBe("a1");
+    expect(loggedKey({ kind: "climb", session: { fingerprint: "manual-1" } } as never)).toBe(
+      "manual-1"
+    );
+    expect(loggedKey({ kind: "hang", session: { id: "h1" } } as never)).toBe("h1");
   });
 });

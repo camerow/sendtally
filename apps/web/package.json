@@ -18,6 +18,7 @@
     "@clerk/react": "6.12.11",
     "@clerk/react-router": "^3.6.3",
     "@sendtally/api-client": "workspace:*",
+    "@sendtally/core": "workspace:*",
     "@sendtally/design": "workspace:*",
     "@sendtally/features": "workspace:*",
     "@tanstack/react-query": "^5.102.8",

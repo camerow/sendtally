@@ -2,9 +2,10 @@ import React from "react";
 import type { DeleteAccountFeature } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { BackLink } from "../../components/BackLink";
-import { bodyText, pageTitle, sectionLabel, secondaryButton } from "./styles";
+import { bodyText, pageTitle, secondaryButton } from "./styles";
 import { DeleteAccountSection } from "./DeleteAccountSection";
 import { Section } from "./Section";
+import { sectionLabel } from "../../components/styles";
 
 export type AccountViewProps = {
   email: string;

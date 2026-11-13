@@ -85,8 +85,6 @@ export const logSession = {
   "logSession.defaultNameMorning": "Sesión de mañana",
   "logSession.defaultNameAfternoon": "Sesión de tarde",
   "logSession.defaultNameEvening": "Sesión de noche",
-  "logSession.wrapUpTitle": "Cerrar sesión",
-  "logSession.wrapUpSubtitle": "Los horarios salen de tus vías · el esfuerzo se puntúa al guardar",
   "logSession.noSendsYet": "Aún sin encadenes",
   "logSession.sendStyle": "Estilo",
   "logSession.removeClimbTitle": "¿Quitar esta vía?",
@@ -95,5 +93,4 @@ export const logSession = {
   "logSession.sentTapToAttempt": "Encadenada, toca para marcar como intento",
   "logSession.attemptTapToSent": "Intento, toca para marcar como encadenada",
   "logSession.joinsThatDay": "Se suma a la sesión de ese día",
-  "logSession.climbSaveFailed": "No se pudo guardar la escalada. Inténtalo de nuevo.",
 } as const;

@@ -14,7 +14,6 @@ import {
   bodyText,
   monoMuted,
   secondaryButton,
-  sectionLabel,
   underlineButton,
 } from "../../settings/components/styles";
 import { checkbox, goldButton, pillMuted, pillOk, td, tdMono, th } from "../styles";
@@ -22,6 +21,7 @@ import { useIsNarrow } from "../../lib/useIsNarrow";
 import { ConversionPrompt } from "./ConversionPrompt";
 import { SessionTagBar } from "./SessionTagBar";
 import { Stat } from "./Stat";
+import { sectionLabel } from "../../components/styles";
 
 const PREVIEW_ROWS = 8;
 const ISSUE_ROWS = 20;

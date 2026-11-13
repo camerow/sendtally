@@ -1,6 +1,6 @@
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
-import { useLoaderData, useSearchParams } from "react-router";
+import { useLoaderData } from "react-router";
 import type {
   ConnectionStatus,
   Activity,
@@ -9,15 +9,16 @@ import type {
   SessionRow,
 } from "@sendtally/api-client";
 import { requireApi } from "../lib/api.server";
-import { cloudflareContext } from "../lib/cloudflare-context";
-import { LOG_SCOPES, type LogScope } from "@sendtally/features/journal";
-import { LogView } from "../sessions/components/LogView";
+import { LogPage } from "../sessions/components/LogPage";
+import climbsStyles from "../climbs/climbs.css?url";
 import journalStyles from "../journal/journal.css?url";
 import logSessionStyles from "../log-session/log-session.css?url";
+import logStyles from "../sessions/log.css?url";
 import sessionsStyles from "../sessions/sessions.css?url";
+import trainingStyles from "../training/training.css?url";
+import blockStyles from "../training/blocks/blocks.css?url";
 
 type LoaderData = {
-  apiUrl: string;
   status: ConnectionStatus;
   sessions: SessionRow[];
   hangSessions: HangHistoryRow[];
@@ -29,6 +30,10 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: sessionsStyles },
   { rel: "stylesheet", href: journalStyles },
   { rel: "stylesheet", href: logSessionStyles },
+  { rel: "stylesheet", href: climbsStyles },
+  { rel: "stylesheet", href: logStyles },
+  { rel: "stylesheet", href: trainingStyles },
+  { rel: "stylesheet", href: blockStyles },
 ];
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
@@ -39,7 +44,6 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
     api.entries(),
   ]);
   return {
-    apiUrl: args.context.get(cloudflareContext).env.API_URL,
     status,
     sessions: sessions.sessions,
     hangSessions: sessions.hangSessions,
@@ -49,21 +53,14 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
 }
 
 export default function Log(): React.ReactElement {
-  const { apiUrl, status, sessions, hangSessions, activities, entries } =
-    useLoaderData<typeof loader>();
-  const [searchParams] = useSearchParams();
-  const show = searchParams.get("show");
-  const scope: LogScope = LOG_SCOPES.find((value) => value === show) ?? "all";
+  const { status, sessions, hangSessions, activities, entries } = useLoaderData<typeof loader>();
   return (
-    <LogView
-      apiUrl={apiUrl}
+    <LogPage
       status={status}
       sessions={sessions}
       hangSessions={hangSessions}
       activities={activities}
       entries={entries}
-      scope={scope}
-      basePath="/app"
     />
   );
 }

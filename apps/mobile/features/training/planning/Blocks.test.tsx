@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { Alert, Text, type AlertButton } from "react-native";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
-import type { PlanDraft } from "@sendtally/features/training";
+import { type PlanDraft, planGridRows } from "@sendtally/features/training";
 import { hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
 import { PlanGrid } from "../plan/PlanGrid";
-import { planGridRows } from "../plan/planGridRows";
+import { openMembership } from "../plan/openMembership";
 import { useNewBlock } from "./useNewBlock";
 import { BlockScreen } from "./BlockScreen";
 import { BlocksList } from "../train/BlocksList";
@@ -631,7 +631,7 @@ describe("templates", () => {
     const view = await renderWithHang(<BlockScreen id="t2" />, hangData(), { plan: bare });
     expect(screen.getByText("Add the workouts this block repeats each week.")).toBeTruthy();
     await view.unmount();
-    expect(mockPlan.deleteBlock).toHaveBeenCalledWith("t2");
+    await waitFor(() => expect(mockPlan.deleteBlock).toHaveBeenCalledWith("t2"));
   });
 });
 
@@ -717,11 +717,16 @@ describe("week grid", () => {
     const workout = (id: string): WorkoutRecord | undefined => (id === "squat" ? squat : undefined);
     await renderWithHang(
       <PlanGrid
-        rows={planGridRows(plan.memberships, workout, {
-          gripName: (id) => id,
-          defaultGrip: (w) => w.grip,
-          workout: () => undefined,
-        })}
+        rows={planGridRows(
+          plan.memberships,
+          workout,
+          {
+            gripName: (id) => id,
+            defaultGrip: (w) => w.grip,
+            workout: () => undefined,
+          },
+          { open: (m) => openMembership(m) }
+        )}
       />
     );
     const [inBlock, outside] = screen.getAllByLabelText("Back squat");

@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { Activity, JournalEntry, SessionRow } from "@sendtally/api-client";
 import {
+  entryRowMeta,
+  spanLabel,
   bodyPlaceholder,
   daysSince,
   draftFromEntry,
   draftIsEmpty,
-  emptyDraft,
+  emptyEntryDraft,
   entryHasTitle,
   entryInput,
   entryTitle,
@@ -13,8 +15,11 @@ import {
   linkedSessions,
   logItems,
   logScopeItems,
+  logTraining,
   logSegmentItems,
   logWorkoutItems,
+  logWorkoutName,
+  trainingLogItems,
   openInjuries,
   overlappingTrip,
   sessionsInSpan,
@@ -284,6 +289,28 @@ describe("blocks in the log", () => {
   });
 });
 
+describe("logTraining", () => {
+  const plan = {
+    blocks: [
+      { id: "over", name: "Base", start: "2026-05-04", weeks: 1, focus: null },
+      { id: "running", name: "Power", start: "2026-06-08", weeks: 2, focus: null },
+    ],
+    memberships: [],
+    weekChanges: [],
+    planChanges: [],
+    membershipDays: [],
+  };
+
+  it("marks done only the blocks over by the day", () => {
+    const training = logTraining(
+      { climbs: [], hangs: [], activities: [], plan, workout: () => undefined },
+      "2026-06-10"
+    );
+    expect(training.plan).toBe(plan);
+    expect(training.finished.map((r) => r.block.id)).toEqual(["over"]);
+  });
+});
+
 describe("groupTrips", () => {
   const now = new Date("2026-06-10T12:00:00.000Z");
   const trip = entry({
@@ -420,14 +447,14 @@ describe("drafts", () => {
   });
 
   it("drops an end date when the kind cannot span one", () => {
-    const draft = { ...emptyDraft("journal", "2026-05-30"), endsAt: "2026-06-01", body: "x" };
+    const draft = { ...emptyEntryDraft("journal", "2026-05-30"), endsAt: "2026-06-01", body: "x" };
     expect(entryInput(draft).ends_at).toBeNull();
   });
 
   it("refuses an empty draft but accepts an update carrying only a number", () => {
-    expect(draftIsEmpty(emptyDraft("journal", "2026-05-30"))).toBe(true);
+    expect(draftIsEmpty(emptyEntryDraft("journal", "2026-05-30"))).toBe(true);
     expect(
-      draftIsEmpty({ ...emptyDraft("journal", "2026-05-30"), parentId: "i1", severity: 0 })
+      draftIsEmpty({ ...emptyEntryDraft("journal", "2026-05-30"), parentId: "i1", severity: 0 })
     ).toBe(false);
   });
 });
@@ -504,7 +531,6 @@ describe("logScopeItems", () => {
 
   it("picks one kind of entry", () => {
     expect(logScopeItems(items, "injuries").map((i) => i.key)).toEqual(["entry:hurt"]);
-    expect(logScopeItems(items, "trips")).toEqual([]);
   });
 
   it("shows each half on its own", () => {
@@ -542,10 +568,12 @@ describe("entryHasTitle", () => {
 
 describe("bodyPlaceholder", () => {
   it("asks an injury about the injury and a journal entry about climbing", () => {
-    expect(bodyPlaceholder(emptyDraft("injury", "2026-05-30"))).toBe(
+    expect(bodyPlaceholder(emptyEntryDraft("injury", "2026-05-30"))).toBe(
       "Summarize how your injury is doing today."
     );
-    expect(bodyPlaceholder(emptyDraft("journal", "2026-05-30"))).toBe("Reflect on your climbing");
+    expect(bodyPlaceholder(emptyEntryDraft("journal", "2026-05-30"))).toBe(
+      "Reflect on your climbing"
+    );
   });
 });
 
@@ -584,5 +612,35 @@ describe("logWorkoutItems", () => {
 
   it("knows one logged without the library by its title", () => {
     expect(logWorkoutItems(items, "title:pull and core")).toHaveLength(2);
+  });
+
+  it("narrows the Training log by scope, then by workout", () => {
+    expect(trainingLogItems(items, "journal", null).map((i) => i.key)).toEqual(["entry:note"]);
+    expect(trainingLogItems(items, "all", "legs").map((i) => i.key)).toEqual(["activity:a1"]);
+    expect(trainingLogItems(items, "journal", "legs")).toEqual([]);
+  });
+
+  it("names the workout a key narrows to, from its rows", () => {
+    expect(logWorkoutName(items, "arms")).toBe("Arm day");
+    expect(logWorkoutName(items, "title:pull and core")).toBe("Pull and core");
+    expect(logWorkoutName(items, "gone")).toBeNull();
+    expect(logWorkoutName(items, null)).toBeNull();
+  });
+});
+
+describe("entryRowMeta", () => {
+  it("shows a trip's dates", () => {
+    const trip = entry({ kind: "trip", occurred_at: "2026-05-22", ends_at: "2026-05-26" });
+    expect(entryRowMeta(trip, "3 sessions")).toBe(spanLabel("2026-05-22", "2026-05-26"));
+  });
+
+  it("shows the first line of a titled entry, or the detail it is given", () => {
+    const titled = entry({ title: "Fingers", body: "Sore today.\nRested." });
+    expect(entryRowMeta(titled)).toBe("Sore today.");
+    expect(entryRowMeta(titled, "On: Pulley")).toBe("On: Pulley");
+  });
+
+  it("leaves an untitled entry's line empty, since its title already is that line", () => {
+    expect(entryRowMeta(entry())).toBe("");
   });
 });

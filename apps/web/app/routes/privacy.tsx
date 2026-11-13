@@ -66,6 +66,16 @@ export default function Privacy(): React.ReactElement {
         edit suggested, or a report resolved, carrying only the kind of action and a few labels,
         such as whether it was an area or a climb, never what you wrote.
       </p>
+      <p>
+        <strong>App installs.</strong> The mobile apps also run Google Analytics for Firebase, which
+        records that the app was installed and opened, how long it is used, the device model,
+        operating system, app version and approximate region, against an identifier for that
+        installation of the app. It also records two events of ours, an account created and a
+        membership started, carrying only which store and which plan the membership came from. None
+        of this is tied to your account identifier or email address. On Android it includes the
+        device&rsquo;s advertising ID, which you can reset or delete in your phone&rsquo;s settings.
+        On iPhone it never includes the advertising identifier, and the app never asks to track you.
+      </p>
 
       <h2>What we never collect</h2>
       <p>
@@ -75,8 +85,10 @@ export default function Privacy(): React.ReactElement {
       <p>
         We do not import your climbing from any third party. Your logbook contains only what you
         entered yourself. We do not track your location in the background, read your contacts, or
-        collect health data from other apps. We do not sell your data, and we do not share it with
-        advertisers or data brokers.
+        collect health data from other apps. We do not sell your data or share it with data brokers.
+        The only thing an advertising platform learns from sendtally is whether a store badge tap,
+        an install, a new account or a membership followed one of our own ads, as described under
+        Google below.
       </p>
 
       <h2>Why we hold it</h2>
@@ -95,11 +107,15 @@ export default function Privacy(): React.ReactElement {
           To answer your emails, and to send you service notices such as a broken Strava connection.
         </li>
         <li>To understand roughly how the site is used, so it can be improved.</li>
+        <li>
+          To learn which of our own ads lead people to install the app, create an account or become
+          a member.
+        </li>
       </ul>
 
       <h2>Who else touches it</h2>
       <p>
-        Five processors, each handling only what it needs, and each processing data on our
+        Six processors, each handling only what it needs, and each processing data on our
         instructions.
       </p>
       <ul>
@@ -124,10 +140,14 @@ export default function Privacy(): React.ReactElement {
           does not read your Strava activities.
         </li>
         <li>
-          <strong>Google Analytics and Google Ads</strong> - aggregate web analytics on
-          sendtally.com, and, for visitors who arrive from one of our ads, whether they go on to tap
-          an app store badge or create an account. Ad personalization is turned off, so there is no
-          retargeting.
+          <strong>Google</strong> - Google Analytics on sendtally.com and Google Analytics for
+          Firebase in the mobile apps, plus Google Ads to measure our own ads. For visitors who
+          arrive from one of our ads, the site reports whether they go on to tap an app store badge
+          or create an account; the apps report installs, new accounts and membership starts. That
+          is measurement only: ad personalization is turned off, so it is never used for retargeting
+          or personalized ads, and your logbook, email address and account identifier are never
+          sent. On iPhone, installs from our ads are reported through Apple&rsquo;s SKAdNetwork,
+          which carries no identifier for you or your device.
         </li>
         <li>
           <strong>PostHog</strong> - product analytics, session replay and error reports, including
@@ -187,6 +207,11 @@ export default function Privacy(): React.ReactElement {
         Usage records at PostHog are not part of that purge. They age off on their own after twelve
         months, and session replays after thirty days. Write to us if you want yours removed sooner
         and we will delete them.
+      </p>
+      <p>
+        Google Analytics for Firebase records are not linked to your account, so there is nothing
+        there for the purge to find. Google keeps them for two months, after which only aggregate
+        counts remain.
       </p>
       <p>
         Activities already posted to Strava live in your Strava account and stay there. Delete those

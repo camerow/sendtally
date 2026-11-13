@@ -14,11 +14,11 @@ import { HangSheet } from "../data/HangSheet";
 import { openExerciseEditor, openGripEditor } from "../exercises/openExerciseEditor";
 import type { ExerciseForm } from "../exercises/types";
 import { useMakeExercise } from "../exercises/useMakeExercise";
-import { KIND_COLORS } from "../insights/kindColors";
+import { KIND_COLORS } from "@sendtally/features/training";
 import { NewWorkoutSheet } from "../library/NewWorkoutSheet";
 import { type } from "../type";
 import { PickerRow } from "./PickerRow";
-import type { Picked } from "./types";
+import type { Picked } from "@sendtally/features/workouts";
 import { pickedOf, usePick } from "./usePick";
 import { usePickerWorld } from "./usePickerWorld";
 

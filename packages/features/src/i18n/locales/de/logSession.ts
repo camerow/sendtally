@@ -85,9 +85,6 @@ export const logSession = {
   "logSession.defaultNameMorning": "Morgensession",
   "logSession.defaultNameAfternoon": "Nachmittagssession",
   "logSession.defaultNameEvening": "Abendsession",
-  "logSession.wrapUpTitle": "Abschließen",
-  "logSession.wrapUpSubtitle":
-    "Zeiten kommen von deinen Kletterversuchen · Effort wird beim Speichern bewertet",
   "logSession.noSendsYet": "Noch keine Begehungen",
   "logSession.sendStyle": "Stil",
   "logSession.removeClimbTitle": "Diese Kletterei entfernen?",
@@ -96,6 +93,4 @@ export const logSession = {
   "logSession.sentTapToAttempt": "Geschafft, tippen um als Versuch zu markieren",
   "logSession.attemptTapToSent": "Versuch, tippen um als geschafft zu markieren",
   "logSession.joinsThatDay": "Kommt zur Session an diesem Tag",
-  "logSession.climbSaveFailed":
-    "Die Kletterei konnte nicht gespeichert werden. Versuch es noch einmal.",
 } as const;

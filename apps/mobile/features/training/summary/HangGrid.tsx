@@ -4,7 +4,7 @@ import type { WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { type } from "../type";
-import { loadText } from "./loadText";
+import { hangLoadText as loadText } from "@sendtally/features/activities";
 
 export type HangGridProps = {
   /** Each set's hangs, held or not, filling from the left. */

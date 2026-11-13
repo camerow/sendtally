@@ -11,28 +11,29 @@ import {
 } from "@sendtally/core/hang";
 import { humanDuration } from "../hang/format";
 import { formatNumber, t } from "../i18n";
+import type { DoneCount } from "./recap";
 
-export type DoseField = (typeof DOSE_FIELDS)[number];
+export type WeekField = (typeof DOSE_FIELDS)[number];
 
 /** Timed work outside hangboarding: rounds of work and rest. */
 const timed = (kind: WorkoutKind, dose: Dose): boolean =>
   kind !== "hangboard" && dose.onS !== undefined;
 
-const HANGBOARD_FIELDS: Record<GripMeasure, DoseField[]> = {
+const HANGBOARD_FIELDS: Record<GripMeasure, WeekField[]> = {
   hang: ["sets", "reps", "onS", "offS", "edgeMm", "weightKg", "setRestS"],
   repsWeight: ["sets", "reps", "weightKg", "setRestS"],
   secondsWeight: ["sets", "onS", "weightKg", "setRestS"],
 };
 
 /** The fields a block week can change for an item, in the order they read. A ground pull has no edge. */
-export function weekFields(kind: WorkoutKind, dose: Dose): DoseField[] {
+export function weekFields(kind: WorkoutKind, dose: Dose): WeekField[] {
   if (kind === "hangboard") return HANGBOARD_FIELDS[gripMeasureOf(dose)];
   if (timed(kind, dose)) return ["sets", "onS", "offS", "weightKg"];
   return ["sets", "reps", "weightKg", "setRestS"];
 }
 
 /** What a field is called on an item of the kind. */
-export function fieldLabel(kind: WorkoutKind, dose: Dose, field: DoseField): string {
+export function fieldLabel(kind: WorkoutKind, dose: Dose, field: WeekField): string {
   const hang = kind === "hangboard";
   switch (field) {
     case "sets":
@@ -52,7 +53,7 @@ export function fieldLabel(kind: WorkoutKind, dose: Dose, field: DoseField): str
   }
 }
 
-const STEP: Record<DoseField, number> = {
+const STEP: Record<WeekField, number> = {
   sets: 1,
   reps: 1,
   weightKg: 2.5,
@@ -62,7 +63,7 @@ const STEP: Record<DoseField, number> = {
   setRestS: 15,
 };
 
-const MIN: Record<DoseField, number> = {
+const MIN: Record<WeekField, number> = {
   sets: 1,
   reps: 0,
   weightKg: -200,
@@ -77,15 +78,15 @@ const round = (n: number): number => Math.round(n * 100) / 100;
 const signed = (n: number): string => `${n > 0 ? "+" : "−"}${formatNumber(Math.abs(n))}`;
 
 /** A field's value as its stepper shows it: weight in the user's unit. */
-export function fieldValue(dose: Dose, field: DoseField, unit: WeightUnit): number {
+export function weekFieldValue(dose: Dose, field: WeekField, unit: WeightUnit): number {
   const value = dose[field] ?? 0;
   return field === "weightKg" ? round(toUnit(value, unit)) : value;
 }
 
 /** The dose with a field set to a value typed in the user's unit, or null when it is not one. */
-export function withField(
+export function withWeekField(
   dose: Dose,
-  field: DoseField,
+  field: WeekField,
   typed: number,
   unit: WeightUnit
 ): Dose | null {
@@ -96,7 +97,7 @@ export function withField(
 }
 
 /** How a field types and steps in the user's unit: weight by 2.5 kg or 5 lb, stepping below zero for assistance. */
-export function fieldLimits(field: DoseField, unit: WeightUnit): NumberLimits {
+export function weekFieldLimits(field: WeekField, unit: WeightUnit): NumberLimits {
   if (field === "weightKg")
     return {
       step: unit === "lb" ? 5 : STEP.weightKg,
@@ -107,18 +108,20 @@ export function fieldLimits(field: DoseField, unit: WeightUnit): NumberLimits {
 }
 
 /** The dose one step up or down on a field: 2.5 kg or 5 lb of weight, 15 s of set rest, else 1. */
-export function stepped(dose: Dose, field: DoseField, direction: 1 | -1, unit: WeightUnit): Dose {
-  const { step } = fieldLimits(field, unit);
-  return withField(dose, field, fieldValue(dose, field, unit) + direction * step, unit) ?? dose;
+export function stepped(dose: Dose, field: WeekField, direction: 1 | -1, unit: WeightUnit): Dose {
+  const { step } = weekFieldLimits(field, unit);
+  return (
+    withWeekField(dose, field, weekFieldValue(dose, field, unit) + direction * step, unit) ?? dose
+  );
 }
 
 /** The rest fields, and on a hang its hangs per set: set by the dose, but kept out of the table. */
-const quiet = (kind: WorkoutKind, dose: Dose, field: DoseField): boolean =>
+const quiet = (kind: WorkoutKind, dose: Dose, field: WeekField): boolean =>
   field === "offS" ||
   field === "setRestS" ||
   (kind === "hangboard" && gripMeasureOf(dose) === "hang" && field === "reps");
 
-const LEAD: readonly DoseField[] = ["edgeMm", "weightKg", "sets", "onS"];
+const LEAD: readonly WeekField[] = ["edgeMm", "weightKg", "sets", "onS"];
 
 /**
  * The columns of an item's weekly load, edge first on a hang: the numbers its dose sets, a
@@ -128,13 +131,13 @@ export function loadColumns(
   kind: WorkoutKind,
   dose: Dose,
   changes: readonly Partial<Dose>[]
-): DoseField[] {
+): WeekField[] {
   const fields = weekFields(kind, dose);
   const ordered =
     kind === "hangboard"
       ? [...LEAD.filter((f) => fields.includes(f)), ...fields.filter((f) => !LEAD.includes(f))]
       : fields;
-  const always = (f: DoseField): boolean =>
+  const always = (f: WeekField): boolean =>
     kind === "hangboard" && (f === "edgeMm" || f === "weightKg");
   return ordered.filter(
     (f) =>
@@ -145,7 +148,7 @@ export function loadColumns(
 }
 
 /** A weekly load column's heading: "Edge", "Load", "Sets". */
-export function columnLabel(kind: WorkoutKind, dose: Dose, field: DoseField): string {
+export function columnLabel(kind: WorkoutKind, dose: Dose, field: WeekField): string {
   const hang = kind === "hangboard";
   switch (field) {
     case "edgeMm":
@@ -167,12 +170,32 @@ export function columnLabel(kind: WorkoutKind, dose: Dose, field: DoseField): st
 export function cellText(
   kind: WorkoutKind,
   dose: Dose,
-  field: DoseField,
+  field: WeekField,
   unit: WeightUnit
 ): string {
   if (dose[field] === undefined) return "–";
-  const value = fieldValue(dose, field, unit);
+  const value = weekFieldValue(dose, field, unit);
   if (field === "onS" || field === "offS" || field === "setRestS") return humanDuration(value);
   if (field === "weightKg" && kind === "hangboard") return value === 0 ? "0" : signed(value);
   return formatNumber(value);
 }
+
+/** The fields a load table types as m:ss. */
+export const isTimeField = (field: WeekField): boolean =>
+  field === "onS" || field === "offS" || field === "setRestS";
+
+/** The unit a load table shows beside a field: the user's for weight, mm for an edge. */
+export const weekFieldUnit = (field: WeekField, unit: WeightUnit): string | null =>
+  field === "weightKg" ? unit : field === "edgeMm" ? "mm" : null;
+
+/** Whether a week's change differs from the workout as written in that field, drawn gold. */
+export const weekFieldMarked = (change: Partial<Dose>, written: Dose, field: WeekField): boolean =>
+  change[field] !== undefined && change[field] !== written[field];
+
+/** A week's runs as "2/3"; blank before it runs or with none planned. */
+export const doneText = (ran: DoneCount | null): string =>
+  ran === null || ran.planned === 0 ? "" : `${ran.done}/${ran.planned}`;
+
+/** Every run of the week done, drawn fern. */
+export const doneAll = (ran: DoneCount | null): boolean =>
+  ran !== null && ran.planned > 0 && ran.done >= ran.planned;

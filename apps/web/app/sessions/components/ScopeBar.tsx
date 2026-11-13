@@ -2,76 +2,53 @@ import React from "react";
 import type { ScopeItem } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
-import { sectionAnchorId } from "../anchors";
 
-const chip: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  textTransform: "uppercase",
-  fontWeight: 500,
-  fontSize: 11,
-  letterSpacing: "0.06em",
-  display: "inline-flex",
-  alignItems: "center",
-  height: 30,
-  padding: "0 11px",
-  borderRadius: "var(--radius-pill)",
-  textDecoration: "none",
-  whiteSpace: "nowrap",
-  flex: "none",
-};
-
+/** The months to jump to, the one in view lit, and the filter button at the end. */
 export function ScopeBar({
   items,
   currentKey,
+  onSelect,
   filtersActive,
   onOpenFilters,
 }: {
-  items: ScopeItem[];
+  items: readonly ScopeItem[];
   currentKey: string | null;
+  onSelect: (sectionKey: string) => void;
   filtersActive: boolean;
   onOpenFilters: () => void;
 }): React.ReactElement {
+  const strip = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (currentKey === null || strip.current === null) return;
+    const chip = strip.current.querySelector<HTMLElement>(`[data-section="${currentKey}"]`);
+    if (chip !== null) strip.current.scrollLeft = Math.max(0, chip.offsetLeft - 80);
+  }, [currentKey]);
   return (
-    <nav className="sessions-scope" aria-label={t("sessions.jumpTo")}>
-      <div className="sessions-scope-strip">
-        {items.map((item) => {
-          const strong = item.kind === "year";
-          const active = !strong && item.sectionKey === currentKey;
-          return (
-            <a
-              key={item.key}
-              href={`#${sectionAnchorId(item.sectionKey)}`}
-              aria-current={active ? "true" : undefined}
-              style={{
-                ...chip,
-                fontWeight: strong ? 600 : 500,
-                background: active ? "var(--bs-gold)" : "transparent",
-                color: active || strong ? "var(--bs-gunmetal)" : "rgba(64,63,76,0.65)",
-                border: `1px solid ${
-                  active ? "var(--bs-gold)" : strong ? "var(--bs-gunmetal)" : "rgba(64,63,76,0.18)"
-                }`,
-              }}
-            >
-              {item.label}
-            </a>
-          );
-        })}
+    <div className="scope-bar">
+      <div ref={strip} className="scope-strip">
+        {items.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            data-section={item.sectionKey}
+            className={item.kind === "year" ? "scope-chip scope-chip--year" : "scope-chip"}
+            aria-pressed={item.sectionKey === currentKey && item.kind !== "year"}
+            aria-label={t("sessions.jumpToLabel", { label: item.label })}
+            onClick={() => onSelect(item.sectionKey)}
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
-      <div className="sessions-scope-tools">
-        <button
-          type="button"
-          onClick={onOpenFilters}
-          aria-label={t("common.filters")}
-          aria-pressed={filtersActive}
-          className="sessions-scope-filters"
-          style={{
-            background: filtersActive ? "var(--bs-gold)" : "transparent",
-            borderColor: filtersActive ? "var(--bs-gold)" : "rgba(64,63,76,0.18)",
-          }}
-        >
-          <Icon name="funnel" size={18} />
-        </button>
-      </div>
-    </nav>
+      <button
+        type="button"
+        className={filtersActive ? "scope-filter scope-filter--on" : "scope-filter"}
+        aria-label={t("common.filters")}
+        aria-pressed={filtersActive}
+        onClick={onOpenFilters}
+      >
+        <Icon name="funnel" size={16} strokeWidth={2} />
+      </button>
+    </div>
   );
 }

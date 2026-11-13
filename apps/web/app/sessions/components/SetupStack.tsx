@@ -26,7 +26,7 @@ export function SetupStack({
       <span className="sessions-setup-eyebrow">
         {t("gyms.setupProgress", { done: total - cards.length, total })}
       </span>
-      <div className="sessions-setup-track">
+      <div key={cards.map((c) => c.key).join()} className="sessions-setup-track">
         {cards.map((card) => (
           <div key={card.key} className="sessions-setup">
             <span className="sessions-setup-text">

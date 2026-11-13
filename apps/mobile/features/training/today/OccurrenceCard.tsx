@@ -3,7 +3,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { occurrenceLink, type Occurrence } from "@sendtally/features/training";
+import { type Occurrence, occurrenceMeta, plannedItems } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { liveRunHref, useLiveRun } from "../../live-session/liveRun";
 import { Button } from "../components/Button";
@@ -17,7 +17,6 @@ import { StartButton } from "../library-detail/StartButton";
 import { type } from "../type";
 import { openOccurrence } from "./openOccurrence";
 import { DayMark } from "./DayMark";
-import { occurrenceMeta } from "./occurrenceText";
 
 export type OccurrenceCardProps = { occurrence: Occurrence; workout: LibraryWorkout };
 
@@ -25,7 +24,7 @@ export type OccurrenceCardProps = { occurrence: Occurrence; workout: LibraryWork
 export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): React.ReactElement {
   const { model } = useHangData();
   const o = occurrence;
-  const planned = { link: occurrenceLink(o), items: o.items, session: o.session };
+  const planned = plannedItems(o);
   const run = useLiveRun();
   const running = run?.workoutId === workout.id ? run : null;
   const changes = useDayChanges();

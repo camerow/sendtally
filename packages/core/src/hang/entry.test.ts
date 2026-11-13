@@ -4,6 +4,8 @@ import {
   entrySeconds,
   numberEntry,
   openNumber,
+  typedNumber,
+  typedSeconds,
   openTime,
   timeEntry,
   timeText,
@@ -108,5 +110,40 @@ describe("numberEntry", () => {
   it("reads the typed value", () => {
     expect(entryNumber({ text: "-", fresh: false })).toBe(0);
     expect(entryNumber({ text: "7.", fresh: false })).toBe(7);
+  });
+});
+
+describe("typed text", () => {
+  it.each([
+    ["1:30", 90],
+    ["130", 90],
+    ["90", 90],
+    ["0:10", 10],
+    ["1:00:00", 3600],
+    [" 3:00 ", 180],
+  ])("reads the time %j as %d seconds", (text, seconds) => {
+    expect(typedSeconds(text)).toBe(seconds);
+  });
+
+  it("clamps a typed time and reads nothing typed as null", () => {
+    expect(typedSeconds("5", { min: 10 })).toBe(10);
+    expect(typedSeconds("")).toBeNull();
+    expect(typedSeconds("abc")).toBeNull();
+  });
+
+  it.each([
+    ["12", { step: 1 }, 12],
+    ["7,5", { step: 2.5, decimals: true }, 7.5],
+    ["7.5", { step: 1 }, 8],
+    ["-3", { step: 1 }, 3],
+    ["-3", { step: 1, signed: true }, -3],
+    ["50", { step: 1, max: 10 }, 10],
+  ] as const)("reads the number %j under %j as %d", (text, limits, value) => {
+    expect(typedNumber(text, limits)).toBe(value);
+  });
+
+  it("reads a number that is not one as null", () => {
+    expect(typedNumber("", { step: 1 })).toBeNull();
+    expect(typedNumber("x", { step: 1 })).toBeNull();
   });
 });

@@ -3,7 +3,12 @@ import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useSearchParams } from "react-router";
 import type { JournalEntry, SessionRow } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
-import { emptyDraft, newEntryHeading, today, type EntryKind } from "@sendtally/features/journal";
+import {
+  emptyEntryDraft,
+  newEntryHeading,
+  today,
+  type EntryKind,
+} from "@sendtally/features/journal";
 import { BackLink } from "../components/BackLink";
 import { EntryComposer } from "../journal/components/EntryComposer";
 import journalStyles from "../journal/journal.css?url";
@@ -40,7 +45,7 @@ export default function NewEntry(): React.ReactElement {
   const [searchParams] = useSearchParams();
 
   const initial = React.useMemo(() => {
-    const draft = emptyDraft(
+    const draft = emptyEntryDraft(
       kindParam(searchParams.get("kind")),
       searchParams.get("date") ?? today()
     );
@@ -62,7 +67,7 @@ export default function NewEntry(): React.ReactElement {
 
   return (
     <div>
-      <BackLink to="/app/journal">{t("common.back")}</BackLink>
+      <BackLink to="/app">{t("common.back")}</BackLink>
       <EntryComposer
         api={api}
         initial={initial}

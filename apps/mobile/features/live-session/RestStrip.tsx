@@ -1,20 +1,9 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { colors, fonts } from "@sendtally/design/tokens";
-import { t } from "@sendtally/features/i18n";
-import { elapsedClock } from "@sendtally/features/sessions";
-import type { Rest } from "../training/rest/restCountdown";
-import { holdNow } from "../training/hold/holdClock";
+import { stripVM } from "@sendtally/features/workouts";
 import { useHold } from "../training/hold/useHold";
-import { useRestLeft } from "../training/rest/useRest";
-import { useLiveRun } from "./liveRun";
-
-/** What a rest is before: the exercise it names, else the set after the one it sits under. */
-const restThen = (rest: Rest): string | null => {
-  if (rest.next !== null) return t("activities.restThen", { name: rest.next });
-  const set = /^\d+:(\d+)$/.exec(rest.at)?.[1];
-  return set === undefined ? null : t("activities.restThenSet", { set: Number(set) + 2 });
-};
+import { useRest } from "../training/rest/useRest";
 
 const text = { fontFamily: fonts.monoSemiBold, fontSize: 11.5, color: colors.white };
 
@@ -23,34 +12,20 @@ const text = { fontFamily: fonts.monoSemiBold, fontSize: 11.5, color: colors.whi
  * bar, gold draining for a rest, green filling for a hold.
  */
 export function RestStrip(): React.ReactElement | null {
-  const rest = useLiveRun()?.rest ?? null;
-  const left = useRestLeft(rest);
+  const { rest, left } = useRest();
   const { hold, now } = useHold();
-  if (hold !== null) {
-    const at = holdNow(hold, now);
-    if (at.phase === "over") return null;
-    const clock = at.phase === "hold" ? elapsedClock(at.seconds) : String(at.left);
-    return (
-      <Strip share={at.phase === "hold" ? Math.min(1, at.share) : 0} fill={colors.fern}>
-        <Text style={text}>{`${hold.name} ${clock}`}</Text>
-        <Text style={[text, { fontFamily: fonts.mono, color: "rgba(255,255,255,0.7)" }]}>
-          {`· ${t("activities.holdOf", { time: elapsedClock(hold.targetS) })}`}
-        </Text>
-      </Strip>
-    );
-  }
-  if (rest === null || left === 0) return null;
-  const then = restThen(rest);
+  const vm = stripVM(rest, left, hold, now);
+  if (vm === null) return null;
   return (
     <Strip
-      share={left / rest.seconds}
-      fill={colors.gold}
-      label={t("activities.restLeft", { time: elapsedClock(left) })}
+      share={vm.share}
+      fill={vm.kind === "rest" ? colors.gold : colors.fern}
+      {...(vm.label !== null && { label: vm.label })}
     >
-      <Text style={text}>{t("activities.restPreview", { time: elapsedClock(left) })}</Text>
-      {then !== null && (
+      <Text style={text}>{vm.text}</Text>
+      {vm.then !== null && (
         <Text style={[text, { fontFamily: fonts.mono, color: "rgba(255,255,255,0.7)" }]}>
-          {`· ${then}`}
+          {vm.then}
         </Text>
       )}
     </Strip>

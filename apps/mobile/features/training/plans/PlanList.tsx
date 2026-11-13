@@ -10,7 +10,7 @@ import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
 import { MiniWeek } from "../plan/MiniWeek";
 import { usePlanActions } from "../plan/usePlanActions";
-import { plannedIn } from "./planText";
+import { plannedIn } from "@sendtally/features/training";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 
 export type PlanListProps = { workoutId: string; name: string; kind: WorkoutKind };

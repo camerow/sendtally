@@ -6,7 +6,7 @@ import { elapsedClock } from "@sendtally/features/sessions";
 import { Button } from "../components/Button";
 import { IconButton } from "../components/IconButton";
 import { type } from "../type";
-import type { Rest } from "./restCountdown";
+import { restRowVM, type Rest } from "@sendtally/features/workouts";
 
 export type RestRowProps =
   | { rest: Rest; left: number; onMore: () => void; onSkip: () => void }
@@ -20,12 +20,12 @@ export type RestRowProps =
 export function RestRow(props: RestRowProps): React.ReactElement {
   if (props.rest === null) return <IdleRest seconds={props.seconds} onStart={props.onStart} />;
   const { rest, left, onMore, onSkip } = props;
-  const share = Math.min(1, left / rest.seconds);
+  const vm = restRowVM(rest, left);
   return (
     <View
-      accessibilityLabel={t("activities.restLeft", { time: elapsedClock(left) })}
+      accessibilityLabel={vm.label}
       style={{
-        minHeight: rest.next === null ? 48 : 64,
+        minHeight: vm.next === null ? 48 : 64,
         flexDirection: "row",
         alignItems: "center",
         gap: 4,
@@ -42,7 +42,7 @@ export function RestRow(props: RestRowProps): React.ReactElement {
           left: 0,
           top: 0,
           bottom: 0,
-          width: `${share * 100}%`,
+          width: `${vm.share * 100}%`,
           backgroundColor: colors.gold,
           opacity: 0.55,
         }}
@@ -58,12 +58,12 @@ export function RestRow(props: RestRowProps): React.ReactElement {
               { fontSize: rest.next === null ? 20 : 22, color: colors.gunmetal },
             ]}
           >
-            {elapsedClock(left)}
+            {vm.clock}
           </Text>
         </View>
-        {rest.next !== null && (
+        {vm.next !== null && (
           <Text style={[type.body, { fontSize: 12.5, color: colors.textSecondary }]}>
-            {t("activities.restNext", { name: rest.next })}
+            {vm.next}
           </Text>
         )}
       </View>
