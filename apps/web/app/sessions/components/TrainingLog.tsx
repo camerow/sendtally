@@ -1,9 +1,8 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
 import {
-  logItemWorkout,
-  logScopeItems,
-  logWorkoutItems,
+  logWorkoutName,
+  trainingLogItems,
   type LogItem,
   type LogScope,
 } from "@sendtally/features/journal";
@@ -56,17 +55,11 @@ export function TrainingLog({
 }): React.ReactElement {
   const [scope, setScope] = React.useState<LogScope>("all");
   const [filtersOpen, setFiltersOpen] = React.useState(false);
-  const inScope = React.useMemo(() => {
-    const scoped = logScopeItems(items, scope);
-    return workout === null ? scoped : logWorkoutItems(scoped, workout);
-  }, [items, scope, workout]);
-  const workoutName = React.useMemo(
-    () =>
-      workout === null
-        ? null
-        : (items.map(logItemWorkout).find((w) => w?.key === workout)?.name ?? null),
-    [items, workout]
+  const inScope = React.useMemo(
+    () => trainingLogItems(items, scope, workout),
+    [items, scope, workout]
   );
+  const workoutName = React.useMemo(() => logWorkoutName(items, workout), [items, workout]);
   const years = React.useMemo(() => logYearGroups(inScope), [inScope]);
   const keys = React.useMemo(() => years.flatMap((y) => y.months.map((m) => m.key)), [years]);
   const current = useCurrentSection(keys);
