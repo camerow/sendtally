@@ -4,10 +4,10 @@ import { measureLabel, tallyMeasureOf, type ExerciseForm } from "@sendtally/feat
 import { t } from "@sendtally/features/i18n";
 import { newDoseFor } from "@sendtally/features/workouts";
 import { chipStyle } from "../../components/chip";
+import { SwitchField } from "../../components/Switch";
 import { Icon } from "../../components/Icon";
 import { useHangData } from "../data/HangDataContext";
 import { ItemEditor } from "./ItemEditor";
-import { Toggle } from "./Toggle";
 
 export type ExerciseFieldsProps = {
   form: ExerciseForm;
@@ -90,7 +90,7 @@ export function ExerciseFields({
         </div>
       </div>
       {!fingers && !climbing && (
-        <Toggle
+        <SwitchField
           label={t("workouts.eachSide")}
           hint={t("workouts.eachSideHint")}
           checked={form.eachSide}

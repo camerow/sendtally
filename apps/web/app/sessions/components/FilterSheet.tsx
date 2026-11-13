@@ -1,7 +1,7 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
 import {
-  TRAINING_LOG_SCOPES,
+  LOG_SCOPES,
   logScopeItems,
   logScopeLabel,
   type LogItem,
@@ -49,7 +49,7 @@ export function FilterSheet({
         </button>
       </div>
       <div className="grade-presets">
-        {TRAINING_LOG_SCOPES.map((value) => (
+        {LOG_SCOPES.map((value) => (
           <FilterChip
             key={value}
             label={logScopeLabel(value)}

@@ -62,6 +62,15 @@ export const occurrenceLink = (o: Occurrence): PlanLink => ({
   focus: focusOf(o.workout),
 });
 
+/** What the plan prescribes for one run: its plan link, its session, and the items to do. */
+export const plannedItems = (
+  o: Occurrence
+): { link: PlanLink; session: number; items: Occurrence["items"] } => ({
+  link: occurrenceLink(o),
+  items: o.items,
+  session: o.session,
+});
+
 export const blockOfMembership = (plan: Plan, m: Pick<Membership, "blockId">): Block | null =>
   m.blockId === null ? null : (plan.blocks.find((b) => b.id === m.blockId) ?? null);
 

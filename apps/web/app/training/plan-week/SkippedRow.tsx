@@ -17,7 +17,7 @@ export function SkippedRow({
   const reason = o.change?.reason ?? null;
   const note = o.change?.note ?? null;
   return (
-    <div className="plan-row plan-row--skipped">
+    <div className="plan-row plan-row--day plan-row--skipped">
       <DayMark kind={workout.kind} filled={false} missed />
       <span className="plan-row-text">
         <span className="plan-label-small plan-label--muted">

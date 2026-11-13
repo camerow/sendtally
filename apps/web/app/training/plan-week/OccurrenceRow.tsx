@@ -31,7 +31,7 @@ export function OccurrenceRow({
   const missed = o.status === "missed";
   const meta = occurrenceMeta(o, model.settings.units);
   return (
-    <div className="plan-row">
+    <div className="plan-row plan-row--day">
       {missed ? (
         <KindCircle kind={workout.kind} badge="missed" />
       ) : (
