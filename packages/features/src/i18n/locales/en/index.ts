@@ -26,6 +26,7 @@ import { summary } from "./summary";
 import { trends } from "./trends";
 import { training } from "./training";
 import { workouts } from "./workouts";
+import { builtInNames } from "../../builtIns";
 
 export const en = {
   ...account,
@@ -56,4 +57,5 @@ export const en = {
   ...trends,
   ...training,
   ...workouts,
+  ...builtInNames,
 } as const;

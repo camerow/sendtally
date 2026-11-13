@@ -15,22 +15,16 @@ export const hang = {
   "hang.summaryPull": "{reps} lifts × {sets} sets · {setRest} between sets",
   "hang.summaryTimedPull": "{on} pull",
 
-  "hang.workout.rep73.name": "Repeaters 7:3",
   "hang.workout.rep73.blurb":
     "Strength-endurance classic. Six hangs a set with short rests, so the forearms never fully recover.",
-  "hang.workout.max10.name": "Max hangs",
   "hang.workout.max10.blurb":
     "Near-maximal load, very little volume, long rests. The staple for raw finger strength.",
-  "hang.workout.block.name": "Block pulls",
   "hang.workout.block.blurb":
     "Lift a loaded block off the floor. Heavy pinch work without a board, and easy to load precisely.",
-  "hang.workout.density.name": "Density hangs",
   "hang.workout.density.blurb":
     "Long, easy hangs at low intensity. Good tendon stimulus that you can do often.",
-  "hang.workout.assist.name": "Assisted one-arm",
   "hang.workout.assist.blurb":
     "Weight removed with a pulley. Alternate arms each set and remove less over time.",
-  "hang.workout.lowpull.name": "Light daily lifts",
   "hang.workout.lowpull.blurb":
     "Many light lifts, most days of the week. Blood flow for tendons, not a hard workout.",
   "hang.untitledWorkout": "Untitled workout",
