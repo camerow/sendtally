@@ -42,14 +42,6 @@
   text-transform: uppercase;
 }
 
-.climbing-hero-kind .category-mark {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-}
-
 .climbing-hero-place {
   font-weight: 600;
   font-size: 16px;
