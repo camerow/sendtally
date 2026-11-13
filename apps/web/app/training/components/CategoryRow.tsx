@@ -10,7 +10,8 @@ export type CategoryRowProps = {
   name: string;
   /** What follows the category on the second line, such as "3 × 8"; faded when nothing is done yet. */
   meta: string | null;
-  to: string;
+  /** Where the row opens; none when it sits inside a row that opens something else. */
+  to?: string;
   faded?: boolean;
   /** Off where the list already names the category. */
   showKind?: boolean;
@@ -29,8 +30,8 @@ export function CategoryRow({
   showMark = true,
 }: CategoryRowProps): React.ReactElement {
   const rest = meta === null || meta === "" ? null : meta;
-  return (
-    <Link to={to} className="category-row">
+  const body = (
+    <>
       {showMark && <CategoryMark kind={kind} />}
       <span className="category-row-text">
         <span className="category-row-name">{name}</span>
@@ -45,6 +46,13 @@ export function CategoryRow({
           {showKind ? (rest === null ? null : ` · ${rest}`) : rest}
         </span>
       </span>
+    </>
+  );
+  return to === undefined ? (
+    <span className="category-row category-row--plain">{body}</span>
+  ) : (
+    <Link to={to} className="category-row">
+      {body}
     </Link>
   );
 }
