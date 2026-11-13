@@ -49,4 +49,3 @@ function localDate(text: string, timeZone: string): string | undefined {
     day: "2-digit",
   }).format(new Date(t));
 }
-

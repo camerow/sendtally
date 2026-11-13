@@ -1,7 +1,7 @@
 # Importing and exporting climbing history as CSV
 
 Sendtally imports a climbing history from a CSV file and exports everything a user has logged as one.
-The importer accepts two formats: a Kaya export as Kaya produces it, and the Sendtally CSV format below.
+The importer accepts the Sendtally CSV format below and the exports of other climbing logs as those services produce them, each described in its own section.
 The export is written in the Sendtally format, so an export re-imports as is.
 
 Import lives at `/app/import` on the web and export is a download from Settings.
@@ -64,6 +64,26 @@ A date-only log sits at local midnight expressed in UTC, so:
 - A row with no `attempts` imports as one try.
 - `grade` holds lower-case V grades (`v4`) for boulders and YDS for routes in the same column; the text decides which.
 - `stiffness`, `rating`, `color`, `location` and `country` are not imported.
+
+## Exports from other climbing logs
+
+Each service's export is recognised by its header, and its columns are read by name, never by position.
+Only a file the user exported reaches Sendtally; nothing fetches from these services.
+A header that does not match, for example after a service changes its export, falls back to the Sendtally format check and then the conversion prompt.
+Grades are read as written, as in the Sendtally format, and a grade that cannot be read is reported for its row while the rest of the file imports.
+Unless a section says otherwise, rows on the same date form one outdoor session, named after the area all of its climbs share and left unnamed when they share none.
+
+## 8a.nu exports
+
+An 8a.nu logbook export has the columns `route_boulder, name, location_name, sector_name, area_name, country_code, date, type, sub_type, rating, project, tries, repeats, difficulty, perceived_hardness, comment, height, recommended, sits`, with routes and boulders in one file.
+
+- A value that is blank or the literal `null` is blank.
+- The session date is the first ten characters of `date`; its time means nothing and no time zone applies.
+- `type` `os` imports as an onsight, `f` as a flash, `rp` as a redpoint, `tr` as a send with no style, and `go` as an attempt. Any other type is reported for its row.
+- `tries` is not a real count in 8a.nu exports, so every climb imports as one try.
+- `difficulty` is the grade. `route_boulder` settles a grade whose letter case says the other discipline, so a boulder `6c` is Font `6C` and a route `7A` is French `7a`.
+- `area_name` names the session. `comment` becomes the climb note.
+- `location_name`, `sector_name`, `country_code`, `sub_type`, `rating`, `project`, `repeats`, `perceived_hardness`, `height`, `recommended` and `sits` are not imported.
 
 ## What happens on import
 

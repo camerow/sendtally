@@ -5,7 +5,7 @@ export const importCsv = {
   "import.stepDone": "3 Terminé",
   "import.dropLabel": "Dépose un CSV ici, ou choisis un fichier",
   "import.dropHint":
-    "Les exports Kaya sont reconnus automatiquement. Tout le reste utilise le format CSV Sendtally ci-dessous. Rien n'est enregistré avant ta confirmation à l'étape suivante.",
+    "Les exports de {services} sont reconnus automatiquement. Tout le reste utilise le format CSV Sendtally ci-dessous. Rien n'est enregistré avant ta confirmation à l'étape suivante.",
   "import.formatLabel": "Format CSV Sendtally",
   "import.downloadTemplate": "Télécharger le modèle",
   "import.formatBody":
@@ -31,11 +31,10 @@ export const importCsv = {
   "import.convertTitle": "Convertir un tableur avec un assistant IA",
   "import.convertHelp":
     "Colle ceci dans Claude ou ChatGPT avec ton tableur (exporte-le d'abord en CSV). Vérifie une ou deux séances dans le résultat, puis importe le fichier obtenu.",
-  "import.kayaSkip":
-    "Utilisateurs de Kaya, passez cette étape : importez l'export des réglages de profil Kaya tel quel.",
+  "import.exportSkip": "Un export de {services} ? Passe cette étape et importe l'export tel quel.",
   "import.reviewTitle": "Vérifier avant d'importer",
   "import.chooseAnother": "Choisir un autre fichier",
-  "import.formatKaya": "Export Kaya",
+  "import.formatExport": "Export {service}",
   "import.formatSendtally": "Format Sendtally",
   "import.statSessions": "séances",
   "import.statClimbs": "voies",
@@ -49,7 +48,7 @@ export const importCsv = {
   "import.skippedBody":
     "Tout le reste s'importe comme indiqué ci-dessous. Corrige le fichier et choisis-le à nouveau, ou continue sans ces lignes.",
   "import.nothingFound":
-    "Ce fichier n'est ni un export Kaya ni au format CSV Sendtally. Convertis-le avec le prompt ci-dessous, puis choisis le fichier converti.",
+    "Ce fichier n'est ni un export que Sendtally reconnaît ni au format CSV Sendtally. Convertis-le avec le prompt ci-dessous, puis choisis le fichier converti.",
   "import.issueNoHeader": "La première ligne n'est pas un en-tête que Sendtally reconnaît.",
   "import.issueMissingDate": "Pas de date, et pas de séance au-dessus à continuer.",
   "import.issueBadDate": "« {value} » n'est pas une date au format AAAA-MM-JJ.",

@@ -29,7 +29,7 @@ export const settings = {
   "settings.embeddedBundle": "Eingebettet",
   "settings.yourData": "Deine Daten",
   "settings.yourDataBody":
-    "Hol eine Kletterhistorie aus einer Tabelle oder einem Kaya-Export herein, oder nimm alles mit, was du hier eingetragen hast.",
+    "Hol eine Kletterhistorie aus einer Tabelle oder dem Export einer anderen Kletter-App herein, oder nimm alles mit, was du hier eingetragen hast.",
   "settings.importCsv": "CSV importieren",
   "settings.exportCsv": "CSV exportieren",
   "settings.exportBodyMobile":

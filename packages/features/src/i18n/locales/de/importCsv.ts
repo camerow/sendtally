@@ -5,7 +5,7 @@ export const importCsv = {
   "import.stepDone": "3 Fertig",
   "import.dropLabel": "CSV hier ablegen oder eine Datei wählen",
   "import.dropHint":
-    "Kaya-Exporte werden automatisch erkannt. Alles andere nutzt das Sendtally-CSV-Format unten. Gespeichert wird erst, wenn du im nächsten Schritt bestätigst.",
+    "Exporte aus {services} werden automatisch erkannt. Alles andere nutzt das Sendtally-CSV-Format unten. Gespeichert wird erst, wenn du im nächsten Schritt bestätigst.",
   "import.formatLabel": "Sendtally-CSV-Format",
   "import.downloadTemplate": "Vorlage herunterladen",
   "import.formatBody":
@@ -31,11 +31,11 @@ export const importCsv = {
   "import.convertTitle": "Tabelle mit einem KI-Assistenten umwandeln",
   "import.convertHelp":
     "Füge das zusammen mit deiner Tabelle (vorher als CSV exportieren) in Claude oder ChatGPT ein. Prüfe ein, zwei Sessions im Ergebnis und importiere dann die Datei, die du bekommst.",
-  "import.kayaSkip":
-    "Kaya-Nutzer überspringen das: Lade den Export aus den Kaya-Profileinstellungen so hoch, wie er ist.",
+  "import.exportSkip":
+    "Export aus {services}? Überspring das und lade den Export so hoch, wie er ist.",
   "import.reviewTitle": "Vor dem Import prüfen",
   "import.chooseAnother": "Andere Datei wählen",
-  "import.formatKaya": "Kaya-Export",
+  "import.formatExport": "{service}-Export",
   "import.formatSendtally": "Sendtally-Format",
   "import.statSessions": "Sessions",
   "import.statClimbs": "Klettereien",
@@ -49,7 +49,7 @@ export const importCsv = {
   "import.skippedBody":
     "Alles andere wird wie unten gezeigt importiert. Korrigiere die Datei und wähle sie erneut, oder fahre ohne diese Zeilen fort.",
   "import.nothingFound":
-    "Diese Datei ist weder ein Kaya-Export noch im Sendtally-CSV-Format. Wandle sie mit dem Prompt unten um und wähle dann die umgewandelte Datei.",
+    "Diese Datei ist weder ein Export, den Sendtally erkennt, noch im Sendtally-CSV-Format. Wandle sie mit dem Prompt unten um und wähle dann die umgewandelte Datei.",
   "import.issueNoHeader": "Die erste Zeile ist keine Kopfzeile, die Sendtally erkennt.",
   "import.issueMissingDate": "Kein Datum und keine Session darüber, die fortgesetzt werden könnte.",
   "import.issueBadDate": "„{value}“ ist kein Datum im Format JJJJ-MM-TT.",

@@ -1,4 +1,5 @@
 import React from "react";
+import { IMPORT_SERVICES } from "@sendtally/core/import";
 import { t } from "@sendtally/features/i18n";
 import { monoMuted } from "../../settings/components/styles";
 
@@ -58,7 +59,7 @@ export function DropZone({ onFile }: { onFile: (file: File) => void }): React.Re
         style={{ fontSize: 12, color: "rgba(64,63,76,0.6)" }}
       />
       <span style={{ ...monoMuted, textAlign: "center", maxWidth: 480 }}>
-        {t("import.dropHint")}
+        {t("import.dropHint", { services: Object.values(IMPORT_SERVICES).join(", ") })}
       </span>
     </div>
   );

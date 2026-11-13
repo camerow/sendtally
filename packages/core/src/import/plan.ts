@@ -1,9 +1,9 @@
 import { disciplineOf, parseGrade, type Grade } from "../grades";
 import { parseCsv } from "./csv";
+import { eightARecords } from "./eightA";
 import { kayaRecords } from "./kaya";
 import { normaliseHeader, recordsOf, SENDTALLY_COLUMNS, type Column, type Record } from "./records";
 import type { ImportClimb, ImportFormat, ImportIssue, ImportPlan, ImportSession } from "./types";
-
 
 // The scale is read from how the grade is written: V4, 6A+ (Font, upper
 // case), 5.11b (YDS), 7a (French, lower case). VB is V0. A trailing + or - that
@@ -32,11 +32,21 @@ function gradeAsWritten(s: string): Grade | undefined {
   return parseGrade(scale, s);
 }
 
-const KAYA_HEADERS = ["date", "ascent_type", "grade", "climb_name"];
+// The service each export format comes from, a proper noun in every locale.
+export const IMPORT_SERVICES: { [F in Exclude<ImportFormat, "sendtally">]: string } = {
+  kaya: "Kaya",
+  "8a": "8a.nu",
+};
+
+const HEADERS: [Exclude<ImportFormat, "sendtally">, string[]][] = [
+  ["kaya", ["date", "ascent_type", "grade", "climb_name"]],
+  ["8a", ["route_boulder", "date", "type", "difficulty"]],
+];
 
 export function detectFormat(header: string[]): ImportFormat | null {
   const names = header.map(normaliseHeader);
-  if (KAYA_HEADERS.every((h) => names.includes(h))) return "kaya";
+  const found = HEADERS.find(([, columns]) => columns.every((h) => names.includes(h)));
+  if (found !== undefined) return found[0];
   if (names.includes("date") && names.includes("grade")) return "sendtally";
   return null;
 }
@@ -49,7 +59,7 @@ export function planImport(text: string, timeZone: string): ImportPlan {
     return { format: "sendtally", sessions: [], issues: [{ row: 1, code: "noHeader" }] };
   }
   const records = RECORDS[format](header, rows.slice(1), timeZone);
-  const { sessions, issues } = groupSessions(records);
+  const { sessions, issues } = groupSessions(records, format === "sendtally");
   // Not one usable row means the file is some other layout, not a file of
   // mistakes, and one message says so better than a row-by-row list.
   if (sessions.length === 0) {
@@ -65,21 +75,26 @@ function sendtallyRecords(header: string[], rows: string[][]): Record[] {
 
 const RECORDS: {
   [F in ImportFormat]: (header: string[], rows: string[][], timeZone: string) => Record[];
-} = { kaya: kayaRecords, sendtally: sendtallyRecords };
+} = { kaya: kayaRecords, "8a": eightARecords, sendtally: sendtallyRecords };
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-// Rows carry their session's columns on the first row only; a blank date
-// continues the session above. The session's fields are the first value seen.
-function groupSessions(records: Record[]): { sessions: ImportSession[]; issues: ImportIssue[] } {
+// Rows carry their session's columns on the first row only; in our own format
+// a blank date continues the session above. The session's fields are the first
+// value seen.
+function groupSessions(
+  records: Record[],
+  fillDown: boolean
+): { sessions: ImportSession[]; issues: ImportIssue[] } {
   const issues: ImportIssue[] = [];
   const sessions = new Map<string, ImportSession>();
   let current: ImportSession | undefined;
   for (const r of records) {
     // A note from a climb's page, which an export writes with no session.
     if (r.kind?.toLowerCase() === "note") continue;
-    const continues = r.date === undefined && r.session === undefined && current !== undefined;
+    const continues =
+      fillDown && r.date === undefined && r.session === undefined && current !== undefined;
     const date = continues ? current!.date : r.date;
     if (date === undefined) {
       issues.push({ row: r.row, code: "missingDate" });
