@@ -2,12 +2,9 @@ import React from "react";
 
 export type IconName =
   | "today"
-  | "check"
-  | "climb"
   | "hang"
   | "back"
   | "forward"
-  | "search"
   | "sessions"
   | "projects"
   | "insights"
@@ -36,15 +33,6 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   today: (
     <path d="M5 6.5h14a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1zM4 10.5h16M8.5 4v4M15.5 4v4" />
   ),
-  check: <path d="M5 12.5l4.5 4.5L19 7" />,
-  climb: (
-    <>
-      <path d="M7 17 17 7" />
-      <circle cx={7} cy={17} r={2.2} />
-      <circle cx={12} cy={12} r={2.2} />
-      <circle cx={17} cy={7} r={2.2} />
-    </>
-  ),
   hang: (
     <>
       <path d="M4 5h16M8 5v4M12 5v6M16 5v8" />
@@ -55,7 +43,6 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   ),
   back: <path d="M15 5l-7 7 7 7" />,
   forward: <path d="M9 5l7 7-7 7" />,
-  search: <path d="M11 5a6 6 0 1 1 0 12 6 6 0 0 1 0-12zM20 20l-4.5-4.5" />,
   sessions: (
     <>
       <rect x="3.5" y="5" width="17" height="6" rx="2" />
