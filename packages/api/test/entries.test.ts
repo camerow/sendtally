@@ -349,6 +349,19 @@ describe("linking sessions", () => {
     expect(session.entries.map((e) => e.id)).toEqual([trip.id]);
   });
 
+  it("links a trip to as many sessions as it allows", async () => {
+    const fingerprints = Array.from({ length: 50 }, (_, i) => `fp_long_${i}`);
+    for (const fingerprint of fingerprints) await seed("u_link_long", fingerprint);
+    const trip = await created("u_link_long", {
+      kind: "trip",
+      occurred_at: "2026-05-01",
+      ends_at: "2026-05-31",
+      body: "A month in Fontainebleau.",
+      fingerprints,
+    });
+    expect(trip.fingerprints).toHaveLength(50);
+  });
+
   it("ignores a session the user does not own", async () => {
     await seed("u_link_mine", "fp_mine");
     await seed("u_link_theirs", "fp_theirs");

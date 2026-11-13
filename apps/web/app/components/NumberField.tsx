@@ -18,8 +18,10 @@ export type NumberFieldMode = ({ kind: "time" } & TimeLimits) | ({ kind: "number
 export type NumberFieldProps = {
   /** Above the box, or only to a screen reader when `compact`. */
   label: string;
-  /** Seconds in time mode. */
-  value: number;
+  /** Seconds in time mode; null for no value yet, which shows the placeholder. */
+  value: number | null;
+  /** What an empty box shows; a dash by default. */
+  placeholder?: string;
   /** Called on blur, Enter or an arrow step, only when the value changed. */
   onChange: (value: number) => void;
   mode: NumberFieldMode;
@@ -61,9 +63,11 @@ export function NumberField({
   unit,
   compact = false,
   short = false,
+  placeholder = "–",
 }: NumberFieldProps): React.ReactElement {
   const id = React.useId();
   const [draft, setDraft] = React.useState<string | null>(null);
+  const text = value === null ? "" : shown(mode, value);
 
   const commit = (next: number | null): void => {
     setDraft(null);
@@ -81,8 +85,9 @@ export function NumberField({
           className="number-field-input"
           inputMode="decimal"
           autoComplete="off"
-          size={compact ? Math.max(2, shown(mode, value).length) : undefined}
-          value={draft ?? shown(mode, value)}
+          placeholder={placeholder}
+          size={compact ? Math.max(2, (text === "" ? placeholder : text).length) : undefined}
+          value={draft ?? text}
           onFocus={(e) => e.currentTarget.select()}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={() => commit(draft === null ? null : typed(mode, draft))}
@@ -92,7 +97,7 @@ export function NumberField({
               focusNext(e.currentTarget);
             } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
               e.preventDefault();
-              const from = draft === null ? value : (typed(mode, draft) ?? value);
+              const from = (draft === null ? null : typed(mode, draft)) ?? value ?? 0;
               commit(stepped(mode, from, e.key === "ArrowUp" ? "plus" : "minus"));
             }
           }}

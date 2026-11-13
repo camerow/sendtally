@@ -1,28 +1,15 @@
 import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
-import type { WorkoutKind } from "@sendtally/core/hang";
-import { setText, useWeightUnit } from "@sendtally/features/activities";
-import { categoryShelves, exerciseLabel } from "@sendtally/features/exercises";
-import { gripMeta } from "@sendtally/features/hang";
-import { t } from "@sendtally/features/i18n";
-import {
-  exerciseKey,
-  exerciseSummary,
-  isGradeMetric,
-  useExerciseSeries,
-  useExercises,
-  workoutsUsing,
-} from "@sendtally/features/statistics";
-import { doseSummary } from "@sendtally/features/workouts";
+import { useWeightUnit } from "@sendtally/features/activities";
+import { exerciseShelves } from "@sendtally/features/exercises";
+import { useExerciseSeries, useExercises } from "@sendtally/features/statistics";
 import { useApi } from "../../../lib/api";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
-import { metricText } from "@sendtally/features/exercises";
 import { openExerciseEditor } from "../exercises/openExerciseEditor";
 import { useLibrary } from "../library/useLibrary";
 import { ExerciseShelf } from "./ExerciseShelf";
-import type { ShelfCard } from "./types";
 
 /**
  * Train > Exercises: every category, each exercise with its best result or its last dose.
@@ -39,55 +26,28 @@ export function ExerciseShelves(): React.ReactElement {
   if (exercises.state.status !== "ready")
     return <LoadState state={exercises.state} onRetry={() => void exercises.reload()} />;
 
-  const workouts = library.status === "ready" ? library.data.workouts : [];
-  const logged = series.status === "ready" ? series.data : [];
-  const metaOf = (name: string, kind: WorkoutKind): string | null => {
-    const s = logged.find((x) => x.key === exerciseKey(name));
-    const best = s === undefined ? null : exerciseSummary(s, today)?.best;
-    if (kind === "climbing") {
-      if (s === undefined || best === undefined || best === null) return null;
-      const reads = isGradeMetric(s.metric)
-        ? t("workouts.exerciseBest", { value: metricText(best.value, s.metric, unit, s.grades) })
-        : t("common.climbs");
-      return `${reads} · ${t("statistics.timesCount", { count: s.sessions.length })}`;
-    }
-    if (best !== undefined && best !== null)
-      return t("workouts.exerciseBest", { value: setText(best.best, unit) });
-    const using = workoutsUsing(workouts, name)[0];
-    const dose = using?.items.find((i) => exerciseKey(i.exercise) === exerciseKey(name))?.doses[0];
-    return using === undefined || dose === undefined
-      ? null
-      : t("workouts.exerciseLast", { value: doseSummary(using.kind, dose, unit) });
-  };
-
-  const notDone = (meta: string): string | null =>
-    meta === t("workouts.notDoneYet") ? null : meta;
-  const grips = model.grips
-    .filter((g) => !g.hidden)
-    .map((g): ShelfCard => ({
-      key: g.id,
-      kind: "hangboard",
-      name: g.name,
-      meta: notDone(gripMeta(model.sessions, g.id, today, model.settings.units)),
-      open: () => router.push({ pathname: "/grip/[id]", params: { id: g.id } }),
-    }));
-  const mine = exercises.state.data
-    .filter((e) => !e.archived)
-    .map((e): ShelfCard => ({
-      key: e.id,
-      kind: e.kind,
-      name: exerciseLabel(e),
-      meta: metaOf(e.name, e.kind),
-      open: () => router.push({ pathname: "/exercise/[id]", params: { id: e.id } }),
-    }));
-
+  const shelves = exerciseShelves({
+    exercises: exercises.state.data,
+    grips: model.grips,
+    sessions: model.sessions,
+    series: series.status === "ready" ? series.data : [],
+    workouts: library.status === "ready" ? library.data.workouts : [],
+    today,
+    unit,
+  });
   return (
     <View style={{ gap: 20 }}>
-      {categoryShelves([...grips, ...mine]).map((s) => (
+      {shelves.map((s) => (
         <ExerciseShelf
           key={s.kind}
           kind={s.kind}
-          cards={s.entries}
+          cards={s.entries.map((c) => ({
+            ...c,
+            open: () =>
+              "grip" in c.opens
+                ? router.push({ pathname: "/grip/[id]", params: { id: c.opens.grip } })
+                : router.push({ pathname: "/exercise/[id]", params: { id: c.opens.exercise } }),
+          }))}
           onAdd={() => openExerciseEditor(s.kind)}
           onSeeAll={() => router.push({ pathname: "/exercise/category", params: { kind: s.kind } })}
         />
