@@ -22,10 +22,10 @@ export default [
     route("sessions/live", "routes/app.sessions.live.tsx"),
     route("sessions/:fingerprint", "routes/app.sessions.$fingerprint.tsx"),
     route("sessions/:fingerprint/edit", "routes/app.sessions.$fingerprint.edit.tsx"),
-    route("plan", "routes/app.plan.tsx"),
-    route("plan/schedule/:workoutId", "routes/app.plan.schedule.$workoutId.tsx"),
     route("train", "routes/app.train.tsx"),
     layout("routes/app.training.tsx", [
+      route("plan", "routes/app.plan.tsx"),
+      route("plan/schedule/:workoutId", "routes/app.plan.schedule.$workoutId.tsx"),
       route("train/:focus", "routes/app.train.$focus.tsx"),
       route("train/workouts/new", "routes/app.train.workouts.new.tsx"),
       route("train/workouts/:id", "routes/app.train.workouts.$id.tsx"),

@@ -2,7 +2,6 @@ import React from "react";
 import type { LinksFunction } from "react-router";
 import pageActionStyles from "../components/page-action.css?url";
 import sessionsStyles from "../sessions/sessions.css?url";
-import { HangDataProvider } from "../training/data/HangDataProvider";
 import planStyles from "../training/plan-week/plan.css?url";
 import { PlanPage } from "../training/plan-week/PlanPage";
 import trainingStyles from "../training/training.css?url";
@@ -15,9 +14,5 @@ export const links: LinksFunction = () => [
 ];
 
 export default function PlanRoute(): React.ReactElement {
-  return (
-    <HangDataProvider>
-      <PlanPage />
-    </HangDataProvider>
-  );
+  return <PlanPage />;
 }
