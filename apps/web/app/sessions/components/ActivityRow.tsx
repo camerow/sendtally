@@ -4,6 +4,7 @@ import { activityPath } from "../../training/log/paths";
 import type { Activity } from "@sendtally/api-client";
 import { activityAt, activityEffortLabel, activityMetaLabel } from "@sendtally/features/activities";
 import { sessionDay } from "@sendtally/features/sessions";
+import { Icon } from "../../components/Icon";
 import { DayColumn } from "./DayColumn";
 import { rowClass } from "./rowClass";
 
@@ -28,7 +29,7 @@ export function ActivityRow({
       aria-label={[activity.title, `${weekday} ${day}`, meta, blockTag ?? null, effort]
         .filter((part) => part !== null)
         .join(", ")}
-      className={rowClass(inset, divider, false)}
+      className={rowClass(inset, divider, true)}
     >
       <DayColumn weekday={weekday} day={day} />
       <span className="log-row-main">
@@ -39,6 +40,9 @@ export function ActivityRow({
         {blockTag !== undefined && <span className="log-row-meta">{blockTag}</span>}
       </span>
       {effort !== null && <span className="log-row-effort">{effort}</span>}
+      <span className="log-row-chevron">
+        <Icon name="chevron" size={12} strokeWidth={2} />
+      </span>
     </Link>
   );
 }

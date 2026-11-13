@@ -11,7 +11,8 @@ export type LogEmptyProps = {
   count: string;
   examples: readonly ExampleRowData[];
   title: string;
-  primary: { label: string; onPress: () => void };
+  /** The common way to start; none until it can be started here. */
+  primary?: { label: string; onPress: () => void };
   actions: readonly LogEmptyAction[];
 };
 
@@ -43,10 +44,12 @@ export function LogEmpty({
       </div>
       <div className="log-empty-start">
         <h2 className="log-empty-title">{title}</h2>
-        <button type="button" className="log-empty-primary" onClick={primary.onPress}>
-          <Icon name="plus" size={17} strokeWidth={3} />
-          {primary.label}
-        </button>
+        {primary !== undefined && (
+          <button type="button" className="log-empty-primary" onClick={primary.onPress}>
+            <Icon name="plus" size={17} strokeWidth={3} />
+            {primary.label}
+          </button>
+        )}
         <div className="log-empty-actions">
           {actions.map(({ key, ...action }) => (
             <MenuRow key={key} {...action} />

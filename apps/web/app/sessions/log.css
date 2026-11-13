@@ -522,3 +522,156 @@
     padding: 0 18px;
   }
 }
+
+.log-segments {
+  margin-bottom: 14px;
+}
+
+.scope-bar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bs-white);
+  border-bottom: 1px solid var(--line-on-light-soft);
+}
+
+.scope-strip {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.scope-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.scope-chip {
+  flex: none;
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid var(--line-on-light-strong);
+  border-radius: 15px;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(64, 63, 76, 0.65);
+  cursor: pointer;
+}
+
+.scope-chip--year {
+  border-color: var(--bs-gunmetal);
+  font-weight: 600;
+  color: var(--bs-gunmetal);
+}
+
+.scope-chip[aria-pressed="true"] {
+  border-color: var(--bs-gold);
+  background: var(--bs-gold);
+  color: var(--bs-gunmetal);
+}
+
+.scope-filter {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-on-light-strong);
+  border-radius: 18px;
+  background: var(--bs-white);
+  color: var(--bs-gunmetal);
+  cursor: pointer;
+}
+
+.scope-filter--on {
+  border-color: var(--bs-gold);
+  background: var(--bs-gold);
+}
+
+.training-log .log-section-header {
+  top: 46px;
+}
+
+.workout-filter {
+  display: flex;
+  padding: 8px 0;
+}
+
+.workout-filter-pill {
+  height: 30px;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px 0 11px;
+  border: none;
+  border-radius: 15px;
+  background: var(--bs-gold);
+  color: var(--bs-gunmetal);
+  cursor: pointer;
+}
+
+.workout-filter-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.training-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 44px 28px 0;
+  text-align: center;
+}
+
+.training-empty-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--bs-gunmetal);
+}
+
+.training-empty-body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--text-on-white-secondary);
+}
+
+.filter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.filter-clear {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bs-azure-ink);
+  cursor: pointer;
+}
