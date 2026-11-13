@@ -5,6 +5,7 @@
 
 export type Env = {
   DB: D1Database;
+  CONNECTOR_RATE_LIMITER: RateLimit;
   TOKEN_KEY: string;
   CLERK_SECRET_KEY: string;
   CLERK_PUBLISHABLE_KEY: string;

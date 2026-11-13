@@ -3,11 +3,10 @@ import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validatio
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { z } from "zod";
-import { auth } from "./auth";
-import type { Env } from "./bindings";
-import type { AppEnv } from "./context";
-import * as repo from "./lib/repo";
+import type { Context } from "hono";
+import { auth, type ConnectorUser } from "./auth";
+import { captureEvent, type AppEnv } from "./context";
+import { tools } from "./mcp/tools";
 
 const METADATA_PATH = "/.well-known/oauth-protected-resource/mcp";
 
@@ -15,34 +14,29 @@ const METADATA_PATH = "/.well-known/oauth-protected-resource/mcp";
 export const clerkIssuer = (publishableKey: string): string =>
   `https://${atob(publishableKey.split("_")[2] ?? "").slice(0, -1)}`;
 
-function serverFor(env: Env, userId: string): McpServer {
+const RATE_LIMITED = "Too many requests from this connector. Wait a minute, then try again.";
+
+function serverFor(c: Context<AppEnv>, user: ConnectorUser): McpServer {
   // The SDK's default validator compiles schemas with new Function, which Workers forbid.
   const server = new McpServer(
     { name: "sendtally", version: "1.0.0" },
     { jsonSchemaValidator: new CfWorkerJsonSchemaValidator() }
   );
-  server.registerTool(
-    "list_sessions",
-    {
-      title: "List climbing sessions",
-      description:
-        "The user's logged climbing sessions, newest first, each with its date, title, effort (RPE 1-10) and top grades.",
-      inputSchema: { limit: z.number().int().min(1).max(100).default(20) },
-      annotations: { readOnlyHint: true },
-    },
-    async ({ limit }) => {
-      const rows = await repo.listSessions(env.DB, userId);
-      const sessions = rows.slice(0, limit).map((row) => ({
-        id: row.fingerprint,
-        startAt: row.start_at,
-        title: row.title,
-        rpe: row.rpe,
-        topGrade: row.top_grade_label,
-        topSendGrade: row.top_send_grade_label,
-      }));
-      return { content: [{ type: "text", text: JSON.stringify({ sessions }) }] };
-    }
-  );
+  const ctx = { env: c.env, userId: user.userId };
+  for (const { name, run, ...config } of tools) {
+    server.registerTool(name, config, async (args) => {
+      const { success } = await c.env.CONNECTOR_RATE_LIMITER.limit({ key: user.userId });
+      if (!success) return { isError: true, content: [{ type: "text", text: RATE_LIMITED }] };
+      await captureEvent(
+        c,
+        "connector_tool_called",
+        { tool: name, client: user.clientId },
+        user.userId
+      );
+      const result = await run(args, ctx);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    });
+  }
   return server;
 }
 
@@ -65,14 +59,14 @@ export const mcp = new Hono<AppEnv>()
     })
   )
   .all("/mcp", async (c) => {
-    const userId = await auth.verifyConnector(c.req.raw, c.env, new URL("/mcp", c.req.url).href);
-    if (userId === null) {
+    const user = await auth.verifyConnector(c.req.raw, c.env, new URL("/mcp", c.req.url).href);
+    if (user === null) {
       const metadata = new URL(METADATA_PATH, c.req.url).href;
       return c.json({ error: "unauthorized" }, 401, {
         "WWW-Authenticate": `Bearer resource_metadata="${metadata}"`,
       });
     }
     const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });
-    await serverFor(c.env, userId).connect(transport);
+    await serverFor(c, user).connect(transport);
     return transport.handleRequest(c.req.raw);
   });

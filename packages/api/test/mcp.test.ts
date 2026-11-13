@@ -1,8 +1,31 @@
 import { env } from "cloudflare:test";
-import { describe, expect, it } from "vitest";
-import { testApp } from "./harness";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Env } from "../src/bindings";
+import type * as harness from "./harness";
+import type * as posthog from "../src/lib/posthog";
 
-const rpc = async (method: string, params: unknown, user?: string): Promise<Response> =>
+const captureUserEvent = vi.hoisted(() => vi.fn(async () => undefined));
+vi.mock("../src/lib/posthog", async (importOriginal) => ({
+  ...(await importOriginal<typeof posthog>()),
+  captureUserEvent,
+}));
+
+// The pool loads the Worker's modules before this file's mock exists, so the app
+// is imported afresh for the mock to reach the capture helper.
+let testApp: typeof harness.testApp;
+beforeAll(async () => {
+  vi.resetModules();
+  ({ testApp } = await import("./harness"));
+});
+
+type ToolResult = { isError?: boolean; content: Array<{ text: string }> };
+
+const rpc = async (
+  method: string,
+  params: unknown,
+  user?: string,
+  bindings: Env = env
+): Promise<Response> =>
   testApp().request(
     "https://api.sendtally.test/mcp",
     {
@@ -14,10 +37,17 @@ const rpc = async (method: string, params: unknown, user?: string): Promise<Resp
       },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
     },
-    env
+    bindings
   );
 
+const callTool = async (user: string, bindings: Env = env): Promise<ToolResult> => {
+  const res = await rpc("tools/call", { name: "list_sessions", arguments: {} }, user, bindings);
+  return ((await res.json()) as { result: ToolResult }).result;
+};
+
 describe("connector", () => {
+  beforeEach(() => captureUserEvent.mockClear());
+
   it("sends an unsigned client to the Clerk instance that signs it in", async () => {
     const res = await rpc("tools/list", {});
     expect(res.status).toBe(401);
@@ -49,13 +79,46 @@ describe("connector", () => {
       },
       env
     );
-    const call = { name: "list_sessions", arguments: {} };
     const sessionsOf = async (user: string): Promise<unknown[]> => {
-      const res = await rpc("tools/call", call, user);
-      const body = (await res.json()) as { result: { content: Array<{ text: string }> } };
-      return (JSON.parse(body.result.content[0]?.text ?? "{}") as { sessions: unknown[] }).sessions;
+      const result = await callTool(user);
+      return (JSON.parse(result.content[0]?.text ?? "{}") as { sessions: unknown[] }).sessions;
     };
     expect(await sessionsOf("user_mcp")).toMatchObject([{ topGrade: "V4" }]);
     expect(await sessionsOf("user_other")).toEqual([]);
+  });
+
+  it("gives every tool the title and annotations the directories require", async () => {
+    const res = await rpc("tools/list", {}, "user_mcp");
+    const { tools } = ((await res.json()) as { result: { tools: unknown[] } }).result;
+    expect(tools.length).toBeGreaterThan(0);
+    for (const tool of tools) {
+      expect(tool).toMatchObject({
+        title: expect.any(String),
+        annotations: { readOnlyHint: expect.any(Boolean), destructiveHint: expect.any(Boolean) },
+      });
+    }
+  });
+
+  it("records each tool call against the user and the assistant that made it", async () => {
+    await callTool("user_mcp");
+    expect(captureUserEvent).toHaveBeenCalledWith(
+      expect.anything(),
+      "user_mcp",
+      "connector_tool_called",
+      { tool: "list_sessions", client: "test-client" }
+    );
+  });
+
+  it("turns away a user over the rate limit without running the tool", async () => {
+    const limited: Env = {
+      ...env,
+      CONNECTOR_RATE_LIMITER: { limit: async () => ({ success: false }) },
+    };
+    const result = await callTool("user_mcp", limited);
+    expect(result).toMatchObject({
+      isError: true,
+      content: [{ text: expect.stringMatching(/Wait a minute/) }],
+    });
+    expect(captureUserEvent).not.toHaveBeenCalled();
   });
 });

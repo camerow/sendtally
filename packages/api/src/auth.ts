@@ -25,19 +25,23 @@ export async function verifyClerkUser(req: Request, env: Env): Promise<AuthedUse
   }
 }
 
+export type ConnectorUser = { userId: string; clientId: string };
+
 // An assistant acting for a user through the connector. Its token is bound to the
 // connector's URL, so one Clerk issued for anything else is refused.
 export async function verifyConnectorUser(
   req: Request,
   env: Env,
   resource: string
-): Promise<string | null> {
+): Promise<ConnectorUser | null> {
   try {
     const state = await createClerkClient({
       secretKey: env.CLERK_SECRET_KEY,
       publishableKey: env.CLERK_PUBLISHABLE_KEY,
     }).authenticateRequest(req, { acceptsToken: "oauth_token", audience: resource });
-    return state.isAuthenticated ? state.toAuth().userId : null;
+    if (!state.isAuthenticated) return null;
+    const { userId, clientId } = state.toAuth();
+    return { userId, clientId };
   } catch (err) {
     console.error(`connector token rejected: ${err instanceof Error ? err.message : String(err)}`);
     return null;
