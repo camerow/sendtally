@@ -1,0 +1,45 @@
+appId: com.sendtally.app
+---
+- tapOn: "Plan(, tab.*)?"
+- waitForAnimationToEnd
+- startRecording: tour1
+- extendedWaitUntil: { visible: "zzz-never", timeout: 2500, optional: true }
+- tapOn: "Log(, tab.*)?"
+- extendedWaitUntil: { visible: "zzz-never", timeout: 1500, optional: true }
+- tapOn:
+    point: "85%,84%"
+- extendedWaitUntil: { visible: "zzz-never", timeout: 1000, optional: true }
+- tapOn: "Live session,.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: "Start.*"
+    optional: true
+- waitForAnimationToEnd
+- tapOn: "Boulder"
+- tapOn: "V3"
+- tapOn: "Sent"
+- tapOn: "V4"
+- tapOn: "Fell"
+- tapOn: "Sent"
+- tapOn: "V5"
+- tapOn: "Fell"
+- tapOn: "Sent"
+- tapOn: "V6"
+- tapOn: "Fell"
+- tapOn: "Finish"
+- waitForAnimationToEnd
+- tapOn:
+    point: "64%,72%"
+- tapOn: "Save"
+- extendedWaitUntil: { visible: "zzz-never", timeout: 2500, optional: true }
+- tapOn: "Train(, tab.*)?"
+- extendedWaitUntil: { visible: "zzz-never", timeout: 1200, optional: true }
+- tapOn: "Workouts"
+- extendedWaitUntil: { visible: "zzz-never", timeout: 1200, optional: true }
+- tapOn: "Max hangs.*"
+- extendedWaitUntil: { visible: "zzz-never", timeout: 1500, optional: true }
+- tapOn: ".*Start.*"
+- extendedWaitUntil: { visible: "zzz-never", timeout: 12000, optional: true }
+- tapOn: "End"
+- extendedWaitUntil: { visible: "zzz-never", timeout: 1500, optional: true }
+- stopRecording

@@ -1,0 +1,14 @@
+appId: com.sendtally.app
+---
+- startRecording: tour3
+- extendedWaitUntil: { visible: "zzz-never", timeout: 1000, optional: true }
+- tapOn: "Save"
+- extendedWaitUntil: { visible: "zzz-never", timeout: 2000, optional: true }
+- tapOn:
+    text: "BACK"
+    optional: true
+- tapOn: "Stats(, tab.*)?"
+- extendedWaitUntil: { visible: "zzz-never", timeout: 3000, optional: true }
+- tapOn: "Training"
+- extendedWaitUntil: { visible: "zzz-never", timeout: 3000, optional: true }
+- stopRecording
