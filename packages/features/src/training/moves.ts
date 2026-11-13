@@ -6,7 +6,11 @@ import {
   type CalendarDate,
   type PlanChange,
 } from "@sendtally/core/hang";
+import type { Plan } from "@sendtally/api-client";
+import { daysList } from "../hang/format";
+import { t } from "../i18n";
 import type { Occurrence } from "./plan";
+import { daysInWeek, scheduleOf } from "./weekDays";
 
 /** The day a run was planned on: where a move came from, else the day it is. */
 export const plannedOn = (o: Occurrence): CalendarDate => o.movedFrom ?? o.date;
@@ -47,3 +51,19 @@ export const moveOf = (o: Occurrence, to: CalendarDate): PlanChange => ({
   reason: null,
   note: null,
 });
+
+/**
+ * What a move leaves alone, said under the calendar: the days the plan keeps next week, or
+ * that the block's later weeks stay put. Nothing for a one-off, which has no next week.
+ */
+export function moveCopy(o: Occurrence, plan: Pick<Plan, "membershipDays">): string | null {
+  if (o.week === null)
+    return o.membership.weekdays.length === 0
+      ? null
+      : t("plan.moveCopy", { days: daysList(o.membership.weekdays) });
+  const next = daysInWeek(scheduleOf(plan, o.membership), o.week + 1);
+  const dated = o.block !== null && isDated(o.block) ? o.block : null;
+  return next.length === 0 || (dated !== null && o.week >= dated.weeks)
+    ? t("plan.moveCopyBlockOnly", { n: o.week })
+    : t("plan.moveCopyBlock", { next: o.week + 1, days: daysList(next), n: o.week });
+}

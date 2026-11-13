@@ -48,7 +48,7 @@ export {
   type ScheduleDraft,
   type ScheduleMode,
 } from "./schedule";
-export { canMoveTo, moveOf, moveWeek, plannedOn } from "./moves";
+export { canMoveTo, moveCopy, moveOf, moveWeek, plannedOn } from "./moves";
 export { usePlan } from "./usePlan";
 export { usePlanActions, type PlanActions } from "./usePlanActions";
 export {

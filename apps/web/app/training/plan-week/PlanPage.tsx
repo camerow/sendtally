@@ -60,14 +60,31 @@ export function PlanPage(): React.ReactElement {
   const week = trainingWeek(log, monday, today);
   const running = blockGroups(log.plan.blocks, today).current;
 
+  // The day to hold under the strip while the list fills in, until the user scrolls.
+  const page = React.useRef<HTMLDivElement>(null);
   React.useLayoutEffect(() => {
-    if (target.current === null) return;
-    scrollTo(target.current, false);
-    target.current = null;
+    const el = page.current;
+    if (el === null) return;
+    const hold = (): void => {
+      if (target.current !== null) scrollTo(target.current, false);
+    };
+    const release = (): void => {
+      target.current = null;
+    };
+    hold();
+    const observer = new ResizeObserver(hold);
+    observer.observe(el);
+    const events = ["wheel", "touchmove", "keydown"] as const;
+    events.forEach((e) => window.addEventListener(e, release, { passive: true }));
+    return () => {
+      observer.disconnect();
+      events.forEach((e) => window.removeEventListener(e, release));
+    };
   }, [offset, scrollTo]);
 
   const select = (date: CalendarDate): void => {
     setSelected(date);
+    target.current = null;
     scrollTo(date, true);
   };
   const changeWeek = (next: number): void => {
@@ -78,7 +95,7 @@ export function PlanPage(): React.ReactElement {
   };
 
   return (
-    <div className="plan">
+    <div className="plan" ref={page}>
       <div className="sessions-head">
         <span className="sessions-head-mark">
           <Logo variant="mark" size={22} />
