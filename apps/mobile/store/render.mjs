@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import puppeteer from "puppeteer-core";
 import sharp from "sharp";
+import { creativeBoards, set3Boards, writeSet3 } from "./set3.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const mobile = path.join(here, "..");
@@ -36,6 +37,14 @@ const septemberSet = [
   }))
 );
 
+// The v3 set: Plan, Log, Train and Stats. Captions and layout live in store/set3.mjs,
+// which writes these artboards.
+const v3Set = [...set3Boards, ...creativeBoards].map(({ platform, slug }) => ({
+  board: `${platform}-set3-${slug}`,
+  to: `store/out/${platform}-set3/${slug}.png`,
+  alpha: false,
+}));
+
 // `alpha: false` flattens the alpha channel away: App Store Connect rejects an
 // app icon that carries one, and the stores want opaque screenshots.
 const targets = [
@@ -58,7 +67,13 @@ const targets = [
   // corners. The review screenshot comes from the app: store/capture-review-shot.sh.
   { board: "iap-promo-1024", to: "store/out/ios/iap-promo-1024.png", alpha: false },
   ...septemberSet,
+  ...v3Set,
 ];
+
+// `node store/render.mjs set3` renders only the boards whose name contains the argument.
+const only = process.argv[2] ?? "";
+
+writeSet3();
 
 function chromePath() {
   const found = CHROME_CANDIDATES.find((candidate) => fs.existsSync(candidate));
@@ -83,7 +98,7 @@ const browser = await puppeteer.launch({
 const failures = [];
 
 try {
-  for (const { board, to, alpha } of targets) {
+  for (const { board, to, alpha } of targets.filter((t) => t.board.includes(only))) {
     const file = path.join(artboards, `${board}.html`);
     const size = boardSize(file);
     const out = path.join(mobile, to);

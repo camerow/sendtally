@@ -1,7 +1,7 @@
 # Importing and exporting climbing history as CSV
 
 Sendtally imports a climbing history from a CSV file and exports everything a user has logged as one.
-The importer accepts two formats: a Kaya export as Kaya produces it, and the Sendtally CSV format below.
+The importer accepts the Sendtally CSV format below and the exports of other climbing logs as those services produce them, each described in its own section.
 The export is written in the Sendtally format, so an export re-imports as is.
 
 Import lives at `/app/import` on the web and export is a download from Settings.
@@ -55,13 +55,76 @@ date,session,location,gym,start_time,end_time,rpe,tags,session_notes,climb,grade
 ## Kaya exports
 
 A Kaya export has the columns `date, stiffness, rating, ascent_type, attempts, grade, color, climb_name, gym, location, country` and is recognised by its header.
-It lists ascents only, one per row, with a UTC timestamp, so:
+It lists ascents only, one per row, oldest first, with the timestamp written as JavaScript's `Date.toString()` in UTC (`Fri Nov 05 2021 03:49:59 GMT+0000 (GMT+00:00)`).
+A date-only log sits at local midnight expressed in UTC, so:
 
 - The session date is the local date of the timestamp in the browser's time zone.
 - Ascents on the same local date form one session. A gym ascent names the session after the gym; outdoor sessions stay unnamed, because Kaya's `location` column holds the boulder or formation rather than the crag.
 - `Flash` and `Onsight` import as that style with one try. `Redpoint` imports with `attempts` tries. `Repeat` imports as a send with one try and no style.
 - A row with no `attempts` imports as one try.
+- `grade` holds lower-case V grades (`v4`) for boulders and YDS for routes in the same column; the text decides which.
 - `stiffness`, `rating`, `color`, `location` and `country` are not imported.
+
+## Exports from other climbing logs
+
+Each service's export is recognised by its header, and its columns are read by name, never by position.
+Only a file the user exported reaches Sendtally; nothing fetches from these services.
+A header that does not match, for example after a service changes its export, falls back to the Sendtally format check and then the conversion prompt.
+Grades are read as written, as in the Sendtally format, and a grade that cannot be read is reported for its row while the rest of the file imports.
+Unless a section says otherwise, rows on the same date form one outdoor session, named after the area all of its climbs share and left unnamed when they share none.
+
+## 8a.nu exports
+
+An 8a.nu logbook export has the columns `route_boulder, name, location_name, sector_name, area_name, country_code, date, type, sub_type, rating, project, tries, repeats, difficulty, perceived_hardness, comment, height, recommended, sits`, with routes and boulders in one file.
+
+- A value that is blank or the literal `null` is blank.
+- The session date is the first ten characters of `date`; its time means nothing and no time zone applies.
+- `type` `os` imports as an onsight, `f` as a flash, `rp` as a redpoint, `tr` as a send with no style, and `go` as an attempt. Any other type is reported for its row.
+- `tries` is not a real count in 8a.nu exports, so every climb imports as one try.
+- `difficulty` is the grade. `route_boulder` settles a grade whose letter case says the other discipline, so a boulder `6c` is Font `6C` and a route `7A` is French `7a`.
+- `area_name` names the session. `comment` becomes the climb note.
+- `location_name`, `sector_name`, `country_code`, `sub_type`, `rating`, `project`, `repeats`, `perceived_hardness`, `height`, `recommended` and `sits` are not imported.
+
+## Mountain Project tick exports
+
+A Mountain Project tick export has the columns `Date, Route, Rating, Notes, URL, Pitches, Location, Avg Stars, Your Stars, Style, Lead Style, Route Type, Your Rating, Length, Rating Code`.
+
+- `Date` is the session date. Every session is outdoor.
+- The grade is `Your Rating` when filled, else `Rating`. A protection or aid suffix (`5.10c PG13`, `R`, `X`) is dropped, and a slash or range grade (`5.10a/b`, `V3-4`) reads as its lower end. Mountain Project grades below `5.5` are outside Sendtally's YDS range and are reported for their row.
+- `Lead Style`, when filled, decides the climb: `Onsight`, `Flash` and `Redpoint` as that style, `Pinkpoint` as a redpoint, `Fell/Hung` as an attempt.
+- Otherwise `Style` decides: `Flash` as a flash, `Attempt` as an attempt, and `Send`, `Lead`, `TR`, `Follow` and `Solo` as a send with no style. Any other value is reported for its row.
+- There is no tries count, so every climb imports as one try.
+- `Location` is the area path joined by `>`. The session is named after the deepest area all of that day's climbs share, never after just a state or country; a leading `International > <continent>` is skipped.
+- `Notes` becomes the climb note.
+- `URL`, `Pitches`, `Avg Stars`, `Your Stars`, `Route Type`, `Length` and `Rating Code` are not imported.
+
+## Sendage exports
+
+A Sendage export opens with a few lines of preamble (`"These climbs were exported from Sendage Climbing."`, the climber's name and the export date, two blank lines) and then the header `Date, Send Type, Climb, Climb Type, Grade, Area, Country, Rating, Comments`.
+The importer looks for a known header in the first four non-blank lines, so the preamble is skipped.
+Kaya's import template uses the same header and reads the same way.
+
+- `Date` is the session date.
+- `Send Type` `onsight`, `flash` and `redpoint` import as that style, `repeat` as a send with no style, and `project` as an attempt. Any other value is reported for its row.
+- There is no tries count, so every climb imports as one try.
+- `Grade` is the climber's own grade. `Climb Type` `boulder` settles a grade whose letter case says route, as in 8a.nu exports.
+- `Area` names the session. `Comments` becomes the climb note, with HTML entities such as `&rsquo;` decoded, including ones Sendage encoded twice.
+- `Country` and `Rating` are not imported.
+
+This layout comes from another project's importer test rather than a real export, so it is the least certain of the formats here.
+
+## theCrag logbook exports
+
+A theCrag logbook export has the columns `Route Name, Ascent Label, Ascent ID, Ascent Link, Ascent Type, Route Grade, Ascent Grade, Route Gear Style, Ascent Gear Style, Route Height, Ascent Height, # Ascents, Route Stars, Route ID, Route Link, Country, Country Link, Crag Name, Crag Link, Crag Path, With, Comment, Quality, Ascent Date, Log Date, Shot`.
+theCrag has shipped exports with columns out of order before, which reading by name absorbs.
+
+- The session date is the first ten characters of `Ascent Date`. A row with no date is reported for its row.
+- Each attempt is its own row, so rows for the same route on the same date fold into one climb: one try per row, and a send when any row is one. A flash or onsight after a failed row on the same day imports as a redpoint.
+- `Ascent Type`: `Onsight` and `Flash` import as that style; `Red point`, `Pink point` and `Ground up red point` as a redpoint; `Send`, `Tick`, `Clean`, `Repeat`, `Greenpoint`, `Lead solo`, `Roped Solo`, `Aid` and the clean top-rope and second variants as a send with no style; `Attempt`, `Hang dog`, `Working`, `Retreat`, `Dab`, `Second with rest` and `Top rope with rest` as an attempt. Any other type, such as `Ghost` or `Mark`, is reported for its row.
+- The grade is `Ascent Grade` when filled, else `Route Grade`. Gear style `Boulder` settles a grade whose letter case says route.
+- Australian and South African Ewbank grades (a bare number such as `24`), UK grades (`VS 4c`, `E1 5a`) and UIAA grades (`VI`) are not supported and are reported as unreadable for their row.
+- `Crag Name` names the session. Nothing marks a gym, so every session is outdoor. `Comment` becomes the climb note; folded rows join their comments.
+- `# Ascents` counts how often the route was logged, not tries, and is not imported, nor are the IDs, links, heights, stars, `Crag Path`, `With`, `Quality`, `Log Date` or `Shot`.
 
 ## What happens on import
 

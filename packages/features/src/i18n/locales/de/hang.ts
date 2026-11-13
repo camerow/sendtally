@@ -15,24 +15,6 @@ export const hang = {
   "hang.summaryPull": "{reps} Züge × {sets} Sätze · {setRest} zwischen Sätzen",
   "hang.summaryTimedPull": "{on} ziehen",
 
-  "hang.workout.rep73.name": "Repeaters 7:3",
-  "hang.workout.rep73.blurb":
-    "Der Kraftausdauer-Klassiker. Sechs Hangs pro Satz mit kurzen Pausen, damit sich die Unterarme nie ganz erholen.",
-  "hang.workout.max10.name": "Max Hangs",
-  "hang.workout.max10.blurb":
-    "Fast maximale Last, sehr wenig Volumen, lange Pausen. Der Standard für reine Fingerkraft.",
-  "hang.workout.block.name": "Block Pulls",
-  "hang.workout.block.blurb":
-    "Einen beschwerten Block vom Boden heben. Schweres Pinch-Training ohne Board, und die Last lässt sich genau dosieren.",
-  "hang.workout.density.name": "Density Hangs",
-  "hang.workout.density.blurb":
-    "Lange, lockere Hangs mit niedriger Intensität. Guter Reiz für die Sehnen, den du oft machen kannst.",
-  "hang.workout.assist.name": "Einarmig mit Entlastung",
-  "hang.workout.assist.blurb":
-    "Gewicht über eine Umlenkrolle abgenommen. Wechsle in jedem Satz den Arm und nimm mit der Zeit weniger ab.",
-  "hang.workout.lowpull.name": "Leichte tägliche Züge",
-  "hang.workout.lowpull.blurb":
-    "Viele leichte Züge an den meisten Tagen der Woche. Durchblutung für die Sehnen, kein hartes Training.",
   "hang.untitledWorkout": "Workout ohne Namen",
   "hang.copyName": "{name} (Kopie)",
 

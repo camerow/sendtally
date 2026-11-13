@@ -5,7 +5,7 @@ export const importCsv = {
   "import.stepDone": "3 Done",
   "import.dropLabel": "Drop a CSV here, or choose a file",
   "import.dropHint":
-    "Kaya exports are recognized automatically. Anything else uses the Sendtally CSV format below. Nothing is saved until you confirm on the next step.",
+    "Exports from {services} are recognized automatically. Anything else uses the Sendtally CSV format below. Nothing is saved until you confirm on the next step.",
   "import.formatLabel": "Sendtally CSV format",
   "import.downloadTemplate": "Download template",
   "import.formatBody":
@@ -29,11 +29,10 @@ export const importCsv = {
   "import.convertTitle": "Convert a spreadsheet with an AI assistant",
   "import.convertHelp":
     "Paste this into Claude or ChatGPT together with your spreadsheet (export it as CSV first). Check the result for a session or two, then import the file it gives you.",
-  "import.kayaSkip":
-    "Kaya users skip this: upload the export from Kaya's profile settings as it is.",
+  "import.exportSkip": "Exported from {services}? Skip this and upload the export as it is.",
   "import.reviewTitle": "Review before importing",
   "import.chooseAnother": "Choose a different file",
-  "import.formatKaya": "Kaya export",
+  "import.formatExport": "{service} export",
   "import.formatSendtally": "Sendtally format",
   "import.statSessions": "sessions",
   "import.statClimbs": "climbs",
@@ -47,9 +46,10 @@ export const importCsv = {
   "import.skippedBody":
     "Everything else imports as shown below. Fix the file and choose it again, or continue without these rows.",
   "import.nothingFound":
-    "This file is not a Kaya export or in the Sendtally CSV format. Convert it with the prompt below, then choose the converted file.",
+    "This file is not an export Sendtally recognizes or in the Sendtally CSV format. Convert it with the prompt below, then choose the converted file.",
   "import.issueNoHeader": "The first row is not a header Sendtally recognizes.",
   "import.issueMissingDate": "No date, and no session above to continue.",
+  "import.issueNoDate": "No date.",
   "import.issueBadDate": '"{value}" is not a date in YYYY-MM-DD form.',
   "import.issueMissingGrade": "No grade.",
   "import.issueUnknownGrade": '"{value}" is not a grade Sendtally knows.',

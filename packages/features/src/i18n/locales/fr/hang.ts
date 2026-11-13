@@ -15,24 +15,6 @@ export const hang = {
   "hang.summaryPull": "{reps} tirages × {sets} séries · {setRest} entre les séries",
   "hang.summaryTimedPull": "Tirage de {on}",
 
-  "hang.workout.rep73.name": "Repeaters 7:3",
-  "hang.workout.rep73.blurb":
-    "Le classique de la force-endurance. Six suspensions par série avec des repos courts, pour que les avant-bras ne récupèrent jamais complètement.",
-  "hang.workout.max10.name": "Suspensions max",
-  "hang.workout.max10.blurb":
-    "Charge quasi maximale, très peu de volume, longs repos. La base pour la force de doigts pure.",
-  "hang.workout.block.name": "Tirages au bloc",
-  "hang.workout.block.blurb":
-    "Soulève un bloc lesté du sol. Du travail de pince lourd sans pan, et une charge facile à doser.",
-  "hang.workout.density.name": "Suspensions densité",
-  "hang.workout.density.blurb":
-    "Suspensions longues et faciles, à faible intensité. Un bon stimulus pour les tendons, à faire souvent.",
-  "hang.workout.assist.name": "Un bras assisté",
-  "hang.workout.assist.blurb":
-    "Poids retiré avec une poulie. Alterne les bras à chaque série et retire moins de poids au fil du temps.",
-  "hang.workout.lowpull.name": "Tirages légers quotidiens",
-  "hang.workout.lowpull.blurb":
-    "Beaucoup de tirages légers, la plupart des jours de la semaine. De la circulation pour les tendons, pas une séance dure.",
   "hang.untitledWorkout": "Exercice sans nom",
   "hang.copyName": "{name} (copie)",
 

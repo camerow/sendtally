@@ -27,7 +27,7 @@ export const settings = {
   "settings.embeddedBundle": "Embedded",
   "settings.yourData": "Your data",
   "settings.yourDataBody":
-    "Bring a climbing history in from a spreadsheet or a Kaya export, or take everything you have logged here with you.",
+    "Bring a climbing history in from a spreadsheet or another climbing app's export, or take everything you have logged here with you.",
   "settings.importCsv": "Import CSV",
   "settings.exportCsv": "Export CSV",
   "settings.exportBodyMobile":

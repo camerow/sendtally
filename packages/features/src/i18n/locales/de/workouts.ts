@@ -27,33 +27,66 @@ export const workouts = {
   "workouts.deleteBody": "Seine Pläne gehen mit. Deine eingetragenen Einheiten bleiben.",
   "workouts.discardChangesTitle": "Änderungen verwerfen?",
 
-  "workouts.builtIn.fiveByFive.name": "5x5 Kraft",
-  "workouts.builtIn.fiveByFive.blurb":
-    "Drei große Übungen, fünf Sätze à fünf. Jede Woche etwas mehr Gewicht, solange jede Wiederholung sauber bleibt.",
-  "workouts.builtIn.antagonist.name": "Antagonisten: Drücken",
-  "workouts.builtIn.antagonist.blurb":
-    "Die Druckmuskeln, die beim Klettern zu kurz kommen, für ausgeglichene, gesunde Schultern.",
-  "workouts.builtIn.extensors.name": "Fingerstrecker-Routine",
-  "workouts.builtIn.extensors.blurb":
-    "Trainiert die Muskeln, die die Hand öffnen, als Ausgleich zum vielen Greifen. Leicht und oft.",
-  "workouts.builtIn.hips.name": "Hüftmobilität",
-  "workouts.builtIn.hips.blurb": "Öffnet die Hüfte für hohe Tritte, Ägypter und Heelhooks.",
-  "workouts.builtIn.yoga.name": "Yoga für Kletternde",
-  "workouts.builtIn.yoga.blurb": "Langsame Dehnungen für Schultern, Rücken und Hüfte am Ruhetag.",
-  "workouts.builtIn.tempo.name": "Tempo-Intervalle",
-  "workouts.builtIn.tempo.blurb":
-    "Drei Minuten hart, zwei Minuten locker, fünfmal. Hart heißt: Du schaffst noch ein paar Worte.",
-  "workouts.builtIn.core.name": "Rumpfzirkel",
-  "workouts.builtIn.core.blurb": "Drei Runden für die Spannung, die die Füße im Steilen hält.",
-  "workouts.builtIn.limit.name": "Limit-Bouldern",
-  "workouts.builtIn.limit.blurb":
+  "workouts.builtIn.rep73.name": "Repeaters 7:3",
+  "workouts.builtIn.rep73.blurb":
+    "Der Kraftausdauer-Klassiker. Sechs Hangs pro Satz mit kurzen Pausen, damit sich die Unterarme nie ganz erholen.",
+  "workouts.builtIn.max10.name": "Max Hangs",
+  "workouts.builtIn.max10.blurb":
+    "Fast maximale Last, sehr wenig Volumen, lange Pausen. Der Standard für reine Fingerkraft.",
+  "workouts.builtIn.fingers-ab.name": "Finger A/B",
+  "workouts.builtIn.fingers-ab.blurb":
+    "Zwei Fingereinheiten, die sich abwechseln: Max Hangs für Kraft, dann Repeaters für die Ausdauer an langen Bouldern. Was du zuletzt gemacht hast, entscheidet, was als Nächstes kommt, auch nach einem ausgelassenen Tag.",
+  "workouts.builtIn.block.name": "Block Pulls",
+  "workouts.builtIn.block.blurb":
+    "Einen beschwerten Block vom Boden heben. Schweres Pinch-Training ohne Board, und die Last lässt sich genau dosieren.",
+  "workouts.builtIn.density.name": "Density Hangs",
+  "workouts.builtIn.density.blurb":
+    "Lange, lockere Hangs mit niedriger Intensität. Guter Reiz für die Sehnen, den du oft machen kannst.",
+  "workouts.builtIn.assist.name": "Einarmig mit Entlastung",
+  "workouts.builtIn.assist.blurb":
+    "Gewicht über eine Umlenkrolle abgenommen. Wechsle in jedem Satz den Arm und nimm mit der Zeit weniger ab.",
+  "workouts.builtIn.lowpull.name": "Leichte tägliche Züge",
+  "workouts.builtIn.lowpull.blurb":
+    "Viele leichte Züge an den meisten Tagen der Woche. Durchblutung für die Sehnen, kein hartes Training.",
+  "workouts.builtIn.min-edge.name": "Hängen an der kleinsten Leiste",
+  "workouts.builtIn.min-edge.blurb":
+    "Hängen mit Körpergewicht an der kleinsten Leiste, die du zehn Sekunden hältst. Mit der Zeit kleinere Leisten, ohne Zusatzgewicht.",
+  "workouts.builtIn.seven-53.name": "7:53 Hangs",
+  "workouts.builtIn.seven-53.blurb":
+    "Drei schwere Hangs von sieben Sekunden pro Satz, mit fast einer Minute dazwischen. Maximalkraft mit mehr Zeit unter Last.",
+  "workouts.builtIn.climb-limit.name": "Limit-Bouldern",
+  "workouts.builtIn.climb-limit.blurb":
     "Ein paar Boulder an deinem Limit, volle Pausen, voller Einsatz bei jedem Versuch. Hör auf, wenn die Züge unsauber werden.",
-  "workouts.builtIn.fourByFour.name": "4x4",
-  "workouts.builtIn.fourByFour.blurb":
+  "workouts.builtIn.climb-4x4.name": "4x4",
+  "workouts.builtIn.climb-4x4.blurb":
     "Vier Boulder direkt hintereinander, viermal, mit ein paar Minuten Pause zwischen den Runden.",
-  "workouts.builtIn.arc.name": "ARC",
-  "workouts.builtIn.arc.blurb":
+  "workouts.builtIn.climb-arc.name": "ARC",
+  "workouts.builtIn.climb-arc.blurb":
     "Leichtes Klettern ohne Pause, 20 bis 40 Minuten. Ein leichter Pump, nie ein Brennen.",
+  "workouts.builtIn.strength-squat.name": "Kniebeuge im Wechsel",
+  "workouts.builtIn.strength-squat.blurb":
+    "Wechselt fünf Sätze à fünf mit drei Sätzen à zehn ab. Jede Einheit macht die nächste, ein ausgelassener Tag verschiebt sie nur.",
+  "workouts.builtIn.strength-5x5.name": "5x5 Kraft",
+  "workouts.builtIn.strength-5x5.blurb":
+    "Drei große Übungen, fünf Sätze à fünf. Jede Woche etwas mehr Gewicht, solange jede Wiederholung sauber bleibt.",
+  "workouts.builtIn.strength-antagonist.name": "Antagonisten: Drücken",
+  "workouts.builtIn.strength-antagonist.blurb":
+    "Die Druckmuskeln, die beim Klettern zu kurz kommen, für ausgeglichene, gesunde Schultern.",
+  "workouts.builtIn.strength-extensors.name": "Fingerstrecker-Routine",
+  "workouts.builtIn.strength-extensors.blurb":
+    "Trainiert die Muskeln, die die Hand öffnen, als Ausgleich zum vielen Greifen. Leicht und oft.",
+  "workouts.builtIn.mobility-hips.name": "Hüftmobilität",
+  "workouts.builtIn.mobility-hips.blurb":
+    "Öffnet die Hüfte für hohe Tritte, Ägypter und Heelhooks.",
+  "workouts.builtIn.yoga-climbers.name": "Yoga für Kletternde",
+  "workouts.builtIn.yoga-climbers.blurb":
+    "Langsame Dehnungen für Schultern, Rücken und Hüfte am Ruhetag.",
+  "workouts.builtIn.run-tempo.name": "Tempo-Intervalle",
+  "workouts.builtIn.run-tempo.blurb":
+    "Drei Minuten hart, zwei Minuten locker, fünfmal. Hart heißt: Du schaffst noch ein paar Worte.",
+  "workouts.builtIn.other-core.name": "Rumpfzirkel",
+  "workouts.builtIn.other-core.blurb":
+    "Drei Runden für die Spannung, die die Füße im Steilen hält.",
 
   "workouts.exercise.backSquat": "Kniebeuge",
   "workouts.exercise.benchPress": "Bankdrücken",
@@ -66,35 +99,23 @@ export const workouts = {
   "workouts.exercise.reverseWristCurls": "Reverse Wrist Curls",
   "workouts.exercise.riceBucket": "Reiseimer",
 
-  "workouts.item.ninetyNinety": "90/90-Wechsel",
-  "workouts.item.couchStretch": "Couch-Stretch, je Seite",
-  "workouts.item.frogStretch": "Froschdehnung",
-  "workouts.item.pigeon": "Taube, je Seite",
-  "workouts.item.hipFlexorLunge": "Hüftbeuger-Ausfallschritt, je Seite",
-  "workouts.item.deepSquat": "Tiefe Hocke halten",
-  "workouts.item.sunSalutation": "Sonnengruß",
-  "workouts.item.downwardDog": "Herabschauender Hund",
-  "workouts.item.threadNeedle": "Nadel einfädeln, je Seite",
-  "workouts.item.lizard": "Eidechse, je Seite",
-  "workouts.item.childsPose": "Kindhaltung",
+  "workouts.exercise.ninetyNinety": "90/90-Wechsel",
+  "workouts.exercise.couchStretch": "Couch-Stretch, je Seite",
+  "workouts.exercise.frogStretch": "Froschdehnung",
+  "workouts.exercise.pigeon": "Taube, je Seite",
+  "workouts.exercise.hipFlexorLunge": "Hüftbeuger-Ausfallschritt, je Seite",
+  "workouts.exercise.deepSquat": "Tiefe Hocke halten",
+  "workouts.exercise.sunSalutation": "Sonnengruß",
+  "workouts.exercise.downwardDog": "Herabschauender Hund",
+  "workouts.exercise.threadNeedle": "Nadel einfädeln, je Seite",
+  "workouts.exercise.lizard": "Eidechse, je Seite",
+  "workouts.exercise.childsPose": "Kindhaltung",
 
   "workouts.step.hard": "Hart",
   "workouts.step.easy": "Locker",
-  "workouts.step.plank": "Unterarmstütz",
-  "workouts.step.hollowHold": "Hollow Hold",
-  "workouts.step.kneeRaises": "Knieheben im Hang",
-  "workouts.builtIn.fingersAb.name": "Finger A/B",
-  "workouts.builtIn.fingersAb.blurb":
-    "Zwei Fingereinheiten, die sich abwechseln: Max Hangs für Kraft, dann Repeaters für die Ausdauer an langen Bouldern. Was du zuletzt gemacht hast, entscheidet, was als Nächstes kommt, auch nach einem ausgelassenen Tag.",
-  "workouts.builtIn.squat.name": "Kniebeuge im Wechsel",
-  "workouts.builtIn.squat.blurb":
-    "Wechselt fünf Sätze à fünf mit drei Sätzen à zehn ab. Jede Einheit macht die nächste, ein ausgelassener Tag verschiebt sie nur.",
-  "workouts.builtIn.minEdge.name": "Hängen an der kleinsten Leiste",
-  "workouts.builtIn.minEdge.blurb":
-    "Hängen mit Körpergewicht an der kleinsten Leiste, die du zehn Sekunden hältst. Mit der Zeit kleinere Leisten, ohne Zusatzgewicht.",
-  "workouts.builtIn.sevenFiftyThree.name": "7:53 Hangs",
-  "workouts.builtIn.sevenFiftyThree.blurb":
-    "Drei schwere Hangs von sieben Sekunden pro Satz, mit fast einer Minute dazwischen. Maximalkraft mit mehr Zeit unter Last.",
+  "workouts.exercise.plank": "Unterarmstütz",
+  "workouts.exercise.hollowHold": "Hollow Hold",
+  "workouts.exercise.kneeRaises": "Knieheben im Hang",
   "workouts.dose.sets": "Sätze",
   "workouts.dose.reps": "Wdh.",
   "workouts.dose.hangs": "Hangs",

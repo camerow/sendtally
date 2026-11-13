@@ -39,8 +39,8 @@ export const COPY_DE: LandingCopy = {
     webAccount: "Or create a free account on the web", // follows en
     photoAlt: "A climber high on a streaked red sandstone wall in a narrow canyon", // follows en
     phone: {
-      key: "logClimbing",
-      alt: "The Log tab: this week's climbing sessions with their climbs, and a climb logged on its own", // follows en
+      key: "heroLoop",
+      alt: "A tour of the app: the Plan tab for this week, the Log, tallying climbs in a live session, starting a hang workout from Train, and the Stats tab", // follows en
     },
   },
   tabs: [

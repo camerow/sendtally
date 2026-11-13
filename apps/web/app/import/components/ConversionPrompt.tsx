@@ -1,5 +1,6 @@
 import React from "react";
 import { CONVERSION_PROMPT } from "@sendtally/features/import";
+import { IMPORT_SERVICES } from "@sendtally/core/import";
 import { t } from "@sendtally/features/i18n";
 import { Section } from "../../settings/components/Section";
 import { bodyText, secondaryButton } from "../../settings/components/styles";
@@ -30,7 +31,9 @@ export function ConversionPrompt(): React.ReactElement {
       <pre style={{ ...code, whiteSpace: "pre-wrap", overflowWrap: "anywhere", lineHeight: 1.55 }}>
         {CONVERSION_PROMPT}
       </pre>
-      <p style={bodyText}>{t("import.kayaSkip")}</p>
+      <p style={bodyText}>
+        {t("import.exportSkip", { services: Object.values(IMPORT_SERVICES).join(", ") })}
+      </p>
     </Section>
   );
 }

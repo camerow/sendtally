@@ -199,7 +199,7 @@
   margin: 0 auto;
   min-height: clamp(560px, 52vw, 760px);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: clamp(32px, 5vw, 64px);
   align-items: center;
   padding: clamp(48px, 6vw, 72px) clamp(16px, 5vw, 56px);
@@ -234,7 +234,9 @@
 }
 
 .l-shot--hero {
-  width: 330px;
+  width: auto;
+  height: clamp(420px, calc(100svh - 200px), 717px);
+  justify-self: center;
   background: var(--bs-gunmetal-deep);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.18),
@@ -248,7 +250,7 @@
 
   .l-shot--hero {
     width: 230px;
-    justify-self: center;
+    height: auto;
   }
 }
 
