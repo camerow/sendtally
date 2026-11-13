@@ -21,6 +21,8 @@ import {
 import { AccountButton } from "../../components/AccountButton";
 import { PageAction } from "../../components/PageAction";
 import { useAppApi } from "../../lib/useAppApi";
+import { BlockRow } from "../blocks/BlockRow";
+import { useScheduledToast } from "../blocks/useScheduledToast";
 import { useHangData } from "../data/HangDataContext";
 import { Icon } from "../../components/Icon";
 import { CalendarMonth } from "../plan-calendar/CalendarMonth";
@@ -48,6 +50,7 @@ export function PlanPage(): React.ReactElement {
   const [offset, setOffset] = React.useState(() => weekOffset(today, start));
   const [selected, setSelected] = React.useState<CalendarDate>(start);
   const [adding, setAdding] = React.useState(false);
+  const scheduled = useScheduledToast();
   const strip = React.useRef<HTMLDivElement>(null);
   const days = React.useRef(new Map<CalendarDate, HTMLElement>());
   const target = React.useRef<CalendarDate | null>(start);
@@ -142,12 +145,12 @@ export function PlanPage(): React.ReactElement {
               {t("plan.blocksInProgress", { count: running.length })}
             </span>
             {running.map((b) => (
-              <div key={b.id} className="plan-block-row">
-                <span className="plan-row-name">{b.name || t("plan.untitled")}</span>
-                <span className="plan-row-meta">
-                  {t("plan.workoutCount", { count: blockMembers(log.plan, b).length })}
-                </span>
-              </div>
+              <BlockRow
+                key={b.id}
+                id={b.id}
+                name={b.name}
+                meta={t("plan.workoutCount", { count: blockMembers(log.plan, b).length })}
+              />
             ))}
           </div>
         )}
@@ -171,6 +174,10 @@ export function PlanPage(): React.ReactElement {
             onClose={(added) => {
               setAdding(false);
               if (added.length > 0) select(selected);
+            }}
+            onScheduled={(made) => {
+              scheduled(made);
+              show(made.start);
             }}
           />
         )}

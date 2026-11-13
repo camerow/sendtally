@@ -47,6 +47,7 @@ const state = vi.hoisted(() => ({
   plan: null as unknown as Plan,
   deleteMembership: vi.fn(async () => undefined),
   saveMembership: vi.fn(async () => undefined),
+  copyBlock: vi.fn(async () => true),
 }));
 
 const library = (): WorkoutLibrary => {
@@ -179,5 +180,25 @@ describe("PlanPage", () => {
     const sheet = document.querySelector("dialog")!;
     expect(sheet.querySelector(".sheet-title")?.textContent).toBe("Schedule");
     expect(sheet.querySelector(".add-row-there")?.textContent).toBe("On this day");
+  });
+
+  it("schedules a template from the Block side, then says so with View", async () => {
+    state.plan = {
+      ...state.plan,
+      blocks: [{ id: "t1", name: "Power phase", start: null, weeks: 4, focus: null }],
+    };
+    act(() => container.querySelector<HTMLButtonElement>(".page-action")?.click());
+    const sheet = (): Element => document.querySelector("dialog")!;
+    act(() =>
+      [...sheet().querySelectorAll<HTMLElement>('[role="radio"]')]
+        .find((b) => b.textContent === "Block")
+        ?.click()
+    );
+    act(() => sheet().querySelector<HTMLElement>(".block-row")?.click());
+    expect(sheet().querySelector(".sheet-kicker")?.textContent).toBe("Power phase");
+    act(() => sheet().querySelector<HTMLElement>(".sheet-action")?.click());
+    await act(async () => undefined);
+    expect(state.copyBlock).toHaveBeenCalledWith("t1", expect.any(String), TODAY);
+    expect(document.querySelector(".toast-message")?.textContent).toBe("Scheduled Power phase");
   });
 });

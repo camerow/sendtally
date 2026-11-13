@@ -6,4 +6,6 @@ export function useLibrary(): WorkoutLibraryQuery {
   return useWorkoutLibrary(useAppApi());
 }
 
+export const WORKOUTS_VIEW = "/app/train?view=workouts";
+
 export const workoutPath = (id: string): string => `/app/train/workouts/${encodeURIComponent(id)}`;

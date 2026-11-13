@@ -191,15 +191,6 @@
   flex-direction: column;
 }
 
-.plan-block-row {
-  min-height: 52px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 3px;
-  border-bottom: 1px solid var(--line-on-light-soft);
-}
-
 .plan-day-slot--last {
   min-height: calc(100vh - 220px);
 }
@@ -453,6 +444,10 @@
 
 .month-calendar-day.is-today > span {
   background: var(--bs-gold);
+}
+
+.month-calendar-day.is-shaded > span {
+  background: var(--surface-soft);
 }
 
 .month-calendar-day.is-on > span,
@@ -810,10 +805,15 @@
   background: var(--surface-soft);
 }
 
+/* The plan grid: a row per plan, a column per weekday */
+
 .plan-grid {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.plan-grid--framed {
   padding: 18px;
   border-radius: 18px;
   border: 1px solid var(--line-on-light-strong);
@@ -827,14 +827,14 @@
   border-top: 1px solid var(--line-on-light-soft);
 }
 
-.plan-grid-row--head {
+.plan-grid-row--lit {
+  background: rgba(249, 220, 92, 0.25);
+}
+
+.plan-grid-days {
   align-items: flex-end;
   padding: 0;
   border-top: none;
-}
-
-.plan-grid-row--lit {
-  background: rgba(249, 220, 92, 0.25);
 }
 
 .plan-grid-name {
@@ -843,29 +843,36 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
+}
+
+.plan-grid-open {
   padding: 0;
   border: none;
   background: none;
   text-align: left;
-  color: var(--bs-gunmetal);
   cursor: pointer;
 }
 
-button.plan-grid-name:hover .plan-row-name {
+.plan-grid-open:hover .plan-grid-workout {
   text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
-.plan-grid-name .plan-row-name {
+.plan-grid-workout {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-sans);
+  font-weight: 600;
   font-size: 14px;
+  color: var(--bs-gunmetal);
 }
 
 .plan-grid-line {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-family: var(--font-mono);
   font-size: 11px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .plan-grid-changed {
@@ -875,10 +882,27 @@ button.plan-grid-name:hover .plan-row-name {
 
 .plan-grid-day {
   width: 24px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
   text-align: center;
 }
 
+.plan-grid-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--bs-gunmetal);
+}
+
+.plan-grid-footer {
+  padding-top: 10px;
+  border-top: 1px solid var(--line-on-light-soft);
+}
+
 .grid-cell {
+  position: relative;
   width: 24px;
   height: 24px;
   flex: none;
@@ -887,23 +911,19 @@ button.plan-grid-name:hover .plan-row-name {
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 0 solid transparent;
   border-radius: 7px;
-  background: var(--surface-soft);
 }
 
 button.grid-cell {
   cursor: pointer;
 }
 
-.grid-cell--editing {
-  border-width: 1px;
-  border-color: var(--line-on-light-strong);
-  box-shadow: 0 1px 1px rgba(64, 63, 76, 0.08);
+button.grid-cell:hover {
+  filter: brightness(0.96);
 }
 
-.grid-cell--asking {
-  border-width: 1.5px;
+.grid-cell--field {
+  box-shadow: 0 1px 1px rgba(64, 63, 76, 0.08);
 }
 
 .grid-cell-dot {
@@ -917,14 +937,25 @@ button.grid-cell {
   width: 13px;
   height: 1.5px;
   border-radius: 1px;
-  background: rgba(64, 63, 76, 0.45);
+  background: var(--text-on-white-secondary);
+  opacity: 0.6;
   transform: rotate(-45deg);
 }
 
-.grid-cell-moved {
+.grid-cell-arrow {
   font-size: 13px;
   line-height: 15px;
   color: rgba(64, 63, 76, 0.32);
+}
+
+.grid-cell-moved-in {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--bs-azure);
 }
 
 .add-workout-button {

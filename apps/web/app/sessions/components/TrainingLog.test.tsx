@@ -130,4 +130,31 @@ describe("TrainingLog", () => {
     act(() => button("Log a workout").click());
     expect(container.querySelector('[data-testid="log-workout-sheet"]')).not.toBeNull();
   });
+
+  it("marks a finished block on its last day, opening the block", () => {
+    const block = { id: "b1", name: "Winter base", start: "2026-10-05", weeks: 2, focus: null };
+    const recap = {
+      block,
+      done: 3,
+      planned: 4,
+      missed: 1,
+      soFar: { done: 3, planned: 4 },
+      effort: 7,
+      weeks: [
+        { week: 1, done: 2, planned: 2, effort: 7 },
+        { week: 2, done: 1, planned: 2, effort: null },
+      ],
+      workouts: [],
+    };
+    const items = logSegmentItems(
+      logItems([], [], [], [], { plan: { blocks: [block], memberships: [] }, finished: [recap] }),
+      "training"
+    );
+    mount(null, items);
+    const row = container.querySelector<HTMLAnchorElement>(".block-done")!;
+    expect(row.getAttribute("href")).toBe("/app/plan/block/b1");
+    expect(row.querySelector(".block-done-name")?.textContent).toBe("Winter base");
+    expect(row.querySelector(".block-done-meta")?.textContent).toBe("2 weeks · 3 of 4 done");
+    expect(row.querySelectorAll(".week-bar")).toHaveLength(2);
+  });
 });

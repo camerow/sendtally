@@ -30,6 +30,7 @@ const writes = vi.hoisted(() => ({
   saveWorkout: vi.fn(async () => undefined),
   deleteWorkout: vi.fn(async () => undefined),
   deleteMembership: vi.fn(async () => undefined),
+  saveMembership: vi.fn(async () => undefined),
   plan: null as unknown as Plan,
 }));
 
@@ -86,6 +87,10 @@ vi.mock("@sendtally/features/training", async (actual) => ({
   ...(await actual<typeof T_training>()),
   usePlan: () => ({ state: { status: "ready", data: writes.plan } }),
   usePlanActions: () => writes,
+  useTrainingLog: () => ({
+    log: { climbs: [], hangs: [], activities: [], plan: writes.plan, workout: () => undefined },
+    ready: true,
+  }),
 }));
 
 let container: HTMLDivElement;
@@ -137,6 +142,7 @@ function mount(id: string): void {
           <Spy />
           <Routes>
             <Route path="/app/train" element={<p>Train</p>} />
+            <Route path="/app/plan/block/:id" element={<p>Block</p>} />
             <Route path="/app/train/workouts/:id" element={<WorkoutPageAt />} />
           </Routes>
         </MemoryRouter>
@@ -216,5 +222,27 @@ describe("WorkoutPage", () => {
     click(container.querySelector(".plan-row-remove"));
     click(document.querySelector(".sheet-action--danger"));
     expect(writes.deleteMembership).toHaveBeenCalledWith("m1");
+  });
+
+  it("adds it to a block not over yet, then says where with View", () => {
+    writes.plan = {
+      ...writes.plan,
+      blocks: [
+        { id: "base", name: "Winter base", start: null, weeks: 4, focus: null },
+        { id: "old", name: "Autumn", start: "2026-09-01", weeks: 2, focus: null },
+      ],
+    };
+    mount("legs");
+    expect(menu()).toEqual(["Add to block", "Duplicate", "Delete workout"]);
+    click(button("Add to block"));
+    const options = [...document.querySelectorAll(".option-row")].map((b) => b.textContent);
+    expect(options).toEqual(["Winter baseTemplate"]);
+    click(document.querySelector(".option-row"));
+    expect(writes.saveMembership).toHaveBeenCalledWith(
+      expect.objectContaining({ workoutId: "legs", blockId: "base", weekdays: [] })
+    );
+    expect(document.querySelector(".toast-message")?.textContent).toBe("Added to Winter base");
+    click(document.querySelector(".toast-action"));
+    expect(at.path).toBe("/app/plan/block/base");
   });
 });

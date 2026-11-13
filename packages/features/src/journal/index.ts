@@ -37,6 +37,7 @@ export {
   isUpdateDraft,
   linkedSessions,
   logItems,
+  logTraining,
   logItemWorkout,
   logScopeItems,
   logWorkoutItems,

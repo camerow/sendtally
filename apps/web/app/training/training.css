@@ -1318,10 +1318,13 @@
   padding: 0 14px;
   border: 1px solid var(--line-on-light-strong);
   border-radius: var(--radius-control);
+  background: none;
+  font-family: var(--font-sans);
   font-weight: 600;
   font-size: 14px;
   color: var(--bs-gunmetal);
   text-decoration: none;
+  cursor: pointer;
 }
 
 .edit-button:hover {

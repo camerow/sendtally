@@ -328,6 +328,41 @@
   gap: 6px;
 }
 
+.sheet-back {
+  align-self: flex-start;
+  width: 36px;
+  height: 36px;
+  margin: -6px 0 0 -10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 18px;
+  background: none;
+  color: var(--bs-gunmetal);
+  cursor: pointer;
+}
+
+.sheet-back:hover {
+  background: rgba(64, 63, 76, 0.08);
+}
+
+.sheet-title-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sheet-title-link svg {
+  color: var(--text-on-white-secondary);
+}
+
+.sheet-title-link:hover {
+  text-decoration: underline;
+}
+
 .sheet-kicker.sheet-kicker--amber {
   color: var(--warning-amber);
 }

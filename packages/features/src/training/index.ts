@@ -128,4 +128,6 @@ export { membershipTag, oneOffDate, plannedIn } from "./planText";
 export { KIND_COLORS, activityColor } from "./kindColors";
 export { addFlowOf, addFlowParams, addKicker, type AddFlow, type RawAddParams } from "./addFlow";
 export { blockMembership, useAddTo, type AddTo, type AddToOptions } from "./useAddTo";
+export { pastMeta, templateMeta } from "./blockMeta";
+export { blockWeekColumns, blockWeekDates, cellMark, weekPlans } from "./blockWeekDays";
 export { usePlanDraft, type PlanDraftState } from "./usePlanDraft";

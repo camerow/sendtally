@@ -5,6 +5,7 @@ import { t } from "@sendtally/features/i18n";
 import { blockOn, blockTag, trainingDay, useTrainingLog } from "@sendtally/features/training";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { useAppApi } from "../../lib/useAppApi";
+import { useScheduledToast } from "../blocks/useScheduledToast";
 import { useHangData } from "../data/HangDataContext";
 import { AddWorkoutsSheet } from "../plan-week/AddWorkoutsSheet";
 import { DaySection } from "../plan-week/DaySection";
@@ -17,6 +18,7 @@ export function PlanDayPage({ date }: { date: CalendarDate }): React.ReactElemen
   const day = trainingDay(log, date, today);
   const block = blockOn(log.plan.blocks, date);
   const [adding, setAdding] = React.useState(false);
+  const scheduled = useScheduledToast();
   return (
     <DetailFrame
       backTo={CALENDAR_PATH}
@@ -36,6 +38,7 @@ export function PlanDayPage({ date }: { date: CalendarDate }): React.ReactElemen
         <AddWorkoutsSheet
           flow={{ date, blockId: block?.id ?? null }}
           onClose={() => setAdding(false)}
+          onScheduled={scheduled}
         />
       )}
     </DetailFrame>

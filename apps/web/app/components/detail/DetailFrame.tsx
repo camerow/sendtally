@@ -13,21 +13,24 @@ export type DetailFrameProps = {
   action?: React.ReactNode;
   /** Sticky at the foot of the column, as Log session. */
   footer?: React.ReactNode;
+  /** The full content width, for a page whose grids would scroll in the 720 column. */
+  wide?: boolean;
   children?: React.ReactNode;
 };
 
-/** A detail page: Back and its actions over one centred 720 column, with an optional sticky footer. */
+/** A detail page: Back and its actions over one centred 720 column (or the full width), with an optional sticky footer. */
 export function DetailFrame({
   backTo,
   backLabel,
   onBack,
   action,
   footer,
+  wide = false,
   children,
 }: DetailFrameProps): React.ReactElement {
   const back = useGoBack(backTo);
   return (
-    <div className="detail">
+    <div className={wide ? "detail detail--wide" : "detail"}>
       <div className="detail-bar">
         <button type="button" className="detail-back" onClick={onBack ?? back}>
           <span className="detail-back-chevron">

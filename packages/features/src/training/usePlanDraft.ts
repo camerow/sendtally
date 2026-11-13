@@ -33,7 +33,7 @@ export type PlanDraftState = {
 
 export function usePlanDraft(
   plan: Plan,
-  actions: PlanActions,
+  actions: Pick<PlanActions, "saveDraft">,
   startEditing = false
 ): PlanDraftState {
   const [draft, setDraft] = React.useState<PlanDraft | null>(startEditing ? emptyPlanDraft : null);

@@ -5,23 +5,29 @@ import { t } from "@sendtally/features/i18n";
 import { AccountButton } from "../../components/AccountButton";
 import { PageAction } from "../../components/PageAction";
 import { Segmented } from "../../components/Segmented";
+import { BlocksList } from "../blocks/BlocksList";
+import { useNewBlock } from "../blocks/useNewBlock";
 import { CategorySheet } from "../editor/CategorySheet";
 import { newExercisePath, newWorkoutPath } from "../editor/paths";
 import { HangDataProvider } from "../data/HangDataProvider";
 import { ExerciseShelves } from "../exercises/ExerciseShelves";
 import { WorkoutLibrary } from "./WorkoutLibrary";
 
-type TrainView = "workouts" | "exercises";
+type TrainView = "blocks" | "workouts" | "exercises";
 
 const readView = (param: string | null): TrainView =>
-  param === "exercises" ? "exercises" : "workouts";
+  param === "workouts" || param === "exercises" ? param : "blocks";
 
-/** The Train tab: the workout library and the exercises, until blocks join them. */
+/**
+ * The Train tab: blocks, the workout library, and exercises. Create makes any of them; a
+ * workout or an exercise asks its category first.
+ */
 export function TrainPage(): React.ReactElement {
   const [params, setParams] = useSearchParams();
   const view = readView(params.get("view"));
   const navigate = useNavigate();
   const [making, setMaking] = React.useState<"workout" | "exercise" | null>(null);
+  const newBlock = useNewBlock();
   return (
     <div className="train">
       <div className="train-head">
@@ -32,6 +38,7 @@ export function TrainPage(): React.ReactElement {
         <PageAction
           label={t("plan.create")}
           items={[
+            { label: t("plan.createBlock"), onSelect: newBlock },
             { label: t("workouts.createWorkout"), onSelect: () => setMaking("workout") },
             { label: t("workouts.createExercise"), onSelect: () => setMaking("exercise") },
           ]}
@@ -41,14 +48,21 @@ export function TrainPage(): React.ReactElement {
       <Segmented<TrainView>
         label={t("training.train")}
         value={view}
-        onChange={(v) => setParams(v === "workouts" ? {} : { view: v }, { replace: true })}
+        onChange={(v) => setParams(v === "blocks" ? {} : { view: v }, { replace: true })}
         options={[
+          { value: "blocks", label: t("plan.tabBlocks") },
           { value: "workouts", label: t("plan.tabWorkouts") },
           { value: "exercises", label: t("plan.tabExercises") },
         ]}
       />
       <HangDataProvider>
-        {view === "workouts" ? <WorkoutLibrary /> : <ExerciseShelves />}
+        {view === "blocks" ? (
+          <BlocksList />
+        ) : view === "workouts" ? (
+          <WorkoutLibrary />
+        ) : (
+          <ExerciseShelves />
+        )}
       </HangDataProvider>
       {making !== null && (
         <CategorySheet

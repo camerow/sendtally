@@ -7,6 +7,10 @@
   margin-bottom: -72px;
 }
 
+.detail--wide {
+  max-width: none;
+}
+
 .detail-bar {
   display: flex;
   align-items: center;
