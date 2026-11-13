@@ -17,21 +17,21 @@ export const plan: ConnectorTool<typeof inputSchema> = {
       repo.listWorkouts(env.DB, userId),
     ]);
     const workoutName = new Map(workouts.map((w) => [w.id, w.name]));
+    const membershipDays = rows.membershipDays.map(membershipDaysOf);
+    const weekChanges = rows.weekChanges.map(weekChangeOf);
+    const planChanges = rows.planChanges.map(planChangeOf);
     const scheduled = rows.memberships.map(membershipOf).map((m) => ({
       blockId: m.blockId,
       workout: workoutName.get(m.workoutId) ?? m.workoutId,
       start: m.start,
       weekdays: m.weekdays,
-      weekdaysFromWeek: rows.membershipDays
-        .map(membershipDaysOf)
+      weekdaysFromWeek: membershipDays
         .filter((d) => d.membershipId === m.id)
         .map(({ fromWeek, weekdays }) => ({ fromWeek, weekdays })),
-      weekChanges: rows.weekChanges
-        .map(weekChangeOf)
+      weekChanges: weekChanges
         .filter((c) => c.membershipId === m.id)
         .map(({ week, dose, change }) => ({ week, dose, change })),
-      skippedOrMoved: rows.planChanges
-        .map(planChangeOf)
+      skippedOrMoved: planChanges
         .filter((c) => c.membershipId === m.id)
         .map(({ plannedOn, kind, movedTo, reason }) => ({ plannedOn, kind, movedTo, reason })),
     }));

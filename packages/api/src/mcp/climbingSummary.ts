@@ -7,6 +7,9 @@ const inputSchema = {
   weeks: z.number().int().min(1).max(104).default(12).describe("How many weeks back to summarise."),
 };
 
+const higher = (grade: Grade, than?: Grade): boolean =>
+  than === undefined || effortGrade(grade) > effortGrade(than);
+
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const climbingSummary: ConnectorTool<typeof inputSchema> = {
@@ -32,11 +35,9 @@ export const climbingSummary: ConnectorTool<typeof inputSchema> = {
         if (effortGrade(grade) < 0) continue;
         const d = disciplineOf(grade.scale);
         const best = (top[d] ??= {});
-        const higher = (g?: Grade): boolean =>
-          g === undefined || effortGrade(grade) > effortGrade(g);
-        if (higher(best.tried)) best.tried = grade;
+        if (higher(grade, best.tried)) best.tried = grade;
         if (climb.kind !== "send") continue;
-        if (higher(best.sent)) best.sent = grade;
+        if (higher(grade, best.sent)) best.sent = grade;
         const label = formatGrade(grade);
         const level = (pyramid[d] ??= new Map()).get(label) ?? { grade, sends: 0 };
         pyramid[d].set(label, { grade, sends: level.sends + 1 });

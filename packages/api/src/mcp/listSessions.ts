@@ -12,7 +12,7 @@ const inputSchema = {
   limit: z.number().int().min(1).max(100).default(20),
 };
 
-export const climbOf = (c: StoredClimb): { grade: string } & Record<string, unknown> => ({
+const climbOf = (c: StoredClimb) => ({
   name: c.name || undefined,
   grade: formatGrade(c.grade ?? { scale: "v", value: c.vGrade }),
   kind: c.kind,
