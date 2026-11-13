@@ -18,10 +18,12 @@
         "CFBundleLocalizations": ["en", "de", "fr", "es"]
       },
       "usesAppleSignIn": true,
+      "googleServicesFile": "./GoogleService-Info.plist",
       "associatedDomains": ["applinks:sendtally.com"]
     },
     "android": {
       "package": "com.sendtally.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#f9dc5c"
@@ -99,6 +101,18 @@
           "android": {
             "enableProguardInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true
+          },
+          "ios": {
+            "useFrameworks": "dynamic"
+          }
+        }
+      ],
+      "@react-native-firebase/app",
+      [
+        "@react-native-firebase/analytics",
+        {
+          "ios": {
+            "withoutAdIdSupport": true
           }
         }
       ],

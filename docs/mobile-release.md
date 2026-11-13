@@ -212,6 +212,119 @@ It is deliberately not in Doppler: Doppler feeds `push-secrets.sh`, which only p
 
 Locally the same five values sit in `apps/mobile/.env.local`, which is gitignored.
 
+## Install attribution for Google Ads
+
+Performance Max sends people to sendtally.com and on to the stores, which drops the Google click and leaves installs unattributed.
+A Google Ads App campaign closes that gap, and it measures through Google Analytics for Firebase in the app rather than through the website.
+PostHog stays the product analytics tool; Firebase is only there for Google Ads.
+
+### What the app sends
+
+`@react-native-firebase/app` and `@react-native-firebase/analytics` run with their config plugins in `apps/mobile/app.json`.
+Firebase logs `first_open` and its other automatic events (`session_start`, `user_engagement`, `app_update`) on its own; nothing in our code triggers them.
+Our code logs two more through `logConversion` in `apps/mobile/features/analytics/conversions.ts`, named after the server's PostHog events so one name means one thing in both tools:
+
+| Event                | Logged when                                                                                                      | Params                                              |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `account_created`    | the sign-in screen finishes a sign-up: an email code sign-up, or a Google or Apple identity Clerk had never seen | none                                                |
+| `membership_started` | a store purchase completes and the Worker confirms the membership is active                                      | `channel` (`app_store`, `play_store`), `product_id` |
+
+Nothing else goes to Firebase: no user id, no email address, no logbook data.
+`EXPO_PUBLIC_E2E` builds skip the two events, same as PostHog.
+
+`apps/mobile/firebase.json` holds the build-time settings, and `fingerprint.config.js` hashes it, because the native build reads it rather than the app config:
+
+- `analytics_default_allow_ad_personalization_signals: false` keeps the data out of remarketing audiences and personalized ads; Google states that measurement and conversion attribution are unaffected.
+- `google_analytics_automatic_screen_reporting_enabled: false`, because the automatic `screen_view` names native view controller classes rather than routes, and PostHog already reports screens by route.
+
+### iOS: no tracking prompt
+
+The analytics plugin sets `ios.withoutAdIdSupport`, which links `FirebaseAnalyticsCore` instead of `FirebaseAnalytics`.
+Core has no IDFA (Identifier for Advertisers) code and links no AdSupport, so the app never reads the IDFA and never shows Apple's App Tracking Transparency prompt.
+
+What Google Ads gets on iOS without it:
+
+- **SKAdNetwork.** Firebase registers the app with Apple's SKAdNetwork on first launch by default (`google_analytics_registration_with_ad_network_enabled`), and Apple then reports installs from Google's ads to Google with no user or device identifier. This is Apple's own privacy-preserving attribution, and it is what attributes iOS installs here.
+- **SKAdNetwork conversion values.** Off until a schema is set in Google Analytics (step 6 below); with one, an install that goes on to create an account or start a membership reports that back through the same postback.
+- **Modeled conversions.** Google Ads fills the gaps from aggregate data automatically; nothing to set up.
+
+Deliberately not used:
+
+- **The IDFA.** It would need the App Tracking Transparency prompt and an App Store "used to track you" declaration.
+- **On-device conversion measurement.** Google's event-data mode needs no email or phone number, but it sends de-identified app event data, including attributes derived from the IP address, for Google to match against ad clicks. That sits closer to Apple's fingerprinting rules than anything else here, and it is inactive in the European Economic Area, the UK and Switzerland anyway. If iOS signal proves too thin, it is one flag: add `"googleAppMeasurementOnDeviceConversion": true` next to `withoutAdIdSupport` in the analytics plugin options. That adds a native dependency, so it needs a store build of its own; check that the resolved `GoogleAdsOnDeviceConversion` version matches the Firebase SDK in [Google's compatibility table](https://github.com/googleads/google-ads-on-device-conversion-ios-sdk). Never use the email or phone variant without an App Tracking Transparency prompt.
+- `NSAdvertisingAttributionReportEndpoint`. It only mails us a copy of each SKAdNetwork postback, and Google Analytics cannot be that endpoint.
+
+Firebase Apple SDK 13 is distributed only through Swift Package Manager, so React Native Firebase requires dynamic frameworks: `expo-build-properties` sets `ios.useFrameworks: "dynamic"`.
+That turns off React Native's precompiled iOS binaries, so a clean iOS build compiles React Native from source and takes noticeably longer.
+
+### Android
+
+Android keeps the Firebase default and reads the advertising ID (the `com.google.android.gms.permission.AD_ID` permission merges in from the Firebase SDK).
+There is no prompt on Android, people can reset or delete the ID in system settings, and Google Ads attributes in-app conversions through it.
+To drop it, add the permission to `android.blockedPermissions` in `app.json` and set `google_analytics_adid_collection_enabled: false` in `firebase.json`; Play install conversions and `first_open` from the install referrer keep working, and in-app conversions fall back to modeling.
+
+### This needs a store build
+
+Firebase is native code, so the runtime fingerprint moves and no installed build can take it as an EAS Update.
+The first push to `main` after it lands builds and submits a release, as the pipeline above describes.
+
+### The config files
+
+`apps/mobile/GoogleService-Info.plist` and `apps/mobile/google-services.json` are committed.
+They are not secrets: Firebase documents its API keys as identifiers that are fine in checked-in config, with access governed by Security Rules rather than the key ([Firebase API keys](https://firebase.google.com/docs/projects/api-keys)).
+EAS builds the committed tree, so committing them is also what gets them into the build.
+`app.json` points at both, and `expo prebuild` stops with "doesn't exist" when either is missing, so a build without them fails loudly.
+A file that is present but malformed is worse: Firebase validates it at launch and throws, so the app crashes before the first screen (an API key one character short does it).
+Commit the files exactly as the Firebase console downloads them, and never edit them by hand.
+
+Keep the two auto-created API keys restricted to the Firebase APIs they were created with, and never add the Gemini or Generative Language API to them.
+
+### One-time setup
+
+None of this can be done from the repository; it needs the Google consoles.
+
+1. **Firebase project.** At [console.firebase.google.com](https://console.firebase.google.com), add Firebase to the existing Google Cloud project `sendtally` (the one that already holds the Play Pub/Sub topic) rather than creating a new one.
+   Turn Google Analytics on when asked, creating a property named `sendtally` in the Chalk and Circuits Analytics account, and set its reporting time zone and currency to match the Google Ads account.
+2. **Register the apps.** Add an iOS app with bundle id `com.sendtally.app`, App Store id `6810779919` and Team ID `GUMXLRF3B6`, and download `GoogleService-Info.plist`.
+   Add an Android app with package `com.sendtally.app` and download `google-services.json`.
+   Skip the "add the SDK" and "add initialization code" steps; the config plugins do both.
+3. **Commit the files.** Put them at `apps/mobile/GoogleService-Info.plist` and `apps/mobile/google-services.json` and commit them.
+   This has to happen before the change merges, because the merge triggers the store build that needs them.
+4. **Analytics settings.** In Google Analytics, Admin:
+   - Data collection and modification, Data collection: leave **Google signals** off.
+   - Data collection and modification, Data retention: leave **event data retention** at 2 months, which the privacy policy promises.
+   - Data display, Events: once each has arrived (DebugView shows them sooner than reports do), mark `account_created` and `membership_started` as key events. `first_open` is a key event already.
+5. **Link Google Ads.** In Google Analytics, Admin, Product links, Google Ads links: link the Google Ads account that owns tag `AW-18445754475`.
+   It needs Editor on the property and Admin on the Google Ads account.
+   Leave **Enable personalized advertising** off; conversion import does not need it.
+   Check that auto-tagging is on in Google Ads (Admin, Account settings).
+6. **SKAdNetwork schema.** In Google Analytics, Admin, Data streams, the iOS stream, **Configure SKAdNetwork conversion values**: pick a schema that counts `account_created` and `membership_started`, and turn on the option that lets the SDK apply it.
+   Google Analytics exports the schema to the linked Google Ads account.
+7. **Import the conversions.** In Google Ads, Goals, Conversions, Summary, New conversion action, Import, Google Analytics 4 properties, App (Firebase).
+   Select `first_open` for each app, `account_created` and `membership_started`, then Import and continue. They can take 24 to 48 hours to appear.
+   Imported actions start as secondary; make `first_open` the primary install action per platform, and set Count to One for `account_created` and `membership_started`.
+8. **Link Google Play.** In Play Console, Setup, Linked services, Google Ads, link the same account and approve the request in Google Ads.
+   Play then reports installs from Google's ads with no SDK involved.
+   Google advises against comparing those with `first_open`; keep Play installs as a secondary action so the two are not counted twice, with `first_open` primary on both platforms.
+9. **Play Console declarations, before that release build uploads.** App content, Advertising ID: make sure it answers Yes, for Analytics and Advertising or marketing.
+   Play blocks a release that carries the `AD_ID` permission while that declaration says No.
+   Data safety: add Device or other IDs, App interactions and Approximate location, each collected for Analytics and Advertising or marketing, encrypted in transit, and not shared, since Google processes it on our behalf.
+10. **App Store privacy label.** App Store Connect, App Privacy: add Device ID, Product Interaction and Coarse Location, each for Analytics and Developer's Advertising or Marketing.
+    Device ID is not linked to the user's identity.
+    Product Interaction and Coarse Location are linked, because PostHog records screens and approximate region against the signed-in account.
+    Answer No to "used to track you" for all three.
+    That answer is only true while the app has no IDFA and no on-device conversion measurement with email or phone; revisit it if either changes.
+11. **Campaign.** Create the App campaign for each store listing and choose the in-app actions it optimizes for.
+
+### Checking that events arrive
+
+DebugView in the Firebase console shows events from a device in debug mode within seconds, where reports take a day.
+
+- iOS: run the app with the launch argument `-FIRDebugEnabled`; on a simulator, `xcrun simctl launch booted com.sendtally.app -FIRDebugEnabled` persists it for later launches until `-FIRDebugDisabled`.
+- Android: `adb shell setprop debug.firebase.analytics.app com.sendtally.app`, and `.none.` to turn it off.
+
+Each event also prints to the device log in debug mode, as `Logging event: origin, name, params: app, account_created, ...` on iOS and `Logging event` under the `FA` tag in `adb logcat` on Android.
+
 ## Store assets
 
 Every store image is generated from artboards vendored out of the Sendtally Marketing Kit design canvas.

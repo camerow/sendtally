@@ -219,6 +219,9 @@ Google Analytics still runs on the marketing pages for aggregate traffic; PostHo
   Account creation: `signup_started` / `auth_code_sent` / `signup_completed` on the web form, and `account_created` from the Clerk webhook as the canonical, all-channel one.
   Membership: `membership_started` with `channel` = `web` (the Clerk checkout redirect) or the store (a new RevenueCat entitlement, never a renewal).
 - The logbook itself never goes to PostHog - event properties stay counts and enum-ish strings.
+- Google Analytics for Firebase runs in the mobile app only so Google Ads can attribute installs (`first_open`) and the in-app `account_created` and `membership_started`, named after their PostHog twins.
+  It is not a second product analytics tool: no user id, no email, no other events of ours, and on iOS no IDFA, so no tracking prompt.
+  Runbook: `docs/mobile-release.md`, "Install attribution for Google Ads".
 - Anything added here has to be reflected in `apps/web/app/routes/privacy.tsx`.
 
 ## Copy
