@@ -85,6 +85,19 @@ An 8a.nu logbook export has the columns `route_boulder, name, location_name, sec
 - `area_name` names the session. `comment` becomes the climb note.
 - `location_name`, `sector_name`, `country_code`, `sub_type`, `rating`, `project`, `repeats`, `perceived_hardness`, `height`, `recommended` and `sits` are not imported.
 
+## Mountain Project tick exports
+
+A Mountain Project tick export has the columns `Date, Route, Rating, Notes, URL, Pitches, Location, Avg Stars, Your Stars, Style, Lead Style, Route Type, Your Rating, Length, Rating Code`.
+
+- `Date` is the session date. Every session is outdoor.
+- The grade is `Your Rating` when filled, else `Rating`. A protection or aid suffix (`5.10c PG13`, `R`, `X`) is dropped, and a slash or range grade (`5.10a/b`, `V3-4`) reads as its lower end. Mountain Project grades below `5.5` are outside Sendtally's YDS range and are reported for their row.
+- `Lead Style`, when filled, decides the climb: `Onsight`, `Flash` and `Redpoint` as that style, `Pinkpoint` as a redpoint, `Fell/Hung` as an attempt.
+- Otherwise `Style` decides: `Flash` as a flash, `Attempt` as an attempt, and `Send`, `Lead`, `TR`, `Follow` and `Solo` as a send with no style. Any other value is reported for its row.
+- There is no tries count, so every climb imports as one try.
+- `Location` is the area path joined by `>`. The session is named after the deepest area all of that day's climbs share, never after just a state or country; a leading `International > <continent>` is skipped.
+- `Notes` becomes the climb note.
+- `URL`, `Pitches`, `Avg Stars`, `Your Stars`, `Route Type`, `Length` and `Rating Code` are not imported.
+
 ## What happens on import
 
 The browser parses the file, groups rows into sessions, and validates every row with the same rules as the log-session form.

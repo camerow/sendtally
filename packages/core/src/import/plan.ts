@@ -2,6 +2,7 @@ import { disciplineOf, parseGrade, type Grade } from "../grades";
 import { parseCsv } from "./csv";
 import { eightARecords } from "./eightA";
 import { kayaRecords } from "./kaya";
+import { mountainProjectRecords } from "./mountainProject";
 import { normaliseHeader, recordsOf, SENDTALLY_COLUMNS, type Column, type Record } from "./records";
 import type { ImportClimb, ImportFormat, ImportIssue, ImportPlan, ImportSession } from "./types";
 
@@ -36,11 +37,13 @@ function gradeAsWritten(s: string): Grade | undefined {
 export const IMPORT_SERVICES: { [F in Exclude<ImportFormat, "sendtally">]: string } = {
   kaya: "Kaya",
   "8a": "8a.nu",
+  mountainProject: "Mountain Project",
 };
 
 const HEADERS: [Exclude<ImportFormat, "sendtally">, string[]][] = [
   ["kaya", ["date", "ascent_type", "grade", "climb_name"]],
   ["8a", ["route_boulder", "date", "type", "difficulty"]],
+  ["mountainProject", ["date", "route", "rating", "location", "style", "lead_style"]],
 ];
 
 export function detectFormat(header: string[]): ImportFormat | null {
@@ -75,7 +78,12 @@ function sendtallyRecords(header: string[], rows: string[][]): Record[] {
 
 const RECORDS: {
   [F in ImportFormat]: (header: string[], rows: string[][], timeZone: string) => Record[];
-} = { kaya: kayaRecords, "8a": eightARecords, sendtally: sendtallyRecords };
+} = {
+  kaya: kayaRecords,
+  "8a": eightARecords,
+  mountainProject: mountainProjectRecords,
+  sendtally: sendtallyRecords,
+};
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
