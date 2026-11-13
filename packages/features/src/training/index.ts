@@ -114,3 +114,4 @@ export { KIND_LOOK, type KindLook, type MarkShape } from "./kindLook";
 export { bandOn, blockOn, monthWeeks, type Band } from "./calendarGrid";
 export { isOneOff } from "./plan";
 export { membershipTag, oneOffDate, plannedIn } from "./planText";
+export { KIND_COLORS, activityColor } from "./kindColors";

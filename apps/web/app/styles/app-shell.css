@@ -201,6 +201,25 @@
   color: var(--bs-white);
 }
 
+.segmented--soft {
+  max-width: none;
+  border: none;
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+
+.segmented--soft .segmented-option {
+  height: 38px;
+  border-radius: 8px;
+  padding: 0 6px;
+  font-size: 13px;
+}
+
+.segmented--soft .segmented-option[aria-checked="true"] {
+  background: var(--bs-white);
+  color: var(--bs-gunmetal);
+}
+
 @media (max-width: 767px) {
   .segmented {
     max-width: none;
@@ -332,6 +351,25 @@
   height: 4px;
   border-radius: 2px;
   background: rgba(64, 63, 76, 0.2);
+}
+
+.sheet-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sheet-kicker {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-on-white-secondary);
+}
+
+.sheet-kicker--amber {
+  color: #c27c0e;
 }
 
 .sheet-title {
@@ -580,6 +618,10 @@
   font-weight: 600;
   font-size: 17px;
   color: var(--bs-gunmetal);
+}
+
+.number-field-input::placeholder {
+  color: rgba(64, 63, 76, 0.45);
 }
 
 .number-field-unit {
@@ -867,4 +909,34 @@
   font-size: 11px;
   color: rgba(64, 63, 76, 0.72);
   white-space: nowrap;
+}
+
+.chip {
+  flex: none;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 12px;
+  border: 1px solid rgba(64, 63, 76, 0.18);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: rgba(64, 63, 76, 0.65);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: rgba(64, 63, 76, 0.32);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--bs-gold);
+  border-color: var(--bs-gold);
+  color: var(--bs-gunmetal);
 }

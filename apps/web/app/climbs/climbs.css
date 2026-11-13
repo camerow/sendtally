@@ -1,4 +1,5 @@
 .climb-pill {
+  flex: none;
   height: 24px;
   box-sizing: border-box;
   display: inline-flex;
@@ -258,4 +259,105 @@
   .add-climb-grade-chips .grade-chips {
     padding: 0 18px;
   }
+}
+
+.grade-badge {
+  min-width: 52px;
+  height: 36px;
+  box-sizing: border-box;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: var(--surface-soft);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--bs-gunmetal);
+  white-space: nowrap;
+}
+
+.grade-badge--on-soft {
+  background: var(--bs-white);
+}
+
+.grade-badge--white {
+  border: 1px solid var(--line-on-light-strong);
+}
+
+.climb-row {
+  min-height: 60px;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--bs-gunmetal);
+  text-align: left;
+  text-decoration: none;
+}
+
+.climb-row--divided,
+.climb-row-group {
+  border-bottom: 1px solid var(--line-on-light-soft);
+}
+
+.climb-row--link {
+  cursor: pointer;
+}
+
+.climb-row--link:hover .climb-row-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.climb-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.climb-row-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.climb-row-name--plain {
+  font-weight: 500;
+  color: var(--text-on-white-secondary);
+}
+
+.climb-row-count {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-on-white-secondary);
+}
+
+.climb-row-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--text-on-white-secondary);
+}
+
+.climb-row-group {
+  padding-bottom: 12px;
+}
+
+.climb-row-children {
+  padding-left: 64px;
 }

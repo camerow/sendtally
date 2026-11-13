@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router";
 import { activityItem, hangItem, ofWorkout, useActivities } from "@sendtally/features/activities";
 import { tallyMeasuresOf } from "@sendtally/features/exercises";
 import { hangWorkoutOf, setupLabel } from "@sendtally/features/hang";
@@ -13,6 +14,8 @@ import { useAppApi } from "../../lib/useAppApi";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { useLibrary } from "../library/useLibrary";
+import { logLink } from "../log/logLink";
+import { activityPath } from "../log/paths";
 import { BodyPreview } from "./BodyPreview";
 import { LibraryIntro } from "./LibraryIntro";
 import { PlanList } from "./PlanList";
@@ -20,8 +23,6 @@ import { PreviewRow } from "./PreviewRow";
 import { ProtocolPanel } from "./ProtocolPanel";
 import { useWorkoutMenu } from "./useWorkoutMenu";
 import { WorkoutOverTime } from "./WorkoutOverTime";
-
-const nowhere = (): string => "";
 
 function Detail({
   workout,
@@ -31,11 +32,12 @@ function Detail({
   use: WorkoutUse | undefined;
 }): React.ReactElement {
   const api = useAppApi();
-  const { model } = useHangData();
+  const { model, today } = useHangData();
   const session = use?.count ?? 0;
   const exercises = useExercises(api).state;
   const activities = useActivities(api).state;
   const menu = useWorkoutMenu(workout);
+  const logIt = logLink(workout, today, session);
   const hang = workout.kind === "hangboard" ? model.workout(workout.id) : undefined;
   const next = hang === undefined ? undefined : (hangWorkoutOf(workout, session) ?? hang);
   const gripId = hang === undefined ? "" : model.defaultGrip(hang);
@@ -44,19 +46,24 @@ function Detail({
     next === undefined || last === null
       ? undefined
       : t("hang.lastUsedValue", { setup: setupLabel(next.kind, last, model.settings.units) });
-  // ponytail: rows open nothing until the activity pages land (#278).
-  const history = (
+  const history =
     hang === undefined
       ? ofWorkout(activities.status === "ready" ? activities.data : [], workout.id).map((a) =>
           activityItem(a, model.settings.units)
         )
-      : ofWorkout(model.sessions, workout.id).map((s) => hangItem(s, model))
-  ).map((item) => ({ ...item, opens: false }));
+      : ofWorkout(model.sessions, workout.id).map((s) => hangItem(s, model));
 
   return (
     <DetailFrame
       backTo="/app/train"
       action={<MoreMenu label={t("summary.more")} items={menu.items} />}
+      footer={
+        logIt === null ? undefined : (
+          <Link to={logIt} className="footer-outline">
+            {t("workouts.logIt")}
+          </Link>
+        )
+      }
     >
       <LibraryIntro workout={workout} use={use} />
       <section className="detail-section">
@@ -79,7 +86,7 @@ function Detail({
         <ProtocolPanel workout={next} minutes={workoutMinutes(workout, session)} />
       )}
       {hang === undefined && <WorkoutOverTime workout={workout} />}
-      <HistoryList items={history} to={nowhere} />
+      <HistoryList items={history} to={activityPath} />
       <PlanList workoutId={workout.id} name={workout.name} kind={workout.kind} />
       {menu.confirm}
     </DetailFrame>
