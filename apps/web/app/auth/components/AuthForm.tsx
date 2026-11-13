@@ -123,6 +123,12 @@ function clerkErrorMessage(err: unknown): string {
 type CodeMode = AuthIntent | "second-factor";
 type Phase = { name: "email" } | { name: "code"; mode: CodeMode } | { name: "password" };
 
+// Device Trust answers a password from an unrecognised device with "needs_client_trust",
+// MFA with "needs_second_factor"; both finish with an emailed second-factor code.
+function needsSecondFactor(status: string | null): boolean {
+  return status === "needs_second_factor" || status === "needs_client_trust";
+}
+
 function funnel(intent: AuthIntent): "signup" | "signin" {
   return intent === "sign-up" ? "signup" : "signin";
 }
@@ -236,9 +242,22 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
       emailAddressId: factor.emailAddressId,
     });
     capture("auth_code_sent", { mode: "second-factor" });
+    setEmail((current) => current || factor.safeIdentifier);
     setPhase({ name: "code", mode: "second-factor" });
     return true;
   }
+
+  // The Google callback sends a sign-in that still needs a second factor here rather than
+  // to Clerk's hosted pages, so the code is requested and entered in this form.
+  const resumed = React.useRef(false);
+  React.useEffect(() => {
+    const signIn = clerk.loaded ? clerk.client?.signIn : undefined;
+    if (resumed.current || signIn === undefined || !needsSecondFactor(signIn.status)) return;
+    resumed.current = true;
+    startSecondFactor(signIn.supportedSecondFactors).catch((err: unknown) =>
+      setError(clerkErrorMessage(err))
+    );
+  });
 
   async function signInWithPassword(): Promise<void> {
     if (!clerk.loaded || clerk.client === undefined || phase.name !== "password") return;
@@ -260,7 +279,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
         return;
       }
       if (
-        result.status === "needs_second_factor" &&
+        needsSecondFactor(result.status) &&
         (await startSecondFactor(result.supportedSecondFactors))
       ) {
         setBusy(false);
@@ -386,7 +405,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           return;
         }
         if (
-          result.status === "needs_second_factor" &&
+          needsSecondFactor(result.status) &&
           (await startSecondFactor(result.supportedSecondFactors))
         ) {
           setCode("");
@@ -554,7 +573,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
             <button onClick={backToEmail} style={linkButton}>
               {t("auth.useDifferentEmail")}
             </button>
-            <button onClick={() => void resendCode()} style={linkButton}>
+            <button onClick={() => void resendCode()} disabled={busy} style={linkButton}>
               {t("auth.resendCode")}
             </button>
           </div>

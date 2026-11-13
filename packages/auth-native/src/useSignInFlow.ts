@@ -10,7 +10,13 @@ import type { Phase, SignInFlow, SignInFlowOptions } from "./types";
 
 WebBrowser.maybeCompleteAuthSession();
 
-type SecondFactor = { strategy: string; emailAddressId?: string };
+type SecondFactor = { strategy: string; emailAddressId?: string; safeIdentifier?: string };
+
+// Device Trust answers a password from an unrecognised device with "needs_client_trust",
+// MFA with "needs_second_factor"; both finish with an emailed second-factor code.
+function needsSecondFactor(status: string | null): boolean {
+  return status === "needs_second_factor" || status === "needs_client_trust";
+}
 
 export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignInFlow {
   const { signIn, isLoaded: signInLoaded, setActive } = useSignIn();
@@ -54,6 +60,14 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
         onSignedIn(oauthOutcome(result));
         return;
       }
+      if (
+        result.signIn !== undefined &&
+        needsSecondFactor(result.signIn.status) &&
+        (await startSecondFactor(result.signIn.supportedSecondFactors))
+      ) {
+        setBusy(false);
+        return;
+      }
       if (await adoptExistingSession()) return;
       setError(t("auth.googleIncomplete"));
     } catch (err) {
@@ -85,10 +99,11 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
   async function startSecondFactor(factors: SecondFactor[] | null): Promise<boolean> {
     const factor = factors?.find((f) => f.strategy === "email_code");
     if (!signInLoaded || factor?.emailAddressId === undefined) return false;
-    await signIn.prepareSecondFactor({
+    await clerk.client.signIn.prepareSecondFactor({
       strategy: "email_code",
       emailAddressId: factor.emailAddressId,
     });
+    setEmail((current) => current || (factor.safeIdentifier ?? ""));
     setPhase({ name: "code", mode: "second-factor" });
     return true;
   }
@@ -194,7 +209,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
           return;
         }
         if (
-          result.status === "needs_second_factor" &&
+          needsSecondFactor(result.status) &&
           (await startSecondFactor(result.supportedSecondFactors))
         ) {
           setCode("");
@@ -232,7 +247,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
         return;
       }
       if (
-        result.status === "needs_second_factor" &&
+        needsSecondFactor(result.status) &&
         (await startSecondFactor(result.supportedSecondFactors))
       ) {
         setBusy(false);

@@ -15,6 +15,8 @@ export default function SsoCallback(): React.ReactElement {
         <StepTitle>{t("auth.verifyingTitle")}</StepTitle>
         <StepBody>{t("auth.ssoBody")}</StepBody>
         <AuthenticateWithRedirectCallback
+          signInUrl="/sign-in"
+          secondFactorUrl="/sign-in"
           signInForceRedirectUrl="/app"
           signUpForceRedirectUrl="/app"
         />
