@@ -3,6 +3,7 @@ import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validatio
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { instrument } from "@posthog/mcp";
 import { Hono } from "hono";
+import type { PostHog } from "posthog-node";
 import { cors } from "hono/cors";
 import type { Context } from "hono";
 import { auth, type ConnectorUser } from "./auth";
@@ -30,13 +31,12 @@ const LOGBOOK_PROPERTIES = [
 
 const RATE_LIMITED = "Too many requests from this connector. Wait a minute, then try again.";
 
-function serverFor(c: Context<AppEnv>, user: ConnectorUser): McpServer {
+function serverFor(c: Context<AppEnv>, user: ConnectorUser, posthog: PostHog | null): McpServer {
   // The SDK's default validator compiles schemas with new Function, which Workers forbid.
   const server = new McpServer(
     { name: "sendtally", version: "1.0.0" },
     { jsonSchemaValidator: new CfWorkerJsonSchemaValidator() }
   );
-  const posthog = getPostHog(c.env);
   if (posthog !== null) {
     instrument(server, posthog, {
       identify: { distinctId: user.userId },
@@ -88,9 +88,9 @@ export const mcp = new Hono<AppEnv>()
       });
     }
     const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });
-    await serverFor(c, user).connect(transport);
-    const response = await transport.handleRequest(c.req.raw);
     const posthog = getPostHog(c.env);
+    await serverFor(c, user, posthog).connect(transport);
+    const response = await transport.handleRequest(c.req.raw);
     if (posthog !== null) c.executionCtx.waitUntil(posthog.flush());
     return response;
   });

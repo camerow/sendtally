@@ -1,15 +1,13 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import { PostHog } from "posthog-node";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { Env } from "../src/bindings";
 import type * as harness from "./harness";
 import type * as posthog from "../src/lib/posthog";
 
-const captureUserEvent = vi.hoisted(() => vi.fn(async () => undefined));
 const posthogClient = vi.hoisted(() => ({ current: null as PostHog | null }));
 vi.mock("../src/lib/posthog", async (importOriginal) => ({
   ...(await importOriginal<typeof posthog>()),
-  captureUserEvent,
   getPostHog: () => posthogClient.current,
 }));
 
@@ -90,8 +88,6 @@ const session = (date: string, climbs: unknown[]): unknown => ({
 });
 
 describe("connector", () => {
-  beforeEach(() => captureUserEvent.mockClear());
-
   it("sends an unsigned client to the Clerk instance that signs it in", async () => {
     const res = await rpc("tools/list", {});
     expect(res.status).toBe(401);
