@@ -8,6 +8,7 @@ import {
   likelyDuplicates,
   planImport,
   type ImportPlan,
+  type ImportSession,
   type LikelyDuplicate,
 } from "@sendtally/core/import";
 import { importAll } from "@sendtally/features/import";
@@ -30,14 +31,11 @@ type Review = {
   error: string | null;
 };
 
-const sha256Hex = (text: string): Promise<string> =>
-  digestStringAsync(CryptoDigestAlgorithm.SHA256, text);
-
-const importing = (review: Review): ImportPlan["sessions"] => {
-  if (review.importAnyway) return review.plan.sessions;
+function split(review: Review): { unflagged: ImportSession[]; importing: ImportSession[] } {
   const flagged = new Set(review.duplicates.map((d) => d.index));
-  return review.plan.sessions.filter((_, i) => !flagged.has(i));
-};
+  const unflagged = review.plan.sessions.filter((_, i) => !flagged.has(i));
+  return { unflagged, importing: review.importAnyway ? review.plan.sessions : unflagged };
+}
 
 /** Import a climbing history: which apps' exports it reads, the file picked, then a review to confirm. */
 export function ImportScreen(): React.ReactElement {
@@ -50,7 +48,9 @@ export function ImportScreen(): React.ReactElement {
     const timeZone = getCalendars()[0]?.timeZone ?? "UTC";
     const plan = planImport(await picked.result.text(), timeZone);
     const log = await api.sessionsWithClimbs();
-    const duplicates = await likelyDuplicates(plan.sessions, log.sessions, sha256Hex);
+    const duplicates = await likelyDuplicates(plan.sessions, log.sessions, (text) =>
+      digestStringAsync(CryptoDigestAlgorithm.SHA256, text)
+    );
     setReview({
       fileName: picked.result.name,
       plan,
@@ -64,9 +64,8 @@ export function ImportScreen(): React.ReactElement {
   const confirm = async (current: Review): Promise<void> => {
     setReview({ ...current, busy: true, error: null });
     try {
-      const sessions = importing(current);
-      const { imported, skipped } = await importAll(api, sessions);
-      const likely = current.plan.sessions.length - sessions.length;
+      const { imported, skipped } = await importAll(api, split(current).importing);
+      const likely = current.importAnyway ? 0 : current.duplicates.length;
       router.dismissTo({ pathname: "/profile", params: { imported, skipped, likely } });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -89,7 +88,8 @@ export function ImportScreen(): React.ReactElement {
   }
 
   const usable = review.plan.sessions.length > 0;
-  const count = importing(review).length;
+  const { unflagged, importing } = split(review);
+  const count = importing.length;
   return (
     <ScreenFrame
       backLabel={t("settings.importCsv")}
@@ -115,6 +115,8 @@ export function ImportScreen(): React.ReactElement {
           fileName={review.fileName}
           plan={review.plan}
           duplicates={review.duplicates}
+          unflagged={unflagged}
+          importing={importing}
           importAnyway={review.importAnyway}
           onImportAnyway={(importAnyway) => setReview({ ...review, importAnyway })}
         />

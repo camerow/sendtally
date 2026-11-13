@@ -10,7 +10,7 @@ export type SwitchRowProps = {
   title: string;
   body?: string;
   checked: boolean;
-  disabled: boolean;
+  disabled?: boolean;
   onChange: (value: boolean) => void;
 };
 
@@ -19,7 +19,7 @@ export function SwitchRow({
   title,
   body,
   checked,
-  disabled,
+  disabled = false,
   onChange,
 }: SwitchRowProps): React.ReactElement {
   return (

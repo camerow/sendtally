@@ -8,15 +8,13 @@ import {
 } from "@sendtally/core/import";
 import { planStats } from "@sendtally/features/import";
 import { formatDate, formatNumber, t } from "@sendtally/features/i18n";
-import { monthName } from "@sendtally/features/sessions";
 import { colors } from "@sendtally/design/tokens";
 import { SectionHeading } from "../../components/SectionHeading";
-import { SectionHeader } from "../sessions/SectionHeader";
 import { SummaryTiles } from "../training/summary/SummaryTiles";
 import { RowIssues } from "./RowIssues";
 import { ImportHero } from "./ImportHero";
 import { LikelyDuplicates } from "./LikelyDuplicates";
-import { PlannedSessionRow } from "./PlannedSessionRow";
+import { SessionsByMonth } from "./SessionsByMonth";
 
 const dayLabel = (date: string): string =>
   formatDate(new Date(`${date}T00:00:00Z`), {
@@ -43,22 +41,22 @@ export function ImportReview({
   fileName,
   plan,
   duplicates,
+  unflagged,
+  importing,
   importAnyway,
   onImportAnyway,
 }: {
   fileName: string;
   plan: ImportPlan;
   duplicates: LikelyDuplicate[];
+  unflagged: ImportSession[];
+  importing: ImportSession[];
   importAnyway: boolean;
   onImportAnyway: (value: boolean) => void;
 }): React.ReactElement {
-  const flagged = new Set(duplicates.map((d) => d.index));
-  const stats = planStats(
-    importAnyway ? plan.sessions : plan.sessions.filter((_, i) => !flagged.has(i))
-  );
+  const stats = planStats(importing);
   const first = plan.sessions[0]!;
   const last = plan.sessions[plan.sessions.length - 1]!;
-  const newestFirst = plan.sessions.filter((_, i) => !flagged.has(i)).reverse();
   return (
     <>
       <View style={{ gap: 10 }}>
@@ -89,22 +87,12 @@ export function ImportReview({
           onImportAnyway={onImportAnyway}
         />
       )}
-      {newestFirst.length > 0 && (
-        <View style={{ marginHorizontal: -18 }}>
-          <View style={{ paddingHorizontal: 18 }}>
-            <SectionHeading title={t("import.sessionsLabel")} />
-          </View>
-          {newestFirst.map((s, i) => (
-            <React.Fragment key={i}>
-              {s.date.slice(0, 7) !== newestFirst[i - 1]?.date.slice(0, 7) && (
-                <SectionHeader
-                  title={monthName(Number(s.date.slice(5, 7)))}
-                  meta={s.date.slice(0, 4)}
-                />
-              )}
-              <PlannedSessionRow session={s} meta={rowMeta(s)} />
-            </React.Fragment>
-          ))}
+      {unflagged.length > 0 && (
+        <View>
+          <SectionHeading title={t("import.sessionsLabel")} />
+          <SessionsByMonth
+            rows={[...unflagged].reverse().map((session) => ({ session, meta: rowMeta(session) }))}
+          />
         </View>
       )}
     </>
