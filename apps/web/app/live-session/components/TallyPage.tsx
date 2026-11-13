@@ -76,8 +76,24 @@ export function TallyPage({ exercise = false }: TallyPageProps): React.ReactElem
   });
   const { draft, gym, circuitGym, selection, snack } = tally;
 
+  const minimise = (
+    <button
+      type="button"
+      className="tally-minimise"
+      aria-label={t("tally.minimise")}
+      onClick={leave}
+    >
+      <Icon name="chevron" size={20} strokeWidth={2.2} />
+    </button>
+  );
   if (draft === null || (exercise && draft.exercise === undefined))
-    return <div className="tally" />;
+    return (
+      <div className="tally">
+        <div className="tally-column">
+          <div className="tally-head">{minimise}</div>
+        </div>
+      </div>
+    );
 
   const done = (): void => {
     tally.done();
@@ -114,14 +130,7 @@ export function TallyPage({ exercise = false }: TallyPageProps): React.ReactElem
     <div className="tally">
       <div className="tally-column">
         <div className="tally-head">
-          <button
-            type="button"
-            className="tally-minimise"
-            aria-label={t("tally.minimise")}
-            onClick={leave}
-          >
-            <Icon name="chevron" size={20} strokeWidth={2.2} />
-          </button>
+          {minimise}
           <button
             type="button"
             className="tally-gym"

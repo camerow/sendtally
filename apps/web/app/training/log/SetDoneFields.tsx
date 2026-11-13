@@ -66,7 +66,7 @@ export function SetDoneFields({
           compact
           label={`${label} · ${hangs ? t("plan.colHangs") : t("workouts.dose.reps")}`}
           short={short}
-          value={set.reps ?? 0}
+          value={set.reps ?? null}
           onChange={(n) => onChange({ ...set, reps: n })}
           mode={{ kind: "number", step: 1, max: 1000 }}
         />
@@ -76,7 +76,7 @@ export function SetDoneFields({
         <NumberField
           compact
           label={`${label} · ${hangs ? t("hang.load") : t("hang.weight")}`}
-          value={kg === undefined ? 0 : toUnit(kg, unit)}
+          value={kg === undefined ? null : toUnit(kg, unit)}
           onChange={(n) => onChange({ ...set, weightKg: fromUnit(n, unit) })}
           mode={weightLimits}
           unit={unit}

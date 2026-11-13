@@ -32,10 +32,12 @@ export function HoldRow({
         style={{ width: `${vm.share * 100}%` }}
       />
       {lead ?? <span className="player-row-gap" />}
-      <span className="player-row-line player-row-text">
-        {vm.word !== null && <span className="player-row-word">{vm.word}</span>}
-        <span className="player-row-clock">{vm.clock}</span>
-        {vm.of !== null && <span className="player-row-next">{vm.of}</span>}
+      <span className="player-row-text">
+        <span className="player-row-line">
+          {vm.word !== null && <span className="player-row-word">{vm.word}</span>}
+          <span className="player-row-clock">{vm.clock}</span>
+          {vm.of !== null && <span className="player-row-of">{vm.of}</span>}
+        </span>
       </span>
       <button type="button" className="player-row-action" onClick={vm.paused ? onResume : onPause}>
         {vm.paused ? t("hang.resume") : t("hang.pause")}

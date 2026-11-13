@@ -62,7 +62,7 @@ const FOCUSED_ROUTES = [
   "/app/workout/tally",
 ];
 
-/** Pages that are the live thing itself, where the live bar would only point back at them. */
+/** Pages that are the live thing itself, where the live bar would only point back at them; so is a live run's review. */
 const LIVE_ROUTES = [
   LIVE_PATH,
   "/app/workout/sets",
@@ -71,9 +71,11 @@ const LIVE_ROUTES = [
 ];
 
 function Shell({ children }: { children: React.ReactNode }): React.ReactElement {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const focused = FOCUSED_ROUTES.includes(pathname);
-  const onLive = LIVE_ROUTES.includes(pathname);
+  const onLive =
+    LIVE_ROUTES.includes(pathname) ||
+    (pathname === "/app/activity/new" && new URLSearchParams(search).get("live") === "1");
   const session = useLiveSession(useLiveSessionStorage()).stored;
   const run = useLiveRun(useLiveRunStore());
   const live = session !== null || run !== null;
@@ -127,7 +129,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
         className={
           focused
             ? "app-content app-content--focused"
-            : live
+            : live && !onLive
               ? "app-content app-content--live"
               : "app-content"
         }
@@ -136,7 +138,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
       </div>
       {!focused && (
         <div className="app-bottom">
-          <LiveBar />
+          {!onLive && <LiveBar />}
           <nav className="app-tabbar" aria-label={t("common.sectionsAria")}>
             {NAV_ITEMS.map(({ label, to, icon }) => (
               <NavLink key={to} to={to} end={to === "/app"} className="app-tab">

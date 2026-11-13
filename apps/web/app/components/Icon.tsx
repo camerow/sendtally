@@ -93,7 +93,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
     </>
   ),
   stop: <rect x="7" y="7" width="10" height="10" rx="1.5" />,
-  play: <path d="M8 5.5v13l10.5-6.5z" />,
+  play: <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />,
   pause: <path d="M9 5.5v13M15 5.5v13" />,
   info: (
     <>

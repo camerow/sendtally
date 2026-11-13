@@ -71,7 +71,9 @@ describe("what runs now", () => {
     expect(asking?.running).toBe(running);
     if (asking !== null) askingStore.record(asking);
     expect(record).toHaveBeenCalled();
+    expect(askingStore.waiting()).toBe(true);
     askingStore.settled();
+    expect(askingStore.waiting()).toBe(false);
     expect(start).toHaveBeenCalledTimes(2);
   });
 });

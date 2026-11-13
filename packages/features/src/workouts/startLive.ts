@@ -59,6 +59,8 @@ export const askingStore = {
     return () => listeners.delete(listener);
   },
   read: (): Asking | null => asking,
+  /** Something waits on the running one being saved or thrown away, and opens once it is. */
+  waiting: (): boolean => afterRecord !== null,
   close: (): void => setAsking(null),
   /** Records the running one; the new one starts once it is saved or thrown away. */
   record: (a: Asking): void => {

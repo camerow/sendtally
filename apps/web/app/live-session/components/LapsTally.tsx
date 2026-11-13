@@ -114,7 +114,7 @@ export function LapsTally({
               )}
             </div>
           )}
-          <button type="button" className="tally-finish lap-add" onClick={laps.addLap}>
+          <button type="button" className="tally-finish laps-add" onClick={laps.addLap}>
             {t("tally.addLap")}
           </button>
         </div>

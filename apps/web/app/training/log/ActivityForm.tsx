@@ -26,6 +26,7 @@ import { DetailFrame } from "../../components/detail/DetailFrame";
 import { Sheet } from "../../components/Sheet";
 import { useAppApi } from "../../lib/useAppApi";
 import { useLiveRunStore } from "../../lib/useLiveRun";
+import { askingStore } from "../../live-session/startLive";
 import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { workoutPath } from "../library/useLibrary";
@@ -100,14 +101,22 @@ export function ActivityForm({
     draft.kind === "strength" && draft.workoutId !== null && activities.status === "ready"
       ? previousSets(activities.data, draft.workoutId, exercise)
       : [];
+  /** A live run's review leaves to what waited on it, if anything did, which then opens in its place. */
+  const leave = (): void => {
+    if (live && askingStore.waiting()) liveRun.clear();
+    else {
+      if (live) liveRun.clear();
+      back();
+    }
+  };
   const save = (): void => {
-    if (live) liveRun.clear();
     if (hang !== undefined) {
+      if (live) liveRun.clear();
       hang.save(draft);
       return;
     }
     void actions.saveActivity(activityFromDraft(id, draft));
-    back();
+    leave();
   };
   const saveAsWorkout = (): void => {
     if (items.length === 0) return;
@@ -258,8 +267,7 @@ export function ActivityForm({
           danger: true,
           onPress: () => {
             setDiscarding(false);
-            liveRun.clear();
-            back();
+            leave();
           },
         }}
       >

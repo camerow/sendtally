@@ -13,9 +13,11 @@ export function IdleRestRow({
 }): React.ReactElement {
   return (
     <div className="player-row">
-      <span className="player-row-line player-row-text">
-        <span className="player-row-word">{t("hang.rest")}</span>
-        <span className="player-row-clock">{elapsedClock(seconds)}</span>
+      <span className="player-row-text">
+        <span className="player-row-line">
+          <span className="player-row-word">{t("hang.rest")}</span>
+          <span className="player-row-clock">{elapsedClock(seconds)}</span>
+        </span>
       </span>
       <button
         type="button"
