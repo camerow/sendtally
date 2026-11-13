@@ -90,6 +90,8 @@ export function DoneDetails({
               <span className="set-col-done">
                 {hangs ? t("activities.colHangsLoad") : t("activities.colDone")}
               </span>
+              <span className="set-tick" />
+              <span className="set-remove" />
             </div>
             {d.sets.map((set, i) => (
               <ReviewSetRow

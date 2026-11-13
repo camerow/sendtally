@@ -1180,7 +1180,12 @@
 }
 
 .set-row--head .set-col-done {
-  width: 88px;
+  text-align: right;
+}
+
+.set-row--head .set-tick,
+.set-row--head .set-remove {
+  height: auto;
 }
 
 .set-short {
@@ -1462,7 +1467,8 @@
 }
 
 .hang-grid-load {
-  width: 54px;
+  min-width: 54px;
+  white-space: nowrap;
   flex: none;
   text-align: right;
   font-family: var(--font-mono);
@@ -1554,6 +1560,33 @@
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-on-dark-muted);
+}
+
+@media (max-width: 767px) {
+  .done-card {
+    padding: 12px 10px;
+  }
+
+  .set-row {
+    gap: 6px;
+  }
+
+  .set-col-n {
+    width: 22px;
+    padding-left: 2px;
+  }
+
+  .set-col-target {
+    font-size: 11px;
+  }
+
+  .set-tick {
+    width: 32px;
+  }
+
+  .set-remove {
+    width: 28px;
+  }
 }
 
 @media (max-width: 767px) {
