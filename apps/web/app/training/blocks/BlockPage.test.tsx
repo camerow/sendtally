@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import React, { act } from "react";
+import React, { act, StrictMode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useLocation, useParams } from "react-router";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
@@ -115,15 +115,17 @@ function Page({ fresh }: { fresh: boolean }): React.ReactElement {
 const mount = (fresh = false): void =>
   act(() =>
     root.render(
-      <ToastProvider>
-        <MemoryRouter initialEntries={["/app/train", "/app/plan/block/b1"]} initialIndex={1}>
-          <Spy />
-          <Routes>
-            <Route path="/app/train" element={<p>Train</p>} />
-            <Route path="/app/plan/block/:id" element={<Page fresh={fresh} />} />
-          </Routes>
-        </MemoryRouter>
-      </ToastProvider>
+      <StrictMode>
+        <ToastProvider>
+          <MemoryRouter initialEntries={["/app/train", "/app/plan/block/b1"]} initialIndex={1}>
+            <Spy />
+            <Routes>
+              <Route path="/app/train" element={<p>Train</p>} />
+              <Route path="/app/plan/block/:id" element={<Page fresh={fresh} />} />
+            </Routes>
+          </MemoryRouter>
+        </ToastProvider>
+      </StrictMode>
     )
   );
 
@@ -210,11 +212,14 @@ describe("BlockPage", () => {
     );
   });
 
-  it("removes an untitled empty template it opened fresh, once it is left", () => {
+  it("removes an untitled empty template it opened fresh, once it is left", async () => {
     state.plan = { ...withBlock({ ...template, name: "" }), memberships: [] };
     mount(true);
     expect(document.activeElement?.classList.contains("block-name-field")).toBe(true);
+    await act(async () => new Promise((done) => setTimeout(done)));
+    expect(state.deleteBlock).not.toHaveBeenCalled();
     act(() => root.render(<p>gone</p>));
+    await act(async () => new Promise((done) => setTimeout(done)));
     expect(state.deleteBlock).toHaveBeenCalledWith("b1");
   });
 

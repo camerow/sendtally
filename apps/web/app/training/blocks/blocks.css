@@ -455,6 +455,7 @@ button.grid-cell:hover {
 }
 
 .block-empty .block-action {
+  width: auto;
   min-height: 44px;
 }
 
@@ -721,4 +722,10 @@ button.grid-cell:hover {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-on-dark-muted);
+}
+
+.block-order .icon-button:disabled {
+  opacity: 0.3;
+  background: none;
+  cursor: default;
 }

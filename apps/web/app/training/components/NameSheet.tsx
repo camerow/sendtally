@@ -41,6 +41,7 @@ export function NameSheet({
           value={name}
           maxLength={80}
           data-autofocus
+          autoComplete="off"
           onFocus={(e) => e.target.select()}
           onChange={(e) => setName(e.target.value)}
         />

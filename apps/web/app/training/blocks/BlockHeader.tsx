@@ -92,6 +92,7 @@ export function BlockHeader({
           value={name}
           maxLength={80}
           placeholder={t("plan.blockNamePlaceholder")}
+          autoComplete="off"
           {...(autoFocus && { autoFocus: true })}
           onChange={(e) => {
             setName(e.target.value);

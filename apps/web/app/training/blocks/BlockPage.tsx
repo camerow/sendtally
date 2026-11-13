@@ -69,12 +69,17 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
   React.useEffect(() => {
     left.current = { empty, remove: actions.deleteBlock };
   });
-  React.useEffect(
-    () => () => {
-      if (left.current.empty) void left.current.remove(id);
-    },
-    [id]
-  );
+  // Checked after unmounting settles, so StrictMode's remount does not count as leaving.
+  const mounted = React.useRef(false);
+  React.useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      setTimeout(() => {
+        if (!mounted.current && left.current.empty) void left.current.remove(id);
+      });
+    };
+  }, [id]);
 
   if (plan.state.status !== "ready")
     return (
