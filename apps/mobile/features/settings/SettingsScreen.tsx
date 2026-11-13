@@ -31,9 +31,15 @@ export function SettingsScreen(): React.ReactElement {
   const onOpenMembership = React.useCallback(() => router.push("/membership"), [router]);
   const onOpenAccount = React.useCallback(() => router.push("/account"), [router]);
   const onImport = React.useCallback(() => router.push("/import"), [router]);
-  const { imported, skipped } = useLocalSearchParams<{ imported?: string; skipped?: string }>();
+  const { imported, skipped, likely } = useLocalSearchParams<{
+    imported?: string;
+    skipped?: string;
+    likely?: string;
+  }>();
   const result =
-    imported === undefined ? null : { imported: Number(imported), skipped: Number(skipped ?? 0) };
+    imported === undefined
+      ? null
+      : { imported: Number(imported), skipped: Number(skipped ?? 0), likely: Number(likely ?? 0) };
 
   return (
     <SettingsView
@@ -61,7 +67,9 @@ export function SettingsScreen(): React.ReactElement {
                   router.push({ pathname: "/(tabs)/sessions", params: { segment: "climbing" } }),
               },
             })}
-            onHide={() => router.setParams({ imported: undefined, skipped: undefined })}
+            onHide={() =>
+              router.setParams({ imported: undefined, skipped: undefined, likely: undefined })
+            }
           />
         )
       }

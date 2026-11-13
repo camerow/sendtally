@@ -8,7 +8,7 @@ const rowTitle = { fontFamily: fonts.sansSemiBold, fontSize: 13, color: colors.g
 
 export type SwitchRowProps = {
   title: string;
-  body: string;
+  body?: string;
   checked: boolean;
   disabled: boolean;
   onChange: (value: boolean) => void;
@@ -28,7 +28,7 @@ export function SwitchRow({
       <View style={{ flexDirection: "row", alignItems: "center", gap: 14, minHeight: 44 }}>
         <View style={{ flex: 1, gap: 3 }}>
           <Text style={rowTitle}>{title}</Text>
-          <Text style={bodyText}>{body}</Text>
+          {body !== undefined && <Text style={bodyText}>{body}</Text>}
         </View>
         <Switch checked={checked} onChange={onChange} disabled={disabled} label={title} />
       </View>
