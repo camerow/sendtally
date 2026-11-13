@@ -8,7 +8,14 @@ import {
 } from "@sendtally/core/hang";
 import { NO_PLAN } from "../training/planLinkParams";
 import { activityKindOf } from "./library";
-import type { IntervalsRun, WorkoutRun } from "./runParams";
+import type { PlayerPath } from "./liveRun";
+import {
+  intervalsParams,
+  runParams,
+  timerParams,
+  type IntervalsRun,
+  type WorkoutRun,
+} from "./runParams";
 import type { LibraryWorkout } from "./types";
 
 /**
@@ -66,4 +73,23 @@ export function workoutStart(
     open: onTally ? "sets" : playerOf(items),
     run: { ...run, exerciseRestS: w.exerciseRestS, items: [...items] },
   };
+}
+
+/** The player a start opens and its params; none for the live session or the activity form. */
+export function playerRoute(
+  w: Pick<LibraryWorkout, "id">,
+  start: WorkoutStart,
+  { link, session }: PlannedItems
+): { pathname: PlayerPath; params: Record<string, string> } | null {
+  switch (start.open) {
+    case "timer":
+      return { pathname: "/workout/timer", params: timerParams(w.id, start.gripId, session, link) };
+    case "intervals":
+      return { pathname: "/workout/intervals", params: intervalsParams(start.run) };
+    case "sets":
+    case "checklist":
+      return { pathname: `/workout/${start.open}`, params: runParams(start.run) };
+    default:
+      return null;
+  }
 }

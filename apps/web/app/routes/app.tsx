@@ -79,7 +79,8 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
   const focused = FOCUSED_ROUTES.includes(pathname);
   const onLive =
     LIVE_ROUTES.includes(pathname) ||
-    (pathname === "/app/activity/new" && new URLSearchParams(search).get("live") === "1");
+    (pathname === "/app/activity/new" && new URLSearchParams(search).get("live") === "1") ||
+    (pathname === "/app/workout/done" && new URLSearchParams(search).has("run"));
   const session = useLiveSession(useLiveSessionStorage()).stored;
   const run = useLiveRun(useLiveRunStore());
   const live = session !== null || run !== null;

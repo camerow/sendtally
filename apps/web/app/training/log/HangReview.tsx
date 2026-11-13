@@ -42,6 +42,7 @@ function Review({
       id={id}
       initial={initial}
       logged={null}
+      live={params.run !== null}
       kindSet
       planned={review.prescribed}
       hang={{
