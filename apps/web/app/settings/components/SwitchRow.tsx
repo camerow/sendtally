@@ -1,6 +1,6 @@
 import React from "react";
 import { bodyText, rowDivider } from "./styles";
-import { Switch } from "./Switch";
+import { Switch } from "../../components/Switch";
 
 export type SwitchRowProps = {
   title: string;

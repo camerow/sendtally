@@ -15,6 +15,7 @@ import { AccountButton } from "../../components/AccountButton";
 import { Segmented } from "../../components/Segmented";
 import { useAppApi } from "../../lib/useAppApi";
 import { useDismissed } from "../../lib/useDismissed";
+import { useQueryUpdate } from "../useQueryUpdate";
 import { LogMenu } from "./LogMenu";
 import { SetupStack, type SetupCard } from "./SetupStack";
 import { TrainingLog } from "./TrainingLog";
@@ -64,19 +65,11 @@ export function LogPage({
       onDismiss: stravaPrompt.dismiss,
     });
   }
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
+  const updateQuery = useQueryUpdate();
   const workout = params.get("workout");
   const segment: LogSegment =
     params.get("segment") === "training" || workout !== null ? "training" : "climbing";
-  const setQuery = (change: (p: URLSearchParams) => void): void =>
-    setParams(
-      (was) => {
-        const next = new URLSearchParams(was);
-        change(next);
-        return next;
-      },
-      { replace: true, preventScrollReset: true }
-    );
   const all = React.useMemo(
     () => logItems(sessions, entries, hangSessions, activities),
     [sessions, entries, hangSessions, activities]
@@ -100,7 +93,7 @@ export function LogPage({
           ]}
           value={segment}
           onChange={(next) =>
-            setQuery((p) => {
+            updateQuery((p) => {
               p.delete("workout");
               p.delete("status");
               if (next === "climbing") p.delete("segment");
@@ -116,7 +109,12 @@ export function LogPage({
         <TrainingLog
           items={items}
           workout={workout}
-          onClearWorkout={() => setQuery((p) => p.delete("workout"))}
+          onClearWorkout={() =>
+            updateQuery((p) => {
+              p.delete("workout");
+              p.set("segment", "training");
+            })
+          }
         />
       )}
       {!empty && <LogMenu variant="fab" />}
