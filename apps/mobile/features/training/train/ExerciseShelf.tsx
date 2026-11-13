@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import type { WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
+import { shelfRows } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { CategoryRow } from "../components/CategoryRow";
 import { ShelfHeader } from "../components/ShelfHeader";
@@ -53,21 +54,18 @@ export function ExerciseShelf({
           </Text>
         </View>
       ) : (
-        [...cards]
-          .sort((a, b) => Number(a.meta === null) - Number(b.meta === null))
-          .slice(0, SHELF_ROWS)
-          .map((c) => (
-            <CategoryRow
-              key={c.key}
-              kind={kind}
-              name={c.name}
-              meta={c.meta ?? t("workouts.notDoneYet")}
-              faded={c.meta === null}
-              showKind={false}
-              showMark={false}
-              onPress={c.open}
-            />
-          ))
+        shelfRows(cards, SHELF_ROWS).map((c) => (
+          <CategoryRow
+            key={c.key}
+            kind={kind}
+            name={c.name}
+            meta={c.meta ?? t("workouts.notDoneYet")}
+            faded={c.meta === null}
+            showKind={false}
+            showMark={false}
+            onPress={c.open}
+          />
+        ))
       )}
     </View>
   );

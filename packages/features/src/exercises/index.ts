@@ -18,3 +18,6 @@ export type {
   TallyMeasure,
 } from "./types";
 export * from "./exerciseText";
+export { usePickerWorld } from "./usePickerWorld";
+export { useExerciseActions, type ExerciseActions } from "./useExerciseActions";
+export { exerciseShelves, shelfRows, type ShelfCard, type ShelfWorld } from "./shelfCards";
