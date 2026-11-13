@@ -601,6 +601,10 @@
   color: var(--bs-gunmetal);
 }
 
+.number-field-input::placeholder {
+  color: rgba(64, 63, 76, 0.45);
+}
+
 .number-field-unit {
   font-family: var(--font-mono);
   font-size: 13px;
