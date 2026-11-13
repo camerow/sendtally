@@ -103,13 +103,19 @@ describe("saving a new session", () => {
 });
 
 describe("each climb's area", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   /** The form's Add climb, not the open sheet's heading. */
   const addClimb = () => screen.getAllByText("Add climb")[0]!;
   const pickArea = async (): Promise<void> => {
     await fireEvent(screen.getByLabelText("Area"), "focus");
     await fireEvent.changeText(screen.getByLabelText("Area"), "Stan");
-    // The search waits out a debounce, which a loaded machine can push past the 1s default.
-    await fireEvent.press(await screen.findByLabelText("Stanage Popular", {}, { timeout: 5000 }));
+    await fireEvent.press(await screen.findByLabelText("Stanage Popular"));
   };
 
   it("leaves the form and sits in the climb sheet, outdoors for every climb", async () => {

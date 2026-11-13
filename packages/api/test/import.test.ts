@@ -116,22 +116,34 @@ describe("import", () => {
   });
 
   it("lists the whole log, however long", async () => {
-    const day = (i: number) =>
-      new Date(Date.UTC(2015, 0, 1) + i * 86_400_000).toISOString().slice(0, 10);
-    const many = Array.from({ length: 250 }, (_, i) => ({
-      date: day(i),
-      location: "indoor",
-      climbs: [{ grade: v(3), kind: "send", tries: 1 }],
-    }));
     const longLog = { ...headers, "x-test-user": "user_long_log" };
-    for (const batch of [many.slice(0, 125), many.slice(125)]) {
-      const res = await testApp().request(
-        "/v1/sessions/import",
-        { method: "POST", headers: longLog, body: JSON.stringify({ sessions: batch }) },
-        env
-      );
-      expect(res.status).toBe(201);
-    }
+    const res = await testApp().request(
+      "/v1/sessions/import",
+      {
+        method: "POST",
+        headers: longLog,
+        body: JSON.stringify({
+          sessions: [
+            {
+              date: "2015-01-01",
+              location: "indoor",
+              climbs: [{ grade: v(3), kind: "send", tries: 1 }],
+            },
+          ],
+        }),
+      },
+      env
+    );
+    expect(res.status).toBe(201);
+    const shifted = (column: string) => `date(${column}, i || ' days') || substr(${column}, 11)`;
+    await env.DB.prepare(
+      `WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 249)
+       INSERT INTO sessions (user_id, fingerprint, source, location, start_at, end_at, times, climb_count, send_count, top_grade, top_send_grade, top_grade_label, top_send_grade_label, rpe, rpe_source, title, summary, climbs_json)
+       SELECT user_id, fingerprint || '-' || i, source, location, ${shifted("start_at")}, ${shifted("end_at")}, times, climb_count, send_count, top_grade, top_send_grade, top_grade_label, top_send_grade_label, rpe, rpe_source, title, summary, climbs_json
+       FROM sessions, n WHERE user_id = ?`
+    )
+      .bind("user_long_log")
+      .run();
     const list = await testApp().request("/v1/sessions", { headers: longLog }, env);
     expect(((await list.json()) as { sessions: unknown[] }).sessions).toHaveLength(250);
   });

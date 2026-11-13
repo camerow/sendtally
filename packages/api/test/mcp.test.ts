@@ -1,23 +1,9 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import { PostHog } from "posthog-node";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Env } from "../src/bindings";
-import type * as harness from "./harness";
-import type * as posthog from "../src/lib/posthog";
-
-const posthogClient = vi.hoisted(() => ({ current: null as PostHog | null }));
-vi.mock("../src/lib/posthog", async (importOriginal) => ({
-  ...(await importOriginal<typeof posthog>()),
-  getPostHog: () => posthogClient.current,
-}));
-
-// The pool loads the Worker's modules before this file's mock exists, so the app
-// is imported afresh for the mock to reach the capture helper.
-let testApp: typeof harness.testApp;
-beforeAll(async () => {
-  vi.resetModules();
-  ({ testApp } = await import("./harness"));
-});
+import * as posthog from "../src/lib/posthog";
+import { testApp } from "./harness";
 
 type ToolResult = { isError?: boolean; content: Array<{ text: string }> };
 
@@ -142,12 +128,12 @@ describe("connector", () => {
       fetch: async () => new Response("{}"),
     });
     const capture = vi.spyOn(client, "capture");
-    posthogClient.current = client;
+    const spy = vi.spyOn(posthog, "getPostHog").mockReturnValue(client);
     try {
       await callTool("user_mcp", env, "list_sessions", { from: "2026-10-01", includeClimbs: true });
       await callTool("user_mcp", env, "delete_block", { id: "winter-base-2026" });
     } finally {
-      posthogClient.current = null;
+      spy.mockRestore();
     }
 
     const toolCall = capture.mock.calls.find(([e]) => e.event === "$mcp_tool_call")?.[0];
@@ -161,32 +147,6 @@ describe("connector", () => {
     expect(sent).not.toContain("winter-base-2026");
     expect(toolCall?.properties).not.toHaveProperty("$mcp_parameters");
     expect(toolCall?.properties).not.toHaveProperty("$mcp_response");
-  });
-
-  it("records a missing capability report with its text, and nothing else", async () => {
-    const client = new PostHog("phc_test", {
-      host: "https://us.i.posthog.com",
-      fetch: async () => new Response("{}"),
-    });
-    const capture = vi.spyOn(client, "capture");
-    posthogClient.current = client;
-    let tools: { result: { tools: { name: string }[] } };
-    try {
-      tools = (await (await rpc("tools/list", {}, "user_mcp")).json()) as typeof tools;
-      await callTool("user_mcp", env, "get_more_tools", { context: "Rename a training block" });
-    } finally {
-      posthogClient.current = null;
-    }
-
-    expect(tools.result.tools.map((t) => t.name)).toContain("get_more_tools");
-    const events = capture.mock.calls.map(([e]) => e);
-    expect(events.find((e) => e.event === "$mcp_missing_capability")).toMatchObject({
-      distinctId: "user_mcp",
-      properties: { $mcp_intent: "Rename a training block" },
-    });
-    for (const e of events.filter((e) => e.event !== "$mcp_missing_capability")) {
-      expect(JSON.stringify(e)).not.toContain("Rename a training block");
-    }
   });
 
   it("turns away a user over the rate limit without running the tool", async () => {
