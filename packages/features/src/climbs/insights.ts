@@ -47,6 +47,8 @@ export type ClimbingInsightsVM = {
   pyramid: PyramidRow[];
   hardest: { gradeLabel: string; name: string | null; dateLabel: string } | null;
   byGrade: GradeClimbsVM[];
+  /** Every climb under the grades, a row standing for several counting each. */
+  byGradeTotal: number;
 };
 
 /** Where a row under a grade opens: the climb, or for unnamed climbs the session or workout that logged them. */
@@ -286,6 +288,7 @@ export function climbingInsightsVM(
   const hardest = [...sent].sort(
     (a, b) => b.rank - a.rank || (a.sentAt ?? "").localeCompare(b.sentAt ?? "")
   )[0];
+  const byGrade = climbsByGrade(tried, climbs, filter.gyms ?? new Map(), format.label);
   return {
     avgSend: avgSendLabel(
       sent.map((c) => c.rank),
@@ -309,6 +312,10 @@ export function climbingInsightsVM(
             name: hardest.name === "" ? null : hardest.name,
             dateLabel: dayMonth((hardest.sentAt ?? "").slice(0, 10)),
           },
-    byGrade: climbsByGrade(tried, climbs, filter.gyms ?? new Map(), format.label),
+    byGrade,
+    byGradeTotal: byGrade.reduce(
+      (n, g) => n + g.climbs.reduce((m, c) => m + (c.row.count ?? 1), 0),
+      0
+    ),
   };
 }

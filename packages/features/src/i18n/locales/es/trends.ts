@@ -20,10 +20,6 @@ export const trends = {
   "trends.gradeBin": "{grade}, {climbs}",
   "trends.presetLimit": "Límite · {grade}+",
   "trends.presetVolume": "Volumen · hasta {grade}",
-  "trends.findTag": "Buscar una etiqueta",
-  "trends.tagSearchPlaceholder": "board, límite, viaje",
-  "trends.anyCheckedTag": "Sesiones con alguna etiqueta marcada",
-  "trends.noTagMatch": "Ninguna etiqueta coincide.",
 
   "trends.group.grade": "Grado",
   "trends.group.volume": "Volumen y ritmo",
