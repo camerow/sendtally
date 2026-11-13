@@ -39,19 +39,37 @@ function Items({
   );
 }
 
+/** What a menu's button needs: its popup role, whether it is open, and the press that toggles it. */
+export type TriggerProps = {
+  "aria-haspopup": "menu";
+  "aria-expanded": boolean;
+  onClick: () => void;
+};
+
 /** The ··· menu: a dropdown anchored to its button on desktop, a bottom sheet at 375. */
 export function MoreMenu({
   label,
   items,
+  trigger,
+  className = "more-wrap",
 }: {
   /** What the button and its menu are called to a screen reader. */
   label: string;
   items: readonly MoreMenuItem[];
+  /** In place of the ··· button, such as a page's Create; it opens and closes the menu. */
+  trigger?: (button: TriggerProps) => React.ReactNode;
+  /** The wrapper's class, which positions the button and its dropdown. */
+  className?: string;
 }): React.ReactElement {
   const [open, setOpen] = React.useState(false);
   const narrow = useIsNarrow();
   const wrap = React.useRef<HTMLDivElement>(null);
   const close = React.useCallback(() => setOpen(false), []);
+  const button: TriggerProps = {
+    "aria-haspopup": "menu",
+    "aria-expanded": open,
+    onClick: () => setOpen((was) => !was),
+  };
 
   React.useEffect(() => {
     if (!open) return;
@@ -70,17 +88,14 @@ export function MoreMenu({
   }, [open, narrow]);
 
   return (
-    <div className="more-wrap" ref={wrap}>
-      <button
-        type="button"
-        className="more-button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label={label}
-        onClick={() => setOpen((was) => !was)}
-      >
-        <Icon name="more" size={20} strokeWidth={3} />
-      </button>
+    <div className={className} ref={wrap}>
+      {trigger === undefined ? (
+        <button type="button" className="more-button" aria-label={label} {...button}>
+          <Icon name="more" size={20} strokeWidth={3} />
+        </button>
+      ) : (
+        trigger(button)
+      )}
       {open && !narrow && (
         <div className="more-menu" role="menu" aria-label={label}>
           <Items items={items} onPick={close} />
