@@ -8,6 +8,7 @@ import {
 } from "@sendtally/features/journal";
 import { logCountLabel, logYearGroups, monthScopeItems } from "@sendtally/features/sessions";
 import { ActivityRow } from "./ActivityRow";
+import { BlockDoneRow } from "./BlockDoneRow";
 import { EntryRow } from "./EntryRow";
 import { FilterSheet } from "./FilterSheet";
 import { HangRow } from "./HangRow";
@@ -21,6 +22,7 @@ function TrainingRow({ item }: { item: LogItem }): React.ReactElement | null {
   if (item.type === "activity")
     return <ActivityRow activity={item.activity} blockTag={item.blockTag} />;
   if (item.type === "entry") return <EntryRow entry={item.entry} />;
+  if (item.type === "block") return <BlockDoneRow recap={item.recap} />;
   return null;
 }
 

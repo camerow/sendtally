@@ -3,13 +3,12 @@ import { View } from "react-native";
 import type { Block } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { blockGroups, useTrainingLog } from "@sendtally/features/training";
+import { blockGroups, pastMeta, templateMeta, useTrainingLog } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { DashedPanel } from "../components/DashedPanel";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { BlockRow } from "../train/BlockRow";
-import { pastMeta, templateMeta } from "../train/blockMeta";
 
 export type ScheduleBlocksProps = { onPick: (block: Block) => void };
 

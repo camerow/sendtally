@@ -1,5 +1,7 @@
 import React from "react";
+import { Link } from "react-router";
 import { t } from "@sendtally/features/i18n";
+import { Icon } from "./Icon";
 
 export type SheetAction = {
   label: string;
@@ -16,6 +18,12 @@ export type SheetProps = {
   kicker?: string;
   /** Amber for a warning, such as "Already running"; grey by default. */
   kickerTone?: "amber";
+  /** Makes the title a link, a chevron after it, such as a day's workout. */
+  titleTo?: string;
+  /** Under the title, such as the day a planned run falls on. */
+  under?: React.ReactNode;
+  /** A step inside the sheet: a chevron back to the one before it. */
+  onBack?: () => void;
   onClose: () => void;
   /** The footer's one button; Cancel sits beside it on desktop. */
   action?: SheetAction;
@@ -37,6 +45,9 @@ function OpenSheet({
   title,
   kicker,
   kickerTone,
+  titleTo,
+  under,
+  onBack,
   onClose,
   action,
   cancel = true,
@@ -73,6 +84,16 @@ function OpenSheet({
     >
       <div className="sheet-handle" />
       <div className="sheet-head">
+        {onBack !== undefined && (
+          <button
+            type="button"
+            className="sheet-back"
+            aria-label={t("common.back")}
+            onClick={onBack}
+          >
+            <Icon name="back" size={18} strokeWidth={2.2} />
+          </button>
+        )}
         {kicker !== undefined && (
           <span
             className={kickerTone === "amber" ? "sheet-kicker sheet-kicker--amber" : "sheet-kicker"}
@@ -81,8 +102,16 @@ function OpenSheet({
           </span>
         )}
         <h2 id={titleId} className="sheet-title">
-          {title}
+          {titleTo === undefined ? (
+            title
+          ) : (
+            <Link to={titleTo} className="sheet-title-link">
+              {title}
+              <Icon name="forward" size={18} strokeWidth={2.2} />
+            </Link>
+          )}
         </h2>
+        {under}
       </div>
       {children}
       {action !== undefined && (

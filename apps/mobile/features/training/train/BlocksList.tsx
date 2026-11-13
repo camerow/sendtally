@@ -10,7 +10,9 @@ import {
   daysThisWeek,
   useTrainingLog,
   ongoingMembers,
+  pastMeta,
   planGridRows,
+  templateMeta,
 } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { BlockCard } from "../blocks/BlockCard";
@@ -21,7 +23,6 @@ import { useHangData } from "../data/HangDataContext";
 import { PlanGrid } from "../plan/PlanGrid";
 import { openMembership } from "../plan/openMembership";
 import { BlockRow } from "./BlockRow";
-import { pastMeta, templateMeta } from "./blockMeta";
 
 function Section({
   title,

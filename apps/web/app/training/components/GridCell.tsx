@@ -6,14 +6,19 @@ import { DayMark } from "../plan-week/DayMark";
 export type GridCellProps = {
   kind: WorkoutKind;
   on: boolean;
-  /** On a dated day: done fills the mark, planned outlines it, missed greys it, skipped is slashed. */
+  /**
+   * On a dated day: done fills the mark, planned outlines it, missed greys it, skipped is
+   * slashed, moved away is outlined with an arrow, and moved in carries an azure dot.
+   */
   status?: CellMark;
   /** A plan with no days yet: outlined in its kind's colour, asking for one. */
   asking?: boolean;
-  /** A day to set: drawn as a field, white when off. */
+  /** Makes the cell a button: a weekday to toggle, or with `opens` a day to open. */
+  onPress?: () => void;
+  opens?: boolean;
+  /** A day to set: drawn as a field, white when off, tinted with the kind's line when on. */
   editing?: boolean;
   label: string;
-  onPress?: () => void;
 };
 
 /** One weekday of a plan's week: its kind's mark where it lands, a dot where it does not. */
@@ -22,46 +27,56 @@ export function GridCell({
   on,
   status,
   asking = false,
+  onPress,
+  opens = false,
   editing = false,
   label,
-  onPress,
 }: GridCellProps): React.ReactElement {
   const look = KIND_LOOK[kind];
-  const lit = on && status !== "skipped" && status !== "moved" && !(editing && !on);
+  const moved = status === "moved";
   const style: React.CSSProperties = {
-    background: lit ? look.tint : editing || status === "moved" ? "var(--bs-white)" : undefined,
-    borderColor: asking || (editing && on) ? look.ink : undefined,
+    background:
+      moved || (editing && !on)
+        ? "var(--bs-white)"
+        : on && status !== "skipped"
+          ? look.tint
+          : "var(--surface-soft)",
+    border:
+      asking || moved || editing
+        ? `${asking ? 1.5 : 1}px solid ${moved || (editing && !on) ? "var(--line-on-light-strong)" : look.ink}`
+        : "none",
   };
-  const className = [
-    "grid-cell",
-    editing ? "grid-cell--editing" : "",
-    asking ? "grid-cell--asking" : "",
-  ].join(" ");
   const mark =
     status === "skipped" ? (
       <span className="grid-cell-slash" />
-    ) : status === "moved" ? (
-      <span className="grid-cell-moved">→</span>
+    ) : moved ? (
+      <span className="grid-cell-arrow">→</span>
     ) : on ? (
-      <DayMark
-        kind={kind}
-        filled={status === undefined || status === "done"}
-        missed={status === "missed"}
-      />
+      <>
+        <DayMark
+          kind={kind}
+          filled={status === undefined || status === "done"}
+          missed={status === "missed"}
+        />
+        {status === "movedIn" && <span className="grid-cell-moved-in" />}
+      </>
     ) : (
       <span className="grid-cell-dot" />
     );
-  return onPress === undefined ? (
-    <span className={className} style={style} role="img" aria-label={label}>
-      {mark}
-    </span>
-  ) : (
+  const className = editing ? "grid-cell grid-cell--field" : "grid-cell";
+  if (onPress === undefined)
+    return (
+      <span className={className} style={style} role="img" aria-label={label}>
+        {mark}
+      </span>
+    );
+  return (
     <button
       type="button"
       className={className}
       style={style}
       aria-label={label}
-      aria-pressed={editing ? on : undefined}
+      {...(!opens && { role: "checkbox", "aria-checked": on })}
       onClick={onPress}
     >
       {mark}

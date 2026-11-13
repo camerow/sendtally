@@ -424,6 +424,12 @@
   padding: 0 12px;
   border-radius: calc(var(--radius-control) + 2px);
   background: var(--surface-soft);
+  color: var(--bs-gunmetal);
+  text-decoration: none;
+}
+
+.current-block:hover .current-block-name {
+  text-decoration: underline;
 }
 
 .current-block-name {

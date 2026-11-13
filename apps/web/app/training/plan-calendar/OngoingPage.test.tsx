@@ -91,13 +91,13 @@ afterEach(() => {
 
 const cells = (): HTMLElement[] =>
   Array.from(
-    container.querySelectorAll<HTMLElement>(".plan-grid-row:not(.plan-grid-row--head) .grid-cell")
+    container.querySelectorAll<HTMLElement>(".plan-grid-row:not(.plan-grid-days) .grid-cell")
   );
 const on = (): boolean[] => cells().map((c) => c.querySelector(".day-mark") !== null);
 
 describe("OngoingPage", () => {
   it("shows each weekly plan on its days", () => {
-    expect(container.querySelector(".plan-row-name")?.textContent).toBe("Gym, legs");
+    expect(container.querySelector(".plan-grid-workout")?.textContent).toBe("Gym, legs");
     expect(on()).toEqual([false, true, false, false, true, false, false]);
   });
 
@@ -106,7 +106,7 @@ describe("OngoingPage", () => {
     act(() => (cells()[2] as HTMLButtonElement).click());
     expect(on()).toEqual([false, true, true, false, true, false, false]);
     act(() => container.querySelector<HTMLButtonElement>(".ongoing-remove")?.click());
-    expect(container.querySelector(".plan-grid-row:not(.plan-grid-row--head)")).toBeNull();
+    expect(container.querySelector(".plan-grid-row:not(.plan-grid-days)")).toBeNull();
     act(() => container.querySelector<HTMLButtonElement>(".detail-primary")?.click());
     expect(state.saveDraft).toHaveBeenCalledOnce();
   });
