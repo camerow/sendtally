@@ -7,7 +7,6 @@ import {
   type LibraryWorkout,
   type PlannedItems,
 } from "@sendtally/features/workouts";
-import { withParams } from "./paths";
 
 /**
  * Where Log it goes for a workout's next session, unplanned: its review with every set ticked
@@ -30,12 +29,9 @@ export function plannedLogLink(
   if (items.length === 0) return null;
   const kind = activityKindOf(w.kind);
   if (kind === null)
-    return withParams(
-      "/app/workout/done",
-      timerParams(w.id, items[0]?.exercise ?? "", session, link)
-    );
-  return withParams("/app/activity/new", {
+    return `/app/workout/done?${new URLSearchParams(timerParams(w.id, items[0]?.exercise ?? "", session, link))}`;
+  return `/app/activity/new?${new URLSearchParams({
     ...activityFormParams({ kind, title: w.name, date, workoutId: w.id, link, minutes: w.minutes }),
     session: String(session),
-  });
+  })}`;
 }
