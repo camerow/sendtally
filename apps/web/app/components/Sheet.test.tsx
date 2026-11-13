@@ -88,6 +88,7 @@ describe("Sheet", () => {
           open
           title="Morning session is still going"
           kicker="Already running"
+          kickerTone="amber"
           onClose={() => {}}
         />
       )
