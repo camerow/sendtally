@@ -27,7 +27,6 @@ export const importCsv = {
   "import.colTriesRpe":
     "Ganze Zahlen. RPE 1 bis 10; leer lassen und Sendtally bewertet die Session.",
   "import.copyPrompt": "Prompt kopieren",
-  "import.copied": "Kopiert",
   "import.convertTitle": "Tabelle mit einem KI-Assistenten umwandeln",
   "import.convertHelp":
     "Füge das zusammen mit deiner Tabelle (vorher als CSV exportieren) in Claude oder ChatGPT ein. Prüfe ein, zwei Sessions im Ergebnis und importiere dann die Datei, die du bekommst.",
@@ -92,4 +91,6 @@ export const importCsv = {
   "import.selectNone": "Auswahl aufheben",
   "import.selectNamed": "Sessions mit Namen auswählen…",
   "import.selectSession": "{name}, {date} auswählen",
+  "import.connectorLine":
+    "Oder verbinde Claude oder ChatGPT mit sendtally und lass die Datei für dich importieren.",
 } as const;

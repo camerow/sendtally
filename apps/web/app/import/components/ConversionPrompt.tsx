@@ -1,8 +1,9 @@
 import React from "react";
+import { Link } from "react-router";
 import { CONVERSION_PROMPT } from "@sendtally/features/import";
 import { t } from "@sendtally/features/i18n";
 import { Section } from "../../settings/components/Section";
-import { bodyText, secondaryButton } from "../../settings/components/styles";
+import { bodyText, linkAction, secondaryButton } from "../../settings/components/styles";
 import { code } from "../styles";
 import { ServiceLinks } from "./ServiceLinks";
 import { sectionLabel } from "../../components/styles";
@@ -24,7 +25,7 @@ export function ConversionPrompt(): React.ReactElement {
           onClick={() => void copy()}
           style={{ ...secondaryButton, fontSize: 13, padding: "9px 16px" }}
         >
-          {copied ? t("import.copied") : t("import.copyPrompt")}
+          {copied ? t("common.copied") : t("import.copyPrompt")}
         </button>
       </div>
       <p style={bodyText}>{t("import.convertHelp")}</p>
@@ -33,6 +34,9 @@ export function ConversionPrompt(): React.ReactElement {
       </pre>
       <p style={bodyText}>{t("import.exportSkip")}</p>
       <ServiceLinks />
+      <Link to="/ai-assistants" style={linkAction}>
+        {t("import.connectorLine")}
+      </Link>
     </Section>
   );
 }

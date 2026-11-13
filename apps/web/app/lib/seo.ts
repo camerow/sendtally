@@ -15,6 +15,7 @@ export const INDEXABLE_PATHS = [
   "/privacy",
   "/terms",
   "/support",
+  "/ai-assistants",
 ];
 
 const OG_LOCALES: Record<Locale, string> = { en: "en_US", de: "de_DE", fr: "fr_FR", es: "es_ES" };

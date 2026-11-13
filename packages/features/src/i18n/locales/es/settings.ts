@@ -44,4 +44,17 @@ export const settings = {
   "settings.postTraining": "Publicar otros entrenamientos",
   "settings.postTrainingBody":
     "Fuerza, carrera, yoga y movilidad se publican como actividades propias.",
+  "settings.assistant": "Conectar un asistente de IA",
+  "settings.assistantBody":
+    "Deja que Claude o ChatGPT importe un registro de escalada antiguo y cree entrenamientos y bloques a partir de tu historial.",
+  "settings.assistantUrl": "URL del conector",
+  "settings.copyUrl": "Copiar URL",
+  "settings.assistantClaude":
+    "Abre Ajustes, luego Conectores, y elige Añadir conector personalizado. Pega la URL e inicia sesión en sendtally.",
+  "settings.assistantChatgpt":
+    "Activa el modo desarrollador, añade un servidor MCP, pega la URL e inicia sesión en sendtally.",
+  "settings.assistantUntested": "Pasos esperados, aún sin probar.",
+  "settings.assistantRevoke":
+    "Para desconectar, quita sendtally en los ajustes de conectores del asistente.",
+  "settings.assistantLearnMore": "Qué puede hacer un asistente",
 } as const;
