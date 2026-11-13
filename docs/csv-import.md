@@ -113,6 +113,19 @@ Kaya's import template uses the same header and reads the same way.
 
 This layout comes from another project's importer test rather than a real export, so it is the least certain of the formats here.
 
+## theCrag logbook exports
+
+A theCrag logbook export has the columns `Route Name, Ascent Label, Ascent ID, Ascent Link, Ascent Type, Route Grade, Ascent Grade, Route Gear Style, Ascent Gear Style, Route Height, Ascent Height, # Ascents, Route Stars, Route ID, Route Link, Country, Country Link, Crag Name, Crag Link, Crag Path, With, Comment, Quality, Ascent Date, Log Date, Shot`.
+theCrag has shipped exports with columns out of order before, which reading by name absorbs.
+
+- The session date is the first ten characters of `Ascent Date`. A row with no date is reported for its row.
+- Each attempt is its own row, so rows for the same route on the same date fold into one climb: one try per row, and a send when any row is one. A flash or onsight after a failed row on the same day imports as a redpoint.
+- `Ascent Type`: `Onsight` and `Flash` import as that style; `Red point`, `Pink point` and `Ground up red point` as a redpoint; `Send`, `Tick`, `Clean`, `Repeat`, `Greenpoint`, `Lead solo`, `Roped Solo`, `Aid` and the clean top-rope and second variants as a send with no style; `Attempt`, `Hang dog`, `Working`, `Retreat`, `Dab`, `Second with rest` and `Top rope with rest` as an attempt. Any other type, such as `Ghost` or `Mark`, is reported for its row.
+- The grade is `Ascent Grade` when filled, else `Route Grade`. Gear style `Boulder` settles a grade whose letter case says route.
+- Australian and South African Ewbank grades (a bare number such as `24`), UK grades (`VS 4c`, `E1 5a`) and UIAA grades (`VI`) are not supported and are reported as unreadable for their row.
+- `Crag Name` names the session. Nothing marks a gym, so every session is outdoor. `Comment` becomes the climb note; folded rows join their comments.
+- `# Ascents` counts how often the route was logged, not tries, and is not imported, nor are the IDs, links, heights, stars, `Crag Path`, `With`, `Quality`, `Log Date` or `Shot`.
+
 ## What happens on import
 
 The browser parses the file, groups rows into sessions, and validates every row with the same rules as the log-session form.

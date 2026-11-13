@@ -23,6 +23,7 @@ const ISSUE_ROWS = 20;
 const ISSUE_KEYS = {
   noHeader: "import.issueNoHeader",
   missingDate: "import.issueMissingDate",
+  noDate: "import.issueNoDate",
   badDate: "import.issueBadDate",
   missingGrade: "import.issueMissingGrade",
   unknownGrade: "import.issueUnknownGrade",

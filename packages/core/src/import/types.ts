@@ -1,11 +1,12 @@
 import type { ClimbKind, ClimbStyle } from "../effort";
 import type { Grade } from "../grades";
 
-export type ImportFormat = "kaya" | "8a" | "mountainProject" | "sendage" | "sendtally";
+export type ImportFormat = "kaya" | "8a" | "mountainProject" | "sendage" | "theCrag" | "sendtally";
 
 export type ImportIssueCode =
   | "noHeader"
   | "missingDate"
+  | "noDate"
   | "badDate"
   | "missingGrade"
   | "unknownGrade"

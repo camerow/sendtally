@@ -4,6 +4,7 @@ import { eightARecords } from "./eightA";
 import { kayaRecords } from "./kaya";
 import { mountainProjectRecords } from "./mountainProject";
 import { sendageRecords } from "./sendage";
+import { theCragRecords } from "./theCrag";
 import {
   normaliseHeader,
   recordsOf,
@@ -47,6 +48,7 @@ export const IMPORT_SERVICES: { [F in Exclude<ImportFormat, "sendtally">]: strin
   "8a": "8a.nu",
   mountainProject: "Mountain Project",
   sendage: "Sendage",
+  theCrag: "theCrag",
 };
 
 const HEADERS: [Exclude<ImportFormat, "sendtally">, string[]][] = [
@@ -54,6 +56,7 @@ const HEADERS: [Exclude<ImportFormat, "sendtally">, string[]][] = [
   ["8a", ["route_boulder", "date", "type", "difficulty"]],
   ["mountainProject", ["date", "route", "rating", "location", "style", "lead_style"]],
   ["sendage", ["date", "send_type", "climb", "climb_type", "grade", "area"]],
+  ["theCrag", ["route_name", "ascent_type", "route_grade", "crag_name", "ascent_date"]],
 ];
 
 export function detectFormat(header: string[]): ImportFormat | null {
@@ -97,6 +100,7 @@ const RECORDS: {
   "8a": eightARecords,
   mountainProject: mountainProjectRecords,
   sendage: sendageRecords,
+  theCrag: theCragRecords,
   sendtally: sendtallyRecords,
 };
 
@@ -120,7 +124,11 @@ function groupSessions(
       fillDown && r.date === undefined && r.session === undefined && current !== undefined;
     const date = continues ? current!.date : r.date;
     if (date === undefined) {
-      issues.push({ row: r.row, code: "missingDate" });
+      issues.push({
+        row: r.row,
+        code: fillDown ? "missingDate" : "noDate",
+        ...(r.climb === undefined ? {} : { climb: r.climb }),
+      });
       continue;
     }
     if (!DATE.test(date) || Number.isNaN(Date.parse(`${date}T00:00:00Z`))) {

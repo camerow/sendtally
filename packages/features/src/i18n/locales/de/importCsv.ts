@@ -52,6 +52,7 @@ export const importCsv = {
     "Diese Datei ist weder ein Export, den Sendtally erkennt, noch im Sendtally-CSV-Format. Wandle sie mit dem Prompt unten um und wähle dann die umgewandelte Datei.",
   "import.issueNoHeader": "Die erste Zeile ist keine Kopfzeile, die Sendtally erkennt.",
   "import.issueMissingDate": "Kein Datum und keine Session darüber, die fortgesetzt werden könnte.",
+  "import.issueNoDate": "Kein Datum.",
   "import.issueBadDate": "„{value}“ ist kein Datum im Format JJJJ-MM-TT.",
   "import.issueMissingGrade": "Kein Grad.",
   "import.issueUnknownGrade": "„{value}“ ist kein Grad, den Sendtally kennt.",

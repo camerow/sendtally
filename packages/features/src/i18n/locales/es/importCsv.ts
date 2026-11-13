@@ -51,6 +51,7 @@ export const importCsv = {
     "Este archivo no es una exportación que Sendtally reconozca ni está en el formato CSV de Sendtally. Conviértelo con el prompt de abajo y luego elige el archivo convertido.",
   "import.issueNoHeader": "La primera fila no es una cabecera que Sendtally reconozca.",
   "import.issueMissingDate": "Sin fecha, y sin sesión arriba que continuar.",
+  "import.issueNoDate": "Sin fecha.",
   "import.issueBadDate": "«{value}» no es una fecha en formato AAAA-MM-DD.",
   "import.issueMissingGrade": "Sin grado.",
   "import.issueUnknownGrade": "«{value}» no es un grado que Sendtally conozca.",

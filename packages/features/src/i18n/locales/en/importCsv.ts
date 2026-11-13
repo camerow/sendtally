@@ -49,6 +49,7 @@ export const importCsv = {
     "This file is not an export Sendtally recognizes or in the Sendtally CSV format. Convert it with the prompt below, then choose the converted file.",
   "import.issueNoHeader": "The first row is not a header Sendtally recognizes.",
   "import.issueMissingDate": "No date, and no session above to continue.",
+  "import.issueNoDate": "No date.",
   "import.issueBadDate": '"{value}" is not a date in YYYY-MM-DD form.',
   "import.issueMissingGrade": "No grade.",
   "import.issueUnknownGrade": '"{value}" is not a grade Sendtally knows.',
