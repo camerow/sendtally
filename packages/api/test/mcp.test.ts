@@ -54,11 +54,13 @@ describe("connector", () => {
     const challenge = res.headers.get("WWW-Authenticate") ?? "";
     const metadataUrl = /resource_metadata="([^"]+)"/.exec(challenge)?.[1] ?? "";
     expect(metadataUrl).toBe("https://api.sendtally.test/.well-known/oauth-protected-resource/mcp");
+    expect(challenge).toContain('scope="profile offline_access"');
 
     const metadata = await testApp().request(metadataUrl, {}, env);
     expect(await metadata.json()).toMatchObject({
       resource: "https://api.sendtally.test/mcp",
       authorization_servers: ["https://clerk.sendtally.test"],
+      scopes_supported: ["profile", "offline_access"],
     });
   });
 
