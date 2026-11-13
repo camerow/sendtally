@@ -4,7 +4,13 @@ import type { PlanChange } from "@sendtally/core/hang";
 import { z } from "zod";
 import { type AppEnv, invalidBody, postAfterResponse } from "./context";
 import { activitiesQuery, activityBody, activityOf } from "./lib/activities";
-import { exerciseBody, exerciseOf, mergeBody } from "./lib/exercises";
+import {
+  exerciseBody,
+  exerciseOf,
+  mergeBody,
+  type Exercise,
+  type ExerciseInput,
+} from "./lib/exercises";
 import {
   blockBody,
   blockOf,
@@ -264,6 +270,29 @@ export const workouts = new Hono<AppEnv>()
     return c.json({ deleted: await repo.deleteWorkout(c.env.DB, c.get("userId"), id) });
   });
 
+/** Creates, or saves and renames everywhere; `taken` is the other exercise already holding the name. */
+export async function saveExercise(
+  db: D1Database,
+  userId: string,
+  id: string,
+  body: ExerciseInput
+): Promise<{ exercise: Exercise; taken: boolean }> {
+  const [taken, row] = await Promise.all([
+    repo.findExerciseByName(db, userId, body.name),
+    repo.getExercise(db, userId, id),
+  ]);
+  if (taken !== null && taken.id !== id) {
+    if (row !== null || !taken.archived) return { exercise: exerciseOf(taken), taken: true };
+    return { exercise: exerciseOf(await repo.restoreExercise(db, userId, taken)), taken: false };
+  }
+  await repo.ensureUser(db, userId);
+  const saved =
+    row === null
+      ? await repo.createExercise(db, userId, id, body)
+      : await repo.updateExercise(db, userId, row, body);
+  return { exercise: exerciseOf(saved), taken: false };
+}
+
 // The user's exercises: every name their workouts and logs use, with how each is
 // measured. Renaming or merging one rewrites those names everywhere.
 export const exercises = new Hono<AppEnv>()
@@ -281,24 +310,14 @@ export const exercises = new Hono<AppEnv>()
     zValidator("json", exerciseBody, invalidBody),
     async (c) => {
       const { id } = c.req.valid("param");
-      const userId = c.get("userId");
-      const body = c.req.valid("json");
-      const [taken, row] = await Promise.all([
-        repo.findExerciseByName(c.env.DB, userId, body.name),
-        repo.getExercise(c.env.DB, userId, id),
-      ]);
-      if (taken !== null && taken.id !== id) {
-        if (row !== null || !taken.archived)
-          return c.json({ error: "name taken", exercise: exerciseOf(taken) }, 409);
-        const restored = await repo.restoreExercise(c.env.DB, userId, taken);
-        return c.json({ exercise: exerciseOf(restored) });
-      }
-      await repo.ensureUser(c.env.DB, userId);
-      const saved =
-        row === null
-          ? await repo.createExercise(c.env.DB, userId, id, body)
-          : await repo.updateExercise(c.env.DB, userId, row, body);
-      return c.json({ exercise: exerciseOf(saved) });
+      const { exercise, taken } = await saveExercise(
+        c.env.DB,
+        c.get("userId"),
+        id,
+        c.req.valid("json")
+      );
+      if (taken) return c.json({ error: "name taken", exercise }, 409);
+      return c.json({ exercise });
     }
   )
 
