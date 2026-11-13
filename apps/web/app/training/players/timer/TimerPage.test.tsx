@@ -9,6 +9,7 @@ import type * as T_workouts from "@sendtally/features/workouts";
 import { liveRunStore, readDoneParams, type RunStorage } from "@sendtally/features/workouts";
 import { WithHang } from "../../data/testHang";
 import { TimerPage } from "./TimerPage";
+import type * as T_useLibrary from "../../library/useLibrary";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -45,7 +46,8 @@ const lifts: HangWorkout = {
 vi.mock("../../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
 vi.mock("../../../lib/useLiveRun", () => ({ useLiveRunStore: () => store }));
 vi.mock("../../../lib/tones", () => ({ playTone: (s: string) => playTone(s) }));
-vi.mock("../../library/useLibrary", () => ({
+vi.mock("../../library/useLibrary", async (actual) => ({
+  ...(await actual<typeof T_useLibrary>()),
   useLibrary: () => ({ state: { status: "loading" }, reload: vi.fn() }),
 }));
 vi.mock("@sendtally/features/training", async (actual) => ({

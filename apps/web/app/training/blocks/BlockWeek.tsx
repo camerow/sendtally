@@ -19,7 +19,7 @@ import { DashedPanel } from "../components/DashedPanel";
 import { PlanGrid } from "../components/PlanGrid";
 import { useHangData } from "../data/HangDataContext";
 import { SwitchField } from "../../components/Switch";
-import { useLibrary } from "../library/useLibrary";
+import { useLibrary, workoutIn } from "../library/useLibrary";
 import { AddWorkoutsSheet } from "../plan-week/AddWorkoutsSheet";
 import { useDayChanges } from "../plan-week/useDayChanges";
 import { BlockOrder } from "./BlockOrder";
@@ -81,9 +81,7 @@ export function BlockWeek({
     workout: LibraryWorkout;
   } | null>(null);
   const changes = useDayChanges();
-  const libraryState = useLibrary().state;
-  const library = (id: string): LibraryWorkout | undefined =>
-    libraryState.status === "ready" ? libraryState.data.workout(id) : undefined;
+  const library = workoutIn(useLibrary());
   const template = !isDated(block);
   const picksWeek = onPickWeek !== undefined && week !== undefined;
   const { rows, dates, columns, following, setFollowing, shownWeek, dayless } = useBlockWeekGrid({

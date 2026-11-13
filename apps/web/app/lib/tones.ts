@@ -1,9 +1,7 @@
 import type { Sound } from "@sendtally/features/workouts";
 
-export type Tone = Sound;
-
 let context: AudioContext | null = null;
-const buffers = new Map<Tone, Promise<AudioBuffer>>();
+const buffers = new Map<Sound, Promise<AudioBuffer>>();
 
 const audio = (): AudioContext => (context ??= new AudioContext());
 
@@ -13,7 +11,7 @@ export function unlockTones(): void {
 }
 
 /** Plays one of the timer's tones, the same sounds as the phone's. */
-export function playTone(tone: Tone): void {
+export function playTone(tone: Sound): void {
   const ctx = audio();
   let buffer = buffers.get(tone);
   if (buffer === undefined) {

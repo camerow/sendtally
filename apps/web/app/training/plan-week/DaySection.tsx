@@ -11,7 +11,7 @@ import {
 import { useDisplayScales } from "@sendtally/features/settings";
 import { DashedPanel } from "../components/DashedPanel";
 import { useHangData } from "../data/HangDataContext";
-import { useLibrary } from "../library/useLibrary";
+import { useLibrary, workoutIn } from "../library/useLibrary";
 import { LoggedRow } from "./LoggedRow";
 import { OccurrenceCard } from "./OccurrenceCard";
 import { OccurrenceRow } from "./OccurrenceRow";
@@ -33,7 +33,7 @@ export function DaySection({
 }): React.ReactElement {
   const { model } = useHangData();
   const scales = useDisplayScales();
-  const library = useLibrary().state;
+  const workoutOf = workoutIn(useLibrary());
   const empty = day.logged.length === 0 && day.plans.length === 0;
   const head = day.isToday ? (
     <h2 className="plan-day-title">{t("training.today")}</h2>
@@ -61,8 +61,7 @@ export function DaySection({
           );
         }
         const o = e.occurrence;
-        const w =
-          library.status === "ready" ? library.data.workout(o.membership.workoutId) : undefined;
+        const w = workoutOf(o.membership.workoutId);
         if (w === undefined) return null;
         if (o.status === "skipped")
           return <SkippedRow key={o.membership.id} occurrence={o} workout={w} />;

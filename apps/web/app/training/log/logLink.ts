@@ -2,11 +2,11 @@ import type { CalendarDate } from "@sendtally/core/hang";
 import {
   activityFormParams,
   activityKindOf,
-  timerParams,
   unplannedItems,
   type LibraryWorkout,
   type PlannedItems,
 } from "@sendtally/features/workouts";
+import { donePath, newActivityPath } from "./paths";
 
 /**
  * Where Log it goes for a workout's next session, unplanned: its review with every set ticked
@@ -25,9 +25,15 @@ export function plannedLogLink(
   if (items.length === 0) return null;
   const kind = activityKindOf(w.kind);
   if (kind === null)
-    return `/app/workout/done?${new URLSearchParams(timerParams(w.id, items[0]?.exercise ?? "", session, link))}`;
-  return `/app/activity/new?${new URLSearchParams({
+    return donePath({
+      workoutId: w.id,
+      gripId: items[0]?.exercise ?? "",
+      link,
+      session,
+      run: null,
+    });
+  return newActivityPath({
     ...activityFormParams({ kind, title: w.name, date, workoutId: w.id, link, minutes: w.minutes }),
     session: String(session),
-  })}`;
+  });
 }

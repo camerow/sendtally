@@ -3,7 +3,7 @@ import type { ActivityKind } from "@sendtally/api-client";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { KIND_LOOK } from "@sendtally/features/training";
-import { useLibrary } from "../library/useLibrary";
+import { useLibrary, workoutIn } from "../library/useLibrary";
 import { WorkoutInfo } from "./WorkoutInfo";
 
 export type PlayerHeaderProps = { kind: ActivityKind; title: string; workoutId: string | null };
@@ -13,9 +13,7 @@ export type PlayerHeaderProps = { kind: ActivityKind; title: string; workoutId: 
  * effort: the top of the sets and checklist players.
  */
 export function PlayerHeader({ kind, title, workoutId }: PlayerHeaderProps): React.ReactElement {
-  const { state } = useLibrary();
-  const workout =
-    state.status === "ready" && workoutId !== null ? state.data.workout(workoutId) : undefined;
+  const workout = workoutIn(useLibrary())(workoutId);
   return (
     <div className="player-head">
       <span className="train-label" style={{ color: KIND_LOOK[kind].ink }}>

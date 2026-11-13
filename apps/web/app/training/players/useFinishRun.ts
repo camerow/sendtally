@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router";
 import type { ItemDone } from "@sendtally/core/hang";
 import { finishedRunParams, type RunFiling } from "@sendtally/features/workouts";
+import { newActivityPath } from "../log/paths";
 
 /**
  * Hands a finished run to its review in place of the player, timed by the player's clock; with
@@ -18,7 +19,7 @@ export function useFinishRun(
   const finish = (): void => {
     const { done, off } = finished();
     const params = finishedRunParams(run, done, startedAt, Date.now(), off);
-    void navigate(`/app/activity/new?${new URLSearchParams(params)}`, { replace: true });
+    void navigate(newActivityPath(params), { replace: true });
   };
   const ending = React.useRef(end);
   React.useEffect(() => {

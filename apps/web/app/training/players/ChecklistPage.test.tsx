@@ -7,12 +7,14 @@ import type * as T_statistics from "@sendtally/features/statistics";
 import type { WorkoutRun } from "@sendtally/features/workouts";
 import { liveRunOf } from "../../lib/useLiveRun";
 import { ChecklistPage } from "./ChecklistPage";
+import type * as T_useLibrary from "../library/useLibrary";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
-vi.mock("../library/useLibrary", () => ({
+vi.mock("../library/useLibrary", async (actual) => ({
+  ...(await actual<typeof T_useLibrary>()),
   useLibrary: () => ({ state: { status: "loading" } }),
 }));
 vi.mock("@sendtally/features/statistics", async (actual) => ({
