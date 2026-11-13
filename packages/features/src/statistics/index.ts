@@ -38,3 +38,4 @@ export {
 export { useExerciseSeries } from "./useExerciseSeries";
 export { useExercises } from "./useExercises";
 export { area, dots, paddedRange, plot, polyline, type Point } from "./chartGeometry";
+export { focusColor } from "./focusColors";

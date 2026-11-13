@@ -1945,3 +1945,13 @@
     font-size: 34px;
   }
 }
+
+.category-row--plain {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+}
+
+.category-row--plain:hover {
+  background: none;
+}

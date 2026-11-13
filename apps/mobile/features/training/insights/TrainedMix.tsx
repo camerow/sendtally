@@ -3,18 +3,18 @@ import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
+  focusColor,
   focusKey,
   type TrainedBy,
   type TrainedFocusVM,
   type TrainedKindVM,
 } from "@sendtally/features/statistics";
+import { KIND_COLORS } from "@sendtally/features/training";
 import { Icon } from "../../../components/Icon";
 import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { Segmented } from "../components/Segmented";
 import { type } from "../type";
-import { focusColor } from "./focusColors";
-import { KIND_COLORS } from "@sendtally/features/training";
 
 export type TrainedMixProps = {
   trained: TrainedKindVM[];
