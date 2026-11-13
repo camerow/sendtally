@@ -13,6 +13,7 @@ import {
   pastMeta,
   planGridRows,
   templateMeta,
+  blockName,
 } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { BlockCard } from "../blocks/BlockCard";
@@ -109,7 +110,7 @@ export function BlocksList(): React.ReactElement {
               back={t("training.train")}
               key={b.id}
               id={b.id}
-              name={b.name || t("plan.untitled")}
+              name={blockName(b)}
               meta={templateMeta(log, b)}
             />
           ))}

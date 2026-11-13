@@ -5,7 +5,7 @@ import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { press } from "../../../lib/press";
 import { BlockWeekChips } from "../blocks/BlockWeekChips";
-import { blockDateRange } from "@sendtally/features/training";
+import { blockDateRange, blockName } from "@sendtally/features/training";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { type } from "../type";
@@ -102,7 +102,7 @@ export function BlockHeader({
       <>
         <View style={{ gap: 4 }}>
           {kicker}
-          <Title size={34}>{block.name || t("plan.untitled")}</Title>
+          <Title size={34}>{blockName(block)}</Title>
           {when}
         </View>
         {chips}

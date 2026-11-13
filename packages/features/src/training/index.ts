@@ -113,6 +113,7 @@ export {
 } from "./planGridRows";
 export {
   blockDateRange,
+  blockName,
   blockKicker,
   blockTag,
   currentBlockLine,

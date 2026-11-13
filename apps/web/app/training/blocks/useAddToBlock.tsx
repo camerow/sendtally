@@ -7,6 +7,7 @@ import {
   blockMembership,
   nextPosition,
   useTrainingLog,
+  blockName,
 } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
@@ -39,7 +40,7 @@ export function useAddToBlock(workout: LibraryWorkout): AddToBlock {
       <Sheet open={open} kicker={workout.name} title={title} onClose={() => setOpen(false)}>
         <div className="option-list">
           {blocks.map((b) => {
-            const name = b.name || t("plan.untitled");
+            const name = blockName(b);
             const there = plan.memberships.some(
               (m) => m.blockId === b.id && m.workoutId === workout.id
             );

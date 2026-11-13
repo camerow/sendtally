@@ -1,7 +1,7 @@
 import React from "react";
 import { isDated, type Block, type CalendarDate } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { blockDateRange } from "@sendtally/features/training";
+import { blockDateRange, blockName } from "@sendtally/features/training";
 import { BlockWeekChips } from "./BlockWeekChips";
 
 const MAX_WEEKS = 16;
@@ -75,7 +75,7 @@ export function BlockHeader({
           <span className="train-label">
             {dated === null ? t("plan.template") : t("plan.scheduled")}
           </span>
-          <h1 className="block-title">{block.name || t("plan.untitled")}</h1>
+          <h1 className="block-title">{blockName(block)}</h1>
           {when}
         </div>
         {chips}

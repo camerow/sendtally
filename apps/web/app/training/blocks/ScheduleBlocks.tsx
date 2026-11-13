@@ -1,7 +1,13 @@
 import React from "react";
 import type { Block } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { blockGroups, pastMeta, templateMeta, useTrainingLog } from "@sendtally/features/training";
+import {
+  blockGroups,
+  pastMeta,
+  templateMeta,
+  useTrainingLog,
+  blockName,
+} from "@sendtally/features/training";
 import { useAppApi } from "../../lib/useAppApi";
 import { DashedPanel } from "../components/DashedPanel";
 import { useHangData } from "../data/HangDataContext";
@@ -34,7 +40,7 @@ export function ScheduleBlocks({ onPick }: ScheduleBlocksProps): React.ReactElem
             <BlockRow
               key={block.id}
               id={block.id}
-              name={block.name || t("plan.untitled")}
+              name={blockName(block)}
               meta={meta}
               onPress={() => onPick(block)}
             />

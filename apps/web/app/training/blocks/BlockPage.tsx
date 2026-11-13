@@ -11,6 +11,7 @@ import {
   usePlan,
   usePlanDraft,
   useTrainingLog,
+  blockName,
 } from "@sendtally/features/training";
 import { MoreMenu } from "../../components/MoreMenu";
 import { Sheet } from "../../components/Sheet";
@@ -95,7 +96,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
   const shown = Math.min(block.weeks, week ?? current ?? 1);
   const schedulable = members.some((m) => hasDays(scheduleOf(log.plan, m)));
   const editing = draft.editing && !ended;
-  const name = block.name || t("plan.untitled");
+  const name = blockName(block);
   const weekProps = {
     plan: draft.plan,
     editing,

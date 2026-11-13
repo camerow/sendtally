@@ -13,6 +13,7 @@ import {
   usePlan,
   useTrainingLog,
   blockDateRange,
+  blockName,
 } from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
@@ -145,7 +146,7 @@ export function BlockScreen({
             deleteRow({
               title: t("plan.deleteBlock"),
               confirm: {
-                title: t("plan.deleteBlockTitle", { name: block.name || t("plan.untitled") }),
+                title: t("plan.deleteBlockTitle", { name: blockName(block) }),
                 body: t("plan.deleteBlockBody"),
               },
               onDelete: () => void actions.deleteBlock(id),
@@ -162,7 +163,7 @@ export function BlockScreen({
               onPress: () =>
                 router.push({
                   pathname: "/plan/block/[id]",
-                  params: { id: template.id, back: block.name || t("plan.untitled") },
+                  params: { id: template.id, back: blockName(block) },
                 }),
             }}
             onHide={() => setTemplate(null)}

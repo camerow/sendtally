@@ -12,6 +12,7 @@ import {
   templateMeta,
   usePlan,
   useTrainingLog,
+  blockName,
 } from "@sendtally/features/training";
 import { workoutPath } from "../library/useLibrary";
 import { ONGOING_PATH } from "../plan-calendar/paths";
@@ -98,12 +99,7 @@ export function BlocksList(): React.ReactElement {
       {templates.length > 0 && (
         <Section title={t("plan.templates")}>
           {templates.map((b) => (
-            <BlockRow
-              key={b.id}
-              id={b.id}
-              name={b.name || t("plan.untitled")}
-              meta={templateMeta(log, b)}
-            />
+            <BlockRow key={b.id} id={b.id} name={blockName(b)} meta={templateMeta(log, b)} />
           ))}
         </Section>
       )}

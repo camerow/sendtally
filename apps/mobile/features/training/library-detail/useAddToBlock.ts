@@ -2,7 +2,12 @@ import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import { blockEnded, isDated } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { nextPosition, useTrainingLog, blockDateRange } from "@sendtally/features/training";
+import {
+  nextPosition,
+  useTrainingLog,
+  blockDateRange,
+  blockName,
+} from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { useAddToMenu, type AddToMenu } from "../components/useAddToMenu";
@@ -23,7 +28,7 @@ export function useAddToBlock(workout: LibraryWorkout): AddToMenu {
     name: workout.name,
     options: blocks.map((b) => ({
       id: b.id,
-      label: b.name || t("plan.untitled"),
+      label: blockName(b),
       detail: isDated(b) ? blockDateRange(b) : t("plan.template"),
       there: plan.memberships.some((m) => m.blockId === b.id && m.workoutId === workout.id),
     })),
