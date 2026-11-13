@@ -29,7 +29,7 @@ export function onboardingSlides(): OnboardingSlide[] {
     },
     {
       key: "trends",
-      eyebrow: t("common.trends"),
+      eyebrow: t("statistics.tab"),
       title: t("onboarding.trends.title"),
       body: t("onboarding.trends.body"),
     },

@@ -50,7 +50,6 @@ export const common = {
   "common.discard": "Descartar",
   "common.createAccount": "Crear cuenta",
   "common.signIn": "Entrar",
-  "common.trends": "Tendencias",
   "common.projects": "Proyectos",
   "common.open": "Abiertos",
   "common.sentStatus": "Encadenados",

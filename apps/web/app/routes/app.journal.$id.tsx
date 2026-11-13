@@ -22,7 +22,7 @@ import { SeverityChart } from "../journal/components/SeverityChart";
 import { TripDetail } from "../journal/components/TripDetail";
 import journalStyles from "../journal/journal.css?url";
 import sessionsStyles from "../sessions/sessions.css?url";
-import trendsStyles from "../trends/trends.css?url";
+import trendTileStyles from "../journal/trendTile.css?url";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { orNotFound, requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
@@ -30,7 +30,7 @@ import { useClientApi } from "../lib/useClientApi";
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: sessionsStyles },
   { rel: "stylesheet", href: journalStyles },
-  { rel: "stylesheet", href: trendsStyles },
+  { rel: "stylesheet", href: trendTileStyles },
 ];
 
 export async function loader(args: LoaderFunctionArgs): Promise<{

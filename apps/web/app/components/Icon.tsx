@@ -3,7 +3,7 @@ import React from "react";
 export type IconName =
   | "sessions"
   | "projects"
-  | "trends"
+  | "insights"
   | "membership"
   | "funnel"
   | "plus"
@@ -15,7 +15,6 @@ export type IconName =
   | "more"
   | "moderation"
   | "search"
-  | "insights"
   | "climbs"
   | "import"
   | "external"
@@ -30,7 +29,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
     </>
   ),
   projects: <path d="M6 20.5V4h11.5l-3 4.5 3 4.5H6" />,
-  trends: <path d="M4 16.8 9.2 10.4 13.2 13.6 20 5.8" />,
+  insights: <path d="M5 19V11M10 19V5M15 19v-6M20 19V8" />,
   membership: <path d="M12 3.9l2.5 5.1 5.6.8-4.1 4 1 5.6-5-2.7-5 2.7 1-5.6-4.1-4 5.6-.8z" />,
   funnel: <path d="M4 5h16l-6.2 7.2V18.5l-3.6 1.8v-8.1z" />,
   plus: <path d="M12 5v14M5 12h14" />,
@@ -48,7 +47,6 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   x: <path d="M6 6l12 12M18 6L6 18" />,
   more: <path d="M5 12h.01M12 12h.01M19 12h.01" />,
   search: <path d="M11 5a6 6 0 1 1 0 12 6 6 0 0 1 0-12zM20 20l-4.5-4.5" />,
-  insights: <path d="M5 19V11M10 19V5M15 19v-6M20 19V8" />,
   climbs: <path d="M3 19l6.5-11 4 6.5 2.5-3.5L21 19z" />,
   import: <path d="M12 4v10M7.5 9.5 12 14l4.5-4.5M4.5 15v4.5h15V15" />,
   external: <path d="M14 5h5v5M19 5l-8 8M17 14v5H5V7h5" />,
