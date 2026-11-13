@@ -70,17 +70,18 @@ export function TrainingLog({
   const years = React.useMemo(() => logYearGroups(inScope), [inScope]);
   const keys = React.useMemo(() => years.flatMap((y) => y.months.map((m) => m.key)), [years]);
   const current = useCurrentSection(keys);
+  const filtersActive = scope !== "all" || workout !== null;
 
   return (
     <div className="training-log">
-      {keys.length > 0 && (
+      {(keys.length > 0 || filtersActive) && (
         <ScopeBar
           items={monthScopeItems(years)}
           currentKey={current}
           onSelect={(key) =>
             document.getElementById(sectionId(key))?.scrollIntoView({ block: "start" })
           }
-          filtersActive={scope !== "all" || workout !== null}
+          filtersActive={filtersActive}
           onOpenFilters={() => setFiltersOpen(true)}
         />
       )}

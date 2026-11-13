@@ -27,7 +27,7 @@ function Picker(): React.ReactElement {
         aria-label={t("workouts.search")}
         autoComplete="off"
         maxLength={80}
-        data-autofocus
+        autoFocus
       />
       {library !== null && shelves.length === 0 && (
         <DashedPanel title={t("workouts.noResultsTitle")} body={t("workouts.noResults")} />
