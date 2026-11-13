@@ -20,14 +20,13 @@ const opener = (target: GradeClimbTarget | null): (() => void) | null => {
 /** Every grade tried with how many went; one grade at a time opens in place to list its climbs, its name lined up with the counts. */
 export function ClimbsByGrade({
   grades,
+  total,
 }: {
   grades: readonly GradeClimbsVM[];
+  /** Every climb under the grades. */
+  total: number;
 }): React.ReactElement {
   const [open, setOpen] = React.useState<string | null>(null);
-  const total = grades.reduce(
-    (n, g) => n + g.climbs.reduce((m, c) => m + (c.row.count ?? 1), 0),
-    0
-  );
   return (
     <View>
       <View
