@@ -30,6 +30,7 @@ type AddState = "none" | "added" | "there";
 export type Scheduled = { id: string; name: string; start: CalendarDate };
 
 export type AddWorkoutsSheetProps = {
+  /** A day to schedule on, in its block if it has one; or Ongoing, with neither. */
   flow: AddFlow;
   /** Closed with the plans added while it was open. */
   onClose: (added: readonly string[]) => void;

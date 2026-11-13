@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ApiError, type Exercise } from "@sendtally/api-client";
-import { pickedOf, takenBy } from "./makeExercise";
+import { pickedOf, pickWith, takenBy } from "./makeExercise";
 
 const squat: Exercise = {
   id: "e1",
@@ -25,6 +25,23 @@ describe("makeExercise", () => {
       exercise: "g1",
     });
     expect(pickedOf({ exercise: squat })).toEqual({
+      exercise: "Back squat",
+      measure: "repsWeight",
+    });
+  });
+
+  it("makes a built-in the user's own before it is picked, and picks nothing when that fails", async () => {
+    const make = vi.fn(async () => ({ exercise: squat }));
+    const builtIn = {
+      builtIn: { id: "b1", name: "Back squat", kind: "strength", measure: "repsWeight" },
+    };
+    expect(await pickWith(make)(builtIn as never)).toEqual({
+      exercise: "Back squat",
+      measure: "repsWeight",
+    });
+    expect(make).toHaveBeenCalledWith(expect.objectContaining({ name: "Back squat" }), "b1");
+    expect(await pickWith(async () => null)(builtIn as never)).toBeNull();
+    expect(await pickWith(make)({ exercise: squat })).toEqual({
       exercise: "Back squat",
       measure: "repsWeight",
     });

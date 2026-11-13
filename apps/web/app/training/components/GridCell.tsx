@@ -3,7 +3,7 @@ import type { WorkoutKind } from "@sendtally/core/hang";
 import { KIND_LOOK, type CellMark } from "@sendtally/features/training";
 import { DayMark } from "../plan-week/DayMark";
 
-export type PlanGridCellProps = {
+export type GridCellProps = {
   kind: WorkoutKind;
   on: boolean;
   /**
@@ -22,7 +22,7 @@ export type PlanGridCellProps = {
 };
 
 /** One weekday of a plan's week: its kind's mark where it lands, a dot where it does not. */
-export function PlanGridCell({
+export function GridCell({
   kind,
   on,
   status,
@@ -31,7 +31,7 @@ export function PlanGridCell({
   opens = false,
   editing = false,
   label,
-}: PlanGridCellProps): React.ReactElement {
+}: GridCellProps): React.ReactElement {
   const look = KIND_LOOK[kind];
   const moved = status === "moved";
   const style: React.CSSProperties = {

@@ -28,7 +28,7 @@ import { useAppApi } from "../../lib/useAppApi";
 import { DashedPanel } from "../components/DashedPanel";
 import { PlanGrid } from "../components/PlanGrid";
 import { useHangData } from "../data/HangDataContext";
-import { Toggle } from "../editor/Toggle";
+import { SwitchField } from "../../components/Switch";
 import { useLibrary } from "../library/useLibrary";
 import { AddWorkoutsSheet } from "../plan-week/AddWorkoutsSheet";
 import { useDayChanges } from "../plan-week/useDayChanges";
@@ -218,7 +218,7 @@ export function BlockWeek({
             editing &&
             shownWeek < block.weeks && (
               <div className="plan-grid-footer">
-                <Toggle
+                <SwitchField
                   label={t("plan.applyFollowing")}
                   checked={following}
                   onChange={setFollowing}

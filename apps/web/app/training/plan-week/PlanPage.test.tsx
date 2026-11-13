@@ -81,10 +81,11 @@ vi.mock("@sendtally/features/training", async (actual) => {
         hangs: [],
         activities: [],
         plan: state.plan,
-        workout: (id: string) => (id === "legs" ? libraryOf([legs])[0] : undefined),
+        workout: (id: string) => libraryOf([legs]).find((w) => w.id === id),
       },
     }),
     usePlanActions: () => state,
+    usePlan: () => ({ state: { status: "ready", data: state.plan }, reload: vi.fn() }),
     useAddTo: () => ({
       add: state.saveMembership,
       undo: state.deleteMembership,

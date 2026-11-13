@@ -6,11 +6,13 @@ import { getMembership } from "../lib/billing.server";
 import sessionsStyles from "../sessions/sessions.css?url";
 import { StatsView } from "../stats/components/StatsView";
 import statsStyles from "../stats/stats.css?url";
+import trainingStyles from "../training/training.css?url";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: sessionsStyles },
   { rel: "stylesheet", href: climbsStyles },
   { rel: "stylesheet", href: statsStyles },
+  { rel: "stylesheet", href: trainingStyles },
 ];
 
 export async function loader(args: LoaderFunctionArgs): Promise<{ member: boolean }> {

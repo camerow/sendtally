@@ -14,6 +14,7 @@ import {
   useTrainingLog,
 } from "@sendtally/features/training";
 import { workoutPath } from "../library/useLibrary";
+import { ONGOING_PATH } from "../plan-calendar/paths";
 import { useAppApi } from "../../lib/useAppApi";
 import { DashedPanel } from "../components/DashedPanel";
 import { PlanGrid } from "../components/PlanGrid";
@@ -47,7 +48,6 @@ export function BlocksList(): React.ReactElement {
   const navigate = useNavigate();
   const { plan, workout } = log;
   const { current, upcoming, templates, past } = blockGroups(plan.blocks, today);
-  // Ongoing's own page arrives with #286; until then its card does not open.
   const ongoing = planGridRows(ongoingMembers(plan, today), workout, model, {
     open: (m) => void navigate(workoutPath(m.workoutId)),
   });
@@ -73,7 +73,11 @@ export function BlocksList(): React.ReactElement {
             />
           ))}
           {ongoing.length > 0 && (
-            <PlanCard title={t("plan.ongoing")} subtitle={t("plan.ongoingRepeats")}>
+            <PlanCard
+              title={t("plan.ongoing")}
+              subtitle={t("plan.ongoingRepeats")}
+              open={{ label: t("plan.openBlock", { name: t("plan.ongoing") }), to: ONGOING_PATH }}
+            >
               <PlanGrid rows={ongoing} framed={false} />
             </PlanCard>
           )}

@@ -1,7 +1,7 @@
 import React from "react";
 import { weekdayLetters, weekdayLong } from "@sendtally/features/hang";
 import { KIND_LOOK, type GridPart, type PlanGridRow } from "@sendtally/features/training";
-import { PlanGridCell } from "./PlanGridCell";
+import { GridCell } from "./GridCell";
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6];
 
@@ -75,7 +75,7 @@ export function PlanGrid({
           const mark = row.marks?.[day] ?? null;
           const marked = row.marks !== undefined && set === undefined;
           return (
-            <PlanGridCell
+            <GridCell
               key={day}
               kind={row.kind}
               on={marked ? mark !== null : row.days.includes(day)}
