@@ -135,11 +135,10 @@ describe("import", () => {
       env
     );
     expect(res.status).toBe(201);
-    const shifted = (column: string) => `date(${column}, i || ' days') || substr(${column}, 11)`;
     await env.DB.prepare(
       `WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 249)
-       INSERT INTO sessions (user_id, fingerprint, source, location, start_at, end_at, times, climb_count, send_count, top_grade, top_send_grade, top_grade_label, top_send_grade_label, rpe, rpe_source, title, summary, climbs_json)
-       SELECT user_id, fingerprint || '-' || i, source, location, ${shifted("start_at")}, ${shifted("end_at")}, times, climb_count, send_count, top_grade, top_send_grade, top_grade_label, top_send_grade_label, rpe, rpe_source, title, summary, climbs_json
+       INSERT INTO sessions (user_id, fingerprint, source, start_at, end_at, climb_count, top_grade, rpe, title, summary)
+       SELECT user_id, fingerprint || i, source, date(start_at, i || ' days'), date(end_at, i || ' days'), climb_count, top_grade, rpe, title, summary
        FROM sessions, n WHERE user_id = ?`
     )
       .bind("user_long_log")

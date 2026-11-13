@@ -4,7 +4,6 @@ export default defineConfig({
   esbuild: { jsx: "automatic" },
   test: {
     environment: "jsdom",
-    testTimeout: 20_000,
     // Node 25+ ships its own localStorage global, which hides jsdom's and has no storage
     // file to back it; turning it off leaves the test DOM's.
     poolOptions: { forks: { execArgv: ["--no-experimental-webstorage"] } },

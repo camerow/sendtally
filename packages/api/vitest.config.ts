@@ -6,7 +6,6 @@ export default defineWorkersConfig(async () => {
   return {
     test: {
       setupFiles: ["./test/apply-migrations.ts"],
-      testTimeout: 20_000,
       // The connector's SDK imports ajv, whose CommonJS build requires JSON files the
       // Workers pool cannot load until Vite has bundled it.
       deps: {
