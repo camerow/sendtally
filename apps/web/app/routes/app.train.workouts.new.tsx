@@ -8,6 +8,10 @@ export default function NewWorkoutRoute(): React.ReactElement {
   const [params] = useSearchParams();
   const kind = WORKOUT_KINDS.find((k) => k === params.get("kind"));
   return (
-    <WorkoutEditorPage kind={kind} focus={readFocus(params.get("focus") ?? undefined) ?? null} />
+    <WorkoutEditorPage
+      kind={kind}
+      {...(params.get("from") !== null && { from: params.get("from") ?? "" })}
+      focus={readFocus(params.get("focus") ?? undefined) ?? null}
+    />
   );
 }

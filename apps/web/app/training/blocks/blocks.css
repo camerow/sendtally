@@ -576,3 +576,216 @@
   background: none;
   cursor: default;
 }
+
+/* A workout in its block: days by week and the weekly load */
+
+.ladder-line {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.week-days {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.week-days-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.week-days-row .grid-cell {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+.week-days-head {
+  align-items: flex-end;
+}
+
+.week-days-letter {
+  width: 28px;
+  flex: none;
+  text-align: center;
+}
+
+.week-days-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.week-days-week {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-on-white-secondary);
+}
+
+.week-days-week.is-bold {
+  font-weight: 600;
+  color: var(--bs-gunmetal);
+}
+
+.week-days-sub {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: rgba(64, 63, 76, 0.55);
+}
+
+.week-days-every {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line-on-light-soft);
+}
+
+.ladder-load {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ladder-load-head {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ladder-open-all {
+  min-height: 36px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--bs-azure-ink);
+  cursor: pointer;
+}
+
+.ladder-open-all:hover {
+  text-decoration: underline;
+}
+
+.load-section {
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(64, 63, 76, 0.14);
+}
+
+.load-section--open {
+  padding-bottom: 12px;
+}
+
+.load-section-head {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.load-section-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.load-section-name {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--bs-gunmetal);
+}
+
+.load-section-summary {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-on-white-secondary);
+}
+
+.load-section-chevron {
+  display: inline-flex;
+  color: var(--text-on-white-secondary);
+  transform: rotate(90deg);
+}
+
+.load-section-chevron.is-open {
+  transform: rotate(-90deg);
+}
+
+.load-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 2px;
+}
+
+.load-table th,
+.load-table td {
+  padding: 4px 3px;
+  text-align: center;
+  font-weight: inherit;
+}
+
+.load-week {
+  width: 34px;
+  padding-left: 6px !important;
+  text-align: left !important;
+}
+
+.load-row--now > * {
+  background: var(--surface-soft);
+}
+
+.load-row--now > :first-child {
+  border-radius: 10px 0 0 10px;
+}
+
+.load-row--now > :last-child {
+  border-radius: 0 10px 10px 0;
+}
+
+.load-value {
+  padding: 0 4px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--bs-gunmetal);
+}
+
+.load-cell--marked .load-value,
+.load-cell--marked .number-field-box {
+  background: rgba(249, 220, 92, 0.25);
+}
+
+.load-cell .number-field {
+  align-items: center;
+}
+
+.load-done {
+  width: 44px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-on-white-secondary);
+}
+
+.load-done--all {
+  color: var(--bs-fern);
+}

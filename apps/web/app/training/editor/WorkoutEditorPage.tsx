@@ -6,6 +6,7 @@ import { t } from "@sendtally/features/i18n";
 import { durationLabel } from "@sendtally/features/sessions";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
+  copyName,
   doseMeasureOf,
   draftOf,
   draftOfEditor,
@@ -47,6 +48,8 @@ const newId = (): string => crypto.randomUUID();
 export type WorkoutEditorProps = {
   /** Edit this workout of the user's own. */
   id?: string;
+  /** Start from a copy of this workout, built in or the user's own. */
+  from?: string;
   /** A new workout of this kind. */
   kind?: WorkoutKind;
   /** A new workout's focus, from the shelf it was made on; General by default. */
@@ -55,10 +58,13 @@ export type WorkoutEditorProps = {
 
 function initialDraft(
   library: WorkoutLibrary,
-  { id, kind, focus = null }: WorkoutEditorProps
+  { id, from, kind, focus = null }: WorkoutEditorProps
 ): WorkoutDraft | null {
-  const base = library.workout(id ?? "");
-  if (base !== undefined) return withEditorIds(draftOf(base), newId);
+  const base = library.workout(id ?? from ?? "");
+  if (base !== undefined) {
+    const draft = withEditorIds(draftOf(base), newId);
+    return id === undefined ? { ...draft, name: copyName(draft.name) } : draft;
+  }
   return kind === undefined ? null : { ...newWorkoutDraft(kind), focus };
 }
 

@@ -37,7 +37,11 @@ export function BlockRecapView({ recap, workout }: BlockRecapViewProps): React.R
           const moved = r.change === null ? [] : [changeText(r.change, model.settings.units)];
           const change = [...moved, ...(r.best ? ["★"] : [])].join(" ") || "-";
           return (
-            <Link key={r.membershipId} to={membershipPath(r)} className="plan-row plan-row--link">
+            <Link
+              key={r.membershipId}
+              to={membershipPath({ id: r.membershipId, blockId: recap.block.id, workoutId: w.id })}
+              className="plan-row plan-row--link"
+            >
               <DayMark kind={w.kind} filled />
               <span className="plan-row-text">
                 <span className="plan-label-small" style={{ color: KIND_LOOK[w.kind].ink }}>

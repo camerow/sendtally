@@ -5,6 +5,8 @@ import { workoutPath } from "../library/useLibrary";
 export const blockPath = (id: string, { fresh = false } = {}): string =>
   `/app/plan/block/${encodeURIComponent(id)}${fresh ? "?fresh=1" : ""}`;
 
-// ponytail: a workout in a block opens its workout until #290 builds the block workout page.
-export const membershipPath = (m: Pick<Membership, "workoutId">): string =>
-  workoutPath(m.workoutId);
+/** Its weeks inside a block, its workout outside one. */
+export const membershipPath = (m: Pick<Membership, "id" | "blockId" | "workoutId">): string =>
+  m.blockId === null
+    ? workoutPath(m.workoutId)
+    : `/app/plan/membership/${encodeURIComponent(m.id)}`;
