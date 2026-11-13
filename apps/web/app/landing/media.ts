@@ -27,12 +27,21 @@ export const MEDIA = {
 
 export type MediaKey = keyof typeof MEDIA;
 
+export type Photo = { src: string; srcSet: string; sizes: string };
+
+const photo = (name: string, widths: number[]): Photo => ({
+  src: `/images/landing/${name}-${widths[0]}.webp`,
+  srcSet: widths.map((w) => `/images/landing/${name}-${w}.webp ${w}w`).join(", "),
+  sizes: "(max-width: 860px) 420px, 100vw",
+});
+
 export const PHOTOS = {
-  sandstoneWall: "/images/landing/sandstone-wall.webp",
-  desertCrag: "/images/landing/desert-crag.webp",
-  pineFace: "/images/landing/pine-face.webp",
-  limestoneWall: "/images/landing/limestone-wall.webp",
-  willCameron: "/images/landing/will-cameron.webp",
+  sandstoneWall: photo("sandstone-wall", [1280, 1920]),
+  desertCrag: photo("desert-crag", [1280, 1600]),
+  pineFace: photo("pine-face", [1280, 1600]),
+  limestoneWall: photo("limestone-wall", [1280, 1600]),
 };
 
 export type PhotoKey = keyof typeof PHOTOS;
+
+export const PORTRAIT = "/images/landing/will-cameron.webp";

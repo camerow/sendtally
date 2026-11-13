@@ -3,6 +3,7 @@ import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useNavigate } from "react-router";
 import { useDeleteAccount } from "@sendtally/features/settings";
+import { resetIdentity } from "../lib/analytics";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
@@ -22,7 +23,11 @@ export default function AccountRoute(): React.ReactElement {
   const { user } = useUser();
   const navigate = useNavigate();
   const signOut = React.useCallback(
-    () => void clerk.signOut(() => navigate("/")),
+    () =>
+      void clerk.signOut(() => {
+        resetIdentity();
+        return navigate("/");
+      }),
     [clerk, navigate]
   );
   const deletion = useDeleteAccount(api, signOut);

@@ -1,5 +1,3 @@
-import { ClerkProvider, useAuth, useUser } from "@clerk/react-router";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs, MiddlewareFunction } from "react-router";
@@ -9,18 +7,14 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLoaderData,
   useRouteError,
   useRouteLoaderData,
 } from "react-router";
-import { deDE, esES, frFR } from "@clerk/localizations";
 import { Logo } from "@sendtally/design";
 import designStyles from "@sendtally/design/styles.css?url";
 import type { Locale } from "@sendtally/features/i18n";
 import { ErrorPage } from "./components/ErrorPage";
 import { requestLocale } from "./lib/locale";
-import { identify, resetIdentity } from "./lib/analytics";
-import { createQueryClient, useClearOnUserChange } from "@sendtally/features/query";
 import { cloudflareContext } from "./lib/cloudflare-context";
 import { APP_STORE_ID } from "./lib/stores";
 
@@ -40,8 +34,6 @@ export const middleware: MiddlewareFunction<Response>[] = [
     })(args, next);
   },
 ];
-
-const CLERK_LOCALIZATIONS = { en: undefined, de: deDE, fr: frFR, es: esES } as const;
 
 export async function loader(args: LoaderFunctionArgs): Promise<{
   locale: Locale;
@@ -63,7 +55,7 @@ function PostHog({ token, host }: { token: string; host: string }): React.ReactE
   return (
     <script
       dangerouslySetInnerHTML={{
-        __html: `!function(t,e){var o,n,p,r;e.__SV||(window.posthog&&window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}p||((p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",p.onerror=function(){p=null},(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r));var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],Object.defineProperty(u,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e}}),Object.defineProperty(u.people,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(){return u.toString(1)+".people (stub)"}}),o="nu su ou au hu init Fu Ou Ru Au Nu za Pu ju Mu Uu Wu Vu capture getExtension $u iu Ju calculateEventProperties Zu register register_once register_for_session unregister unregister_for_session Yu Eu Qu getFeatureFlag getFeatureFlagPayload getFeatureFlagResult getAllFeatureFlags isFeatureEnabled reloadFeatureFlags updateFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey displaySurvey cancelPendingSurvey canRenderSurvey canRenderSurveyAsync th identify setPersonProperties unsetPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset eh shutdown setIdentity clearIdentity get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException addExceptionStep captureLog startExceptionAutocapture stopExceptionAutocapture loadToolbar get_property getSessionProperty Ku zu createPersonProfile setInternalOrTestUser Xu du vu opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing get_explicit_consent_status is_capturing clear_opt_in_out_capturing Bu debug Ua Ts getPageViewId captureTraceFeedback captureTraceMetric Su".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init(${JSON.stringify(token)},{api_host:${JSON.stringify(host)},ui_host:'https://us.posthog.com',defaults:'2026-05-30',person_profiles:'identified_only',session_recording:{maskAllInputs:false}});`,
+        __html: `!function(t,e){var o,n,p,r;e.__SV||(window.posthog&&window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],Object.defineProperty(u,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e}}),Object.defineProperty(u.people,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(){return u.toString(1)+".people (stub)"}}),o="nu su ou au hu init Fu Ou Ru Au Nu za Pu ju Mu Uu Wu Vu capture getExtension $u iu Ju calculateEventProperties Zu register register_once register_for_session unregister unregister_for_session Yu Eu Qu getFeatureFlag getFeatureFlagPayload getFeatureFlagResult getAllFeatureFlags isFeatureEnabled reloadFeatureFlags updateFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey displaySurvey cancelPendingSurvey canRenderSurvey canRenderSurveyAsync th identify setPersonProperties unsetPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset eh shutdown setIdentity clearIdentity get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException addExceptionStep captureLog startExceptionAutocapture stopExceptionAutocapture loadToolbar get_property getSessionProperty Ku zu createPersonProfile setInternalOrTestUser Xu du vu opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing get_explicit_consent_status is_capturing clear_opt_in_out_capturing Bu debug Ua Ts getPageViewId captureTraceFeedback captureTraceMetric Su".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init(${JSON.stringify(token)},{api_host:${JSON.stringify(host)},ui_host:'https://us.posthog.com',defaults:'2026-05-30',person_profiles:'identified_only',session_recording:{maskAllInputs:false}});`,
       }}
     />
   );
@@ -91,6 +83,17 @@ function GoogleTag({ ids }: { ids: string[] }): React.ReactElement {
   );
 }
 
+function LatePostHogLibrary({ host }: { host: string }): React.ReactElement {
+  const src = `${host.replace(".i.posthog.com", "-assets.i.posthog.com")}/static/array.js`;
+  return (
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `!function(u){var d=0;function go(){if(d)return;d=1;var e=document.createElement("script");e.async=!0;e.crossOrigin="anonymous";e.src=u;document.head.appendChild(e)}["pointerdown","keydown"].forEach(function(n){addEventListener(n,go,{once:!0,capture:!0,passive:!0})});function idle(){(window.requestIdleCallback||function(f){setTimeout(f,1)})(go)}"complete"===document.readyState?idle():addEventListener("load",idle)}(${JSON.stringify(src)});`,
+      }}
+    />
+  );
+}
+
 export function Layout({ children }: { children: React.ReactNode }): React.ReactElement {
   const data = useRouteLoaderData<typeof loader>("root");
   return (
@@ -101,6 +104,7 @@ export function Layout({ children }: { children: React.ReactNode }): React.React
         <meta name="apple-itunes-app" content={`app-id=${APP_STORE_ID}`} />
         {data && data.gtagIds.length > 0 ? <GoogleTag ids={data.gtagIds} /> : null}
         {data?.posthog ? <PostHog {...data.posthog} /> : null}
+        {data?.posthog ? <LatePostHogLibrary host={data.posthog.host} /> : null}
         <Meta />
         <Links />
       </head>
@@ -121,55 +125,8 @@ export function Layout({ children }: { children: React.ReactNode }): React.React
   );
 }
 
-/**
- * Ties browser events to the same key the Worker uses (the Clerk user id) and
- * puts the email on the person, which is what the project's internal-user
- * cohort filters us out by.
- */
-function Identify(): null {
-  const { isLoaded, isSignedIn, user } = useUser();
-  const identified = React.useRef(false);
-
-  React.useEffect(() => {
-    if (!isLoaded) return;
-    if (isSignedIn && user !== null && user !== undefined) {
-      identified.current = true;
-      identify(user.id, {
-        email: user.primaryEmailAddress?.emailAddress,
-        name: user.fullName ?? undefined,
-        created_at: user.createdAt?.toISOString(),
-      });
-      return;
-    }
-    // Only on the way out: resetting on every anonymous page load would break
-    // the anonymous-to-signed-up funnel by cutting the distinct id.
-    if (identified.current) {
-      identified.current = false;
-      resetIdentity();
-    }
-  }, [isLoaded, isSignedIn, user]);
-
-  return null;
-}
-
-function ClearQueriesOnSignOut(): null {
-  const { isLoaded, userId } = useAuth();
-  useClearOnUserChange(isLoaded, userId);
-  return null;
-}
-
 export default function App(): React.ReactElement {
-  const loaderData = useLoaderData<typeof loader>();
-  const [queryClient] = React.useState(createQueryClient);
-  return (
-    <ClerkProvider loaderData={loaderData} localization={CLERK_LOCALIZATIONS[loaderData.locale]}>
-      <QueryClientProvider client={queryClient}>
-        <Identify />
-        <ClearQueriesOnSignOut />
-        <Outlet />
-      </QueryClientProvider>
-    </ClerkProvider>
-  );
+  return <Outlet />;
 }
 
 export function ErrorBoundary(): React.ReactElement {

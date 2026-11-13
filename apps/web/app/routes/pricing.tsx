@@ -1,4 +1,3 @@
-import { useAuth } from "@clerk/react-router";
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { useLoaderData } from "react-router";
@@ -42,10 +41,12 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
 
 export default function Pricing(): React.ReactElement {
   const loaderData = useLoaderData<typeof loader>();
-  const auth = useAuth();
-  const signedIn = loaderData.signedIn || auth.isSignedIn === true;
   return (
-    <LandingProvider signedIn={signedIn} locale={loaderData.locale} platform={loaderData.platform}>
+    <LandingProvider
+      signedIn={loaderData.signedIn}
+      locale={loaderData.locale}
+      platform={loaderData.platform}
+    >
       <Nav />
       <main>
         <PricingHeader />
