@@ -6,6 +6,7 @@ The export is written in the Sendtally format, so an export re-imports as is.
 
 Import lives at `/app/import` on the web and export is a download from Settings.
 Both go through the API: `POST /v1/sessions/import` and `GET /v1/export.csv`.
+An AI assistant connected to the user's account imports through the connector's `import_climbing_log` tool, described below.
 
 ## The Sendtally CSV format
 
@@ -137,6 +138,21 @@ The Worker then scores each session in date order against the user's history, so
 Each imported session's fingerprint is derived from its rows (`import-<hash>`), so importing the same file twice skips the sessions that are already there rather than duplicating them.
 Tags are not part of the fingerprint, so tags added to a session that is already there are not applied; tag it from its session page instead.
 Imported sessions are never posted to Strava.
+
+## Importing from an AI assistant
+
+The connector at `/mcp` has two tools that write sessions; neither fetches anything from another service, and the only input is text the assistant passes in.
+
+`import_climbing_log({ csv, timeZone, dryRun })` runs the same planner as `/app/import` on the CSV text, then the same insert path as `POST /v1/sessions/import`.
+Its description carries the Sendtally format and the conversion rules from the prompt below, so the assistant converts an unknown spreadsheet or journal itself and passes a recognised export through unchanged.
+It returns the format it recognised, the sessions imported and skipped as already there, and the row-level issues with their row numbers, counted from the first line of the text.
+A planned session the log form would refuse, such as one longer than 12 hours, is reported as `invalidSession` against the row of the offending climb, or the session's first row, and the rest of the text imports.
+`dryRun` returns the sessions and climbs it found and the issues, and writes nothing.
+One call takes at most 200 sessions, so the description asks for a large file in chunks, each with the header and with a day's rows kept together; the fingerprints make a resend safe.
+Imported sessions are never posted to Strava.
+
+`log_session` logs one session the user describes, with the log form's fields and the gym as a name, through the same save as `POST /v1/sessions`.
+It is posted to Strava when the user has posting on.
 
 ## The export
 

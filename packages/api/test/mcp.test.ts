@@ -60,7 +60,7 @@ const put = async (user: string, path: string, body: unknown): Promise<void> => 
   const res = await testApp().request(
     path,
     {
-      method: path === "/v1/sessions" ? "POST" : "PUT",
+      method: path === "/v1/sessions" || path === "/v1/gyms" ? "POST" : "PUT",
       headers: { "x-test-user": user, "Content-Type": "application/json" },
       body: JSON.stringify(body),
     },
@@ -287,5 +287,92 @@ describe("connector", () => {
       workouts: [],
     });
     expect(await toolJson(other, "get_plan")).toEqual({ blocks: [], outsideBlocks: [] });
+  });
+
+  const CSV = [
+    "date,session,location,gym,climb,grade,kind,tries,climb_notes",
+    "2026-09-01,Tuesday night session,indoor,,Crimp line,V4,send,2,Felt strong",
+    ",,,,,V5,attempt,3,",
+    "2026-09-03,Thursday session,indoor,,,V6,send,1,",
+    "2026-09-03,Thursday session,indoor,,,V99,send,1,",
+  ].join("\n");
+
+  const importLog = (user: string, args: Record<string, unknown>) =>
+    toolJson<Record<string, unknown>>(user, "import_climbing_log", {
+      timeZone: "UTC",
+      ...args,
+    });
+
+  it("checks a log on a dry run and writes nothing", async () => {
+    const user = "user_import_dry";
+    expect(await importLog(user, { csv: CSV, dryRun: true })).toEqual({
+      format: "sendtally",
+      sessions: 2,
+      climbs: 3,
+      issues: [{ row: 5, code: "unknownGrade", value: "V99", climb: "" }],
+    });
+    expect(await toolJson(user, "list_sessions")).toEqual({ sessions: [] });
+  });
+
+  it("imports a log once and reports each bad row by its number", async () => {
+    const user = "user_import";
+    const issues = [{ row: 5, code: "unknownGrade", value: "V99", climb: "" }];
+    expect(await importLog(user, { csv: CSV })).toEqual({
+      format: "sendtally",
+      imported: 2,
+      skipped: 0,
+      issues,
+    });
+    expect(await importLog(user, { csv: CSV })).toEqual({
+      format: "sendtally",
+      imported: 0,
+      skipped: 2,
+      issues,
+    });
+    type Listed = { sessions: Array<{ title: string; climbs: unknown[] }> };
+    const listed = await toolJson<Listed>(user, "list_sessions", { includeClimbs: true });
+    expect(listed.sessions.map((s) => s.climbs.length)).toEqual([1, 2]);
+    expect(await toolJson(user + "_other", "list_sessions")).toEqual({ sessions: [] });
+  });
+
+  it("reports a session the log form would refuse against its first row", async () => {
+    const csv = [
+      "date,start_time,end_time,grade",
+      "2026-09-01,06:00,20:00,V4",
+      "2026-09-02,,,V5",
+    ].join("\n");
+    expect(await importLog("user_import_long", { csv })).toMatchObject({
+      imported: 1,
+      issues: [{ row: 2, code: "invalidSession", value: expect.stringMatching(/too long/) }],
+    });
+  });
+
+  it("logs a session for the signed-in user only, matching their gym by name", async () => {
+    const user = "user_log";
+    await put(user, "/v1/gyms", { id: "g1", name: "Boulder Barn" });
+    const logged = await toolJson<Record<string, unknown>>(user, "log_session", {
+      date: "2026-09-05",
+      startTime: "18:00",
+      endTime: "19:30",
+      gym: "boulder barn",
+      climbs: [{ name: "Arete", grade: { scale: "v", value: 5 }, kind: "send", tries: 2 }],
+    });
+    expect(logged).toMatchObject({ startAt: "2026-09-05T18:00:00.000Z", rpe: expect.any(Number) });
+    const row = await env.DB.prepare("SELECT gym_id FROM sessions WHERE user_id = ?")
+      .bind(user)
+      .first<{ gym_id: string }>();
+    expect(row?.gym_id).toBe("g1");
+    expect(await toolJson(user + "_other", "list_sessions")).toEqual({ sessions: [] });
+  });
+
+  it("refuses a session the log form would refuse", async () => {
+    const result = await toolJson<Record<string, unknown>>("user_log_bad", "log_session", {
+      date: "2026-09-05",
+      startTime: "06:00",
+      endTime: "20:00",
+      climbs: [{ grade: { scale: "v", value: 5 } }],
+    });
+    expect(result.error).toMatch(/too long/);
+    expect(await toolJson("user_log_bad", "list_sessions")).toEqual({ sessions: [] });
   });
 });

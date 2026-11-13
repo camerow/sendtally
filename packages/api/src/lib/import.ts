@@ -6,7 +6,7 @@ export const IMPORT_BATCH_MAX = 200;
 
 // The log form's body with the gym as a name: a CSV cannot know our ids, so
 // the Worker matches it against the user's gyms. Areas are not imported.
-const importSessionShape = manualSessionShape
+export const importSessionShape = manualSessionShape
   .omit({ gymId: true })
   .extend({ gym: z.string().trim().min(1).max(80).optional() })
   .superRefine((body, ctx) => {
