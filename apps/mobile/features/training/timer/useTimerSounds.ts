@@ -18,18 +18,13 @@ export function useTimerSounds(): (s: Sound) => void {
     miss: useAudioPlayer(missSound),
     finish: useAudioPlayer(finishSound),
   };
-  const latest = React.useRef(players);
-  React.useEffect(() => {
-    latest.current = players;
-  });
-
   React.useEffect(() => {
     void setAudioModeAsync({ playsInSilentMode: true, interruptionMode: "mixWithOthers" });
   }, []);
 
-  return React.useCallback((sound: Sound) => {
-    const player = latest.current[sound];
+  return (sound) => {
+    const player = players[sound];
     void player.seekTo(0);
     player.play();
-  }, []);
+  };
 }

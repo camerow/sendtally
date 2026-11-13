@@ -2,7 +2,6 @@ import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import {
-  currentPhase,
   protocolOf,
   startWorkoutRun,
   type HangPhase,
@@ -11,13 +10,11 @@ import {
   type Run,
 } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
-import { loadLabel, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { blockTagOf, usePlan } from "@sendtally/features/training";
 import { Icon } from "../../../components/Icon";
 import { useApi } from "../../../lib/api";
 import { press } from "../../../lib/press";
-import { ON_DARK, ON_DARK_LINE, ON_DARK_SOFT } from "../components/onDark";
 import { WorkoutNotes } from "../components/WorkoutNotes";
 import { type } from "../type";
 import { useHangData } from "../data/HangDataContext";
@@ -31,6 +28,9 @@ import { TimerRing } from "./TimerRing";
 import { useTimer } from "./useTimer";
 import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
 import {
+  ON_DARK,
+  ON_DARK_LINE,
+  ON_DARK_SOFT,
   forToday,
   hangRunDone,
   timerParams,
@@ -73,12 +73,12 @@ function Timer({
       )
   );
   const { run, secondsLeft, progress } = timer;
-  const phase = currentPhase(run);
-  const current = (items[phase.item] ?? items[0]).workout;
-  const setup = setups[phase.item] ?? { edgeMm: 0, loadKg: 0 };
-  const gripId = grips[phase.item] ?? current.grip;
-  const load = loadLabel(current.kind, setup.loadKg, model.settings.units);
-  const view = timerView(run, secondsLeft, load, current.sets);
+  const view = timerView(run, secondsLeft, {
+    planned,
+    grips,
+    setups,
+    unit: model.settings.units,
+  });
 
   React.useEffect(() => {
     writeLiveRun({
@@ -145,7 +145,7 @@ function Timer({
           })}
         >
           <Text style={[type.mono, { fontSize: 13, color: ON_DARK }]}>
-            {`${model.gripName(gripId)} · ${setupLabel(current.kind, setup, model.settings.units)}`}
+            {`${model.gripName(view.gripId)} · ${view.setup}`}
           </Text>
           <Icon name="pencil" size={14} strokeWidth={2} color={ON_DARK_SOFT} />
         </Pressable>
@@ -165,7 +165,7 @@ function Timer({
         />
         <View style={{ alignItems: "center", gap: 10 }}>
           <SetArrows timer={timer} label={view.setLine} />
-          <RepDots reps={current.reps} marks={run.marks} working={view.working} />
+          <RepDots reps={view.current.reps} marks={run.marks} working={view.working} />
         </View>
       </View>
       {changing && (

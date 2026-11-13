@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { Label } from "../components/Label";
-import { ON_DARK, ON_DARK_MUTED, ON_DARK_SOFT } from "../components/onDark";
+import { ON_DARK, ON_DARK_MUTED, ON_DARK_SOFT } from "@sendtally/features/workouts";
 import { type } from "../type";
 import type { StepText } from "@sendtally/features/activities";
 

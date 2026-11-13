@@ -10,9 +10,10 @@ import {
   type Intervals,
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
+import { setupLabel } from "../hang/format";
 import { t } from "../i18n";
 import { intervalsView } from "./intervalsView";
-import { phaseProgress } from "./phaseProgress";
+import { progressMove } from "./progressMove";
 import type { PlannedRun } from "./usePlannedRun";
 import { phaseCue, ticks } from "./timerCues";
 import { forToday, hangRunDone, timerView } from "./timerView";
@@ -33,12 +34,18 @@ const repeaters: HangWorkout = {
 };
 const lifts: HangWorkout = { ...repeaters, id: "w2", kind: "pull", hangS: 0, reps: 3, sets: 1 };
 const planned: PlannedRun = { items: [{ workout: repeaters, dose: undefined }], exerciseRestS: 0 };
+const items = {
+  planned,
+  grips: ["half-crimp"],
+  setups: [{ edgeMm: 20, loadKg: 5 }],
+  unit: "kg",
+} as const;
 const at0 = 1_000_000;
 const hanging = tick(startWorkoutRun([repeaters], 0, at0), at0 + 5_000);
 
 describe("timerView", () => {
   it("reads Get ready on a white fill, with nothing to fail before the first hang", () => {
-    const view = timerView(startWorkoutRun([repeaters], 0, at0), 5, "", 2);
+    const view = timerView(startWorkoutRun([repeaters], 0, at0), 5, items);
     expect(view.look.fill).toBe(colors.white);
     expect(view.primary).toBe(t("hang.pause"));
     expect(view.fail).toBeNull();
@@ -46,10 +53,13 @@ describe("timerView", () => {
   });
 
   it("offers Came off early while a hang runs, and nothing once paused", () => {
-    const view = timerView(hanging, 5, "", 2);
+    const view = timerView(hanging, 5, items);
     expect(view.working).toBe(true);
+    expect(view.current).toBe(repeaters);
+    expect(view.gripId).toBe("half-crimp");
+    expect(view.setup).toBe(setupLabel("hang", { edgeMm: 20, loadKg: 5 }, "kg"));
     expect(view.fail).toBe(t("hang.cameOffEarly", { n: 2 }));
-    const paused = timerView(togglePause(hanging, at0 + 6_000), 5, "", 2);
+    const paused = timerView(togglePause(hanging, at0 + 6_000), 5, items);
     expect(paused.fail).toBeNull();
     expect(paused.primary).toBe(t("hang.resume"));
     expect(paused.ring).toBe(t("hang.resume"));
@@ -57,16 +67,21 @@ describe("timerView", () => {
 
   it("logs a lift on a pull, and offers Missed lift", () => {
     const pull = tick(startWorkoutRun([lifts], 0, at0), at0 + 5_000);
-    const view = timerView(pull, 0, "20 kg", 1);
+    const view = timerView(pull, 0, {
+      planned: { items: [{ workout: lifts, dose: undefined }], exerciseRestS: 0 },
+      grips: ["bar"],
+      setups: [{ edgeMm: 0, loadKg: 20 }],
+      unit: "kg",
+    });
     expect(view.primary).toBe(t("hang.lifted"));
     expect(view.ring).toBe(t("hang.logLift"));
     expect(view.fail).toBe(t("hang.missedLift"));
   });
 });
 
-describe("phaseProgress", () => {
+describe("progressMove", () => {
   it("runs a timed phase linearly to 1 over what is left", () => {
-    expect(phaseProgress({ seconds: 7, taps: 0 }, hanging, at0 + 5_000 + 3_500)).toEqual({
+    expect(progressMove(hanging, at0 + 5_000 + 3_500)).toEqual({
       from: 0.5,
       to: 1,
       ms: 3_500,
@@ -75,7 +90,7 @@ describe("phaseProgress", () => {
 
   it("holds still while paused", () => {
     const paused = togglePause(hanging, at0 + 5_000 + 3_500);
-    expect(phaseProgress({ seconds: 7, taps: 0 }, paused, at0 + 20_000)).toEqual({
+    expect(progressMove(paused, at0 + 20_000)).toEqual({
       from: 0.5,
       to: 0.5,
       ms: 0,
@@ -85,7 +100,7 @@ describe("phaseProgress", () => {
   it("eases a lift from wherever it is to the share of taps", () => {
     const pull = tick(startWorkoutRun([lifts], 0, at0), at0 + 5_000);
     const one = logLift(pull, true, at0 + 6_000);
-    expect(phaseProgress({ seconds: 18, taps: 3 }, one, at0 + 6_000)).toEqual({
+    expect(progressMove(one, at0 + 6_000)).toEqual({
       from: null,
       to: 1 / 3,
       ms: 260,

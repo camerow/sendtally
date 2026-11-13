@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
 import { Label } from "../components/Label";
-import { ON_DARK_MUTED } from "../components/onDark";
+import { ON_DARK_MUTED } from "@sendtally/features/workouts";
 import type { UpNextItem } from "@sendtally/features/activities";
 import { UpNextRow } from "./UpNextRow";
 

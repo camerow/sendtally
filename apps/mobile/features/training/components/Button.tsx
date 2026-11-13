@@ -4,7 +4,7 @@ import { colors } from "@sendtally/design/tokens";
 import { press } from "../../../lib/press";
 import { type } from "../type";
 import { HangIcon, type HangIconName } from "./HangIcon";
-import { ON_DARK, ON_DARK_LINE } from "./onDark";
+import { ON_DARK, ON_DARK_LINE } from "@sendtally/features/workouts";
 
 export type ButtonVariant =
   | "primary"
