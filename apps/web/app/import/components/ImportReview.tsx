@@ -1,12 +1,6 @@
 import React from "react";
-import {
-  planStats,
-  sessionNames,
-  sessionTitle,
-  withAddedTags,
-  type ImportIssue,
-  type ImportPlan,
-} from "@sendtally/features/import";
+import type { ImportIssue, ImportPlan } from "@sendtally/core/import";
+import { planStats, sessionNames, sessionTitle, withAddedTags } from "@sendtally/features/import";
 import { sameTagName, type TagOption } from "@sendtally/features/sessions";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { Section } from "../../settings/components/Section";
