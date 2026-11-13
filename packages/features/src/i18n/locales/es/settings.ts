@@ -29,7 +29,7 @@ export const settings = {
   "settings.embeddedBundle": "Integrado",
   "settings.yourData": "Tus datos",
   "settings.yourDataBody":
-    "Trae un historial de escalada desde una hoja de cálculo o una exportación de Kaya, o llévate todo lo que has registrado aquí.",
+    "Trae un historial de escalada desde una hoja de cálculo o la exportación de otra app de escalada, o llévate todo lo que has registrado aquí.",
   "settings.importCsv": "Importar CSV",
   "settings.exportCsv": "Exportar CSV",
   "settings.exportBodyMobile":

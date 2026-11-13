@@ -1,29 +1,19 @@
 import { disciplineOf, parseGrade, type Grade } from "../grades";
 import { parseCsv } from "./csv";
+import { eightARecords } from "./eightA";
+import { kayaRecords } from "./kaya";
+import { mountainProjectRecords } from "./mountainProject";
+import { sendageRecords } from "./sendage";
+import { theCragRecords } from "./theCrag";
+import {
+  normaliseHeader,
+  recordsOf,
+  SENDTALLY_COLUMNS,
+  type Column,
+  type Line,
+  type Record,
+} from "./records";
 import type { ImportClimb, ImportFormat, ImportIssue, ImportPlan, ImportSession } from "./types";
-
-export const SENDTALLY_COLUMNS = [
-  "date",
-  "session",
-  "location",
-  "gym",
-  "start_time",
-  "end_time",
-  "rpe",
-  "tags",
-  "session_notes",
-  "climb",
-  "grade",
-  "kind",
-  "style",
-  "tries",
-  "wall",
-  "climb_notes",
-] as const;
-
-type Column = (typeof SENDTALLY_COLUMNS)[number];
-
-type Record = Partial<globalThis.Record<Column, string>> & { row: number };
 
 // The scale is read from how the grade is written: V4, 6A+ (Font, upper
 // case), 5.11b (YDS), 7a (French, lower case). VB is V0. A trailing + or - that
@@ -52,28 +42,44 @@ function gradeAsWritten(s: string): Grade | undefined {
   return parseGrade(scale, s);
 }
 
-const KAYA_HEADERS = ["date", "ascent_type", "grade", "climb_name"];
+// The service each export format comes from, a proper noun in every locale.
+export const IMPORT_SERVICES: { [F in Exclude<ImportFormat, "sendtally">]: string } = {
+  kaya: "Kaya",
+  "8a": "8a.nu",
+  mountainProject: "Mountain Project",
+  sendage: "Sendage",
+  theCrag: "theCrag",
+};
+
+const HEADERS: [Exclude<ImportFormat, "sendtally">, string[]][] = [
+  ["kaya", ["date", "ascent_type", "grade", "climb_name"]],
+  ["8a", ["route_boulder", "date", "type", "difficulty"]],
+  ["mountainProject", ["date", "route", "rating", "location", "style", "lead_style"]],
+  ["sendage", ["date", "send_type", "climb", "climb_type", "grade", "area"]],
+  ["theCrag", ["route_name", "ascent_type", "route_grade", "crag_name", "ascent_date"]],
+];
 
 export function detectFormat(header: string[]): ImportFormat | null {
   const names = header.map(normaliseHeader);
-  if (KAYA_HEADERS.every((h) => names.includes(h))) return "kaya";
+  const found = HEADERS.find(([, columns]) => columns.every((h) => names.includes(h)));
+  if (found !== undefined) return found[0];
   if (names.includes("date") && names.includes("grade")) return "sendtally";
   return null;
 }
 
-function normaliseHeader(h: string): string {
-  return h.trim().toLowerCase().replace(/\s+/g, "_");
-}
-
 export function planImport(text: string, timeZone: string): ImportPlan {
-  const rows = parseCsv(text);
-  const header = rows[0];
+  const lines = parseCsv(text)
+    .map((cells, i) => ({ row: i + 1, cells }))
+    .filter(({ cells }) => cells.some((c) => c.trim() !== ""));
+  // A header can follow a few lines of preamble, as in a Sendage export.
+  const at = lines.slice(0, 4).findIndex(({ cells }) => detectFormat(cells) !== null);
+  const header = lines[at]?.cells;
   const format = header === undefined ? null : detectFormat(header);
   if (header === undefined || format === null) {
     return { format: "sendtally", sessions: [], issues: [{ row: 1, code: "noHeader" }] };
   }
-  const records = RECORDS[format](header, rows.slice(1), timeZone);
-  const { sessions, issues } = groupSessions(records);
+  const records = RECORDS[format](header, lines.slice(at + 1), timeZone);
+  const { sessions, issues } = groupSessions(records, format === "sendtally");
   // Not one usable row means the file is some other layout, not a file of
   // mistakes, and one message says so better than a row-by-row list.
   if (sessions.length === 0) {
@@ -82,97 +88,47 @@ export function planImport(text: string, timeZone: string): ImportPlan {
   return { format, sessions, issues };
 }
 
-function recordsOf(
-  header: string[],
-  rows: string[][],
-  pick: (name: string) => Column | undefined
-): Record[] {
-  const columns = header.map((h) => pick(normaliseHeader(h)));
-  return rows.map((cells, i) => {
-    const record: Record = { row: i + 2 };
-    columns.forEach((col, j) => {
-      const value = cells[j]?.trim() ?? "";
-      if (col !== undefined && value !== "") record[col] = value;
-    });
-    return record;
-  });
-}
-
-function sendtallyRecords(header: string[], rows: string[][]): Record[] {
+function sendtallyRecords(header: string[], rows: Line[]): Record[] {
   const known = new Set<string>(SENDTALLY_COLUMNS);
   return recordsOf(header, rows, (name) => (known.has(name) ? (name as Column) : undefined));
 }
 
 const RECORDS: {
-  [F in ImportFormat]: (header: string[], rows: string[][], timeZone: string) => Record[];
-} = { kaya: kayaRecords, sendtally: sendtallyRecords };
-
-// Kaya exports ascents only, one per row, with a UTC timestamp. The local date
-// of that instant is the session date. Its location column names the boulder or
-// formation rather than the crag, so only a gym names the session.
-function kayaRecords(header: string[], rows: string[][], timeZone: string): Record[] {
-  const map: globalThis.Record<string, Column> = {
-    date: "date",
-    grade: "grade",
-    climb_name: "climb",
-    attempts: "tries",
-    ascent_type: "style",
-    gym: "gym",
-  };
-  return recordsOf(header, rows, (name) => map[name]).map(({ style, tries, date, ...rest }) => {
-    const local = date === undefined ? undefined : localDate(date, timeZone);
-    return {
-      ...rest,
-      ...(local === undefined ? {} : { date: local }),
-      ...(rest.gym === undefined ? {} : { session: rest.gym }),
-      location: rest.gym === undefined ? "outdoor" : "indoor",
-      kind: "send",
-      ...(tries === undefined ? {} : { tries }),
-      ...kayaStyle(style),
-    };
-  });
-}
-
-function kayaStyle(style: string | undefined): Pick<Record, "style" | "tries"> {
-  switch (style?.toLowerCase()) {
-    case "flash":
-      return { style: "flash", tries: "1" };
-    case "onsight":
-      return { style: "onsight", tries: "1" };
-    case "repeat":
-      return { tries: "1" };
-    default:
-      return { style: "redpoint" };
-  }
-}
-
-function localDate(text: string, timeZone: string): string | undefined {
-  const t = Date.parse(text);
-  if (Number.isNaN(t)) return text;
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date(t));
-}
+  [F in ImportFormat]: (header: string[], rows: Line[], timeZone: string) => Record[];
+} = {
+  kaya: kayaRecords,
+  "8a": eightARecords,
+  mountainProject: mountainProjectRecords,
+  sendage: sendageRecords,
+  theCrag: theCragRecords,
+  sendtally: sendtallyRecords,
+};
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-// Rows carry their session's columns on the first row only; a blank date
-// continues the session above. The session's fields are the first value seen.
-function groupSessions(records: Record[]): { sessions: ImportSession[]; issues: ImportIssue[] } {
+// Rows carry their session's columns on the first row only; in our own format
+// a blank date continues the session above. The session's fields are the first
+// value seen.
+function groupSessions(
+  records: Record[],
+  fillDown: boolean
+): { sessions: ImportSession[]; issues: ImportIssue[] } {
   const issues: ImportIssue[] = [];
   const sessions = new Map<string, ImportSession>();
   let current: ImportSession | undefined;
   for (const r of records) {
     // A note from a climb's page, which an export writes with no session.
     if (r.kind?.toLowerCase() === "note") continue;
-    const continues = r.date === undefined && r.session === undefined && current !== undefined;
+    const continues =
+      fillDown && r.date === undefined && r.session === undefined && current !== undefined;
     const date = continues ? current!.date : r.date;
     if (date === undefined) {
-      issues.push({ row: r.row, code: "missingDate" });
+      issues.push({
+        row: r.row,
+        code: fillDown ? "missingDate" : "noDate",
+        ...(r.climb === undefined ? {} : { climb: r.climb }),
+      });
       continue;
     }
     if (!DATE.test(date) || Number.isNaN(Date.parse(`${date}T00:00:00Z`))) {
