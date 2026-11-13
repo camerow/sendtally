@@ -11,6 +11,7 @@ import {
 } from "@sendtally/core/hang";
 import { humanDuration } from "../hang/format";
 import { formatNumber, t } from "../i18n";
+import type { DoneCount } from "./recap";
 
 export type WeekField = (typeof DOSE_FIELDS)[number];
 
@@ -178,3 +179,23 @@ export function cellText(
   if (field === "weightKg" && kind === "hangboard") return value === 0 ? "0" : signed(value);
   return formatNumber(value);
 }
+
+/** The fields a load table types as m:ss. */
+export const isTimeField = (field: WeekField): boolean =>
+  field === "onS" || field === "offS" || field === "setRestS";
+
+/** The unit a load table shows beside a field: the user's for weight, mm for an edge. */
+export const weekFieldUnit = (field: WeekField, unit: WeightUnit): string | null =>
+  field === "weightKg" ? unit : field === "edgeMm" ? "mm" : null;
+
+/** Whether a week's change differs from the workout as written in that field, drawn gold. */
+export const weekFieldMarked = (change: Partial<Dose>, written: Dose, field: WeekField): boolean =>
+  change[field] !== undefined && change[field] !== written[field];
+
+/** A week's runs as "2/3"; blank before it runs or with none planned. */
+export const doneText = (ran: DoneCount | null): string =>
+  ran === null || ran.planned === 0 ? "" : `${ran.done}/${ran.planned}`;
+
+/** Every run of the week done, drawn fern. */
+export const doneAll = (ran: DoneCount | null): boolean =>
+  ran !== null && ran.planned > 0 && ran.done >= ran.planned;

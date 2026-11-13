@@ -1,6 +1,7 @@
 import { isCalendarDate, type Block, type CalendarDate } from "@sendtally/core/hang";
 import { shortDate } from "../hang/format";
 import { t } from "../i18n";
+import { blockName } from "./blockText";
 
 /** Where an add started: a day to schedule on, or a block to add to. */
 export type AddFlow = { date: CalendarDate | null; blockId: string | null };
@@ -29,6 +30,6 @@ export function addKicker(flow: AddFlow, blocks: readonly Block[]): string {
   return flow.date !== null
     ? shortDate(flow.date)
     : block !== undefined
-      ? block.name || t("plan.untitled")
+      ? blockName(block)
       : t("plan.addToPlan");
 }

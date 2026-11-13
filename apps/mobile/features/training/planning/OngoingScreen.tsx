@@ -12,6 +12,7 @@ import {
   useTrainingLog,
   ongoingMembers,
   planGridRows,
+  useLit,
 } from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
@@ -41,12 +42,7 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
   const { log } = useTrainingLog(api);
   const draft = usePlanDraft(log.plan);
   const [adding, setAdding] = React.useState(false);
-  const [added, setAdded] = React.useState<readonly string[]>([]);
-  React.useEffect(() => {
-    if (added.length === 0) return;
-    const fade = setTimeout(() => setAdded([]), 2400);
-    return () => clearTimeout(fade);
-  }, [added]);
+  const [added, setAdded] = useLit();
 
   if (plan.state.status !== "ready")
     return <LoadState state={plan.state} onRetry={() => void plan.reload()} framed />;

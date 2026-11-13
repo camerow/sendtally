@@ -7,7 +7,7 @@ import {
 } from "@sendtally/core/hang";
 import { dayMonth, shortDate } from "../hang/format";
 import { t } from "../i18n";
-import { blockKicker } from "./blockText";
+import { blockKicker, blockName } from "./blockText";
 
 /** Where a membership stands: its block's week, when it starts, or ongoing. */
 export function membershipTag(m: Membership, block: Block | null, today: CalendarDate): string {
@@ -31,7 +31,7 @@ export function plannedIn(
   today: CalendarDate
 ): { name: string; meta: string } {
   if (block !== null) {
-    const name = block.name || t("plan.untitled");
+    const name = blockName(block);
     if (block.start === null || blockEnded(block, today)) return { name, meta: "" };
     const at = blockWeekOn(block, today);
     return {

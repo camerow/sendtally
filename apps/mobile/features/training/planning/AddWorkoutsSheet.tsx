@@ -6,7 +6,7 @@ import type { Block, CalendarDate } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { focusLabel, usePlan, workoutLines } from "@sendtally/features/training";
+import { focusLabel, usePlan, workoutLines, blockName } from "@sendtally/features/training";
 import { libraryShelves, type LibraryWorkout } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -108,7 +108,7 @@ export function AddWorkoutsSheet({
     if (!made) return;
     prompt();
     close();
-    onScheduled?.({ id, name: b.name || t("plan.untitled"), start });
+    onScheduled?.({ id, name: blockName(b), start });
   };
   const footer =
     picked !== null ? (
@@ -152,7 +152,7 @@ export function AddWorkoutsSheet({
         <View style={{ gap: 12, paddingBottom: 12 }}>
           {picked !== null ? (
             <SheetHeader
-              kicker={picked.name || t("plan.untitled")}
+              kicker={blockName(picked)}
               title={t("plan.planAgainStart")}
               action={t("common.cancel")}
               onAction={close}
