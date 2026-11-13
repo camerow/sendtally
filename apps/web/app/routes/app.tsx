@@ -33,6 +33,7 @@ type NavItem = { label: () => string; to: string; icon: IconName };
 
 const NAV_ITEMS: NavItem[] = [
   { label: () => t("journal.log"), to: "/app", icon: "sessions" },
+  { label: () => t("training.train"), to: "/app/train", icon: "train" },
   { label: () => t("common.trends"), to: "/app/trends", icon: "trends" },
 ];
 
@@ -61,7 +62,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
           <NavLink
             key={to}
             to={to}
-            end
+            end={to === "/app"}
             style={({ isActive }) => ({
               display: "flex",
               alignItems: "center",
@@ -97,7 +98,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
       {!focused && (
         <nav className="app-tabbar" aria-label={t("common.sectionsAria")}>
           {NAV_ITEMS.map(({ label, to, icon }) => (
-            <NavLink key={to} to={to} end className="app-tab">
+            <NavLink key={to} to={to} end={to === "/app"} className="app-tab">
               <Icon name={icon} />
               {label()}
             </NavLink>

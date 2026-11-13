@@ -4,7 +4,7 @@ import Svg, { Path, Polyline } from "react-native-svg";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { Label } from "../components/Label";
-import { dots, plot, polyline } from "./chartGeometry";
+import { dots, plot, polyline } from "@sendtally/features/statistics";
 
 const HEIGHT = 44;
 const NEUTRAL_RPE = 6;
