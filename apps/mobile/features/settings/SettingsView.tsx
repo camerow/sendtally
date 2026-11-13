@@ -35,6 +35,9 @@ export type SettingsViewProps = {
   exporter: CsvExportFeature;
   onChangeGradePref: (discipline: Discipline, scale: GradeScale) => void;
   onOpenAccount: () => void;
+  onImport: () => void;
+  /** Over the screen, as the import result is. */
+  toast?: React.ReactNode;
 };
 
 function StatusPill({ label, active }: { label: string; active: boolean }): React.ReactElement {
@@ -70,6 +73,8 @@ export function SettingsView({
   exporter,
   onChangeGradePref,
   onOpenAccount,
+  onImport,
+  toast,
 }: SettingsViewProps): React.ReactElement {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
@@ -144,7 +149,7 @@ export function SettingsView({
           </View>
         )}
 
-        <DataSection exporter={exporter} />
+        <DataSection exporter={exporter} onImport={onImport} />
 
         <Pressable
           onPress={onOpenAccount}
@@ -174,6 +179,7 @@ export function SettingsView({
         <AppUpdateSection />
         <BuildInfo />
       </ScrollView>
+      {toast}
     </SafeAreaView>
   );
 }

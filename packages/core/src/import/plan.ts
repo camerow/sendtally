@@ -51,6 +51,17 @@ export const IMPORT_SERVICES: { [F in Exclude<ImportFormat, "sendtally">]: strin
   theCrag: "theCrag",
 };
 
+const EXPORT_PAGES: { [F in keyof typeof IMPORT_SERVICES]?: string } = {
+  theCrag: "https://www.thecrag.com/en/article/exportlogbook",
+};
+
+export function exportPageUrl(format: keyof typeof IMPORT_SERVICES): string {
+  return (
+    EXPORT_PAGES[format] ??
+    `https://www.google.com/search?q=${encodeURIComponent(`${IMPORT_SERVICES[format]} data export`)}`
+  );
+}
+
 const HEADERS: [Exclude<ImportFormat, "sendtally">, string[]][] = [
   ["kaya", ["date", "ascent_type", "grade", "climb_name"]],
   ["8a", ["route_boulder", "date", "type", "difficulty"]],
