@@ -55,12 +55,14 @@ date,session,location,gym,start_time,end_time,rpe,tags,session_notes,climb,grade
 ## Kaya exports
 
 A Kaya export has the columns `date, stiffness, rating, ascent_type, attempts, grade, color, climb_name, gym, location, country` and is recognised by its header.
-It lists ascents only, one per row, with a UTC timestamp, so:
+It lists ascents only, one per row, oldest first, with the timestamp written as JavaScript's `Date.toString()` in UTC (`Fri Nov 05 2021 03:49:59 GMT+0000 (GMT+00:00)`).
+A date-only log sits at local midnight expressed in UTC, so:
 
 - The session date is the local date of the timestamp in the browser's time zone.
 - Ascents on the same local date form one session. A gym ascent names the session after the gym; outdoor sessions stay unnamed, because Kaya's `location` column holds the boulder or formation rather than the crag.
 - `Flash` and `Onsight` import as that style with one try. `Redpoint` imports with `attempts` tries. `Repeat` imports as a send with one try and no style.
 - A row with no `attempts` imports as one try.
+- `grade` holds lower-case V grades (`v4`) for boulders and YDS for routes in the same column; the text decides which.
 - `stiffness`, `rating`, `color`, `location` and `country` are not imported.
 
 ## What happens on import
