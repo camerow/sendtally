@@ -1734,45 +1734,6 @@
   text-align: left;
 }
 
-.toggle {
-  appearance: none;
-  position: relative;
-  width: 44px;
-  height: 26px;
-  flex: none;
-  margin: 0;
-  border-radius: 13px;
-  background: var(--line-on-light-strong);
-  cursor: pointer;
-  transition: background var(--motion-fast);
-}
-
-.toggle::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--bs-white);
-  box-shadow: 0 1px 3px rgba(20, 19, 26, 0.25);
-  transition: transform var(--motion-fast);
-}
-
-.toggle:checked {
-  background: var(--bs-fern);
-}
-
-.toggle:checked::after {
-  transform: translateX(18px);
-}
-
-.toggle:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring-azure);
-}
-
 .disclosure {
   width: 100%;
   padding: 0;
