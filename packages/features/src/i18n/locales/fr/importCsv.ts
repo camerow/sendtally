@@ -82,6 +82,11 @@ export const importCsv = {
     "Les tendances et les projets incluent tout de suite les séances importées. Ouvre-en une pour ajouter un RPE, des tags ou des notes.",
   "import.openLog": "Ouvrir le journal",
   "import.importAnother": "Importer un autre fichier",
+  "import.likelyMatch": "Correspond à {name} dans ton journal",
+  "import.importAnyway_one": "L'importer quand même",
+  "import.importAnyway_other": "Les importer quand même",
+  "import.likelySkipped_one": "{count} doublon probable ignoré",
+  "import.likelySkipped_other": "{count} doublons probables ignorés",
   "import.showAllRows": "Afficher les {total} lignes",
   "import.tagSelected": "Taguer les séances choisies",
   "import.tagSelectedHint":

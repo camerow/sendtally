@@ -82,6 +82,11 @@ export const importCsv = {
     "Trends und Projekte enthalten die importierten Sessions sofort. Öffne eine davon, um RPE, Tags oder Notizen zu ergänzen.",
   "import.openLog": "Log öffnen",
   "import.importAnother": "Weitere Datei importieren",
+  "import.likelyMatch": "Entspricht {name} in deinem Log",
+  "import.importAnyway_one": "Trotzdem importieren",
+  "import.importAnyway_other": "Trotzdem importieren",
+  "import.likelySkipped_one": "{count} wahrscheinliches Duplikat übersprungen",
+  "import.likelySkipped_other": "{count} wahrscheinliche Duplikate übersprungen",
   "import.showAllRows": "Alle {total} Zeilen anzeigen",
   "import.tagSelected": "Ausgewählte Sessions taggen",
   "import.tagSelectedHint":

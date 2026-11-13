@@ -1,7 +1,8 @@
 import type { Context } from "hono";
 import { type AppEnv, captureEvent } from "./context";
 import { applyProjectFlags, climbNotesOf, climbSlug, placeLoggedClimbs } from "./lib/climbs";
-import { importFingerprint, manualBodyOf, type ImportSessionBody } from "./lib/import";
+import { importFingerprint } from "@sendtally/core/import";
+import { manualBodyOf, sha256Hex, type ImportSessionBody } from "./lib/import";
 import {
   buildManualSession,
   climbLinksOf,
@@ -72,7 +73,7 @@ export const importSessions = async (
   let imported = 0;
   let skipped = 0;
   for (const session of ordered) {
-    const fingerprint = await importFingerprint(session);
+    const fingerprint = await importFingerprint(session, sha256Hex);
     if ((await repo.getSession(c.env.DB, userId, fingerprint)) !== null) {
       skipped++;
       continue;

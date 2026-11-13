@@ -1,13 +1,19 @@
 import React from "react";
 import { Link } from "react-router";
 import type { SendtallyApi } from "@sendtally/api-client";
-import { planImport, type ImportPlan } from "@sendtally/core/import";
+import {
+  likelyDuplicates,
+  planImport,
+  type ImportPlan,
+  type LikelyDuplicate,
+} from "@sendtally/core/import";
 import { importAll, withAddedTags, withTag } from "@sendtally/features/import";
 import { sameTagName, useTagVocabulary } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { BackLink, backLinkStyle } from "../../components/BackLink";
 import { Section } from "../../settings/components/Section";
 import { bodyText, pageTitle, secondaryButton } from "../../settings/components/styles";
+import { sha256Hex } from "../sha256Hex";
 import { goldButton } from "../styles";
 import { DropZone } from "./DropZone";
 import { FormatGuide } from "./FormatGuide";
@@ -22,10 +28,15 @@ type State =
       fileName: string;
       plan: ImportPlan;
       added: string[][];
+      duplicates: LikelyDuplicate[];
+      importAnyway: number[];
       busy: boolean;
       error: string | null;
     }
-  | { step: "done"; imported: number; skipped: number; skippedRows: number };
+  | { step: "done"; imported: number; skipped: number; likely: number; skippedRows: number };
+
+const heldBack = (state: { duplicates: LikelyDuplicate[]; importAnyway: number[] }): number[] =>
+  state.duplicates.map((d) => d.index).filter((i) => !state.importAnyway.includes(i));
 
 export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
   const [state, setState] = React.useState<State>({ step: "choose" });
@@ -41,11 +52,15 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
   const choose = async (file: File): Promise<void> => {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const plan = planImport(await file.text(), timeZone);
+    const log = await api.sessionsWithClimbs();
+    const duplicates = await likelyDuplicates(plan.sessions, log.sessions, sha256Hex);
     setState({
       step: "review",
       fileName: file.name,
       plan,
       added: plan.sessions.map(() => []),
+      duplicates,
+      importAnyway: [],
       busy: false,
       error: null,
     });
@@ -55,8 +70,17 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
     if (state.step !== "review") return;
     setState({ ...state, busy: true, error: null });
     try {
-      const totals = await importAll(api, withAddedTags(state.plan.sessions, state.added));
-      setState({ step: "done", ...totals, skippedRows: state.plan.issues.length });
+      const held = heldBack(state);
+      const sessions = withAddedTags(state.plan.sessions, state.added).filter(
+        (_, i) => !held.includes(i)
+      );
+      const totals = await importAll(api, sessions);
+      setState({
+        step: "done",
+        ...totals,
+        likely: held.length,
+        skippedRows: state.plan.issues.length,
+      });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       setState({ ...state, busy: false, error: message });
@@ -110,6 +134,20 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
           onRemoveTag={(indexes, tag) =>
             retag(indexes, (tags) => tags.filter((t) => !sameTagName(t, tag)))
           }
+          duplicates={state.duplicates}
+          importAnyway={state.importAnyway}
+          onImportAnyway={(index) =>
+            setState((s) =>
+              s.step === "review"
+                ? {
+                    ...s,
+                    importAnyway: s.importAnyway.includes(index)
+                      ? s.importAnyway.filter((i) => i !== index)
+                      : [...s.importAnyway, index],
+                  }
+                : s
+            )
+          }
           busy={state.busy}
           error={state.error}
           onConfirm={() => void confirm()}
@@ -127,6 +165,9 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
               <Stat value={state.skipped} label={t("import.statAlreadyThere")} />
               <Stat value={state.skippedRows} label={t("import.statSkipped")} />
             </div>
+            {state.likely > 0 && (
+              <p style={bodyText}>{t("import.likelySkipped", { count: state.likely })}</p>
+            )}
             <p style={bodyText}>{t("import.doneBody")}</p>
           </Section>
           <div style={{ display: "flex", gap: 12 }}>

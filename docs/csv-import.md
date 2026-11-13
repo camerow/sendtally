@@ -139,6 +139,20 @@ Each imported session's fingerprint is derived from its rows (`import-<hash>`), 
 Tags are not part of the fingerprint, so tags added to a session that is already there are not applied; tag it from its session page instead.
 Imported sessions are never posted to Strava.
 
+### Likely duplicates
+
+The fingerprint does not catch the same day arriving from two sources, such as a Kaya export and a personal spreadsheet, or a session logged by hand that is also in an export.
+So the review step also compares each planned session with the sessions already in the log.
+A session looks like one already in the log when a logged session on the same date matches more than half of its climbs: same grade, and same name when both climbs have a name.
+Each logged climb matches at most one climb, and grades are compared as written, so `V4` never matches `6B`.
+Sessions from the discontinued board integration count as logged sessions here.
+A session its fingerprint already skips is not reported again.
+
+On the web review step a likely duplicate is marked with the session it matches and is left out of the import until the user ticks "Import it anyway".
+The done step says how many were left out.
+Nothing is ever skipped silently, and nothing already in the log is changed, merged or deleted.
+Climbs inside one session are never compared with each other: two unnamed climbs of the same grade on one day are usually two different problems or a repeat.
+
 ## Importing from an AI assistant
 
 The connector at `/mcp` has two tools that write sessions; neither fetches anything from another service, and the only input is text the assistant passes in.
@@ -148,6 +162,8 @@ Its description carries the Sendtally format and the conversion rules from the p
 It returns the format it recognised, the sessions imported and skipped as already there, and the row-level issues with their row numbers, counted from the first line of the text.
 A planned session the log form would refuse, such as one longer than 12 hours, is reported as `invalidSession` against the row of the offending climb, or the session's first row, and the rest of the text imports.
 `dryRun` returns the sessions and climbs it found and the issues, and writes nothing.
+It also returns `likelyDuplicates`, decided as on the review step: each with the session's first row, date and name, and the title and date of the logged session it matches.
+The tool description asks the assistant to check these with the user before importing; a real import takes every session it is sent.
 One call takes at most 200 sessions, so the description asks for a large file in chunks, each with the header and with a day's rows kept together; the fingerprints make a resend safe.
 Imported sessions are never posted to Strava.
 

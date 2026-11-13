@@ -1,5 +1,5 @@
 import React from "react";
-import { IMPORT_SERVICES, type ImportPlan } from "@sendtally/core/import";
+import { IMPORT_SERVICES, type ImportPlan, type LikelyDuplicate } from "@sendtally/core/import";
 import {
   issueText,
   planStats,
@@ -38,6 +38,9 @@ export type ImportReviewProps = {
   fileName: string;
   plan: ImportPlan;
   added: string[][];
+  duplicates: LikelyDuplicate[];
+  importAnyway: number[];
+  onImportAnyway: (index: number) => void;
   suggestionsFor: (applied: string[]) => TagOption[];
   onAddTag: (indexes: number[], tag: string) => void;
   onRemoveTag: (indexes: number[], tag: string) => void;
@@ -51,6 +54,9 @@ export function ImportReview({
   fileName,
   plan,
   added,
+  duplicates,
+  importAnyway,
+  onImportAnyway,
   suggestionsFor,
   onAddTag,
   onRemoveTag,
@@ -83,6 +89,10 @@ export function ImportReview({
       ),
     ]);
   const shown = showAll ? newestFirst : newestFirst.slice(0, PREVIEW_ROWS);
+  const matchOf = (index: number): LikelyDuplicate["logged"] | undefined =>
+    duplicates.find((d) => d.index === index)?.logged;
+  const importing =
+    plan.sessions.length - duplicates.filter((d) => !importAnyway.includes(d.index)).length;
   const first = plan.sessions[0];
   const last = plan.sessions[plan.sessions.length - 1];
 
@@ -231,71 +241,107 @@ export function ImportReview({
           />
           {shown.map(({ session: s, index }, i) => {
             const sends = s.climbs.filter((c) => c.kind === "send").length;
+            const match = matchOf(index);
+            const rule = i < shown.length - 1 ? "1px solid var(--line-on-light-soft)" : "none";
             return (
-              <label
-                key={index}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  padding: "12px 18px",
-                  borderBottom:
-                    i < shown.length - 1 ? "1px solid var(--line-on-light-soft)" : "none",
-                  background: selected.includes(index) ? "var(--surface-soft)" : "transparent",
-                  cursor: "pointer",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={selected.includes(index)}
-                  disabled={busy}
-                  aria-label={t("import.selectSession", {
-                    name: sessionTitle(s) ?? t("common.climbingSession"),
-                    date: dayLabel(s.date),
-                  })}
-                  onChange={() => toggle(index)}
-                  style={checkbox}
-                />
-                <span
+              <React.Fragment key={index}>
+                <label
                   style={{
-                    ...monoMuted,
-                    fontSize: 11,
-                    color: "var(--bs-gunmetal)",
-                    width: narrow ? 52 : 92,
-                    flexShrink: 0,
-                  }}
-                >
-                  {dayLabel(s.date)}
-                </span>
-                <span
-                  style={{
-                    flexGrow: 1,
                     display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                    minWidth: 0,
+                    alignItems: "center",
+                    gap: 14,
+                    padding: "12px 18px",
+                    borderBottom: match === undefined ? rule : "none",
+                    background: selected.includes(index) ? "var(--surface-soft)" : "transparent",
+                    cursor: "pointer",
                   }}
                 >
-                  <span style={{ fontWeight: 600 }}>
-                    {sessionTitle(s) ?? t("common.climbingSession")}
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(index)}
+                    disabled={busy}
+                    aria-label={t("import.selectSession", {
+                      name: sessionTitle(s) ?? t("common.climbingSession"),
+                      date: dayLabel(s.date),
+                    })}
+                    onChange={() => toggle(index)}
+                    style={checkbox}
+                  />
+                  <span
+                    style={{
+                      ...monoMuted,
+                      fontSize: 11,
+                      color: "var(--bs-gunmetal)",
+                      width: narrow ? 52 : 92,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {dayLabel(s.date)}
                   </span>
-                  <span style={monoMuted}>
-                    {t("common.climbCount", { count: s.climbs.length })} ·{" "}
-                    {s.location === "indoor" ? t("common.indoor") : t("common.outdoor")} ·{" "}
-                    {t("import.sendCount", { count: sends })} · {planStats([s]).topGrade ?? "–"}
-                  </span>
-                  {s.tags !== undefined && (
-                    <span style={{ ...monoMuted, color: "var(--bs-petal-ink)" }}>
-                      {s.tags.join(" · ")}
+                  <span
+                    style={{
+                      flexGrow: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                      minWidth: 0,
+                    }}
+                  >
+                    <span style={{ fontWeight: 600 }}>
+                      {sessionTitle(s) ?? t("common.climbingSession")}
                     </span>
-                  )}
-                </span>
-                <span style={pillMuted}>
-                  {s.rpe === undefined
-                    ? t("import.rpeScored")
-                    : t("import.rpeGiven", { rpe: s.rpe })}
-                </span>
-              </label>
+                    <span style={monoMuted}>
+                      {t("common.climbCount", { count: s.climbs.length })} ·{" "}
+                      {s.location === "indoor" ? t("common.indoor") : t("common.outdoor")} ·{" "}
+                      {t("import.sendCount", { count: sends })} · {planStats([s]).topGrade ?? "–"}
+                    </span>
+                    {s.tags !== undefined && (
+                      <span style={{ ...monoMuted, color: "var(--bs-petal-ink)" }}>
+                        {s.tags.join(" · ")}
+                      </span>
+                    )}
+                  </span>
+                  <span style={pillMuted}>
+                    {s.rpe === undefined
+                      ? t("import.rpeScored")
+                      : t("import.rpeGiven", { rpe: s.rpe })}
+                  </span>
+                </label>
+                {match !== undefined && (
+                  <label
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "6px 14px",
+                      padding: "8px 18px",
+                      background: "color-mix(in srgb, var(--bs-gold) 18%, transparent)",
+                      borderBottom: rule,
+                      fontSize: 13,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span>
+                      {t("import.likelyMatch", {
+                        name: match.title || t("common.climbingSession"),
+                      })}
+                    </span>
+                    <span
+                      style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600 }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={importAnyway.includes(index)}
+                        disabled={busy}
+                        onChange={() => onImportAnyway(index)}
+                        style={checkbox}
+                      />
+                      {t("import.importAnyway", { count: 1 })}
+                    </span>
+                  </label>
+                )}
+              </React.Fragment>
             );
           })}
           {!showAll && plan.sessions.length > PREVIEW_ROWS && (
@@ -316,8 +362,13 @@ export function ImportReview({
       )}
       <div style={{ display: "flex", gap: 12, paddingTop: 4 }}>
         {plan.sessions.length > 0 && (
-          <button type="button" style={goldButton} disabled={busy} onClick={onConfirm}>
-            {busy ? t("import.importing") : t("import.confirm", { count: plan.sessions.length })}
+          <button
+            type="button"
+            style={goldButton}
+            disabled={busy || importing === 0}
+            onClick={onConfirm}
+          >
+            {busy ? t("import.importing") : t("import.confirm", { count: importing })}
           </button>
         )}
         <button type="button" style={secondaryButton} disabled={busy} onClick={onCancel}>
