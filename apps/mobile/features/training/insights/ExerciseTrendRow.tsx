@@ -4,23 +4,18 @@ import Svg, { Path, Polyline } from "react-native-svg";
 import type { WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import type { ExerciseTrendVM } from "@sendtally/features/statistics";
 import { Icon } from "../../../components/Icon";
 import { pressRow } from "../../../lib/press";
-import { metricText } from "@sendtally/features/exercises";
-import { dots, plot, polyline } from "@sendtally/features/statistics";
+import {
+  SPARK_HEIGHT,
+  SPARK_WIDTH,
+  dots,
+  polyline,
+  sparkPoints,
+  trendChange,
+  type ExerciseTrendVM,
+} from "@sendtally/features/statistics";
 import { type } from "../type";
-
-const SPARK = 6;
-const SPARK_WIDTH = 34;
-const SPARK_HEIGHT = 20;
-const SPARK_PAD = 3;
-
-/** "+6 kg": the change since the first time in range, in what the exercise is measured in; nothing when it did not move. */
-function changeText(row: ExerciseTrendVM, unit: WeightUnit): string {
-  if (row.change === 0 || row.count < 2) return "";
-  return `${row.change < 0 ? "−" : "+"}${metricText(Math.abs(row.change), row.metric, unit)}`;
-}
 
 /** An exercise: how often, its last few bests as a line, and how much it moved; it opens its trend. */
 export function ExerciseTrendRow({
@@ -32,20 +27,9 @@ export function ExerciseTrendRow({
   unit: WeightUnit;
   onPress?: () => void;
 }): React.ReactElement {
-  const values = row.values.slice(-SPARK);
-  const lo = Math.min(...values);
-  const hi = Math.max(...values);
-  const flat = lo === hi;
-  const points = plot(
-    values,
-    flat ? lo - 1 : lo,
-    flat ? hi + 1 : hi,
-    SPARK_WIDTH,
-    SPARK_HEIGHT,
-    SPARK_PAD
-  );
+  const points = sparkPoints(row.values);
   const tone = row.change > 0 ? colors.fern : colors.textMuted;
-  const change = changeText(row, unit);
+  const change = trendChange(row, unit);
   const count = t("statistics.timesCount", { count: row.count });
   return (
     <Pressable

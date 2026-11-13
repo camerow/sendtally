@@ -6,7 +6,7 @@ import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
 import { canCompareGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
-  exerciseKey,
+  exerciseByKey,
   useExercises,
   type ExerciseGroupKind,
   type ExerciseGroupVM,
@@ -34,10 +34,7 @@ export function ExerciseGroups({
   const openOf = (kind: ExerciseGroupKind, key: string): (() => void) | undefined => {
     if (kind === "hangboard")
       return () => router.push({ pathname: "/grip/[id]", params: { id: key } });
-    const exercise =
-      exercises.status === "ready"
-        ? exercises.data.find((e) => exerciseKey(e.name) === key)
-        : undefined;
+    const exercise = exercises.status === "ready" ? exerciseByKey(exercises.data, key) : undefined;
     return exercise === undefined
       ? undefined
       : () => router.push({ pathname: "/exercise/[id]", params: { id: exercise.id } });
