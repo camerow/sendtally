@@ -88,4 +88,5 @@ export const common = {
   "common.offline": "Offline",
   "common.addedTo": "Zu „{name}“ hinzugefügt",
   "common.view": "Ansehen",
+  "common.copied": "Kopiert",
 } as const;

@@ -10,6 +10,7 @@ export default [
   route("privacy", "routes/privacy.tsx"),
   route("terms", "routes/terms.tsx"),
   route("support", "routes/support.tsx"),
+  route("ai-assistants", "routes/ai-assistants.tsx"),
   layout("routes/clerk-layout.tsx", [
     route("sign-in", "routes/sign-in.tsx"),
     route("sign-in/verify", "routes/sign-in.verify.tsx"),
@@ -69,6 +70,7 @@ export default [
       route("settings", "routes/app.settings.tsx"),
       route("import", "routes/app.import.tsx"),
       route("export.csv", "routes/app.export-csv.ts"),
+      route("settings/assistant", "routes/app.settings.assistant.tsx"),
       route("settings/gyms/:id", "routes/app.settings.gyms.$id.tsx"),
       route("moderation", "routes/app.moderation.tsx"),
       route("account", "routes/app.account.tsx"),
