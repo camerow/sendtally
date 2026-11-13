@@ -163,6 +163,32 @@ describe("connector", () => {
     expect(toolCall?.properties).not.toHaveProperty("$mcp_response");
   });
 
+  it("records a missing capability report with its text, and nothing else", async () => {
+    const client = new PostHog("phc_test", {
+      host: "https://us.i.posthog.com",
+      fetch: async () => new Response("{}"),
+    });
+    const capture = vi.spyOn(client, "capture");
+    posthogClient.current = client;
+    let tools: { result: { tools: { name: string }[] } };
+    try {
+      tools = (await (await rpc("tools/list", {}, "user_mcp")).json()) as typeof tools;
+      await callTool("user_mcp", env, "get_more_tools", { context: "Rename a training block" });
+    } finally {
+      posthogClient.current = null;
+    }
+
+    expect(tools.result.tools.map((t) => t.name)).toContain("get_more_tools");
+    const events = capture.mock.calls.map(([e]) => e);
+    expect(events.find((e) => e.event === "$mcp_missing_capability")).toMatchObject({
+      distinctId: "user_mcp",
+      properties: { $mcp_intent: "Rename a training block" },
+    });
+    for (const e of events.filter((e) => e.event !== "$mcp_missing_capability")) {
+      expect(JSON.stringify(e)).not.toContain("Rename a training block");
+    }
+  });
+
   it("turns away a user over the rate limit without running the tool", async () => {
     const limited: Env = {
       ...env,
