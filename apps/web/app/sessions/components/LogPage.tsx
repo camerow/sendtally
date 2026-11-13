@@ -9,7 +9,14 @@ import type {
 } from "@sendtally/api-client";
 import { useGyms } from "@sendtally/features/gyms";
 import { t } from "@sendtally/features/i18n";
-import { logItems, logSegmentItems, type LogSegment } from "@sendtally/features/journal";
+import {
+  logItems,
+  logSegmentItems,
+  logTraining,
+  today,
+  type LogSegment,
+} from "@sendtally/features/journal";
+import { useTrainingLog } from "@sendtally/features/training";
 import { ClimbingLog } from "../../climbs/components/ClimbingLog";
 import { AccountButton } from "../../components/AccountButton";
 import { Segmented } from "../../components/Segmented";
@@ -70,9 +77,11 @@ export function LogPage({
   const workout = params.get("workout");
   const segment: LogSegment =
     params.get("segment") === "training" || workout !== null ? "training" : "climbing";
+  const { log: trainingLog } = useTrainingLog(api);
+  const training = React.useMemo(() => logTraining(trainingLog, today()), [trainingLog]);
   const all = React.useMemo(
-    () => logItems(sessions, entries, hangSessions, activities),
-    [sessions, entries, hangSessions, activities]
+    () => logItems(sessions, entries, hangSessions, activities, training),
+    [sessions, entries, hangSessions, activities, training]
   );
   const items = React.useMemo(() => logSegmentItems(all, segment), [all, segment]);
   const empty = items.length === 0 && (segment === "climbing" || workout === null);

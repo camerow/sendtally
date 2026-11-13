@@ -1,14 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import type { Plan } from "@sendtally/api-client";
-import {
-  addDays,
-  isDated,
-  weekday,
-  type Block,
-  type Membership,
-  type Weekday,
-} from "@sendtally/core/hang";
+import { isDated, type Block, type Membership, type Weekday } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -17,7 +10,10 @@ import {
   scheduleOf,
   withFollowing,
   withoutFollowing,
-  trainingDay,
+  blockWeekColumns,
+  blockWeekDates,
+  cellMark,
+  weekPlans,
   useTrainingLog,
   type DaySchedule,
   type DayToggle,
@@ -72,8 +68,6 @@ export type BlockWeekProps = {
   onMove?: (membershipId: string, by: -1 | 1) => void;
 };
 
-const DAYS = [0, 1, 2, 3, 4, 5, 6];
-
 /**
  * A block's week, a row per workout opening it in the block, and + Add workout under it in Edit mode. On a
  * scheduled block a week shows its dates; in Edit mode a cell sets the workout's day.
@@ -126,22 +120,12 @@ export function BlockWeek({
     );
     setBefore(on ? now : null);
   };
-  const from = isDated(block) && week !== undefined ? addDays(block.start, (week - 1) * 7) : null;
-  // A block week runs from its start's weekday, so each weekday column finds its own date.
-  const dates = from === null ? null : DAYS.map((d) => addDays(from, (d - weekday(from) + 7) % 7));
-  const statuses = dates === null ? null : dates.map((date) => trainingDay(log, date, today).plans);
+  const dates = blockWeekDates(block, week);
+  const statuses = dates === null ? null : weekPlans(log, dates, today);
   const marks =
     statuses === null
       ? undefined
-      : (m: Membership): (CellMark | null)[] =>
-          statuses.map((plans) => {
-            const o = plans.find((x) => x.membership.id === m.id);
-            return o === undefined
-              ? null
-              : o.movedFrom !== null && o.status === "planned"
-                ? "movedIn"
-                : o.status;
-          });
+      : (m: Membership): (CellMark | null)[] => statuses.map((plans) => cellMark(plans, m.id));
   const picksWeek = onPickWeek !== undefined && week !== undefined;
   const options: GridOptions = editing
     ? {
@@ -250,7 +234,7 @@ export function BlockWeek({
             picksWeek ? <WeekNav week={week} weeks={block.weeks} onPick={onPickWeek} /> : undefined
           }
           dates={dates === null ? undefined : dates.map((d) => String(Number(d.slice(8))))}
-          columns={from === null ? undefined : DAYS.map((i) => weekday(addDays(from, i)))}
+          columns={blockWeekColumns(block, week)}
           footer={
             editing &&
             shownWeek < block.weeks && (

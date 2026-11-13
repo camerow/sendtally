@@ -20,6 +20,8 @@ export type MonthCalendarProps = {
   today: CalendarDate;
   /** Blocks to band across the weeks they cover, as the plan calendar shows them. */
   blocks?: readonly Block[];
+  /** Days tinted as a run, such as the rest of a block's first week. */
+  shaded?: (d: CalendarDate) => boolean;
   onPick: (d: CalendarDate) => void;
 };
 
@@ -31,6 +33,7 @@ export function MonthCalendar({
   max,
   today,
   blocks,
+  shaded,
   onPick,
 }: MonthCalendarProps): React.ReactElement {
   const [month, setMonth] = React.useState(() => monthStart(selected));
@@ -83,7 +86,14 @@ export function MonthCalendar({
                 if (!inMonth(d)) return <span key={d} className="month-calendar-day" />;
                 const off = (min !== null && d < min) || (max !== undefined && d > max);
                 const on = picked === undefined ? d === selected : picked.includes(d);
-                const tone = on ? " is-on" : d === today ? " is-today" : "";
+                const inBlock = !off && shaded?.(d) === true;
+                const tone = on
+                  ? " is-on"
+                  : inBlock
+                    ? " is-shaded"
+                    : d === today
+                      ? " is-today"
+                      : "";
                 return (
                   <button
                     key={d}
@@ -91,7 +101,7 @@ export function MonthCalendar({
                     className={`month-calendar-day${tone}`}
                     disabled={off}
                     aria-pressed={on}
-                    aria-label={dayTitle(d)}
+                    aria-label={inBlock ? t("hang.inBlock", { date: dayTitle(d) }) : dayTitle(d)}
                     onClick={() => onPick(d)}
                   >
                     <span>{Number(d.slice(8))}</span>

@@ -1,5 +1,5 @@
 import React from "react";
-import { useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import {
   addDays,
   daysBetween,
@@ -19,7 +19,10 @@ import {
 } from "@sendtally/features/training";
 import { AccountButton } from "../../components/AccountButton";
 import { PageAction } from "../../components/PageAction";
+import { useToast } from "../../components/Toast";
 import { useAppApi } from "../../lib/useAppApi";
+import { BlockRow } from "../blocks/BlockRow";
+import { blockPath } from "../blocks/paths";
 import { useHangData } from "../data/HangDataContext";
 import { AddWorkoutsSheet } from "./AddWorkoutsSheet";
 import { DaySection } from "./DaySection";
@@ -44,6 +47,8 @@ export function PlanPage(): React.ReactElement {
   const [offset, setOffset] = React.useState(() => weekOffset(today, start));
   const [selected, setSelected] = React.useState<CalendarDate>(start);
   const [adding, setAdding] = React.useState(false);
+  const navigate = useNavigate();
+  const toast = useToast();
   const strip = React.useRef<HTMLDivElement>(null);
   const days = React.useRef(new Map<CalendarDate, HTMLElement>());
   const target = React.useRef<CalendarDate | null>(start);
@@ -87,6 +92,12 @@ export function PlanPage(): React.ReactElement {
     target.current = null;
     scrollTo(date, true);
   };
+  const show = (date: CalendarDate): void => {
+    setOffset(weekOffset(today, date));
+    setSelected(date);
+    target.current = date;
+    scrollTo(date, true);
+  };
   const changeWeek = (next: number): void => {
     setOffset(next);
     const day = addDays(addDays(weekStart(today), next * 7), weekday(selected));
@@ -121,12 +132,12 @@ export function PlanPage(): React.ReactElement {
             {t("plan.blocksInProgress", { count: running.length })}
           </span>
           {running.map((b) => (
-            <div key={b.id} className="plan-block-row">
-              <span className="plan-row-name">{b.name || t("plan.untitled")}</span>
-              <span className="plan-row-meta">
-                {t("plan.workoutCount", { count: blockMembers(log.plan, b).length })}
-              </span>
-            </div>
+            <BlockRow
+              key={b.id}
+              id={b.id}
+              name={b.name}
+              meta={t("plan.workoutCount", { count: blockMembers(log.plan, b).length })}
+            />
           ))}
         </div>
       )}
@@ -144,10 +155,20 @@ export function PlanPage(): React.ReactElement {
       ))}
       {adding && (
         <AddWorkoutsSheet
-          date={selected}
+          flow={{ date: selected, blockId: null }}
           onClose={(added) => {
             setAdding(false);
             if (added.length > 0) select(selected);
+          }}
+          onScheduled={(made) => {
+            toast.show({
+              message: t("plan.scheduledName", { name: made.name }),
+              action: {
+                label: t("plan.viewTemplate"),
+                onPress: () => void navigate(blockPath(made.id)),
+              },
+            });
+            show(made.start);
           }}
         />
       )}

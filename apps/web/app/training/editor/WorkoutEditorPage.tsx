@@ -30,7 +30,7 @@ import { useAppApi } from "../../lib/useAppApi";
 import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
-import { useLibrary, workoutPath } from "../library/useLibrary";
+import { WORKOUTS_VIEW, useLibrary, workoutPath } from "../library/useLibrary";
 import { FocusField } from "../log/FocusField";
 import { ExercisePicker } from "./ExercisePicker";
 import { ItemEditor } from "./ItemEditor";
@@ -71,7 +71,7 @@ function Editor({
 }): React.ReactElement {
   const api = useAppApi();
   const navigate = useNavigate();
-  const back = useGoBack("/app/train");
+  const back = useGoBack(WORKOUTS_VIEW);
   const toast = useToast();
   const failed = React.useCallback(
     () => toast.show({ message: t("workouts.saveFailed") }),
@@ -107,7 +107,7 @@ function Editor({
 
   return (
     <DetailFrame
-      backTo="/app/train"
+      backTo={WORKOUTS_VIEW}
       backLabel={t("common.cancel")}
       onBack={state === initial ? undefined : () => setDiscarding(true)}
       footer={

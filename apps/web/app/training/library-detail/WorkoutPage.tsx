@@ -14,7 +14,7 @@ import { useAppApi } from "../../lib/useAppApi";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { editWorkoutPath } from "../editor/paths";
-import { useLibrary } from "../library/useLibrary";
+import { WORKOUTS_VIEW, useLibrary } from "../library/useLibrary";
 import { logLink } from "../log/logLink";
 import { activityPath } from "../log/paths";
 import { BodyPreview } from "./BodyPreview";
@@ -57,7 +57,7 @@ function Detail({
 
   return (
     <DetailFrame
-      backTo="/app/train"
+      backTo={WORKOUTS_VIEW}
       action={
         <span className="detail-actions">
           {workout.source === "mine" && (
@@ -104,7 +104,7 @@ function Detail({
       {hang === undefined && <WorkoutOverTime workout={workout} />}
       <HistoryList items={history} to={activityPath} />
       <PlanList workoutId={workout.id} name={workout.name} kind={workout.kind} />
-      {menu.confirm}
+      {menu.sheets}
     </DetailFrame>
   );
 }

@@ -191,15 +191,6 @@
   flex-direction: column;
 }
 
-.plan-block-row {
-  min-height: 52px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 3px;
-  border-bottom: 1px solid var(--line-on-light-soft);
-}
-
 .plan-day-slot--last {
   min-height: calc(100vh - 220px);
 }
@@ -478,6 +469,10 @@
 
 .month-calendar-day.is-today > span {
   background: var(--bs-gold);
+}
+
+.month-calendar-day.is-shaded > span {
+  background: var(--surface-soft);
 }
 
 .month-calendar-day.is-on > span,

@@ -1,6 +1,8 @@
 import type { Block, CalendarDate, DatedBlock } from "@sendtally/core/hang";
-import { t } from "@sendtally/features/i18n";
-import { blockDone, blockMembers, type TrainingLog } from "@sendtally/features/training";
+import { t } from "../i18n";
+import { blockMembers } from "./blocks";
+import type { TrainingLog } from "./days";
+import { blockDone } from "./recap";
 
 const weeks = (n: number): string => t("calendar.weeks", { count: n });
 

@@ -11,6 +11,9 @@ vi.mock("../data/HangDataProvider", () => ({
   HangDataProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 vi.mock("./WorkoutLibrary", () => ({ WorkoutLibrary: () => <p>workouts</p> }));
+vi.mock("../blocks/BlocksList", () => ({ BlocksList: () => <p>blocks</p> }));
+const newBlock = vi.hoisted(() => vi.fn());
+vi.mock("../blocks/useNewBlock", () => ({ useNewBlock: () => newBlock }));
 vi.mock("../exercises/ExerciseShelves", () => ({ ExerciseShelves: () => <p>exercises</p> }));
 
 let container: HTMLDivElement;
@@ -57,12 +60,24 @@ const option = (label: string): HTMLElement =>
   )!;
 
 describe("TrainPage", () => {
-  it("opens on Workouts and keeps the chosen segment in the address", () => {
+  it("opens on Blocks and keeps the chosen segment in the address", () => {
     mount("/app/train");
+    expect(container.textContent).toContain("blocks");
+    act(() => option("Workouts").click());
     expect(container.textContent).toContain("workouts");
-    act(() => option("Exercises").click());
-    expect(container.textContent).toContain("exercises");
-    expect(at.search).toBe("?view=exercises");
+    expect(at.search).toBe("?view=workouts");
+    act(() => option("Blocks").click());
+    expect(at.search).toBe("");
+  });
+
+  it("makes a new block from Create", () => {
+    mount("/app/train");
+    act(() => container.querySelector<HTMLElement>(".page-action")?.click());
+    const row = [...document.querySelectorAll<HTMLElement>(".more-item")].find(
+      (b) => b.textContent === "Create block"
+    );
+    act(() => row?.click());
+    expect(newBlock).toHaveBeenCalled();
   });
 
   it("lands on the segment a link names", () => {

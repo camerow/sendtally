@@ -17,8 +17,10 @@ import {
   type LogTraining,
   type TripSpan,
 } from "./types";
-import { blockLastDay } from "@sendtally/core/hang";
-import { blockTagOf } from "../training/recap";
+import { blockLastDay, type CalendarDate } from "@sendtally/core/hang";
+import { blockGroups } from "../training/blocks";
+import type { TrainingLog } from "../training/days";
+import { blockRecap, blockTagOf } from "../training/recap";
 
 const KIND_LABELS: Record<EntryKind, MessageKey> = {
   journal: "journal.kindJournal",
@@ -129,6 +131,12 @@ export function logSegmentItems(items: LogItem[], segment: LogSegment): LogItem[
       : (i.type === "session") === (segment === "climbing")
   );
 }
+
+/** The plan the log tags sessions with, and the blocks over by `day` that it marks done. */
+export const logTraining = (log: TrainingLog, day: CalendarDate): LogTraining => ({
+  plan: log.plan,
+  finished: blockGroups(log.plan.blocks, day).past.map((b) => blockRecap(log, b, day)),
+});
 
 const NO_TRAINING: LogTraining = { plan: { blocks: [], memberships: [] }, finished: [] };
 

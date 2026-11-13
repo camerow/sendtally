@@ -15,6 +15,7 @@ import {
   linkedSessions,
   logItems,
   logScopeItems,
+  logTraining,
   logSegmentItems,
   logWorkoutItems,
   logWorkoutName,
@@ -285,6 +286,28 @@ describe("blocks in the log", () => {
     });
     const grouped = groupTrips(logItems([], [trip], [], [], training));
     expect(grouped.map((i) => i.key)).toEqual(["block:b1", "entry:t1"]);
+  });
+});
+
+describe("logTraining", () => {
+  const plan = {
+    blocks: [
+      { id: "over", name: "Base", start: "2026-05-04", weeks: 1, focus: null },
+      { id: "running", name: "Power", start: "2026-06-08", weeks: 2, focus: null },
+    ],
+    memberships: [],
+    weekChanges: [],
+    planChanges: [],
+    membershipDays: [],
+  };
+
+  it("marks done only the blocks over by the day", () => {
+    const training = logTraining(
+      { climbs: [], hangs: [], activities: [], plan, workout: () => undefined },
+      "2026-06-10"
+    );
+    expect(training.plan).toBe(plan);
+    expect(training.finished.map((r) => r.block.id)).toEqual(["over"]);
   });
 });
 
