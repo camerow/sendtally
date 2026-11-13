@@ -16,9 +16,11 @@ import { colors } from "@sendtally/design/tokens";
 import { dayMonth, weekdayLetters, weekdayLong } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
+  blockWeekColumns,
   daysInWeek,
+  everyWeekFrom,
+  ranMark,
   scheduleOf,
-  trainingDay,
   usualDays,
   type DayToggle,
   type TrainingLog,
@@ -61,15 +63,12 @@ export function WeekDaysGrid({
   const schedule = scheduleOf(plan, membership);
   const dated = isDated(block) ? block : null;
   // From this week on; none once the block has ended.
-  const everyFrom = dated === null ? 1 : today < dated.start ? 1 : blockWeekOn(dated, today);
+  const everyFrom = everyWeekFrom(block, today);
   const every = everyFrom === null ? null : usualDays(schedule, everyFrom, block.weeks);
-  const columns = dated === null ? DAYS : DAYS.map((i) => weekday(addDays(dated.start, i)));
+  const columns = blockWeekColumns(block, 1) ?? DAYS;
   const weeks = Array.from({ length: block.weeks }, (_, i) => i + 1);
 
-  const markOn = (date: CalendarDate): CellMark | null => {
-    const o = trainingDay(log, date, today).plans.find((x) => x.membership.id === membership.id);
-    return o === undefined ? null : o.status === "planned" ? null : o.status;
-  };
+  const markOn = (date: CalendarDate): CellMark | null => ranMark(log, membership.id, date, today);
 
   const current = dated === null ? null : blockWeekOn(dated, today);
   const row = (

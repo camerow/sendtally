@@ -6,7 +6,6 @@ import {
   blockEnded,
   blockWeekOn,
   doseIndex,
-  isDated,
   letterOf,
   sessionItems,
   turnsOf,
@@ -17,8 +16,10 @@ import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import {
   blockOfMembership,
-  blockRecap,
+  changedWeeks,
+  ladderDone,
   loadColumns,
+  weekChangesOf,
   useTrainingLog,
   workoutLines,
   KIND_LOOK,
@@ -41,14 +42,6 @@ import { LoadTable } from "./LoadTable";
 import { LoadSection } from "./LoadSection";
 import { usePlanDraft } from "./usePlanDraft";
 import { WeekDaysGrid } from "./WeekDaysGrid";
-
-/** "changes W5, W6"; nothing when no week changes it. */
-const changedWeeks = (changes: readonly Partial<Dose>[]): string[] => {
-  const weeks = changes.flatMap((c, i) =>
-    Object.keys(c).length > 0 ? [t("plan.weekShort", { n: i + 1 })] : []
-  );
-  return weeks.length === 0 ? [] : [t("plan.changesWeeks", { weeks: weeks.join(", ") })];
-};
 
 export type LadderScreenProps = {
   id: string;
@@ -80,32 +73,16 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
   const items = sessionItems(w.items, turn);
   const itemIdAt = (index: number): string => itemIdOf(w.items[index] ?? {}, index);
   const doseOf = (index: number): number => doseIndex(w.items[index] ?? { doses: [] }, turn);
-  const weeks = Array.from({ length: block.weeks }, (_, i) => i + 1);
   const changesOf = (index: number): Partial<Dose>[] =>
-    weeks.map(
-      (week) =>
-        plan.weekChanges.find(
-          (c) =>
-            c.membershipId === id &&
-            c.week === week &&
-            c.dose === doseOf(index) &&
-            c.itemId === itemIdAt(index)
-        )?.change ?? {}
-    );
+    weekChangesOf(plan, {
+      membershipId: id,
+      weeks: block.weeks,
+      dose: doseOf(index),
+      itemId: itemIdAt(index),
+    });
   const current = blockWeekOn(block, today);
-  const dated = isDated(block) ? block : null;
   const ended = blockEnded(block, today);
-  const ran =
-    dated === null
-      ? undefined
-      : blockRecap(log, dated, today).workouts.find((r) => r.membershipId === id)?.weeks;
-  // A template has no runs to count.
-  const done =
-    dated === null
-      ? null
-      : weeks.map((week) =>
-          ended || (current !== null && week <= current) ? (ran?.[week - 1] ?? null) : null
-        );
+  const done = ladderDone(log, block, id, today);
   const lines =
     w.kind === "hangboard" ? (bodySummary(w)?.split(" · ") ?? []) : workoutLines(w, model);
   const mine = library?.source === "mine";

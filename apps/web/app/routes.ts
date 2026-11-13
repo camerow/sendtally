@@ -27,6 +27,7 @@ export default [
       route("plan", "routes/app.plan.tsx"),
       route("plan/schedule/:workoutId", "routes/app.plan.schedule.$workoutId.tsx"),
       route("plan/block/:id", "routes/app.plan.block.$id.tsx"),
+      route("plan/membership/:id", "routes/app.plan.membership.$id.tsx"),
       route("plan/calendar", "routes/app.plan.calendar.tsx"),
       route("plan/day/:date", "routes/app.plan.day.$date.tsx"),
       route("plan/ongoing", "routes/app.plan.ongoing.tsx"),

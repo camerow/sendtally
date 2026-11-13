@@ -124,3 +124,4 @@ export { blockMembership, useAddTo, type AddTo, type AddToOptions } from "./useA
 export { pastMeta, templateMeta } from "./blockMeta";
 export { blockWeekColumns, blockWeekDates, cellMark, weekPlans } from "./blockWeekDays";
 export { usePlanDraft, type PlanDraftState } from "./usePlanDraft";
+export { changedWeeks, everyWeekFrom, ladderDone, ranMark, weekChangesOf } from "./ladder";

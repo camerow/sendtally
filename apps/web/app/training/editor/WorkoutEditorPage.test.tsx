@@ -167,6 +167,17 @@ describe("WorkoutEditorPage", () => {
     expect(writes.saveWorkout).not.toHaveBeenCalled();
   });
 
+  it("starts from a copy of a workout and saves it as a new one", () => {
+    mount(<WorkoutEditorPage from="legs" />);
+    expect(container.querySelector<HTMLInputElement>(".name-field")?.value).toBe(
+      "Gym, legs (copy)"
+    );
+    click(container.querySelector(".detail-primary"));
+    const [id] = writes.saveWorkout.mock.calls[0] as unknown as [string];
+    expect(id).not.toBe("legs");
+    expect(saved().items[0]?.exercise).toBe("Zercher squat");
+  });
+
   it("makes a new workout in its category and focus, then opens it", () => {
     mount(<WorkoutEditorPage kind="strength" focus="power" />);
     type(container.querySelector<HTMLInputElement>(".name-field")!, "Fast pulls");
