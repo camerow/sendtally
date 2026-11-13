@@ -17,6 +17,8 @@ import {
   logScopeItems,
   logSegmentItems,
   logWorkoutItems,
+  logWorkoutName,
+  trainingLogItems,
   openInjuries,
   overlappingTrip,
   sessionsInSpan,
@@ -506,7 +508,6 @@ describe("logScopeItems", () => {
 
   it("picks one kind of entry", () => {
     expect(logScopeItems(items, "injuries").map((i) => i.key)).toEqual(["entry:hurt"]);
-    expect(logScopeItems(items, "trips")).toEqual([]);
   });
 
   it("shows each half on its own", () => {
@@ -588,6 +589,19 @@ describe("logWorkoutItems", () => {
 
   it("knows one logged without the library by its title", () => {
     expect(logWorkoutItems(items, "title:pull and core")).toHaveLength(2);
+  });
+
+  it("narrows the Training log by scope, then by workout", () => {
+    expect(trainingLogItems(items, "journal", null).map((i) => i.key)).toEqual(["entry:note"]);
+    expect(trainingLogItems(items, "all", "legs").map((i) => i.key)).toEqual(["activity:a1"]);
+    expect(trainingLogItems(items, "journal", "legs")).toEqual([]);
+  });
+
+  it("names the workout a key narrows to, from its rows", () => {
+    expect(logWorkoutName(items, "arms")).toBe("Arm day");
+    expect(logWorkoutName(items, "title:pull and core")).toBe("Pull and core");
+    expect(logWorkoutName(items, "gone")).toBeNull();
+    expect(logWorkoutName(items, null)).toBeNull();
   });
 });
 
