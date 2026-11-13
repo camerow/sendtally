@@ -479,6 +479,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  border: none;
   border-radius: var(--radius-control);
   background: var(--bs-gold);
   color: var(--bs-gunmetal);
@@ -486,6 +487,7 @@
   font-weight: 600;
   font-size: 15px;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .log-empty-primary:hover {

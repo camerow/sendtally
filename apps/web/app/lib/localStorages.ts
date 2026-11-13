@@ -15,5 +15,3 @@ export const localStore = (key: string): DraftStorage =>
 
 export const climbKindStorage = localStore("sendtally:climb-kind");
 export const sessionDraftStorage = localStore("sendtally:session-draft:new");
-/** The session logged climb by climb from the log; apart from the form's draft so neither overwrites the other. */
-export const liveSessionStorage = localStore("sendtally:session-draft:live");

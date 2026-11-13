@@ -36,7 +36,8 @@ import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { DiscardDraftDialog } from "../../components/DiscardDraftDialog";
 import { useIsNarrow } from "../../lib/useIsNarrow";
-import { climbKindStorage, liveSessionStorage, sessionDraftStorage } from "../../lib/localStorages";
+import { climbKindStorage, sessionDraftStorage } from "../../lib/localStorages";
+import { useLiveSessionStorage } from "../../lib/useLiveSessionStorage";
 import { AreaFormDialog } from "../../areas/components/AreaFormDialog";
 import { ClimbFormDialog } from "../../areas/components/ClimbFormDialog";
 import { useDeviceLocation } from "../../areas/useDeviceLocation";
@@ -159,6 +160,7 @@ export function LogSessionForm({
 }): React.ReactElement {
   const navigate = useNavigate();
   const client = useQueryClient();
+  const liveSessionStorage = useLiveSessionStorage();
   const prefs = useGradeScalePrefs(api);
   const [draft, setDraft] = React.useState<LogSessionDraft>(
     () => editing?.draft ?? emptySessionDraft(new Date(), prefs.scales)
