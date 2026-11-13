@@ -6,6 +6,8 @@ import { Sheet } from "./Sheet";
 export type AddNoteSheetProps = {
   /** The note to edit, "new" to write one, or null when closed. A session's note keeps its session's day. */
   note: { id: string; day: string; note: string; source?: "session" | "page" } | "new" | null;
+  /** The day a new note starts on; today when not given. */
+  day?: string;
   /** Saved locally first, so the sheet closes at once. */
   onSave: (day: string, note: string) => void;
   onDelete: (id: string) => void;
@@ -15,6 +17,7 @@ export type AddNoteSheetProps = {
 /** Writes, rewrites or deletes one dated note; deleting asks first. */
 export function AddNoteSheet({
   note,
+  day: startDay,
   onSave,
   onDelete,
   onClose,
@@ -27,7 +30,7 @@ export function AddNoteSheet({
   const [wasOpen, setWasOpen] = React.useState<AddNoteSheetProps["note"]>(null);
   if (note !== wasOpen) {
     setWasOpen(note);
-    setDay(editing?.day ?? localDate(new Date()));
+    setDay(editing?.day ?? startDay ?? localDate(new Date()));
     setDraft(editing?.note ?? "");
     setConfirming(false);
   }
