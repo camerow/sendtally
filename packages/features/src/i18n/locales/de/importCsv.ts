@@ -93,4 +93,17 @@ export const importCsv = {
   "import.selectSession": "{name}, {date} auswählen",
   "import.connectorLine":
     "Oder verbinde Claude oder ChatGPT mit sendtally und lass die Datei für dich importieren.",
+  "import.supportedApps": "Unterstützte Apps",
+  "import.chooseFile": "CSV-Datei auswählen",
+  "import.notRecognized": "Nicht erkannt",
+  "import.nothingToImport": "Nichts zu importieren",
+  "import.nothingFoundMobile":
+    "Diese Datei ist weder ein Export, den Sendtally erkennt, noch im Sendtally-CSV-Format. Wandle sie mit einem KI-Assistenten um und wähle dann die umgewandelte Datei.",
+  "import.convertHelpMobile":
+    "Sende diesen Prompt mit deiner Tabelle im Anhang an Claude oder ChatGPT.",
+  "import.sharePrompt": "Prompt teilen",
+  "import.added_one": "{count} Session hinzugefügt",
+  "import.added_other": "{count} Sessions hinzugefügt",
+  "import.addedSome": "{added} hinzugefügt · {skipped} schon vorhanden",
+  "import.allThere": "Alle {total} schon in deinem Log",
 } as const;

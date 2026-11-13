@@ -1,6 +1,12 @@
 import React from "react";
-import { IMPORT_SERVICES, type ImportIssue, type ImportPlan } from "@sendtally/core/import";
-import { planStats, sessionNames, sessionTitle, withAddedTags } from "@sendtally/features/import";
+import { IMPORT_SERVICES, type ImportPlan } from "@sendtally/core/import";
+import {
+  issueText,
+  planStats,
+  sessionNames,
+  sessionTitle,
+  withAddedTags,
+} from "@sendtally/features/import";
 import { sameTagName, type TagOption } from "@sendtally/features/sessions";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { Section } from "../../settings/components/Section";
@@ -19,24 +25,6 @@ import { sectionLabel } from "../../components/styles";
 
 const PREVIEW_ROWS = 8;
 const ISSUE_ROWS = 20;
-
-const ISSUE_KEYS = {
-  noHeader: "import.issueNoHeader",
-  missingDate: "import.issueMissingDate",
-  noDate: "import.issueNoDate",
-  badDate: "import.issueBadDate",
-  missingGrade: "import.issueMissingGrade",
-  unknownGrade: "import.issueUnknownGrade",
-  badKind: "import.issueBadKind",
-  badStyle: "import.issueBadStyle",
-  badTries: "import.issueBadTries",
-  badRpe: "import.issueBadRpe",
-  badLocation: "import.issueBadLocation",
-  badTime: "import.issueBadTime",
-} as const;
-
-const issueText = (issue: ImportIssue): string =>
-  t(ISSUE_KEYS[issue.code], { value: issue.value ?? "" });
 
 const dayLabel = (date: string): string =>
   formatDate(new Date(`${date}T00:00:00Z`), {
