@@ -60,19 +60,18 @@ export const importClimbingLog: ConnectorTool<typeof inputSchema> = {
     const issues: (ImportIssue | { row: number; code: "invalidSession"; value: string })[] = [
       ...plan.issues,
     ];
-    const sessions: ImportSessionBody[] = [];
-    const valid: ImportSession[] = [];
-    for (const { rows, ...planned } of plan.sessions) {
+    const valid: { planned: ImportSession; body: ImportSessionBody }[] = [];
+    for (const session of plan.sessions) {
+      const { rows, ...planned } = session;
       const parsed = importSessionShape.safeParse(planned);
-      if (parsed.success) {
-        sessions.push(parsed.data);
-        valid.push({ ...planned, rows });
-      } else
+      if (parsed.success) valid.push({ planned: session, body: parsed.data });
+      else
         for (const { path, message } of parsed.error.issues) {
           const row = path[0] === "climbs" ? rows[Number(path[1])] : rows[0];
           issues.push({ row: row ?? 1, code: "invalidSession", value: message });
         }
     }
+    const sessions = valid.map((v) => v.body);
     if (sessions.length > IMPORT_BATCH_MAX) {
       return {
         error: `${sessions.length} sessions is more than ${IMPORT_BATCH_MAX}; send the file in chunks.`,
@@ -84,11 +83,12 @@ export const importClimbingLog: ConnectorTool<typeof inputSchema> = {
         ...row,
         climbs: parseClimbs(row.climbs_json),
       }));
-      const duplicates = await likelyDuplicates(valid, logged, sha256Hex);
+      const planned = valid.map((v) => v.planned);
+      const duplicates = await likelyDuplicates(planned, logged, sha256Hex);
       const likely = duplicates.map(({ index, logged: match }) => ({
-        row: valid[index]?.rows[0] ?? 1,
-        date: valid[index]?.date,
-        name: valid[index]?.name,
+        row: planned[index]?.rows[0] ?? 1,
+        date: planned[index]?.date,
+        name: planned[index]?.name,
         matches: { title: match.title, date: match.start_at.slice(0, 10) },
       }));
       return {

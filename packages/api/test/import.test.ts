@@ -1,5 +1,7 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
+import { likelyDuplicates, planImport } from "@sendtally/core/import";
+import { sha256Hex } from "../src/lib/import";
 import { testApp } from "./harness";
 
 const headers = { "x-test-user": "user_import", "Content-Type": "application/json" };
@@ -106,6 +108,29 @@ describe("import", () => {
       `2022-11-22,Moe's Valley,outdoor,,,,8,trip,Last day of the trip,Lindners Roof,V9,send,redpoint,30,,Foot swap,,Moe's Valley,manual,${rows[1]!.fingerprint}`
     );
     expect(lines[4]).toMatch(/^2023-01-05,,indoor,Boulder Barn,,,\d+,,,,6A\+,send,flash,1,,,,/);
+  });
+
+  it("fingerprints a planned session as the Worker does, so an imported one is not a likely duplicate", async () => {
+    const user = { ...headers, "x-test-user": "user_import_fingerprint" };
+    const csv = [
+      "date,session,climb,grade",
+      "2026-11-10,Gym night,Blue crimps,V4",
+      "2026-11-10,Gym night,,V5",
+    ].join("\n");
+    const { sessions: planned } = planImport(csv, "UTC");
+    const [session] = planned;
+    expect(session?.climbs.map((c) => c.tries)).toEqual([1, 1]);
+    session!.climbs[0]!.name = "  Blue crimps  ";
+    const body = { sessions: planned.map(({ rows: _rows, ...s }) => s) };
+    const res = await testApp().request(
+      "/v1/sessions/import",
+      { method: "POST", headers: user, body: JSON.stringify(body) },
+      env
+    );
+    expect(await res.json()).toEqual({ imported: 1, skipped: 0 });
+    const log = await testApp().request("/v1/sessions?include=climbs", { headers: user }, env);
+    const { sessions } = (await log.json()) as { sessions: Parameters<typeof likelyDuplicates>[1] };
+    expect(await likelyDuplicates(planned, sessions, sha256Hex)).toEqual([]);
   });
 
   it("rejects a session the log form would reject", async () => {
