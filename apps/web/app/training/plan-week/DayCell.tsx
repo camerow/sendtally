@@ -2,14 +2,8 @@ import React from "react";
 import { weekday } from "@sendtally/core/hang";
 import { dayTitle, weekdayShort } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { dayMarks, type DayMarkSpec, type TrainingDay } from "@sendtally/features/training";
+import { dayMarks, type TrainingDay, oncePerKind } from "@sendtally/features/training";
 import { DayMark } from "./DayMark";
-
-const oncePerKind = (marks: readonly DayMarkSpec[]): DayMarkSpec[] =>
-  [...new Set(marks.map((m) => m.kind))].map((kind) => ({
-    kind,
-    filled: marks.some((m) => m.kind === kind && m.filled),
-  }));
 
 /** One day of the strip: its name, its date and a mark per kind trained or planned. */
 export function DayCell({

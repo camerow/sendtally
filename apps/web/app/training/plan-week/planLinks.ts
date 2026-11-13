@@ -1,6 +1,6 @@
 import type { LoggedItem, Occurrence } from "@sendtally/features/training";
-import { occurrenceLink } from "@sendtally/features/training";
-import type { LibraryWorkout, PlannedItems } from "@sendtally/features/workouts";
+import { plannedItems } from "@sendtally/features/training";
+import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { workoutPath } from "../library/useLibrary";
 import { activityPath } from "../log/paths";
 import { plannedLogLink } from "../log/logLink";
@@ -12,15 +12,8 @@ export function loggedPath(item: LoggedItem): string {
   return `/app/sessions/${encodeURIComponent(item.session.fingerprint)}`;
 }
 
-/** What the plan prescribes for one run. */
-export const plannedOf = (o: Occurrence): PlannedItems => ({
-  link: occurrenceLink(o),
-  items: o.items,
-  session: o.session,
-});
-
 /** Log it for one planned run; none for a workout with nothing in it. */
 export const occurrenceLogLink = (w: LibraryWorkout, o: Occurrence): string | null =>
-  plannedLogLink(w, o.date, plannedOf(o));
+  plannedLogLink(w, o.date, plannedItems(o));
 
 export const occurrencePath = (o: Occurrence): string => workoutPath(o.membership.workoutId);

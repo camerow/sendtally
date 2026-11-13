@@ -4,7 +4,9 @@ export {
   dayMarks,
   itemEffort,
   loggedFocus,
+  loggedKey,
   loggedKind,
+  oncePerKind,
   loggedSessions,
   trainingDay,
   trainingWeek,
@@ -28,6 +30,7 @@ export {
   blockOfMembership,
   nextOccurrence,
   occurrenceLink,
+  plannedItems,
   asOn,
   occurrencesOn,
   sessionsOf,
@@ -43,6 +46,7 @@ export {
   newSchedule,
   blockDates,
   scheduledMemberships,
+  scheduleAddLabel,
   scheduleReady,
   toggled,
   type ScheduleDraft,
@@ -111,9 +115,10 @@ export { blockDateRange, blockKicker, blockTag, doneOfShort, effortText } from "
 export { occurrenceMeta, occurrenceTag } from "./occurrenceText";
 export { loggedRowText, type LoggedRowText } from "./loggedRowText";
 export { KIND_LOOK, type KindLook, type MarkShape } from "./kindLook";
-export { bandOn, blockOn, monthWeeks, type Band } from "./calendarGrid";
+export { bandOn, bandText, blockOn, calendarDay, monthWeeks, type Band } from "./calendarGrid";
 export { isOneOff } from "./plan";
 export { membershipTag, oneOffDate, plannedIn } from "./planText";
 export { KIND_COLORS, activityColor } from "./kindColors";
 export { addFlowOf, addFlowParams, addKicker, type AddFlow, type RawAddParams } from "./addFlow";
 export { blockMembership, useAddTo, type AddTo, type AddToOptions } from "./useAddTo";
+export { usePlanDraft, type PlanDraftState } from "./usePlanDraft";

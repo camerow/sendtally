@@ -16,7 +16,7 @@ export function LoggedRow({
   to: string;
 }): React.ReactElement {
   return (
-    <Link to={to} className="plan-row plan-row--link">
+    <Link to={to} className="plan-row plan-row--day plan-row--link">
       <KindCircle kind={kind} badge="done" />
       <span className="plan-row-text">
         <span className="plan-row-name">{text.name}</span>

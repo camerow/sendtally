@@ -5,8 +5,8 @@ import {
   dayEntries,
   loggedKind,
   loggedRowText,
-  type LoggedItem,
   type TrainingDay,
+  loggedKey,
 } from "@sendtally/features/training";
 import { useDisplayScales } from "@sendtally/features/settings";
 import { DashedPanel } from "../components/DashedPanel";
@@ -18,17 +18,19 @@ import { OccurrenceRow } from "./OccurrenceRow";
 import { loggedPath } from "./planLinks";
 import { SkippedRow } from "./SkippedRow";
 
-const loggedKey = (item: LoggedItem): string => {
-  if (item.kind === "activity") return item.activity.id;
-  return item.kind === "climb" ? item.session.fingerprint : item.session.id;
-};
-
 /**
  * A day in plan order, as the week list shows it: each plan as it stands, a done one as what
  * did it, then what else was logged. Today is a title; any other day a quiet date line, and
  * an empty one nothing more.
  */
-export function DaySection({ day }: { day: TrainingDay }): React.ReactElement {
+export function DaySection({
+  day,
+  heading = true,
+}: {
+  day: TrainingDay;
+  /** Off where the page's own title already names the day. */
+  heading?: boolean;
+}): React.ReactElement {
   const { model } = useHangData();
   const scales = useDisplayScales();
   const library = useLibrary().state;
@@ -38,10 +40,10 @@ export function DaySection({ day }: { day: TrainingDay }): React.ReactElement {
   ) : (
     <h2 className="plan-label plan-label--muted plan-day-line">{dayTitle(day.date)}</h2>
   );
-  if (empty && !day.isToday) return head;
+  if (heading && empty && !day.isToday) return head;
   return (
     <div className="plan-day">
-      {head}
+      {heading && head}
       {dayEntries(day).map((e) => {
         if (e.kind !== "plan") {
           const { item } = e;

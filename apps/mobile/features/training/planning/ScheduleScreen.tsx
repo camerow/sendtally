@@ -10,7 +10,6 @@ import {
   type Block,
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { daysList, shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   blockDates,
@@ -22,6 +21,7 @@ import {
   usePlan,
   type ScheduleDraft,
   type ScheduleMode,
+  scheduleAddLabel,
 } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -43,15 +43,6 @@ import { StartField } from "./StartField";
 import { WeekdayChips } from "./WeekdayChips";
 
 export type ScheduleScreenProps = { workoutId: string; flow: AddFlow };
-
-function addLabel(d: ScheduleDraft, count: number, first: string | undefined): string {
-  if (d.mode === "repeat")
-    return d.weekdays.length === 0
-      ? t("hang.add")
-      : t("plan.addEvery", { days: daysList(d.weekdays) });
-  if (count === 1 && first !== undefined) return t("plan.addOn", { date: shortDate(first) });
-  return count === 0 ? t("hang.add") : t("plan.addOnDays", { count });
-}
 
 /** The last step of adding: every week on some days, or on some dates, in a block or not. */
 export function ScheduleScreen({
@@ -101,7 +92,7 @@ export function ScheduleScreen({
     <ScreenFrame
       footer={
         <Button
-          label={addLabel(draft, days.length, days[0])}
+          label={scheduleAddLabel(draft, days.length, days[0])}
           onPress={save}
           disabled={!ready}
           variant="primary"

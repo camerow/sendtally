@@ -1,11 +1,11 @@
 import { router } from "expo-router";
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { addMonths, monthStart, type CalendarDate } from "@sendtally/core/hang";
+import { addMonths, monthStart } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { monthTitle, weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { trainingWeek, useTrainingLog, bandOn, monthWeeks } from "@sendtally/features/training";
+import { trainingWeek, useTrainingLog, monthWeeks, bandText } from "@sendtally/features/training";
 import { BackButton } from "../../../components/BackButton";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -21,13 +21,6 @@ export function CalendarScreen(): React.ReactElement {
   const { today } = useHangData();
   const { log } = useTrainingLog(useApi());
   const [month, setMonth] = React.useState(() => monthStart(today));
-
-  const bandOf = (monday: CalendarDate): string | null => {
-    const band = bandOn(log.plan.blocks, monday);
-    return band === null
-      ? null
-      : t("calendar.band", { name: band.block.name, at: band.week, of: band.block.weeks });
-  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -92,7 +85,7 @@ export function CalendarScreen(): React.ReactElement {
             key={monday}
             days={trainingWeek(log, monday, today)}
             month={month}
-            band={bandOf(monday)}
+            band={bandText(log.plan.blocks, monday)}
             onPress={(date) => router.push({ pathname: "/plan/day", params: { date } })}
           />
         ))}

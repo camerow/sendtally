@@ -1,5 +1,6 @@
 import React from "react";
 import type { WorkoutKind } from "@sendtally/core/hang";
+import { colors } from "@sendtally/design/tokens";
 import { KIND_LOOK } from "@sendtally/features/training";
 
 export type DayMarkProps = {
@@ -32,7 +33,7 @@ export function DayMark({
         ...(filled
           ? { background: color }
           : {
-              border: `1.5px ${dashed ? "dashed" : "solid"} ${dashed ? "rgba(64,63,76,0.55)" : color}`,
+              border: `1.5px ${dashed ? "dashed" : "solid"} ${dashed ? colors.textMuted : color}`,
             }),
       }}
     />

@@ -16,6 +16,7 @@ import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { FilterChip } from "../../components/FilterChip";
 import { Icon } from "../../components/Icon";
 import { useAppApi } from "../../lib/useAppApi";
+import { useQueryUpdate } from "../../sessions/useQueryUpdate";
 import { SectionHeader } from "../../sessions/components/SectionHeader";
 import { ClimbingEmpty } from "./ClimbingEmpty";
 import { ClimbingLogCell } from "./ClimbingLogCell";
@@ -44,7 +45,8 @@ export function ClimbingLog({ items }: { items: LogItem[] }): React.ReactElement
   const api = useAppApi();
   const { state } = useClimbs(api);
   const { scales } = useGradeScalePrefs(api);
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
+  const updateQuery = useQueryUpdate();
   const status = statusOf(params.get("status"));
   const [query, setQuery] = React.useState("");
   const [grade, setGrade] = React.useState<GradeFilter | null>(null);
@@ -89,15 +91,10 @@ export function ClimbingLog({ items }: { items: LogItem[] }): React.ReactElement
   }, [filtered, log, items]);
 
   const setStatus = (next: ClimbStatusFilter): void =>
-    setParams(
-      (was) => {
-        const p = new URLSearchParams(was);
-        if (next === "all") p.delete("status");
-        else p.set("status", next);
-        return p;
-      },
-      { replace: true, preventScrollReset: true }
-    );
+    updateQuery((p) => {
+      if (next === "all") p.delete("status");
+      else p.set("status", next);
+    });
 
   return (
     <div className="climbing-log">
