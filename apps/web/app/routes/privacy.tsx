@@ -80,7 +80,8 @@ export default function Privacy(): React.ReactElement {
         connect to your account uses it, its connection and each action it takes are recorded as
         events too, carrying only which action it was, which assistant and model took it, how long
         it took, whether it failed, and the names of the options it set, never what it read or
-        wrote.
+        wrote. When the assistant cannot do something you asked, it may send us a short description
+        of what was missing.
       </p>
       <p>
         <strong>App installs.</strong> The mobile apps also run Google Analytics for Firebase, which

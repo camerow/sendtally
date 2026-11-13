@@ -21,13 +21,9 @@ const clerkIssuer = (publishableKey: string): string =>
   `https://${atob(publishableKey.split("_")[2] ?? "").slice(0, -1)}`;
 
 // Arguments, results, error text and the assistant's stated intent can all carry
-// the user's logbook, which never goes to PostHog.
-const LOGBOOK_PROPERTIES = [
-  "$mcp_parameters",
-  "$mcp_response",
-  "$mcp_error_message",
-  "$mcp_intent",
-];
+// the user's logbook, which never goes to PostHog. A missing-capability report
+// is the exception: its intent is the assistant's description of what it lacked.
+const LOGBOOK_PROPERTIES = ["$mcp_parameters", "$mcp_response", "$mcp_error_message"];
 
 const RATE_LIMITED = "Too many requests from this connector. Wait a minute, then try again.";
 
@@ -43,8 +39,10 @@ function serverFor(c: Context<AppEnv>, user: ConnectorUser, posthog: PostHog | n
       context: false,
       enableConversationId: false,
       enableExceptionAutocapture: false,
+      reportMissing: true,
       beforeSend: (event) => {
         for (const key of LOGBOOK_PROPERTIES) delete event.properties[key];
+        if (event.event !== "$mcp_missing_capability") delete event.properties.$mcp_intent;
         return event;
       },
     });
