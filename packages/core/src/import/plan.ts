@@ -29,7 +29,7 @@ export function gradeFromText(text: string): Grade | undefined {
 
 function gradeAsWritten(s: string): Grade | undefined {
   if (s === "") return undefined;
-  const scale = /^v\d+$/i.test(s)
+  const scale = /^v(\d|1[0-7])$/i.test(s)
     ? "v"
     : /^5\.\d/.test(s)
       ? "yds"

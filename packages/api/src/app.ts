@@ -4,6 +4,7 @@ import { HTTPException } from "hono/http-exception";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
 import { mcp } from "./mcp";
+import { importSessions, writeManualSession } from "./sessions";
 import { z } from "zod";
 import { auth } from "./auth";
 import type { Env } from "./bindings";
@@ -54,11 +55,8 @@ import {
   type Viewer,
 } from "./lib/areas";
 import {
-  applyProjectFlags,
   climbResolver,
-  placeLoggedClimbs,
   climbCatalogue,
-  climbNotesOf,
   climbSlug,
   missingClimbs,
   projectBody,
@@ -81,13 +79,11 @@ import { exportCsv } from "./lib/export";
 import { activityOf } from "./lib/activities";
 import { hangHistoryOf } from "./lib/hang";
 import { dedupedWalls, gymBody, gymOf, newGymBody } from "./lib/gyms";
-import { importBody, importFingerprint, manualBodyOf } from "./lib/import";
+import { importBody } from "./lib/import";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
-  buildManualSession,
   climbLinksOf,
   climbNoteBody,
-  historySession,
   userClimbNoteBody,
   userClimbNoteParam,
   manualSessionBody,
@@ -126,18 +122,6 @@ function sameSecret(presented: string | undefined, expected: string): boolean {
 
 const revenuecat = (env: Env): RevenueCatClient =>
   new RevenueCatClient(env.REVENUECAT_SECRET_API_KEY);
-
-const manualScoringHistory = async (
-  db: D1Database,
-  userId: string,
-  excludeFingerprint?: string
-) => {
-  const rows = await repo.listSessions(db, userId, true);
-  return rows
-    .filter((r) => r.fingerprint !== excludeFingerprint && r.rpe_source !== "none")
-    .map(historySession)
-    .filter((s): s is NonNullable<typeof s> => s !== null);
-};
 
 const sessionResponse = async (env: Env, userId: string, fingerprint: string) => {
   const [row, viewer] = await Promise.all([
@@ -330,29 +314,8 @@ const saveManualSession = async (
   form: ManualSessionBody,
   created: boolean
 ) => {
-  const db = c.env.DB;
+  await writeManualSession(c, fingerprint, form, created);
   const userId = c.get("userId");
-  const history = await manualScoringHistory(db, userId, fingerprint);
-  const input = buildManualSession(fingerprint, form, history);
-  const links = climbLinksOf(form.climbs);
-  if (created) await repo.insertManualSession(db, userId, input, links);
-  else await repo.updateManualSession(db, userId, input, links);
-  // The rows around a session live in their own tables, so they are written side by side.
-  await Promise.all([
-    repo.upsertSessionNote(db, userId, fingerprint, form.date, normalisedNote(form.notes)),
-    repo.setSessionTags(db, userId, fingerprint, form.tags ?? []),
-    repo
-      .restoreUserClimbs(db, userId, {
-        nameKeys: form.climbs.map((climb) => climbSlug(climb.name)).filter((key) => key !== ""),
-        ids: form.climbs.flatMap((climb) => climb.userClimbId ?? []),
-      })
-      .then(() => placeLoggedClimbs(db, userId, form.climbs))
-      .then(() => applyProjectFlags(db, userId, form.climbs)),
-    repo.setClimbNotes(db, userId, fingerprint, climbNotesOf(form.climbs)),
-  ]);
-  await captureEvent(c, created ? "manual_session_created" : "manual_session_updated", {
-    session_source: "manual",
-  });
   const body = { session: await sessionResponse(c.env, userId, fingerprint) };
   // Already posted sessions get the activity patched, never a second one.
   postAfterResponse(c, fingerprint, () => syncSessionToStrava(c.env, userId, fingerprint));
@@ -1894,48 +1857,10 @@ const app = new Hono<AppEnv>()
     return c.json(await saveManualSession(c, fingerprint, placed.form, false));
   })
 
-  // A batch of sessions from a CSV. Scored oldest first so each one sees the
-  // ones before it as history, and skipped when its fingerprint is already
-  // there, so a file imported twice adds nothing. Never posted to Strava.
-  .post("/v1/sessions/import", zValidator("json", importBody, invalidBody), async (c) => {
-    const userId = c.get("userId");
-    await repo.ensureUser(c.env.DB, userId);
-    const gymIdByName = new Map(
-      (await repo.listGyms(c.env.DB, userId)).map((g) => [g.name.toLowerCase(), g.id])
-    );
-    const history = await manualScoringHistory(c.env.DB, userId);
-    const ordered = [...c.req.valid("json").sessions].sort((a, b) => a.date.localeCompare(b.date));
-    let imported = 0;
-    let skipped = 0;
-    for (const session of ordered) {
-      const fingerprint = await importFingerprint(session);
-      if ((await repo.getSession(c.env.DB, userId, fingerprint)) !== null) {
-        skipped++;
-        continue;
-      }
-      const form = manualBodyOf(session, gymIdByName);
-      const input = buildManualSession(fingerprint, form, history);
-      await repo.insertManualSession(c.env.DB, userId, input);
-      await repo.upsertSessionNote(
-        c.env.DB,
-        userId,
-        fingerprint,
-        form.date,
-        normalisedNote(form.notes)
-      );
-      if (form.tags !== undefined)
-        await repo.setSessionTags(c.env.DB, userId, fingerprint, form.tags);
-      await repo.setClimbNotes(c.env.DB, userId, fingerprint, climbNotesOf(form.climbs));
-      const scored = historySession(input);
-      if (scored !== null) history.push(scored);
-      imported++;
-    }
-    await captureEvent(c, "sessions_imported", {
-      imported: String(imported),
-      skipped: String(skipped),
-    });
-    return c.json({ imported, skipped }, 201);
-  })
+  // A batch of sessions from a CSV.
+  .post("/v1/sessions/import", zValidator("json", importBody, invalidBody), async (c) =>
+    c.json(await importSessions(c, c.req.valid("json").sessions), 201)
+  )
 
   // Everything the user logged, one row per climb, in the importer's format.
   .get("/v1/export.csv", async (c) => {

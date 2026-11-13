@@ -131,6 +131,7 @@ describe("planImport", () => {
     expect(gradeFromText("6A+")).toEqual({ scale: "font", value: "6A+" });
     expect(gradeFromText("7a")).toEqual({ scale: "french", value: "7a" });
     expect(gradeFromText("5.11b")).toEqual({ scale: "yds", value: "5.11b" });
+    expect(gradeFromText("V18")).toBeUndefined();
     expect(gradeFromText("v0-")).toEqual({ scale: "v", value: 0 });
     expect(gradeFromText("V4+")).toEqual({ scale: "v", value: 4 });
     expect(gradeFromText("5.11b-")).toEqual({ scale: "yds", value: "5.11b" });

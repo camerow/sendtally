@@ -25,7 +25,8 @@ function serverFor(c: Context<AppEnv>, user: ConnectorUser): McpServer {
     { name: "sendtally", version: "1.0.0" },
     { jsonSchemaValidator: new CfWorkerJsonSchemaValidator() }
   );
-  const ctx = { env: c.env, userId: user.userId };
+  c.set("userId", user.userId);
+  const ctx = { env: c.env, userId: user.userId, c };
   for (const { name, run, ...config } of tools) {
     server.registerTool(name, config, async (args) => {
       const { success } = await c.env.CONNECTOR_RATE_LIMITER.limit({ key: user.userId });
