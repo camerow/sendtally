@@ -93,5 +93,4 @@ export const logSession = {
   "logSession.sentTapToAttempt": "Enchaînée, touchez pour marquer comme essai",
   "logSession.attemptTapToSent": "Essai, touchez pour marquer comme enchaînée",
   "logSession.joinsThatDay": "Rejoint la séance de ce jour-là",
-  "logSession.climbSaveFailed": "Impossible d'enregistrer la voie. Réessaie.",
 } as const;
