@@ -1,6 +1,10 @@
 import React from "react";
 
 export type IconName =
+  | "today"
+  | "hang"
+  | "back"
+  | "forward"
   | "sessions"
   | "projects"
   | "insights"
@@ -30,6 +34,19 @@ export type IconName =
   | "remove";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
+  today: (
+    <path d="M5 6.5h14a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1zM4 10.5h16M8.5 4v4M15.5 4v4" />
+  ),
+  hang: (
+    <>
+      <path d="M4 5h16M8 5v4M12 5v6M16 5v8" />
+      <circle cx={8} cy={11} r={2} />
+      <circle cx={12} cy={13} r={2} />
+      <circle cx={16} cy={15} r={2} />
+    </>
+  ),
+  back: <path d="M15 5l-7 7 7 7" />,
+  forward: <path d="M9 5l7 7-7 7" />,
   sessions: (
     <>
       <rect x="3.5" y="5" width="17" height="6" rx="2" />

@@ -10,7 +10,6 @@ export type ExpandableRowProps = {
   children: React.ReactNode;
   /** What opens under it, lined up with the row's text. */
   body: React.ReactNode;
-  indent: number;
 };
 
 /** A list row that opens in place: a soft fill and the chevron turned down while open. */
@@ -20,7 +19,6 @@ export function ExpandableRow({
   label,
   children,
   body,
-  indent,
 }: ExpandableRowProps): React.ReactElement {
   return (
     <>
@@ -36,11 +34,7 @@ export function ExpandableRow({
           <Icon name="chevron" size={14} strokeWidth={2} />
         </span>
       </button>
-      {expanded && (
-        <div className="expandable-row-body" style={{ paddingLeft: indent }}>
-          {body}
-        </div>
-      )}
+      {expanded && <div className="expandable-row-body">{body}</div>}
     </>
   );
 }

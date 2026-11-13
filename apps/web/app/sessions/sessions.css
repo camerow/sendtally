@@ -666,3 +666,100 @@
     display: none;
   }
 }
+
+.session-climb-sort {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--bs-gunmetal);
+  background: var(--surface-soft);
+  border: 1px solid var(--line-on-light);
+  border-radius: var(--radius-control);
+  padding: 9px 12px;
+  cursor: pointer;
+}
+
+.session-climb-head {
+  padding: 12px 4px 9px;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-label-accent);
+}
+
+.session-climb-row {
+  padding: 12px 4px;
+  align-items: start;
+  border-top: 1px solid var(--line-on-light);
+}
+
+.session-climb-n,
+.session-climb-cell {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-on-white-secondary);
+}
+
+.session-climb-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.session-climb-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.session-climb-endurance {
+  display: inline-flex;
+  color: var(--bs-petal-ink);
+}
+
+.session-climb-name {
+  font-weight: 500;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-climb-name a {
+  color: inherit;
+  text-decoration-color: var(--line-on-light-strong);
+}
+
+.session-climb-area {
+  font-size: 12.5px;
+  color: var(--text-on-white-secondary);
+}
+
+.session-climb-note {
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-line;
+  color: var(--text-on-white-secondary);
+  border-left: 2px solid var(--line-on-light);
+  padding-left: 10px;
+}
+
+.session-climb-grade {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--bs-gunmetal);
+}
+
+.session-climb-grade--top {
+  color: var(--text-label-accent);
+}
+
+.session-climb-row .climb-pill {
+  justify-self: start;
+}

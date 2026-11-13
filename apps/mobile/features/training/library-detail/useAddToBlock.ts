@@ -9,7 +9,7 @@ import { useAddToMenu, type AddToMenu } from "../components/useAddToMenu";
 import { useHangData } from "../data/HangDataContext";
 import { usePlanActions } from "../plan/usePlanActions";
 import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
-import { blockMembership } from "../planning/useAddTo";
+import { blockMembership } from "@sendtally/features/training";
 
 /** A workout's Add to block: any template or block not over yet, with no days to start. */
 export function useAddToBlock(workout: LibraryWorkout): AddToMenu {

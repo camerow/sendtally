@@ -1,22 +1,9 @@
 import React from "react";
-import type { LinksFunction } from "react-router";
 import { useParams } from "react-router";
 
-import detailStyles from "../components/detail/detail.css?url";
-import { HangDataProvider } from "../training/data/HangDataProvider";
 import { WorkoutEditPage } from "../training/log/WorkoutEditPage";
-import trainingStyles from "../training/training.css?url";
-
-export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: detailStyles },
-  { rel: "stylesheet", href: trainingStyles },
-];
 
 export default function Route(): React.ReactElement {
   const id = useParams().id ?? "";
-  return (
-    <HangDataProvider>
-      <WorkoutEditPage id={id} />
-    </HangDataProvider>
-  );
+  return <WorkoutEditPage id={id} />;
 }
