@@ -19,7 +19,7 @@ import { playTone } from "../../../lib/tones";
 import { useAppApi } from "../../../lib/useAppApi";
 import { useLiveRunStore } from "../../../lib/useLiveRun";
 import { useHangData } from "../../data/HangDataContext";
-import { useLibrary } from "../../library/useLibrary";
+import { useLibrary, workoutIn } from "../../library/useLibrary";
 import { donePath } from "../../log/paths";
 import { ForTodaySheet } from "./ForTodaySheet";
 import { RepDots } from "./RepDots";
@@ -50,7 +50,6 @@ function Timer({
 }: TimerProps): React.ReactElement {
   const navigate = useNavigate();
   const { model } = useHangData();
-  const library = useLibrary().state;
   const [changing, setChanging] = React.useState(false);
   const workout = planned.items[0].workout;
   const timer = useHangTimerPlayer({
@@ -72,8 +71,7 @@ function Timer({
     setups,
     unit: model.settings.units,
   });
-  const targetRpe =
-    library.status === "ready" ? library.data.workout(workout.id)?.targetRpe : undefined;
+  const targetRpe = workoutIn(useLibrary())(workout.id)?.targetRpe;
 
   return (
     <TimerFrame

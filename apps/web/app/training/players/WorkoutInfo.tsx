@@ -3,7 +3,7 @@ import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
-import { useLibrary } from "../library/useLibrary";
+import { useLibrary, workoutIn } from "../library/useLibrary";
 
 /** An info button beside a running workout's name that opens its description; none without one. */
 export function WorkoutInfo({
@@ -14,8 +14,7 @@ export function WorkoutInfo({
   /** On the dark timer, in its softer ink. */
   dark?: boolean;
 }): React.ReactElement | null {
-  const { state } = useLibrary();
-  const workout = state.status === "ready" ? state.data.workout(workoutId) : undefined;
+  const workout = workoutIn(useLibrary())(workoutId);
   const [open, setOpen] = React.useState(false);
   if (workout === undefined || workout.description === "") return null;
   return (

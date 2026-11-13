@@ -3,6 +3,7 @@ import { holdEndsAt, pauseHold, resumeHold, startHold, type Hold } from "./holdC
 import { holdCues, parseLiveRun, type HoldCue, type LiveRun, type LiveRunStore } from "./liveRun";
 import { finishedRun } from "./finishedRun";
 import { restAfter, restLeft, withMoreRest, type Rest } from "./restCountdown";
+import { useLatest } from "./useLatest";
 
 export function useLiveRun(store: LiveRunStore): LiveRun | null {
   const raw = React.useSyncExternalStore(store.storage.subscribe, store.storage.read, () => null);
@@ -85,10 +86,7 @@ export function useHold(store: LiveRunStore, onOver?: (hold: Hold) => void): Hol
   const hold = useLiveRun(store)?.hold ?? null;
   const endsAt = hold === null || hold.pausedAt !== null ? null : holdEndsAt(hold);
   const now = useNow(endsAt);
-  const over = React.useRef(onOver);
-  React.useEffect(() => {
-    over.current = onOver;
-  });
+  const over = useLatest(onOver);
   const owns = onOver !== undefined;
   React.useEffect(() => {
     if (!owns) return;
@@ -100,7 +98,7 @@ export function useHold(store: LiveRunStore, onOver?: (hold: Hold) => void): Hol
   const reached = endsAt !== null && now >= endsAt;
   React.useEffect(() => {
     if (reached && hold !== null) over.current?.(hold);
-  }, [reached, hold]);
+  }, [reached, hold, over]);
   return {
     hold,
     now,
@@ -124,10 +122,7 @@ export function useHold(store: LiveRunStore, onOver?: (hold: Hold) => void): Hol
  */
 export function useLiveHold(store: LiveRunStore, play: (sound: HoldCue["sound"]) => void): void {
   const hold = useLiveRun(store)?.hold;
-  const latest = React.useRef(play);
-  React.useEffect(() => {
-    latest.current = play;
-  });
+  const latest = useLatest(play);
   const running = hold !== undefined && hold.pausedAt === null;
   const zeroAt = running ? hold.zeroAt : null;
   const targetS = hold?.targetS ?? 0;
@@ -149,19 +144,16 @@ export function useLiveHold(store: LiveRunStore, play: (sound: HoldCue["sound"])
       Math.max(0, end - now)
     );
     return () => [...timers, finish].forEach(clearTimeout);
-  }, [zeroAt, targetS, sides, store]);
+  }, [zeroAt, targetS, sides, store, latest]);
 }
 
 /** Plays `play` as the live run's rest ends, whether its player is open or minimised. */
 export function useRestTone(store: LiveRunStore, play: () => void): void {
   const endsAt = useLiveRun(store)?.rest?.endsAt;
-  const latest = React.useRef(play);
-  React.useEffect(() => {
-    latest.current = play;
-  });
+  const latest = useLatest(play);
   React.useEffect(() => {
     if (endsAt === undefined || endsAt <= Date.now()) return;
     const timer = setTimeout(() => latest.current(), endsAt - Date.now());
     return () => clearTimeout(timer);
-  }, [endsAt]);
+  }, [endsAt, latest]);
 }

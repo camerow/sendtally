@@ -18,6 +18,7 @@ import { intervalsParams, timerParams, type DoneParams, type IntervalsRun } from
 import type { Sound } from "./timerCues";
 import { hangRunDone } from "./timerView";
 import { useHangTimer, type HangTimer } from "./useHangTimer";
+import { useLatest } from "./useLatest";
 import type { PlannedRun } from "./usePlannedRun";
 
 /** Where a timer was when it was minimised or the page closed: its run, and the hang timer's setups. */
@@ -99,10 +100,7 @@ export function useHangTimerPlayer({
 
   useEndOnOpen(end, timer);
 
-  const finish = React.useRef(onFinish);
-  React.useEffect(() => {
-    finish.current = onFinish;
-  });
+  const finish = useLatest(onFinish);
   const sent = React.useRef(false);
   React.useEffect(() => {
     if (run.finished === null || sent.current) return;
@@ -114,7 +112,7 @@ export function useHangTimerPlayer({
       session,
       run: hangRunDone(run, planned, grips, setups),
     });
-  }, [run, planned, workout, gripId, grips, setups, link, session]);
+  }, [run, planned, workout, gripId, grips, setups, link, session, finish]);
 
   return timer;
 }
@@ -142,10 +140,7 @@ export function useIntervalsPlayer({
   const { run } = timer;
   const climbing = workout.kind === "climbing";
 
-  const finish = React.useRef(onFinish);
-  React.useEffect(() => {
-    finish.current = onFinish;
-  });
+  const finish = useLatest(onFinish);
   const sent = React.useRef(false);
   React.useEffect(() => {
     store.write({
@@ -160,7 +155,7 @@ export function useIntervalsPlayer({
     sent.current = true;
     const { done, off } = doneOfRun(workout.body, stepsDone(run));
     finish.current(done, off, run.startedAt);
-  }, [store, run, workout, climbing]);
+  }, [store, run, workout, climbing, finish]);
 
   useEndOnOpen(end, timer);
 

@@ -10,6 +10,7 @@ import type { WorkoutRun } from "@sendtally/features/workouts";
 import { liveRunOf } from "../../lib/useLiveRun";
 import { SetsPage } from "../../training/players/SetsPage";
 import { TallyPage } from "./TallyPage";
+import type * as T_useLibrary from "../../training/library/useLibrary";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -33,7 +34,8 @@ vi.mock("@sendtally/features/log-session", async (actual) => ({
 vi.mock("@sendtally/features/settings", () => ({
   useGradeScalePrefs: () => ({ scales: { boulder: "v", route: "yds" }, ready: true }),
 }));
-vi.mock("../../training/library/useLibrary", () => ({
+vi.mock("../../training/library/useLibrary", async (actual) => ({
+  ...(await actual<typeof T_useLibrary>()),
   useLibrary: () => ({ state: { status: "loading" } }),
 }));
 vi.mock("@sendtally/features/statistics", async (actual) => ({

@@ -24,7 +24,7 @@ import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { usePlanActions } from "../data/usePlanActions";
 import { copyWorkoutPath, editWorkoutPath } from "../editor/paths";
-import { useLibrary } from "../library/useLibrary";
+import { useLibrary, workoutIn } from "../library/useLibrary";
 import { LoadSection } from "./LoadSection";
 import { LoadTable } from "./LoadTable";
 import { WeekDaysGrid } from "./WeekDaysGrid";
@@ -46,7 +46,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
   const navigate = useNavigate();
   const leave = useGoBack(BACK_TO);
   const draft = usePlanDraft(log.plan, actions);
-  const libraryState = useLibrary().state;
+  const workoutOf = workoutIn(useLibrary());
   const [turn, setTurn] = React.useState(0);
   const [open, setOpen] = React.useState<readonly number[]>([0]);
   const [removing, setRemoving] = React.useState(false);
@@ -65,8 +65,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
   const { membership: m, block, workout: w, turns, items, current, ended, done, lines } = view;
   const look = KIND_LOOK[w.kind];
   const changesOf = (index: number): Partial<Dose>[] => view.changes[index] ?? [];
-  const mine =
-    libraryState.status === "ready" && libraryState.data.workout(w.id)?.source === "mine";
+  const mine = workoutOf(w.id)?.source === "mine";
   const editing = draft.editing && !ended;
 
   const loadOf = (index: number): React.ReactElement | null => {
