@@ -1,23 +1,7 @@
-import { builtInDose, type PickerSource } from "@sendtally/features/exercises";
-import type { MadeExercise } from "../exercises/types";
-import { doseMeasureOf } from "@sendtally/features/workouts";
+import { pickedOf, type PickerSource } from "@sendtally/features/exercises";
+export { pickedOf } from "@sendtally/features/exercises";
 import { useMakeExercise } from "../exercises/useMakeExercise";
 import type { Picked } from "@sendtally/features/workouts";
-
-/** A grip, or one of the user's exercises, as a workout item names it. */
-export function pickedOf(made: MadeExercise): Picked {
-  if ("grip" in made)
-    return {
-      exercise: made.grip.id,
-      ...(made.grip.measure === undefined ? {} : { measure: made.grip.measure }),
-    };
-  const dose = builtInDose(made.exercise.builtIn);
-  return {
-    exercise: made.exercise.name,
-    measure: doseMeasureOf(made.exercise),
-    ...(dose === undefined ? {} : { dose }),
-  };
-}
 
 /**
  * What a picker row adds to a workout. A built-in becomes the user's own exercise first,

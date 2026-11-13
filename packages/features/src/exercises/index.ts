@@ -21,3 +21,6 @@ export * from "./exerciseText";
 export { usePickerWorld } from "./usePickerWorld";
 export { useExerciseActions, type ExerciseActions } from "./useExerciseActions";
 export { exerciseShelves, shelfRows, type ShelfCard, type ShelfWorld } from "./shelfCards";
+export { pickedOf, takenBy } from "./makeExercise";
+export { useMakeExercise, type MakeExercise } from "./useMakeExercise";
+export type { ExerciseForm, MadeExercise } from "./types";
