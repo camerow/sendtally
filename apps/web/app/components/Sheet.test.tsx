@@ -101,6 +101,11 @@ describe("Sheet", () => {
     expect(head.firstElementChild?.className).toBe("sheet-kicker sheet-kicker--amber");
   });
 
+  it("holds focus itself when no child asks for it", () => {
+    const dialog = mount(true)!;
+    expect(document.activeElement).toBe(dialog);
+  });
+
   it("stays open for a click that started inside it", () => {
     const onClose = vi.fn();
     const dialog = mount(true, onClose)!;
