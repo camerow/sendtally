@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router";
+import { activityPath } from "../../training/log/paths";
 import type { HangHistoryRow } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -12,7 +14,7 @@ import { StravaMark } from "../../components/StravaMark";
 import { DayColumn } from "./DayColumn";
 import { rowClass } from "./rowClass";
 
-/** A hangboard session in the log, laid out like a session row. It opens nowhere on the web yet. */
+/** A hangboard session in the log, laid out like a session row. It opens its page. */
 export function HangRow({
   hang,
   inset = false,
@@ -30,8 +32,8 @@ export function HangRow({
   const effort = hangEffortLabel(hang);
   const onStrava = hang.stravaActivityId !== null;
   return (
-    <div
-      role="group"
+    <Link
+      to={activityPath(hang.id)}
       aria-label={[
         title,
         `${weekday} ${day}`,
@@ -54,6 +56,6 @@ export function HangRow({
         {blockTag !== undefined && <span className="log-row-meta">{blockTag}</span>}
       </span>
       {effort !== null && <span className="log-row-effort">{effort}</span>}
-    </div>
+    </Link>
   );
 }

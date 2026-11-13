@@ -1,11 +1,13 @@
 import React from "react";
+import { Link } from "react-router";
+import { activityPath } from "../../training/log/paths";
 import type { Activity } from "@sendtally/api-client";
 import { activityAt, activityEffortLabel, activityMetaLabel } from "@sendtally/features/activities";
 import { sessionDay } from "@sendtally/features/sessions";
 import { DayColumn } from "./DayColumn";
 import { rowClass } from "./rowClass";
 
-/** A strength, mobility, run or other session in the log. It opens nowhere on the web yet. */
+/** A strength, mobility, run or other session in the log. It opens its page. */
 export function ActivityRow({
   activity,
   inset = false,
@@ -21,8 +23,8 @@ export function ActivityRow({
   const meta = activityMetaLabel(activity);
   const effort = activityEffortLabel(activity);
   return (
-    <div
-      role="group"
+    <Link
+      to={activityPath(activity.id)}
       aria-label={[activity.title, `${weekday} ${day}`, meta, blockTag ?? null, effort]
         .filter((part) => part !== null)
         .join(", ")}
@@ -37,6 +39,6 @@ export function ActivityRow({
         {blockTag !== undefined && <span className="log-row-meta">{blockTag}</span>}
       </span>
       {effort !== null && <span className="log-row-effort">{effort}</span>}
-    </div>
+    </Link>
   );
 }

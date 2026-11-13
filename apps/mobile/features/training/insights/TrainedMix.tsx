@@ -14,7 +14,7 @@ import { Label } from "../components/Label";
 import { Segmented } from "../components/Segmented";
 import { type } from "../type";
 import { focusColor } from "./focusColors";
-import { KIND_COLORS } from "./kindColors";
+import { KIND_COLORS } from "@sendtally/features/training";
 
 export type TrainedMixProps = {
   trained: TrainedKindVM[];

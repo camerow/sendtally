@@ -1,9 +1,10 @@
 import React from "react";
+import { Link } from "react-router";
 import type { GripSessionVM } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { SectionHeading } from "../../components/detail/SectionHeading";
+import { activityPath } from "../log/paths";
 
-// ponytail: rows open nothing until the activity pages land (#278).
 /** Every session on the grip, newest first: load, day and setup, completion, Best on a best. */
 export function GripSessions({ rows }: { rows: readonly GripSessionVM[] }): React.ReactElement {
   return (
@@ -12,7 +13,17 @@ export function GripSessions({ rows }: { rows: readonly GripSessionVM[] }): Reac
         title={t("hang.history", { count: t("hang.sessionCount", { count: rows.length }) })}
       />
       {rows.map((s) => (
-        <div key={s.id} className="grip-session">
+        <Link
+          key={s.id}
+          to={activityPath(s.id)}
+          className="grip-session"
+          aria-label={[
+            s.load,
+            s.meta,
+            s.completion,
+            ...(s.best ? [t("statistics.best")] : []),
+          ].join(", ")}
+        >
           <span className="grip-session-main">
             <span className="grip-session-load">
               {s.load}
@@ -21,7 +32,7 @@ export function GripSessions({ rows }: { rows: readonly GripSessionVM[] }): Reac
             <span className="grip-session-meta">{s.meta}</span>
           </span>
           <span className="grip-session-pct">{s.completion}</span>
-        </div>
+        </Link>
       ))}
     </section>
   );

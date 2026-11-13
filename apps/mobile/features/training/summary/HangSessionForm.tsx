@@ -22,7 +22,7 @@ import { DoneDetails } from "../activity/DoneDetails";
 import { SetupPill } from "../done/SetupPill";
 import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
-import { hangCount } from "./hangCount";
+import { hangCount } from "@sendtally/features/activities";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { Toast } from "../../../components/Toast";
 
