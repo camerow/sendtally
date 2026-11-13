@@ -1,5 +1,5 @@
 import React from "react";
-import type { ImportIssue, ImportPlan } from "@sendtally/core/import";
+import { IMPORT_SERVICES, type ImportIssue, type ImportPlan } from "@sendtally/core/import";
 import { planStats, sessionNames, sessionTitle, withAddedTags } from "@sendtally/features/import";
 import { sameTagName, type TagOption } from "@sendtally/features/sessions";
 import { formatDate, t } from "@sendtally/features/i18n";
@@ -23,6 +23,7 @@ const ISSUE_ROWS = 20;
 const ISSUE_KEYS = {
   noHeader: "import.issueNoHeader",
   missingDate: "import.issueMissingDate",
+  noDate: "import.issueNoDate",
   badDate: "import.issueBadDate",
   missingGrade: "import.issueMissingGrade",
   unknownGrade: "import.issueUnknownGrade",
@@ -124,7 +125,9 @@ export function ImportReview({
             </span>
             {!unrecognised && (
               <span style={pillOk}>
-                {plan.format === "kaya" ? t("import.formatKaya") : t("import.formatSendtally")}
+                {plan.format === "sendtally"
+                  ? t("import.formatSendtally")
+                  : t("import.formatExport", { service: IMPORT_SERVICES[plan.format] })}
               </span>
             )}
           </span>

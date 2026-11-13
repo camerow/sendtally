@@ -1,3 +1,4 @@
 export { parseCsv, toCsv } from "./csv";
-export { detectFormat, gradeFromText, planImport, SENDTALLY_COLUMNS } from "./plan";
+export { detectFormat, gradeFromText, IMPORT_SERVICES, planImport } from "./plan";
+export { SENDTALLY_COLUMNS } from "./records";
 export type * from "./types";
