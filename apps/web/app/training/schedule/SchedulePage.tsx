@@ -8,7 +8,6 @@ import {
   maxDate,
   type Block,
 } from "@sendtally/core/hang";
-import { daysList, shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   blockDates,
@@ -21,6 +20,7 @@ import {
   type AddFlow,
   type ScheduleDraft,
   type ScheduleMode,
+  scheduleAddLabel,
 } from "@sendtally/features/training";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { Segmented } from "../../components/Segmented";
@@ -33,15 +33,6 @@ import { useLibrary, workoutPath } from "../library/useLibrary";
 import { BlockChoice } from "./BlockChoice";
 import { StartField } from "./StartField";
 import { WeekdayChips } from "./WeekdayChips";
-
-function addLabel(d: ScheduleDraft, count: number, first: string | undefined): string {
-  if (d.mode === "repeat")
-    return d.weekdays.length === 0
-      ? t("hang.add")
-      : t("plan.addEvery", { days: daysList(d.weekdays) });
-  if (count === 1 && first !== undefined) return t("plan.addOn", { date: shortDate(first) });
-  return count === 0 ? t("hang.add") : t("plan.addOnDays", { count });
-}
 
 /** The last step of adding to the plan: every week on some days, or on some dates, in a block or not. */
 export function SchedulePage({
@@ -104,7 +95,7 @@ export function SchedulePage({
           disabled={!scheduleReady(draft, block)}
           onClick={save}
         >
-          {addLabel(draft, days.length, days[0])}
+          {scheduleAddLabel(draft, days.length, days[0])}
         </button>
       }
     >

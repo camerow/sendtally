@@ -8,7 +8,7 @@ import {
 } from "@sendtally/core/hang";
 import { dayTitle, monthTitle, weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { bandOn, monthWeeks } from "@sendtally/features/training";
+import { bandText, calendarDay, monthWeeks } from "@sendtally/features/training";
 import { Icon } from "../../components/Icon";
 
 export type MonthCalendarProps = {
@@ -35,12 +35,6 @@ export function MonthCalendar({
 }: MonthCalendarProps): React.ReactElement {
   const [month, setMonth] = React.useState(() => monthStart(selected));
   const inMonth = (d: CalendarDate): boolean => d.slice(0, 7) === month.slice(0, 7);
-  const bandLabel = (monday: CalendarDate): string | null => {
-    const band = blocks === undefined ? null : bandOn(blocks, monday);
-    return band === null
-      ? null
-      : t("calendar.band", { name: band.block.name, at: band.week, of: band.block.weeks });
-  };
   return (
     <div className="month-calendar">
       <div className="month-calendar-head">
@@ -70,7 +64,7 @@ export function MonthCalendar({
         ))}
       </div>
       {monthWeeks(month).map((monday) => {
-        const band = bandLabel(monday);
+        const band = blocks === undefined ? null : bandText(blocks, monday);
         return (
           <div key={monday}>
             {blocks !== undefined && (
@@ -81,8 +75,7 @@ export function MonthCalendar({
             <div className="month-calendar-row">
               {Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((d) => {
                 if (!inMonth(d)) return <span key={d} className="month-calendar-day" />;
-                const off = (min !== null && d < min) || (max !== undefined && d > max);
-                const on = picked === undefined ? d === selected : picked.includes(d);
+                const { off, on } = calendarDay(d, { selected, picked, min, max });
                 const tone = on ? " is-on" : d === today ? " is-today" : "";
                 return (
                   <button

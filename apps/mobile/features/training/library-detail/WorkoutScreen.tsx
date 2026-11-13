@@ -8,10 +8,10 @@ import { hangWorkoutOf, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
-  occurrenceLink,
   trainingDay,
   useTrainingLog,
   type Occurrence,
+  plannedItems,
 } from "@sendtally/features/training";
 import { workoutMinutes, type LibraryWorkout, type WorkoutUse } from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
@@ -88,10 +88,7 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
           activityItem(a, model.settings.units)
         )
       : ofWorkout(model.sessions, workout.id).map((s) => hangItem(s, model));
-  const planned =
-    run === undefined
-      ? undefined
-      : { link: occurrenceLink(run), items: run.items, session: run.session };
+  const planned = run === undefined ? undefined : plannedItems(run);
   const missed = run?.status === "missed";
   const logIt = (
     <LogItButton

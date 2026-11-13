@@ -5,8 +5,8 @@ import {
   dayEntries,
   loggedKind,
   loggedRowText,
-  type LoggedItem,
   type TrainingDay,
+  loggedKey,
 } from "@sendtally/features/training";
 import { useDisplayScales } from "@sendtally/features/settings";
 import { DashedPanel } from "../components/DashedPanel";
@@ -17,11 +17,6 @@ import { OccurrenceCard } from "./OccurrenceCard";
 import { OccurrenceRow } from "./OccurrenceRow";
 import { loggedPath } from "./planLinks";
 import { SkippedRow } from "./SkippedRow";
-
-const loggedKey = (item: LoggedItem): string => {
-  if (item.kind === "activity") return item.activity.id;
-  return item.kind === "climb" ? item.session.fingerprint : item.session.id;
-};
 
 /**
  * A day in plan order, as the week list shows it: each plan as it stands, a done one as what
