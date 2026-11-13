@@ -260,6 +260,44 @@ describe("session links", () => {
     expect((await call("user_a", "/v1/sessions", { body: indoor("Arete") })).status).toBe(201);
   });
 
+  it("saves a full session of named, linked, noted climbs and saves it again", async () => {
+    const area = await createArea("user_a", buttermilks);
+    const first = await createClimb("user_a", mandala(area.id));
+    await env.DB.prepare(
+      `WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 299)
+       INSERT INTO area_climbs (id, area_id, name, name_key, slug, type, grade_scale, grade_value, status, version, created_by, created_at, updated_at)
+       SELECT id || '-' || i, area_id, name || ' ' || i, name_key || '-' || i, slug || '-' || i, type, grade_scale, grade_value, status, version, created_by, created_at, updated_at
+       FROM area_climbs, n WHERE id = ?`
+    )
+      .bind(first.id)
+      .run();
+    const climbs = await env.DB.prepare("SELECT id, name FROM area_climbs WHERE area_id = ?")
+      .bind(area.id)
+      .all<Row>()
+      .then((r) => r.results);
+    expect(climbs).toHaveLength(300);
+    const body = {
+      date: "2026-09-12",
+      location: "outdoor",
+      areaId: area.id,
+      climbs: climbs.map((climb) => ({
+        name: climb.name,
+        climbId: climb.id,
+        note: "Heel hook",
+        grade: { scale: "v", value: 4 },
+      })),
+    };
+    const res = await call("user_a", "/v1/sessions", { body });
+    expect(res.status).toBe(201);
+    const fingerprint = (res.body["session"] as { fingerprint: string }).fingerprint;
+    expect(await linkCount(fingerprint)).toBe(300);
+
+    const edited = await call("user_a", `/v1/sessions/${fingerprint}`, { method: "PUT", body });
+    expect(edited.status).toBe(200);
+    const linked = await read("user_a", fingerprint);
+    expect(linked.climbs.filter((c) => c.link !== null)).toHaveLength(300);
+  });
+
   it("replaces links on edit and removes them on delete", async () => {
     const area = await createArea("user_a", buttermilks);
     const climb = await createClimb("user_a", mandala(area.id));

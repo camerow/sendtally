@@ -6,9 +6,19 @@ export type ToastMessage = {
   action?: { label: string; onPress: () => void };
 };
 
-type Shown = ToastMessage & { id: number };
+/** `lift` is how far above the window's bottom it sits to clear a screen footer, if one shows. */
+type Shown = ToastMessage & { id: number; lift: number | null };
 
 const SHOWN_MS = 4000;
+const ABOVE_FOOTER = 12;
+
+/** A detail screen's sticky footer holds its main action, so a toast sits just above it. */
+function footerLift(): number | null {
+  const footer = document.querySelector(".detail-footer");
+  return footer === null
+    ? null
+    : window.innerHeight - footer.getBoundingClientRect().top + ABOVE_FOOTER;
+}
 
 const ToastContext = React.createContext<((toast: ToastMessage) => void) | null>(null);
 
@@ -24,7 +34,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }): Reac
   const next = React.useRef(0);
   const show = React.useCallback((toast: ToastMessage) => {
     next.current += 1;
-    setShown({ ...toast, id: next.current });
+    setShown({ ...toast, id: next.current, lift: footerLift() });
   }, []);
   const id = shown?.id;
   React.useEffect(() => {
@@ -36,7 +46,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }): Reac
   return (
     <ToastContext.Provider value={show}>
       {children}
-      <div role="status" aria-live="polite" className="toast-region">
+      <div
+        role="status"
+        aria-live="polite"
+        className="toast-region"
+        style={shown?.lift == null ? undefined : { bottom: shown.lift }}
+      >
         {shown !== null && (
           <div key={shown.id} className="toast">
             <span className="toast-message">{shown.message}</span>

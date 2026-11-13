@@ -8,7 +8,7 @@ import type { ExerciseTrendVM } from "@sendtally/features/statistics";
 import { Icon } from "../../../components/Icon";
 import { pressRow } from "../../../lib/press";
 import { metricText } from "@sendtally/features/exercises";
-import { dots, plot, polyline } from "../trends/chartGeometry";
+import { dots, plot, polyline } from "@sendtally/features/statistics";
 import { type } from "../type";
 
 const SPARK = 6;

@@ -13,7 +13,7 @@ import {
 } from "@sendtally/features/training";
 import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
-import { membershipTag, oneOffDate } from "../plans/planText";
+import { membershipTag, oneOffDate } from "@sendtally/features/training";
 import { DayMark } from "../today/DayMark";
 import { MiniWeek } from "./MiniWeek";
 import { openMembership } from "./openMembership";

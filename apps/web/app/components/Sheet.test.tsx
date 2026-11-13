@@ -81,6 +81,26 @@ describe("Sheet", () => {
     expect(document.activeElement).toBe(container.querySelector("textarea"));
   });
 
+  it("draws a kicker above the title, amber when asked", () => {
+    act(() =>
+      root.render(
+        <Sheet
+          open
+          title="Morning session is still going"
+          kicker="Already running"
+          kickerTone="amber"
+          onClose={() => {}}
+        />
+      )
+    );
+    const head = container.querySelector(".sheet-head")!;
+    expect(Array.from(head.children).map((c) => c.textContent)).toEqual([
+      "Already running",
+      "Morning session is still going",
+    ]);
+    expect(head.firstElementChild?.className).toBe("sheet-kicker sheet-kicker--amber");
+  });
+
   it("stays open for a click that started inside it", () => {
     const onClose = vi.fn();
     const dialog = mount(true, onClose)!;

@@ -37,3 +37,4 @@ export {
 } from "./exercises";
 export { useExerciseSeries } from "./useExerciseSeries";
 export { useExercises } from "./useExercises";
+export { area, dots, paddedRange, plot, polyline, type Point } from "./chartGeometry";

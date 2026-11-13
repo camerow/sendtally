@@ -13,7 +13,14 @@ export type IconName =
   | "endurance"
   | "x"
   | "more"
-  | "moderation";
+  | "moderation"
+  | "search"
+  | "insights"
+  | "climbs"
+  | "import"
+  | "external"
+  | "train"
+  | "star";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -40,6 +47,13 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   ),
   x: <path d="M6 6l12 12M18 6L6 18" />,
   more: <path d="M5 12h.01M12 12h.01M19 12h.01" />,
+  search: <path d="M11 5a6 6 0 1 1 0 12 6 6 0 0 1 0-12zM20 20l-4.5-4.5" />,
+  insights: <path d="M5 19V11M10 19V5M15 19v-6M20 19V8" />,
+  climbs: <path d="M3 19l6.5-11 4 6.5 2.5-3.5L21 19z" />,
+  import: <path d="M12 4v10M7.5 9.5 12 14l4.5-4.5M4.5 15v4.5h15V15" />,
+  external: <path d="M14 5h5v5M19 5l-8 8M17 14v5H5V7h5" />,
+  star: <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />,
+  train: <path d="M3.5 5h17v5.5h-17zM7 7.75h3M14 7.75h3M9 10.5V20M15 10.5V20" />,
   moderation: <path d="M12 3.5 19 6.2v5.3c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6.2z" />,
 };
 
