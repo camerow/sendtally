@@ -3,6 +3,7 @@ import { type Context, Hono, type MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
+import { mcp } from "./mcp";
 import { z } from "zod";
 import { auth } from "./auth";
 import type { Env } from "./bindings";
@@ -2178,7 +2179,8 @@ const app = new Hono<AppEnv>()
   .route("/v1/blocks", blocks)
   .route("/v1/memberships", memberships)
   .route("/v1/workouts", workouts)
-  .route("/v1/exercises", exercises);
+  .route("/v1/exercises", exercises)
+  .route("/", mcp);
 
 app.onError(async (error, c) => {
   // zValidator throws this for a body it cannot parse at all. Without this the

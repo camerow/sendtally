@@ -13,9 +13,11 @@
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
-    "@clerk/backend": "^2.9.2",
+    "@cfworker/json-schema": "^4.1.6",
+    "@clerk/backend": "^3.27.0",
     "@cloudflare/workers-types": "^4.20250823.0",
     "@hono/zod-validator": "^0.9.1",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@sendtally/core": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.13.16",

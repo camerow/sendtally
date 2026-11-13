@@ -19,7 +19,7 @@ export default function Privacy(): React.ReactElement {
   return (
     <LegalPage
       title="Privacy policy"
-      updated="12 NOVEMBER 2026"
+      updated="13 NOVEMBER 2026"
       lede="sendtally holds the climbing sessions you type in and almost nothing else. This page lists every piece of data it keeps, who else touches it, and how to get it all deleted."
     >
       <h2>Who this covers</h2>
@@ -64,7 +64,9 @@ export default function Privacy(): React.ReactElement {
         what you type, except passwords; in the mobile app photos and system pickers stay masked.
         Adding to Areas and moderating it are recorded as events too, such as an area created, an
         edit suggested, or a report resolved, carrying only the kind of action and a few labels,
-        such as whether it was an area or a climb, never what you wrote.
+        such as whether it was an area or a climb, never what you wrote. When an AI assistant you
+        connect to your account uses it, each action it takes is recorded as an event too, carrying
+        only which action it was and which assistant took it, never what it read or wrote.
       </p>
       <p>
         <strong>App installs.</strong> The mobile apps also run Google Analytics for Firebase, which

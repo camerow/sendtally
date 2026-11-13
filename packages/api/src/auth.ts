@@ -25,6 +25,29 @@ export async function verifyClerkUser(req: Request, env: Env): Promise<AuthedUse
   }
 }
 
+export type ConnectorUser = { userId: string; clientId: string };
+
+// An assistant acting for a user through the connector. Its token is bound to the
+// connector's URL, so one Clerk issued for anything else is refused.
+export async function verifyConnectorUser(
+  req: Request,
+  env: Env,
+  resource: string
+): Promise<ConnectorUser | null> {
+  try {
+    const state = await createClerkClient({
+      secretKey: env.CLERK_SECRET_KEY,
+      publishableKey: env.CLERK_PUBLISHABLE_KEY,
+    }).authenticateRequest(req, { acceptsToken: "oauth_token", audience: resource });
+    if (!state.isAuthenticated) return null;
+    const { userId, clientId } = state.toAuth();
+    return { userId, clientId };
+  } catch (err) {
+    console.error(`connector token rejected: ${err instanceof Error ? err.message : String(err)}`);
+    return null;
+  }
+}
+
 export async function deleteClerkUser(userId: string, env: Env): Promise<void> {
   await createClerkClient({ secretKey: env.CLERK_SECRET_KEY }).users.deleteUser(userId);
 }
@@ -83,6 +106,7 @@ export async function verifyClerkWebhook(req: Request, env: Env): Promise<AuthWe
 // inside the workers pool, and the tests have to answer as a signed-in user.
 export const auth = {
   verifyUser: verifyClerkUser,
+  verifyConnector: verifyConnectorUser,
   deleteUser: deleteClerkUser,
   verifyWebhook: verifyClerkWebhook,
   userNames: clerkUserNames,

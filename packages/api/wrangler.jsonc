@@ -17,8 +17,17 @@
       "migrations_dir": "migrations",
     },
   ],
+  // Per user, on connector tool calls. Each environment counts in its own namespace.
+  "ratelimits": [
+    {
+      "name": "CONNECTOR_RATE_LIMITER",
+      "namespace_id": "1000",
+      "simple": { "limit": 60, "period": 60 },
+    },
+  ],
   "vars": {
     "WEB_APP_URL": "http://localhost:5173",
+    "CLERK_PUBLISHABLE_KEY": "pk_test_bGlnaHQtbGlnZXItOTkuY2xlcmsuYWNjb3VudHMuZGV2JA",
   },
   "env": {
     "staging": {
@@ -31,8 +40,16 @@
           "migrations_dir": "migrations",
         },
       ],
+      "ratelimits": [
+        {
+          "name": "CONNECTOR_RATE_LIMITER",
+          "namespace_id": "1001",
+          "simple": { "limit": 60, "period": 60 },
+        },
+      ],
       "vars": {
         "WEB_APP_URL": "https://staging.sendtally.com",
+        "CLERK_PUBLISHABLE_KEY": "pk_test_bGlnaHQtbGlnZXItOTkuY2xlcmsuYWNjb3VudHMuZGV2JA",
         "PREVIEW_ORIGIN_SUFFIX": "-sendtally-web-staging.chalk-and-circuits.workers.dev",
         // No PostHog token: staging is the pull request sandbox and the e2e flows, so its
         // server-side captures would land in the one project alongside real ones. An absent
@@ -52,8 +69,16 @@
           "migrations_dir": "migrations",
         },
       ],
+      "ratelimits": [
+        {
+          "name": "CONNECTOR_RATE_LIMITER",
+          "namespace_id": "1002",
+          "simple": { "limit": 60, "period": 60 },
+        },
+      ],
       "vars": {
         "WEB_APP_URL": "https://sendtally.com",
+        "CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuc2VuZHRhbGx5LmNvbSQ",
         "POSTHOG_PROJECT_TOKEN": "phc_mK5KViTzigeXd5KwHRkP2pK2WNCSUdeTcvmTEudpatRH",
         "POSTHOG_HOST": "https://us.i.posthog.com",
       },
