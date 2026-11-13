@@ -95,4 +95,17 @@ export const importCsv = {
   "import.selectSession": "Elegir {name}, {date}",
   "import.connectorLine":
     "O conecta Claude o ChatGPT a sendtally y deja que importe el archivo por ti.",
+  "import.supportedApps": "Apps compatibles",
+  "import.chooseFile": "Elegir un archivo CSV",
+  "import.notRecognized": "No reconocido",
+  "import.nothingToImport": "Nada que importar",
+  "import.nothingFoundMobile":
+    "Este archivo no es una exportación que Sendtally reconozca ni está en el formato CSV de Sendtally. Conviértelo con un asistente de IA y luego elige el archivo convertido.",
+  "import.convertHelpMobile":
+    "Envía este prompt a Claude o ChatGPT con tu hoja de cálculo adjunta.",
+  "import.sharePrompt": "Compartir prompt",
+  "import.added_one": "{count} sesión añadida",
+  "import.added_other": "{count} sesiones añadidas",
+  "import.addedSome": "{added} añadidas · {skipped} ya estaban",
+  "import.allThere": "Las {total} ya están en tu registro",
 } as const;

@@ -32,7 +32,7 @@ export function testApp(
   };
   auth.verifyConnector = async (req) => {
     const userId = req.headers.get("x-test-user");
-    return userId === null ? null : { userId, clientId: "test-client" };
+    return userId === null ? null : { userId };
   };
   auth.deleteUser = overrides.deleteUser ?? (async () => undefined);
   auth.userNames = overrides.userNames ?? (async () => new Map());
