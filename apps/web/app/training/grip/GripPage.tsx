@@ -1,7 +1,8 @@
 import React from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { gripSeries, setupsOf, summarise, type GripSetup } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
+import { pickedOf } from "@sendtally/features/exercises";
 import {
   canCompareGrips,
   gripSessionRows,
@@ -18,9 +19,11 @@ import { SummaryTiles } from "../../components/detail/SummaryTiles";
 import { CategoryMark } from "../components/CategoryMark";
 import { DashedPanel } from "../components/DashedPanel";
 import { UsedIn } from "../components/UsedIn";
-import { useGoBack } from "../components/useGoBack";
+import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { COMPARE_GRIPS_PATH, EXERCISES_VIEW } from "../exercises/paths";
+import { editGripPath } from "../editor/paths";
+import { useAddToWorkout } from "../editor/useAddToWorkout";
 import { useLibrary } from "../library/useLibrary";
 import { GripSessions } from "./GripSessions";
 import { LoadTrendCard } from "./LoadTrendCard";
@@ -57,7 +60,14 @@ export function GripPage({ id }: { id: string }): React.ReactElement {
           (w) => w.kind === "hangboard" && w.items.some((i) => i.exercise === id)
         )
       : [];
+  const addTo = useAddToWorkout({
+    name,
+    picked: grip === undefined ? { exercise: id } : pickedOf({ grip }),
+    fingers: true,
+    usedIn,
+  });
   const menu: MoreMenuItem[] = [
+    ...(addTo.item === null || grip?.hidden === true ? [] : [addTo.item]),
     ...(canCompareGrips(model.sessions)
       ? [{ label: t("hang.compareGrips"), onSelect: () => void navigate(COMPARE_GRIPS_PATH) }]
       : []),
@@ -75,7 +85,16 @@ export function GripPage({ id }: { id: string }): React.ReactElement {
   return (
     <DetailFrame
       backTo={EXERCISES_VIEW}
-      action={menu.length > 0 && <MoreMenu label={t("summary.more")} items={menu} />}
+      action={
+        <span className="detail-actions">
+          {grip !== undefined && (
+            <Link to={editGripPath(id)} className="edit-button">
+              {t("common.edit")}
+            </Link>
+          )}
+          {menu.length > 0 && <MoreMenu label={t("summary.more")} items={menu} />}
+        </span>
+      }
     >
       <div className="intro">
         <span className="intro-kicker">
@@ -106,6 +125,7 @@ export function GripPage({ id }: { id: string }): React.ReactElement {
         </>
       )}
       <UsedIn workouts={usedIn} />
+      {addTo.sheet}
       {grip !== undefined && (
         <Sheet
           open={archiving}

@@ -24,7 +24,7 @@ import { NumberField } from "../../components/NumberField";
 import { useToast } from "../../components/Toast";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { useAppApi } from "../../lib/useAppApi";
-import { useGoBack } from "../components/useGoBack";
+import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { workoutPath } from "../library/useLibrary";
 import { DoneDetails } from "./DoneDetails";

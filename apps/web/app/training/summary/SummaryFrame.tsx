@@ -9,7 +9,7 @@ import { StravaStatusRow } from "../../components/detail/StravaStatusRow";
 import { SummaryTiles } from "../../components/detail/SummaryTiles";
 import { stravaMenuItem } from "../../components/detail/stravaMenuItem";
 import { useAppApi } from "../../lib/useAppApi";
-import { useGoBack } from "../components/useGoBack";
+import { useGoBack } from "../../lib/useGoBack";
 import { activityEditPath } from "../log/paths";
 
 export type SummaryFrameProps = {

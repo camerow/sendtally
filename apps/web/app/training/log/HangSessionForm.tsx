@@ -8,7 +8,7 @@ import { hangTitle } from "@sendtally/features/sessions";
 import { KIND_LOOK } from "@sendtally/features/training";
 import { useToast } from "../../components/Toast";
 import { DetailFrame } from "../../components/detail/DetailFrame";
-import { useGoBack } from "../components/useGoBack";
+import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { DoneDetails } from "./DoneDetails";
 import { EffortField } from "./EffortField";

@@ -8,6 +8,8 @@ export type ExerciseActions = {
   remove: (id: string) => Promise<boolean>;
   /** Every workout and log entry naming `from` names `into` after. */
   merge: (from: Exercise, into: Exercise) => Promise<boolean>;
+  /** Reads the exercises and the workouts naming them again, after one was saved. */
+  refresh: () => Promise<void>;
 };
 
 /** Removing and merging exercises, refreshing everything that names them once done. */
@@ -40,6 +42,10 @@ export function useExerciseActions(
             queries.activities(api).queryKey as unknown[],
           ]
         ),
+      refresh: async () => {
+        await client.invalidateQueries({ queryKey: exercises });
+        await client.invalidateQueries({ queryKey: queries.workouts(api).queryKey as unknown[] });
+      },
     };
   }, [api, client, onError]);
 }

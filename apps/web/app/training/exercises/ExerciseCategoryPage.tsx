@@ -10,7 +10,9 @@ import {
 } from "@sendtally/features/exercises";
 import { gripMeta } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import { Icon } from "../../components/Icon";
 import { DetailFrame } from "../../components/detail/DetailFrame";
+import { newExercisePath } from "../editor/paths";
 import { useAppApi } from "../../lib/useAppApi";
 import { CategoryMark } from "../components/CategoryMark";
 import { DashedPanel } from "../components/DashedPanel";
@@ -67,7 +69,18 @@ export function ExerciseCategoryPage({ kind }: { kind: WorkoutKind }): React.Rea
   const placeholder = t("focus.search", { focus: label });
   const entries = pickerEntries(world, { category: kind, text });
   return (
-    <DetailFrame backTo={EXERCISES_VIEW}>
+    <DetailFrame
+      backTo={EXERCISES_VIEW}
+      action={
+        <Link
+          to={newExercisePath(kind)}
+          className="detail-add"
+          aria-label={t("workouts.newExerciseIn", { category: label })}
+        >
+          <Icon name="plus" size={18} strokeWidth={2.5} />
+        </Link>
+      }
+    >
       <div className="intro">
         <span className="intro-kicker">
           <CategoryMark kind={kind} />

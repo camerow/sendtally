@@ -14,6 +14,8 @@ import type * as T_activities from "@sendtally/features/activities";
 import type * as T_exercises from "@sendtally/features/exercises";
 import type * as T_statistics from "@sendtally/features/statistics";
 
+import type * as T_workouts from "@sendtally/features/workouts";
+
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
@@ -56,6 +58,10 @@ vi.mock("@sendtally/features/activities", async (actual) => ({
   ...(await actual<typeof T_activities>()),
   useActivities: () => ({ state: { status: "ready", data: [] } }),
   useWeightUnit: () => "kg",
+}));
+vi.mock("@sendtally/features/workouts", async (actual) => ({
+  ...(await actual<typeof T_workouts>()),
+  useWorkoutActions: () => ({ saveWorkout: vi.fn(), deleteWorkout: vi.fn() }),
 }));
 vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<typeof T_exercises>()),
@@ -145,7 +151,7 @@ describe("ExercisePage", () => {
     expect(container.querySelector(".link-row")?.getAttribute("href")).toBe(
       "/app/train/workouts/legs"
     );
-    expect(menu()).toEqual(["Merge into…", "Archive"]);
+    expect(menu()).toEqual(["Add to workout", "Merge into…", "Archive"]);
   });
 
   it("deletes one nothing uses, after asking, and goes back", () => {
