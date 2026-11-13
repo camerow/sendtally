@@ -8,7 +8,7 @@ import { code } from "../styles";
 import { ServiceLinks } from "./ServiceLinks";
 import { sectionLabel } from "../../components/styles";
 
-export function ConversionPrompt(): React.ReactElement {
+export function ConversionPrompt({ showApps = false }: { showApps?: boolean }): React.ReactElement {
   const [copied, setCopied] = React.useState(false);
   const copy = async (): Promise<void> => {
     await navigator.clipboard.writeText(CONVERSION_PROMPT);
@@ -32,8 +32,12 @@ export function ConversionPrompt(): React.ReactElement {
       <pre style={{ ...code, whiteSpace: "pre-wrap", overflowWrap: "anywhere", lineHeight: 1.55 }}>
         {CONVERSION_PROMPT}
       </pre>
-      <p style={bodyText}>{t("import.exportSkip")}</p>
-      <ServiceLinks />
+      {showApps && (
+        <>
+          <p style={bodyText}>{t("import.exportSkip")}</p>
+          <ServiceLinks />
+        </>
+      )}
       <Link to="/ai-assistants" style={linkAction}>
         {t("import.connectorLine")}
       </Link>

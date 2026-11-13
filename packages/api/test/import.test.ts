@@ -134,5 +134,5 @@ describe("import", () => {
     }
     const list = await testApp().request("/v1/sessions", { headers: longLog }, env);
     expect(((await list.json()) as { sessions: unknown[] }).sessions).toHaveLength(250);
-  }, 30_000);
+  });
 });
