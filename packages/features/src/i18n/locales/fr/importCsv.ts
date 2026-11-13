@@ -91,4 +91,6 @@ export const importCsv = {
   "import.selectNone": "Effacer",
   "import.selectNamed": "Choisir les séances nommées…",
   "import.selectSession": "Choisir {name}, {date}",
+  "import.connectorLine":
+    "Ou connecte Claude ou ChatGPT à sendtally et laisse-le importer le fichier pour toi.",
 } as const;

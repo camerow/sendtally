@@ -89,4 +89,6 @@ export const importCsv = {
   "import.selectNone": "Clear",
   "import.selectNamed": "Select sessions named…",
   "import.selectSession": "Select {name}, {date}",
+  "import.connectorLine":
+    "Or connect Claude or ChatGPT to sendtally and let it import the file for you.",
 } as const;

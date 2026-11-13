@@ -41,4 +41,18 @@ export const settings = {
   "settings.postHangboardBody": "Each hangboard session posts as a Workout.",
   "settings.postTraining": "Post other training",
   "settings.postTrainingBody": "Strength, runs, yoga and mobility post as their own activities.",
+  "settings.assistant": "Connect an AI assistant",
+  "settings.assistantBody":
+    "Let Claude or ChatGPT import an old climbing log and build workouts and training blocks from your history.",
+  "settings.assistantUrl": "Connector URL",
+  "settings.copyUrl": "Copy URL",
+  "settings.copied": "Copied",
+  "settings.assistantClaude":
+    "Open Settings, then Connectors, and choose Add custom connector. Paste the URL and sign in to sendtally.",
+  "settings.assistantChatgpt":
+    "Turn on developer mode, add an MCP server, paste the URL and sign in to sendtally.",
+  "settings.assistantUntested": "Expected steps, not tested yet.",
+  "settings.assistantRevoke":
+    "To disconnect, remove sendtally in the assistant's own connector settings.",
+  "settings.assistantLearnMore": "What an assistant can do",
 } as const;

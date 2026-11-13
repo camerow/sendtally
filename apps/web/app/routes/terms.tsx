@@ -19,7 +19,7 @@ export default function Terms(): React.ReactElement {
   return (
     <LegalPage
       title="Terms of service"
-      updated="18 SEPTEMBER 2026"
+      updated="13 NOVEMBER 2026"
       lede="sendtally is a climbing logbook run by one person. These terms say what you can expect from it, what it expects from you, and what happens if either of us walks away."
     >
       <h2>Agreeing to these terms</h2>
@@ -41,9 +41,10 @@ export default function Terms(): React.ReactElement {
         and turns the sessions you have logged into trends over time.
       </p>
       <p>
-        Everything in your logbook comes from the form you fill in. sendtally does not import your
-        climbing from any third party, and does not read data from any account other than the ones
-        you explicitly connect.
+        Everything in your logbook comes from you: the form you fill in, a file you import, or an AI
+        assistant you connect and ask to add it. sendtally does not import your climbing from any
+        third party, and does not read data from any account other than the ones you explicitly
+        connect.
       </p>
       <p>
         The one thing sendtally writes outward is Strava: if you connect Strava and turn posting on,
@@ -140,6 +141,17 @@ export default function Terms(): React.ReactElement {
         deleting your sendtally account, does not remove them: delete those in Strava yourself if
         you want them gone. Your use of Strava is governed by Strava&rsquo;s own terms and privacy
         policy, not ours. sendtally is not affiliated with, endorsed by, or sponsored by Strava.
+      </p>
+
+      <h2>Connecting an AI assistant</h2>
+      <p>
+        Connecting Claude, ChatGPT or another assistant is optional. While it is connected, you are
+        instructing us to let it read your sessions, training library and plan, and to add the
+        sessions, exercises, workouts and training blocks it creates on your behalf. It cannot edit
+        or delete anything, and sendtally never fetches data from another service for it. You are
+        responsible for what you ask it to add. Remove sendtally from the assistant&rsquo;s own
+        connector settings to end its access. Your use of an assistant is governed by its
+        provider&rsquo;s terms, not ours.
       </p>
 
       <h2>How you may use the service</h2>

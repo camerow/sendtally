@@ -117,6 +117,14 @@ export function SettingsView({
         </div>
       </Section>
 
+      <Link to="/app/settings/assistant" style={{ textDecoration: "none", color: "inherit" }}>
+        <Section>
+          <ChevronRow>
+            <span style={sectionLabel}>{t("settings.assistant")}</span>
+          </ChevronRow>
+        </Section>
+      </Link>
+
       <Link to="/app/account" style={{ textDecoration: "none", color: "inherit" }}>
         <Section>
           <ChevronRow>
