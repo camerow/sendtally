@@ -9,7 +9,7 @@ import { Button } from "../training/components/Button";
 import { Label } from "../training/components/Label";
 import { AMBER } from "../training/components/tints";
 import { Title } from "../training/components/Title";
-import { askingStore, type Asking } from "./startLive";
+import { askingStore, type Asking } from "@sendtally/features/workouts";
 
 function Body({ asking }: { asking: Asking }): React.ReactElement {
   const { running, start } = asking;

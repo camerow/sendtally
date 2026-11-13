@@ -2,7 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router";
 import { useLiveRunStore } from "../lib/useLiveRun";
 import { useLiveSessionStorage } from "../lib/useLiveSessionStorage";
-import { LIVE_PATH, running, startLive } from "./startLive";
+import { startLive } from "@sendtally/features/workouts";
+import { LIVE_PATH, running } from "./startLive";
 
 /** A live run's review, which whatever waited on it replaces once it is saved or thrown away. */
 const reviewingLive = (): boolean =>

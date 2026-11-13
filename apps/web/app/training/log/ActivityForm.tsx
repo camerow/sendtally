@@ -26,7 +26,7 @@ import { DetailFrame } from "../../components/detail/DetailFrame";
 import { Sheet } from "../../components/Sheet";
 import { useAppApi } from "../../lib/useAppApi";
 import { useLiveRunStore } from "../../lib/useLiveRun";
-import { askingStore } from "../../live-session/startLive";
+import { askingStore } from "@sendtally/features/workouts";
 import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { workoutPath } from "../library/useLibrary";

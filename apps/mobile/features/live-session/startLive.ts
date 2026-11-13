@@ -1,15 +1,7 @@
 import { router } from "expo-router";
-import {
-  askingStore,
-  runningNow,
-  startLive as startWhenFree,
-  type Asking,
-  type Running,
-} from "@sendtally/features/workouts";
+import { runningNow, startLive as startWhenFree, type Running } from "@sendtally/features/workouts";
 import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { liveRun, liveRunHref } from "./liveRun";
-
-export { askingStore, type Asking, type Running };
 
 export function running(): Running | null {
   return runningNow(liveSessionStorage, liveRun, (run, finish) =>

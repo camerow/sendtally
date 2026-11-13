@@ -20,19 +20,29 @@ export type RestClock = {
   skip: () => void;
 };
 
-/** Whole seconds left on a rest, counted down live; zero once it is over. */
-export function useRestLeft(rest: Rest | null): number {
+/** The time, kept current four times a second until `until`; it stops there, or with none. */
+export function useNow(until: number | null): number {
   const [now, setNow] = React.useState(Date.now);
-  const endsAt = rest?.endsAt;
   React.useEffect(() => {
-    if (endsAt === undefined) return;
-    const timer = setInterval(() => {
+    if (until === null) return;
+    const tick = (): void => {
       const at = Date.now();
       setNow(at);
-      if (at >= endsAt) clearInterval(timer);
-    }, 250);
-    return () => clearInterval(timer);
-  }, [endsAt]);
+      if (at >= until) clearInterval(timer);
+    };
+    const first = setTimeout(tick, 0);
+    const timer = setInterval(tick, 250);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
+  }, [until]);
+  return now;
+}
+
+/** Whole seconds left on a rest, counted down live; zero once it is over. */
+export function useRestLeft(rest: Rest | null): number {
+  const now = useNow(rest?.endsAt ?? null);
   return rest === null ? 0 : Math.min(rest.seconds, restLeft(rest, now));
 }
 
@@ -73,7 +83,8 @@ export const playerHolds = (): boolean => owners > 0;
  */
 export function useHold(store: LiveRunStore, onOver?: (hold: Hold) => void): HoldClock {
   const hold = useLiveRun(store)?.hold ?? null;
-  const [now, setNow] = React.useState(Date.now);
+  const endsAt = hold === null || hold.pausedAt !== null ? null : holdEndsAt(hold);
+  const now = useNow(endsAt);
   const over = React.useRef(onOver);
   React.useEffect(() => {
     over.current = onOver;
@@ -86,33 +97,22 @@ export function useHold(store: LiveRunStore, onOver?: (hold: Hold) => void): Hol
       owners -= 1;
     };
   }, [owns]);
+  const reached = endsAt !== null && now >= endsAt;
   React.useEffect(() => {
-    if (hold === null || hold.pausedAt !== null) return;
-    const timer = setInterval(() => {
-      const at = Date.now();
-      setNow(at);
-      if (at < holdEndsAt(hold)) return;
-      clearInterval(timer);
-      over.current?.(hold);
-    }, 250);
-    return () => clearInterval(timer);
-  }, [hold]);
+    if (reached && hold !== null) over.current?.(hold);
+  }, [reached, hold]);
   return {
     hold,
     now,
     start: (at, name, targetS, sides) => {
       store.writeRest(null);
-      const at0 = Date.now();
-      setNow(at0);
-      store.writeHold(startHold(at, name, targetS, sides, at0));
+      store.writeHold(startHold(at, name, targetS, sides, Date.now()));
     },
     pause: () => {
       if (hold !== null) store.writeHold(pauseHold(hold, Date.now()));
     },
     resume: () => {
-      if (hold === null) return;
-      setNow(Date.now());
-      store.writeHold(resumeHold(hold, Date.now()));
+      if (hold !== null) store.writeHold(resumeHold(hold, Date.now()));
     },
     stop: () => store.writeHold(null),
   };
@@ -128,10 +128,13 @@ export function useLiveHold(store: LiveRunStore, play: (sound: HoldCue["sound"])
   React.useEffect(() => {
     latest.current = play;
   });
-  const key = hold === undefined || hold.pausedAt !== null ? null : JSON.stringify(hold);
+  const running = hold !== undefined && hold.pausedAt === null;
+  const zeroAt = running ? hold.zeroAt : null;
+  const targetS = hold?.targetS ?? 0;
+  const sides = hold?.sides ?? false;
   React.useEffect(() => {
-    if (key === null) return;
-    const h = JSON.parse(key) as Hold;
+    if (zeroAt === null) return;
+    const h = { zeroAt, targetS, sides };
     const now = Date.now();
     const timers = holdCues(h)
       .filter((c) => c.at > now - 150)
@@ -146,7 +149,7 @@ export function useLiveHold(store: LiveRunStore, play: (sound: HoldCue["sound"])
       Math.max(0, end - now)
     );
     return () => [...timers, finish].forEach(clearTimeout);
-  }, [key, store]);
+  }, [zeroAt, targetS, sides, store]);
 }
 
 /** Plays `play` as the live run's rest ends, whether its player is open or minimised. */

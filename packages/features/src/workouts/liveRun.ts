@@ -140,7 +140,7 @@ export function liveRunSummary({ state }: LiveRun): string {
 export type HoldCue = { at: number; sound: "tick" | "work" | "rest" };
 
 /** A tick each second of the count-in, a tone as each side starts and as it ends. */
-export function holdCues(h: Hold): HoldCue[] {
+export function holdCues(h: Pick<Hold, "zeroAt" | "targetS" | "sides">): HoldCue[] {
   const s = (n: number): number => h.zeroAt + n * 1000;
   const count = Array.from({ length: COUNT_IN_S }, (_, i) => ({
     at: s(i - COUNT_IN_S),
