@@ -43,6 +43,7 @@ export function AlreadyRunningSheet(): React.ReactElement | null {
     <Sheet
       open
       kicker={t("tally.alreadyRunning")}
+      kickerTone="amber"
       title={t("tally.stillGoing", { name: asking.running.name })}
       onClose={askingStore.close}
     >
