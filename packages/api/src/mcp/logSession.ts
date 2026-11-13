@@ -2,7 +2,7 @@ import { postAfterResponse } from "../context";
 import { importSessionShape, manualBodyOf } from "../lib/import";
 import { syncSessionToStrava } from "../lib/posting";
 import * as repo from "../lib/repo";
-import { writeManualSession } from "../sessions";
+import { gymIdsByName, writeManualSession } from "../sessions";
 import type { ConnectorTool } from "./types";
 
 const inputSchema = importSessionShape.shape;
@@ -22,9 +22,7 @@ export const logSession: ConnectorTool<typeof inputSchema> = {
       climbs: parsed.data.climbs.map(({ climbId: _, userClimbId: __, ...climb }) => climb),
     };
     await repo.ensureUser(env.DB, userId);
-    const gymIdByName = new Map(
-      (await repo.listGyms(env.DB, userId)).map((g) => [g.name.toLowerCase(), g.id])
-    );
+    const gymIdByName = await gymIdsByName(env.DB, userId);
     const fingerprint = `manual-${crypto.randomUUID()}`;
     await writeManualSession(c, fingerprint, manualBodyOf(session, gymIdByName), true);
     postAfterResponse(c, fingerprint, () => syncSessionToStrava(env, userId, fingerprint));

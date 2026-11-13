@@ -23,6 +23,9 @@ const manualScoringHistory = async (
     .filter((s): s is NonNullable<typeof s> => s !== null);
 };
 
+export const gymIdsByName = async (db: D1Database, userId: string): Promise<Map<string, string>> =>
+  new Map((await repo.listGyms(db, userId)).map((g) => [g.name.toLowerCase(), g.id]));
+
 export const writeManualSession = async (
   c: Context<AppEnv>,
   fingerprint: string,
@@ -63,9 +66,7 @@ export const importSessions = async (
 ): Promise<{ imported: number; skipped: number }> => {
   const userId = c.get("userId");
   await repo.ensureUser(c.env.DB, userId);
-  const gymIdByName = new Map(
-    (await repo.listGyms(c.env.DB, userId)).map((g) => [g.name.toLowerCase(), g.id])
-  );
+  const gymIdByName = await gymIdsByName(c.env.DB, userId);
   const history = await manualScoringHistory(c.env.DB, userId);
   const ordered = [...sessions].sort((a, b) => a.date.localeCompare(b.date));
   let imported = 0;

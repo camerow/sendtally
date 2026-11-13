@@ -1,4 +1,4 @@
-import { planImport } from "@sendtally/core/import";
+import { planImport, type ImportIssue } from "@sendtally/core/import";
 import { z } from "zod";
 import { IMPORT_BATCH_MAX, importSessionShape, type ImportSessionBody } from "../lib/import";
 import { importSessions } from "../sessions";
@@ -33,7 +33,7 @@ Conversion rules:
 - session_notes holds anything written about the day; climb_notes anything written about that climb. Quote fields that contain commas or line breaks.
 - Skip rows with no grade and no climb name. Do not invent values.
 
-Rows with problems are skipped and returned in issues with their row number (row 1 is the first line of the text). Run with dryRun first, fix every issue, then import the corrected text: the rest of a session imports without its bad rows, and a fixed row sent later on its own becomes a separate session. The same rows never import twice, so a resend or a retry is safe. Send a large file in chunks of up to ${IMPORT_BATCH_MAX} sessions, each with the header row, keeping all of one day's rows in one chunk. Try dryRun first to check a converted file. Imported sessions are never posted to Strava.`;
+Rows with problems are skipped and returned in issues with their row number (row 1 is the first line of the text). Run with dryRun first, fix every issue, then import the corrected text: the rest of a session imports without its bad rows, and a fixed row sent later on its own becomes a separate session. The same rows never import twice, so a resend or a retry is safe. Send a large file in chunks of up to ${IMPORT_BATCH_MAX} sessions, each with the header row, keeping all of one day's rows in one chunk. Imported sessions are never posted to Strava.`;
 
 export const importClimbingLog: ConnectorTool<typeof inputSchema> = {
   name: "import_climbing_log",
@@ -43,7 +43,7 @@ export const importClimbingLog: ConnectorTool<typeof inputSchema> = {
   annotations: { readOnlyHint: false, destructiveHint: false },
   run: async ({ csv, timeZone, dryRun }, { c }) => {
     const plan = planImport(csv, timeZone);
-    const issues: { row: number; code: string; value?: string; climb?: string }[] = [
+    const issues: (ImportIssue | { row: number; code: "invalidSession"; value: string })[] = [
       ...plan.issues,
     ];
     const sessions: ImportSessionBody[] = [];
