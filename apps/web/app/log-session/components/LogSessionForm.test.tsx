@@ -127,6 +127,7 @@ async function save(): Promise<void> {
   await act(async () => button.click());
 }
 
+vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
 describe("LogSessionForm with Areas", () => {
   it("searches Areas climbs in the crag and sends the pick as a link", async () => {
     const api = fakeApi();

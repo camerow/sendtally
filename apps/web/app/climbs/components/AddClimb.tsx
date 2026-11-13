@@ -229,7 +229,7 @@ export function AddClimb(): React.ReactElement {
               <div className="add-climb-grade-chips">
                 <GradeChips
                   label={t("common.grade")}
-                  grades={ladder}
+                  chips={ladder.map((g) => ({ key: g, label: g }))}
                   active={at < 0 ? null : climb.grade}
                   startIndex={at < 0 ? typicalGradeIndex(mine, climb.scale) : at}
                   onPick={(grade) => setClimb({ ...climb, grade })}

@@ -19,7 +19,11 @@ export type IconName =
   | "import"
   | "external"
   | "train"
-  | "star";
+  | "star"
+  | "stop"
+  | "check"
+  | "pencil"
+  | "climb";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -52,6 +56,17 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   external: <path d="M14 5h5v5M19 5l-8 8M17 14v5H5V7h5" />,
   star: <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />,
   train: <path d="M3.5 5h17v5.5h-17zM7 7.75h3M14 7.75h3M9 10.5V20M15 10.5V20" />,
+  climb: (
+    <>
+      <path d="M7 17 17 7" />
+      <circle cx="7" cy="17" r="2.2" />
+      <circle cx="12" cy="12" r="2.2" />
+      <circle cx="17" cy="7" r="2.2" />
+    </>
+  ),
+  stop: <rect x="7" y="7" width="10" height="10" rx="1.5" />,
+  check: <path d="M5 12.5l4.5 4.5L19 7" />,
+  pencil: <path d="M5 19h4L19 9l-4-4L5 15zM13.5 6.5l4 4" />,
   moderation: <path d="M12 3.5 19 6.2v5.3c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6.2z" />,
 };
 

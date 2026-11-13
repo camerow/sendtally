@@ -13,7 +13,7 @@ import {
 } from "@sendtally/features/session-detail";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
-import { liveSessionStorage } from "../lib/localStorages";
+import { useLiveSessionStorage } from "../lib/useLiveSessionStorage";
 import { useClientApi } from "../lib/useClientApi";
 import { EnduranceLaps } from "../session-detail/components/EnduranceLaps";
 import { PostStatusBar } from "../session-detail/components/PostStatusBar";
@@ -67,6 +67,7 @@ function SessionActions({
   stravaUrl: string | null;
 }): React.ReactElement {
   const navigate = useNavigate();
+  const liveSessionStorage = useLiveSessionStorage();
   const [confirming, setConfirming] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);

@@ -9,6 +9,11 @@ import { Icon, type IconName } from "../components/Icon";
 import { requireApi } from "../lib/api.server";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { AccountButton } from "../components/AccountButton";
+import { LiveBar } from "../components/LiveBar";
+import { AlreadyRunningSheet } from "../live-session/components/AlreadyRunningSheet";
+import { LIVE_PATH } from "../live-session/startLive";
+import { useLiveSessionStorage } from "../lib/useLiveSessionStorage";
+import { useLiveSession } from "@sendtally/features/log-session";
 import { ToastProvider } from "../components/Toast";
 import { useAppApi } from "../lib/useAppApi";
 import { useIsModerator } from "../lib/useIsModerator";
@@ -44,11 +49,13 @@ const MODERATION_ITEM: NavItem = {
 };
 
 /** Screens reached by a back link, whose own action bar owns the bottom edge. */
-const FOCUSED_ROUTES = ["/app/sessions/new", "/app/log/climbs/new"];
+const FOCUSED_ROUTES = ["/app/sessions/new", "/app/log/climbs/new", "/app/sessions/live"];
 
 function Shell({ children }: { children: React.ReactNode }): React.ReactElement {
   const { pathname } = useLocation();
   const focused = FOCUSED_ROUTES.includes(pathname);
+  const onLive = pathname === LIVE_PATH;
+  const live = useLiveSession(useLiveSessionStorage()).stored !== null;
   const moderator = useIsModerator();
   useReportGoogleSignUp();
 
@@ -90,21 +97,36 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
           </NavLink>
         ))}
         <div className="app-sidebar-spacer" />
+        {!onLive && <LiveBar />}
         <div className="app-sidebar-footer">
           <AccountButton withName />
         </div>
       </div>
-      <div className={focused ? "app-content app-content--focused" : "app-content"}>{children}</div>
+      <div
+        className={
+          focused
+            ? "app-content app-content--focused"
+            : live
+              ? "app-content app-content--live"
+              : "app-content"
+        }
+      >
+        {children}
+      </div>
       {!focused && (
-        <nav className="app-tabbar" aria-label={t("common.sectionsAria")}>
-          {NAV_ITEMS.map(({ label, to, icon }) => (
-            <NavLink key={to} to={to} end={to === "/app"} className="app-tab">
-              <Icon name={icon} />
-              {label()}
-            </NavLink>
-          ))}
-        </nav>
+        <div className="app-bottom">
+          <LiveBar />
+          <nav className="app-tabbar" aria-label={t("common.sectionsAria")}>
+            {NAV_ITEMS.map(({ label, to, icon }) => (
+              <NavLink key={to} to={to} end={to === "/app"} className="app-tab">
+                <Icon name={icon} />
+                {label()}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
       )}
+      <AlreadyRunningSheet />
     </div>
   );
 }

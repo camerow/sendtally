@@ -47,6 +47,7 @@ const CLIMBS = [
 
 let climbs = CLIMBS;
 
+vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
 vi.mock("@sendtally/features/settings", () => ({
   useGradeScalePrefs: () => ({ scales: { boulder: "v", route: "yds" }, ready: true }),
