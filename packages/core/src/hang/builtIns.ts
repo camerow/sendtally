@@ -133,9 +133,7 @@ export const BUILT_IN_EXERCISES = [
 export type BuiltInExerciseId = (typeof BUILT_IN_EXERCISES)[number]["id"];
 
 /** Interval steps a built-in workout names that are not exercises of their own. */
-export const BUILT_IN_STEP_NAMES = { hard: "Hard", easy: "Easy" } as const;
-
-export type BuiltInStep = keyof typeof BUILT_IN_STEP_NAMES;
+export type BuiltInStep = "hard" | "easy";
 
 /** A hangboard item names its grip; every other item a built-in exercise or an interval step. */
 export type BuiltInItemSpec =

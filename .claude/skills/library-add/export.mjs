@@ -9,11 +9,9 @@ const root = process.cwd();
 const en = {};
 for (const f of fs.readdirSync(`${root}/packages/features/src/i18n/locales/en`)) {
   const src = fs.readFileSync(`${root}/packages/features/src/i18n/locales/en/${f}`, "utf8");
-  for (const m of src.matchAll(/"([\w.]+)":\s*\n?\s*"((?:[^"\\]|\\.)*)"/g))
+  for (const m of src.matchAll(/"([\w.-]+)":\s*\n?\s*"((?:[^"\\]|\\.)*)"/g))
     en[m[1]] = JSON.parse(`"${m[2]}"`);
 }
-const keys = fs.readFileSync(`${root}/packages/features/src/i18n/builtIns.ts`, "utf8");
-const stem = (id) => keys.match(new RegExp(`"?${id}"?: "([\\w.]+)",`))?.[1];
 const out = [];
 for (const e of BUILT_IN_EXERCISES)
   out.push({
@@ -31,10 +29,10 @@ for (const w of BUILT_IN_WORKOUTS)
   out.push({
     type: "workout",
     id: w.id,
-    nameKey: `${stem(w.id)}.name`,
-    blurbKey: `${stem(w.id)}.blurb`,
+    nameKey: `workouts.builtIn.${w.id}.name`,
+    blurbKey: `workouts.builtIn.${w.id}.blurb`,
     name: w.name,
-    blurb: en[`${stem(w.id)}.blurb`],
+    blurb: en[`workouts.builtIn.${w.id}.blurb`],
     kind: w.kind,
     focus: w.focus,
     minutes: w.minutes,

@@ -15,12 +15,11 @@ Do not ask Will for anything you can default; make the call, then list what you 
 | What                     | File                                                                                                        |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------- |
 | Exercises and workouts   | `packages/core/src/hang/builtIns.ts` (`BUILT_IN_EXERCISES`, `BUILT_IN_WORKOUTS`), with their English names |
-| Workout catalog keys     | `packages/features/src/i18n/builtIns.ts` (`WORKOUT_KEYS`)                                                   |
-| Translations and blurbs  | `packages/features/src/i18n/locales/{en,de,fr,es}/workouts.ts`                                              |
+| Names and blurbs         | `packages/features/src/i18n/locales/{en,de,fr,es}/workouts.ts`                                              |
 | Allowed values           | `packages/core/src/hang/exercise.ts`, `packages/core/src/hang/plan.ts`, `packages/core/src/hang/library.ts` |
 
 Read the current entries in each file before writing, and follow their order and style.
-English names live only in core: the `en` catalog builds their keys from it, so never add an English name to `en`.
+Core holds each English name for the Worker, and the `en` catalog repeats it; a features test fails when they differ.
 
 ## Exercise
 
@@ -29,7 +28,7 @@ English names live only in core: the `en` catalog builds their keys from it, so 
    - `kind`: `EXERCISE_KINDS` (`climbing`, `strength`, `mobility`, `other`).
    - `measure`: `EXERCISE_MEASURES` (`reps`, `repsWeight`, `seconds`, `secondsWeight`, `rounds`); climbing only takes `reps` or `seconds`.
    - `dose`: only when the measure's default start is wrong for it, e.g. `{ sets: 1 }`.
-2. Add `"workouts.exercise.<id>"` to the de, fr and es catalogs, next to the other `workouts.exercise.*` keys.
+2. Add `"workouts.exercise.<id>"` to all four catalogs, next to the other `workouts.exercise.*` keys; `en` carries the same name as core.
 
 ## Workout
 
@@ -44,8 +43,7 @@ English names live only in core: the `en` catalog builds their keys from it, so 
    - `Dose`: `sets` always; `reps`, `onS`, `offS`, `setRestS` (seconds) as the prescription needs.
      Hangboard built-ins never carry `edgeMm` or `weightKg`; the user picks those per use.
      Two doses on one item make it alternate (A/B weeks).
-2. Add `"<id>": "workouts.builtIn.<camelId>"` to `WORKOUT_KEYS`.
-3. Add `workouts.builtIn.<camelId>.blurb` to all four catalogs and `.name` to de, fr and es, next to the other `workouts.builtIn.*` keys.
+2. Add `workouts.builtIn.<id>.name` and `.blurb` to all four catalogs, next to the other `workouts.builtIn.*` keys; `en`'s name is the same as core's.
    The blurb is one sentence in the existing voice: what it trains and why a climber does it.
 
 ## Copy
@@ -62,7 +60,7 @@ Its database holds one document per built-in in collection `entries`, id `ex-<id
 Workout items name their exercise in `ref`: a built-in exercise id, `grip:<id>`, or `step:hard` / `step:easy`.
 An edited built-in keeps the code's version in `orig`, a new one has `isNew: true`, and `note` is free text for you.
 
-- `/library-add apply`: query `entries` where `status == "pending"` with the ArtifactData tool, apply each one to the code by the rules above (new entries get new keys; edits change the existing spec and its English name in core, and re-translate de/fr/es when the English changed), run the checks, then batch `update` each applied document to `status: "built"`, removing `orig`, `isNew` and `note` (pin each write with `if_version`).
+- `/library-add apply`: query `entries` where `status == "pending"` with the ArtifactData tool, apply each one to the code by the rules above (new entries get new keys; edits change the existing spec and its English name in core and `en`, and re-translate de/fr/es when the English changed), run the checks, then batch `update` each applied document to `status: "built"`, removing `orig`, `isNew` and `note` (pin each write with `if_version`).
   An ID must never change on a built-in; if a pending edit asks for something the rules forbid, leave it pending and say why.
 - `/library-add sync`: after the library changed in code, run `node .claude/skills/library-add/export.mjs <dir>` from the repo root; it writes one JSON file per built-in into `<dir>`.
   Batch `set` them into `entries` (at most 50 writes per batch), skipping documents that are `pending`, and delete documents for built-ins that no longer exist.

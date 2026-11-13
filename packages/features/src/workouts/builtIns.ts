@@ -6,7 +6,6 @@ import {
 } from "@sendtally/core/hang";
 import { builtInExerciseName } from "../exercises/builtIns";
 import { t } from "../i18n";
-import { WORKOUT_KEYS } from "../i18n/builtIns";
 import type { LibraryWorkout } from "./types";
 
 const exerciseOf = (spec: BuiltInItemSpec): string => {
@@ -28,8 +27,8 @@ export function builtInWorkouts(): LibraryWorkout[] {
     id: w.id,
     source: "library",
     kind: w.kind,
-    name: t(`${WORKOUT_KEYS[w.id]}.name`),
-    description: t(`${WORKOUT_KEYS[w.id]}.blurb`),
+    name: t(`workouts.builtIn.${w.id}.name`),
+    description: t(`workouts.builtIn.${w.id}.blurb`),
     minutes: w.minutes,
     targetRpe: w.targetRpe,
     items: w.items.map(itemOf),
