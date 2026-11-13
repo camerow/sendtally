@@ -4,7 +4,7 @@ import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
   TRAINED_KINDS,
-  focusKey,
+  mixRows,
   pickedWorkouts,
   useTrainingInsights,
   type TrainedBy,
@@ -37,11 +37,7 @@ export function TrainingInsights({ range }: { range: TrendRange }): React.ReactE
       </Text>
     );
   if (state.data.sessions === 0) return <DashedPanel body={t("statistics.empty")} />;
-  const legend =
-    by === "category"
-      ? state.data.trained.map((k) => ({ key: k.kind, name: k.name }))
-      : state.data.byFocus.map((f) => ({ key: focusKey(f.focus), name: f.name }));
-  const picked = legend.find((r) => r.key === pick) ?? null;
+  const picked = mixRows(state.data, by).find((r) => r.key === pick) ?? null;
   return (
     <>
       <Text style={[type.mono, { fontSize: 12.5, color: colors.textSecondary }]}>

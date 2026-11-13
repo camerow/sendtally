@@ -1,9 +1,8 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
-import { blockWeekOn } from "@sendtally/core/hang";
 import { colors, radius } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { blockDone, blockGroups, useTrainingLog } from "@sendtally/features/training";
+import { currentBlockLine, useTrainingLog } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { pressRow } from "../../../lib/press";
 import { useHangData } from "../data/HangDataContext";
@@ -14,13 +13,9 @@ import { type } from "../type";
 export function CurrentBlockRow(): React.ReactElement | null {
   const { today } = useHangData();
   const { log } = useTrainingLog(useApi());
-  const block = blockGroups(log.plan.blocks, today).current[0];
-  if (block === undefined) return null;
-  const done = blockDone(log, block, today);
-  const meta = [
-    t("plan.blockWeek", { at: blockWeekOn(block, today) ?? 1, of: block.weeks }),
-    ...(done.planned > 0 ? [t("plan.doneOf", done)] : []),
-  ].join(" · ");
+  const line = currentBlockLine(log, today);
+  if (line === null) return null;
+  const { block, meta } = line;
   return (
     <Pressable
       onPress={() => openBlock(block.id, t("statistics.tab"))}

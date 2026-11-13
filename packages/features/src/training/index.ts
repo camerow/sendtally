@@ -111,7 +111,14 @@ export {
   type GripNames,
   type PlanGridRow,
 } from "./planGridRows";
-export { blockDateRange, blockKicker, blockTag, doneOfShort, effortText } from "./blockText";
+export {
+  blockDateRange,
+  blockKicker,
+  blockTag,
+  currentBlockLine,
+  doneOfShort,
+  effortText,
+} from "./blockText";
 export { occurrenceMeta, occurrenceTag } from "./occurrenceText";
 export { loggedRowText, type LoggedRowText } from "./loggedRowText";
 export { KIND_LOOK, type KindLook, type MarkShape } from "./kindLook";
