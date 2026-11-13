@@ -159,3 +159,7 @@ export function holdCues(h: Hold): HoldCue[] {
       : [{ at: s(h.targetS), sound: "rest" as const }]),
   ];
 }
+
+/** Whole seconds a run has been going at `now`, from its Start. */
+export const runElapsedSeconds = (startedAt: number, now: Date): number =>
+  Math.max(0, Math.floor((now.getTime() - startedAt) / 1000));

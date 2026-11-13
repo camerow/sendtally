@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Hold } from "./holdClock";
-import { holdRowVM, restRowVM } from "./holdRow";
+import { holdRowVM, restRowVM, stripVM } from "./holdRow";
 import type { Rest } from "./restCountdown";
 
 const hold = (over: Partial<Hold> = {}): Hold => ({
@@ -42,5 +42,19 @@ describe("a rest's row", () => {
       next: "Next: Ring row",
       label: "Rest, 0:45 left",
     });
+  });
+});
+
+describe("the live bar's strip", () => {
+  it("says what a rest is before, and leaves at zero", () => {
+    const rest = { at: "0:0", seconds: 90, endsAt: 90_000, next: null };
+    expect(stripVM(rest, 90, null, 0)).toMatchObject({
+      kind: "rest",
+      text: "Rest 1:30",
+      then: "· then set 2",
+      share: 1,
+    });
+    expect(stripVM({ ...rest, at: "after:0", next: "Row" }, 45, null, 0)?.then).toBe("· then Row");
+    expect(stripVM(rest, 0, null, 0)).toBeNull();
   });
 });

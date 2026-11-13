@@ -57,3 +57,53 @@ export function restRowVM(rest: Rest, left: number): RestRowVM {
     label: t("activities.restLeft", { time: clock }),
   };
 }
+
+export type StripVM = {
+  kind: "rest" | "hold";
+  /** "Rest 1:30", or the hold's name and its clock. */
+  text: string;
+  /** "· then set 2", "· of 0:30". */
+  then: string | null;
+  share: number;
+  label: string | null;
+};
+
+/** What a rest is before: the exercise it names, else the set after the one it sits under. */
+const restThen = (rest: Rest): string | null => {
+  if (rest.next !== null) return t("activities.restThen", { name: rest.next });
+  const set = /^\d+:(\d+)$/.exec(rest.at)?.[1];
+  return set === undefined ? null : t("activities.restThenSet", { set: Number(set) + 2 });
+};
+
+/**
+ * The live run's strip under the live bar while its player is minimised: its hold, else its rest;
+ * none once either is over.
+ */
+export function stripVM(
+  rest: Rest | null,
+  left: number,
+  hold: Hold | null,
+  now: number
+): StripVM | null {
+  if (hold !== null) {
+    const at = holdNow(hold, now);
+    if (at.phase === "over") return null;
+    const clock = at.phase === "hold" ? elapsedClock(at.seconds) : String(at.left);
+    return {
+      kind: "hold",
+      text: `${hold.name} ${clock}`,
+      then: `· ${t("activities.holdOf", { time: elapsedClock(hold.targetS) })}`,
+      share: at.phase === "hold" ? Math.min(1, at.share) : 0,
+      label: null,
+    };
+  }
+  if (rest === null || left === 0) return null;
+  const then = restThen(rest);
+  return {
+    kind: "rest",
+    text: t("activities.restPreview", { time: elapsedClock(left) }),
+    then: then === null ? null : `· ${then}`,
+    share: left / rest.seconds,
+    label: t("activities.restLeft", { time: elapsedClock(left) }),
+  };
+}

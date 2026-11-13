@@ -46,6 +46,8 @@ export default [
       route("activity/:id", "routes/app.activity.$id.tsx"),
       route("activity/:id/edit", "routes/app.activity.$id.edit.tsx"),
       route("workout/done", "routes/app.workout.done.tsx"),
+      route("workout/sets", "routes/app.workout.sets.tsx"),
+      route("workout/checklist", "routes/app.workout.checklist.tsx"),
     ]),
     route("journal", "routes/app.journal._index.tsx"),
     route("journal/new", "routes/app.journal.new.tsx"),

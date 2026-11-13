@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { tallyDraft, writeStoredDraft } from "@sendtally/features/log-session";
+import { liveRunOf } from "../../lib/useLiveRun";
 import { liveSessionStorageOf } from "../../lib/useLiveSessionStorage";
 import { askingStore, running, startLive } from "../startLive";
 import { AlreadyRunningSheet } from "./AlreadyRunningSheet";
@@ -47,7 +48,7 @@ const runOne = (): void =>
 describe("starting while a session runs", () => {
   it("starts straight away when nothing runs", () => {
     const start = vi.fn();
-    startLive(running(storage, go), start);
+    startLive(running(storage, liveRunOf("u1").store, go), start);
     expect(start).toHaveBeenCalled();
     expect(document.querySelector("dialog")).toBeNull();
   });
@@ -55,7 +56,7 @@ describe("starting while a session runs", () => {
   it("asks first, and resumes the running one", () => {
     runOne();
     const start = vi.fn();
-    act(() => startLive(running(storage, go), start));
+    act(() => startLive(running(storage, liveRunOf("u1").store, go), start));
     expect(document.body.textContent).toContain("Already running");
     act(() => button("Resume").click());
     expect(went).toEqual(["/app/sessions/live"]);
@@ -65,7 +66,7 @@ describe("starting while a session runs", () => {
   it("records the running one, and starts the new one once it is saved", () => {
     runOne();
     const start = vi.fn();
-    act(() => startLive(running(storage, go), start));
+    act(() => startLive(running(storage, liveRunOf("u1").store, go), start));
     act(() => button("Record").click());
     expect(went).toEqual(["/app/sessions/live?finish=1"]);
     expect(start).not.toHaveBeenCalled();
@@ -76,7 +77,7 @@ describe("starting while a session runs", () => {
   it("discards the running one only once confirmed, then starts", () => {
     runOne();
     const start = vi.fn();
-    act(() => startLive(running(storage, go), start));
+    act(() => startLive(running(storage, liveRunOf("u1").store, go), start));
     act(() => button("Discard").click());
     expect(storage.read()).not.toBeNull();
     act(() => button("Discard").click());
