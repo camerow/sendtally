@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  pickedOf,
+  pickWith,
   useMakeExercise,
   type MakeExercise,
   type PickerSource,
@@ -24,16 +24,7 @@ export function useMake(): MakeExercise {
   return useMakeExercise(useAppApi(), model, actions, failed, newId);
 }
 
-/**
- * What a picker row adds to a workout. A built-in becomes the user's own exercise first,
- * linked to it so its name stays translated; null when that save failed.
- */
+/** What a picker row adds to a workout (see `pickWith`). */
 export function usePick(): (source: PickerSource) => Promise<Picked | null> {
-  const make = useMake();
-  return async (source) => {
-    if (!("builtIn" in source)) return pickedOf(source);
-    const { id, name, kind, measure } = source.builtIn;
-    const made = await make({ kind, name, measure, eachSide: false }, id);
-    return made === null ? null : pickedOf(made);
-  };
+  return pickWith(useMake());
 }
