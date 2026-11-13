@@ -49,7 +49,8 @@ function serverFor(c: Context<AppEnv>, user: ConnectorUser, posthog: PostHog | n
       },
     });
   }
-  const ctx = { env: c.env, userId: user.userId };
+  c.set("userId", user.userId);
+  const ctx = { env: c.env, userId: user.userId, c };
   for (const { name, run, ...config } of tools) {
     server.registerTool(name, config, async (args) => {
       const { success } = await c.env.CONNECTOR_RATE_LIMITER.limit({ key: user.userId });

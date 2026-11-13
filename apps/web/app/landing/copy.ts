@@ -304,6 +304,7 @@ export const COPY = {
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
       { label: "Support", href: "/support" },
+      { label: "AI assistants", href: "/ai-assistants" },
     ],
   },
 };

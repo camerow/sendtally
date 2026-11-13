@@ -378,6 +378,10 @@ export const COPY_ES: LandingCopy = {
         label: "Soporte",
         href: "/support",
       },
+      {
+        label: "Asistentes de IA",
+        href: "/ai-assistants",
+      },
     ],
   },
 };

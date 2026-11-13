@@ -44,4 +44,17 @@ export const settings = {
   "settings.postTraining": "Anderes Training posten",
   "settings.postTrainingBody":
     "Kraft, Läufe, Yoga und Mobility werden als eigene Aktivitäten gepostet.",
+  "settings.assistant": "KI-Assistenten verbinden",
+  "settings.assistantBody":
+    "Lass Claude oder ChatGPT ein altes Kletterlog importieren und aus deinem Verlauf Workouts und Trainingsblöcke bauen.",
+  "settings.assistantUrl": "Connector-URL",
+  "settings.copyUrl": "URL kopieren",
+  "settings.assistantClaude":
+    "Öffne Einstellungen, dann Connectors, und wähle Benutzerdefinierten Connector hinzufügen. Füge die URL ein und melde dich bei sendtally an.",
+  "settings.assistantChatgpt":
+    "Schalte den Entwicklermodus ein, füge einen MCP-Server hinzu, füge die URL ein und melde dich bei sendtally an.",
+  "settings.assistantUntested": "Erwartete Schritte, noch nicht getestet.",
+  "settings.assistantRevoke":
+    "Zum Trennen entferne sendtally in den Connector-Einstellungen des Assistenten.",
+  "settings.assistantLearnMore": "Was ein Assistent kann",
 } as const;
