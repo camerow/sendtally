@@ -7,7 +7,7 @@ import { Icon } from "../../components/Icon";
 import { pressRow } from "../../lib/press";
 import { BlockWeekBars } from "../training/blocks/BlockWeekBars";
 import { Label } from "../training/components/Label";
-import { ON_DARK, ON_DARK_MUTED } from "../training/components/onDark";
+import { ON_DARK, ON_DARK_MUTED } from "@sendtally/features/workouts";
 import { type } from "../training/type";
 
 const CARD_HEIGHT = 82;

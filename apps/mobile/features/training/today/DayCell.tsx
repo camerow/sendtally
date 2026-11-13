@@ -7,7 +7,7 @@ import { t } from "@sendtally/features/i18n";
 import { dayMarks, type TrainingDay, oncePerKind } from "@sendtally/features/training";
 import { press } from "../../../lib/press";
 import { Label } from "../components/Label";
-import { ON_DARK_SOFT } from "../components/onDark";
+import { ON_DARK_SOFT } from "@sendtally/features/workouts";
 import { type } from "../type";
 import { DayMark } from "./DayMark";
 

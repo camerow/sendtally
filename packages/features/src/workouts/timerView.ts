@@ -6,18 +6,34 @@ import {
   type HangKind,
   type HangPhase,
   type HangSetup,
+  type HangWorkout,
   type Run,
+  type WeightUnit,
   type SetDone,
 } from "@sendtally/core/hang";
 import { setKeyOf } from "../activities/done";
 import type { HangModel } from "../hang/model";
+import { loadLabel, setupLabel } from "../hang/format";
 import { timerText, type TimerText } from "../hang/timerText";
 import { t } from "../i18n";
 import { phaseLook, type PhaseLook } from "./phaseLook";
 import type { TimerRun } from "./runParams";
 import type { PlannedRun } from "./usePlannedRun";
 
+/** What the run runs: its planned items, each on its grip with today's setup. */
+export type TimerItems = {
+  planned: PlannedRun;
+  grips: readonly string[];
+  setups: readonly HangSetup[];
+  unit: WeightUnit;
+};
+
 export type TimerView = Omit<TimerText, "fail"> & {
+  /** The item running now, on its grip and setup. */
+  current: HangWorkout;
+  gripId: string;
+  /** "20 mm · +5 kg", its setup for today. */
+  setup: string;
   look: PhaseLook;
   working: boolean;
   /** Lifted on a pull, Pause or Resume otherwise. */
@@ -30,19 +46,29 @@ export type TimerView = Omit<TimerText, "fail"> & {
 
 /** Every word and colour the hang timer shows for where its run is now. */
 export function timerView(
-  run: Run,
+  run: Run<HangPhase>,
   secondsLeft: number,
-  loadText: string,
-  sets: number
+  { planned, grips, setups, unit }: TimerItems
 ): TimerView {
   const phase = currentPhase(run);
+  const { items } = planned;
+  const current = (items[phase.item] ?? items[0]).workout;
+  const setup = setups[phase.item] ?? { edgeMm: 0, loadKg: 0 };
   const pull = phase.taps > 0;
   const working = isWork(phase.kind);
   const paused = run.pausedAt !== null;
-  const text = timerText(run, secondsLeft, loadText, sets);
+  const text = timerText(
+    run,
+    secondsLeft,
+    loadLabel(current.kind, setup.loadKg, unit),
+    current.sets
+  );
   const pause = paused ? t("hang.resume") : t("hang.pause");
   return {
     ...text,
+    current,
+    gripId: grips[phase.item] ?? current.grip,
+    setup: setupLabel(current.kind, setup, unit),
     look: phaseLook(working, phase.kind === "ready" && run.index === 0),
     working,
     primary: pull ? t("hang.lifted") : pause,

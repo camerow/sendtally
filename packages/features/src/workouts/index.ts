@@ -45,7 +45,7 @@ export { usePlannedRun, type PlannedItem, type PlannedRun } from "./usePlannedRu
 export * from "./intervalsView";
 export * from "./onDark";
 export * from "./phaseLook";
-export * from "./phaseProgress";
+export * from "./progressMove";
 export * from "./timerCues";
 export * from "./timerView";
 export { useHangTimer, type HangTimer } from "./useHangTimer";

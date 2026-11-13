@@ -3,7 +3,7 @@ import { View } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 import { isWork, runPercent, type Run } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { HANG_ON_DARK, HANG_TRACK, REST_ON_DARK, REST_TRACK } from "../components/onDark";
+import { HANG_ON_DARK, HANG_TRACK, REST_ON_DARK, REST_TRACK } from "@sendtally/features/workouts";
 import { LiveFill } from "./LiveFill";
 
 export type RunProgressBarProps = { run: Run; progress: SharedValue<number> };

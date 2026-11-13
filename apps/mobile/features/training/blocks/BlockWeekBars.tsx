@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { colors, effortColor } from "@sendtally/design/tokens";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import type { BlockWeek } from "@sendtally/features/training";
-import { ON_DARK_MUTED, ON_DARK_TRACK } from "../components/onDark";
+import { ON_DARK_MUTED, ON_DARK_TRACK } from "@sendtally/features/workouts";
 import { type } from "../type";
 
 export type BlockWeekBarsProps = {
