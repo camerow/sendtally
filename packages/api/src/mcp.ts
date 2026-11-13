@@ -11,7 +11,7 @@ import { tools } from "./mcp/tools";
 const METADATA_PATH = "/.well-known/oauth-protected-resource/mcp";
 
 // A publishable key is its prefix and the base64 of the instance's host, "$"-terminated.
-export const clerkIssuer = (publishableKey: string): string =>
+const clerkIssuer = (publishableKey: string): string =>
   `https://${atob(publishableKey.split("_")[2] ?? "").slice(0, -1)}`;
 
 const RATE_LIMITED = "Too many requests from this connector. Wait a minute, then try again.";

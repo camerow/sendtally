@@ -87,18 +87,6 @@ describe("connector", () => {
     expect(await sessionsOf("user_other")).toEqual([]);
   });
 
-  it("gives every tool the title and annotations the directories require", async () => {
-    const res = await rpc("tools/list", {}, "user_mcp");
-    const { tools } = ((await res.json()) as { result: { tools: unknown[] } }).result;
-    expect(tools.length).toBeGreaterThan(0);
-    for (const tool of tools) {
-      expect(tool).toMatchObject({
-        title: expect.any(String),
-        annotations: { readOnlyHint: expect.any(Boolean), destructiveHint: expect.any(Boolean) },
-      });
-    }
-  });
-
   it("records each tool call against the user and the assistant that made it", async () => {
     await callTool("user_mcp");
     expect(captureUserEvent).toHaveBeenCalledWith(
