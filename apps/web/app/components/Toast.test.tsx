@@ -57,6 +57,18 @@ describe("Toast", () => {
     expect(toast()).toBeNull();
   });
 
+  it("sits 12 above a detail screen's footer, and at its own place without one", () => {
+    act(() => show({ message: "Plain" }));
+    expect(container.querySelector<HTMLElement>(".toast-region")?.style.bottom).toBe("");
+    const footer = document.createElement("div");
+    footer.className = "detail-footer";
+    footer.getBoundingClientRect = () => ({ top: window.innerHeight - 83 }) as DOMRect;
+    document.body.appendChild(footer);
+    act(() => show({ message: "Set removed" }));
+    expect(container.querySelector<HTMLElement>(".toast-region")?.style.bottom).toBe("95px");
+    footer.remove();
+  });
+
   it("restarts the clock for a newer toast", () => {
     act(() => show({ message: "First" }));
     act(() => vi.advanceTimersByTime(3000));
