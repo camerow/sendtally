@@ -25,7 +25,6 @@ export const importCsv = {
   "import.colTriesRpe":
     "Whole numbers. RPE 1 to 10; leave it blank and Sendtally scores the session.",
   "import.copyPrompt": "Copy prompt",
-  "import.copied": "Copied",
   "import.convertTitle": "Convert a spreadsheet with an AI assistant",
   "import.convertHelp":
     "Paste this into Claude or ChatGPT together with your spreadsheet (export it as CSV first). Check the result for a session or two, then import the file it gives you.",

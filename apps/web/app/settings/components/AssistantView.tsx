@@ -25,7 +25,7 @@ export function AssistantView({ url }: { url: string }): React.ReactElement {
           {url}
         </pre>
         <button type="button" onClick={() => void copy()} style={secondaryButton}>
-          {copied ? t("settings.copied") : t("settings.copyUrl")}
+          {copied ? t("common.copied") : t("settings.copyUrl")}
         </button>
       </Section>
 

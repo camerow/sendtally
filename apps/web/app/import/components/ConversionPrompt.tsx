@@ -25,7 +25,7 @@ export function ConversionPrompt(): React.ReactElement {
           onClick={() => void copy()}
           style={{ ...secondaryButton, fontSize: 13, padding: "9px 16px" }}
         >
-          {copied ? t("import.copied") : t("import.copyPrompt")}
+          {copied ? t("common.copied") : t("import.copyPrompt")}
         </button>
       </div>
       <p style={bodyText}>{t("import.convertHelp")}</p>

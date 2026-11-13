@@ -27,7 +27,6 @@ export const importCsv = {
     "flash, onsight ou redpoint. Réussites seulement ; onsight pour les voies uniquement.",
   "import.colTriesRpe": "Nombres entiers. RPE de 1 à 10 ; laisse vide et Sendtally note la séance.",
   "import.copyPrompt": "Copier le prompt",
-  "import.copied": "Copié",
   "import.convertTitle": "Convertir un tableur avec un assistant IA",
   "import.convertHelp":
     "Colle ceci dans Claude ou ChatGPT avec ton tableur (exporte-le d'abord en CSV). Vérifie une ou deux séances dans le résultat, puis importe le fichier obtenu.",

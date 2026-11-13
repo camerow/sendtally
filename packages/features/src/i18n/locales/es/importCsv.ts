@@ -27,7 +27,6 @@ export const importCsv = {
   "import.colTriesRpe":
     "Números enteros. RPE de 1 a 10; déjalo vacío y Sendtally puntúa la sesión.",
   "import.copyPrompt": "Copiar prompt",
-  "import.copied": "Copiado",
   "import.convertTitle": "Convertir una hoja de cálculo con un asistente de IA",
   "import.convertHelp":
     "Pega esto en Claude o ChatGPT junto con tu hoja (expórtala primero como CSV). Revisa una o dos sesiones del resultado y luego importa el archivo que te dé.",

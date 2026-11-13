@@ -49,7 +49,6 @@ export const settings = {
     "Laisse Claude ou ChatGPT importer un ancien carnet d'escalade et créer des séances et des blocs d'entraînement à partir de ton historique.",
   "settings.assistantUrl": "URL du connecteur",
   "settings.copyUrl": "Copier l'URL",
-  "settings.copied": "Copié",
   "settings.assistantClaude":
     "Ouvre Réglages, puis Connecteurs, et choisis Ajouter un connecteur personnalisé. Colle l'URL et connecte-toi à sendtally.",
   "settings.assistantChatgpt":

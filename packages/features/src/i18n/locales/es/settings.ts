@@ -49,7 +49,6 @@ export const settings = {
     "Deja que Claude o ChatGPT importe un registro de escalada antiguo y cree entrenamientos y bloques a partir de tu historial.",
   "settings.assistantUrl": "URL del conector",
   "settings.copyUrl": "Copiar URL",
-  "settings.copied": "Copiado",
   "settings.assistantClaude":
     "Abre Ajustes, luego Conectores, y elige Añadir conector personalizado. Pega la URL e inicia sesión en sendtally.",
   "settings.assistantChatgpt":

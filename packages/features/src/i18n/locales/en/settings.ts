@@ -46,7 +46,6 @@ export const settings = {
     "Let Claude or ChatGPT import an old climbing log and build workouts and training blocks from your history.",
   "settings.assistantUrl": "Connector URL",
   "settings.copyUrl": "Copy URL",
-  "settings.copied": "Copied",
   "settings.assistantClaude":
     "Open Settings, then Connectors, and choose Add custom connector. Paste the URL and sign in to sendtally.",
   "settings.assistantChatgpt":
