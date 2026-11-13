@@ -13,7 +13,8 @@ export type IconName =
   | "endurance"
   | "x"
   | "more"
-  | "moderation";
+  | "moderation"
+  | "train";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -40,6 +41,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   ),
   x: <path d="M6 6l12 12M18 6L6 18" />,
   more: <path d="M5 12h.01M12 12h.01M19 12h.01" />,
+  train: <path d="M3.5 5h17v5.5h-17zM7 7.75h3M14 7.75h3M9 10.5V20M15 10.5V20" />,
   moderation: <path d="M12 3.5 19 6.2v5.3c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6.2z" />,
 };
 
