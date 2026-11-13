@@ -1,4 +1,3 @@
-import { useAuth } from "@clerk/react-router";
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { useLoaderData } from "react-router";
@@ -18,12 +17,8 @@ import { COPIES } from "../landing/copies";
 import { LandingProvider } from "../landing/LandingContext";
 import { storePlatform, type StorePlatform } from "../lib/stores";
 import landingStyles from "../landing/landing.css?url";
-import { PHOTOS } from "../landing/media";
 
-export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: landingStyles },
-  { rel: "preload", as: "image", href: PHOTOS.sandstoneWall },
-];
+export const links: LinksFunction = () => [{ rel: "stylesheet", href: landingStyles }];
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const locale = data?.locale ?? "en";
@@ -64,10 +59,12 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
 
 export default function Home(): React.ReactElement {
   const loaderData = useLoaderData<typeof loader>();
-  const auth = useAuth();
-  const signedIn = loaderData.signedIn || auth.isSignedIn === true;
   return (
-    <LandingProvider signedIn={signedIn} locale={loaderData.locale} platform={loaderData.platform}>
+    <LandingProvider
+      signedIn={loaderData.signedIn}
+      locale={loaderData.locale}
+      platform={loaderData.platform}
+    >
       <Nav />
       <Hero />
       <TabsStrip />
