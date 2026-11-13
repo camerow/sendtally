@@ -6,7 +6,7 @@ import { KIND_LOOK } from "@sendtally/features/training";
 import { ExpandableRow } from "../../../components/ExpandableRow";
 import { Icon } from "../../../components/Icon";
 import { CategoryRow } from "../../../training/components/CategoryRow";
-import { activityPath, withParams } from "../../../training/log/paths";
+import { activityPath } from "../../../training/log/paths";
 
 export type WorkoutsDoneProps = {
   groups: WorkoutGroupVM[];
@@ -26,7 +26,7 @@ function Sessions({ row }: { row: WorkoutDoneVM }): React.ReactElement {
         </Link>
       ))}
       <Link
-        to={withParams("/app", { segment: "training", workout: row.key })}
+        to={`/app?${new URLSearchParams({ segment: "training", workout: row.key })}`}
         className="workout-all"
       >
         {t("statistics.allInLog", { n: row.total })}
@@ -78,7 +78,6 @@ export function WorkoutsDone({
                 expanded={expanded}
                 onToggle={() => setOpen(expanded ? null : id)}
                 label={`${r.name}, ${r.meta}`}
-                indent={48}
                 body={<Sessions row={r} />}
               >
                 <CategoryRow kind={r.kind} name={r.name} meta={r.meta} showKind={g.kind === null} />
