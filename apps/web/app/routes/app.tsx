@@ -59,6 +59,8 @@ const FOCUSED_ROUTES = [
   "/app/sessions/live",
   "/app/workout/sets",
   "/app/workout/checklist",
+  "/app/workout/timer",
+  "/app/workout/intervals",
   "/app/workout/tally",
 ];
 
@@ -67,6 +69,8 @@ const LIVE_ROUTES = [
   LIVE_PATH,
   "/app/workout/sets",
   "/app/workout/checklist",
+  "/app/workout/timer",
+  "/app/workout/intervals",
   "/app/workout/tally",
 ];
 
