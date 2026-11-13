@@ -293,6 +293,16 @@ export async function saveExercise(
   return { exercise: exerciseOf(saved), taken: false };
 }
 
+/** Deleted when nothing uses it; archived when a workout or log names it; null when the user has no such exercise. */
+export async function deleteExercise(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<"deleted" | "archived" | null> {
+  const row = await repo.getExercise(db, userId, id);
+  return row === null ? null : repo.removeExercise(db, userId, row);
+}
+
 // The user's exercises: every name their workouts and logs use, with how each is
 // measured. Renaming or merging one rewrites those names everywhere.
 export const exercises = new Hono<AppEnv>()
@@ -324,10 +334,9 @@ export const exercises = new Hono<AppEnv>()
   // Deleted when nothing uses it; archived when a workout or log names it, keeping its history.
   .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
     const { id } = c.req.valid("param");
-    const userId = c.get("userId");
-    const row = await repo.getExercise(c.env.DB, userId, id);
-    if (row === null) return c.json({ error: "not found" }, 404);
-    return c.json({ removed: await repo.removeExercise(c.env.DB, userId, row) });
+    const removed = await deleteExercise(c.env.DB, c.get("userId"), id);
+    if (removed === null) return c.json({ error: "not found" }, 404);
+    return c.json({ removed });
   })
 
   // Every workout and log naming this one takes the other's name, and this one goes.

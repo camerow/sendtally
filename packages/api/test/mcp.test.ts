@@ -145,6 +145,7 @@ describe("connector", () => {
     posthogClient.current = client;
     try {
       await callTool("user_mcp", env, "list_sessions", { from: "2026-10-01", includeClimbs: true });
+      await callTool("user_mcp", env, "delete_block", { id: "winter-base-2026" });
     } finally {
       posthogClient.current = null;
     }
@@ -157,6 +158,7 @@ describe("connector", () => {
     const sent = JSON.stringify(capture.mock.calls);
     expect(sent).not.toContain("Crimp line");
     expect(sent).not.toContain("2026-10-01");
+    expect(sent).not.toContain("winter-base-2026");
     expect(toolCall?.properties).not.toHaveProperty("$mcp_parameters");
     expect(toolCall?.properties).not.toHaveProperty("$mcp_response");
   });
@@ -189,7 +191,7 @@ describe("connector", () => {
         { name: "", grade: { scale: "v", value: 5 }, kind: "attempt", tries: 4 },
       ])
     );
-    type Listed = { sessions: Array<{ startAt: string; climbs?: unknown[] }> };
+    type Listed = { sessions: Array<{ id: string; startAt: string; climbs?: unknown[] }> };
     const ranged = await toolJson<Listed>(user, "list_sessions", {
       from: "2026-10-01",
       to: "2026-10-01",
@@ -202,7 +204,7 @@ describe("connector", () => {
     const plain = await toolJson<Listed>(user, "list_sessions");
     expect(plain.sessions).toHaveLength(2);
     expect(plain.sessions[0]).not.toHaveProperty("climbs");
-    expect(plain.sessions[0]).not.toHaveProperty("id");
+    expect(plain.sessions[0]?.id).toMatch(/^manual-/);
   });
 
   it("summarises only the signed-in user's recent climbing", async () => {
@@ -278,8 +280,15 @@ describe("connector", () => {
     const library = await toolJson<Library>(user, "get_training_library");
     expect(library).toMatchObject({
       exercises: expect.arrayContaining([
-        { name: "Back squat", kind: "strength", measure: "repsWeight", eachSide: false },
         {
+          id: expect.any(String),
+          name: "Back squat",
+          kind: "strength",
+          measure: "repsWeight",
+          eachSide: false,
+        },
+        {
+          id: "pullUps",
           name: "Pull-ups",
           kind: "strength",
           measure: "repsWeight",
@@ -289,6 +298,7 @@ describe("connector", () => {
       ]),
       workouts: expect.arrayContaining([
         {
+          id: "w1",
           name: "Back squat",
           kind: "strength",
           focus: null,
@@ -297,6 +307,7 @@ describe("connector", () => {
           items: [{ exercise: "Back squat", doses: [{ sets: 5, reps: 5, weightKg: 100 }] }],
         },
         expect.objectContaining({
+          id: "rep73",
           name: "Repeaters 7:3",
           builtIn: true,
           items: [
@@ -310,11 +321,14 @@ describe("connector", () => {
     expect(await toolJson(user, "get_plan")).toEqual({
       blocks: [
         {
+          id: "b1",
           name: "Winter base",
           start: "2026-11-02",
           weeks: 6,
           workouts: [
             {
+              id: "m1",
+              workoutId: "w1",
               workout: "Back squat",
               start: "2026-11-02",
               weekdays: [1, 4],
@@ -454,7 +468,7 @@ describe("connector", () => {
       expect(
         await toolJson<Saved>(user, "save_exercise", { key: "pinch", ...fingerboard })
       ).toEqual({
-        exercise: { ...fingerboard, eachSide: false, builtIn: false },
+        exercise: { id: "pinch", ...fingerboard, eachSide: false, builtIn: false },
         existing: false,
       });
       expect(
@@ -469,6 +483,7 @@ describe("connector", () => {
         await toolJson<Saved>(user, "save_exercise", { name: "pull-ups", kind: "other" })
       ).toEqual({
         exercise: {
+          id: expect.any(String),
           name: "Pull-ups",
           kind: "strength",
           measure: "repsWeight",
@@ -596,6 +611,156 @@ describe("connector", () => {
         content: [{ text: expect.stringMatching(/Mystery/) }],
       });
       expect(await toolJson(user, "get_plan")).toEqual({ blocks: [], outsideBlocks: [] });
+    });
+
+    const errorOf = async (user: string, name: string, args: Record<string, unknown>) => {
+      const result = await callTool(user, env, name, args);
+      expect(result.isError).toBe(true);
+      return result.content[0]?.text ?? "";
+    };
+
+    const pullDay = {
+      kind: "strength",
+      name: "Pull day",
+      description: "",
+      minutes: 40,
+      targetRpe: 7,
+      items: [{ exercise: "Pull-ups", doses: [{ sets: 4, reps: 6 }] }],
+    };
+
+    type SavedWorkout = { workout: { id: string; minutes: number } };
+    type SavedBlock = { block: { id: string; start: string | null } };
+    type Plan = {
+      blocks: Array<{ id: string; start: string | null; workouts: Array<Record<string, unknown>> }>;
+    };
+
+    it("edits an exercise, a workout and a block in place, keeping their ids", async () => {
+      const user = "user_edit";
+      const made = await toolJson<{ exercise: { id: string } }>(user, "save_exercise", {
+        name: "Pinch block",
+        kind: "strength",
+      });
+      const edited = await toolJson<{ exercise: { id: string; name: string } }>(
+        user,
+        "save_exercise",
+        { id: made.exercise.id, name: "Pinch lifts", kind: "strength" }
+      );
+      expect(edited.exercise).toMatchObject({ id: made.exercise.id, name: "Pinch lifts" });
+      expect((await mine(user)).map((e) => e.name)).not.toContain("Pinch block");
+
+      const workout = await toolJson<SavedWorkout>(user, "save_workout", pullDay);
+      const rewritten = await toolJson<SavedWorkout>(user, "save_workout", {
+        ...pullDay,
+        id: workout.workout.id,
+        minutes: 60,
+      });
+      expect(rewritten.workout).toMatchObject({ id: workout.workout.id, minutes: 60 });
+
+      const block = await toolJson<SavedBlock>(user, "save_block", {
+        block: { name: "Winter base", start: "2026-11-02", weeks: 6 },
+        workouts: [
+          { workout: "Pull day", weekdays: [0] },
+          { workout: "Max hangs", weekdays: [2] },
+        ],
+      });
+      const before = (await toolJson<Plan>(user, "get_plan")).blocks[0]?.workouts[0]?.id;
+      await toolJson(user, "save_block", {
+        id: block.block.id,
+        block: { name: "Winter base", start: "2026-11-02", weeks: 8 },
+        workouts: [{ workout: "Pull day", weekdays: [0, 3] }],
+      });
+      const plan = await toolJson<Plan>(user, "get_plan");
+      expect(plan.blocks).toMatchObject([
+        {
+          id: block.block.id,
+          weeks: 8,
+          workouts: [{ id: before, workout: "Pull day", weekdays: [0, 3] }],
+        },
+      ]);
+      expect(
+        await errorOf(user + "_other", "save_block", {
+          id: block.block.id,
+          block: { name: "Mine now", start: null, weeks: 4 },
+          workouts: [{ workout: "Max hangs", weekdays: [0] }],
+        })
+      ).toMatch(/no block/);
+    });
+
+    it("schedules a template in place rather than leaving it beside a dated block", async () => {
+      const user = "user_template";
+      const template = await toolJson<SavedBlock>(user, "save_block", {
+        block: { name: "Winter base", start: null, weeks: 6 },
+        workouts: [{ workout: "Max hangs", weekdays: [0] }],
+      });
+      await toolJson(user, "save_block", {
+        id: template.block.id,
+        block: { name: "Winter base", start: "2026-11-02", weeks: 6 },
+        workouts: [{ workout: "Max hangs", weekdays: [0] }],
+      });
+      expect((await toolJson<Plan>(user, "get_plan")).blocks).toMatchObject([
+        { id: template.block.id, start: "2026-11-02", workouts: [{ start: "2026-11-02" }] },
+      ]);
+    });
+
+    it("refuses to edit or delete a built-in", async () => {
+      const user = "user_built_in";
+      expect(
+        await errorOf(user, "save_exercise", { id: "pullUps", name: "Pull-ups", kind: "strength" })
+      ).toMatch(/built-in exercise.*new name/);
+      expect(await errorOf(user, "save_workout", { ...pullDay, id: "max10" })).toMatch(
+        /built-in workout/
+      );
+      await toolJson(user, "save_block", {
+        block: { name: "Winter base", start: "2026-11-02", weeks: 6 },
+        workouts: [{ workout: "Max hangs", weekdays: [0] }],
+      });
+      expect(await errorOf(user, "delete_workout", { id: "max10" })).toMatch(/built-in workout/);
+      expect(await errorOf(user, "delete_exercise", { id: "pullUps" })).toMatch(/built-in/);
+      expect((await toolJson<Plan>(user, "get_plan")).blocks[0]?.workouts).toHaveLength(1);
+    });
+
+    it("deletes a block, a workout and an exercise, archiving an exercise a workout uses", async () => {
+      const user = "user_delete";
+      const workout = await toolJson<SavedWorkout>(user, "save_workout", pullDay);
+      const block = await toolJson<SavedBlock>(user, "save_block", {
+        block: { name: "Winter base", start: "2026-11-02", weeks: 6 },
+        workouts: [{ workout: "Pull day", weekdays: [0] }],
+      });
+      const loose = await toolJson<{ exercise: { id: string } }>(user, "save_exercise", {
+        name: "Towel hangs",
+        kind: "strength",
+      });
+      const pullUps = (
+        await toolJson<{ exercises: Array<{ id: string; name: string; builtIn?: boolean }> }>(
+          user,
+          "get_training_library"
+        )
+      ).exercises.find((e) => e.name === "Pull-ups" && !e.builtIn);
+
+      expect(await errorOf(user + "_other", "delete_block", { id: block.block.id })).toMatch(
+        /no block/
+      );
+      expect(await errorOf(user + "_other", "delete_workout", { id: workout.workout.id })).toMatch(
+        /no workout/
+      );
+      expect(await errorOf(user + "_other", "delete_exercise", { id: loose.exercise.id })).toMatch(
+        /no exercise/
+      );
+
+      expect(await toolJson(user, "delete_exercise", { id: pullUps?.id })).toEqual({
+        removed: "archived",
+      });
+      expect(await toolJson(user, "delete_exercise", { id: loose.exercise.id })).toEqual({
+        removed: "deleted",
+      });
+      expect(await toolJson(user, "delete_block", { id: block.block.id })).toEqual({
+        deleted: true,
+      });
+      expect(await toolJson(user, "get_plan")).toEqual({ blocks: [], outsideBlocks: [] });
+      expect(await toolJson(user, "delete_workout", { id: workout.workout.id })).toEqual({
+        deleted: true,
+      });
+      expect(await mine(user)).toEqual([]);
     });
   });
 });
