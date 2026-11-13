@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { Logo } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
 import { queries, useQuery } from "@sendtally/features/query";
-import { defaultRange, shownRange, yearsOf, type TrendRange } from "@sendtally/features/trends";
+import { defaultRange, shownRange, statsYears, type TrendRange } from "@sendtally/features/trends";
 import { AccountButton } from "../../components/AccountButton";
 import { Segmented } from "../../components/Segmented";
 import { useAppApi } from "../../lib/useAppApi";
@@ -23,14 +23,7 @@ export function StatsView({ member }: { member: boolean }): React.ReactElement {
   const range = shownRange(member, picked ?? defaultRange(member));
   const { state } = useQuery(queries.sessionsWithClimbs(useAppApi()));
   const years = React.useMemo(
-    () =>
-      state.status !== "ready"
-        ? []
-        : yearsOf([
-            ...state.data.sessions.map((s) => s.start_at),
-            ...state.data.hangSessions.map((h) => h.date),
-            ...state.data.activities.map((a) => a.date),
-          ]),
+    () => (state.status === "ready" ? statsYears(state.data) : []),
     [state]
   );
   return (

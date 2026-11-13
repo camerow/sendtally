@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, useLocation } from "react-router";
 import type { StravaState } from "@sendtally/features/activities";
 import { ToastProvider } from "../../components/Toast";
 import { SessionDetail } from "./SessionDetail";
@@ -18,7 +18,14 @@ let strava: StravaState | null = null;
 let editable = true;
 
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({ deleteLoggedSession }) }));
-vi.mock("../../lib/useLiveSessionStorage", () => ({ useLiveSessionStorage: () => ({}) }));
+const liveStorage = vi.hoisted(() => ({
+  read: () => null,
+  write: () => true,
+  remove: () => undefined,
+  subscribe: () => () => undefined,
+  changed: () => undefined,
+}));
+vi.mock("../../lib/useLiveSessionStorage", () => ({ useLiveSessionStorage: () => liveStorage }));
 vi.mock("@sendtally/features/session-detail", () => ({
   CLIMB_SORTS: ["order"],
   climbSortLabel: () => "Order",
@@ -74,13 +81,18 @@ afterEach(() => {
   container.remove();
 });
 
+function Where(): React.ReactElement {
+  return <span data-where>{useLocation().pathname}</span>;
+}
+
 function render(): void {
   act(() =>
     root.render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={["/app/sessions/manual-1"]}>
         <ToastProvider>
           <SessionDetail fingerprint="manual-1" />
         </ToastProvider>
+        <Where />
       </MemoryRouter>
     )
   );
@@ -135,5 +147,7 @@ describe("SessionDetail", () => {
     );
     await act(async () => confirm?.click());
     expect(deleteLoggedSession).toHaveBeenCalledWith("manual-1");
+    expect(container.querySelector("[data-where]")?.textContent).toBe("/app");
+    expect(container.textContent).not.toContain("Could not delete");
   });
 });

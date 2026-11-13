@@ -22,8 +22,6 @@ import { LoadState } from "../../training/data/LoadState";
 import { SessionClimbTable } from "./SessionClimbTable";
 import { SessionJournal } from "./SessionJournal";
 
-type Noting = { id: string; day: string; note: string; entry: JournalEntry } | "new" | null;
-
 /** One logged climbing session: what, where and how hard, its Strava state, the pyramid, its climbs and notes. */
 export function SessionDetail({ fingerprint }: { fingerprint: string }): React.ReactElement {
   const api = useAppApi();
@@ -31,7 +29,14 @@ export function SessionDetail({ fingerprint }: { fingerprint: string }): React.R
   const navigate = useNavigate();
   const toast = useToast();
   const feature = useSessionDetail(api, fingerprint);
-  const [noting, setNoting] = React.useState<Noting>(null);
+  const [noting, setNoting] = React.useState<JournalEntry | "new" | null>(null);
+  const note = React.useMemo(
+    () =>
+      noting === null || noting === "new"
+        ? noting
+        : { id: noting.id, day: noting.occurred_at, note: noting.body },
+    [noting]
+  );
   const [deleting, setDeleting] = React.useState(false);
   const { state, sort, setSort } = feature;
 
@@ -115,22 +120,12 @@ export function SessionDetail({ fingerprint }: { fingerprint: string }): React.R
       )}
 
       <SessionClimbTable climbs={climbs} climbAreas={vm.climbAreas} sort={sort} onSort={setSort} />
-      <SessionJournal
-        entries={entries}
-        onAdd={() => setNoting("new")}
-        onOpen={(entry) =>
-          setNoting({ id: entry.id, day: entry.occurred_at, note: entry.body, entry })
-        }
-      />
+      <SessionJournal entries={entries} onAdd={() => setNoting("new")} onOpen={setNoting} />
       <AddNoteSheet
-        note={noting}
+        note={note}
         day={vm.startDay}
         onSave={(day, body) =>
-          void feature.saveNote(
-            day,
-            body,
-            noting === "new" || noting === null ? undefined : noting.entry
-          )
+          void feature.saveNote(day, body, noting === "new" || noting === null ? undefined : noting)
         }
         onDelete={(id) => void feature.deleteNote(id)}
         onClose={() => setNoting(null)}

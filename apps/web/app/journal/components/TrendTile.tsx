@@ -1,6 +1,4 @@
 import React from "react";
-import { Link, useNavigate } from "react-router";
-import { t } from "@sendtally/features/i18n";
 import { thinned, useTween, type TrendPointVM, type TrendTileVM } from "@sendtally/features/trends";
 import { seriesColour } from "./series";
 
@@ -9,23 +7,11 @@ const VALUE_BAND = 16;
 const pointTotal = (p: TrendPointVM): number | null =>
   p.a === null && p.b === null ? null : (p.a ?? 0) + (p.b ?? 0);
 
-export type TrendTileProps = {
-  tile: TrendTileVM;
-  /** Where the details link goes; a preview swaps it for the membership prompt. */
-  onLockedLink?: () => void;
-  /** Opens the enlarged chart; a tile without a page of its own gets one this way. */
-  onExpand?: () => void;
-  plotHeight?: number;
-};
+const PLOT_HEIGHT = 144;
 
-export function TrendTile({
-  tile,
-  onLockedLink,
-  onExpand,
-  plotHeight = 144,
-}: TrendTileProps): React.ReactElement {
-  const navigate = useNavigate();
-  const barHeight = plotHeight - VALUE_BAND;
+/** A trip's pyramid as a chart, its total read out and each bar's on hover. */
+export function TrendTile({ tile }: { tile: TrendTileVM }): React.ReactElement {
+  const barHeight = PLOT_HEIGHT - VALUE_BAND;
   const [hover, setHover] = React.useState<number | null>(null);
   const hit = hover !== null && hover < tile.points.length ? hover : null;
   const point = hit === null ? null : tile.points[hit]!;
@@ -35,44 +21,13 @@ export function TrendTile({
   const y = (v: number): number => ((v - lo) / (hi - lo || 1)) * barHeight;
   const axisShown = thinned(tile.points);
   const n = Math.max(1, tile.points.length);
-  const stacked = tile.chart === "stack";
   const [first, second] = tile.series;
   const clear = (): void => setHover(null);
-  const open = onLockedLink ?? (tile.link !== null ? () => void navigate("/app/stats") : onExpand);
 
   return (
-    <div
-      className="trend-tile"
-      data-hover={hit !== null}
-      data-pressable={open !== undefined}
-      onMouseLeave={clear}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" && e.target === e.currentTarget) open?.();
-      }}
-      tabIndex={open !== undefined && tile.link === null ? 0 : undefined}
-      onClick={(e) => {
-        if (open === undefined || (e.target as Element).closest(".trend-tile-link")) return;
-        open();
-      }}
-    >
+    <div className="trend-tile" data-hover={hit !== null} onMouseLeave={clear}>
       <div className="trend-tile-top">
         <span className="trend-tile-title">{tile.title}</span>
-        {tile.link !== null && (
-          <Link
-            to="/app/stats"
-            className="trend-tile-link"
-            onClick={
-              onLockedLink === undefined
-                ? undefined
-                : (e) => {
-                    e.preventDefault();
-                    onLockedLink();
-                  }
-            }
-          >
-            {t("trends.details")}
-          </Link>
-        )}
       </div>
       <div className="trend-headline-row">
         <span className="trend-headline" aria-live="polite">
@@ -92,7 +47,7 @@ export function TrendTile({
           ))}
       </div>
       <div className="trend-chart">
-        <div className="trend-yaxis" style={{ height: plotHeight }}>
+        <div className="trend-yaxis" style={{ height: PLOT_HEIGHT }}>
           {tile.ticks.map((tick, i) => (
             <span key={i} className="trend-tick" style={{ top: VALUE_BAND + (barHeight * i) / 2 }}>
               {tick}
@@ -100,7 +55,7 @@ export function TrendTile({
           ))}
         </div>
         <div className="trend-plot-wrap">
-          <div className="trend-plot" data-hover={hit !== null} style={{ height: plotHeight }}>
+          <div className="trend-plot" data-hover={hit !== null} style={{ height: PLOT_HEIGHT }}>
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
@@ -108,50 +63,43 @@ export function TrendTile({
                 style={{ top: VALUE_BAND + (barHeight * i) / 2 }}
               />
             ))}
-            {tile.chart === "line" ? (
-              <LineChart tile={tile} hit={hit} y={y} n={n} height={barHeight} />
-            ) : (
-              <div className="trend-bars" style={{ gap: tile.points.length > 16 ? 3 : 6 }}>
-                {tile.points.map((p, i) => {
-                  const a = p.a ?? 0;
-                  const b = stacked ? (p.b ?? 0) : 0;
-                  const empty = a + b <= lo;
-                  const hA = empty ? 3 : a <= 0 ? 0 : Math.max(2, y(a));
-                  const hB = b <= 0 ? 0 : Math.max(2, y(lo + b));
-                  return (
-                    <div key={i} className="trend-col" data-hit={hit === i}>
-                      {hB > 0 && (
-                        <div
-                          className="trend-seg trend-seg-top"
-                          style={{ height: hB, background: seriesColour(second?.key ?? "primary") }}
-                        />
-                      )}
-                      {hA > 0 && hB > 0 && <div className="trend-seg" style={{ height: 2 }} />}
-                      {hA > 0 && (
-                        <div
-                          className={hB > 0 ? "trend-seg" : "trend-seg trend-seg-top"}
-                          style={{
-                            height: hA,
-                            background: empty
-                              ? "var(--data-bar-empty)"
-                              : seriesColour(first?.key ?? "primary"),
-                          }}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <div className="trend-bars" style={{ gap: tile.points.length > 16 ? 3 : 6 }}>
+              {tile.points.map((p, i) => {
+                const a = p.a ?? 0;
+                const b = p.b ?? 0;
+                const empty = a + b <= lo;
+                const hA = empty ? 3 : a <= 0 ? 0 : Math.max(2, y(a));
+                const hB = b <= 0 ? 0 : Math.max(2, y(lo + b));
+                return (
+                  <div key={i} className="trend-col" data-hit={hit === i}>
+                    {hB > 0 && (
+                      <div
+                        className="trend-seg trend-seg-top"
+                        style={{ height: hB, background: seriesColour(second?.key ?? "primary") }}
+                      />
+                    )}
+                    {hA > 0 && hB > 0 && <div className="trend-seg" style={{ height: 2 }} />}
+                    {hA > 0 && (
+                      <div
+                        className={hB > 0 ? "trend-seg" : "trend-seg trend-seg-top"}
+                        style={{
+                          height: hA,
+                          background: empty
+                            ? "var(--data-bar-empty)"
+                            : seriesColour(first?.key ?? "primary"),
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
             {point !== null && hit !== null && pointTotal(point) !== null && (
               <span
                 className="trend-col-value"
                 style={{
                   left: `${((hit + 0.5) / n) * 100}%`,
-                  top:
-                    plotHeight -
-                    Math.max(3, y(pointTotal(point)!)) -
-                    (tile.chart === "line" ? 10 : 0),
+                  top: PLOT_HEIGHT - Math.max(3, y(pointTotal(point)!)),
                 }}
               >
                 {tile.format(pointTotal(point)!)}
@@ -185,62 +133,5 @@ export function TrendTile({
         </div>
       </div>
     </div>
-  );
-}
-
-function LineChart({
-  tile,
-  hit,
-  y,
-  n,
-  height,
-}: {
-  tile: TrendTileVM;
-  hit: number | null;
-  y: (v: number) => number;
-  n: number;
-  height: number;
-}): React.ReactElement {
-  const colour = seriesColour(tile.series[0]?.key ?? "primary");
-  const at = tile.points.map((p, i) =>
-    p.a === null ? null : { x: ((i + 0.5) / n) * 100, y: height - y(p.a) }
-  );
-  let d = "";
-  let pen = false;
-  for (const p of at) {
-    if (p === null) continue;
-    d += `${pen ? "L" : "M"}${p.x.toFixed(2)} ${p.y.toFixed(1)} `;
-    pen = true;
-  }
-  return (
-    <>
-      <svg
-        className="trend-line"
-        viewBox={`0 0 100 ${height}`}
-        preserveAspectRatio="none"
-        aria-hidden="true"
-        style={{ height }}
-      >
-        <path
-          d={d}
-          fill="none"
-          stroke={colour}
-          strokeWidth={2}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
-        />
-      </svg>
-      {at.map((p, i) =>
-        p === null ? null : (
-          <span
-            key={i}
-            className="trend-dot"
-            data-hit={hit === i}
-            style={{ left: `${p.x}%`, top: VALUE_BAND + p.y, background: colour }}
-          />
-        )
-      )}
-    </>
   );
 }

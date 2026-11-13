@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { t } from "@sendtally/features/i18n";
 import { Button } from "../components/Button";
-import type { AddFlow } from "./flowParams";
+import type { AddFlow } from "@sendtally/features/training";
 import { useAddTo } from "./useAddTo";
 
 export type AddButtonProps = { flow: AddFlow; workoutId: string };

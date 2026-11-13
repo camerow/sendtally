@@ -143,6 +143,7 @@
 }
 
 .expandable-row-body {
+  padding-left: 64px;
   border-bottom: 1px solid var(--line-on-light-soft);
 }
 
