@@ -5,6 +5,7 @@ import type { Activity } from "@sendtally/api-client";
 import { activityAt, activityEffortLabel, activityMetaLabel } from "@sendtally/features/activities";
 import { sessionDay } from "@sendtally/features/sessions";
 import { Icon } from "../../components/Icon";
+import { CategoryMark } from "../../training/components/CategoryMark";
 import { DayColumn } from "./DayColumn";
 import { rowClass } from "./rowClass";
 
@@ -32,6 +33,7 @@ export function ActivityRow({
       className={rowClass(inset, divider, true)}
     >
       <DayColumn weekday={weekday} day={day} />
+      <CategoryMark kind={activity.kind} size={28} />
       <span className="log-row-main">
         <span className="log-row-title">
           <span className="log-row-title-text">{activity.title}</span>

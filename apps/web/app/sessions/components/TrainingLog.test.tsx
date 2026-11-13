@@ -59,6 +59,11 @@ const ITEMS = logSegmentItems(
   "training"
 );
 
+vi.mock("../../training/library-detail/LogWorkoutSheet", () => ({
+  LogWorkoutSheet: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="log-workout-sheet" /> : null,
+}));
+
 let container: HTMLDivElement;
 let root: Root;
 const onClear = vi.fn();
@@ -115,11 +120,14 @@ describe("TrainingLog", () => {
     expect(onClear).toHaveBeenCalled();
   });
 
-  it("shows the empty state with Journal and Injury before anything is logged", () => {
+  it("shows the empty state with Log workout, Journal and Injury before anything is logged", () => {
     mount(null, []);
     const hrefs = Array.from(container.querySelectorAll(".log-empty a")).map(
       (a) => a.getAttribute("href")?.split("&")[0]
     );
     expect(hrefs).toEqual(["/app/journal/new?kind=journal", "/app/journal/new?kind=injury"]);
+    expect(container.querySelector('[data-testid="log-workout-sheet"]')).toBeNull();
+    act(() => button("Log a workout").click());
+    expect(container.querySelector('[data-testid="log-workout-sheet"]')).not.toBeNull();
   });
 });

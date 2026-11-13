@@ -12,6 +12,7 @@ import {
 } from "@sendtally/features/sessions";
 import { StravaMark } from "../../components/StravaMark";
 import { Icon } from "../../components/Icon";
+import { CategoryMark } from "../../training/components/CategoryMark";
 import { DayColumn } from "./DayColumn";
 import { rowClass } from "./rowClass";
 
@@ -48,6 +49,7 @@ export function HangRow({
       className={rowClass(inset, divider, true)}
     >
       <DayColumn weekday={weekday} day={day} />
+      <CategoryMark kind={"hangboard"} size={28} />
       <span className="log-row-main">
         <span className="log-row-title">
           <span className="log-row-title-text">{title}</span>

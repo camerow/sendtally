@@ -675,3 +675,17 @@
   color: var(--bs-azure-ink);
   cursor: pointer;
 }
+
+.log-workout-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
+}
+
+.log-workout-shelf {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
