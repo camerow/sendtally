@@ -2,10 +2,11 @@ import { useClerk } from "@clerk/react-router";
 import { isClerkAPIResponseError } from "@clerk/react-router/errors";
 import React from "react";
 import { useNavigate } from "react-router";
-import type { EmailCodeFactor, SignInSecondFactor } from "@clerk/types";
+import type { EmailCodeFactor } from "@clerk/types";
 import { AuthShell, StepBody, StepCard, StepTitle } from "./AuthShell";
 import { adsConversion, capture } from "../../lib/analytics";
 import { PRIVACY_PATH, TERMS_PATH } from "../../legal/constants";
+import { SSO_RETURN_PARAM } from "../ssoReturn";
 import type { AuthIntent } from "../types";
 import { t } from "@sendtally/features/i18n";
 
@@ -123,6 +124,8 @@ function clerkErrorMessage(err: unknown): string {
 type CodeMode = AuthIntent | "second-factor";
 type Phase = { name: "email" } | { name: "code"; mode: CodeMode } | { name: "password" };
 
+type SignIn = NonNullable<ReturnType<typeof useClerk>["client"]>["signIn"];
+
 function needsSecondFactor(status: string | null): boolean {
   return status === "needs_second_factor" || status === "needs_client_trust";
 }
@@ -228,32 +231,54 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     }
   }
 
-  // Clerk answers a challenged credential with "needs_second_factor" instead of throwing,
-  // so treating every non-complete status as a failure would tell someone with a correct
-  // password that it was wrong. Device Trust raises this on any unrecognised device.
-  async function startSecondFactor(factors: SignInSecondFactor[] | null): Promise<boolean> {
-    if (!clerk.loaded || clerk.client === undefined) return false;
-    const factor = factors?.find((f): f is EmailCodeFactor => f.strategy === "email_code");
-    if (factor === undefined) return false;
-    await clerk.client.signIn.prepareSecondFactor({
-      strategy: "email_code",
-      emailAddressId: factor.emailAddressId,
-    });
-    capture("auth_code_sent", { mode: "second-factor" });
+  // Clerk answers a challenged credential with a second-factor status instead of throwing.
+  // This form finishes an email code; any other step (authenticator app, SMS) goes to
+  // Clerk's hosted page for it. A code already sent is reused unless the user asks again.
+  const secondFactorStarted = React.useRef(false);
+  async function startSecondFactor(signIn: SignIn, resend = false): Promise<void> {
+    secondFactorStarted.current = true;
+    const factor = signIn.supportedSecondFactors?.find(
+      (f): f is EmailCodeFactor => f.strategy === "email_code"
+    );
+    if (factor === undefined) {
+      const step = signIn.status === "needs_second_factor" ? "factor-two" : "client-trust";
+      await clerk.navigate(`${clerk.buildSignInUrl()}#/${step}`);
+      return;
+    }
+    const sent = signIn.secondFactorVerification.strategy === "email_code";
+    if (resend || !sent) {
+      await signIn.prepareSecondFactor({
+        strategy: "email_code",
+        emailAddressId: factor.emailAddressId,
+      });
+      capture("auth_code_sent", { mode: "second-factor" });
+    }
     setEmail((current) => current || factor.safeIdentifier);
     setPhase({ name: "code", mode: "second-factor" });
-    return true;
   }
 
-  const resumed = React.useRef(false);
-  React.useEffect(() => {
-    const signIn = clerk.loaded ? clerk.client?.signIn : undefined;
-    if (resumed.current || signIn === undefined || !needsSecondFactor(signIn.status)) return;
-    resumed.current = true;
-    startSecondFactor(signIn.supportedSecondFactors).catch((err: unknown) =>
-      setError(clerkErrorMessage(err))
-    );
+  const fromCallback =
+    clerk.loaded &&
+    new URLSearchParams(window.location.search).has(SSO_RETURN_PARAM) &&
+    clerk.client !== undefined;
+  const resumeSecondFactor = React.useEffectEvent(() => {
+    const signIn = clerk.client?.signIn;
+    if (!fromCallback || signIn === undefined || secondFactorStarted.current) return;
+    if (!needsSecondFactor(signIn.status)) return;
+    startSecondFactor(signIn).catch((err: unknown) => setError(clerkErrorMessage(err)));
   });
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- the pending sign-in only exists once Clerk loads in the browser
+  React.useEffect(() => resumeSecondFactor(), [clerk.loaded]);
+  const callbackFailure = fromCallback
+    ? (clerk.client?.signIn.firstFactorVerification.error ??
+      clerk.client?.signUp.verifications.externalAccount.error ??
+      null)
+    : null;
+  const shownError =
+    error ??
+    (phase.name === "email" && callbackFailure !== null
+      ? (callbackFailure.longMessage ?? callbackFailure.message)
+      : null);
 
   async function signInWithPassword(): Promise<void> {
     if (!clerk.loaded || clerk.client === undefined || phase.name !== "password") return;
@@ -274,10 +299,8 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
         await navigate("/app");
         return;
       }
-      if (
-        needsSecondFactor(result.status) &&
-        (await startSecondFactor(result.supportedSecondFactors))
-      ) {
+      if (needsSecondFactor(result.status)) {
+        await startSecondFactor(result);
         setBusy(false);
         return;
       }
@@ -379,7 +402,10 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           code: code.trim(),
         });
         if (result.status === "complete" && result.createdSessionId !== null) {
-          capture("signin_completed", { method: "password_second_factor" });
+          const firstFactor = result.firstFactorVerification.strategy ?? "unknown";
+          capture("signin_completed", {
+            method: `${firstFactor.replace(/^oauth_/, "")}_second_factor`,
+          });
           await clerk.setActive({ session: result.createdSessionId });
           await navigate("/app");
           return;
@@ -400,10 +426,8 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           await navigate("/app");
           return;
         }
-        if (
-          needsSecondFactor(result.status) &&
-          (await startSecondFactor(result.supportedSecondFactors))
-        ) {
+        if (needsSecondFactor(result.status)) {
+          await startSecondFactor(result);
           setCode("");
           setBusy(false);
           return;
@@ -459,11 +483,8 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     setError(null);
     setBusy(true);
     try {
-      const resent =
-        phase.mode === "second-factor"
-          ? await startSecondFactor(clerk.client.signIn.supportedSecondFactors)
-          : await prepareEmailCode();
-      if (!resent) setError(t("auth.resendFailed"));
+      if (phase.mode === "second-factor") await startSecondFactor(clerk.client.signIn, true);
+      else if (!(await prepareEmailCode())) setError(t("auth.resendFailed"));
     } catch (err) {
       setError(clerkErrorMessage(err));
     }
@@ -494,7 +515,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
               }}
               style={inputStyle}
             />
-            {error !== null && <span style={errorText}>{error}</span>}
+            {shownError !== null && <span style={errorText}>{shownError}</span>}
             <button
               onClick={() => void signInWithPassword()}
               disabled={busy}
@@ -556,7 +577,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
               }}
               style={{ ...inputStyle, fontFamily: "var(--font-mono)", letterSpacing: "0.2em" }}
             />
-            {error !== null && <span style={errorText}>{error}</span>}
+            {shownError !== null && <span style={errorText}>{shownError}</span>}
             <button
               onClick={() => void verifyCode()}
               disabled={busy}
@@ -612,7 +633,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
             }}
             style={inputStyle}
           />
-          {error !== null && <span style={errorText}>{error}</span>}
+          {shownError !== null && <span style={errorText}>{shownError}</span>}
           <button
             onClick={() => void sendCode()}
             disabled={busy}

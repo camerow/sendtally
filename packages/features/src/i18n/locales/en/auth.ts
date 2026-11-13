@@ -7,6 +7,8 @@ export const auth = {
   "auth.signUpHeading": "Create your account.",
   "auth.signUpBody":
     "Enter your email to get started. Logging sessions and posting them to Strava are free.",
+  "auth.secondFactorOnWeb":
+    "This account needs another sign-in step the app can't do yet. Sign in at sendtally.com to finish.",
   "auth.googleIncomplete": "Google sign-in didn't complete. Try again.",
   "auth.invalidEmail": "Enter a valid email address.",
   "auth.emailCodeDisabled": "Email code sign-in is not enabled for this account.",

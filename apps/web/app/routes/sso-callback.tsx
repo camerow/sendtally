@@ -1,6 +1,7 @@
 import { AuthenticateWithRedirectCallback } from "@clerk/react-router";
 import React from "react";
 import { AuthShell, StepBody, StepCard, StepTitle } from "../auth/components/AuthShell";
+import { SSO_RETURN_PARAM } from "../auth/ssoReturn";
 import { pageMeta } from "../lib/seo";
 import { t } from "@sendtally/features/i18n";
 
@@ -15,8 +16,9 @@ export default function SsoCallback(): React.ReactElement {
         <StepTitle>{t("auth.verifyingTitle")}</StepTitle>
         <StepBody>{t("auth.ssoBody")}</StepBody>
         <AuthenticateWithRedirectCallback
-          signInUrl="/sign-in"
-          secondFactorUrl="/sign-in"
+          signInUrl={`/sign-in?${SSO_RETURN_PARAM}`}
+          secondFactorUrl={`/sign-in?${SSO_RETURN_PARAM}`}
+          signUpUrl={`/sign-up?${SSO_RETURN_PARAM}`}
           signInForceRedirectUrl="/app"
           signUpForceRedirectUrl="/app"
         />

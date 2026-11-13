@@ -11,6 +11,7 @@ import type { Phase, SignInFlow, SignInFlowOptions } from "./types";
 WebBrowser.maybeCompleteAuthSession();
 
 type SecondFactor = { strategy: string; emailAddressId?: string; safeIdentifier?: string };
+type SecondFactorAttempt = { status: string | null; supportedSecondFactors: SecondFactor[] | null };
 
 function needsSecondFactor(status: string | null): boolean {
   return status === "needs_second_factor" || status === "needs_client_trust";
@@ -58,14 +59,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
         onSignedIn(oauthOutcome(result));
         return;
       }
-      if (
-        result.signIn !== undefined &&
-        needsSecondFactor(result.signIn.status) &&
-        (await startSecondFactor(result.signIn.supportedSecondFactors))
-      ) {
-        setBusy(false);
-        return;
-      }
+      if (await continueSecondFactor(result.signIn)) return;
       if (await adoptExistingSession()) return;
       setError(t("auth.googleIncomplete"));
     } catch (err) {
@@ -85,6 +79,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
         onSignedIn(oauthOutcome(result));
         return;
       }
+      if (await continueSecondFactor(result.signIn)) return;
     } catch (err) {
       setError(errorMessage(err));
     }
@@ -103,6 +98,18 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
     });
     setEmail((current) => current || (factor.safeIdentifier ?? ""));
     setPhase({ name: "code", mode: "second-factor" });
+    return true;
+  }
+
+  // The app finishes an emailed code; any other second step (authenticator app, SMS) can
+  // only be finished on the web, so say so rather than calling the credential wrong.
+  async function continueSecondFactor(attempt: SecondFactorAttempt | undefined): Promise<boolean> {
+    if (attempt === undefined || !needsSecondFactor(attempt.status)) return false;
+    if (!(await startSecondFactor(attempt.supportedSecondFactors))) {
+      setError(t("auth.secondFactorOnWeb"));
+    }
+    setCode("");
+    setBusy(false);
     return true;
   }
 
@@ -206,14 +213,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
           onSignedIn("signed-in");
           return;
         }
-        if (
-          needsSecondFactor(result.status) &&
-          (await startSecondFactor(result.supportedSecondFactors))
-        ) {
-          setCode("");
-          setBusy(false);
-          return;
-        }
+        if (await continueSecondFactor(result)) return;
       } else {
         const result = await signUp.attemptEmailAddressVerification({ code: code.trim() });
         if (result.status === "complete" && result.createdSessionId !== null) {
@@ -244,13 +244,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
         onSignedIn("signed-in");
         return;
       }
-      if (
-        needsSecondFactor(result.status) &&
-        (await startSecondFactor(result.supportedSecondFactors))
-      ) {
-        setBusy(false);
-        return;
-      }
+      if (await continueSecondFactor(result)) return;
       setError(t("auth.wrongPassword"));
     } catch (err) {
       setError(errorMessage(err));
