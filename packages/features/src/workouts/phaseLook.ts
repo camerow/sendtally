@@ -1,5 +1,5 @@
 import { colors } from "@sendtally/design/tokens";
-import { HANG_ON_DARK, ON_DARK_SOFT, REST_ON_DARK } from "../components/onDark";
+import { HANG_ON_DARK, ON_DARK_SOFT, REST_ON_DARK } from "./onDark";
 
 /** `mark` draws the ring and bars; `fill` backs the primary button and tints labels, AA with gunmetal ink. */
 export type PhaseLook = { mark: string; fill: string };
