@@ -123,8 +123,6 @@ function clerkErrorMessage(err: unknown): string {
 type CodeMode = AuthIntent | "second-factor";
 type Phase = { name: "email" } | { name: "code"; mode: CodeMode } | { name: "password" };
 
-// Device Trust answers a password from an unrecognised device with "needs_client_trust",
-// MFA with "needs_second_factor"; both finish with an emailed second-factor code.
 function needsSecondFactor(status: string | null): boolean {
   return status === "needs_second_factor" || status === "needs_client_trust";
 }
@@ -247,8 +245,6 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     return true;
   }
 
-  // The Google callback sends a sign-in that still needs a second factor here rather than
-  // to Clerk's hosted pages, so the code is requested and entered in this form.
   const resumed = React.useRef(false);
   React.useEffect(() => {
     const signIn = clerk.loaded ? clerk.client?.signIn : undefined;

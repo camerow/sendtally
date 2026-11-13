@@ -12,8 +12,6 @@ WebBrowser.maybeCompleteAuthSession();
 
 type SecondFactor = { strategy: string; emailAddressId?: string; safeIdentifier?: string };
 
-// Device Trust answers a password from an unrecognised device with "needs_client_trust",
-// MFA with "needs_second_factor"; both finish with an emailed second-factor code.
 function needsSecondFactor(status: string | null): boolean {
   return status === "needs_second_factor" || status === "needs_client_trust";
 }
