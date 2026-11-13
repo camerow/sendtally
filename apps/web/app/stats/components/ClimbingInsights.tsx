@@ -1,17 +1,7 @@
 import React from "react";
-import {
-  CLIMB_PLACES,
-  climbingInsightsVM,
-  daysClimbed,
-  mainDiscipline,
-  useClimbs,
-  workoutClimbSessions,
-  type ClimbPlaceFilter,
-} from "@sendtally/features/climbs";
-import { useGyms } from "@sendtally/features/gyms";
+import { CLIMB_PLACES, climbPlaceLabel, useClimbingInsights } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
-import { disciplineLabel, type Discipline } from "@sendtally/features/log-session";
-import { useGradeScalePrefs } from "@sendtally/features/settings";
+import { disciplineLabel } from "@sendtally/features/log-session";
 import type { TrendRange } from "@sendtally/features/trends";
 import { GradeBadge } from "../../climbs/components/GradeBadge";
 import { Pyramid } from "../../components/Pyramid";
@@ -22,47 +12,15 @@ import { ClimbsByGrade } from "./ClimbsByGrade";
 import { CountTile } from "./CountTile";
 import { DaysClimbing } from "./DaysClimbing";
 
-const PLACE_LABELS: Record<ClimbPlaceFilter, () => string> = {
-  all: () => t("trends.scopeAll"),
-  outdoor: () => t("trends.outside"),
-  indoor: () => t("climbs.gym"),
-};
-
 /**
  * The pyramid of what was sent, the climbs at each grade, the average send, sends, flashes and
  * projects, the days climbed and the top send, counting climbs logged in workouts too.
  */
 export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactElement {
-  const api = useAppApi();
-  const { state } = useClimbs(api);
-  const { scales } = useGradeScalePrefs(api);
-  const [discipline, setDiscipline] = React.useState<Discipline | null>(null);
-  const [place, setPlace] = React.useState<ClimbPlaceFilter>("all");
-  const gymList = useGyms(api).state;
-  const gyms = React.useMemo(
-    () => new Map(gymList.status === "ready" ? gymList.data.map((g) => [g.id, g.name]) : []),
-    [gymList]
+  const { state, vm, days, discipline, setDiscipline, place, setPlace } = useClimbingInsights(
+    useAppApi(),
+    range
   );
-  const ready = state.status === "ready" ? state.data : null;
-  const sessions = React.useMemo(
-    () => (ready === null ? [] : [...ready.sessions, ...workoutClimbSessions(ready.activities)]),
-    [ready]
-  );
-  const shownDiscipline = discipline ?? mainDiscipline(sessions);
-  const vm = React.useMemo(
-    () =>
-      ready === null
-        ? null
-        : climbingInsightsVM(sessions, ready.climbs, {
-            range,
-            discipline: shownDiscipline,
-            place,
-            scales,
-            gyms,
-          }),
-    [ready, sessions, range, shownDiscipline, place, scales, gyms]
-  );
-  const days = React.useMemo(() => daysClimbed(sessions, range), [sessions, range]);
 
   return (
     <>
@@ -71,7 +29,7 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
           <Segmented
             soft
             label={t("climbs.discipline")}
-            value={shownDiscipline}
+            value={discipline}
             onChange={setDiscipline}
             options={(["boulder", "route"] as const).map((d) => ({
               value: d,
@@ -85,7 +43,7 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
             label={t("climbs.where")}
             value={place}
             onChange={setPlace}
-            options={CLIMB_PLACES.map((p) => ({ value: p, label: PLACE_LABELS[p]() }))}
+            options={CLIMB_PLACES.map((p) => ({ value: p, label: climbPlaceLabel(p) }))}
           />
         </div>
       </div>
@@ -109,7 +67,7 @@ export function ClimbingInsights({ range }: { range: TrendRange }): React.ReactE
               />
             )}
           </section>
-          {vm.byGrade.length > 0 && <ClimbsByGrade grades={vm.byGrade} />}
+          {vm.byGrade.length > 0 && <ClimbsByGrade grades={vm.byGrade} total={vm.byGradeTotal} />}
           <div className="stats-wide">
             <div className="count-tiles">
               <CountTile value={vm.avgSend ?? "–"} label={t("climbs.avgSendWord")} />

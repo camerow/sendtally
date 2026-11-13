@@ -96,7 +96,7 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
     return {
       status: "ready",
       data: {
-        vm: sessionDetailVM(s, scales, postable, workedBefore, gymName),
+        vm: sessionDetailVM(s, scales, workedBefore, gymName),
         climbs: filterAndSortClimbs(
           climbVMs(raw.data.climbs, scales, workedBefore, openProjects(catalogue)),
           filter,

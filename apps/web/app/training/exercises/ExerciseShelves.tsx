@@ -1,4 +1,6 @@
 import React from "react";
+import { useNavigate } from "react-router";
+import { newExercisePath } from "../editor/paths";
 import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
 import { exerciseShelves, shelfRows, type ShelfCard } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
@@ -22,6 +24,7 @@ const pathOf = ({ opens }: ShelfCard): string =>
  */
 export function ExerciseShelves(): React.ReactElement {
   const api = useAppApi();
+  const navigate = useNavigate();
   const { model, today } = useHangData();
   const exercises = useExercises(api);
   const series = useExerciseSeries(api);
@@ -45,6 +48,10 @@ export function ExerciseShelves(): React.ReactElement {
           <ShelfHeader
             title={kindLabel(kind)}
             kind={kind}
+            add={{
+              label: t("workouts.newExerciseIn", { category: kindLabel(kind) }),
+              onPress: () => void navigate(newExercisePath(kind)),
+            }}
             seeAll={
               entries.length > SHELF_ROWS
                 ? { to: exerciseCategoryPath(kind), count: entries.length }

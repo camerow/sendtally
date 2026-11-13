@@ -26,6 +26,11 @@ function Spy(): null {
 }
 
 beforeEach(() => {
+  window.matchMedia = vi.fn(() => ({
+    matches: false,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  })) as unknown as typeof window.matchMedia;
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);

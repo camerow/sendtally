@@ -46,7 +46,7 @@ describe("ClimbsByGrade", () => {
     act(() =>
       root.render(
         <MemoryRouter>
-          <ClimbsByGrade grades={grades} />
+          <ClimbsByGrade grades={grades} total={2} />
         </MemoryRouter>
       )
     );

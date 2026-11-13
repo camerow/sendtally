@@ -7,6 +7,8 @@ export type DetailFrameProps = {
   /** Where Back goes when the page was opened directly, with no history to go back through. */
   backTo: string;
   backLabel?: string;
+  /** Replaces going back, as an editor asking to discard its changes first. */
+  onBack?: () => void;
   /** Right of Back, as the ··· menu. */
   action?: React.ReactNode;
   /** Sticky at the foot of the column, as Log session. */
@@ -18,6 +20,7 @@ export type DetailFrameProps = {
 export function DetailFrame({
   backTo,
   backLabel,
+  onBack,
   action,
   footer,
   children,
@@ -26,7 +29,7 @@ export function DetailFrame({
   return (
     <div className="detail">
       <div className="detail-bar">
-        <button type="button" className="detail-back" onClick={back}>
+        <button type="button" className="detail-back" onClick={onBack ?? back}>
           <span className="detail-back-chevron">
             <Icon name="chevron" size={14} strokeWidth={2.2} />
           </span>

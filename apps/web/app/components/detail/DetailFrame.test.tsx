@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes } from "react-router";
@@ -43,5 +43,20 @@ describe("DetailFrame", () => {
     expect(container.querySelector(".detail-footer")?.textContent).toBe("foot");
     act(() => container.querySelector<HTMLButtonElement>(".detail-back")!.click());
     expect(container.textContent).toBe("the list");
+  });
+
+  it("runs onBack instead of going back when given", () => {
+    const onBack = vi.fn();
+    act(() =>
+      root.render(
+        <MemoryRouter>
+          <DetailFrame backTo="/list" onBack={onBack}>
+            body
+          </DetailFrame>
+        </MemoryRouter>
+      )
+    );
+    act(() => container.querySelector<HTMLButtonElement>(".detail-back")!.click());
+    expect(onBack).toHaveBeenCalled();
   });
 });

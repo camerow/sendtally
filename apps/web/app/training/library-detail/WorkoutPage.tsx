@@ -13,6 +13,7 @@ import { SectionHeading } from "../../components/detail/SectionHeading";
 import { useAppApi } from "../../lib/useAppApi";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
+import { editWorkoutPath } from "../editor/paths";
 import { useLibrary } from "../library/useLibrary";
 import { logLink } from "../log/logLink";
 import { activityPath } from "../log/paths";
@@ -57,7 +58,16 @@ function Detail({
   return (
     <DetailFrame
       backTo="/app/train"
-      action={<MoreMenu label={t("summary.more")} items={menu.items} />}
+      action={
+        <span className="detail-actions">
+          {workout.source === "mine" && (
+            <Link to={editWorkoutPath(workout.id)} className="edit-button">
+              {t("common.edit")}
+            </Link>
+          )}
+          <MoreMenu label={t("summary.more")} items={menu.items} />
+        </span>
+      }
       footer={
         <div className="footer-row">
           <Link to={schedulePath(workout.id)} className="footer-outline">

@@ -42,7 +42,7 @@ export function TripDetail({
         <StatStrip stats={tripStats(days, scales)} />
       </div>
       {pyramid !== null && (
-        <div className="trends trip-pyramid">
+        <div className="trip-pyramid">
           <TrendTile tile={pyramid} />
         </div>
       )}

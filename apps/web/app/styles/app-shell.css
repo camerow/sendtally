@@ -1,3 +1,7 @@
+:root {
+  --warning-amber: #c27c0e;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 232px 1fr;
@@ -368,17 +372,8 @@
   gap: 6px;
 }
 
-.sheet-kicker {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-on-white-secondary);
-}
-
-.sheet-kicker--amber {
-  color: #c27c0e;
+.sheet-kicker.sheet-kicker--amber {
+  color: var(--warning-amber);
 }
 
 .sheet-title {
@@ -584,15 +579,6 @@
   min-width: 0;
 }
 
-.number-field-label {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(64, 63, 76, 0.72);
-}
-
 .number-field-box {
   display: flex;
   align-items: center;
@@ -612,8 +598,8 @@
 }
 
 .number-field-box--short {
-  background: rgba(194, 124, 14, 0.12);
-  border: 1.5px solid #c27c0e;
+  background: color-mix(in srgb, var(--warning-amber) 12%, transparent);
+  border: 1.5px solid var(--warning-amber);
 }
 
 .number-field-input {
@@ -745,6 +731,8 @@
   gap: 8px;
 }
 
+.sheet-kicker,
+.number-field-label,
 .field-label {
   font-family: var(--font-mono);
   font-weight: 500;

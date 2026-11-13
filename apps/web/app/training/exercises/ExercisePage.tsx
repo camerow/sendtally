@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router";
 import type { Exercise } from "@sendtally/api-client";
 import {
   exerciseItems,
@@ -6,7 +7,7 @@ import {
   useActivities,
   useWeightUnit,
 } from "@sendtally/features/activities";
-import { exerciseLabel } from "@sendtally/features/exercises";
+import { exerciseLabel, pickedOf } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import {
   exerciseKey,
@@ -23,6 +24,8 @@ import { DashedPanel } from "../components/DashedPanel";
 import { ExerciseTrendCard } from "../components/ExerciseTrendCard";
 import { UsedIn } from "../components/UsedIn";
 import { LoadState } from "../data/LoadState";
+import { editExercisePath } from "../editor/paths";
+import { useAddToWorkout } from "../editor/useAddToWorkout";
 import { useLibrary } from "../library/useLibrary";
 import { activityPath } from "../log/paths";
 import { EXERCISES_VIEW } from "./paths";
@@ -46,6 +49,12 @@ function Detail({
       : undefined;
   const usedIn =
     library.status === "ready" ? workoutsUsing(library.data.workouts, exercise.name) : [];
+  const addTo = useAddToWorkout({
+    name: exerciseLabel(exercise),
+    picked: pickedOf({ exercise }),
+    fingers: false,
+    usedIn,
+  });
   const menu = useExerciseMenu(
     exercise,
     all.filter((e) => e.id !== exercise.id),
@@ -59,7 +68,20 @@ function Detail({
   return (
     <DetailFrame
       backTo={EXERCISES_VIEW}
-      action={<MoreMenu label={t("summary.more")} items={menu.items} />}
+      action={
+        <span className="detail-actions">
+          <Link to={editExercisePath(exercise.id)} className="edit-button">
+            {t("common.edit")}
+          </Link>
+          <MoreMenu
+            label={t("summary.more")}
+            items={[
+              ...(addTo.item === null || exercise.archived ? [] : [addTo.item]),
+              ...menu.items,
+            ]}
+          />
+        </span>
+      }
     >
       <div className="intro">
         <span className="intro-kicker">
@@ -78,6 +100,7 @@ function Detail({
       )}
       <UsedIn workouts={usedIn} />
       {menu.sheets}
+      {addTo.sheet}
     </DetailFrame>
   );
 }

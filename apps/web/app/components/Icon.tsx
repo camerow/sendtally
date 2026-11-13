@@ -27,7 +27,11 @@ export type IconName =
   | "stop"
   | "check"
   | "pencil"
-  | "climb";
+  | "climb"
+  | "up"
+  | "down"
+  | "restart"
+  | "remove";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   today: (
@@ -71,6 +75,10 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   climbs: <path d="M3 19l6.5-11 4 6.5 2.5-3.5L21 19z" />,
   import: <path d="M12 4v10M7.5 9.5 12 14l4.5-4.5M4.5 15v4.5h15V15" />,
   external: <path d="M14 5h5v5M19 5l-8 8M17 14v5H5V7h5" />,
+  up: <path d="M6 15l6-6 6 6" />,
+  down: <path d="M6 9l6 6 6-6" />,
+  restart: <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v4h4" />,
+  remove: <path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M8 12h8" />,
   star: <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />,
   train: <path d="M3.5 5h17v5.5h-17zM7 7.75h3M14 7.75h3M9 10.5V20M15 10.5V20" />,
   climb: (

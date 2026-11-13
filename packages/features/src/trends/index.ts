@@ -9,6 +9,7 @@ export {
   isYearRange,
   trendRanges,
   yearsOf,
+  statsYears,
   trendRangeLabel,
 } from "./types";
 export type * from "./types";
