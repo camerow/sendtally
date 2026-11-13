@@ -14,12 +14,12 @@ import {
   withSetRest,
   type DoseMeasure,
 } from "@sendtally/features/workouts";
+import { SwitchField } from "../../components/Switch";
 import { Icon, type IconName } from "../../components/Icon";
 import { MoreMenu } from "../../components/MoreMenu";
 import { NumberField } from "../../components/NumberField";
 import { LetterBadge } from "../components/LetterBadge";
 import { DoseInput } from "./DoseInput";
-import { Toggle } from "./Toggle";
 
 export type ItemEditorProps = {
   kind: WorkoutKind;
@@ -181,7 +181,7 @@ export function ItemEditor({
         </div>
       ))}
       <div className="item-editor-foot">
-        <Toggle
+        <SwitchField
           label={t("workouts.alternates")}
           checked={alternating}
           onChange={(on) => onChange(withAlternates(item, on))}

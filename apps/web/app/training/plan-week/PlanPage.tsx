@@ -1,9 +1,10 @@
 import React from "react";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import {
   addDays,
   daysBetween,
   isCalendarDate,
+  monthStart,
   weekStart,
   weekday,
   type CalendarDate,
@@ -21,6 +22,9 @@ import { AccountButton } from "../../components/AccountButton";
 import { PageAction } from "../../components/PageAction";
 import { useAppApi } from "../../lib/useAppApi";
 import { useHangData } from "../data/HangDataContext";
+import { Icon } from "../../components/Icon";
+import { CalendarMonth } from "../plan-calendar/CalendarMonth";
+import { CALENDAR_PATH } from "../plan-calendar/paths";
 import { AddWorkoutsSheet } from "./AddWorkoutsSheet";
 import { DaySection } from "./DaySection";
 import { WeekStrip } from "./WeekStrip";
@@ -82,6 +86,19 @@ export function PlanPage(): React.ReactElement {
     };
   }, [offset, scrollTo]);
 
+  const [month, setMonth] = React.useState(() => monthStart(start));
+  const show = (date: CalendarDate): void => {
+    const next = weekOffset(today, date);
+    setSelected(date);
+    if (next === offset) {
+      target.current = null;
+      scrollTo(date, true);
+    } else {
+      setOffset(next);
+      target.current = date;
+    }
+  };
+
   const select = (date: CalendarDate): void => {
     setSelected(date);
     target.current = null;
@@ -95,62 +112,72 @@ export function PlanPage(): React.ReactElement {
   };
 
   return (
-    <div className="plan" ref={page}>
-      <div className="sessions-head">
-        <span className="sessions-head-mark">
-          <Logo variant="mark" size={22} />
-        </span>
-        <h1 className="sessions-title">{t("plan.tab")}</h1>
-        <div style={{ flex: 1 }} />
-        <PageAction label={t("plan.schedule")} onPress={() => setAdding(true)} />
-        <AccountButton />
-      </div>
-      <span className="plan-label">{longDate(today)}</span>
-      <div className="plan-strip" ref={strip}>
-        <WeekStrip
-          offset={offset}
-          days={week}
-          selected={selected}
-          onSelect={select}
-          onOffset={changeWeek}
-        />
-      </div>
-      {running.length > 0 && (
-        <div className="plan-blocks">
-          <span className="plan-label plan-label--muted">
-            {t("plan.blocksInProgress", { count: running.length })}
+    <div className="plan-layout">
+      <div className="plan" ref={page}>
+        <div className="sessions-head">
+          <span className="sessions-head-mark">
+            <Logo variant="mark" size={22} />
           </span>
-          {running.map((b) => (
-            <div key={b.id} className="plan-block-row">
-              <span className="plan-row-name">{b.name || t("plan.untitled")}</span>
-              <span className="plan-row-meta">
-                {t("plan.workoutCount", { count: blockMembers(log.plan, b).length })}
-              </span>
-            </div>
-          ))}
+          <h1 className="sessions-title">{t("plan.tab")}</h1>
+          <div style={{ flex: 1 }} />
+          <PageAction label={t("plan.schedule")} onPress={() => setAdding(true)} />
+          <Link to={CALENDAR_PATH} className="plan-calendar-link" aria-label={t("calendar.open")}>
+            <Icon name="today" size={22} />
+          </Link>
+          <AccountButton />
         </div>
-      )}
-      {week.map((d, i) => (
-        <div
-          key={d.date}
-          ref={(el) => {
-            if (el === null) days.current.delete(d.date);
-            else days.current.set(d.date, el);
-          }}
-          className={i === week.length - 1 ? "plan-day-slot plan-day-slot--last" : "plan-day-slot"}
-        >
-          <DaySection day={d} />
+        <span className="plan-label">{longDate(today)}</span>
+        <div className="plan-strip" ref={strip}>
+          <WeekStrip
+            offset={offset}
+            days={week}
+            selected={selected}
+            onSelect={select}
+            onOffset={changeWeek}
+          />
         </div>
-      ))}
-      {adding && (
-        <AddWorkoutsSheet
-          date={selected}
-          onClose={(added) => {
-            setAdding(false);
-            if (added.length > 0) select(selected);
-          }}
-        />
-      )}
+        {running.length > 0 && (
+          <div className="plan-blocks">
+            <span className="plan-label plan-label--muted">
+              {t("plan.blocksInProgress", { count: running.length })}
+            </span>
+            {running.map((b) => (
+              <div key={b.id} className="plan-block-row">
+                <span className="plan-row-name">{b.name || t("plan.untitled")}</span>
+                <span className="plan-row-meta">
+                  {t("plan.workoutCount", { count: blockMembers(log.plan, b).length })}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        {week.map((d, i) => (
+          <div
+            key={d.date}
+            ref={(el) => {
+              if (el === null) days.current.delete(d.date);
+              else days.current.set(d.date, el);
+            }}
+            className={
+              i === week.length - 1 ? "plan-day-slot plan-day-slot--last" : "plan-day-slot"
+            }
+          >
+            <DaySection day={d} />
+          </div>
+        ))}
+        {adding && (
+          <AddWorkoutsSheet
+            flow={{ date: selected, blockId: null }}
+            onClose={(added) => {
+              setAdding(false);
+              if (added.length > 0) select(selected);
+            }}
+          />
+        )}
+      </div>
+      <aside className="plan-aside" aria-label={t("calendar.open")}>
+        <CalendarMonth month={month} onMonth={setMonth} selected={selected} onPick={show} />
+      </aside>
     </div>
   );
 }

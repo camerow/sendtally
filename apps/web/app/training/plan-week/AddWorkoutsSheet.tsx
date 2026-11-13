@@ -1,7 +1,13 @@
 import React from "react";
-import type { CalendarDate } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { addKicker, focusLabel, useAddTo, workoutLines } from "@sendtally/features/training";
+import {
+  addKicker,
+  focusLabel,
+  usePlan,
+  useAddTo,
+  workoutLines,
+  type AddFlow,
+} from "@sendtally/features/training";
 import { libraryShelves, type LibraryWorkout } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
@@ -16,7 +22,8 @@ import { useLibrary, workoutPath } from "../library/useLibrary";
 type AddState = "none" | "added" | "there";
 
 export type AddWorkoutsSheetProps = {
-  date: CalendarDate;
+  /** A day to schedule on, in its block if it has one; or Ongoing, with neither. */
+  flow: AddFlow;
   /** Closed with the plans added while it was open. */
   onClose: (added: readonly string[]) => void;
 };
@@ -25,10 +32,11 @@ export type AddWorkoutsSheetProps = {
  * Scheduling workouts on a day: every workout under its focus, searched across all of them,
  * each added with + and taken back with a second click, the sheet staying open for more.
  */
-export function AddWorkoutsSheet({ date, onClose }: AddWorkoutsSheetProps): React.ReactElement {
+export function AddWorkoutsSheet({ flow, onClose }: AddWorkoutsSheetProps): React.ReactElement {
   const { model, today } = useHangData();
-  const flow = { date, blockId: null };
-  const addTo = useAddTo(useAppApi(), flow, today, {
+  const api = useAppApi();
+  const blocks = usePlan(api).state;
+  const addTo = useAddTo(api, flow, today, {
     newId: () => crypto.randomUUID(),
     actions: usePlanActions(),
   });
@@ -50,8 +58,8 @@ export function AddWorkoutsSheet({ date, onClose }: AddWorkoutsSheetProps): Reac
   return (
     <Sheet
       open
-      kicker={addKicker(flow, [])}
-      title={t("plan.schedule")}
+      kicker={addKicker(flow, blocks.status === "ready" ? blocks.data.blocks : [])}
+      title={flow.date === null ? t("plan.addWorkouts") : t("plan.schedule")}
       onClose={close}
       cancel={false}
       action={{ label: t("common.done"), onPress: close }}
@@ -86,7 +94,13 @@ export function AddWorkoutsSheet({ date, onClose }: AddWorkoutsSheetProps): Reac
                     />
                   </div>
                   {now === "there" ? (
-                    <span className="add-row-there">{t("plan.onDay")}</span>
+                    <span className="add-row-there">
+                      {flow.date !== null
+                        ? t("plan.onDay")
+                        : flow.blockId === null
+                          ? t("plan.ongoing")
+                          : t("plan.inBlock")}
+                    </span>
                   ) : now === "added" ? (
                     <button
                       type="button"
