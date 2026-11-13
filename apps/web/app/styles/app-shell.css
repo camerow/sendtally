@@ -334,6 +334,25 @@
   background: rgba(64, 63, 76, 0.2);
 }
 
+.sheet-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sheet-kicker {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-on-white-secondary);
+}
+
+.sheet-kicker--amber {
+  color: #c27c0e;
+}
+
 .sheet-title {
   margin: 0;
   font-family: var(--font-display);
