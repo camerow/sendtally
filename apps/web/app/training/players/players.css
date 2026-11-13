@@ -422,3 +422,12 @@
   flex-direction: column;
   gap: 10px;
 }
+
+.player-row-play {
+  width: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--bs-gunmetal);
+}
