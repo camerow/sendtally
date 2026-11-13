@@ -30,6 +30,7 @@ export function testApp(
     const features = (req.headers.get("x-test-features") ?? "").split(",");
     return { userId, hasFeature: (feature) => features.includes(feature) };
   };
+  auth.verifyConnector = async (req) => req.headers.get("x-test-user");
   auth.deleteUser = overrides.deleteUser ?? (async () => undefined);
   auth.userNames = overrides.userNames ?? (async () => new Map());
   auth.verifyWebhook =

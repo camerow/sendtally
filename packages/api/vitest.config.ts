@@ -6,6 +6,16 @@ export default defineWorkersConfig(async () => {
   return {
     test: {
       setupFiles: ["./test/apply-migrations.ts"],
+      // The connector's SDK imports ajv, whose CommonJS build requires JSON files the
+      // Workers pool cannot load until Vite has bundled it.
+      deps: {
+        optimizer: {
+          ssr: {
+            enabled: true,
+            include: ["@modelcontextprotocol/sdk > ajv", "@modelcontextprotocol/sdk > ajv-formats"],
+          },
+        },
+      },
       poolOptions: {
         workers: {
           singleWorker: true,
@@ -15,6 +25,7 @@ export default defineWorkersConfig(async () => {
               TEST_MIGRATIONS: migrations,
               TOKEN_KEY: "VGhpcyBpcyBhIDMyLWJ5dGUgdGVzdCBrZXkhISEhISE=",
               CLERK_SECRET_KEY: "test-clerk-secret",
+              CLERK_PUBLISHABLE_KEY: "pk_test_Y2xlcmsuc2VuZHRhbGx5LnRlc3Qk",
               STRAVA_CLIENT_ID: "12345",
               STRAVA_CLIENT_SECRET: "test-strava-secret",
               STRAVA_WEBHOOK_VERIFY_TOKEN: "test-verify-token",
