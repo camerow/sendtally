@@ -1,11 +1,9 @@
 import React from "react";
-import { Link } from "react-router";
-import { t } from "@sendtally/features/i18n";
 import { focusLabel, focusMeaning, focusParam, workoutLines } from "@sendtally/features/training";
 import type { LibraryShelf as Shelf } from "@sendtally/features/workouts";
-import { Icon } from "../../components/Icon";
 import { CategoryRow } from "../components/CategoryRow";
 import { DashedPanel } from "../components/DashedPanel";
+import { ShelfHeader } from "../components/ShelfHeader";
 import { useHangData } from "../data/HangDataContext";
 import { workoutPath } from "./useLibrary";
 
@@ -19,23 +17,12 @@ export function LibraryShelf({ shelf }: { shelf: Shelf }): React.ReactElement {
   const count = shelf.workouts.length;
   return (
     <section className="library-shelf">
-      {count > SHELF_ROWS ? (
-        <Link
-          to={`/app/train/${focusParam(shelf.focus)}`}
-          className="shelf-head shelf-head--link"
-          aria-label={t("workouts.seeAllOf", { kind: label })}
-        >
-          <h2 className="train-title shelf-title">{label}</h2>
-          <span className="train-label shelf-see-all">
-            {t("workouts.seeAllCount", { n: count })}
-            <Icon name="chevron" size={14} strokeWidth={2.2} />
-          </span>
-        </Link>
-      ) : (
-        <div className="shelf-head">
-          <h2 className="train-title shelf-title">{label}</h2>
-        </div>
-      )}
+      <ShelfHeader
+        title={label}
+        seeAll={
+          count > SHELF_ROWS ? { to: `/app/train/${focusParam(shelf.focus)}`, count } : undefined
+        }
+      />
       {count === 0 && <DashedPanel body={focusMeaning(shelf.focus)} />}
       {shelf.workouts.slice(0, SHELF_ROWS).map((w) => (
         <CategoryRow
