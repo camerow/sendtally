@@ -12,8 +12,10 @@ export type SheetAction = {
 export type SheetProps = {
   open: boolean;
   title: string;
-  /** A short amber word above the title, in the label voice, such as "Already running". */
+  /** A short line above the title in the label voice, such as the day it schedules on. */
   kicker?: string;
+  /** Amber for a warning, such as "Already running"; grey by default. */
+  kickerTone?: "amber";
   onClose: () => void;
   /** The footer's one button; Cancel sits beside it on desktop. */
   action?: SheetAction;
@@ -32,6 +34,7 @@ export function Sheet({ open, ...props }: SheetProps): React.ReactElement | null
 function OpenSheet({
   title,
   kicker,
+  kickerTone,
   onClose,
   action,
   children,
@@ -65,7 +68,13 @@ function OpenSheet({
     >
       <div className="sheet-handle" />
       <div className="sheet-head">
-        {kicker !== undefined && <span className="sheet-kicker">{kicker}</span>}
+        {kicker !== undefined && (
+          <span
+            className={kickerTone === "amber" ? "sheet-kicker sheet-kicker--amber" : "sheet-kicker"}
+          >
+            {kicker}
+          </span>
+        )}
         <h2 id={titleId} className="sheet-title">
           {title}
         </h2>

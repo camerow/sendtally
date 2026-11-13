@@ -346,6 +346,10 @@
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--text-on-white-secondary);
+}
+
+.sheet-kicker--amber {
   color: #c27c0e;
 }
 

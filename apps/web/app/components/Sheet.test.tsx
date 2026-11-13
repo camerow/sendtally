@@ -81,7 +81,7 @@ describe("Sheet", () => {
     expect(document.activeElement).toBe(container.querySelector("textarea"));
   });
 
-  it("draws a kicker above the title", () => {
+  it("draws a kicker above the title, amber when asked", () => {
     act(() =>
       root.render(
         <Sheet
@@ -97,6 +97,7 @@ describe("Sheet", () => {
       "Already running",
       "Morning session is still going",
     ]);
+    expect(head.firstElementChild?.className).toBe("sheet-kicker sheet-kicker--amber");
   });
 
   it("stays open for a click that started inside it", () => {
