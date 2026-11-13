@@ -482,7 +482,7 @@ importers:
         version: 4.20260702.1
       '@hono/zod-validator':
         specifier: ^0.9.1
-        version: 0.9.1(hono@4.13.8)(zod@4.6.5)
+        version: 0.9.1(hono@4.13.16)(zod@4.6.5)
       '@sendtally/core':
         specifier: workspace:*
         version: link:../core
@@ -490,8 +490,8 @@ importers:
         specifier: ^0.45.2
         version: 0.45.2(@cloudflare/workers-types@4.20260702.1)
       hono:
-        specifier: ^4.9.6
-        version: 4.13.8
+        specifier: ^4.13.16
+        version: 4.13.16
       posthog-node:
         specifier: ^5.46.1
         version: 5.52.4
@@ -521,8 +521,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       hono:
-        specifier: ^4.9.6
-        version: 4.13.8
+        specifier: ^4.13.16
+        version: 4.13.16
     devDependencies:
       typescript:
         specifier: ^6.0.3
@@ -6468,8 +6468,8 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.13.8:
-    resolution: {integrity: sha512-/Gng7NfoykZl2pjukW5Z6+8Yxm3BPRf86GTbQnt0SbySkvax4fyL4H3HhY1cCpBGmiW9XDRFzRV+CXK2W8QudQ==}
+  hono@4.13.16:
+    resolution: {integrity: sha512-AOLOEhvrV+iH92xXCnFr/5+3KjPKcI3xP63XJtX5spAnkznPdHijlIsUTpi7/9EhWqrTCekw5c5zh1K+YsVw7A==}
     engines: {node: '>=16.9.0'}
 
   hookified@1.15.1:
@@ -11370,9 +11370,9 @@ snapshots:
       protobufjs: 7.6.6
       yargs: 17.7.3
 
-  '@hono/zod-validator@0.9.1(hono@4.13.8)(zod@4.6.5)':
+  '@hono/zod-validator@0.9.1(hono@4.13.16)(zod@4.6.5)':
     dependencies:
-      hono: 4.13.8
+      hono: 4.13.16
       zod: 4.6.5
 
   '@humanfs/core@0.19.2':
@@ -15379,7 +15379,7 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.13.8: {}
+  hono@4.13.16: {}
 
   hookified@1.15.1: {}
 
