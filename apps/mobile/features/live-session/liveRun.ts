@@ -1,112 +1,35 @@
 import type { Href } from "expo-router";
-import React from "react";
-import { currentPhase, type HangSetup, type ItemDone, type Run } from "@sendtally/core/hang";
-import { t } from "@sendtally/features/i18n";
-import { exerciseName } from "@sendtally/features/workouts";
+import {
+  liveRunStore,
+  useLiveRun as useStoredRun,
+  type Hold,
+  type LiveRun,
+  type PlayerPath,
+  type Rest,
+} from "@sendtally/features/workouts";
 import { exerciseTallyStorage } from "../../lib/exerciseTallyStorage";
 import { liveRunStorage } from "../../lib/liveRunStorage";
-import type { Hold } from "@sendtally/features/workouts";
-import type { Rest } from "@sendtally/features/workouts";
-import { phaseLabel } from "@sendtally/features/hang";
 
-/** Where a player is: the timer's run, or the sets and items ticked so far. */
-export type RunState =
-  | { player: "timer"; run: Run; setups?: HangSetup[]; laps?: boolean }
-  | { player: "sets"; done: ItemDone[]; ticked: string[] }
-  | { player: "checklist"; ticked: number[]; count: number };
+export {
+  liveRunSummary,
+  parseLiveRun,
+  type LiveRun,
+  type PlayerPath,
+  type RunState,
+} from "@sendtally/features/workouts";
 
-const PLAYERS = [
-  "/workout/timer",
-  "/workout/intervals",
-  "/workout/sets",
-  "/workout/checklist",
-] as const;
+/** This phone's live run, kept with the signed-in user's drafts. */
+export const liveRun = liveRunStore(liveRunStorage, exerciseTallyStorage);
 
-export type PlayerPath = (typeof PLAYERS)[number];
-
-/** The one workout running in a player, and the route that opens it again. */
-export type LiveRun = {
-  title: string;
-  workoutId: string | null;
-  pathname: PlayerPath;
-  params: Record<string, string>;
-  startedAt: number;
-  state: RunState;
-  /** The rest counting down between sets or items, kept while the player is minimised. */
-  rest?: Rest;
-  /** The timed set or line running in its row; never at once with a rest. */
-  hold?: Hold;
-};
-
-export function parseLiveRun(raw: string | null): LiveRun | null {
-  if (raw === null) return null;
-  try {
-    const run: unknown = JSON.parse(raw);
-    if (typeof run !== "object" || run === null) return null;
-    const { title, pathname, params, startedAt, state } = run as Partial<LiveRun>;
-    const valid =
-      typeof title === "string" &&
-      PLAYERS.some((p) => p === pathname) &&
-      typeof params === "object" &&
-      typeof startedAt === "number" &&
-      typeof state?.player === "string";
-    return valid ? (run as LiveRun) : null;
-  } catch {
-    return null;
-  }
-}
-
-export const readLiveRun = (): LiveRun | null => parseLiveRun(liveRunStorage.read());
-
-/** Saves where a player is, keeping the rest or hold it has running. */
-export function writeLiveRun(run: LiveRun): void {
-  const { rest, hold } = resumedRun(run.pathname, run.workoutId) ?? {};
-  liveRunStorage.write(
-    JSON.stringify({
-      ...run,
-      ...(rest !== undefined && { rest }),
-      ...(hold !== undefined && { hold }),
-    })
-  );
-}
-
-/** Saves the run exactly as given, its rest and hold included. */
-export function writeLiveRunAsIs(run: LiveRun): void {
-  liveRunStorage.write(JSON.stringify(run));
-}
-
-/** Starts, changes or ends the live run's rest. */
-export function writeRest(rest: Rest | null): void {
-  const live = readLiveRun();
-  if (live === null) return;
-  const { rest: _, ...run } = live;
-  liveRunStorage.write(JSON.stringify(rest === null ? run : { ...run, rest }));
-}
-
-/** Starts, pauses or ends the live run's hold. */
-export function writeHold(hold: Hold | null): void {
-  const live = readLiveRun();
-  if (live === null) return;
-  const { hold: _, ...run } = live;
-  liveRunStorage.write(JSON.stringify(hold === null ? run : { ...run, hold }));
-}
-
-/** The stored run of the player at `pathname` for this workout, to pick up where it was. */
-export function resumedRun(pathname: PlayerPath, workoutId: string | null): LiveRun | null {
-  const run = readLiveRun();
-  return run?.pathname === pathname && run.workoutId === workoutId ? run : null;
-}
-
-/** The run is over, saved or thrown away: it leaves the bar, and its climbing tally goes too. */
-export function clearLiveRun(): void {
-  liveRunStorage.remove();
-  exerciseTallyStorage.remove();
-}
-
-export function useLiveRun(): LiveRun | null {
-  const raw = React.useSyncExternalStore(liveRunStorage.subscribe, liveRunStorage.read);
-  return React.useMemo(() => parseLiveRun(raw), [raw]);
-}
+export const readLiveRun = (): LiveRun | null => liveRun.read();
+export const writeLiveRun = (run: LiveRun): void => liveRun.write(run);
+export const writeLiveRunAsIs = (run: LiveRun): void => liveRun.writeAsIs(run);
+export const writeRest = (rest: Rest | null): void => liveRun.writeRest(rest);
+export const writeHold = (hold: Hold | null): void => liveRun.writeHold(hold);
+export const resumedRun = (pathname: PlayerPath, workoutId: string | null): LiveRun | null =>
+  liveRun.resumed(pathname, workoutId);
+export const clearLiveRun = (): void => liveRun.clear();
+export const useLiveRun = (): LiveRun | null => useStoredRun(liveRun);
 
 /** Opens the run again; `end` ends it on the way, straight to its review. */
 export function liveRunHref(run: LiveRun, end = false): Href {
@@ -114,22 +37,4 @@ export function liveRunHref(run: LiveRun, end = false): Href {
     pathname: run.pathname,
     params: end ? { ...run.params, end: "1" } : run.params,
   };
-}
-
-/** Where the run is, for the live bar: "Set 2 of 5 · Hang", "Ring row · Set 1 of 3", "2 of 5 done". */
-export function liveRunSummary({ state }: LiveRun): string {
-  if (state.player === "timer") {
-    const { set } = currentPhase(state.run);
-    const sets = { set, sets: state.run.sets };
-    const where = state.laps === true ? t("tally.lapOf", sets) : t("hang.setOf", sets);
-    return `${where} · ${phaseLabel(state.run, state.laps === true)}`;
-  }
-  if (state.player === "checklist")
-    return t("plan.doneOf", { done: state.ticked.length, planned: state.count });
-  for (const d of state.done) {
-    const set = d.sets.findIndex((_, s) => !state.ticked.includes(`${d.item}:${s}`));
-    if (set !== -1)
-      return `${exerciseName(d.exercise)} · ${t("hang.setOf", { set: set + 1, sets: d.sets.length })}`;
-  }
-  return t("tally.allSetsDone");
 }
