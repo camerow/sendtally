@@ -26,7 +26,7 @@ import { ForTodaySheet } from "./ForTodaySheet";
 import { TimerFrame } from "./TimerFrame";
 import { TimerRing } from "./TimerRing";
 import { useTimer } from "./useTimer";
-import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
+import { liveRun } from "../../live-session/liveRun";
 import {
   ON_DARK,
   ON_DARK_LINE,
@@ -81,7 +81,7 @@ function Timer({
   });
 
   React.useEffect(() => {
-    writeLiveRun({
+    liveRun.write({
       title: workout.name,
       workoutId: workout.id,
       pathname: "/workout/timer",
@@ -202,7 +202,7 @@ export function TimerScreen({
   const plan = usePlan(useApi()).state;
   const planned = usePlannedRun(workoutId, link, session);
   const [resumed] = React.useState(() => {
-    const state = resumedRun("/workout/timer", workoutId)?.state;
+    const state = liveRun.resumed("/workout/timer", workoutId)?.state;
     return state?.player === "timer" ? state : null;
   });
   const [setups, setSetups] = React.useState<HangSetup[] | null>(resumed?.setups ?? null);

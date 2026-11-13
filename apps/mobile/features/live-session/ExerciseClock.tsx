@@ -4,7 +4,7 @@ import { t } from "@sendtally/features/i18n";
 import type { Tally } from "@sendtally/features/log-session";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
-import type { RestClock } from "../training/rest/useRest";
+import type { RestClock } from "@sendtally/features/workouts";
 
 export type ExerciseClockProps = { clock: Tally["clock"]; rest: RestClock };
 

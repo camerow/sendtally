@@ -4,7 +4,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { tallyDraft, writeStoredDraft } from "@sendtally/features/log-session";
 import { liveRunOf } from "../../lib/useLiveRun";
 import { liveSessionStorageOf } from "../../lib/useLiveSessionStorage";
-import { askingStore, running, startLive } from "../startLive";
+import { askingStore, startLive } from "@sendtally/features/workouts";
+import { running } from "../startLive";
 import { AlreadyRunningSheet } from "./AlreadyRunningSheet";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;

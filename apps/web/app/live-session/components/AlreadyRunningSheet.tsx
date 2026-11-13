@@ -3,7 +3,7 @@ import { t } from "@sendtally/features/i18n";
 import { Sheet } from "../../components/Sheet";
 import { useLiveRunStore } from "../../lib/useLiveRun";
 import { useLiveSessionStorage } from "../../lib/useLiveSessionStorage";
-import { askingStore, type Asking } from "../startLive";
+import { askingStore, type Asking } from "@sendtally/features/workouts";
 
 /**
  * Asks what happens to the session or workout already running before another starts, and starts the

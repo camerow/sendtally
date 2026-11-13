@@ -31,7 +31,7 @@ export const startHold = (
 ): Hold => ({ at, name, targetS, sides, zeroAt: now + COUNT_IN_S * 1000, pausedAt: null });
 
 /** When it reaches its target, both sides and the switch included. */
-export const holdEndsAt = (h: Hold): number =>
+export const holdEndsAt = (h: Pick<Hold, "zeroAt" | "targetS" | "sides">): number =>
   h.zeroAt + (h.sides ? 2 * h.targetS + SWITCH_S : h.targetS) * 1000;
 
 /** Where the hold is: counting in, on a side, switching, or over. */

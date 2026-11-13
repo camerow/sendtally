@@ -5,7 +5,7 @@ import React from "react";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
 import { hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
 import type { WorkoutRun } from "@sendtally/features/workouts";
-import { readLiveRun } from "../../live-session/liveRun";
+import { liveRun } from "../../live-session/liveRun";
 import { useLiveHold } from "../hold/useLiveHold";
 import { SetsScreen } from "./SetsScreen";
 
@@ -174,7 +174,7 @@ describe("Sets player", () => {
     ]);
     await fireEvent.press(screen.getByText("Skip"));
     expect(screen.queryByLabelText("Rest, 1:00 left")).toBeNull();
-    expect(readLiveRun()?.rest).toBeUndefined();
+    expect(liveRun.read()?.rest).toBeUndefined();
   });
 
   it("shows which dose an alternating exercise runs, with its name when it has one", async () => {
@@ -205,7 +205,7 @@ describe("Sets player", () => {
     await advance(13_000);
     expect(screen.getByText("0:10")).toBeTruthy();
     expect(screen.getByText("of 0:30")).toBeTruthy();
-    expect(readLiveRun()?.hold?.name).toBe("Plank");
+    expect(liveRun.read()?.hold?.name).toBe("Plank");
     await fireEvent.press(screen.getByRole("button", { name: "Done" }));
     expect(screen.getByLabelText("Plank, set 1")).toHaveProp("accessibilityState", {
       checked: true,
@@ -215,8 +215,8 @@ describe("Sets player", () => {
     await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
     expect(screen.queryByLabelText("Rest, 0:20 left")).toBeNull();
     await advance(34_000);
-    expect(readLiveRun()?.hold).toBeUndefined();
-    expect(readLiveRun()?.state).toEqual({
+    expect(liveRun.read()?.hold).toBeUndefined();
+    expect(liveRun.read()?.state).toEqual({
       player: "sets",
       done: [
         expect.objectContaining({
@@ -255,12 +255,12 @@ describe("Sets player", () => {
     await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
     await view.unmount();
     await advance(35_000);
-    expect(readLiveRun()?.hold).toBeUndefined();
-    expect(readLiveRun()?.state).toMatchObject({
+    expect(liveRun.read()?.hold).toBeUndefined();
+    expect(liveRun.read()?.state).toMatchObject({
       ticked: ["0:0"],
       done: [{ sets: [{ onS: 30 }, {}] }],
     });
-    expect(readLiveRun()?.rest).toMatchObject({ at: "0:0", seconds: 20 });
+    expect(liveRun.read()?.rest).toMatchObject({ at: "0:0", seconds: 20 });
     await renderWithHang(<SetsScreen run={planks} />, hangData());
     expect(screen.getByLabelText("Plank, set 1")).toHaveProp("accessibilityState", {
       checked: true,

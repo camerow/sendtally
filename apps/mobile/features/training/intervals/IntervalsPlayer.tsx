@@ -10,7 +10,7 @@ import { kindLabel } from "@sendtally/features/activities";
 import { SetArrows } from "../timer/SetArrows";
 import { TimerFrame } from "../timer/TimerFrame";
 import { useTimer } from "../timer/useTimer";
-import { resumedRun, writeLiveRun } from "../../live-session/liveRun";
+import { liveRun } from "../../live-session/liveRun";
 import { intervalsParams, intervalsView, type IntervalsRun } from "@sendtally/features/workouts";
 import { StepCard } from "./StepCard";
 import { UpNext } from "./UpNext";
@@ -32,7 +32,7 @@ export function IntervalsPlayer({
 }: IntervalsPlayerProps): React.ReactElement {
   const { body } = workout;
   const timer = useTimer((now) => {
-    const state = resumedRun("/workout/intervals", workout.workoutId)?.state;
+    const state = liveRun.resumed("/workout/intervals", workout.workoutId)?.state;
     return state?.player === "timer"
       ? (state.run as Run<IntervalPhase>)
       : startIntervalsRun(body, now);
@@ -42,7 +42,7 @@ export function IntervalsPlayer({
   const view = intervalsView(run, body, secondsLeft, unit, climbing);
 
   React.useEffect(() => {
-    writeLiveRun({
+    liveRun.write({
       title: workout.title,
       workoutId: workout.workoutId,
       pathname: "/workout/intervals",

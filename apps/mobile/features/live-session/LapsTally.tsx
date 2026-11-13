@@ -16,7 +16,7 @@ import { LIVE_HEADER, MinimiseButton } from "../../components/MinimiseButton";
 import { press } from "../../lib/press";
 import { Button } from "../training/components/Button";
 import { RestRow } from "../training/rest/RestRow";
-import type { RestClock } from "../training/rest/useRest";
+import type { RestClock } from "@sendtally/features/workouts";
 import { LiveClimbEditor } from "./LiveClimbEditor";
 
 export type LapsTallyProps = {

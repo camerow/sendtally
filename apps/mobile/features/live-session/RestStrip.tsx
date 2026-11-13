@@ -3,8 +3,7 @@ import { Text, View } from "react-native";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { stripVM } from "@sendtally/features/workouts";
 import { useHold } from "../training/hold/useHold";
-import { useRestLeft } from "../training/rest/useRest";
-import { useLiveRun } from "./liveRun";
+import { useRest } from "../training/rest/useRest";
 
 const text = { fontFamily: fonts.monoSemiBold, fontSize: 11.5, color: colors.white };
 
@@ -13,8 +12,7 @@ const text = { fontFamily: fonts.monoSemiBold, fontSize: 11.5, color: colors.whi
  * bar, gold draining for a rest, green filling for a hold.
  */
 export function RestStrip(): React.ReactElement | null {
-  const rest = useLiveRun()?.rest ?? null;
-  const left = useRestLeft(rest);
+  const { rest, left } = useRest();
   const { hold, now } = useHold();
   const vm = stripVM(rest, left, hold, now);
   if (vm === null) return null;

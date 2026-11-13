@@ -6,8 +6,6 @@ import {
   type Running,
 } from "@sendtally/features/workouts";
 
-export { askingStore, startLive, type Asking, type Running } from "@sendtally/features/workouts";
-
 export const LIVE_PATH = "/app/sessions/live";
 
 /** Where a live run opens again; `end` ends it on the way, straight to its review. */

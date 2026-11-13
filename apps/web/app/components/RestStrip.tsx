@@ -1,5 +1,5 @@
 import React from "react";
-import { stripVM, useHold, useLiveRun, useRestLeft } from "@sendtally/features/workouts";
+import { stripVM, useHold, useRest } from "@sendtally/features/workouts";
 import { useLiveRunStore } from "../lib/useLiveRun";
 
 /**
@@ -8,8 +8,7 @@ import { useLiveRunStore } from "../lib/useLiveRun";
  */
 export function RestStrip(): React.ReactElement | null {
   const store = useLiveRunStore();
-  const rest = useLiveRun(store)?.rest ?? null;
-  const left = useRestLeft(rest);
+  const { rest, left } = useRest(store);
   const { hold, now } = useHold(store);
   const vm = stripVM(rest, left, hold, now);
   if (vm === null) return null;
