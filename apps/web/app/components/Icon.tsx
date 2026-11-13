@@ -34,7 +34,10 @@ export type IconName =
   | "remove"
   | "play"
   | "pause"
-  | "info";
+  | "info"
+  | "skip"
+  | "sound"
+  | "muted";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   today: (
@@ -95,6 +98,9 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   stop: <rect x="7" y="7" width="10" height="10" rx="1.5" />,
   play: <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />,
   pause: <path d="M9 5.5v13M15 5.5v13" />,
+  skip: <path d="M6 6l8 6-8 6zM18 6v12" />,
+  sound: <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4zM15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />,
+  muted: <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4zM16 9.5l5 5M21 9.5l-5 5" />,
   info: (
     <>
       <circle cx="12" cy="12" r="8.5" />

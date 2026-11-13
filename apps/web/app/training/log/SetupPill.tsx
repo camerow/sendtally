@@ -1,17 +1,10 @@
 import React from "react";
-import {
-  MAX_EDGE_MM,
-  MIN_EDGE_MM,
-  fromUnit,
-  toUnit,
-  type HangKind,
-  type HangSetup,
-} from "@sendtally/core/hang";
+import type { HangKind, HangSetup } from "@sendtally/core/hang";
 import { setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { NumberField } from "../../components/NumberField";
 import { Sheet } from "../../components/Sheet";
 import { useHangData } from "../data/HangDataContext";
+import { SetupFields } from "./SetupFields";
 
 export type SetupPillProps = {
   kind: HangKind;
@@ -43,32 +36,7 @@ export function SetupPill({ kind, setup, kicker, onChange }: SetupPillProps): Re
         action={{ label: t("common.done"), onPress: () => setOpen(false) }}
       >
         <span className="train-label">{kicker}</span>
-        <div className="setup-fields">
-          {kind === "hang" && (
-            <NumberField
-              label={t("hang.edgeDepth")}
-              value={setup.edgeMm}
-              unit="mm"
-              mode={{ kind: "number", step: 1, min: MIN_EDGE_MM, max: MAX_EDGE_MM }}
-              onChange={(edgeMm) => onChange({ ...setup, edgeMm })}
-            />
-          )}
-          <NumberField
-            label={kind === "hang" ? t("hang.addedWeight") : t("hang.weight")}
-            value={toUnit(setup.loadKg, unit)}
-            unit={unit}
-            mode={{
-              kind: "number",
-              step: unit === "lb" ? 5 : 2.5,
-              min: toUnit(-200, unit),
-              max: toUnit(1000, unit),
-              decimals: true,
-              signed: true,
-            }}
-            onChange={(n) => onChange({ ...setup, loadKg: fromUnit(n, unit) })}
-          />
-          {kind === "hang" && <p className="form-hint">{t("hang.assistNote")}</p>}
-        </div>
+        <SetupFields kind={kind} setup={setup} onChange={onChange} />
       </Sheet>
     </>
   );

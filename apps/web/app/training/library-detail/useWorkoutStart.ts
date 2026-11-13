@@ -4,7 +4,7 @@ import { eachSideOf, tallyMeasuresOf } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { useExercises } from "@sendtally/features/statistics";
 import {
-  runParams,
+  playerRoute,
   useLiveRun,
   workoutStart,
   type LibraryWorkout,
@@ -18,9 +18,8 @@ import { useLiveRunStore } from "../../lib/useLiveRun";
 export type StartAction = { label: string; resume: boolean; onPress: () => void };
 
 /**
- * Start for a workout the sets or checklist player runs, once whatever else is live is dealt
- * with; Resume while this workout is the run going. None for the other players.
- * ponytail: the hang timer and intervals players arrive with #291.
+ * Start for a workout one of the players runs, once whatever else is live is dealt with;
+ * Resume while this workout is the run going. None for the live session or the activity form.
  */
 export function useWorkoutStart(
   workout: LibraryWorkout,
@@ -41,7 +40,7 @@ export function useWorkoutStart(
     eachSideOf(exercises.data),
     tallyMeasuresOf(exercises.data, workout.kind)
   );
-  if (start.open !== "sets" && start.open !== "checklist") return null;
-  const to = runPath({ pathname: `/workout/${start.open}`, params: runParams(start.run) });
-  return { label: t("hang.start"), resume: false, onPress: () => startLive(to) };
+  const route = playerRoute(workout, start, planned);
+  if (route === null) return null;
+  return { label: t("hang.start"), resume: false, onPress: () => startLive(runPath(route)) };
 }

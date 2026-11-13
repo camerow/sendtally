@@ -59,6 +59,8 @@ const FOCUSED_ROUTES = [
   "/app/sessions/live",
   "/app/workout/sets",
   "/app/workout/checklist",
+  "/app/workout/timer",
+  "/app/workout/intervals",
   "/app/workout/tally",
 ];
 
@@ -67,6 +69,8 @@ const LIVE_ROUTES = [
   LIVE_PATH,
   "/app/workout/sets",
   "/app/workout/checklist",
+  "/app/workout/timer",
+  "/app/workout/intervals",
   "/app/workout/tally",
 ];
 
@@ -75,7 +79,8 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
   const focused = FOCUSED_ROUTES.includes(pathname);
   const onLive =
     LIVE_ROUTES.includes(pathname) ||
-    (pathname === "/app/activity/new" && new URLSearchParams(search).get("live") === "1");
+    (pathname === "/app/activity/new" && new URLSearchParams(search).get("live") === "1") ||
+    (pathname === "/app/workout/done" && new URLSearchParams(search).has("run"));
   const session = useLiveSession(useLiveSessionStorage()).stored;
   const run = useLiveRun(useLiveRunStore());
   const live = session !== null || run !== null;
