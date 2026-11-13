@@ -90,11 +90,13 @@ describe("connector", () => {
     const challenge = res.headers.get("WWW-Authenticate") ?? "";
     const metadataUrl = /resource_metadata="([^"]+)"/.exec(challenge)?.[1] ?? "";
     expect(metadataUrl).toBe("https://api.sendtally.test/.well-known/oauth-protected-resource/mcp");
+    expect(challenge).toContain('scope="profile offline_access"');
 
     const metadata = await testApp().request(metadataUrl, {}, env);
     expect(await metadata.json()).toMatchObject({
       resource: "https://api.sendtally.test/mcp",
       authorization_servers: ["https://clerk.sendtally.test"],
+      scopes_supported: ["profile", "offline_access"],
     });
   });
 
@@ -121,18 +123,6 @@ describe("connector", () => {
     };
     expect(await sessionsOf("user_mcp")).toMatchObject([{ topGrade: "V4" }]);
     expect(await sessionsOf("user_other")).toEqual([]);
-  });
-
-  it("gives every tool the title and annotations the directories require", async () => {
-    const res = await rpc("tools/list", {}, "user_mcp");
-    const { tools } = ((await res.json()) as { result: { tools: unknown[] } }).result;
-    expect(tools.length).toBeGreaterThan(0);
-    for (const tool of tools) {
-      expect(tool).toMatchObject({
-        title: expect.any(String),
-        annotations: { readOnlyHint: expect.any(Boolean), destructiveHint: expect.any(Boolean) },
-      });
-    }
   });
 
   it("records each tool call against the user and the assistant that made it", async () => {

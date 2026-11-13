@@ -9,9 +9,12 @@ import { captureEvent, type AppEnv } from "./context";
 import { tools } from "./mcp/tools";
 
 const METADATA_PATH = "/.well-known/oauth-protected-resource/mcp";
+// Tools need only the user id, which every Clerk token carries; offline_access
+// asks for a refresh token so the assistant stays signed in past the access token.
+const SCOPES = ["profile", "offline_access"];
 
 // A publishable key is its prefix and the base64 of the instance's host, "$"-terminated.
-export const clerkIssuer = (publishableKey: string): string =>
+const clerkIssuer = (publishableKey: string): string =>
   `https://${atob(publishableKey.split("_")[2] ?? "").slice(0, -1)}`;
 
 const RATE_LIMITED = "Too many requests from this connector. Wait a minute, then try again.";
@@ -55,7 +58,7 @@ export const mcp = new Hono<AppEnv>()
       resource: new URL("/mcp", c.req.url).href,
       authorization_servers: [clerkIssuer(c.env.CLERK_PUBLISHABLE_KEY)],
       bearer_methods_supported: ["header"],
-      scopes_supported: ["profile", "email"],
+      scopes_supported: SCOPES,
     })
   )
   .all("/mcp", async (c) => {
@@ -63,7 +66,7 @@ export const mcp = new Hono<AppEnv>()
     if (user === null) {
       const metadata = new URL(METADATA_PATH, c.req.url).href;
       return c.json({ error: "unauthorized" }, 401, {
-        "WWW-Authenticate": `Bearer resource_metadata="${metadata}"`,
+        "WWW-Authenticate": `Bearer resource_metadata="${metadata}", scope="${SCOPES.join(" ")}"`,
       });
     }
     const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });
