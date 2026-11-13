@@ -58,6 +58,11 @@ export { usePlanActions, type PlanActions } from "./usePlanActions";
 export {
   cellText,
   columnLabel,
+  doneAll,
+  doneText,
+  isTimeField,
+  weekFieldMarked,
+  weekFieldUnit,
   fieldLabel,
   weekFieldLimits,
   weekFieldValue,
@@ -141,7 +146,21 @@ export {
 } from "./blockMeta";
 export { blockWeekColumns, blockWeekDates, cellMark, weekPlans } from "./blockWeekDays";
 export { usePlanDraft, type PlanDraftState } from "./usePlanDraft";
-export { changedWeeks, everyWeekFrom, ladderDone, ranMark, weekChangesOf } from "./ladder";
+export {
+  changedWeeks,
+  everyWeekFrom,
+  ladderDone,
+  ladderView,
+  loadSummary,
+  ranMark,
+  toggleIn,
+  weekChangesOf,
+  weekDaysRows,
+  type LadderView,
+  type WeekDaysArgs,
+  type WeekDaysCell,
+  type WeekDaysRow,
+} from "./ladder";
 export { LIT_MS, useLit } from "./useLit";
 export { useBlockWeekGrid, type BlockWeekGrid, type BlockWeekGridArgs } from "./useBlockWeekGrid";
 export {
