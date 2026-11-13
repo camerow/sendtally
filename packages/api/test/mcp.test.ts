@@ -40,10 +40,46 @@ const rpc = async (
     bindings
   );
 
-const callTool = async (user: string, bindings: Env = env): Promise<ToolResult> => {
-  const res = await rpc("tools/call", { name: "list_sessions", arguments: {} }, user, bindings);
+const callTool = async (
+  user: string,
+  bindings: Env = env,
+  name = "list_sessions",
+  args: Record<string, unknown> = {}
+): Promise<ToolResult> => {
+  const res = await rpc("tools/call", { name, arguments: args }, user, bindings);
   return ((await res.json()) as { result: ToolResult }).result;
 };
+
+const toolJson = async <T>(
+  user: string,
+  name: string,
+  args: Record<string, unknown> = {}
+): Promise<T> => JSON.parse((await callTool(user, env, name, args)).content[0]?.text ?? "{}") as T;
+
+const put = async (user: string, path: string, body: unknown): Promise<void> => {
+  const res = await testApp().request(
+    path,
+    {
+      method: path === "/v1/sessions" ? "POST" : "PUT",
+      headers: { "x-test-user": user, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+    env
+  );
+  expect(res.ok).toBe(true);
+};
+
+const recently = (daysAgo: number): string =>
+  new Date(Date.now() - daysAgo * 86_400_000).toISOString().slice(0, 10);
+
+const session = (date: string, climbs: unknown[]): unknown => ({
+  date,
+  name: "Tuesday night session",
+  startTime: "18:00",
+  endTime: "19:30",
+  location: "indoor",
+  climbs,
+});
 
 describe("connector", () => {
   beforeEach(() => captureUserEvent.mockClear());
@@ -110,5 +146,146 @@ describe("connector", () => {
       content: [{ text: expect.stringMatching(/Wait a minute/) }],
     });
     expect(captureUserEvent).not.toHaveBeenCalled();
+  });
+
+  it("lists sessions in a date range, with their climbs when asked", async () => {
+    const user = "user_range";
+    await put(
+      user,
+      "/v1/sessions",
+      session("2026-10-01", [
+        { name: "Crimp line", grade: { scale: "v", value: 3 }, kind: "send", tries: 2 },
+      ])
+    );
+    await put(
+      user,
+      "/v1/sessions",
+      session("2026-10-20", [
+        { name: "", grade: { scale: "v", value: 5 }, kind: "attempt", tries: 4 },
+      ])
+    );
+    type Listed = { sessions: Array<{ startAt: string; climbs?: unknown[] }> };
+    const ranged = await toolJson<Listed>(user, "list_sessions", {
+      from: "2026-10-01",
+      to: "2026-10-01",
+      includeClimbs: true,
+    });
+    expect(ranged.sessions).toHaveLength(1);
+    expect(ranged.sessions[0]?.climbs).toEqual([
+      { name: "Crimp line", grade: "V3", kind: "send", tries: 2 },
+    ]);
+    const plain = await toolJson<Listed>(user, "list_sessions");
+    expect(plain.sessions).toHaveLength(2);
+    expect(plain.sessions[0]).not.toHaveProperty("climbs");
+    expect(plain.sessions[0]).not.toHaveProperty("id");
+  });
+
+  it("summarises only the signed-in user's recent climbing", async () => {
+    const user = "user_summary";
+    await put(
+      user,
+      "/v1/sessions",
+      session(recently(3), [
+        { name: "", grade: { scale: "v", value: 4 }, kind: "send", tries: 1 },
+        { name: "", grade: { scale: "v", value: 4 }, kind: "send", tries: 1 },
+        { name: "", grade: { scale: "v", value: 6 }, kind: "attempt", tries: 3 },
+        { name: "", grade: { scale: "french", value: "7a" }, kind: "send", tries: 1 },
+      ])
+    );
+    await put(
+      user,
+      "/v1/sessions",
+      session("2020-01-01", [{ name: "", grade: { scale: "v", value: 9 }, kind: "send", tries: 1 }])
+    );
+    const summary = await toolJson<Record<string, unknown>>(user, "get_climbing_summary", {
+      weeks: 4,
+    });
+    expect(summary).toMatchObject({
+      sessions: 1,
+      sessionsPerWeek: 0.3,
+      rpeByWeek: [{ sessions: 1 }],
+      disciplines: expect.arrayContaining([
+        {
+          discipline: "boulder",
+          hardestSend: "V4",
+          hardestTried: "V6",
+          sendPyramid: [{ grade: "V4", sends: 2 }],
+        },
+        {
+          discipline: "route",
+          hardestSend: "7a",
+          hardestTried: "7a",
+          sendPyramid: [{ grade: "7a", sends: 1 }],
+        },
+      ]),
+    });
+    expect(await toolJson(user + "_other", "get_climbing_summary")).toMatchObject({
+      sessions: 0,
+      disciplines: [],
+    });
+  });
+
+  it("reads only the signed-in user's library and plan", async () => {
+    const user = "user_library";
+    await put(user, "/v1/workouts/w1", {
+      kind: "strength",
+      name: "Back squat",
+      description: "",
+      minutes: 45,
+      targetRpe: 8,
+      items: [{ exercise: "Back squat", doses: [{ sets: 5, reps: 5, weightKg: 100 }] }],
+    });
+    await put(user, "/v1/blocks/b1", {
+      name: "Winter base",
+      start: "2026-11-02",
+      weeks: 6,
+      focus: null,
+    });
+    await put(user, "/v1/memberships/m1", {
+      workoutId: "w1",
+      blockId: "b1",
+      weekdays: [1, 4],
+      start: "2026-11-02",
+      position: 0,
+    });
+
+    expect(await toolJson(user, "get_training_library")).toMatchObject({
+      exercises: [{ name: "Back squat", kind: "strength" }],
+      workouts: [
+        {
+          name: "Back squat",
+          targetRpe: 8,
+          items: [{ exercise: "Back squat", doses: [{ sets: 5, reps: 5, weightKg: 100 }] }],
+        },
+      ],
+      hangboardGrips: expect.arrayContaining([{ id: "half", name: "Half crimp" }]),
+    });
+    expect(await toolJson(user, "get_plan")).toEqual({
+      blocks: [
+        {
+          name: "Winter base",
+          start: "2026-11-02",
+          weeks: 6,
+          workouts: [
+            {
+              workout: "Back squat",
+              start: "2026-11-02",
+              weekdays: [1, 4],
+              weekdaysFromWeek: [],
+              weekChanges: [],
+              skippedOrMoved: [],
+            },
+          ],
+        },
+      ],
+      outsideBlocks: [],
+    });
+
+    const other = user + "_other";
+    expect(await toolJson(other, "get_training_library")).toMatchObject({
+      exercises: [],
+      workouts: [],
+    });
+    expect(await toolJson(other, "get_plan")).toEqual({ blocks: [], outsideBlocks: [] });
   });
 });
