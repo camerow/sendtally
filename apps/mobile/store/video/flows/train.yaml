@@ -1,0 +1,43 @@
+appId: com.sendtally.app
+# Beat 1: a new block on the Train tab, with a hangboard, a strength and a climbing workout on their days.
+---
+- tapOn: "Train(, tab.*)?"
+- waitForAnimationToEnd
+- startRecording: "train"
+- tapOn:
+    id: "fab"
+- tapOn: "Create block"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Edit block"
+    timeout: 15000
+- inputText: "Winter strength"
+- pressKey: Enter
+- tapOn: "Increase Weeks"
+- tapOn: "Increase Weeks"
+- tapOn: "Add a workout to .*"
+- waitForAnimationToEnd
+- tapOn: "Add Max hangs"
+- waitForAnimationToEnd
+- tapOn: "Add 5x5 strength"
+- waitForAnimationToEnd
+- tapOn: "Add Limit bouldering"
+- waitForAnimationToEnd
+# A hidden "Done" from another sheet matches the text first, so tap the sheet's own by position.
+- tapOn:
+    point: "87%,16%"
+    retryTapIfNoChange: false
+- waitForAnimationToEnd
+- tapOn: "Max hangs, Monday"
+- tapOn: "Max hangs, Thursday"
+- tapOn: "5x5 strength, Wednesday"
+- tapOn: "Limit bouldering, Tuesday"
+- tapOn: "Limit bouldering, Saturday"
+- tapOn: "Apply to following weeks"
+- tapOn: "Save"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "hold the frame"
+    timeout: 2000
+    optional: true
+- stopRecording
