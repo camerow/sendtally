@@ -89,22 +89,24 @@ export function ImportReview({
           onImportAnyway={onImportAnyway}
         />
       )}
-      <View style={{ marginHorizontal: -18 }}>
-        <View style={{ paddingHorizontal: 18 }}>
-          <SectionHeading title={t("import.sessionsLabel")} />
+      {newestFirst.length > 0 && (
+        <View style={{ marginHorizontal: -18 }}>
+          <View style={{ paddingHorizontal: 18 }}>
+            <SectionHeading title={t("import.sessionsLabel")} />
+          </View>
+          {newestFirst.map((s, i) => (
+            <React.Fragment key={i}>
+              {s.date.slice(0, 7) !== newestFirst[i - 1]?.date.slice(0, 7) && (
+                <SectionHeader
+                  title={monthName(Number(s.date.slice(5, 7)))}
+                  meta={s.date.slice(0, 4)}
+                />
+              )}
+              <PlannedSessionRow session={s} meta={rowMeta(s)} />
+            </React.Fragment>
+          ))}
         </View>
-        {newestFirst.map((s, i) => (
-          <React.Fragment key={i}>
-            {s.date.slice(0, 7) !== newestFirst[i - 1]?.date.slice(0, 7) && (
-              <SectionHeader
-                title={monthName(Number(s.date.slice(5, 7)))}
-                meta={s.date.slice(0, 4)}
-              />
-            )}
-            <PlannedSessionRow session={s} meta={rowMeta(s)} />
-          </React.Fragment>
-        ))}
-      </View>
+      )}
     </>
   );
 }

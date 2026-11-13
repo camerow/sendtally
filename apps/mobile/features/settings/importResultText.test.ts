@@ -12,7 +12,7 @@ describe("importResultText", () => {
       "All 214 already in your log"
     );
     expect(importResultText({ imported: 9, skipped: 0, likely: 3 })).toBe(
-      "Added 9 · 3 likely duplicates skipped"
+      "Added 9 sessions · 3 likely duplicates skipped"
     );
     expect(importResultText({ imported: 7, skipped: 2, likely: 1 })).toBe(
       "Added 7 · 2 already there · 1 likely duplicate skipped"
