@@ -24,6 +24,7 @@ export function DropZone({ onFile }: { onFile: (file: File) => void }): React.Re
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
+        textAlign: "center",
         gap: 10,
         padding: "36px 18px",
         background: over ? "var(--surface-soft)" : "var(--bs-white)",

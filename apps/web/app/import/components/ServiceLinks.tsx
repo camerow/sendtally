@@ -6,7 +6,7 @@ import { monoMuted } from "../../settings/components/styles";
 export function ServiceLinks(): React.ReactElement {
   return (
     <nav aria-labelledby="export-from" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <span id="export-from" style={monoMuted}>
+      <span id="export-from" style={{ ...monoMuted, textTransform: "uppercase" }}>
         {t("import.exportFrom")}
       </span>
       <ul
