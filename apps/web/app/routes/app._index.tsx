@@ -15,6 +15,7 @@ import journalStyles from "../journal/journal.css?url";
 import logSessionStyles from "../log-session/log-session.css?url";
 import logStyles from "../sessions/log.css?url";
 import sessionsStyles from "../sessions/sessions.css?url";
+import trainingStyles from "../training/training.css?url";
 
 type LoaderData = {
   status: ConnectionStatus;
@@ -30,6 +31,7 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: logSessionStyles },
   { rel: "stylesheet", href: climbsStyles },
   { rel: "stylesheet", href: logStyles },
+  { rel: "stylesheet", href: trainingStyles },
 ];
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
