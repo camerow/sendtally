@@ -37,9 +37,3 @@ export async function importAll(
   }
   return totals;
 }
-
-export function importResultText({ imported, skipped }: ImportResult): string {
-  if (imported === 0) return t("import.allThere", { total: skipped });
-  if (skipped === 0) return t("import.added", { count: imported });
-  return t("import.addedSome", { added: imported, skipped });
-}

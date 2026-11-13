@@ -1,10 +1,10 @@
 import React from "react";
-import { Pressable, Share, Text, View } from "react-native";
+import { Share, Text, View } from "react-native";
 import { CONVERSION_PROMPT } from "@sendtally/features/import";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { press } from "../../lib/press";
+import { colors } from "@sendtally/design/tokens";
 import { bodyText, sectionCard, sectionLabel } from "../../lib/styles";
+import { Button } from "../training/components/Button";
 import { AMBER } from "../training/components/tints";
 import { ImportHero } from "./ImportHero";
 
@@ -25,24 +25,12 @@ export function NotRecognized({ fileName }: { fileName: string }): React.ReactEl
         <Text style={sectionLabel}>{t("import.convertTitle")}</Text>
         <Text style={bodyText}>{t("import.convertHelpMobile")}</Text>
         <View style={{ flexDirection: "row" }}>
-          <Pressable
+          <Button
+            variant="outline"
+            label={t("import.sharePrompt")}
             onPress={() => void Share.share({ message: CONVERSION_PROMPT })}
-            accessibilityRole="button"
-            style={press({
-              minHeight: 46,
-              paddingHorizontal: 18,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: radius.control,
-              borderWidth: 1,
-              borderColor: colors.lineOnLightStrong,
-              backgroundColor: colors.white,
-            })}
-          >
-            <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.gunmetal }}>
-              {t("import.sharePrompt")}
-            </Text>
-          </Pressable>
+            style={{ backgroundColor: colors.white }}
+          />
         </View>
       </View>
     </>
