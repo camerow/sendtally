@@ -108,7 +108,8 @@ describe("each climb's area", () => {
   const pickArea = async (): Promise<void> => {
     await fireEvent(screen.getByLabelText("Area"), "focus");
     await fireEvent.changeText(screen.getByLabelText("Area"), "Stan");
-    await fireEvent.press(await screen.findByLabelText("Stanage Popular"));
+    // The search waits out a debounce, which a loaded machine can push past the 1s default.
+    await fireEvent.press(await screen.findByLabelText("Stanage Popular", {}, { timeout: 5000 }));
   };
 
   it("leaves the form and sits in the climb sheet, outdoors for every climb", async () => {

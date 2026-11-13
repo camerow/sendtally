@@ -1,5 +1,7 @@
 import { climbingSummary } from "./climbingSummary";
+import { importClimbingLog } from "./importClimbingLog";
 import { listSessions } from "./listSessions";
+import { logSession } from "./logSession";
 import { plan } from "./plan";
 import { saveBlock } from "./saveBlock";
 import { saveExercise } from "./saveExercise";
@@ -15,4 +17,6 @@ export const tools: ConnectorTool[] = [
   saveExercise,
   saveWorkout,
   saveBlock,
+  importClimbingLog,
+  logSession,
 ];
