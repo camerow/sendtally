@@ -38,7 +38,6 @@ export const sessions = {
   "sessions.all": "Tout",
   "sessions.jumpTo": "Aller à",
   "sessions.jumpToMonth": "Aller au mois",
-  "sessions.unfinishedSession": "Séance inachevée",
   "sessions.savedOnDeviceAt": "Enregistrée sur cet appareil à {time}",
   "sessions.resume": "Reprendre",
   "sessions.setupEyebrowLapsed": "Strava · reconnexion requise",
@@ -64,10 +63,7 @@ export const sessions = {
   "sessions.logFullSessionHint":
     "Enregistre une séance d'escalade passée avec cotations, essais, notes, lieu et effort.",
   "sessions.discardSession": "Abandonner la séance",
-  "sessions.savedAsYouGo": "Enregistrée au fil de l'eau",
   "sessions.saving": "Enregistrement…",
-  "sessions.notSavedYet": "Pas encore enregistrée, nouvel essai à venir",
-  "sessions.addDetails": "Ajouter des détails",
   "sessions.topSend": "max {grade}",
   "sessions.onlyWorkout": "Seulement {name}",
   "sessions.example": "Exemple",

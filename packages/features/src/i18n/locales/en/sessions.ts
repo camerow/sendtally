@@ -38,7 +38,6 @@ export const sessions = {
   "sessions.all": "All",
   "sessions.jumpTo": "Jump to",
   "sessions.jumpToMonth": "Jump to month",
-  "sessions.unfinishedSession": "Unfinished session",
   "sessions.savedOnDeviceAt": "Saved on this device at {time}",
   "sessions.resume": "Resume",
   "sessions.setupEyebrowLapsed": "Strava · reconnect needed",
@@ -63,10 +62,7 @@ export const sessions = {
   "sessions.logFullSessionHint":
     "Record a previous climbing session with grades, attempts, notes, location, effort.",
   "sessions.discardSession": "Discard session",
-  "sessions.savedAsYouGo": "Saved as you go",
   "sessions.saving": "Saving…",
-  "sessions.notSavedYet": "Not saved yet, will retry",
-  "sessions.addDetails": "Add details",
   "sessions.topSend": "top {grade}",
   "sessions.onlyWorkout": "Only {name}",
   "sessions.example": "Example",

@@ -42,7 +42,7 @@ import {
 } from "@sendtally/features/workouts";
 import { doseMeasureOf } from "@sendtally/features/workouts";
 import { ItemEditor } from "./ItemEditor";
-import type { AddFlow } from "../planning/flowParams";
+import type { AddFlow } from "@sendtally/features/training";
 import { useAddTo } from "../planning/useAddTo";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
