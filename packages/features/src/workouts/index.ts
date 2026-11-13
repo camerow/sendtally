@@ -54,3 +54,4 @@ export * from "./liveRun";
 export * from "./useLiveRun";
 export * from "./useSetsPlayer";
 export * from "./useChecklistPlayer";
+export * from "./holdRow";
