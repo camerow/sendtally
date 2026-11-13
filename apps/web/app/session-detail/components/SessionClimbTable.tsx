@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router";
-import { climbPills } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
   CLIMB_SORTS,
@@ -8,13 +7,19 @@ import {
   type ClimbSort,
   type ClimbVM,
 } from "@sendtally/features/session-detail";
+import { ClimbPill } from "../../climbs/components/ClimbPill";
 import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
-import { sectionLabel } from "../../components/styles";
 import { EnduranceLaps } from "./EnduranceLaps";
 
-const RESULT_BADGES: Record<ClimbVM["pill"], { fill: string; ink: string; line?: string }> =
-  climbPills;
+const HEADINGS = [
+  { label: () => "#" },
+  { label: () => t("sessionDetail.colClimb") },
+  { label: () => t("common.grade") },
+  { label: () => t("sessionDetail.colAngle"), wide: true },
+  { label: () => t("sessionDetail.colAttempts"), wide: true },
+  { label: () => t("common.result") },
+];
 
 export type SessionClimbTableProps = {
   climbs: ClimbVM[];
@@ -36,19 +41,9 @@ export function SessionClimbTable({
       <div className="detail-heading">
         <h2 className="detail-label">{`${t("common.climbs")} · ${climbs.length}`}</h2>
         <select
+          className="session-climb-sort"
           value={sort}
           onChange={(e) => onSort(e.target.value as ClimbSort)}
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontWeight: 500,
-            fontSize: 12,
-            color: "var(--bs-gunmetal)",
-            background: "#F7F6F3",
-            border: "1px solid rgba(64,63,76,0.15)",
-            borderRadius: "var(--radius-control)",
-            padding: "9px 12px",
-            cursor: "pointer",
-          }}
         >
           {CLIMB_SORTS.map((s) => (
             <option key={s} value={s}>
@@ -58,145 +53,55 @@ export function SessionClimbTable({
         </select>
       </div>
 
-      <div className="session-climb-grid" style={{ padding: "12px 4px 9px", alignItems: "center" }}>
-        {[
-          "#",
-          t("sessionDetail.colClimb"),
-          t("common.grade"),
-          t("sessionDetail.colAngle"),
-          t("sessionDetail.colAttempts"),
-          t("common.result"),
-        ].map((h, i) => (
-          <span
-            key={h}
-            style={sectionLabel}
-            className={i === 3 || i === 4 ? "session-climb-wide" : undefined}
-          >
-            {h}
+      <div className="session-climb-grid session-climb-head">
+        {HEADINGS.map((h) => (
+          <span key={h.label()} className={h.wide === true ? "session-climb-wide" : undefined}>
+            {h.label()}
           </span>
         ))}
       </div>
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        {climbs.map((c) => {
-          const badge = RESULT_BADGES[c.pill];
-          const endurance = c.endurance !== undefined;
-          return (
-            <div
-              key={c.n}
-              className="session-climb-grid"
-              style={{
-                padding: "12px 4px",
-                alignItems: "start",
-                borderTop: "1px solid var(--line-on-light)",
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 12,
-                  color: "rgba(64,63,76,0.5)",
-                }}
-              >
-                {c.n}
-              </span>
-              <span style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                  {c.colour !== undefined && <CircuitDot colour={c.colour} size={12} />}
-                  {c.endurance !== undefined && (
-                    <span style={{ display: "inline-flex", color: "var(--bs-petal-ink)" }}>
-                      <Icon name="endurance" size={14} strokeWidth={2.4} />
-                    </span>
+      {climbs.map((c) => {
+        const laps = c.endurance;
+        return (
+          <div key={c.n} className="session-climb-grid session-climb-row">
+            <span className="session-climb-n">{c.n}</span>
+            <span className="session-climb-main">
+              <span className="session-climb-title">
+                {c.colour !== undefined && <CircuitDot colour={c.colour} size={12} />}
+                {laps !== undefined && (
+                  <span className="session-climb-endurance">
+                    <Icon name="endurance" size={14} strokeWidth={2.4} />
+                  </span>
+                )}
+                <span className="session-climb-name">
+                  {c.climbSlug === null ? (
+                    c.name
+                  ) : (
+                    <Link to={`/app/climbs/${c.climbSlug}`}>{c.name}</Link>
                   )}
-                  <span
-                    style={{
-                      fontWeight: 500,
-                      fontSize: 15,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {c.climbSlug === null ? (
-                      c.name
-                    ) : (
-                      <Link
-                        to={`/app/climbs/${c.climbSlug}`}
-                        style={{ color: "inherit", textDecorationColor: "rgba(64,63,76,0.3)" }}
-                      >
-                        {c.name}
-                      </Link>
-                    )}
-                  </span>
                 </span>
-                {climbAreas && c.area !== null && (
-                  <span style={{ fontSize: 12.5, color: "var(--text-on-white-secondary)" }}>
-                    {c.area}
-                  </span>
-                )}
-                {c.note !== null && (
-                  <span
-                    style={{
-                      fontSize: 13,
-                      lineHeight: 1.5,
-                      whiteSpace: "pre-line",
-                      color: "var(--text-on-white-secondary)",
-                      borderLeft: "2px solid rgba(64,63,76,0.12)",
-                      paddingLeft: 10,
-                    }}
-                  >
-                    {c.note}
-                  </span>
-                )}
-                {c.endurance !== undefined && <EnduranceLaps endurance={c.endurance} />}
               </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontWeight: 600,
-                  fontSize: 14,
-                  color: c.isTopSend ? "var(--text-label-accent)" : "var(--bs-gunmetal)",
-                }}
-              >
-                {c.gradeLabel}
-              </span>
-              {[c.angleLabel ?? "", endurance ? "" : String(c.attempts)].map((value, i) => (
-                <span
-                  key={i}
-                  className="session-climb-wide"
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 12,
-                    color: "rgba(64,63,76,0.72)",
-                  }}
-                >
-                  {value}
-                </span>
-              ))}
-              {endurance ? (
-                <span />
-              ) : (
-                <span
-                  style={{
-                    justifySelf: "start",
-                    fontFamily: "var(--font-mono)",
-                    fontWeight: 500,
-                    fontSize: 10,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    borderRadius: "var(--radius-pill)",
-                    padding: "3px 9px",
-                    background: badge.fill,
-                    border: `1px solid ${badge.line ?? "transparent"}`,
-                    color: badge.ink,
-                  }}
-                >
-                  {c.resultLabel}
-                </span>
+              {climbAreas && c.area !== null && (
+                <span className="session-climb-area">{c.area}</span>
               )}
-            </div>
-          );
-        })}
-      </div>
+              {c.note !== null && <span className="session-climb-note">{c.note}</span>}
+              {laps !== undefined && <EnduranceLaps endurance={laps} />}
+            </span>
+            <span
+              className={
+                c.isTopSend ? "session-climb-grade session-climb-grade--top" : "session-climb-grade"
+              }
+            >
+              {c.gradeLabel}
+            </span>
+            <span className="session-climb-wide session-climb-cell">{c.angleLabel ?? ""}</span>
+            <span className="session-climb-wide session-climb-cell">
+              {laps === undefined ? String(c.attempts) : ""}
+            </span>
+            {laps === undefined ? <ClimbPill kind={c.pill} label={c.resultLabel} /> : <span />}
+          </div>
+        );
+      })}
     </section>
   );
 }
