@@ -586,6 +586,13 @@
   gap: 3px;
 }
 
+.plan-row-name,
+.plan-row-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .plan-row-name {
   font-weight: 600;
   font-size: 15px;
