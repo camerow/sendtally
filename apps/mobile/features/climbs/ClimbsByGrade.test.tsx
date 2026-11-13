@@ -38,7 +38,7 @@ const grades: GradeClimbsVM[] = [
 
 describe("Climbs by grade", () => {
   it("counts every climb and opens one grade at a time", async () => {
-    await render(<ClimbsByGrade grades={grades} />);
+    await render(<ClimbsByGrade grades={grades} total={5} />);
     expect(screen.getByText("5 climbs")).toBeTruthy();
     expect(screen.queryByText("Arete")).toBeNull();
 
@@ -54,7 +54,7 @@ describe("Climbs by grade", () => {
   });
 
   it("opens a named climb on its screen and a session's gym climbs on the session", async () => {
-    await render(<ClimbsByGrade grades={grades} />);
+    await render(<ClimbsByGrade grades={grades} total={5} />);
     await fireEvent.press(screen.getByLabelText("V6, 1 sent · 3 attempted"));
     expect(screen.getAllByText("V6")).toHaveLength(1);
     await fireEvent.press(screen.getByLabelText("V6, Gym climbs ×3, Oct 30, 4 tries"));

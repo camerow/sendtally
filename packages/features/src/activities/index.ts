@@ -69,3 +69,4 @@ export * from "./intervalsText";
 export * from "./summaryText";
 export type { HistoryItem, Stat } from "./types";
 export { hangCount, hangLoadText } from "./hangText";
+export { stravaLabel } from "./stravaLabel";

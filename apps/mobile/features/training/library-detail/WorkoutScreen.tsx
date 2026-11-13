@@ -26,7 +26,7 @@ import { LoadState } from "../data/LoadState";
 import { HistoryList } from "../history/HistoryList";
 import { activityItem, hangItem, ofWorkout } from "@sendtally/features/activities";
 import { useLibrary, useNextSession } from "../library/useLibrary";
-import type { AddFlow } from "../planning/flowParams";
+import type { AddFlow } from "@sendtally/features/training";
 import { AddButton } from "../planning/AddButton";
 import { useDayChanges } from "../plan-days/useDayChanges";
 import { PlanList } from "../plans/PlanList";

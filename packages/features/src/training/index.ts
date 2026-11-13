@@ -48,7 +48,7 @@ export {
   type ScheduleDraft,
   type ScheduleMode,
 } from "./schedule";
-export { canMoveTo, moveOf, moveWeek, plannedOn } from "./moves";
+export { canMoveTo, moveCopy, moveOf, moveWeek, plannedOn } from "./moves";
 export { usePlan } from "./usePlan";
 export { usePlanActions, type PlanActions } from "./usePlanActions";
 export {
@@ -115,3 +115,5 @@ export { bandOn, blockOn, monthWeeks, type Band } from "./calendarGrid";
 export { isOneOff } from "./plan";
 export { membershipTag, oneOffDate, plannedIn } from "./planText";
 export { KIND_COLORS, activityColor } from "./kindColors";
+export { addFlowOf, addFlowParams, addKicker, type AddFlow, type RawAddParams } from "./addFlow";
+export { blockMembership, useAddTo, type AddTo, type AddToOptions } from "./useAddTo";
