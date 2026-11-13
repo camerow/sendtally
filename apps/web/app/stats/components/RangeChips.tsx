@@ -28,9 +28,9 @@ export function RangeChips({
 }: RangeChipsProps): React.ReactElement {
   const row = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
-    const el = row.current;
-    const chip = el?.querySelector<HTMLElement>('[aria-pressed="true"]');
-    if (el && chip) el.scrollLeft = chip.offsetLeft - (el.clientWidth - chip.offsetWidth) / 2;
+    row.current
+      ?.querySelector<HTMLElement>('[aria-pressed="true"]')
+      ?.scrollIntoView?.({ inline: "center", block: "nearest" });
   }, [shown]);
   return (
     <div ref={row} role="group" aria-label={t("trends.timeRange")} className="range-chips">

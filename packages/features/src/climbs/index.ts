@@ -106,3 +106,8 @@ export {
   type ClimbsData,
   type ClimbsFeature,
 } from "./useClimbs";
+export {
+  climbPlaceLabel,
+  useClimbingInsights,
+  type ClimbingInsightsFeature,
+} from "./useClimbingInsights";
