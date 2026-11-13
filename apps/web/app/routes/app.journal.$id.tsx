@@ -79,7 +79,7 @@ export default function EntryDetailRoute(): React.ReactElement {
     setError(null);
     api
       .deleteEntry(entry.id)
-      .then(() => navigate("/app/journal"))
+      .then(() => navigate("/app"))
       .catch(() => {
         setError(t("journal.deleteFailed"));
         setDeleting(false);
@@ -88,7 +88,7 @@ export default function EntryDetailRoute(): React.ReactElement {
 
   return (
     <div>
-      <BackLink to="/app/journal">{t("common.back")}</BackLink>
+      <BackLink to="/app">{t("common.back")}</BackLink>
 
       <div className="journal-head">
         <div className="journal-head-row">

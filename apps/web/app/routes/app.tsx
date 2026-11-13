@@ -34,7 +34,6 @@ type NavItem = { label: () => string; to: string; icon: IconName };
 const NAV_ITEMS: NavItem[] = [
   { label: () => t("journal.log"), to: "/app", icon: "sessions" },
   { label: () => t("training.train"), to: "/app/train", icon: "train" },
-  { label: () => t("common.projects"), to: "/app/projects", icon: "projects" },
   { label: () => t("common.trends"), to: "/app/trends", icon: "trends" },
 ];
 

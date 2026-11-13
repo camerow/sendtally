@@ -2,7 +2,7 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router";
 import { t } from "@sendtally/features/i18n";
-import { ENTRY_KINDS, entryKindLabel, today, type EntryKind } from "@sendtally/features/journal";
+import { entryKindLabel, today, type EntryKind } from "@sendtally/features/journal";
 import { Icon, type IconName } from "../../components/Icon";
 import { EntryKindIcon } from "../../journal/components/EntryKindIcon";
 import { useIsNarrow } from "../../lib/useIsNarrow";
@@ -57,32 +57,33 @@ function Row({
   );
 }
 
-function Choices({
-  onLogClimb,
-  onPick,
-}: {
-  onLogClimb: () => void;
-  onPick: () => void;
-}): React.ReactElement {
+function Choices({ onPick }: { onPick: () => void }): React.ReactElement {
   return (
     <>
-      <Row
-        icon="plus"
-        title={t("sessions.logAClimb")}
-        hint={t("sessions.logAClimbHint")}
-        onClick={() => {
-          onPick();
-          onLogClimb();
-        }}
-      />
+      <span className="log-menu-group">{t("statistics.climbing")}</span>
       <Row
         icon="sessions"
-        title={t("sessions.logFullSession")}
+        title={t("climbs.logSession")}
         hint={t("sessions.logFullSessionHint")}
         to="/app/sessions/new"
         onClick={onPick}
       />
-      {ENTRY_KINDS.map((kind) => (
+      <Row
+        icon="climbs"
+        title={t("climbs.addClimb")}
+        hint={t("climbs.addClimbHint")}
+        to="/app/log/climbs/new"
+        onClick={onPick}
+      />
+      <Row
+        icon="trip"
+        title={entryKindLabel("trip")}
+        hint={t(HINTS.trip)}
+        to={entryHref("trip")}
+        onClick={onPick}
+      />
+      <span className="log-menu-group">{t("statistics.training")}</span>
+      {(["journal", "injury"] as const).map((kind) => (
         <Row
           key={kind}
           icon={kind}
@@ -97,17 +98,11 @@ function Choices({
 }
 
 /**
- * One climb is the frequent action, so it gets the wide half. The chevron half holds the
- * slower paths: the full form and the journal entry kinds. Desktop anchors a menu to the
- * button in the header; the phone floats it and gets the sheet it already uses for filters.
+ * Adding a climb is the frequent action, so it gets the wide half. The chevron half holds every
+ * way to log, climbing then training. Desktop anchors a menu to the button in the header; the
+ * phone floats it and opens the menu as a sheet.
  */
-export function LogMenu({
-  variant,
-  onLogClimb,
-}: {
-  variant: "header" | "fab";
-  onLogClimb: () => void;
-}): React.ReactElement {
+export function LogMenu({ variant }: { variant: "header" | "fab" }): React.ReactElement {
   const [open, setOpen] = React.useState(false);
   const narrow = useIsNarrow();
   const wrap = React.useRef<HTMLDivElement>(null);
@@ -136,10 +131,10 @@ export function LogMenu({
   return (
     <div className={`log-menu-wrap log-menu-wrap--${variant}`} ref={wrap}>
       <div className="log-split">
-        <button type="button" className="log-split-main" onClick={onLogClimb}>
+        <Link to="/app/log/climbs/new" className="log-split-main">
           <Icon name="plus" size={17} strokeWidth={3} />
-          {t("sessions.logClimb")}
-        </button>
+          {t("climbs.addClimb")}
+        </Link>
         <button
           type="button"
           className="log-split-more"
@@ -154,7 +149,7 @@ export function LogMenu({
 
       {open && !narrow && (
         <div className="log-menu" role="menu" aria-label={t("sessions.moreWaysToLog")}>
-          <Choices onLogClimb={onLogClimb} onPick={close} />
+          <Choices onPick={close} />
         </div>
       )}
 
@@ -170,7 +165,7 @@ export function LogMenu({
             >
               <div className="sessions-sheet-handle" />
               <div className="log-menu-sheet">
-                <Choices onLogClimb={onLogClimb} onPick={close} />
+                <Choices onPick={close} />
               </div>
             </div>
           </div>,

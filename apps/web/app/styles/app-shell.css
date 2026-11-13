@@ -814,3 +814,33 @@
   background: var(--bs-gunmetal);
   color: var(--bs-white);
 }
+
+.chip {
+  flex: none;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 12px;
+  border: 1px solid rgba(64, 63, 76, 0.18);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: rgba(64, 63, 76, 0.65);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: rgba(64, 63, 76, 0.32);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--bs-gold);
+  border-color: var(--bs-gold);
+  color: var(--bs-gunmetal);
+}
