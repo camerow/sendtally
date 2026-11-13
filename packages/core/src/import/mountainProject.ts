@@ -1,4 +1,4 @@
-import { nameByDate, rowsByName, type Record } from "./records";
+import { nameByDate, rowsByName, type Line, type Record } from "./records";
 
 const STYLES: globalThis.Record<string, Pick<Record, "kind" | "style">> = {
   onsight: { kind: "send", style: "onsight" },
@@ -17,7 +17,7 @@ const STYLES: globalThis.Record<string, Pick<Record, "kind" | "style">> = {
 // Ticks are outdoor, one try each. The lead style, when there is one, says more
 // than the style. `Location` is the area path, and a session is never named
 // after just a state or country.
-export function mountainProjectRecords(header: string[], rows: string[][]): Record[] {
+export function mountainProjectRecords(header: string[], rows: Line[]): Record[] {
   const records = rowsByName(header, rows).map(({ row, get }): Record => {
     const style = get("lead_style") ?? get("style");
     return {

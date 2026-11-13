@@ -1,7 +1,7 @@
 import type { ClimbKind, ClimbStyle } from "../effort";
 import type { Grade } from "../grades";
 
-export type ImportFormat = "kaya" | "8a" | "mountainProject" | "sendtally";
+export type ImportFormat = "kaya" | "8a" | "mountainProject" | "sendage" | "sendtally";
 
 export type ImportIssueCode =
   | "noHeader"

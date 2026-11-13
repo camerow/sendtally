@@ -98,6 +98,21 @@ A Mountain Project tick export has the columns `Date, Route, Rating, Notes, URL,
 - `Notes` becomes the climb note.
 - `URL`, `Pitches`, `Avg Stars`, `Your Stars`, `Route Type`, `Length` and `Rating Code` are not imported.
 
+## Sendage exports
+
+A Sendage export opens with a few lines of preamble (`"These climbs were exported from Sendage Climbing."`, the climber's name and the export date, two blank lines) and then the header `Date, Send Type, Climb, Climb Type, Grade, Area, Country, Rating, Comments`.
+The importer looks for a known header in the first four non-blank lines, so the preamble is skipped.
+Kaya's import template uses the same header and reads the same way.
+
+- `Date` is the session date.
+- `Send Type` `onsight`, `flash` and `redpoint` import as that style, `repeat` as a send with no style, and `project` as an attempt. Any other value is reported for its row.
+- There is no tries count, so every climb imports as one try.
+- `Grade` is the climber's own grade. `Climb Type` `boulder` settles a grade whose letter case says route, as in 8a.nu exports.
+- `Area` names the session. `Comments` becomes the climb note, with HTML entities such as `&rsquo;` decoded, including ones Sendage encoded twice.
+- `Country` and `Rating` are not imported.
+
+This layout comes from another project's importer test rather than a real export, so it is the least certain of the formats here.
+
 ## What happens on import
 
 The browser parses the file, groups rows into sessions, and validates every row with the same rules as the log-session form.

@@ -3,7 +3,15 @@ import { parseCsv } from "./csv";
 import { eightARecords } from "./eightA";
 import { kayaRecords } from "./kaya";
 import { mountainProjectRecords } from "./mountainProject";
-import { normaliseHeader, recordsOf, SENDTALLY_COLUMNS, type Column, type Record } from "./records";
+import { sendageRecords } from "./sendage";
+import {
+  normaliseHeader,
+  recordsOf,
+  SENDTALLY_COLUMNS,
+  type Column,
+  type Line,
+  type Record,
+} from "./records";
 import type { ImportClimb, ImportFormat, ImportIssue, ImportPlan, ImportSession } from "./types";
 
 // The scale is read from how the grade is written: V4, 6A+ (Font, upper
@@ -38,12 +46,14 @@ export const IMPORT_SERVICES: { [F in Exclude<ImportFormat, "sendtally">]: strin
   kaya: "Kaya",
   "8a": "8a.nu",
   mountainProject: "Mountain Project",
+  sendage: "Sendage",
 };
 
 const HEADERS: [Exclude<ImportFormat, "sendtally">, string[]][] = [
   ["kaya", ["date", "ascent_type", "grade", "climb_name"]],
   ["8a", ["route_boulder", "date", "type", "difficulty"]],
   ["mountainProject", ["date", "route", "rating", "location", "style", "lead_style"]],
+  ["sendage", ["date", "send_type", "climb", "climb_type", "grade", "area"]],
 ];
 
 export function detectFormat(header: string[]): ImportFormat | null {
@@ -55,13 +65,17 @@ export function detectFormat(header: string[]): ImportFormat | null {
 }
 
 export function planImport(text: string, timeZone: string): ImportPlan {
-  const rows = parseCsv(text);
-  const header = rows[0];
+  const lines = parseCsv(text)
+    .map((cells, i) => ({ row: i + 1, cells }))
+    .filter(({ cells }) => cells.some((c) => c.trim() !== ""));
+  // A header can follow a few lines of preamble, as in a Sendage export.
+  const at = lines.slice(0, 4).findIndex(({ cells }) => detectFormat(cells) !== null);
+  const header = lines[at]?.cells;
   const format = header === undefined ? null : detectFormat(header);
   if (header === undefined || format === null) {
     return { format: "sendtally", sessions: [], issues: [{ row: 1, code: "noHeader" }] };
   }
-  const records = RECORDS[format](header, rows.slice(1), timeZone);
+  const records = RECORDS[format](header, lines.slice(at + 1), timeZone);
   const { sessions, issues } = groupSessions(records, format === "sendtally");
   // Not one usable row means the file is some other layout, not a file of
   // mistakes, and one message says so better than a row-by-row list.
@@ -71,17 +85,18 @@ export function planImport(text: string, timeZone: string): ImportPlan {
   return { format, sessions, issues };
 }
 
-function sendtallyRecords(header: string[], rows: string[][]): Record[] {
+function sendtallyRecords(header: string[], rows: Line[]): Record[] {
   const known = new Set<string>(SENDTALLY_COLUMNS);
   return recordsOf(header, rows, (name) => (known.has(name) ? (name as Column) : undefined));
 }
 
 const RECORDS: {
-  [F in ImportFormat]: (header: string[], rows: string[][], timeZone: string) => Record[];
+  [F in ImportFormat]: (header: string[], rows: Line[], timeZone: string) => Record[];
 } = {
   kaya: kayaRecords,
   "8a": eightARecords,
   mountainProject: mountainProjectRecords,
+  sendage: sendageRecords,
   sendtally: sendtallyRecords,
 };
 

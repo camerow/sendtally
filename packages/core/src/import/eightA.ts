@@ -1,4 +1,4 @@
-import { gradeIn, nameByDate, rowsByName, type Record } from "./records";
+import { gradeIn, nameByDate, rowsByName, type Line, type Record } from "./records";
 
 const TYPES: globalThis.Record<string, Pick<Record, "kind" | "style">> = {
   os: { kind: "send", style: "onsight" },
@@ -11,7 +11,7 @@ const TYPES: globalThis.Record<string, Pick<Record, "kind" | "style">> = {
 // One file for routes and boulders. A missing value is blank or the string
 // "null", the date's time means nothing, and `tries` is not a real count, so
 // every climb is one try. `area_name` names the session.
-export function eightARecords(header: string[], rows: string[][]): Record[] {
+export function eightARecords(header: string[], rows: Line[]): Record[] {
   const records = rowsByName(header, rows).map(({ row, get: cell }): Record => {
     const get = (name: string): string | undefined => {
       const value = cell(name);

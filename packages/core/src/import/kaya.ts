@@ -1,9 +1,9 @@
-import { recordsOf, type Column, type Record } from "./records";
+import { recordsOf, type Column, type Line, type Record } from "./records";
 
 // Kaya exports ascents only, one per row, with a UTC timestamp. The local date
 // of that instant is the session date. Its location column names the boulder or
 // formation rather than the crag, so only a gym names the session.
-export function kayaRecords(header: string[], rows: string[][], timeZone: string): Record[] {
+export function kayaRecords(header: string[], rows: Line[], timeZone: string): Record[] {
   const map: globalThis.Record<string, Column> = {
     date: "date",
     grade: "grade",

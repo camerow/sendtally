@@ -21,14 +21,17 @@ export type Column = (typeof SENDTALLY_COLUMNS)[number];
 
 export type Record = Partial<globalThis.Record<Column, string>> & { row: number };
 
+// A non-blank row of the file and its row number, counting from 1.
+export type Line = { row: number; cells: string[] };
+
 export function recordsOf(
   header: string[],
-  rows: string[][],
+  rows: Line[],
   pick: (name: string) => Column | undefined
 ): Record[] {
   const columns = header.map((h) => pick(normaliseHeader(h)));
-  return rows.map((cells, i) => {
-    const record: Record = { row: i + 2 };
+  return rows.map(({ row, cells }) => {
+    const record: Record = { row };
     columns.forEach((col, j) => {
       const value = cells[j]?.trim() ?? "";
       if (col !== undefined && value !== "") record[col] = value;
@@ -44,10 +47,10 @@ export function normaliseHeader(h: string): string {
 export type Row = { row: number; get: (name: string) => string | undefined };
 
 // Cells by header name, for a service export whose columns are not ours.
-export function rowsByName(header: string[], rows: string[][]): Row[] {
+export function rowsByName(header: string[], rows: Line[]): Row[] {
   const names = header.map(normaliseHeader);
-  return rows.map((cells, i) => ({
-    row: i + 2,
+  return rows.map(({ row, cells }) => ({
+    row,
     get: (name) => cells[names.indexOf(name)]?.trim() || undefined,
   }));
 }
