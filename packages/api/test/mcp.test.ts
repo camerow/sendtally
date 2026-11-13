@@ -249,17 +249,39 @@ describe("connector", () => {
       position: 0,
     });
 
-    expect(await toolJson(user, "get_training_library")).toMatchObject({
-      exercises: [{ name: "Back squat", kind: "strength" }],
-      workouts: [
+    type Library = { exercises: Array<{ name: string; builtIn?: boolean }>; workouts: unknown[] };
+    const library = await toolJson<Library>(user, "get_training_library");
+    expect(library).toMatchObject({
+      exercises: expect.arrayContaining([
+        { name: "Back squat", kind: "strength", measure: "repsWeight", eachSide: false },
+        {
+          name: "Pull-ups",
+          kind: "strength",
+          measure: "repsWeight",
+          eachSide: false,
+          builtIn: true,
+        },
+      ]),
+      workouts: expect.arrayContaining([
         {
           name: "Back squat",
+          kind: "strength",
+          focus: null,
+          minutes: 45,
           targetRpe: 8,
           items: [{ exercise: "Back squat", doses: [{ sets: 5, reps: 5, weightKg: 100 }] }],
         },
-      ],
+        expect.objectContaining({
+          name: "Repeaters 7:3",
+          builtIn: true,
+          items: [
+            { exercise: "half", doses: [{ sets: 6, reps: 6, onS: 7, offS: 3, setRestS: 180 }] },
+          ],
+        }),
+      ]),
       hangboardGrips: expect.arrayContaining([{ id: "half", name: "Half crimp" }]),
     });
+    expect(library.exercises.filter((e) => e.name === "Back squat")).toHaveLength(1);
     expect(await toolJson(user, "get_plan")).toEqual({
       blocks: [
         {
@@ -282,10 +304,166 @@ describe("connector", () => {
     });
 
     const other = user + "_other";
-    expect(await toolJson(other, "get_training_library")).toMatchObject({
-      exercises: [],
-      workouts: [],
-    });
+    const others = await toolJson<Library>(other, "get_training_library");
+    expect(others.exercises.every((e) => e.builtIn)).toBe(true);
     expect(await toolJson(other, "get_plan")).toEqual({ blocks: [], outsideBlocks: [] });
+  });
+
+  describe("training tools", () => {
+    type Saved = { exercise: { name: string; builtIn: boolean }; existing: boolean };
+    type Library = { exercises: Array<{ name: string; kind: string; builtIn?: boolean }> };
+    type PlanOut = { blocks: Array<{ name: string; workouts: Array<Record<string, unknown>> }> };
+    const mine = async (user: string): Promise<Library["exercises"]> =>
+      (await toolJson<Library>(user, "get_training_library")).exercises.filter((e) => !e.builtIn);
+
+    it("saves an exercise once, links a built-in by name and answers a clash with the existing one", async () => {
+      const user = "user_save_exercise";
+      const fingerboard = { name: "Weighted pinch", kind: "strength", measure: "secondsWeight" };
+      expect(
+        await toolJson<Saved>(user, "save_exercise", { key: "pinch", ...fingerboard })
+      ).toEqual({
+        exercise: { ...fingerboard, eachSide: false, builtIn: false },
+        existing: false,
+      });
+      expect(
+        await toolJson<Saved>(user, "save_exercise", { key: "pinch", ...fingerboard })
+      ).toMatchObject({
+        existing: false,
+      });
+      expect(
+        await toolJson<Saved>(user, "save_exercise", { name: "weighted PINCH", kind: "other" })
+      ).toMatchObject({ exercise: { name: "Weighted pinch", kind: "strength" }, existing: true });
+      expect(
+        await toolJson<Saved>(user, "save_exercise", { name: "pull-ups", kind: "other" })
+      ).toEqual({
+        exercise: {
+          name: "Pull-ups",
+          kind: "strength",
+          measure: "repsWeight",
+          eachSide: false,
+          builtIn: true,
+        },
+        existing: false,
+      });
+      expect((await mine(user)).map((e) => e.name).sort()).toEqual(["Pull-ups", "Weighted pinch"]);
+      expect(await mine(user + "_other")).toEqual([]);
+    });
+
+    it("saves a workout whose items reuse the user's exercises, then built-ins, then new ones", async () => {
+      const user = "user_save_workout";
+      await toolJson(user, "save_exercise", { name: "Pinch block", kind: "strength" });
+      const workout = {
+        key: "pull-day",
+        kind: "strength",
+        name: "Pull day",
+        description: "",
+        minutes: 40,
+        targetRpe: 7,
+        items: [
+          { exercise: "pinch BLOCK", doses: [{ sets: 3, onS: 10, weightKg: 20 }] },
+          { exercise: "chin-ups", doses: [{ sets: 4, reps: 6 }] },
+          { exercise: "Towel hangs", doses: [{ sets: 3, onS: 20 }] },
+        ],
+      };
+      const saved = await toolJson<{ workout: { items: Array<{ exercise: string }> } }>(
+        user,
+        "save_workout",
+        workout
+      );
+      expect(saved.workout.items.map((i) => i.exercise)).toEqual([
+        "Pinch block",
+        "Chin-ups",
+        "Towel hangs",
+      ]);
+      await toolJson(user, "save_workout", workout);
+      const library = await toolJson<{ workouts: Array<{ name: string; builtIn?: boolean }> }>(
+        user,
+        "get_training_library"
+      );
+      expect(library.workouts.filter((w) => !w.builtIn).map((w) => w.name)).toEqual(["Pull day"]);
+      expect(await mine(user)).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: "Chin-ups", kind: "strength" }),
+          expect.objectContaining({ name: "Towel hangs", kind: "strength" }),
+        ])
+      );
+      expect(await mine(user)).toHaveLength(3);
+      expect(await mine(user + "_other")).toEqual([]);
+    });
+
+    it("explains which field is out of range", async () => {
+      const result = await callTool("user_save_invalid", env, "save_workout", {
+        kind: "strength",
+        name: "Too much",
+        description: "",
+        minutes: null,
+        targetRpe: 11,
+        items: [{ exercise: "Dips", doses: [{ sets: 0 }] }],
+      });
+      expect(result.isError).toBe(true);
+      expect(result.content[0]?.text).toContain("<=10 at targetRpe");
+      expect(result.content[0]?.text).toContain(
+        "expected number to be >=1 at items[0].doses[0].sets"
+      );
+    });
+
+    it("plans a block with its workouts and weekdays in one call, once per key", async () => {
+      const user = "user_save_block";
+      await toolJson(user, "save_workout", {
+        kind: "strength",
+        name: "Pull day",
+        description: "",
+        minutes: null,
+        targetRpe: null,
+        items: [{ exercise: "Pull-ups", doses: [{ sets: 4, reps: 6 }] }],
+      });
+      const block = {
+        key: "winter",
+        block: { name: "Winter base", start: "2026-11-02", weeks: 6 },
+        workouts: [
+          { workout: "pull day", weekdays: [0, 3] },
+          { workout: "Max hangs", weekdays: [1], weeks: [{ fromWeek: 4, weekdays: [1, 5] }] },
+        ],
+      };
+      await toolJson(user, "save_block", block);
+      await toolJson(user, "save_block", block);
+      expect(await toolJson<PlanOut>(user, "get_plan")).toMatchObject({
+        blocks: [
+          {
+            name: "Winter base",
+            start: "2026-11-02",
+            weeks: 6,
+            workouts: [
+              { workout: "Pull day", start: "2026-11-02", weekdays: [0, 3], weekdaysFromWeek: [] },
+              {
+                workout: "max10",
+                weekdays: [1],
+                weekdaysFromWeek: [{ fromWeek: 4, weekdays: [1, 5] }],
+              },
+            ],
+          },
+        ],
+      });
+      expect(await toolJson(user + "_other", "get_plan")).toEqual({
+        blocks: [],
+        outsideBlocks: [],
+      });
+    });
+
+    it("saves nothing when a block names a workout the user does not have", async () => {
+      const user = "user_save_block_unknown";
+      const result = await callTool(user, env, "save_block", {
+        block: { name: "Spring", start: "2026-03-02", weeks: 4 },
+        workouts: [
+          { workout: "Max hangs", weekdays: [0] },
+          { workout: "Mystery", weekdays: [2] },
+        ],
+      });
+      expect(result).toMatchObject({
+        isError: true,
+        content: [{ text: expect.stringMatching(/Mystery/) }],
+      });
+      expect(await toolJson(user, "get_plan")).toEqual({ blocks: [], outsideBlocks: [] });
+    });
   });
 });

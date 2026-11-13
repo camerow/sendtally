@@ -94,7 +94,7 @@ export type FocusOptional<T extends { focus: Focus | null }> = Omit<T, "focus"> 
   focus?: Focus | null | undefined;
 };
 
-const workoutFields = {
+export const workoutFields = {
   kind: z.enum(WORKOUT_KINDS),
   name: title,
   description: z.string().trim().max(2000),
@@ -121,9 +121,11 @@ const legacyItems = z
       (variations[0]?.items ?? []).map((i) => ({ exercise: i.exercise, doses: [i.dose] }))
   );
 
+export const workoutItems = z.array(item).max(MAX_ITEMS);
+
 export const workoutBody = z
   .union([
-    z.object({ ...workoutFields, items: z.array(item).max(MAX_ITEMS) }),
+    z.object({ ...workoutFields, items: workoutItems }),
     z.object({ ...workoutFields, variations: legacyItems }),
   ])
   .transform(({ kind, name, description, minutes, targetRpe, exerciseRestS, focus, ...body }) => ({
