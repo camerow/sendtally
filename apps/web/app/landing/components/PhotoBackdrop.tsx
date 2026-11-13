@@ -21,10 +21,13 @@ export function PhotoBackdrop({
     <>
       <img
         className="l-backdrop"
-        src={PHOTOS[photo]}
+        src={PHOTOS[photo].src}
+        srcSet={PHOTOS[photo].srcSet}
+        sizes={PHOTOS[photo].sizes}
         alt={alt}
         style={{ objectPosition: position }}
         loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
         decoding="async"
       />
       <div className={`l-scrim l-scrim--${scrim}`} />

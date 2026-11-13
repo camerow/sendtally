@@ -14,7 +14,14 @@ export function Shot({ media, className, priority = false }: ShotProps): React.R
   const item = MEDIA[media.key];
   const video = React.useRef<HTMLVideoElement>(null);
   React.useEffect(() => {
-    if (prefersReducedMotion()) video.current?.pause();
+    const el = video.current;
+    if (el === null || prefersReducedMotion()) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) el.play().catch(() => undefined);
+      else el.pause();
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
   return (
     <div className={["l-shot", className].filter(Boolean).join(" ")}>
@@ -24,11 +31,10 @@ export function Shot({ media, className, priority = false }: ShotProps): React.R
           src={item.src}
           poster={item.poster}
           aria-label={media.alt}
-          autoPlay
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="none"
         />
       ) : (
         <img

@@ -1,7 +1,7 @@
 import React from "react";
 import { Label } from "@sendtally/design";
 import { useLanding } from "../LandingContext";
-import { PHOTOS } from "../media";
+import { PORTRAIT } from "../media";
 import { Reveal } from "./Reveal";
 
 export function MadeBy(): React.ReactElement {
@@ -10,7 +10,7 @@ export function MadeBy(): React.ReactElement {
     <section id="made" className="l-made">
       <img
         className="l-made-photo"
-        src={PHOTOS.willCameron}
+        src={PORTRAIT}
         alt={copy.made.photoAlt}
         loading="lazy"
         decoding="async"
