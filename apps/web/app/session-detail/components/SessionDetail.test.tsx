@@ -18,6 +18,7 @@ let strava: StravaState | null = null;
 let editable = true;
 
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({ deleteLoggedSession }) }));
+vi.mock("../../lib/useLiveSessionStorage", () => ({ useLiveSessionStorage: () => ({}) }));
 vi.mock("@sendtally/features/session-detail", () => ({
   CLIMB_SORTS: ["order"],
   climbSortLabel: () => "Order",

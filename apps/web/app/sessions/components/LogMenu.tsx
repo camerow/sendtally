@@ -6,6 +6,7 @@ import { entryKindLabel, today, type EntryKind } from "@sendtally/features/journ
 import { Icon, type IconName } from "../../components/Icon";
 import { EntryKindIcon } from "../../journal/components/EntryKindIcon";
 import { useIsNarrow } from "../../lib/useIsNarrow";
+import { useStartLiveSession } from "../../live-session/useStartLiveSession";
 
 const HINTS: Record<EntryKind, "journal.hintJournal" | "journal.hintTrip" | "journal.hintInjury"> =
   {
@@ -58,9 +59,19 @@ function Row({
 }
 
 function Choices({ onPick }: { onPick: () => void }): React.ReactElement {
+  const startLive = useStartLiveSession();
   return (
     <>
       <span className="log-menu-group">{t("statistics.climbing")}</span>
+      <Row
+        icon="climb"
+        title={t("sessions.liveSession")}
+        hint={t("sessions.liveSessionHint")}
+        onClick={() => {
+          onPick();
+          startLive();
+        }}
+      />
       <Row
         icon="sessions"
         title={t("climbs.logSession")}

@@ -17,18 +17,6 @@
   letter-spacing: -0.03em;
 }
 
-.sessions-primary-link {
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--bs-white);
-  background: var(--bs-azure-ink);
-  border-radius: var(--radius-control);
-  padding: 9px 16px;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
 .sessions-setup-stack {
   display: flex;
   flex-direction: column;
@@ -120,152 +108,12 @@
   white-space: nowrap;
 }
 
-.sessions-first {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 48px 20px 32px;
-  text-align: center;
-}
-
-.sessions-first .sessions-primary-link {
-  font-size: 15px;
-  padding: 13px 20px;
-}
-
-.sessions-first-label {
-  text-transform: uppercase;
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 22px;
-  letter-spacing: 0.08em;
-  color: var(--bs-petal-ink);
-}
-
-.sessions-first-body {
-  margin: 0 0 8px;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--text-on-white-secondary);
-  max-width: 40ch;
-  text-wrap: pretty;
-}
-
-.sessions-filters {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 24px;
-}
-
-.sessions-filter-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.sessions-filter-label {
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  font-weight: 500;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  color: rgba(64, 63, 76, 0.55);
-  min-width: 62px;
-}
-
-.sessions-body {
-  display: flex;
-  gap: 32px;
-  margin-top: 26px;
-}
-
-.sessions-list {
-  flex: 1;
-  min-width: 0;
-}
-
-.sessions-rail {
-  width: 128px;
-  flex: none;
-  position: sticky;
-  top: 0;
-  align-self: flex-start;
-  display: flex;
-  flex-direction: column;
-  padding-top: 2px;
-}
-
-.sessions-year {
-  margin: 0;
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background: var(--bs-white);
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  padding: 0 0 10px;
-  border-bottom: 2px solid var(--bs-gunmetal);
-  scroll-margin-top: 8px;
-}
-
-.sessions-year + section > .sessions-month {
-  margin-top: 14px;
-}
-
-.sessions-list > section + section > .sessions-year {
-  margin-top: 30px;
-}
-
-.sessions-month {
-  position: sticky;
-  top: 39px;
-  z-index: 2;
-  background: var(--bs-white);
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin: 22px 0 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--line-on-light);
-  scroll-margin-top: 46px;
-}
-
-.sessions-month--top {
-  top: 0;
-  scroll-margin-top: 8px;
-}
-
-.sessions-heading-title {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.02em;
-}
-
-.sessions-heading-meta {
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  font-weight: 500;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  color: rgba(64, 63, 76, 0.55);
-}
-
-.sessions-heading-meta-year {
-  display: none;
-}
-
 .sessions-rows {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.sessions-scope,
 .sessions-sheet-backdrop {
   display: none;
 }
@@ -302,10 +150,6 @@
   font-family: var(--font-mono);
   font-weight: 600;
   font-size: 16px;
-}
-
-.session-row-dot {
-  display: none;
 }
 
 .session-row-main {
@@ -381,11 +225,6 @@
     letter-spacing: -0.5px;
   }
 
-  .sessions-head-action,
-  .sessions-filters,
-  .sessions-rail,
-  .sessions-year,
-  .sessions-heading-year,
   .session-row-month,
   .session-row-badge {
     display: none;
@@ -397,90 +236,6 @@
 
   .sessions-setup-connect {
     padding: 11px 14px;
-  }
-
-  .sessions-first-label {
-    font-size: 20px;
-  }
-
-  .sessions-body {
-    display: block;
-    margin-top: 0;
-  }
-
-  .sessions-scope {
-    display: flex;
-    align-items: center;
-    height: 44px;
-    margin: 8px -18px 0;
-    position: sticky;
-    top: 0;
-    z-index: 4;
-    background: var(--bs-white);
-    border-bottom: 1px solid var(--line-on-light-soft);
-  }
-
-  .sessions-scope-strip {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex: 1;
-    min-width: 0;
-    height: 44px;
-    padding: 0 18px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
-    mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
-  }
-
-  .sessions-scope-strip::-webkit-scrollbar {
-    display: none;
-  }
-
-  .sessions-scope-tools {
-    flex: none;
-    display: flex;
-    align-items: center;
-    height: 44px;
-    padding: 0 10px 0 4px;
-    border-left: 1px solid var(--line-on-light-soft);
-  }
-
-  .sessions-scope-filters {
-    width: 36px;
-    height: 36px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: 1px solid;
-    border-radius: 18px;
-    color: var(--bs-gunmetal);
-    cursor: pointer;
-  }
-
-  .sessions-year + section > .sessions-month {
-    margin-top: 0;
-  }
-
-  .sessions-month,
-  .sessions-month--top {
-    top: 44px;
-    box-sizing: border-box;
-    height: 34px;
-    gap: 8px;
-    margin: 0;
-    padding: 9px 0 0;
-    scroll-margin-top: 44px;
-  }
-
-  .sessions-heading-title {
-    font-size: 15px;
-  }
-
-  .sessions-heading-meta-year {
-    display: inline;
   }
 
   .sessions-rows {
@@ -513,15 +268,6 @@
     font-size: 17px;
     line-height: 20px;
     letter-spacing: -0.2px;
-  }
-
-  .session-row-dot {
-    display: block;
-    width: 6px;
-    height: 6px;
-    margin-top: 4px;
-    border-radius: 3px;
-    background: var(--bs-azure);
   }
 
   .session-row-title {
@@ -584,32 +330,6 @@
     border-radius: 2px;
     background: rgba(64, 63, 76, 0.2);
   }
-
-  .sessions-sheet-clear {
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    font-weight: 500;
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    color: var(--bs-azure-ink);
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-  }
-
-  .sessions-sheet-apply {
-    height: 48px;
-    margin-top: 4px;
-    border: none;
-    border-radius: var(--radius-control);
-    background: var(--bs-azure-ink);
-    color: var(--bs-white);
-    font-family: var(--font-sans);
-    font-weight: 600;
-    font-size: 15px;
-    cursor: pointer;
-  }
 }
 
 /* An entry is the same row with the fill dropped: identical rhythm, different weight. */
@@ -659,28 +379,6 @@
 .entry-kind--status {
   background: rgba(64, 63, 76, 0.06);
   color: var(--bs-gunmetal);
-}
-
-.sessions-scope-chip {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  display: inline-flex;
-  align-items: center;
-  height: 30px;
-  padding: 0 12px;
-  border-radius: var(--radius-pill);
-  border: 1px solid rgba(64, 63, 76, 0.18);
-  color: rgba(64, 63, 76, 0.65);
-  text-decoration: none;
-}
-
-.sessions-scope-chip.is-on {
-  background: var(--bs-gold);
-  border-color: var(--bs-gold);
-  color: var(--bs-gunmetal);
-  font-weight: 600;
 }
 
 @media (max-width: 767px) {
@@ -1019,26 +717,11 @@
   }
 }
 
-/* A trip holds what was logged inside its dates; the rule down its side is the grouping. */
-.log-trip {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-left: 14px;
-  border-left: 3px solid rgba(204, 121, 234, 0.7);
-}
-
 .session-row--trip {
   background: rgba(204, 121, 234, 0.13);
 }
 
 @media (max-width: 767px) {
-  .log-trip {
-    gap: 0;
-    margin: 8px 0;
-    padding-left: 12px;
-  }
-
   .session-row--trip {
     padding: 10px 8px;
     border-bottom: none;

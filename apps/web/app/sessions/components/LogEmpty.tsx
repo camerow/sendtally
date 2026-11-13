@@ -1,5 +1,4 @@
 import React from "react";
-import { Link } from "react-router";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { ExampleRow } from "./ExampleRow";
@@ -12,7 +11,7 @@ export type LogEmptyProps = {
   count: string;
   examples: readonly ExampleRowData[];
   title: string;
-  primary: { label: string; to: string };
+  primary: { label: string; onPress: () => void };
   actions: readonly LogEmptyAction[];
 };
 
@@ -44,10 +43,10 @@ export function LogEmpty({
       </div>
       <div className="log-empty-start">
         <h2 className="log-empty-title">{title}</h2>
-        <Link to={primary.to} className="log-empty-primary">
+        <button type="button" className="log-empty-primary" onClick={primary.onPress}>
           <Icon name="plus" size={17} strokeWidth={3} />
           {primary.label}
-        </Link>
+        </button>
         <div className="log-empty-actions">
           {actions.map(({ key, ...action }) => (
             <MenuRow key={key} {...action} />

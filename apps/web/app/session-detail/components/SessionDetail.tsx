@@ -16,7 +16,7 @@ import { Pyramid } from "../../components/Pyramid";
 import { PyramidLegend } from "../../components/PyramidLegend";
 import { Sheet } from "../../components/Sheet";
 import { useToast } from "../../components/Toast";
-import { liveSessionStorage } from "../../lib/localStorages";
+import { useLiveSessionStorage } from "../../lib/useLiveSessionStorage";
 import { useAppApi } from "../../lib/useAppApi";
 import { LoadState } from "../../training/data/LoadState";
 import { SessionClimbTable } from "./SessionClimbTable";
@@ -27,6 +27,7 @@ type Noting = { id: string; day: string; note: string; entry: JournalEntry } | "
 /** One logged climbing session: what, where and how hard, its Strava state, the pyramid, its climbs and notes. */
 export function SessionDetail({ fingerprint }: { fingerprint: string }): React.ReactElement {
   const api = useAppApi();
+  const liveSessionStorage = useLiveSessionStorage();
   const navigate = useNavigate();
   const toast = useToast();
   const feature = useSessionDetail(api, fingerprint);
