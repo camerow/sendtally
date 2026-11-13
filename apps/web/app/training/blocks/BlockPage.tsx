@@ -20,6 +20,7 @@ import { NameSheet } from "../components/NameSheet";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { usePlanActions } from "../data/usePlanActions";
+import { BlockHead } from "./BlockHead";
 import { BlockHeader } from "./BlockHeader";
 import { BlockOverview } from "./BlockOverview";
 import { BlockRecapView } from "./BlockRecapView";
@@ -167,13 +168,12 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
         </>
       ) : (
         <>
-          <div className="block-head">
-            <span className="train-label block-finished">{t("plan.finished")}</span>
-            <h1 className="block-title">{block.name}</h1>
-            <span className="block-when">
-              {`${blockDateRange(dated)} · ${t("calendar.weeks", { count: block.weeks })}`}
-            </span>
-          </div>
+          <BlockHead
+            finished
+            kicker={t("plan.finished")}
+            title={block.name}
+            when={`${blockDateRange(dated)} · ${t("calendar.weeks", { count: block.weeks })}`}
+          />
           <BlockRecapView recap={blockRecap(log, dated, today)} workout={log.workout} />
           <BlockWeek block={block} members={members} workout={log.workout} canAdd={false} />
         </>

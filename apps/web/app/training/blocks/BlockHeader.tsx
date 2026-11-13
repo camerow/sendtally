@@ -8,6 +8,7 @@ import {
   clampWeeks,
   keptName,
 } from "@sendtally/features/training";
+import { BlockHead } from "./BlockHead";
 import { BlockWeekChips } from "./BlockWeekChips";
 
 export type BlockHeaderProps = {
@@ -64,23 +65,18 @@ export function BlockHeader({
       {glyph}
     </button>
   );
-  const when = (
-    <span className="block-when">
-      {dated === null ? t("plan.notScheduled") : blockDateRange(dated)}
-    </span>
-  );
+  const whenText = dated === null ? t("plan.notScheduled") : blockDateRange(dated);
+  const when = <span className="block-when">{whenText}</span>;
   const chips = <BlockWeekChips block={block} today={today} picked={week} onPick={onPickWeek} />;
 
   if (!editing)
     return (
       <>
-        <div className="block-head">
-          <span className="train-label">
-            {dated === null ? t("plan.template") : t("plan.scheduled")}
-          </span>
-          <h1 className="block-title">{blockName(block)}</h1>
-          {when}
-        </div>
+        <BlockHead
+          kicker={dated === null ? t("plan.template") : t("plan.scheduled")}
+          title={blockName(block)}
+          when={whenText}
+        />
         {chips}
       </>
     );
