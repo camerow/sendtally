@@ -28,7 +28,14 @@ const loggedKey = (item: LoggedItem): string => {
  * did it, then what else was logged. Today is a title; any other day a quiet date line, and
  * an empty one nothing more.
  */
-export function DaySection({ day }: { day: TrainingDay }): React.ReactElement {
+export function DaySection({
+  day,
+  heading = true,
+}: {
+  day: TrainingDay;
+  /** Off where the page's own title already names the day. */
+  heading?: boolean;
+}): React.ReactElement {
   const { model } = useHangData();
   const scales = useDisplayScales();
   const library = useLibrary().state;
@@ -38,10 +45,10 @@ export function DaySection({ day }: { day: TrainingDay }): React.ReactElement {
   ) : (
     <h2 className="plan-label plan-label--muted plan-day-line">{dayTitle(day.date)}</h2>
   );
-  if (empty && !day.isToday) return head;
+  if (heading && empty && !day.isToday) return head;
   return (
     <div className="plan-day">
-      {head}
+      {heading && head}
       {dayEntries(day).map((e) => {
         if (e.kind !== "plan") {
           const { item } = e;
