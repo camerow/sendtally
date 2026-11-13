@@ -144,3 +144,10 @@ export { usePlanDraft, type PlanDraftState } from "./usePlanDraft";
 export { changedWeeks, everyWeekFrom, ladderDone, ranMark, weekChangesOf } from "./ladder";
 export { LIT_MS, useLit } from "./useLit";
 export { useBlockWeekGrid, type BlockWeekGrid, type BlockWeekGridArgs } from "./useBlockWeekGrid";
+export {
+  useBlockPage,
+  type BlockPageArgs,
+  type BlockPageData,
+  type BlockPageState,
+  type BlockWeekState,
+} from "./useBlockPage";

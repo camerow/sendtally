@@ -1,17 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router";
-import { blockEnded, blockWeekOn, isDated } from "@sendtally/core/hang";
+
 import { t } from "@sendtally/features/i18n";
 import {
   blockDateRange,
-  blockMembers,
   blockRecap,
-  hasDays,
-  scheduleOf,
   usePlan,
-  usePlanDraft,
   useTrainingLog,
   blockName,
+  useBlockPage,
 } from "@sendtally/features/training";
 import { MoreMenu } from "../../components/MoreMenu";
 import { Sheet } from "../../components/Sheet";
@@ -57,30 +54,14 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
   const [moving, setMoving] = React.useState(false);
   const [naming, setNaming] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
-  const [week, setWeek] = React.useState<number | null>(null);
-  // A new block opens in Edit mode, its name typed first.
-  const draft = usePlanDraft(log.plan, actions, fresh);
-  const saved = log.plan.blocks.find((b) => b.id === id);
-  const block = draft.plan.blocks.find((b) => b.id === id);
-  const members = block === undefined ? [] : blockMembers(draft.plan, block);
-
-  // An untitled template left with nothing in it was never really made.
-  const empty = saved !== undefined && !isDated(saved) && saved.name === "" && members.length === 0;
-  const left = React.useRef({ empty, remove: actions.deleteBlock });
-  React.useEffect(() => {
-    left.current = { empty, remove: actions.deleteBlock };
+  const { draft, members, page, saveAsTemplate } = useBlockPage({
+    id,
+    fresh,
+    log,
+    today,
+    actions,
+    newId: () => crypto.randomUUID(),
   });
-  // Checked after unmounting settles, so StrictMode's remount does not count as leaving.
-  const mounted = React.useRef(false);
-  React.useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-      setTimeout(() => {
-        if (!mounted.current && left.current.empty) void left.current.remove(id);
-      });
-    };
-  }, [id]);
 
   if (plan.state.status !== "ready")
     return (
@@ -89,28 +70,12 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
       </DetailFrame>
     );
   // Gone, deleted elsewhere: Back still leaves.
-  if (block === undefined || saved === undefined) return <DetailFrame backTo={BACK_TO} />;
-  const dated = isDated(block) ? block : null;
-  const ended = blockEnded(block, today);
-  const current = dated === null ? null : blockWeekOn(dated, today);
-  const shown = Math.min(block.weeks, week ?? current ?? 1);
-  const schedulable = members.some((m) => hasDays(scheduleOf(log.plan, m)));
-  const editing = draft.editing && !ended;
+  if (page === null) return <DetailFrame backTo={BACK_TO} />;
+  const { block, saved, dated, ended, current, shown, schedulable, editing, weekProps } = page;
   const name = blockName(block);
-  const weekProps = {
-    plan: draft.plan,
-    editing,
-    onToggle: draft.toggle,
-    onSchedules: draft.setSchedules,
-    onPickWeek: setWeek,
-    onMove: (membershipId: string, by: -1 | 1) => draft.move(id, membershipId, by),
-    ...(!ended && { onEditDays: draft.begin }),
-  };
-  const saveAsTemplate = async (named: string): Promise<void> => {
-    const copy = crypto.randomUUID();
-    if (!(await actions.copyBlock(id, copy, null))) return;
-    if (named !== saved.name)
-      await actions.saveBlock({ ...saved, id: copy, start: null, name: named });
+  const saveTemplate = async (named: string): Promise<void> => {
+    const copy = await saveAsTemplate(named);
+    if (copy === null) return;
     toast.show({
       message: t("plan.savedAsTemplate", { name: named }),
       action: { label: t("plan.viewTemplate"), onPress: () => void navigate(blockPath(copy)) },
@@ -178,7 +143,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
             savedName={saved.name}
             autoFocus={fresh}
             week={shown}
-            onPickWeek={setWeek}
+            onPickWeek={weekProps.onPickWeek}
             onSave={draft.setBlock}
             minWeeks={current ?? 1}
             {...(dated !== null && today < dated.start && { onMoveStart: () => setMoving(true) })}
@@ -225,7 +190,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
           title={t("plan.saveAsTemplate")}
           name={saved.name}
           action={t("plan.saveTemplate")}
-          onSave={(named) => void saveAsTemplate(named)}
+          onSave={(named) => void saveTemplate(named)}
           onClose={() => setNaming(false)}
         />
       )}
