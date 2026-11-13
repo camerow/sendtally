@@ -1082,3 +1082,20 @@
 .session-pyramid .pyramid-legend {
   align-self: flex-end;
 }
+
+.session-climb-grid {
+  display: grid;
+  grid-template-columns: 34px 1.9fr 62px 62px 70px 92px;
+  gap: 12px;
+}
+
+@media (max-width: 767px) {
+  .session-climb-grid {
+    grid-template-columns: 20px minmax(0, 1fr) 36px 76px;
+    gap: 10px;
+  }
+
+  .session-climb-wide {
+    display: none;
+  }
+}
