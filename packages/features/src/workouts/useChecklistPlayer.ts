@@ -13,6 +13,9 @@ export type ChecklistPlayer = {
   rest: RestClock;
   hold: HoldClock;
   toggle: (i: number) => void;
+  /** The seconds a line's hold would run for, when it is timed, unticked, and nothing holds yet. */
+  holdTarget: (i: number) => number | null;
+  startHold: (i: number) => void;
   /** Ends a line's hold; a timed line ticks itself once it is done, Done in the count-in only cancels. */
   endHold: (h: Hold, seconds: number | null) => void;
   /** What the run did and the lines it left unticked, for its review. */
@@ -23,7 +26,12 @@ export type ChecklistPlayer = {
  * A workout of plain lines: tick each as it is done, with the workout's rest between them and
  * timed lines held in their row. Kept in `store` so the run outlasts the page.
  */
-export function useChecklistPlayer(run: WorkoutRun, store: LiveRunStore): ChecklistPlayer {
+export function useChecklistPlayer(
+  run: WorkoutRun,
+  store: LiveRunStore,
+  /** Whether an exercise is done each side, which its hold counts twice. */
+  sided: (exercise: string) => boolean
+): ChecklistPlayer {
   const [resumed] = React.useState(() => {
     const live = store.resumed("/workout/checklist", run.workoutId);
     return live?.state.player === "checklist" ? { ...live.state, startedAt: live.startedAt } : null;
@@ -57,12 +65,28 @@ export function useChecklistPlayer(run: WorkoutRun, store: LiveRunStore): Checkl
     if (seconds !== null && !ticked.has(i)) toggle(i);
   };
   const hold = useHold(store, (h) => endHold(h, h.targetS));
+  const holdTarget = (i: number): number | null => {
+    const dose = run.items[i]?.dose;
+    return !ticked.has(i) &&
+      hold.hold === null &&
+      dose?.reps === undefined &&
+      dose?.onS !== undefined &&
+      dose.onS > 0
+      ? dose.onS
+      : null;
+  };
   return {
     startedAt,
     ticked,
     rest,
     hold,
     toggle,
+    holdTarget,
+    startHold: (i) => {
+      const targetS = holdTarget(i);
+      const exercise = run.items[i]?.exercise ?? "";
+      if (targetS !== null) hold.start(String(i), exerciseName(exercise), targetS, sided(exercise));
+    },
     endHold,
     finished: () => {
       rest.skip();

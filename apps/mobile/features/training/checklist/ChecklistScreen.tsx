@@ -42,7 +42,7 @@ export function ChecklistScreen({
   const unit = useWeightUnit(api);
   const exercises = useExercises(api).state;
   const sided = eachSideOf(exercises.status === "ready" ? exercises.data : []);
-  const player = useChecklistPlayer(run, liveRun);
+  const player = useChecklistPlayer(run, liveRun, sided);
   const { startedAt, ticked, rest, hold, toggle, endHold } = player;
 
   const finish = (): void => {
@@ -90,26 +90,18 @@ export function ChecklistScreen({
                   dose={doseSummary(run.kind, item.dose, unit, sided(item.exercise))}
                   ticked={ticked.has(i)}
                   onToggle={() => toggle(i)}
-                  go={
-                    !ticked.has(i) &&
-                    hold.hold === null &&
-                    item.dose.reps === undefined &&
-                    item.dose.onS !== undefined &&
-                    item.dose.onS > 0 && (
-                      <HoldButton
-                        name={exerciseName(item.exercise)}
-                        targetS={item.dose.onS}
-                        onPress={() =>
-                          hold.start(
-                            String(i),
-                            exerciseName(item.exercise),
-                            item.dose.onS ?? 0,
-                            sided(item.exercise)
-                          )
-                        }
-                      />
-                    )
-                  }
+                  go={(() => {
+                    const targetS = player.holdTarget(i);
+                    return (
+                      targetS !== null && (
+                        <HoldButton
+                          name={exerciseName(item.exercise)}
+                          targetS={targetS}
+                          onPress={() => player.startHold(i)}
+                        />
+                      )
+                    );
+                  })()}
                 />
               )}
               {rest.rest?.at === afterKey(i) ? (

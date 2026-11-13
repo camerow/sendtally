@@ -1,7 +1,13 @@
 import React from "react";
 import { doneAsPrescribed, type ItemDone, type SetDone } from "@sendtally/core/hang";
 import type { Activity, Exercise } from "@sendtally/api-client";
-import { lapPlanOf } from "../activities/climbing";
+import {
+  climbingLastTime,
+  climbsLine,
+  lapPlanOf,
+  lapsLine,
+  wallLine,
+} from "../activities/climbing";
 import { changeSet, previousSets } from "../activities/done";
 import { tallyMeasuresOf } from "../exercises/measure";
 import type { TallyMeasure } from "../exercises/types";
@@ -35,6 +41,16 @@ export type SetsPlayerInputs = {
   exercises: readonly Pick<Exercise, "name" | "kind" | "measure" | "eachSide">[] | null;
 };
 
+export type ClimbingItem = {
+  measure: TallyMeasure;
+  /** "Last time: 16 climbs · 13 sent · top V4", when there was one. */
+  lastTime: string | null;
+  /** What this run logged on it so far, once it has. */
+  logged: string | null;
+  /** Its tally is still running, minimised. */
+  live: boolean;
+};
+
 export type SetsPlayer = {
   startedAt: number;
   /** What each item has done so far, last time's sets filled in where nothing was typed. */
@@ -45,6 +61,13 @@ export type SetsPlayer = {
   rest: RestClock;
   hold: HoldClock;
   tallyOf: (item: number) => TallyMeasure | null;
+  /** A climbing item's card: how it is measured, last time, what this run logged, and whether its tally is live. */
+  climbing: (item: number) => ClimbingItem | null;
+  /** What a set asks: a lifting set takes last time's weight where the workout sets none. */
+  target: (at: SetAt) => SetDone;
+  /** The seconds a hold would run for, when the set is the current one, timed, and nothing holds yet. */
+  holdTarget: (at: SetAt) => number | null;
+  startHold: (at: SetAt) => void;
   previous: (exercise: string) => SetDone[];
   lifting: (item: number) => boolean;
   nameOf: (item: number) => string;
@@ -144,6 +167,37 @@ export function useSetsPlayer({
           tallyOf(item) === "wallTime" ? run.items[item]?.dose.onS : undefined
         );
 
+  const sided = eachSideOf(exercises ?? []);
+  const holdTarget = (at: SetAt): number | null => {
+    const targetS = run.items[at.item]?.dose.onS;
+    return hold.hold === null &&
+      current?.item === at.item &&
+      current.set === at.set &&
+      targetS !== undefined &&
+      targetS > 0
+      ? targetS
+      : null;
+  };
+  const climbing = (item: number): ClimbingItem | null => {
+    const measure = tallyOf(item);
+    const at = run.items[item];
+    if (measure === null || at === undefined) return null;
+    const logged = climbedSets(item);
+    return {
+      measure,
+      lastTime: climbingLastTime(previous(at.exercise), measure, at.dose),
+      logged:
+        logged.length === 0
+          ? null
+          : measure === "laps"
+            ? lapsLine(logged, at.dose)
+            : measure === "wallTime"
+              ? wallLine(logged)
+              : climbsLine(logged),
+      live: tally.stored?.draft.exercise?.item === item,
+    };
+  };
+
   return {
     startedAt,
     shown,
@@ -152,10 +206,22 @@ export function useSetsPlayer({
     rest,
     hold,
     tallyOf,
+    climbing,
+    target: ({ item, set }) => {
+      const { sets: _, name: __, ...target } = run.items[item]?.dose ?? { sets: 0 };
+      const last = previous(run.items[item]?.exercise ?? "")[set];
+      return lifting(item) ? { ...target, weightKg: target.weightKg ?? last?.weightKg } : target;
+    },
+    holdTarget,
+    startHold: (at) => {
+      const targetS = holdTarget(at);
+      if (targetS !== null)
+        hold.start(setKey(at), nameOf(at.item), targetS, sided(run.items[at.item]?.exercise ?? ""));
+    },
     previous,
     lifting,
     nameOf,
-    sided: eachSideOf(exercises ?? []),
+    sided,
     folded: (item) => itemDone(run.items, ticked, item) && !opened.has(item),
     open: (item) => setOpened((was) => new Set([...was, item])),
     toggle,

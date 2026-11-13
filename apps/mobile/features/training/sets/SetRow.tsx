@@ -4,6 +4,7 @@ import type { SetDone, WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { setText } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
+import { holdShort } from "@sendtally/features/workouts";
 import { press } from "../../../lib/press";
 import { CheckBox } from "../components/CheckBox";
 import { type } from "../type";
@@ -73,7 +74,7 @@ export function SetRow({
             unit={unit}
             label={label}
             {...(!ticked && go !== undefined && { go })}
-            holdShort={ticked && target.onS !== undefined && (done.onS ?? 0) < target.onS}
+            holdShort={holdShort(target, done, ticked)}
             onChange={onChange}
           />
         ) : (

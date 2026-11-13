@@ -3,14 +3,7 @@ import React from "react";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
-import {
-  climbingLastTime,
-  climbsLine,
-  lapsLine,
-  useActivities,
-  useWeightUnit,
-  wallLine,
-} from "@sendtally/features/activities";
+import { useActivities, useWeightUnit } from "@sendtally/features/activities";
 import type { TallyMeasure } from "@sendtally/features/exercises";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { useLiveSession } from "@sendtally/features/log-session";
@@ -66,7 +59,7 @@ export function SetsScreen({
     activities: activities.status === "ready" ? activities.data : null,
     exercises: exercises.status === "ready" ? exercises.data : null,
   });
-  const { shown, ticked, current, rest, hold, tallyOf, previous, nameOf } = player;
+  const { shown, ticked, current, rest, hold, previous, nameOf } = player;
 
   const holdRow = (at: SetAt): React.ReactNode =>
     hold.hold?.at === setKey(at) && (
@@ -86,21 +79,10 @@ export function SetsScreen({
       />
     );
   const go = (at: SetAt): React.ReactNode => {
-    const targetS = run.items[at.item]?.dose.onS;
-    const name = nameOf(at.item);
+    const targetS = player.holdTarget(at);
     return (
-      hold.hold === null &&
-      current?.item === at.item &&
-      current.set === at.set &&
-      targetS !== undefined &&
-      targetS > 0 && (
-        <HoldButton
-          name={name}
-          targetS={targetS}
-          onPress={() =>
-            hold.start(setKey(at), name, targetS, player.sided(run.items[at.item]?.exercise ?? ""))
-          }
-        />
+      targetS !== null && (
+        <HoldButton name={nameOf(at.item)} targetS={targetS} onPress={() => player.startHold(at)} />
       )
     );
   };
@@ -148,29 +130,16 @@ export function SetsScreen({
           {run.items.map((item, i) => {
             const d = shown[i];
             if (d === undefined) return null;
-            const measure = tallyOf(i);
-            if (measure !== null) {
-              const logged = player.climbedSets(i);
+            const climbing = player.climbing(i);
+            if (climbing !== null)
               return (
                 <ClimbingCard
                   key={i}
                   item={item}
-                  measure={measure}
-                  lastTime={climbingLastTime(previous(d.exercise), measure, item.dose)}
-                  logged={
-                    logged.length === 0
-                      ? null
-                      : measure === "laps"
-                        ? lapsLine(logged, item.dose)
-                        : measure === "wallTime"
-                          ? wallLine(logged)
-                          : climbsLine(logged)
-                  }
-                  live={tally.stored?.draft.exercise?.item === i}
-                  onStart={() => startClimbing(i, measure)}
+                  {...climbing}
+                  onStart={() => startClimbing(i, climbing.measure)}
                 />
               );
-            }
             const folded = player.folded(i);
             return (
               <React.Fragment key={i}>
@@ -184,6 +153,7 @@ export function SetsScreen({
                   <SetsCard
                     item={item}
                     done={d}
+                    target={(set) => player.target({ item: i, set })}
                     previous={previous(d.exercise)}
                     lifting={player.lifting(i)}
                     ticked={ticked}
