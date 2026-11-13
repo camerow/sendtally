@@ -65,7 +65,6 @@ export function AddWorkoutsSheet({ date, onClose }: AddWorkoutsSheetProps): Reac
         aria-label={t("workouts.search")}
         autoComplete="off"
         maxLength={80}
-        data-autofocus
       />
       <div className="add-shelves">
         {library !== null && shelves.length === 0 && (

@@ -23,6 +23,7 @@ import { PreviewRow } from "./PreviewRow";
 import { ProtocolPanel } from "./ProtocolPanel";
 import { useWorkoutMenu } from "./useWorkoutMenu";
 import { WorkoutOverTime } from "./WorkoutOverTime";
+import { schedulePath } from "../schedule/paths";
 
 function Detail({
   workout,
@@ -58,11 +59,16 @@ function Detail({
       backTo="/app/train"
       action={<MoreMenu label={t("summary.more")} items={menu.items} />}
       footer={
-        logIt === null ? undefined : (
-          <Link to={logIt} className="footer-outline">
-            {t("workouts.logIt")}
+        <div className="footer-row">
+          <Link to={schedulePath(workout.id)} className="footer-outline">
+            {t("plan.addToPlan")}
           </Link>
-        )
+          {logIt !== null && (
+            <Link to={logIt} className="footer-outline">
+              {t("workouts.logIt")}
+            </Link>
+          )}
+        </div>
       }
     >
       <LibraryIntro workout={workout} use={use} />

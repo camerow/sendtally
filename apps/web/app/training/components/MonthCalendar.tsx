@@ -91,7 +91,6 @@ export function MonthCalendar({
                     className={`month-calendar-day${tone}`}
                     disabled={off}
                     aria-pressed={on}
-                    data-autofocus={on ? true : undefined}
                     aria-label={dayTitle(d)}
                     onClick={() => onPick(d)}
                   >
