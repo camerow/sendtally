@@ -22,6 +22,7 @@ export default [
     route("sessions/live", "routes/app.sessions.live.tsx"),
     route("sessions/:fingerprint", "routes/app.sessions.$fingerprint.tsx"),
     route("sessions/:fingerprint/edit", "routes/app.sessions.$fingerprint.edit.tsx"),
+    route("plan", "routes/app.plan.tsx"),
     route("train", "routes/app.train.tsx"),
     route("train/:focus", "routes/app.train.$focus.tsx"),
     route("train/workouts/:id", "routes/app.train.workouts.$id.tsx"),

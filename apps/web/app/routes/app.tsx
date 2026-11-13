@@ -37,6 +37,7 @@ export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string
 type NavItem = { label: () => string; to: string; icon: IconName };
 
 const NAV_ITEMS: NavItem[] = [
+  { label: () => t("plan.tab"), to: "/app/plan", icon: "today" },
   { label: () => t("journal.log"), to: "/app", icon: "sessions" },
   { label: () => t("training.train"), to: "/app/train", icon: "train" },
   { label: () => t("statistics.tab"), to: "/app/stats", icon: "insights" },

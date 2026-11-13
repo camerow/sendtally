@@ -19,6 +19,8 @@ export type SheetProps = {
   onClose: () => void;
   /** The footer's one button; Cancel sits beside it on desktop. */
   action?: SheetAction;
+  /** Off when the action only closes, such as Done, so Cancel would offer the same thing. */
+  cancel?: boolean;
   children?: React.ReactNode;
 };
 
@@ -37,6 +39,7 @@ function OpenSheet({
   kickerTone,
   onClose,
   action,
+  cancel = true,
   children,
 }: Omit<SheetProps, "open">): React.ReactElement {
   const dialog = React.useRef<HTMLDialogElement>(null);
@@ -82,9 +85,11 @@ function OpenSheet({
       {children}
       {action !== undefined && (
         <div className="sheet-footer">
-          <button type="button" className="sheet-cancel" onClick={onClose}>
-            {t("common.cancel")}
-          </button>
+          {cancel && (
+            <button type="button" className="sheet-cancel" onClick={onClose}>
+              {t("common.cancel")}
+            </button>
+          )}
           <button
             type="button"
             className={
