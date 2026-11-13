@@ -1,4 +1,5 @@
 import React from "react";
+import { View } from "react-native";
 import type { ImportSession, LikelyDuplicate } from "@sendtally/core/import";
 import { t } from "@sendtally/features/i18n";
 import { SwitchRow } from "../settings/SwitchRow";
@@ -22,7 +23,7 @@ export function LikelyDuplicates({
     meta: t("import.likelyMatch", { name: logged.title || t("common.climbingSession") }),
   }));
   return (
-    <>
+    <View>
       <PreviewSection
         title={t("import.likelyTitle", { count: rows.length })}
         items={rows}
@@ -35,6 +36,6 @@ export function LikelyDuplicates({
         checked={importAnyway}
         onChange={onImportAnyway}
       />
-    </>
+    </View>
   );
 }
