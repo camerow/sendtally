@@ -30,7 +30,7 @@ import { CategoryMark } from "../library/CategoryMark";
 import { useLibrary } from "../library/useLibrary";
 import { SummaryTiles } from "../summary/SummaryTiles";
 import { TrendCard } from "../trends/TrendCard";
-import { insight } from "../trends/trendText";
+import { insight } from "@sendtally/features/hang";
 import { type } from "../type";
 import { GripSessions } from "./GripSessions";
 import { Milestones } from "./Milestones";

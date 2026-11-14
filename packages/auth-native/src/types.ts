@@ -10,7 +10,9 @@ export type Phase = { name: "email" } | { name: "code"; mode: CodeMode } | { nam
 export type FlowCopy = { title: string; body: string; submitLabel: string };
 export type IntentSwap = { to: Intent; prompt: string; label: string };
 
-export type SignInFlowOptions = { intent: Intent; onSignedIn: () => void };
+export type SignInOutcome = "signed-in" | "signed-up";
+
+export type SignInFlowOptions = { intent: Intent; onSignedIn: (outcome: SignInOutcome) => void };
 
 export type SignInFlow = {
   phase: Phase;

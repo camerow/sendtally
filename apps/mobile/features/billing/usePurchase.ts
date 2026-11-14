@@ -1,7 +1,9 @@
 import { t } from "@sendtally/features/i18n";
 import React from "react";
+import { Platform } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 import type { Entitlements } from "@sendtally/api-client";
+import { logConversion } from "../analytics/conversions";
 import {
   loadPackages,
   purchasePackage,
@@ -53,8 +55,14 @@ export function usePurchase(refresh: () => Promise<Entitlements>): PurchaseFeatu
         .then(async (outcome) => {
           if (outcome === "cancelled") return;
           const next = await refresh();
-          if (!next.membership.active)
+          if (!next.membership.active) {
             setError(t("billing.notEntitledAfterPurchase", { store: storeLabel() }));
+            return;
+          }
+          logConversion("membership_started", {
+            channel: Platform.OS === "ios" ? "app_store" : "play_store",
+            product_id: pkg.product.identifier,
+          });
         })
         .catch((err: unknown) => {
           console.error(`purchase failed: ${err instanceof Error ? err.message : String(err)}`);

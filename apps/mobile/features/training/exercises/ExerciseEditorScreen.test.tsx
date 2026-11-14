@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
+import { usePreventRemove } from "expo-router/react-navigation";
 import React from "react";
 import { Alert } from "react-native";
 import { anExercise, hangData, renderWithHang } from "../data/renderWithHang";
@@ -169,13 +170,18 @@ describe("exercise editor", () => {
       exercises: [anExercise("e1", "Plank", "strength", { measure: "seconds" })],
     });
     expect(screen.getByText("Edit exercise")).toBeTruthy();
+    const leave = (): void =>
+      jest.mocked(usePreventRemove).mock.lastCall?.[1]({ data: { action: { type: "GO_BACK" } } });
+    expect(jest.mocked(usePreventRemove).mock.lastCall?.[0]).toBe(false);
     await fireEvent.changeText(screen.getByLabelText("Name"), "Front plank");
-    await fireEvent.press(screen.getByText("Cancel"));
+    expect(jest.mocked(usePreventRemove).mock.lastCall?.[0]).toBe(true);
+    leave();
     expect(Alert.alert).toHaveBeenCalledWith("Discard your changes?", undefined, expect.anything());
-    expect(router.back).not.toHaveBeenCalled();
 
     await fireEvent.press(screen.getByText("Save"));
     expect(router.back).toHaveBeenCalled();
+    leave();
+    expect(Alert.alert).toHaveBeenCalledTimes(1);
     expect(mockApi.saveExercise).toHaveBeenCalledWith("e1", {
       name: "Front plank",
       kind: "strength",

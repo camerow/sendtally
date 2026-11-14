@@ -1,31 +1,26 @@
-import { useAuth } from "@clerk/react-router";
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { useLoaderData } from "react-router";
 import type { Locale } from "@sendtally/features/i18n";
 import { isSignedIn } from "../auth/session.server";
+import { connectorUrl } from "../lib/connector";
 import { landingLocale } from "../lib/locale";
 import { landingPath, pageMeta, SITE_URL } from "../lib/seo";
-import { Details } from "../landing/components/Details";
+import { AgentsRow } from "../landing/components/AgentsRow";
+import { Extras } from "../landing/components/Extras";
+import { FeatureSection } from "../landing/components/FeatureSection";
 import { Footer } from "../landing/components/Footer";
-import { FreeSection } from "../landing/components/FreeSection";
 import { Hero } from "../landing/components/Hero";
-import { HowItWorks } from "../landing/components/HowItWorks";
-import { Insights } from "../landing/components/Insights";
+import { MadeBy } from "../landing/components/MadeBy";
 import { Nav } from "../landing/components/Nav";
-import { PhotoBand } from "../landing/components/PhotoBand";
-import { PricePanel } from "../landing/components/PricePanel";
-import { SessionBreakdown } from "../landing/components/SessionBreakdown";
-import { StravaSection } from "../landing/components/StravaSection";
+import { StartSection } from "../landing/components/StartSection";
+import { TabsStrip } from "../landing/components/TabsStrip";
 import { COPIES } from "../landing/copies";
 import { LandingProvider } from "../landing/LandingContext";
+import { storePlatform, type StorePlatform } from "../lib/stores";
 import landingStyles from "../landing/landing.css?url";
-import { LANDING_PHOTOS } from "../landing/photos";
 
-export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: landingStyles },
-  { rel: "preload", as: "image", href: LANDING_PHOTOS.hero.src },
-];
+export const links: LinksFunction = () => [{ rel: "stylesheet", href: landingStyles }];
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const locale = data?.locale ?? "en";
@@ -54,32 +49,38 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   ];
 };
 
-type LoaderData = { signedIn: boolean; locale: Locale };
+type LoaderData = { signedIn: boolean; locale: Locale; platform: StorePlatform; url: string };
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
   return {
     signedIn: await isSignedIn(args),
     locale: landingLocale(new URL(args.request.url).pathname) ?? "en",
+    platform: storePlatform(args.request.headers.get("user-agent")),
+    url: connectorUrl(args),
   };
 }
 
 export default function Home(): React.ReactElement {
   const loaderData = useLoaderData<typeof loader>();
-  const auth = useAuth();
-  const signedIn = loaderData.signedIn || auth.isSignedIn === true;
   return (
-    <LandingProvider signedIn={signedIn} locale={loaderData.locale}>
+    <LandingProvider
+      signedIn={loaderData.signedIn}
+      locale={loaderData.locale}
+      platform={loaderData.platform}
+    >
       <Nav />
       <Hero />
-      <FreeSection />
-      <PhotoBand />
-      <Insights />
-      <SessionBreakdown />
-      <StravaSection />
-      <HowItWorks />
-      <Details />
-      <PricePanel />
-      <Footer />
+      <TabsStrip />
+      <main>
+        {COPIES[loaderData.locale].features.map((feature, i) => (
+          <FeatureSection key={feature.id} feature={feature} flip={i % 2 === 1} />
+        ))}
+        {loaderData.locale === "en" && <AgentsRow url={loaderData.url} />}
+        <Extras />
+        <MadeBy />
+        <StartSection />
+      </main>
+      <Footer stores={false} />
     </LandingProvider>
   );
 }

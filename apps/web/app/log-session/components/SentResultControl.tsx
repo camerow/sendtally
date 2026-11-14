@@ -17,7 +17,8 @@ import { t } from "@sendtally/features/i18n";
 import { Glyph } from "./Glyph";
 import { outcomeFill } from "./OutcomeControl";
 import { TriesStepper } from "./TriesStepper";
-import { CHECK, CROSS, monoLabel } from "./styles";
+import { CHECK, CROSS } from "./styles";
+import { monoLabel } from "../../components/styles";
 
 const FIRST_GO_STYLES: readonly FirstGoStyle[] = ["onsight", "flash"];
 

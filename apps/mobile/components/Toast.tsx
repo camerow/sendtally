@@ -37,7 +37,8 @@ export function Toast({ message, action, onHide }: ToastProps): React.ReactEleme
         left: 18,
         right: 18,
         bottom: insets.bottom + (footer > 0 ? footer + 12 : 8),
-        height: 52,
+        minHeight: 52,
+        paddingVertical: 6,
         borderRadius: 14,
         flexDirection: "row",
         alignItems: "center",
@@ -53,7 +54,7 @@ export function Toast({ message, action, onHide }: ToastProps): React.ReactEleme
       }}
     >
       <Text
-        numberOfLines={1}
+        numberOfLines={2}
         style={{ flex: 1, fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}
       >
         {message}

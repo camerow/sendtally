@@ -19,7 +19,7 @@ import type {
 import { t } from "../i18n";
 import { isUnscored } from "../sessions/meta";
 import { sameTagName } from "../sessions/tags";
-import { durationLabel as lowerDurationLabel, hasEnd, hasStart } from "../sessions/years";
+import { durationLabel, hasEnd, hasStart } from "../sessions/years";
 import {
   DEFAULT_GRADE_PREFS,
   GRADE_SCALE_OPTIONS,
@@ -93,7 +93,10 @@ function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-export function emptyDraft(now: Date, prefs: GradePrefs = DEFAULT_GRADE_PREFS): LogSessionDraft {
+export function emptySessionDraft(
+  now: Date,
+  prefs: GradePrefs = DEFAULT_GRADE_PREFS
+): LogSessionDraft {
   return {
     name: "",
     date: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
@@ -199,10 +202,6 @@ export function withStartTime(draft: LogSessionDraft, startTime: string): LogSes
   const endMinutes = (minutesOf(startTime) + held) % (24 * 60);
   const endTime = `${pad(Math.floor(endMinutes / 60))}:${pad(endMinutes % 60)}`;
   return { ...draft, startTime, endTime };
-}
-
-export function durationLabel(minutes: number): string {
-  return lowerDurationLabel(minutes);
 }
 
 function topDraftGrade(draft: LogSessionDraft): Grade | undefined {

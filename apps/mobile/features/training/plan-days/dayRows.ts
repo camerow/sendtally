@@ -1,5 +1,4 @@
 import { t } from "@sendtally/features/i18n";
-import type { Membership } from "@sendtally/core/hang";
 import type { DetailMenuRow } from "../components/types";
 
 /**
@@ -33,6 +32,3 @@ export const dayRows = (
         },
       ]),
 ];
-
-/** A one-off, the only plan Remove takes away whole: a repeat or a block day is skipped instead. */
-export const isOneOff = (m: Membership): boolean => m.blockId === null && m.weekdays.length === 0;

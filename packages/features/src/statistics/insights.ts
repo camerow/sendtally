@@ -1,19 +1,26 @@
 import type { SessionLogWithClimbs } from "@sendtally/api-client";
-import { FOCI, gripSeries, setupsOf, totalSeconds, type Focus } from "@sendtally/core/hang";
+import {
+  FOCI,
+  gripSeries,
+  setupsOf,
+  totalSeconds,
+  type Focus,
+  type WorkoutKind,
+} from "@sendtally/core/hang";
 import { gripSetupLabel } from "../hang/format";
 import { formatNumber, t } from "../i18n";
-import { durationLabel } from "../log-session/transforms";
+import { durationLabel } from "../sessions/years";
 import { focusLabel } from "../training/focus";
 import { isUnscored } from "../sessions/meta";
 import { DAY_MS, bucketsFor, priorWindow, windowOf } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
 import { exerciseSeries, type ExerciseMetric } from "./exercises";
 import { kindLabel } from "../activities/format";
-import { ACTIVITY_KINDS, oneDecimal, type ActivityKind } from "./overview";
+import { TRAINED_KINDS, oneDecimal } from "./overview";
 import { workoutsDone, type WorkoutsDoneVM } from "./workouts";
 
 type Done = {
-  kind: ActivityKind;
+  kind: WorkoutKind;
   focus: Focus | null;
   at: number;
   rpe: number | null;
@@ -29,7 +36,7 @@ export type InsightsPointVM = {
 
 type TrainedVM = { name: string; share: number; detail: string };
 
-export type TrainedKindVM = TrainedVM & { kind: ActivityKind };
+export type TrainedKindVM = TrainedVM & { kind: WorkoutKind };
 
 /** A focus's share of what was trained, General for sessions with none. */
 export type TrainedFocusVM = TrainedVM & { focus: Focus | null };
@@ -186,7 +193,7 @@ function perWeekLabel(perWeek: number): string {
 export function trainingInsightsVM(
   log: SessionLogWithClimbs,
   range: TrendRange,
-  kinds: readonly ActivityKind[],
+  kinds: readonly WorkoutKind[],
   gripName: (id: string) => string,
   now: Date = new Date()
 ): TrainingInsightsVM {
@@ -231,7 +238,7 @@ export function trainingInsightsVM(
       const inside = shown.filter((d) => d.at >= b.start && d.at < b.end);
       return { label: b.label, axis: b.axis, sessions: inside.length, effort: effortOf(inside) };
     }),
-    trained: mix(shown, ACTIVITY_KINDS, (d) => d.kind, kindLabel).map(({ key, ...k }) => ({
+    trained: mix(shown, TRAINED_KINDS, (d) => d.kind, kindLabel).map(({ key, ...k }) => ({
       ...k,
       kind: key,
     })),

@@ -8,7 +8,8 @@ import { tallyDraft, writeStoredDraft } from "@sendtally/features/log-session";
 import { liveRunStorage } from "../../lib/liveRunStorage";
 import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { AlreadyRunningSheet } from "./AlreadyRunningSheet";
-import { clearLiveRun, readLiveRun, writeLiveRun, type LiveRun } from "./liveRun";
+import { liveRun } from "./liveRun";
+import { type LiveRun } from "@sendtally/features/workouts";
 import { startLive } from "./startLive";
 import { startLiveSession } from "./startLiveSession";
 
@@ -61,7 +62,7 @@ describe("starting while something runs", () => {
   });
 
   it("asks first, naming the running workout, and resumes it", async () => {
-    writeLiveRun(HANGS);
+    liveRun.write(HANGS);
     const start = jest.fn();
     await render(<AlreadyRunningSheet />);
     await act(async () => startLive(start));
@@ -73,7 +74,7 @@ describe("starting while something runs", () => {
   });
 
   it("records the running one on its review, and starts the new one once it is saved", async () => {
-    writeLiveRun(HANGS);
+    liveRun.write(HANGS);
     const start = jest.fn();
     await render(<AlreadyRunningSheet />);
     await act(async () => startLive(start));
@@ -83,7 +84,7 @@ describe("starting while something runs", () => {
       params: { ...HANGS.params, end: "1" },
     });
     expect(start).not.toHaveBeenCalled();
-    await act(async () => clearLiveRun());
+    await act(async () => liveRun.clear());
     expect(start).toHaveBeenCalledTimes(1);
   });
 
@@ -104,12 +105,12 @@ describe("starting while something runs", () => {
   });
 
   it("keeps everything on cancel", async () => {
-    writeLiveRun(HANGS);
+    liveRun.write(HANGS);
     const start = jest.fn();
     await render(<AlreadyRunningSheet />);
     await act(async () => startLive(start));
     await fireEvent.press(screen.getByText("Cancel"));
     expect(start).not.toHaveBeenCalled();
-    expect(readLiveRun()).toEqual(HANGS);
+    expect(liveRun.read()).toEqual(HANGS);
   });
 });

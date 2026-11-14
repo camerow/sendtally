@@ -108,6 +108,19 @@ export type DayMarkSpec = { kind: WorkoutKind; filled: boolean };
  * One mark per thing on the day: filled for what was logged, outlined while open. A plan
  * done adds none, since the session that did it is already logged.
  */
+/** What was logged, as a key: an activity's id, a climbing session's fingerprint, a hangboard session's id. */
+export const loggedKey = (item: LoggedItem): string => {
+  if (item.kind === "activity") return item.activity.id;
+  return item.kind === "climb" ? item.session.fingerprint : item.session.id;
+};
+
+/** One mark per kind, filled if any of that kind happened, as the week strip draws a day. */
+export const oncePerKind = (marks: readonly DayMarkSpec[]): DayMarkSpec[] =>
+  [...new Set(marks.map((m) => m.kind))].map((kind) => ({
+    kind,
+    filled: marks.some((m) => m.kind === kind && m.filled),
+  }));
+
 export function dayMarks(day: TrainingDay): DayMarkSpec[] {
   return [
     ...day.logged.map((i) => ({ kind: loggedKind(i), filled: true })),

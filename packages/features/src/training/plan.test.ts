@@ -1,4 +1,4 @@
-import { canMoveTo, moveOf, moveWeek } from "./moves";
+import { canMoveTo, moveCopy, moveOf, moveWeek } from "./moves";
 import { describe, expect, it } from "vitest";
 import type { Plan } from "@sendtally/api-client";
 import type { Workout } from "@sendtally/core/hang";
@@ -293,6 +293,30 @@ describe("moving a day", () => {
       plannedOn: "2026-11-03",
       movedTo: "2026-11-05",
     });
+  });
+});
+
+describe("what a move leaves alone", () => {
+  const today = "2026-11-03";
+  const runOn = (p: Plan, id: string) =>
+    occurrencesOn(p, workout, [], today, today).find((o) => o.membership.id === id);
+
+  it("names the block week after for a run in a block", () => {
+    const run = runOn(plan, "m1");
+    if (run === undefined) throw new Error("no run");
+    expect(moveCopy(run, plan)).toContain("Week 2 stays on Tue, Fri");
+  });
+
+  it("says nothing for a one-off, which has no next week", () => {
+    const oneOff: Plan = {
+      ...plan,
+      memberships: [
+        { id: "o1", workoutId: "squat", blockId: null, weekdays: [], start: today, position: 0 },
+      ],
+    };
+    const run = runOn(oneOff, "o1");
+    if (run === undefined) throw new Error("no run");
+    expect(moveCopy(run, oneOff)).toBeNull();
   });
 });
 

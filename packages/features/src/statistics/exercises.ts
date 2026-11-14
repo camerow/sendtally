@@ -1,4 +1,4 @@
-import type { Activity } from "@sendtally/api-client";
+import type { Activity, Exercise } from "@sendtally/api-client";
 import {
   climbDiscipline,
   climbRank,
@@ -74,6 +74,12 @@ export type ExerciseSummary = {
 };
 
 export const exerciseKey = (name: string): string => name.trim().toLowerCase();
+
+/** The exercise a trend row stands for, matched on its key. */
+export const exerciseByKey = <E extends Pick<Exercise, "name">>(
+  exercises: readonly E[],
+  key: string
+): E | undefined => exercises.find((e) => exerciseKey(e.name) === key);
 
 /** The workouts with an item of this exercise, in any case; a hangboard item names a grip. */
 export function workoutsUsing<W extends Pick<Workout, "kind" | "items">>(

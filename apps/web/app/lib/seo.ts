@@ -6,7 +6,17 @@ export function landingPath(locale: Locale): string {
   return locale === "en" ? "/" : `/${locale}`;
 }
 
-export const INDEXABLE_PATHS = ["/", "/de", "/fr", "/es", "/privacy", "/terms", "/support"];
+export const INDEXABLE_PATHS = [
+  "/",
+  "/de",
+  "/fr",
+  "/es",
+  "/pricing",
+  "/privacy",
+  "/terms",
+  "/support",
+  "/agents",
+];
 
 const OG_LOCALES: Record<Locale, string> = { en: "en_US", de: "de_DE", fr: "fr_FR", es: "es_ES" };
 

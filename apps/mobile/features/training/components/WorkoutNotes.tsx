@@ -4,7 +4,7 @@ import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { useRunWorkout } from "../library/useLibrary";
 import { type } from "../type";
-import { ON_DARK_SOFT } from "./onDark";
+import { ON_DARK_SOFT } from "@sendtally/features/workouts";
 
 export type WorkoutNotesProps = {
   workoutId: string;

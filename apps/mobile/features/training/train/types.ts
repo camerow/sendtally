@@ -1,10 +1,4 @@
-import type { WorkoutKind } from "@sendtally/core/hang";
+import type { ShelfCard as Card } from "@sendtally/features/exercises";
 
-/** One exercise on its category's shelf; `meta` is null until it is done, and one with nothing to show yet does not open. */
-export type ShelfCard = {
-  key: string;
-  kind: WorkoutKind;
-  name: string;
-  meta: string | null;
-  open?: () => void;
-};
+/** One exercise on its category's shelf, with where it opens. */
+export type ShelfCard = Card & { open?: () => void };

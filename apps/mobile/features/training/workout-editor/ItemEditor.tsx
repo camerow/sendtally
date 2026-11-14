@@ -10,7 +10,7 @@ import type { DetailMenuRow } from "../components/types";
 import { type } from "../type";
 import { DoseNameTile } from "./DoseNameTile";
 import { DoseInput } from "./DoseInput";
-import { doseFieldsFor, type DoseMeasure } from "./doseFields";
+import { doseFieldsFor, type DoseMeasure } from "@sendtally/features/workouts";
 import {
   MAX_DOSES,
   withAlternates,
@@ -18,9 +18,11 @@ import {
   withDoseAdded,
   withDoseName,
   withoutLastDose,
+  withLapUnit,
   withSetRest,
-} from "./editorState";
+} from "@sendtally/features/workouts";
 import { LetterBadge } from "../components/LetterBadge";
+import { UnitToggle } from "../../log-session/UnitToggle";
 import { TimeField } from "../../../components/TimeField";
 import { useFieldOrder } from "../../../components/useFieldOrder";
 
@@ -64,7 +66,8 @@ export function ItemEditor({
   const alternating = item.doses.length > 1;
   const next = letterOf(item.doses.length);
   const last = letterOf(item.doses.length - 1);
-  const fields = doseFieldsFor(kind, measure);
+  const fields = doseFieldsFor(kind, measure, item.doses[0]);
+  const laps = measure === "laps";
   const { slot } = useFieldOrder([
     ...item.doses.flatMap((_, d) => fields.map((f) => `${d}.${f.key}`)),
     "setRest",
@@ -167,6 +170,19 @@ export function ItemEditor({
           </>
         )}
       </View>
+      {laps && (
+        <View
+          style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+        >
+          <Text style={[type.body, { fontSize: 14, color: colors.gunmetal }]}>
+            {t("endurance.oneLapIs")}
+          </Text>
+          <UnitToggle
+            value={item.doses[0]?.onS === undefined ? "moves" : "seconds"}
+            onChange={(unit) => onChange(withLapUnit(item, unit))}
+          />
+        </View>
+      )}
       {item.doses.map((dose, d) => (
         <View key={d} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           {alternating && <LetterBadge dose={d} size={26} />}
@@ -226,7 +242,7 @@ export function ItemEditor({
       </View>
       <TimeField
         {...slot("setRest")}
-        label={t("hang.fieldSetRest")}
+        label={laps ? t("workouts.lapRest") : t("hang.fieldSetRest")}
         value={item.doses[0]?.setRestS ?? 0}
         max={3600}
         onChange={(seconds) => onChange(withSetRest(item, seconds))}

@@ -17,8 +17,10 @@ import {
   type LogTraining,
   type TripSpan,
 } from "./types";
-import { blockLastDay } from "@sendtally/core/hang";
-import { blockTagOf } from "../training/recap";
+import { blockLastDay, type CalendarDate } from "@sendtally/core/hang";
+import { blockGroups } from "../training/blocks";
+import type { TrainingLog } from "../training/days";
+import { blockRecap, blockTagOf } from "../training/recap";
 
 const KIND_LABELS: Record<EntryKind, MessageKey> = {
   journal: "journal.kindJournal",
@@ -63,16 +65,15 @@ export function today(now: Date = new Date()): string {
   return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
 }
 
-/** Which slice of the log is on show. "journal" is what the journal page is. */
-export type LogScope = "all" | "sessions" | "journal" | "trips" | "injuries";
+/** What the Training log can be narrowed to. */
+export type LogScope = "all" | "sessions" | "journal" | "injuries";
 
-export const LOG_SCOPES: LogScope[] = ["all", "sessions", "journal", "trips", "injuries"];
+export const LOG_SCOPES: LogScope[] = ["all", "sessions", "journal", "injuries"];
 
 const SCOPE_LABELS: Record<LogScope, MessageKey> = {
   all: "journal.showEverything",
   sessions: "journal.showSessions",
   journal: "journal.showJournal",
-  trips: "journal.showTrips",
   injuries: "journal.showInjuries",
 };
 
@@ -84,8 +85,7 @@ export function logScopeItems(items: LogItem[], scope: LogScope): LogItem[] {
   if (scope === "all") return items;
   if (scope === "sessions") return items.filter((i) => i.type !== "entry");
   if (scope === "journal") return items.filter((i) => i.type === "entry");
-  const kind: EntryKind = scope === "trips" ? "trip" : "injury";
-  return items.filter((i) => i.type === "entry" && i.entry.kind === kind);
+  return items.filter((i) => i.type === "entry" && i.entry.kind === "injury");
 }
 
 /** A logged workout's name and key, which Stats links to the log by; nothing for the rest. */
@@ -104,6 +104,22 @@ export function logItemWorkout(item: LogItem): { key: string; name: string } | n
 export const logWorkoutItems = (items: LogItem[], key: string): LogItem[] =>
   items.filter((i) => logItemWorkout(i)?.key === key);
 
+/** The Training log's rows under its scope, and only one workout's when a key is given. */
+export function trainingLogItems(
+  items: LogItem[],
+  scope: LogScope,
+  workout: string | null
+): LogItem[] {
+  const scoped = logScopeItems(items, scope);
+  return workout === null ? scoped : logWorkoutItems(scoped, workout);
+}
+
+/** The name of the workout a key narrows the log to, from the rows that carry it. */
+export function logWorkoutName(items: readonly LogItem[], key: string | null): string | null {
+  if (key === null) return null;
+  return items.map(logItemWorkout).find((w) => w?.key === key)?.name ?? null;
+}
+
 /** The two halves of the log, and of Stats. */
 export type LogSegment = "climbing" | "training";
 
@@ -116,8 +132,11 @@ export function logSegmentItems(items: LogItem[], segment: LogSegment): LogItem[
   );
 }
 
-/** What the training half can be narrowed to: everything but trips, which it leaves out. */
-export const TRAINING_LOG_SCOPES: LogScope[] = LOG_SCOPES.filter((s) => s !== "trips");
+/** The plan the log tags sessions with, and the blocks over by `day` that it marks done. */
+export const logTraining = (log: TrainingLog, day: CalendarDate): LogTraining => ({
+  plan: log.plan,
+  finished: blockGroups(log.plan.blocks, day).past.map((b) => blockRecap(log, b, day)),
+});
 
 const NO_TRAINING: LogTraining = { plan: { blocks: [], memberships: [] }, finished: [] };
 
@@ -273,7 +292,7 @@ export function openInjuries(entries: JournalEntry[]): JournalEntry[] {
   return entries.filter((e) => e.kind === "injury" && e.status === "ongoing");
 }
 
-export function emptyDraft(kind: EntryKind, occurredAt: string): EntryDraft {
+export function emptyEntryDraft(kind: EntryKind, occurredAt: string): EntryDraft {
   return {
     kind,
     occurredAt,
@@ -363,6 +382,17 @@ export function entryWhen(entry: JournalEntry): string {
   return spansDates(entry.kind)
     ? spanLabel(entry.occurred_at, entry.ends_at)
     : longDayLabel(entry.occurred_at);
+}
+
+/**
+ * The line under an entry in the log: its dates when it spans some, else the detail it is
+ * given. A titled entry with no detail shows its first line; an untitled one already borrows
+ * that line as its title.
+ */
+export function entryRowMeta(entry: JournalEntry, detail?: string): string {
+  if (spansDates(entry.kind)) return spanLabel(entry.occurred_at, entry.ends_at);
+  const titled = (entry.title?.trim() ?? "") !== "";
+  return titled && detail === undefined ? (entry.body.trim().split("\n")[0] ?? "") : (detail ?? "");
 }
 
 /** "22 - 26 May", "From 18 May" while it is still going. */

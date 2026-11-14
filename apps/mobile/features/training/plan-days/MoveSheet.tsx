@@ -2,16 +2,15 @@ import React from "react";
 import { Text, View } from "react-native";
 import { blockLastDay, isDated, type CalendarDate } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { daysList, shortDate } from "@sendtally/features/hang";
+import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   canMoveTo,
+  moveCopy,
   moveOf,
   moveWeek,
   plannedOn,
   trainingDay,
-  daysInWeek,
-  scheduleOf,
   useTrainingLog,
   type Occurrence,
 } from "@sendtally/features/training";
@@ -39,17 +38,7 @@ export function MoveSheet({ occurrence: o, name, onClose }: MoveSheetProps): Rea
   const dated = o.block !== null && isDated(o.block) ? o.block : null;
   const last = dated === null ? null : blockLastDay(dated);
   const first = dated !== null && dated.start > today ? dated.start : today;
-  const nextDays = daysList(
-    o.week === null
-      ? o.membership.weekdays
-      : daysInWeek(scheduleOf(log.plan, o.membership), o.week + 1)
-  );
-  const copy =
-    o.week === null
-      ? t("plan.moveCopy", { days: nextDays })
-      : nextDays === "" || (dated !== null && o.week >= dated.weeks)
-        ? t("plan.moveCopyBlockOnly", { n: o.week })
-        : t("plan.moveCopyBlock", { next: o.week + 1, days: nextDays, n: o.week });
+  const copy = moveCopy(o, log.plan);
   return (
     <HangSheet visible onClose={onClose} closeLabel={t("common.cancel")}>
       <View style={{ gap: 18, paddingBottom: 12 }}>
@@ -70,9 +59,11 @@ export function MoveSheet({ occurrence: o, name, onClose }: MoveSheetProps): Rea
             if (canMoveTo(o, d, today, plansOn)) setTo(d);
           }}
         />
-        <Text style={[type.body, { fontSize: 13, lineHeight: 19, color: colors.textSecondary }]}>
-          {copy}
-        </Text>
+        {copy !== null && (
+          <Text style={[type.body, { fontSize: 13, lineHeight: 19, color: colors.textSecondary }]}>
+            {copy}
+          </Text>
+        )}
         <Button
           label={to === null ? t("plan.move") : t("plan.moveTo", { day: shortDate(to) })}
           disabled={to === null}

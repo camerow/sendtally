@@ -4,7 +4,9 @@ export {
   dayMarks,
   itemEffort,
   loggedFocus,
+  loggedKey,
   loggedKind,
+  oncePerKind,
   loggedSessions,
   trainingDay,
   trainingWeek,
@@ -28,6 +30,7 @@ export {
   blockOfMembership,
   nextOccurrence,
   occurrenceLink,
+  plannedItems,
   asOn,
   occurrencesOn,
   sessionsOf,
@@ -43,25 +46,31 @@ export {
   newSchedule,
   blockDates,
   scheduledMemberships,
+  scheduleAddLabel,
   scheduleReady,
   toggled,
   type ScheduleDraft,
   type ScheduleMode,
 } from "./schedule";
-export { canMoveTo, moveOf, moveWeek, plannedOn } from "./moves";
+export { canMoveTo, moveCopy, moveOf, moveWeek, plannedOn } from "./moves";
 export { usePlan } from "./usePlan";
 export { usePlanActions, type PlanActions } from "./usePlanActions";
 export {
   cellText,
   columnLabel,
+  doneAll,
+  doneText,
+  isTimeField,
+  weekFieldMarked,
+  weekFieldUnit,
   fieldLabel,
-  fieldLimits,
-  fieldValue,
+  weekFieldLimits,
+  weekFieldValue,
   loadColumns,
   stepped,
   weekFields,
-  withField,
-  type DoseField,
+  withWeekField,
+  type WeekField,
 } from "./weeks";
 export { useTrainingLog, type TrainingLogQuery } from "./useTrainingLog";
 export {
@@ -71,6 +80,7 @@ export {
   type TrainingReminder,
 } from "./reminders";
 export { focusBeside, focusLabel, focusMeaning, focusParam, readFocus } from "./focus";
+export { NO_PLAN, planLinkParams, readPlanLink, readSession } from "./planLinkParams";
 export {
   daysInWeek,
   hasDays,
@@ -91,6 +101,72 @@ export {
   draftMove,
   draftRemove,
   draftSchedule,
-  emptyDraft,
+  emptyPlanDraft,
   type PlanDraft,
 } from "./planDraft";
+export {
+  liveMembers,
+  ongoingMembers,
+  planGridRows,
+  weekLines,
+  workoutLines,
+  type CellMark,
+  type GridOptions,
+  type GridPart,
+  type GripNames,
+  type PlanGridRow,
+} from "./planGridRows";
+export {
+  blockDateRange,
+  blockName,
+  blockKicker,
+  blockTag,
+  currentBlockLine,
+  doneOfShort,
+  effortText,
+} from "./blockText";
+export { occurrenceMeta, occurrenceTag } from "./occurrenceText";
+export { loggedRowText, type LoggedRowText } from "./loggedRowText";
+export { KIND_LOOK, type KindLook, type MarkShape } from "./kindLook";
+export { bandOn, bandText, blockOn, calendarDay, monthWeeks, type Band } from "./calendarGrid";
+export { isOneOff } from "./plan";
+export { membershipTag, oneOffDate, plannedIn } from "./planText";
+export { KIND_COLORS, activityColor } from "./kindColors";
+export { addFlowOf, addFlowParams, addKicker, type AddFlow, type RawAddParams } from "./addFlow";
+export { blockMembership, useAddTo, type AddTo, type AddToOptions } from "./useAddTo";
+export {
+  addToBlockOptions,
+  canStepWeeks,
+  clampWeeks,
+  keptName,
+  MAX_BLOCK_WEEKS,
+  newBlock,
+  pastMeta,
+  templateMeta,
+} from "./blockMeta";
+export { blockWeekColumns, blockWeekDates, cellMark, weekPlans } from "./blockWeekDays";
+export { usePlanDraft, type PlanDraftState } from "./usePlanDraft";
+export {
+  changedWeeks,
+  everyWeekFrom,
+  ladderDone,
+  ladderView,
+  loadSummary,
+  ranMark,
+  toggleIn,
+  weekChangesOf,
+  weekDaysRows,
+  type LadderView,
+  type WeekDaysArgs,
+  type WeekDaysCell,
+  type WeekDaysRow,
+} from "./ladder";
+export { LIT_MS, useLit } from "./useLit";
+export { useBlockWeekGrid, type BlockWeekGrid, type BlockWeekGridArgs } from "./useBlockWeekGrid";
+export {
+  useBlockPage,
+  type BlockPageArgs,
+  type BlockPageData,
+  type BlockPageState,
+  type BlockWeekState,
+} from "./useBlockPage";

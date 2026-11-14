@@ -4,8 +4,9 @@ export const importCsv = {
   "import.stepReview": "2 Revisar",
   "import.stepDone": "3 Listo",
   "import.dropLabel": "Suelta un CSV aquí o elige un archivo",
+  "import.exportFrom": "Dónde exportar",
   "import.dropHint":
-    "Las exportaciones de Kaya se reconocen automáticamente. Todo lo demás usa el formato CSV de Sendtally de abajo. No se guarda nada hasta que confirmes en el siguiente paso.",
+    "Las exportaciones de estas apps se reconocen automáticamente. Todo lo demás usa el formato CSV de Sendtally de abajo. No se guarda nada hasta que confirmes en el siguiente paso.",
   "import.formatLabel": "Formato CSV de Sendtally",
   "import.downloadTemplate": "Descargar plantilla",
   "import.formatBody":
@@ -27,15 +28,14 @@ export const importCsv = {
   "import.colTriesRpe":
     "Números enteros. RPE de 1 a 10; déjalo vacío y Sendtally puntúa la sesión.",
   "import.copyPrompt": "Copiar prompt",
-  "import.copied": "Copiado",
   "import.convertTitle": "Convertir una hoja de cálculo con un asistente de IA",
   "import.convertHelp":
     "Pega esto en Claude o ChatGPT junto con tu hoja (expórtala primero como CSV). Revisa una o dos sesiones del resultado y luego importa el archivo que te dé.",
-  "import.kayaSkip":
-    "Si usas Kaya, sáltate esto: sube la exportación de los ajustes de perfil de Kaya tal cual.",
+  "import.exportSkip":
+    "¿Exportado desde una de estas apps? Sáltate esto y sube la exportación tal cual.",
   "import.reviewTitle": "Revisar antes de importar",
   "import.chooseAnother": "Elegir otro archivo",
-  "import.formatKaya": "Exportación de Kaya",
+  "import.formatExport": "Exportación de {service}",
   "import.formatSendtally": "Formato Sendtally",
   "import.statSessions": "sesiones",
   "import.statClimbs": "vías",
@@ -49,9 +49,10 @@ export const importCsv = {
   "import.skippedBody":
     "Todo lo demás se importa como se muestra abajo. Corrige el archivo y vuelve a elegirlo, o continúa sin estas filas.",
   "import.nothingFound":
-    "Este archivo no es una exportación de Kaya ni está en el formato CSV de Sendtally. Conviértelo con el prompt de abajo y luego elige el archivo convertido.",
+    "Este archivo no es una exportación que Sendtally reconozca ni está en el formato CSV de Sendtally. Conviértelo con el prompt de abajo y luego elige el archivo convertido.",
   "import.issueNoHeader": "La primera fila no es una cabecera que Sendtally reconozca.",
   "import.issueMissingDate": "Sin fecha, y sin sesión arriba que continuar.",
+  "import.issueNoDate": "Sin fecha.",
   "import.issueBadDate": "«{value}» no es una fecha en formato AAAA-MM-DD.",
   "import.issueMissingGrade": "Sin grado.",
   "import.issueUnknownGrade": "«{value}» no es un grado que Sendtally conozca.",
@@ -81,6 +82,13 @@ export const importCsv = {
     "Las tendencias y los proyectos incluyen las sesiones importadas de inmediato. Abre cualquiera para añadir un RPE, etiquetas o notas.",
   "import.openLog": "Abrir el registro",
   "import.importAnother": "Importar otro archivo",
+  "import.likelyTitle_one": "{count} sesión parece una que ya está en tu registro",
+  "import.likelyTitle_other": "{count} sesiones parecen unas que ya están en tu registro",
+  "import.likelyMatch": "Coincide con {name} en tu registro",
+  "import.importAnyway_one": "Importarla igualmente",
+  "import.importAnyway_other": "Importarlas igualmente",
+  "import.likelySkipped_one": "{count} posible duplicado omitido",
+  "import.likelySkipped_other": "{count} posibles duplicados omitidos",
   "import.showAllRows": "Mostrar las {total} filas",
   "import.tagSelected": "Etiquetar las sesiones elegidas",
   "import.tagSelectedHint":
@@ -91,4 +99,19 @@ export const importCsv = {
   "import.selectNone": "Borrar",
   "import.selectNamed": "Elegir sesiones llamadas…",
   "import.selectSession": "Elegir {name}, {date}",
+  "import.connectorLine":
+    "O conecta Claude o ChatGPT a sendtally y deja que importe el archivo por ti.",
+  "import.supportedApps": "Apps compatibles",
+  "import.chooseFile": "Elegir un archivo CSV",
+  "import.notRecognized": "No reconocido",
+  "import.nothingToImport": "Nada que importar",
+  "import.nothingFoundMobile":
+    "Este archivo no es una exportación que Sendtally reconozca ni está en el formato CSV de Sendtally. Conviértelo con un asistente de IA y luego elige el archivo convertido.",
+  "import.convertHelpMobile":
+    "Envía este prompt a Claude o ChatGPT con tu hoja de cálculo adjunta.",
+  "import.sharePrompt": "Compartir prompt",
+  "import.added_one": "{count} sesión añadida",
+  "import.added_other": "{count} sesiones añadidas",
+  "import.addedSome": "{added} añadidas · {skipped} ya estaban",
+  "import.allThere": "Las {total} ya están en tu registro",
 } as const;

@@ -5,12 +5,8 @@ import { t } from "@sendtally/features/i18n";
 import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
 import { ChevronRow } from "../../settings/components/ChevronRow";
-import {
-  bodyText,
-  monoMuted,
-  secondaryButton,
-  sectionLabel,
-} from "../../settings/components/styles";
+import { bodyText, monoMuted, secondaryButton } from "../../settings/components/styles";
+import { sectionLabel } from "../../components/styles";
 
 export function GymsSection({ gyms, ready }: { gyms: Gym[]; ready: boolean }): React.ReactElement {
   return (

@@ -10,7 +10,7 @@ import {
 } from "@sendtally/features/areas";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { AreaFormDialog } from "./AreaFormDialog";
-import { AreaMenu } from "./AreaMenu";
+import { MoreMenu } from "../../components/MoreMenu";
 import { Breadcrumb } from "./Breadcrumb";
 import { ClimbFormDialog } from "./ClimbFormDialog";
 import { Notice } from "./Notice";
@@ -59,7 +59,8 @@ export function AreaPageView({
           </div>
           <span className="area-meta">{meta.join(" · ")}</span>
         </div>
-        <AreaMenu
+        <MoreMenu
+          label={t("areas.moreActions")}
           items={[
             {
               label: t("areas.suggestEdits"),

@@ -5,8 +5,10 @@
 
 export type Env = {
   DB: D1Database;
+  CONNECTOR_RATE_LIMITER: RateLimit;
   TOKEN_KEY: string;
   CLERK_SECRET_KEY: string;
+  CLERK_PUBLISHABLE_KEY: string;
   CLERK_WEBHOOK_SIGNING_SECRET: string;
   STRAVA_CLIENT_ID: string;
   STRAVA_CLIENT_SECRET: string;

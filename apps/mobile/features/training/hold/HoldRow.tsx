@@ -2,10 +2,9 @@ import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { elapsedClock } from "@sendtally/features/sessions";
 import { Button } from "../components/Button";
 import { type } from "../type";
-import { holdNow, type Hold } from "./holdClock";
+import { holdRowVM, type Hold } from "@sendtally/features/workouts";
 
 export type HoldRowProps = {
   hold: Hold;
@@ -29,32 +28,10 @@ export function HoldRow({
   onResume,
   onDone,
 }: HoldRowProps): React.ReactElement {
-  const at = holdNow(hold, now);
-  const word =
-    at.phase === "countIn"
-      ? t("activities.holdReady")
-      : at.phase === "switch"
-        ? t("activities.holdSwitch")
-        : at.phase === "hold" && at.side !== null
-          ? t(at.side === "L" ? "activities.holdLeft" : "activities.holdRight")
-          : null;
-  const clock =
-    at.phase === "hold"
-      ? elapsedClock(at.seconds)
-      : at.phase === "over"
-        ? elapsedClock(hold.targetS)
-        : String(at.left);
-  const share = at.phase === "hold" ? Math.min(1, at.share) : at.phase === "over" ? 1 : 0;
-  const paused = hold.pausedAt !== null;
+  const vm = holdRowVM(hold, now);
   return (
     <View
-      accessibilityLabel={[
-        word,
-        clock,
-        t("activities.holdOf", { time: elapsedClock(hold.targetS) }),
-      ]
-        .filter((x) => x !== null)
-        .join(" ")}
+      accessibilityLabel={vm.label}
       style={{
         minHeight: 48,
         flexDirection: "row",
@@ -72,26 +49,24 @@ export function HoldRow({
           left: 0,
           top: 0,
           bottom: 0,
-          width: `${share * 100}%`,
+          width: `${vm.share * 100}%`,
           backgroundColor: colors.fern,
           opacity: 0.16,
         }}
       />
       {lead ?? <View style={{ width: 12 }} />}
       <View style={{ flex: 1, flexDirection: "row", alignItems: "baseline", gap: 6 }}>
-        {word !== null && (
-          <Text style={[type.bodyBold, { fontSize: 13, color: colors.gunmetal }]}>{word}</Text>
+        {vm.word !== null && (
+          <Text style={[type.bodyBold, { fontSize: 13, color: colors.gunmetal }]}>{vm.word}</Text>
         )}
-        <Text style={[type.monoBold, { fontSize: 20, color: colors.gunmetal }]}>{clock}</Text>
-        {at.phase !== "countIn" && at.phase !== "switch" && (
-          <Text style={[type.mono, { fontSize: 12.5, color: colors.textSecondary }]}>
-            {t("activities.holdOf", { time: elapsedClock(hold.targetS) })}
-          </Text>
+        <Text style={[type.monoBold, { fontSize: 20, color: colors.gunmetal }]}>{vm.clock}</Text>
+        {vm.of !== null && (
+          <Text style={[type.mono, { fontSize: 12.5, color: colors.textSecondary }]}>{vm.of}</Text>
         )}
       </View>
       <Button
-        label={paused ? t("hang.resume") : t("hang.pause")}
-        onPress={paused ? onResume : onPause}
+        label={vm.paused ? t("hang.resume") : t("hang.pause")}
+        onPress={vm.paused ? onResume : onPause}
         variant="link"
         height={40}
       />

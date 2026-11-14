@@ -15,24 +15,6 @@ export const hang = {
   "hang.summaryPull": "{reps} tirones × {sets} series · {setRest} entre series",
   "hang.summaryTimedPull": "Tirón de {on}",
 
-  "hang.workout.rep73.name": "Repeaters 7:3",
-  "hang.workout.rep73.blurb":
-    "El clásico de fuerza-resistencia. Seis suspensiones por serie con descansos cortos, para que los antebrazos nunca se recuperen del todo.",
-  "hang.workout.max10.name": "Suspensiones máximas",
-  "hang.workout.max10.blurb":
-    "Carga casi máxima, muy poco volumen, descansos largos. Lo básico para la fuerza de dedos pura.",
-  "hang.workout.block.name": "Tirones de bloque",
-  "hang.workout.block.blurb":
-    "Levanta un bloque lastrado del suelo. Trabajo de pinza pesado sin plafón, y una carga fácil de ajustar con precisión.",
-  "hang.workout.density.name": "Suspensiones de densidad",
-  "hang.workout.density.blurb":
-    "Suspensiones largas y suaves a baja intensidad. Buen estímulo para los tendones que puedes hacer a menudo.",
-  "hang.workout.assist.name": "Un brazo asistido",
-  "hang.workout.assist.blurb":
-    "Peso quitado con una polea. Alterna los brazos en cada serie y quita menos peso con el tiempo.",
-  "hang.workout.lowpull.name": "Tirones ligeros diarios",
-  "hang.workout.lowpull.blurb":
-    "Muchos tirones ligeros, casi todos los días de la semana. Riego para los tendones, no un entreno duro.",
   "hang.untitledWorkout": "Entreno sin nombre",
   "hang.copyName": "{name} (copia)",
 

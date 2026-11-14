@@ -6,7 +6,8 @@ import type { GradeScale } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { ComboField, type ComboItem } from "../../components/ComboField";
 import { Glyph } from "./Glyph";
-import { FLAG, columnHead, inputStyle } from "./styles";
+import { FLAG, columnHead } from "./styles";
+import { inputStyle } from "../../components/styles";
 
 export type ClimbNameFieldProps = {
   value: string;

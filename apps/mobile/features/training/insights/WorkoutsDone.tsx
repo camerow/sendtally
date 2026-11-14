@@ -9,7 +9,7 @@ import { Icon } from "../../../components/Icon";
 import { press, pressRow } from "../../../lib/press";
 import { CategoryRow } from "../components/CategoryRow";
 import { Label } from "../components/Label";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
 
 export type WorkoutsDoneProps = {

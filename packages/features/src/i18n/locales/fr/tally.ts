@@ -35,4 +35,11 @@ export const tally = {
   "tally.restClock": "Repos {time}",
   "tally.timeLeft": "{time} restantes",
   "tally.skipRest": "Passer le repos",
+  "tally.lapLabel": "Tour {lap}",
+  "tally.allLapsDone": "Tous les tours faits",
+  "tally.onTheWall": "Sur le mur",
+  "tally.addLap": "+ Ajouter un tour",
+  "tally.startLap": "Lancer le tour",
+  "tally.restTook": "repos {time}",
+  "tally.startRest": "Lancer le repos",
 } as const;

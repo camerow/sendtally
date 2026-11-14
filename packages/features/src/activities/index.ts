@@ -40,6 +40,8 @@ export {
   climbsLine,
   climbsTotal,
   isClimbingSets,
+  lapPlanOf,
+  lapsLine,
   wallChip,
   wallLine,
   type ClimbsTotal,
@@ -62,3 +64,9 @@ export {
   type SeriesPoint,
   type SetChange,
 } from "./summary";
+export * from "./historyItems";
+export * from "./intervalsText";
+export * from "./summaryText";
+export type { HistoryItem, Stat } from "./types";
+export { hangCount, hangLoadText } from "./hangText";
+export { stravaLabel } from "./stravaLabel";

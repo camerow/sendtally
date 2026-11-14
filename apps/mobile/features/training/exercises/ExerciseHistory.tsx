@@ -5,7 +5,7 @@ import { useActivities } from "@sendtally/features/activities";
 import type { ExerciseSeries } from "@sendtally/features/statistics";
 import { useApi } from "../../../lib/api";
 import { HistoryList } from "../history/HistoryList";
-import { exerciseItems } from "../history/historyItems";
+import { exerciseItems } from "@sendtally/features/activities";
 
 export type ExerciseHistoryProps = { series: ExerciseSeries; unit: WeightUnit };
 

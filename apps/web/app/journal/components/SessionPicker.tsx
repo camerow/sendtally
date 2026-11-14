@@ -1,7 +1,7 @@
 import React from "react";
 import type { SessionRow } from "@sendtally/api-client";
 import { formatDate, t } from "@sendtally/features/i18n";
-import { isoDay } from "@sendtally/features/journal";
+import { sessionChoices } from "@sendtally/features/journal";
 import { sessionTitle } from "@sendtally/features/sessions";
 import { SessionRowBody } from "../../sessions/components/SessionRowBody";
 
@@ -43,31 +43,10 @@ export function SessionPicker({
   value: string[];
   onChange: (fingerprints: string[]) => void;
 }): React.ReactElement | null {
-  const linked = React.useMemo(
-    () =>
-      sessions
-        .filter((s) => value.includes(s.fingerprint))
-        .sort((a, b) => b.start_at.localeCompare(a.start_at)),
-    [sessions, value]
-  );
-
-  const available = React.useMemo(
-    () =>
-      sessions
-        .filter((s) => !value.includes(s.fingerprint))
-        .sort((a, b) => b.start_at.localeCompare(a.start_at)),
-    [sessions, value]
-  );
+  const { linked, inSpan, recent: rest } = sessionChoices(sessions, value, occurredAt, endsAt);
+  const available = [...inSpan, ...rest];
 
   if (sessions.length === 0) return null;
-
-  // What the entry's own dates cover, which in every doorway is what it is about.
-  const to = endsAt === "" ? occurredAt : endsAt;
-  const inSpan = available.filter((s) => {
-    const day = isoDay(s.start_at);
-    return day >= occurredAt && day <= to;
-  });
-  const rest = available.filter((s) => !inSpan.includes(s));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

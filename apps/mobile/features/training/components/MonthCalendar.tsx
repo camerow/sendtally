@@ -10,7 +10,7 @@ import {
 } from "@sendtally/core/hang";
 import { dayTitle, monthTitle, weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { bandOn, monthWeeks } from "../calendar/calendarGrid";
+import { bandText, calendarDay, monthWeeks } from "@sendtally/features/training";
 import { type } from "../type";
 import { BlockBand } from "./BlockBand";
 import { IconButton } from "./IconButton";
@@ -42,12 +42,6 @@ export function MonthCalendar({
 }: MonthCalendarProps): React.ReactElement {
   const [month, setMonth] = React.useState(() => monthStart(selected));
   const inMonth = (d: CalendarDate): boolean => d.slice(0, 7) === month.slice(0, 7);
-  const bandLabel = (monday: CalendarDate): string | null => {
-    const band = blocks === undefined ? null : bandOn(blocks, monday);
-    return band === null
-      ? null
-      : t("calendar.band", { name: band.block.name, at: band.week, of: band.block.weeks });
-  };
 
   return (
     <View
@@ -98,12 +92,13 @@ export function MonthCalendar({
       </View>
       {monthWeeks(month).map((monday) => (
         <View key={monday}>
-          {blocks !== undefined && <BlockBand label={bandLabel(monday)} />}
+          {blocks !== undefined && (
+            <BlockBand label={blocks === undefined ? null : bandText(blocks, monday)} />
+          )}
           <View style={{ flexDirection: "row" }}>
             {Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((d) => {
               if (!inMonth(d)) return <View key={d} style={{ width: `${100 / 7}%` }} />;
-              const off = (min !== null && d < min) || (max !== undefined && d > max);
-              const on = picked === undefined ? d === selected : picked.includes(d);
+              const { off, on } = calendarDay(d, { selected, picked, min, max });
               const inBlock = !off && shaded(d);
               return (
                 <Pressable

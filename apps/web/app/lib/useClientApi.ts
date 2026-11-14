@@ -5,8 +5,9 @@ import { SendtallyApi, type ApiWrite, type TokenProvider } from "@sendtally/api-
 import { invalidateAfterWrite } from "@sendtally/features/query";
 
 // Clerk hands out a new `getToken` as the session refreshes, so there is one client per API URL
-// and user, and an effect keeps its token getter and cache hook current. Only effects and event
-// handlers send requests, so the server render never shares a signed-in getter across requests.
+// and user, and a layout effect keeps its token getter and cache hook current before any effect
+// sends a request. Only effects and event handlers send requests, so the server render never
+// shares a signed-in getter across requests.
 const bound: { getToken: TokenProvider; onWrite: (write: ApiWrite) => void } = {
   getToken: () => Promise.resolve(null),
   onWrite: () => undefined,
@@ -16,7 +17,7 @@ const clients = new Map<string, SendtallyApi>();
 export function useClientApi(apiUrl: string): SendtallyApi {
   const { getToken, userId } = useAuth();
   const client = useQueryClient();
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     bound.getToken = getToken;
     bound.onWrite = (write) => void invalidateAfterWrite(client, write);
   }, [getToken, client]);

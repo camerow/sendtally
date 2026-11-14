@@ -3,7 +3,7 @@ import { View } from "react-native";
 import Animated, { ZoomIn } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import type { RepMark } from "@sendtally/core/hang";
-import { HANG_ON_DARK, ON_DARK_MUTED, ON_DARK_TRACK } from "../components/onDark";
+import { HANG_ON_DARK, ON_DARK_MUTED, ON_DARK_TRACK } from "@sendtally/features/workouts";
 
 export type RepDotsProps = { reps: number; marks: readonly RepMark[]; working: boolean };
 

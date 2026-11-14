@@ -2,9 +2,10 @@ import React from "react";
 import { TEMPLATE_CSV } from "@sendtally/features/import";
 import { t } from "@sendtally/features/i18n";
 import { Section } from "../../settings/components/Section";
-import { bodyText, linkAction, sectionLabel } from "../../settings/components/styles";
+import { bodyText, linkAction } from "../../settings/components/styles";
 import { code, td, tdMono, th } from "../styles";
 import { ConversionPrompt } from "./ConversionPrompt";
+import { sectionLabel } from "../../components/styles";
 
 type Column = {
   name: string;

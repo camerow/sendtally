@@ -4,7 +4,7 @@ import { hasNextSet, type Phase } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { press } from "../../../lib/press";
 import { HangIcon } from "../components/HangIcon";
-import { ON_DARK } from "../components/onDark";
+import { ON_DARK } from "@sendtally/features/workouts";
 import { type } from "../type";
 import type { Timer } from "./useTimer";
 

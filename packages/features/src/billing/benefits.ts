@@ -1,15 +1,6 @@
 import { t } from "../i18n";
 import type { TrendTileId } from "../trends/types";
 
-export function memberPoints(): string[] {
-  return [
-    t("billing.pointVolume"),
-    t("billing.pointRpe"),
-    t("billing.pointAvgGrade"),
-    t("billing.pointFlashRate"),
-  ];
-}
-
 export type MembershipPanelRow = {
   metric: TrendTileId;
   eyebrow: string;

@@ -1,7 +1,7 @@
 export {
   MAX_CLIMB_SUGGESTIONS,
   climbDraftGrade,
-  climbGradeLabel,
+  summaryGradeLabel,
   climbKey,
   climbsWorkedBefore,
   findClimb,
@@ -15,7 +15,6 @@ export {
 } from "./transforms";
 export {
   dateLabel,
-  disciplineLabel,
   gradeRank,
   withClimbNote,
   withoutClimbNote,
@@ -54,8 +53,10 @@ export {
 } from "./daysClimbed";
 export {
   areaChoice,
+  climbChange,
   climbSuggestions,
   isNewClimb,
+  knownOf,
   placeOf,
   type AreaChoice,
   type ClimbSuggestion,
@@ -105,3 +106,8 @@ export {
   type ClimbsData,
   type ClimbsFeature,
 } from "./useClimbs";
+export {
+  climbPlaceLabel,
+  useClimbingInsights,
+  type ClimbingInsightsFeature,
+} from "./useClimbingInsights";

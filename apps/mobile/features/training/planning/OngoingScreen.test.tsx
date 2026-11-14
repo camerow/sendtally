@@ -1,7 +1,8 @@
 import { beforeEach, expect, it, jest } from "@jest/globals";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import { Alert } from "react-native";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
 import type { PlanDraft } from "@sendtally/features/training";
 import { hangData, renderWithHang } from "../data/renderWithHang";
@@ -63,7 +64,13 @@ const plan: Plan = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
 });
+
+const discard = async (): Promise<void> => {
+  const buttons = jest.mocked(Alert.alert).mock.lastCall?.[2];
+  await act(async () => buttons?.find((b) => b.style === "destructive")?.onPress?.());
+};
 
 it("opens Ongoing from its card on Train", async () => {
   await renderWithHang(<BlocksList />, hangData(), { workouts, plan });
@@ -84,6 +91,9 @@ it("sets days and takes workouts out in Edit, saved together and dropped on Canc
   await fireEvent.press(screen.getByLabelText("Remove Easy run from your plan"));
   expect(screen.queryByText("Easy run")).toBeNull();
   await fireEvent.press(screen.getByText("Cancel"));
+  expect(Alert.alert).toHaveBeenCalledWith("Discard your changes?", undefined, expect.anything());
+  expect(screen.queryByText("Easy run")).toBeNull();
+  await discard();
   expect(screen.getByText("Easy run")).toBeTruthy();
   expect(mockPlan.saveDraft).not.toHaveBeenCalled();
 

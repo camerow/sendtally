@@ -5,9 +5,9 @@ import React from "react";
 import { StyleSheet } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
-import { readLiveRun } from "../../live-session/liveRun";
-import { NO_PLAN } from "../data/planLinkParams";
-import type { TimerRun } from "../done/doneParams";
+import { liveRun } from "../../live-session/liveRun";
+import { NO_PLAN } from "@sendtally/features/training";
+import type { TimerRun } from "@sendtally/features/workouts";
 import { hangData, renderWithHang, TODAY } from "../data/renderWithHang";
 import { TimerScreen } from "./TimerScreen";
 
@@ -77,7 +77,7 @@ describe("Timer", () => {
       <TimerScreen workoutId="rep73" gripId="half" link={NO_PLAN} session={0} />
     );
     await advance(5100);
-    expect(readLiveRun()).toMatchObject({
+    expect(liveRun.read()).toMatchObject({
       title: "Repeaters 7:3",
       pathname: "/workout/timer",
       params: { workoutId: "rep73", gripId: "half", session: "0" },

@@ -51,6 +51,15 @@ describe("climbing sets", () => {
     expect(climbingDoseLine({ sets: 2, onS: 1200 }, "wallTime")).toBe("2 × 20:00 on the wall");
   });
 
+  it("states circuit laps in moves or time, and counts the clean ones", () => {
+    expect(climbingDoseLine({ sets: 3, reps: 40 }, "laps")).toBe("3 laps of 40 moves");
+    expect(climbingDoseLine({ sets: 1, onS: 240 }, "laps")).toBe("1 lap of 4 min");
+    const laps = [{ reps: 40 }, { reps: 28 }, { reps: 40 }];
+    expect(climbingLastTime(laps, "laps", { sets: 3, reps: 40 })).toBe(
+      "Last time: 3 laps · 2 clean"
+    );
+  });
+
   it("compares sends and laps with last time over the whole session", () => {
     const first = {
       id: "a1",

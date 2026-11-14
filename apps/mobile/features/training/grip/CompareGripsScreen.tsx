@@ -13,8 +13,8 @@ import { DashedPanel } from "../components/DashedPanel";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
-import { loadChange } from "../summary/summaryText";
-import { KIND_LOOK } from "../today/kindLook";
+import { loadChange } from "@sendtally/features/activities";
+import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
 import { SetupChips } from "./SetupChips";
 

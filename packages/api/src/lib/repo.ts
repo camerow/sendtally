@@ -94,6 +94,21 @@ export type UserRow = typeof users.$inferSelect;
 
 export type StravaConnectionRow = typeof stravaConnections.$inferSelect;
 
+// D1 binds at most 100 values in one statement, so a list that grows with the
+// climbs in a session is split across statements. A list leaves room for the
+// handful of other values its statement binds.
+const D1_MAX_BOUND = 100;
+const LIST_PER_STATEMENT = 90;
+
+function chunked<T>(items: readonly T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size));
+  return chunks;
+}
+
+const insertChunks = <T extends object>(rows: T[]): T[][] =>
+  rows.length === 0 ? [] : chunked(rows, Math.floor(D1_MAX_BOUND / Object.keys(rows[0]!).length));
+
 // What the apps read. `summary` and `climbs_json` are the Strava description
 // and the raw climb blob, which the endpoints shape themselves.
 const SESSION_PRIVATE_COLUMNS = ["user_id", "summary", "climbs_json"] as const;
@@ -292,8 +307,10 @@ export async function replaceStoreEntitlements(
 
 export type ManualSessionInput = ManualSessionRow;
 
-const insertLinks = (d: Db, userId: string, fingerprint: string, links: ClimbLink[]) =>
-  d.insert(sessionClimbLinks).values(links.map((l) => ({ user_id: userId, fingerprint, ...l })));
+const insertLinks = (d: Db, userId: string, fingerprint: string, links: ClimbLink[]) => {
+  const rows = links.map((l) => ({ user_id: userId, fingerprint, ...l }));
+  return insertChunks(rows).map((c) => d.insert(sessionClimbLinks).values(c));
+};
 
 const clearLinks = (d: Db, userId: string, fingerprint: string) =>
   d
@@ -312,8 +329,7 @@ export async function insertManualSession(
   const insert = d
     .insert(sessions)
     .values({ user_id: userId, source: "manual", board: null, ...s });
-  if (links.length === 0) await insert;
-  else await d.batch([insert, insertLinks(d, userId, s.fingerprint, links)]);
+  await d.batch([insert, ...insertLinks(d, userId, s.fingerprint, links)]);
 }
 
 // The links are replaced whole, like the session's tags and notes.
@@ -335,10 +351,11 @@ export async function updateManualSession(
         eq(sessions.source, "manual")
       )
     );
-  const clear = clearLinks(d, userId, fingerprint);
-  await (links.length === 0
-    ? d.batch([update, clear])
-    : d.batch([update, clear, insertLinks(d, userId, fingerprint, links)]));
+  await d.batch([
+    update,
+    clearLinks(d, userId, fingerprint),
+    ...insertLinks(d, userId, fingerprint, links),
+  ]);
 }
 
 export type SessionLinks = {
@@ -737,16 +754,8 @@ export async function setClimbNotes(
   const clear = d
     .delete(climbNotes)
     .where(and(eq(climbNotes.user_id, userId), eq(climbNotes.fingerprint, fingerprint)));
-  if (notes.length === 0) {
-    await clear;
-    return;
-  }
-  await d.batch([
-    clear,
-    d
-      .insert(climbNotes)
-      .values(notes.map((n) => ({ user_id: userId, fingerprint, updated_at, ...n }))),
-  ]);
+  const rows = notes.map((n) => ({ user_id: userId, fingerprint, updated_at, ...n }));
+  await d.batch([clear, ...insertChunks(rows).map((c) => d.insert(climbNotes).values(c))]);
 }
 
 export async function setClimbNote(
@@ -915,15 +924,8 @@ export async function setEntrySessions(
   const clear = d
     .delete(entrySessions)
     .where(and(eq(entrySessions.user_id, userId), eq(entrySessions.entry_id, entryId)));
-  if (wanted.length === 0) await clear;
-  else {
-    await d.batch([
-      clear,
-      d
-        .insert(entrySessions)
-        .values(wanted.map((fingerprint) => ({ user_id: userId, entry_id: entryId, fingerprint }))),
-    ]);
-  }
+  const rows = wanted.map((fingerprint) => ({ user_id: userId, entry_id: entryId, fingerprint }));
+  await d.batch([clear, ...insertChunks(rows).map((c) => d.insert(entrySessions).values(c))]);
   return wanted;
 }
 
@@ -1204,17 +1206,20 @@ export async function restoreUserClimbs(
   userId: string,
   climbs: { nameKeys: string[]; ids: string[] }
 ): Promise<void> {
-  if (climbs.nameKeys.length === 0 && climbs.ids.length === 0) return;
-  await drizzle(db)
-    .update(userClimbs)
-    .set({ deleted_at: null, updated_at: new Date().toISOString() })
-    .where(
-      and(
-        eq(userClimbs.user_id, userId),
-        isNotNull(userClimbs.deleted_at),
-        or(inArray(userClimbs.name_key, climbs.nameKeys), inArray(userClimbs.id, climbs.ids))
-      )
-    );
+  const d = drizzle(db);
+  const updated_at = new Date().toISOString();
+  const restore = (match: SQL) =>
+    d
+      .update(userClimbs)
+      .set({ deleted_at: null, updated_at })
+      .where(and(eq(userClimbs.user_id, userId), isNotNull(userClimbs.deleted_at), match));
+  const [first, ...rest] = [
+    ...chunked(climbs.nameKeys, LIST_PER_STATEMENT).map((keys) =>
+      restore(inArray(userClimbs.name_key, keys))
+    ),
+    ...chunked(climbs.ids, LIST_PER_STATEMENT).map((ids) => restore(inArray(userClimbs.id, ids))),
+  ];
+  if (first !== undefined) await d.batch([first, ...rest]);
 }
 
 export type ClimbPlace = {
@@ -1928,12 +1933,17 @@ export async function areaClimbsByIds(
   viewer: Viewer,
   ids: string[]
 ): Promise<AreaClimbRow[]> {
-  if (ids.length === 0) return [];
-  return drizzle(db)
-    .select()
-    .from(areaClimbs)
-    .where(and(inArray(areaClimbs.id, ids), visibleTo(areaClimbs, viewer)))
-    .all();
+  const d = drizzle(db);
+  const found = await Promise.all(
+    chunked(ids, LIST_PER_STATEMENT).map((chunk) =>
+      d
+        .select()
+        .from(areaClimbs)
+        .where(and(inArray(areaClimbs.id, chunk), visibleTo(areaClimbs, viewer)))
+        .all()
+    )
+  );
+  return found.flat();
 }
 
 export type RevisionRow = typeof contentRevisions.$inferSelect;
@@ -2512,14 +2522,18 @@ export async function dismissDuplicateReport(
 }
 
 export async function linkCounts(db: D1Database, climbIds: string[]): Promise<Map<string, number>> {
-  if (climbIds.length === 0) return new Map();
-  const rows = await drizzle(db)
-    .select({ id: sessionClimbLinks.climb_id, n: count() })
-    .from(sessionClimbLinks)
-    .where(inArray(sessionClimbLinks.climb_id, climbIds))
-    .groupBy(sessionClimbLinks.climb_id)
-    .all();
-  return new Map(rows.map((r) => [r.id, r.n]));
+  const d = drizzle(db);
+  const rows = await Promise.all(
+    chunked([...new Set(climbIds)], LIST_PER_STATEMENT).map((ids) =>
+      d
+        .select({ id: sessionClimbLinks.climb_id, n: count() })
+        .from(sessionClimbLinks)
+        .where(inArray(sessionClimbLinks.climb_id, ids))
+        .groupBy(sessionClimbLinks.climb_id)
+        .all()
+    )
+  );
+  return new Map(rows.flat().map((r) => [r.id, r.n]));
 }
 
 // One batch. The first statement is the guard: the duplicate is open and the

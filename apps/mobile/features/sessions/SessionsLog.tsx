@@ -4,7 +4,7 @@ import { useSharedValue } from "react-native-reanimated";
 import { Text, View } from "react-native";
 import { useSettings } from "@sendtally/features/settings";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { logItems, logSegmentItems, today, type LogTraining } from "@sendtally/features/journal";
+import { logItems, logSegmentItems, logTraining, today } from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
 import { queries, useQueryPair } from "@sendtally/features/query";
 import { colors, fonts } from "@sendtally/design/tokens";
@@ -23,7 +23,7 @@ import { useApi } from "../../lib/api";
 import { maybeAskForReview } from "../../lib/review";
 import { useSetupDismissed } from "../../lib/setupPrompt";
 import { useGyms } from "@sendtally/features/gyms";
-import { blockGroups, blockRecap, useTrainingLog } from "@sendtally/features/training";
+import { useTrainingLog } from "@sendtally/features/training";
 
 /** The log in two halves, Climbing and Training, each with its own way to add to it; Training can be narrowed to one workout by its key. */
 export function SessionsLog({ workout = null }: { workout?: string | null }): React.ReactElement {
@@ -73,15 +73,7 @@ export function SessionsLog({ workout = null }: { workout?: string | null }): Re
   }
 
   const { log: training } = useTrainingLog(api);
-  const blocks = React.useMemo((): LogTraining => {
-    const day = today();
-    return {
-      plan: training.plan,
-      finished: blockGroups(training.plan.blocks, day).past.map((b) =>
-        blockRecap(training, b, day)
-      ),
-    };
-  }, [training]);
+  const blocks = React.useMemo(() => logTraining(training, today()), [training]);
   const items = React.useMemo(
     () =>
       sessions === null

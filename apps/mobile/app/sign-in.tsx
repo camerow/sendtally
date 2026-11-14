@@ -7,6 +7,7 @@ import { GoogleMark, useSignInFlow } from "@sendtally/auth-native";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
+import { logConversion } from "../features/analytics/conversions";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
 import { press } from "../lib/press";
 
@@ -15,7 +16,10 @@ export default function SignIn(): React.ReactElement | null {
   const router = useRouter();
   const flow = useSignInFlow({
     intent: params.intent === "sign-up" ? "sign-up" : "sign-in",
-    onSignedIn: () => router.replace("/(tabs)/sessions"),
+    onSignedIn: (outcome) => {
+      if (outcome === "signed-up") logConversion("account_created");
+      router.replace("/(tabs)/sessions");
+    },
   });
   const { phase, busy, error, copy, swap } = flow;
   const inCodePhase = phase.name === "code";

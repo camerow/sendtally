@@ -3,12 +3,12 @@ import type { SendtallyApi } from "@sendtally/api-client";
 import { queries, useQuery, type QueryState } from "../query";
 import type { TrendRange } from "../trends/types";
 import { trainingInsightsVM, type TrainingInsightsVM } from "./insights";
-import type { ActivityKind } from "./overview";
+import type { WorkoutKind } from "@sendtally/core/hang";
 
 export function useTrainingInsights(
   api: SendtallyApi,
   range: TrendRange,
-  kinds: readonly ActivityKind[],
+  kinds: readonly WorkoutKind[],
   gripName: (id: string) => string
 ): QueryState<TrainingInsightsVM> {
   const { state } = useQuery(queries.sessionsWithClimbs(api));

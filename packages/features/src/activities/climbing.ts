@@ -2,6 +2,20 @@ import { clock, type Dose, type SetClimb, type SetDone } from "@sendtally/core/h
 import type { TallyMeasure } from "../exercises/types";
 import { t } from "../i18n";
 import { vGradeOf } from "../log-session/transforms";
+import { enduranceAmountLabel } from "../log-session/endurance";
+
+/** What one lap of a circuit asks for: time when the dose holds a time, moves otherwise. */
+export const lapPlanOf = (dose: Dose): { unit: "moves" | "seconds"; target: number } =>
+  dose.onS !== undefined
+    ? { unit: "seconds", target: dose.onS }
+    : { unit: "moves", target: dose.reps ?? 0 };
+
+/** "3 laps · 2 clean": laps logged as sets, each clean when it reached the lap's target. */
+export function lapsLine(sets: readonly SetDone[], dose: Dose): string {
+  const { unit, target } = lapPlanOf(dose);
+  const clean = sets.filter((s) => (unit === "moves" ? s.reps : s.onS) === target).length;
+  return t("activities.lapsClean", { count: sets.length, clean });
+}
 
 /** What a climbing exercise's sets add up to: climbs, sends, and the hardest send. */
 export type ClimbsTotal = { climbs: number; sent: number; top: string | null };
@@ -61,6 +75,13 @@ export const climbingSetText = (set: SetDone): string =>
 
 /** "4 sets of 4 climbs", "2 × 20:00 on the wall", or "1 set" when a set runs until Done. */
 export function climbingDoseLine(dose: Dose, measure: TallyMeasure): string {
+  if (measure === "laps") {
+    const plan = lapPlanOf(dose);
+    return t("activities.lapsOf", {
+      count: dose.sets,
+      amount: enduranceAmountLabel({ ...plan, laps: [] }, plan.target),
+    });
+  }
   if (measure === "wallTime")
     return `${dose.sets} × ${t("activities.onTheWall", { time: clock(dose.onS ?? 0, true) })}`;
   return dose.reps === undefined
@@ -69,7 +90,16 @@ export function climbingDoseLine(dose: Dose, measure: TallyMeasure): string {
 }
 
 /** "Last time: 16 climbs · 13 sent · top V4", or null before there was a last time. */
-export function climbingLastTime(sets: readonly SetDone[], measure: TallyMeasure): string | null {
+export function climbingLastTime(
+  sets: readonly SetDone[],
+  measure: TallyMeasure,
+  dose?: Dose
+): string | null {
+  if (measure === "laps") {
+    return sets.length === 0 || dose === undefined
+      ? null
+      : t("activities.lastTimeLine", { summary: lapsLine(sets, dose) });
+  }
   if (!isClimbingSets(sets)) return null;
   const summary = measure === "wallTime" ? wallLine(sets) : climbsLine(sets);
   return t("activities.lastTimeLine", { summary });

@@ -16,7 +16,7 @@ import { IntervalsBar } from "../components/IntervalsBar";
 import { Label } from "../components/Label";
 import { PhaseBar } from "../components/PhaseBar";
 import { Title } from "../components/Title";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
 import { MineBadge } from "./MineBadge";
 

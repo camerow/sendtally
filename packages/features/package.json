@@ -36,6 +36,7 @@
   "dependencies": {
     "@sendtally/api-client": "workspace:*",
     "@sendtally/core": "workspace:*",
+    "@sendtally/design": "workspace:*",
     "@tanstack/query-persist-client-core": "^5.103.1"
   },
   "peerDependencies": {

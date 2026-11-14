@@ -4,7 +4,7 @@ import { t } from "@sendtally/features/i18n";
 import { SectionHeading } from "../../../components/SectionHeading";
 import { Button } from "../components/Button";
 import { HistoryRow } from "./HistoryRow";
-import type { HistoryItem } from "./types";
+import type { HistoryItem } from "@sendtally/features/activities";
 
 const SHOWN = 5;
 

@@ -10,7 +10,8 @@ import { useApi } from "../../lib/api";
 import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { press } from "../../lib/press";
 import { LiveClock } from "../../components/LiveClock";
-import { liveRunHref, liveRunSummary, useLiveRun } from "./liveRun";
+import { liveRunHref, useLiveRun } from "./liveRun";
+import { liveRunSummary } from "@sendtally/features/workouts";
 
 type Live = {
   name: string;

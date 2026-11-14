@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Dose } from "@sendtally/core/hang";
-import { cellText, loadColumns, stepped, weekFields, withField } from "./weeks";
+import { cellText, loadColumns, stepped, weekFields, withWeekField } from "./weeks";
 
 const squat: Dose = { sets: 5, reps: 5, weightKg: 100 };
 const repeaters: Dose = { sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 20 };
@@ -63,8 +63,8 @@ describe("week fields", () => {
   });
 
   it("takes a typed value, refusing what is not one", () => {
-    expect(withField(squat, "reps", 3, "kg")).toEqual({ ...squat, reps: 3 });
-    expect(withField(squat, "sets", 0, "kg")).toBeNull();
-    expect(withField(squat, "reps", Number.NaN, "kg")).toBeNull();
+    expect(withWeekField(squat, "reps", 3, "kg")).toEqual({ ...squat, reps: 3 });
+    expect(withWeekField(squat, "sets", 0, "kg")).toBeNull();
+    expect(withWeekField(squat, "reps", Number.NaN, "kg")).toBeNull();
   });
 });

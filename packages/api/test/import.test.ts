@@ -1,5 +1,7 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
+import { likelyDuplicates, planImport } from "@sendtally/core/import";
+import { sha256Hex } from "../src/lib/import";
 import { testApp } from "./harness";
 
 const headers = { "x-test-user": "user_import", "Content-Type": "application/json" };
@@ -108,6 +110,29 @@ describe("import", () => {
     expect(lines[4]).toMatch(/^2023-01-05,,indoor,Boulder Barn,,,\d+,,,,6A\+,send,flash,1,,,,/);
   });
 
+  it("fingerprints a planned session as the Worker does, so an imported one is not a likely duplicate", async () => {
+    const user = { ...headers, "x-test-user": "user_import_fingerprint" };
+    const csv = [
+      "date,session,climb,grade",
+      "2026-11-10,Gym night,Blue crimps,V4",
+      "2026-11-10,Gym night,,V5",
+    ].join("\n");
+    const { sessions: planned } = planImport(csv, "UTC");
+    const [session] = planned;
+    expect(session?.climbs.map((c) => c.tries)).toEqual([1, 1]);
+    session!.climbs[0]!.name = "  Blue crimps  ";
+    const body = { sessions: planned.map(({ rows: _rows, ...s }) => s) };
+    const res = await testApp().request(
+      "/v1/sessions/import",
+      { method: "POST", headers: user, body: JSON.stringify(body) },
+      env
+    );
+    expect(await res.json()).toEqual({ imported: 1, skipped: 0 });
+    const log = await testApp().request("/v1/sessions?include=climbs", { headers: user }, env);
+    const { sessions } = (await log.json()) as { sessions: Parameters<typeof likelyDuplicates>[1] };
+    expect(await likelyDuplicates(planned, sessions, sha256Hex)).toEqual([]);
+  });
+
   it("rejects a session the log form would reject", async () => {
     const res = await post("/v1/sessions/import", {
       sessions: [{ date: "2022-13-01", location: "outdoor", climbs: [{ grade: v(1) }] }],
@@ -116,22 +141,33 @@ describe("import", () => {
   });
 
   it("lists the whole log, however long", async () => {
-    const day = (i: number) =>
-      new Date(Date.UTC(2015, 0, 1) + i * 86_400_000).toISOString().slice(0, 10);
-    const many = Array.from({ length: 250 }, (_, i) => ({
-      date: day(i),
-      location: "indoor",
-      climbs: [{ grade: v(3), kind: "send", tries: 1 }],
-    }));
     const longLog = { ...headers, "x-test-user": "user_long_log" };
-    for (const batch of [many.slice(0, 125), many.slice(125)]) {
-      const res = await testApp().request(
-        "/v1/sessions/import",
-        { method: "POST", headers: longLog, body: JSON.stringify({ sessions: batch }) },
-        env
-      );
-      expect(res.status).toBe(201);
-    }
+    const res = await testApp().request(
+      "/v1/sessions/import",
+      {
+        method: "POST",
+        headers: longLog,
+        body: JSON.stringify({
+          sessions: [
+            {
+              date: "2015-01-01",
+              location: "indoor",
+              climbs: [{ grade: v(3), kind: "send", tries: 1 }],
+            },
+          ],
+        }),
+      },
+      env
+    );
+    expect(res.status).toBe(201);
+    await env.DB.prepare(
+      `WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 249)
+       INSERT INTO sessions (user_id, fingerprint, source, start_at, end_at, climb_count, top_grade, rpe, title, summary)
+       SELECT user_id, fingerprint || i, source, date(start_at, i || ' days'), date(end_at, i || ' days'), climb_count, top_grade, rpe, title, summary
+       FROM sessions, n WHERE user_id = ?`
+    )
+      .bind("user_long_log")
+      .run();
     const list = await testApp().request("/v1/sessions", { headers: longLog }, env);
     expect(((await list.json()) as { sessions: unknown[] }).sessions).toHaveLength(250);
   });

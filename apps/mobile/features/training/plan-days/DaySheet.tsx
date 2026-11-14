@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import { occurrenceLink, type Occurrence } from "@sendtally/features/training";
+import { type Occurrence, KIND_LOOK, plannedItems } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { MenuRow } from "../../live-session/MenuRow";
 import { SheetHeader } from "../components/SheetHeader";
@@ -12,7 +12,6 @@ import { LogItButton } from "../library-detail/LogItButton";
 import { StartButton } from "../library-detail/StartButton";
 import { logLibraryWorkout } from "../library-detail/startLibraryWorkout";
 import { openMembership } from "../plan/openMembership";
-import { KIND_LOOK } from "../today/kindLook";
 import { dayRows } from "./dayRows";
 
 export type DaySheetProps = {
@@ -32,7 +31,7 @@ export function DaySheet({
   onChange,
   onClose,
 }: DaySheetProps): React.ReactElement {
-  const planned = { link: occurrenceLink(o), items: o.items, session: o.session };
+  const planned = plannedItems(o);
   const missed = o.status === "missed";
   return (
     <HangSheet visible onClose={onClose} closeLabel={t("common.close")}>

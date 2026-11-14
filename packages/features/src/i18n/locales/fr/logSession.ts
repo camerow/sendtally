@@ -85,9 +85,6 @@ export const logSession = {
   "logSession.defaultNameMorning": "Séance du matin",
   "logSession.defaultNameAfternoon": "Séance de l'après-midi",
   "logSession.defaultNameEvening": "Séance du soir",
-  "logSession.wrapUpTitle": "Conclure",
-  "logSession.wrapUpSubtitle":
-    "Les horaires viennent de vos voies · l'effort est noté à l'enregistrement",
   "logSession.noSendsYet": "Pas encore de croix",
   "logSession.sendStyle": "Style",
   "logSession.removeClimbTitle": "Retirer cette voie ?",
@@ -96,5 +93,4 @@ export const logSession = {
   "logSession.sentTapToAttempt": "Enchaînée, touchez pour marquer comme essai",
   "logSession.attemptTapToSent": "Essai, touchez pour marquer comme enchaînée",
   "logSession.joinsThatDay": "Rejoint la séance de ce jour-là",
-  "logSession.climbSaveFailed": "Impossible d'enregistrer la voie. Réessaie.",
 } as const;

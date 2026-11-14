@@ -7,12 +7,10 @@ import { SessionsLog } from "./SessionsLog";
 
 const mockPush = jest.fn();
 const mockStart = jest.fn();
-const mockBrowse = jest.fn();
 
 jest.mock("expo-router", () => ({
   router: { push: (to: unknown) => mockPush(to), navigate: (to: unknown) => mockPush(to) },
 }));
-jest.mock("expo-web-browser", () => ({ openBrowserAsync: (url: string) => mockBrowse(url) }));
 jest.mock("../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("../../lib/review", () => ({ maybeAskForReview: () => undefined }));
 jest.mock("../../lib/setupPrompt", () => ({
@@ -85,7 +83,7 @@ describe("An empty log", () => {
     await fireEvent.press(screen.getByText("Add climb"));
     expect(mockPush).toHaveBeenCalledWith("/climb/log");
     await fireEvent.press(screen.getByText("Import a log"));
-    expect(mockBrowse).toHaveBeenCalledWith("https://sendtally.com/app/import");
+    expect(mockPush).toHaveBeenCalledWith("/import");
   });
 
   it("starts Training's first workout from Train › Workouts", async () => {

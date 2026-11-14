@@ -19,7 +19,7 @@ export default function Privacy(): React.ReactElement {
   return (
     <LegalPage
       title="Privacy policy"
-      updated="18 SEPTEMBER 2026"
+      updated="13 NOVEMBER 2026"
       lede="sendtally holds the climbing sessions you type in and almost nothing else. This page lists every piece of data it keeps, who else touches it, and how to get it all deleted."
     >
       <h2>Who this covers</h2>
@@ -55,6 +55,18 @@ export default function Privacy(): React.ReactElement {
         posted for you.
       </p>
       <p>
+        <strong>Your AI assistant connection, only if you make one.</strong> If you connect Claude,
+        ChatGPT or another assistant, you sign in to sendtally from it and it gets a token from
+        Clerk; we store no new credential. The assistant can read your sessions, training library
+        and plan, can add sessions, exercises, workouts and training blocks, and can change or
+        delete your exercises, workouts and training blocks. It cannot change or delete your logged
+        sessions. What it reads goes to that assistant&rsquo;s provider and is governed by their
+        privacy policy. It works only with files you give it: we never fetch your data from another
+        service. Each time it uses the connection, PostHog records the action as described under
+        Usage below, never the content. Remove sendtally from the assistant&rsquo;s connector
+        settings to end its access.
+      </p>
+      <p>
         <strong>Usage.</strong> Standard web analytics through Google Analytics and PostHog (pages
         and app screens viewed, approximate region, device and browser), and the request logs
         Cloudflare keeps for the sites and API it serves us. Once you sign in, PostHog records your
@@ -64,7 +76,22 @@ export default function Privacy(): React.ReactElement {
         what you type, except passwords; in the mobile app photos and system pickers stay masked.
         Adding to Areas and moderating it are recorded as events too, such as an area created, an
         edit suggested, or a report resolved, carrying only the kind of action and a few labels,
-        such as whether it was an area or a climb, never what you wrote.
+        such as whether it was an area or a climb, never what you wrote. When an AI assistant you
+        connect to your account uses it, its connection and each action it takes are recorded as
+        events too, carrying only which action it was, which assistant and model took it, how long
+        it took, whether it failed, and the names of the options it set, never what it read or
+        wrote. When the assistant cannot do something you asked, it may send us a short description
+        of what was missing.
+      </p>
+      <p>
+        <strong>App installs.</strong> The mobile apps also run Google Analytics for Firebase, which
+        records that the app was installed and opened, how long it is used, the device model,
+        operating system, app version and approximate region, against an identifier for that
+        installation of the app. It also records two events of ours, an account created and a
+        membership started, carrying only which store and which plan the membership came from. None
+        of this is tied to your account identifier or email address. On Android it includes the
+        device&rsquo;s advertising ID, which you can reset or delete in your phone&rsquo;s settings.
+        On iPhone it never includes the advertising identifier, and the app never asks to track you.
       </p>
 
       <h2>What we never collect</h2>
@@ -75,8 +102,10 @@ export default function Privacy(): React.ReactElement {
       <p>
         We do not import your climbing from any third party. Your logbook contains only what you
         entered yourself. We do not track your location in the background, read your contacts, or
-        collect health data from other apps. We do not sell your data, and we do not share it with
-        advertisers or data brokers.
+        collect health data from other apps. We do not sell your data or share it with data brokers.
+        The only thing an advertising platform learns from sendtally is whether a store badge tap,
+        an install, a new account or a membership followed one of our own ads, as described under
+        Google below.
       </p>
 
       <h2>Why we hold it</h2>
@@ -95,11 +124,15 @@ export default function Privacy(): React.ReactElement {
           To answer your emails, and to send you service notices such as a broken Strava connection.
         </li>
         <li>To understand roughly how the site is used, so it can be improved.</li>
+        <li>
+          To learn which of our own ads lead people to install the app, create an account or become
+          a member.
+        </li>
       </ul>
 
       <h2>Who else touches it</h2>
       <p>
-        Five processors, each handling only what it needs, and each processing data on our
+        Six processors, each handling only what it needs, and each processing data on our
         instructions.
       </p>
       <ul>
@@ -124,8 +157,14 @@ export default function Privacy(): React.ReactElement {
           does not read your Strava activities.
         </li>
         <li>
-          <strong>Google Analytics</strong> - aggregate web analytics on sendtally.com. There is no
-          advertising network and no retargeting.
+          <strong>Google</strong> - Google Analytics on sendtally.com and Google Analytics for
+          Firebase in the mobile apps, plus Google Ads to measure our own ads. For visitors who
+          arrive from one of our ads, the site reports whether they go on to tap an app store badge
+          or create an account; the apps report installs, new accounts and membership starts. That
+          is measurement only: ad personalization is turned off, so it is never used for retargeting
+          or personalized ads, and your logbook, email address and account identifier are never
+          sent. On iPhone, installs from our ads are reported through Apple&rsquo;s SKAdNetwork,
+          which carries no identifier for you or your device.
         </li>
         <li>
           <strong>PostHog</strong> - product analytics, session replay and error reports, including
@@ -187,6 +226,11 @@ export default function Privacy(): React.ReactElement {
         and we will delete them.
       </p>
       <p>
+        Google Analytics for Firebase records are not linked to your account, so there is nothing
+        there for the purge to find. Google keeps them for two months, after which only aggregate
+        counts remain.
+      </p>
+      <p>
         Activities already posted to Strava live in your Strava account and stay there. Delete those
         in Strava if you want them gone.
       </p>
@@ -197,8 +241,9 @@ export default function Privacy(): React.ReactElement {
       </p>
       <p>
         Google Analytics and PostHog set cookies to count visits and sessions and to join the pages
-        you visit into one session. We do not run advertising cookies, retargeting pixels, or
-        third-party trackers beyond the analytics described here.
+        you visit into one session. When you arrive from one of our ads, Google Ads sets a cookie
+        holding that ad click, so a later store badge tap or sign-up can be counted against the ad.
+        We do not run retargeting pixels or third-party trackers beyond what is described here.
       </p>
 
       <h2>Your rights</h2>

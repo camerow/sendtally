@@ -5,7 +5,7 @@ import type { WorkoutKind } from "@sendtally/core/hang";
 import { Icon } from "../../../components/Icon";
 import { HangIcon } from "../components/HangIcon";
 import { DayMark } from "./DayMark";
-import { KIND_LOOK } from "./kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 
 export type KindCircleProps = {
   kind: WorkoutKind;

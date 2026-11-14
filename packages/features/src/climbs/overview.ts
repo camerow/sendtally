@@ -5,7 +5,7 @@ import { utcDate } from "../log-session/transforms";
 import { isClimbHolder, isUnscored } from "../sessions/meta";
 import { sessionTitle } from "../sessions/title";
 import { climbNotes, dateLabel, type ProjectNoteVM } from "./projects";
-import { climbGradeLabel, climbKey } from "./transforms";
+import { summaryGradeLabel, climbKey } from "./transforms";
 import type { GradeScales } from "../sessions/grades";
 
 /** A logged climb is this one when stamped with its id, or, unstamped, when it carries its name. */
@@ -149,7 +149,7 @@ export function climbTitle(
   climb: Pick<ClimbSummary, "name" | "grade">,
   scales: GradeScales
 ): string {
-  return climb.grade === null ? climb.name : `${climb.name}, ${climbGradeLabel(climb, scales)}`;
+  return climb.grade === null ? climb.name : `${climb.name}, ${summaryGradeLabel(climb, scales)}`;
 }
 
 export function climbDetailVM(

@@ -18,7 +18,8 @@ import {
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { Glyph } from "./Glyph";
-import { CHECK, inputStyle, monoLabel } from "./styles";
+import { CHECK } from "./styles";
+import { inputStyle, monoLabel } from "../../components/styles";
 
 const MAX_SECONDS = 3600;
 

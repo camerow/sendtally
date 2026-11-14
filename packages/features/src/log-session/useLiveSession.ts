@@ -2,7 +2,6 @@ import React from "react";
 import { writeStoredDraft, type DraftStorage, type LiveDraftMeta } from "./draftStore";
 import type { Gym } from "../gyms/types";
 import { isLive, liveDraft, liveStoredDraft, withGymAdopted } from "./liveSession";
-import type { LiveSync } from "./liveSync";
 import type { ClimbDraft, LogSessionDraft } from "./types";
 import { useStoredDraft, type StoredDraftEntry } from "./useDraftAutosave";
 
@@ -24,12 +23,11 @@ export type LiveSession = StoredDraftEntry & {
 };
 
 /**
- * The device-local draft, edited one climb at a time from the log. Writes land at once and,
- * with a `sync`, follow on to the server. A draft the server already has stops being live once
- * it goes quiet on another day, and is dropped from the file; one it does not have stays live
- * until it lands.
+ * The device-local draft of the live session, edited one climb at a time. A draft the server
+ * already has stops being live once it goes quiet on another day, and is dropped from the file;
+ * one it does not have stays live until it lands.
  */
-export function useLiveSession(storage: DraftStorage, sync?: LiveSync): LiveSession {
+export function useLiveSession(storage: DraftStorage): LiveSession {
   const { stored, discard } = useStoredDraft(storage);
   const live = stored !== null && isLive(stored, new Date());
 
@@ -37,18 +35,13 @@ export function useLiveSession(storage: DraftStorage, sync?: LiveSync): LiveSess
     if (stored !== null && !live) discard();
   }, [stored, live, discard]);
 
-  React.useEffect(() => {
-    if (liveStoredDraft(storage, new Date()) !== null) sync?.changed();
-  }, [storage, sync]);
-
   const current = React.useCallback(() => liveStoredDraft(storage, new Date()), [storage]);
 
   const write = React.useCallback(
     (draft: LogSessionDraft, meta: LiveDraftMeta | undefined): void => {
       writeStoredDraft(storage, draft, new Date(), meta);
-      sync?.changed();
     },
-    [storage, sync]
+    [storage]
   );
 
   const putClimb = React.useCallback(
@@ -82,10 +75,9 @@ export function useLiveSession(storage: DraftStorage, sync?: LiveSync): LiveSess
         write({ ...entry.draft, climbs }, entry);
         return;
       }
-      if (entry.fingerprint !== undefined) sync?.remove(entry.fingerprint);
       discard();
     },
-    [current, write, discard, sync]
+    [current, write, discard]
   );
 
   const replace = React.useCallback(

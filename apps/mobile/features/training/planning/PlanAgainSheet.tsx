@@ -10,6 +10,7 @@ import { SheetHeader } from "../components/SheetHeader";
 import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
 import { usePlanActions } from "../plan/usePlanActions";
+import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
 import { PlanAgainStart } from "./PlanAgainStart";
 
 export type PlanAgainSheetProps = {
@@ -23,6 +24,7 @@ export type PlanAgainSheetProps = {
 export function PlanAgainSheet({ block, back, onClose }: PlanAgainSheetProps): React.ReactElement {
   const { today } = useHangData();
   const actions = usePlanActions();
+  const prompt = useReminderPrompt();
   const [start, setStart] = React.useState(today);
   const [busy, setBusy] = React.useState(false);
 
@@ -32,6 +34,7 @@ export function PlanAgainSheet({ block, back, onClose }: PlanAgainSheetProps): R
     const made = await actions.copyBlock(block.id, id, start);
     setBusy(false);
     if (!made) return;
+    prompt();
     onClose();
     router.replace({
       pathname: "/plan/block/[id]",

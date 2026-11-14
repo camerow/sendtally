@@ -1,7 +1,7 @@
 import React from "react";
 import { AreaDialog } from "../../areas/components/AreaDialog";
 import { Field } from "../../areas/components/Field";
-import { inputStyle } from "../../areas/styles";
+import { inputStyle } from "../../components/styles";
 
 export type NoteDialogProps = {
   title: string;

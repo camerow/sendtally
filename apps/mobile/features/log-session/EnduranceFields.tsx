@@ -8,7 +8,6 @@ import {
   enduranceOf,
   enduranceProgressLabel,
   enduranceStep,
-  enduranceUnitLabel,
   isCleanLap,
   FELL_AFTER_START,
   removeLap,
@@ -16,12 +15,12 @@ import {
   withEnduranceUnit,
   withLap,
   type ClimbDraft,
-  type EnduranceUnit,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { SelectRow } from "../../components/SelectRow";
+import { UnitToggle } from "./UnitToggle";
 import { press, pressRow, tap } from "../../lib/press";
 
 const label = {
@@ -92,61 +91,6 @@ function AmountStepper({
         {value}
       </Text>
       <Stepper glyph="+" accessibilityLabel={up} disabled={atCeiling} onPress={onUp} />
-    </View>
-  );
-}
-
-function UnitToggle({
-  value,
-  onChange,
-}: {
-  value: EnduranceUnit;
-  onChange: (unit: EnduranceUnit) => void;
-}): React.ReactElement {
-  return (
-    <View
-      accessibilityRole="radiogroup"
-      style={{
-        flexDirection: "row",
-        height: 30,
-        borderRadius: 15,
-        borderWidth: 1,
-        borderColor: colors.lineOnLightStrong,
-        overflow: "hidden",
-      }}
-    >
-      {(["moves", "seconds"] as const).map((unit) => {
-        const active = unit === value;
-        return (
-          <Pressable
-            key={unit}
-            onPress={tap(() => onChange(unit))}
-            accessibilityRole="radio"
-            accessibilityState={{ checked: active }}
-            accessibilityLabel={enduranceUnitLabel(unit)}
-            hitSlop={{ top: 7, bottom: 7 }}
-            style={press({
-              height: 28,
-              paddingHorizontal: 12,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: active ? "rgba(64,63,76,0.08)" : "transparent",
-            })}
-          >
-            <Text
-              style={{
-                fontFamily: active ? fonts.monoSemiBold : fonts.monoMedium,
-                fontSize: 10,
-                letterSpacing: 0.7,
-                textTransform: "uppercase",
-                color: active ? colors.gunmetal : colors.textFaint,
-              }}
-            >
-              {enduranceUnitLabel(unit)}
-            </Text>
-          </Pressable>
-        );
-      })}
     </View>
   );
 }

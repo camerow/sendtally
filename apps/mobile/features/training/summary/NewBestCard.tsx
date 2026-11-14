@@ -5,7 +5,7 @@ import type { NewBestVM } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../../components/Icon";
 import { Label } from "../components/Label";
-import { ON_DARK, ON_DARK_MUTED } from "../components/onDark";
+import { ON_DARK, ON_DARK_MUTED } from "@sendtally/features/workouts";
 import { type } from "../type";
 
 /** A session that beat its grip's best on the same setup: gunmetal with a gold glow and star. */

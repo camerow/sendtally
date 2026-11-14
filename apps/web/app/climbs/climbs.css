@@ -1,0 +1,425 @@
+.climb-pill {
+  flex: none;
+  height: 24px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.climbing-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.climbing-hero .climb-pill {
+  align-self: flex-start;
+}
+
+.climbing-hero-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 34px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--bs-gunmetal);
+}
+
+.climbing-hero-kind {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.climbing-hero-place {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--bs-gunmetal);
+}
+
+.climbing-hero-meta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-on-white-secondary);
+}
+
+.suggest-box {
+  min-height: 50px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1.5px solid transparent;
+  border-radius: calc(var(--radius-control) + 2px);
+  background: var(--surface-soft);
+}
+
+.suggest-box--focused {
+  border-color: var(--bs-gunmetal);
+  background: var(--bs-white);
+}
+
+.suggest-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 46px;
+  border: none;
+  background: none;
+  outline: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--bs-gunmetal);
+}
+
+.suggest-input::placeholder {
+  font-weight: 400;
+  color: rgba(64, 63, 76, 0.45);
+}
+
+.suggest-new {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bs-fern);
+}
+
+.suggest-hint {
+  padding-left: 2px;
+  margin-top: -2px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--text-on-white-secondary);
+}
+
+.suggest-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line-on-light);
+  border-radius: calc(var(--radius-control) + 2px);
+  background: var(--bs-white);
+  overflow: hidden;
+}
+
+.suggest-row {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 14px;
+  border: none;
+  border-top: 1px solid var(--line-on-light-soft);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.suggest-row:first-child {
+  border-top: none;
+}
+
+.suggest-row:hover {
+  background: var(--surface-soft);
+}
+
+.suggest-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  color: var(--bs-gunmetal);
+}
+
+.suggest-meta {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-on-white-secondary);
+}
+
+.editor-bar {
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 72px 1fr 72px;
+  align-items: center;
+}
+
+.editor-cancel {
+  justify-self: start;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--text-on-white-secondary);
+}
+
+.editor-title {
+  margin: 0;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--bs-gunmetal);
+}
+
+.add-climb-body {
+  gap: 16px;
+}
+
+.add-climb-error {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--bs-watermelon-ink);
+}
+
+.add-climb-grade-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.add-climb-grade-head .segmented {
+  width: 180px;
+}
+
+.add-climb-grade-head .segmented-option {
+  height: 34px;
+  font-size: 13px;
+}
+
+.add-climb-row {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line-on-light-soft);
+}
+
+.add-climb-row-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--bs-gunmetal);
+}
+
+.add-climb-row-hint {
+  font-size: 12.5px;
+  color: var(--text-on-white-secondary);
+}
+
+.add-climb-date {
+  width: 160px;
+  min-height: 44px;
+}
+
+@media (max-width: 767px) {
+  .add-climb-grade-chips {
+    margin: 0 -18px;
+  }
+
+  .add-climb-grade-chips .grade-chips {
+    padding: 0 18px;
+  }
+}
+
+.grade-badge {
+  min-width: 52px;
+  height: 36px;
+  box-sizing: border-box;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: var(--surface-soft);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--bs-gunmetal);
+  white-space: nowrap;
+}
+
+.grade-badge--on-soft {
+  background: var(--bs-white);
+}
+
+.grade-badge--white {
+  border: 1px solid var(--line-on-light-strong);
+}
+
+.climb-row {
+  min-height: 60px;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--bs-gunmetal);
+  text-align: left;
+  text-decoration: none;
+}
+
+.climb-row--divided,
+.climb-row-group {
+  border-bottom: 1px solid var(--line-on-light-soft);
+}
+
+.climb-row--link {
+  cursor: pointer;
+}
+
+.climb-row--link:hover .climb-row-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.climb-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.climb-row-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.climb-row-name--plain {
+  font-weight: 500;
+  color: var(--text-on-white-secondary);
+}
+
+.climb-row-count {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-on-white-secondary);
+}
+
+.climb-row-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--text-on-white-secondary);
+}
+
+.climb-row-group {
+  padding-bottom: 12px;
+}
+
+.climb-row-children {
+  padding-left: 64px;
+}
+
+.histogram {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.histogram-bars {
+  height: 118px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.histogram-bin {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.histogram-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-align: center;
+  color: var(--text-on-white-secondary);
+}
+
+.histogram-bar {
+  border-radius: 3px 3px 0 0;
+  background: var(--bs-azure);
+}
+
+.histogram-bar--out {
+  background: var(--data-azure-soft);
+}
+
+.histogram-labels {
+  display: flex;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line-on-light-strong);
+}
+
+.histogram-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(64, 63, 76, 0.55);
+}
+
+.histogram-label--on {
+  font-weight: 600;
+  color: var(--bs-gunmetal);
+}
+
+.grade-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

@@ -35,4 +35,11 @@ export const tally = {
   "tally.restClock": "Rest {time}",
   "tally.timeLeft": "{time} left",
   "tally.skipRest": "Skip rest",
+  "tally.lapLabel": "Lap {lap}",
+  "tally.allLapsDone": "All laps done",
+  "tally.onTheWall": "On the wall",
+  "tally.addLap": "+ Add lap",
+  "tally.startLap": "Start lap",
+  "tally.restTook": "rest {time}",
+  "tally.startRest": "Start rest",
 } as const;

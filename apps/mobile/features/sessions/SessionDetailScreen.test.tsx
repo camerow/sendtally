@@ -35,7 +35,6 @@ jest.mock("../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
     visible ? children : null,
 }));
-jest.mock("./SessionTags", () => ({ SessionTags: () => null }));
 jest.mock("../settings/useStravaConnect", () => ({
   useStravaConnect: () => ({ connect: mockConnect, busy: false, error: null }),
 }));

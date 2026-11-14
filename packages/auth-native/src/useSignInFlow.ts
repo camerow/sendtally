@@ -5,11 +5,17 @@ import React from "react";
 import { t } from "@sendtally/features/i18n";
 import { copyFor, swapFor } from "./copy";
 import { errorCode, errorMessage } from "./errors";
+import { oauthOutcome } from "./outcome";
 import type { Phase, SignInFlow, SignInFlowOptions } from "./types";
 
 WebBrowser.maybeCompleteAuthSession();
 
-type SecondFactor = { strategy: string; emailAddressId?: string };
+type SecondFactor = { strategy: string; emailAddressId?: string; safeIdentifier?: string };
+type SecondFactorAttempt = { status: string | null; supportedSecondFactors: SecondFactor[] | null };
+
+function needsSecondFactor(status: string | null): boolean {
+  return status === "needs_second_factor" || status === "needs_client_trust";
+}
 
 export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignInFlow {
   const { signIn, isLoaded: signInLoaded, setActive } = useSignIn();
@@ -33,7 +39,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
     const session = clerk.client.signedInSessions[0];
     if (session === undefined) return false;
     await clerk.setActive({ session: session.id });
-    onSignedIn();
+    onSignedIn("signed-in");
     return true;
   }
 
@@ -50,9 +56,10 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
       });
       if (result.createdSessionId !== null && result.setActive !== undefined) {
         await result.setActive({ session: result.createdSessionId });
-        onSignedIn();
+        onSignedIn(oauthOutcome(result));
         return;
       }
+      if (await continueSecondFactor(result.signIn)) return;
       if (await adoptExistingSession()) return;
       setError(t("auth.googleIncomplete"));
     } catch (err) {
@@ -69,9 +76,10 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
       const result = await startAppleAuthenticationFlow();
       if (result.createdSessionId !== null && result.setActive !== undefined) {
         await result.setActive({ session: result.createdSessionId });
-        onSignedIn();
+        onSignedIn(oauthOutcome(result));
         return;
       }
+      if (await continueSecondFactor(result.signIn)) return;
     } catch (err) {
       setError(errorMessage(err));
     }
@@ -84,11 +92,24 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
   async function startSecondFactor(factors: SecondFactor[] | null): Promise<boolean> {
     const factor = factors?.find((f) => f.strategy === "email_code");
     if (!signInLoaded || factor?.emailAddressId === undefined) return false;
-    await signIn.prepareSecondFactor({
+    await clerk.client.signIn.prepareSecondFactor({
       strategy: "email_code",
       emailAddressId: factor.emailAddressId,
     });
+    setEmail((current) => current || (factor.safeIdentifier ?? ""));
     setPhase({ name: "code", mode: "second-factor" });
+    return true;
+  }
+
+  // The app finishes an emailed code; any other second step (authenticator app, SMS) can
+  // only be finished on the web, so say so rather than calling the credential wrong.
+  async function continueSecondFactor(attempt: SecondFactorAttempt | undefined): Promise<boolean> {
+    if (attempt === undefined || !needsSecondFactor(attempt.status)) return false;
+    if (!(await startSecondFactor(attempt.supportedSecondFactors))) {
+      setError(t("auth.secondFactorOnWeb"));
+    }
+    setCode("");
+    setBusy(false);
     return true;
   }
 
@@ -179,7 +200,7 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
         });
         if (result.status === "complete" && setActive !== undefined) {
           await setActive({ session: result.createdSessionId });
-          onSignedIn();
+          onSignedIn("signed-in");
           return;
         }
       } else if (phase.mode === "sign-in") {
@@ -189,22 +210,15 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
         });
         if (result.status === "complete" && setActive !== undefined) {
           await setActive({ session: result.createdSessionId });
-          onSignedIn();
+          onSignedIn("signed-in");
           return;
         }
-        if (
-          result.status === "needs_second_factor" &&
-          (await startSecondFactor(result.supportedSecondFactors))
-        ) {
-          setCode("");
-          setBusy(false);
-          return;
-        }
+        if (await continueSecondFactor(result)) return;
       } else {
         const result = await signUp.attemptEmailAddressVerification({ code: code.trim() });
         if (result.status === "complete" && result.createdSessionId !== null) {
           await clerk.setActive({ session: result.createdSessionId });
-          onSignedIn();
+          onSignedIn("signed-up");
           return;
         }
       }
@@ -227,16 +241,10 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
       const result = await signIn.attemptFirstFactor({ strategy: "password", password });
       if (result.status === "complete" && setActive !== undefined) {
         await setActive({ session: result.createdSessionId });
-        onSignedIn();
+        onSignedIn("signed-in");
         return;
       }
-      if (
-        result.status === "needs_second_factor" &&
-        (await startSecondFactor(result.supportedSecondFactors))
-      ) {
-        setBusy(false);
-        return;
-      }
+      if (await continueSecondFactor(result)) return;
       setError(t("auth.wrongPassword"));
     } catch (err) {
       setError(errorMessage(err));

@@ -2,7 +2,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import React from "react";
 import { HistoryList } from "./HistoryList";
-import type { HistoryItem } from "./types";
+import type { HistoryItem } from "@sendtally/features/activities";
 
 const item = (n: number, over: Partial<HistoryItem> = {}): HistoryItem => ({
   id: `s${n}`,

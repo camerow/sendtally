@@ -6,7 +6,7 @@ import { View } from "react-native";
 import { exerciseTallyStorage } from "../../lib/exerciseTallyStorage";
 import { liveRunStorage } from "../../lib/liveRunStorage";
 import { anExercise, hangData, renderWithHang } from "../training/data/renderWithHang";
-import type { WorkoutRun } from "../training/data/workoutRunParams";
+import type { WorkoutRun } from "@sendtally/features/workouts";
 import { SetsScreen } from "../training/sets/SetsScreen";
 import { TallyScreen } from "./TallyScreen";
 

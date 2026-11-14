@@ -3,13 +3,12 @@ import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import { focusBeside } from "@sendtally/features/training";
+import { focusBeside, KIND_LOOK } from "@sendtally/features/training";
 import { durationLabel } from "@sendtally/features/sessions";
 import { workoutMinutes, type LibraryWorkout, type WorkoutUse } from "@sendtally/features/workouts";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { CategoryMark } from "../library/CategoryMark";
-import { KIND_LOOK } from "../today/kindLook";
 import { type } from "../type";
 
 export type LibraryIntroProps = {

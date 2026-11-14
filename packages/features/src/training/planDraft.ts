@@ -17,7 +17,7 @@ export type PlanDraft = {
   removed: readonly string[];
 };
 
-export const emptyDraft: PlanDraft = {
+export const emptyPlanDraft: PlanDraft = {
   block: null,
   schedules: [],
   weekChanges: [],

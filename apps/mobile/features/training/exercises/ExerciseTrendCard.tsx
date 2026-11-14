@@ -14,7 +14,7 @@ import { Title } from "../components/Title";
 import { Legend } from "../trends/Legend";
 import { SeriesChart } from "../trends/SeriesChart";
 import { type } from "../type";
-import { headlineLabel, loadText, metricText } from "./exerciseText";
+import { headlineLabel, loadText, metricText } from "@sendtally/features/exercises";
 import type { ExerciseChartMetric } from "./types";
 
 export type ExerciseTrendCardProps = {

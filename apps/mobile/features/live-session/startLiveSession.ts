@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import type { PlanLink } from "@sendtally/core/hang";
-import { planLinkParams } from "../training/data/planLinkParams";
+import { planLinkParams } from "@sendtally/features/training";
 import { startLive } from "./startLive";
 
 /**

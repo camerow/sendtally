@@ -3,7 +3,7 @@ import React from "react";
 import { WORKOUT_KINDS } from "@sendtally/core/hang";
 import { readFocus } from "@sendtally/features/training";
 import { HangDataProvider } from "../../features/training/data/HangDataProvider";
-import { addFlowOf, type RawAddParams } from "../../features/training/planning/flowParams";
+import { addFlowOf, type RawAddParams } from "@sendtally/features/training";
 import { WorkoutEditorScreen } from "../../features/training/workout-editor/WorkoutEditorScreen";
 
 export default function WorkoutEditRoute(): React.ReactElement {

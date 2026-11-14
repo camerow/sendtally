@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import React from "react";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
 import { anExercise, readingOrder, renderWithHang } from "../data/renderWithHang";
-import type { WorkoutRun } from "../data/workoutRunParams";
+import type { WorkoutRun } from "@sendtally/features/workouts";
 import { ChecklistScreen } from "./ChecklistScreen";
 
 jest.mock("expo-router", () => ({

@@ -1,3 +1,4 @@
+import type { ImportSession } from "@sendtally/core/import";
 import { z } from "zod";
 import { manualSessionShape, sessionTooLong, type ManualSessionBody } from "./manual";
 
@@ -5,7 +6,7 @@ export const IMPORT_BATCH_MAX = 200;
 
 // The log form's body with the gym as a name: a CSV cannot know our ids, so
 // the Worker matches it against the user's gyms. Areas are not imported.
-const importSessionShape = manualSessionShape
+export const importSessionShape = manualSessionShape
   .omit({ gymId: true })
   .extend({ gym: z.string().trim().min(1).max(80).optional() })
   .superRefine((body, ctx) => {
@@ -28,17 +29,18 @@ export type ImportSessionBody = z.infer<typeof importSessionShape>;
 
 export type ImportBody = z.input<typeof importBody>;
 
-// The same rows produce the same fingerprint, so importing a file twice adds
-// nothing the second time. The user's edits afterwards do not change it.
-export async function importFingerprint(session: ImportSessionBody): Promise<string> {
-  const canonical = JSON.stringify([
-    session.date,
-    session.name ?? "",
-    session.climbs.map((c) => [c.name, c.grade.scale, c.grade.value, c.kind, c.tries]),
-  ]);
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical));
-  const hex = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-  return `import-${hex.slice(0, 32)}`;
+type Agrees<T extends U, U> = T;
+
+// The core planner's sessions, less their row numbers, are what this endpoint
+// takes, whether /app/import or the connector planned them.
+export type PlannedImportSession = Agrees<
+  Omit<ImportSession, "rows">,
+  ImportBody["sessions"][number]
+>;
+
+export async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export function manualBodyOf(

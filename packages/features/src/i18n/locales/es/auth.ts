@@ -7,6 +7,8 @@ export const auth = {
   "auth.signUpHeading": "Crea tu cuenta.",
   "auth.signUpBody":
     "Escribe tu correo para empezar. Registrar sesiones y publicarlas en Strava es gratis.",
+  "auth.secondFactorOnWeb":
+    "Esta cuenta necesita otro paso de inicio de sesión que la app aún no admite. Inicia sesión en sendtally.com para terminar.",
   "auth.googleIncomplete": "El acceso con Google no se completó. Inténtalo de nuevo.",
   "auth.invalidEmail": "Escribe una dirección de correo válida.",
   "auth.emailCodeDisabled": "El acceso con código por correo no está activado para esta cuenta.",

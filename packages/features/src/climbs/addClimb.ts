@@ -1,6 +1,15 @@
-import type { AreaClimb, AreaSummary, ClimbSummary, SendtallyApi } from "@sendtally/api-client";
+import type {
+  AreaClimb,
+  AreaSummary,
+  ClimbChange,
+  ClimbGrade,
+  ClimbSummary,
+  SendtallyApi,
+} from "@sendtally/api-client";
 import { t } from "../i18n";
-import { MAX_CLIMB_SUGGESTIONS, climbKey, sameClimbName } from "./transforms";
+import { draftGrade } from "../log-session/transforms";
+import type { ClimbDraft } from "../log-session/types";
+import { MAX_CLIMB_SUGGESTIONS, climbKey, findClimb, sameClimbName } from "./transforms";
 
 /** A name under the climb field: the area's own from Areas first, then the user's. */
 export type ClimbSuggestion =
@@ -83,4 +92,36 @@ export async function placeOf(
   const { area } = await api.createArea({ name: choice.name, confirmedNew: true });
   if (area === null) throw new Error("area not created");
   return { id: area.id, name: area.name };
+}
+
+/** Mine by the id it was picked as, else by its name. */
+export function knownOf(
+  climbs: readonly ClimbSummary[],
+  climb: ClimbDraft
+): ClimbSummary | undefined {
+  return climbs.find((c) => c.id === climb.userClimbId) ?? findClimb(climbs, climb.name);
+}
+
+const sameGrade = (a: ClimbGrade, b: ClimbGrade | null | undefined): boolean =>
+  b != null && a.scale === b.scale && String(a.value) === String(b.value);
+
+/**
+ * What an edit changes on the climb: its name and grade only when they differ, its place
+ * always, and its project flag only when the user touched it and it differs.
+ */
+export function climbChange(
+  original: ClimbSummary | undefined,
+  climb: ClimbDraft,
+  place: Place | null,
+  project: boolean | null
+): ClimbChange {
+  const name = climb.name.trim();
+  const grade = draftGrade(climb.grade, climb.scale);
+  return {
+    ...(name === original?.name ? {} : { name }),
+    areaId: place?.id ?? null,
+    areaClimbId: climb.climbId ?? null,
+    ...(grade === undefined || sameGrade(grade, original?.grade) ? {} : { grade }),
+    ...(project === null || original?.project === project ? {} : { working: project }),
+  };
 }

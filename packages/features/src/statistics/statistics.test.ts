@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Activity as Logged, HangHistoryRow, SessionWithClimbs } from "@sendtally/api-client";
 import { isLockedRange, shownRange } from "../trends/types";
 import { trainingInsightsVM } from "./insights";
-import { ACTIVITY_KINDS } from "./overview";
+import { TRAINED_KINDS } from "./overview";
 
 const NOW = new Date("2026-10-22T20:00:00Z");
 
@@ -122,7 +122,7 @@ describe("trainingInsightsVM", () => {
   };
 
   it("counts only what falls in the range, a day per point over 7D", () => {
-    const vm = trainingInsightsVM(log, "7d", ACTIVITY_KINDS, grip, NOW);
+    const vm = trainingInsightsVM(log, "7d", TRAINED_KINDS, grip, NOW);
     expect(vm.sessions).toBe(5);
     expect(vm.points).toHaveLength(7);
     expect(vm.points.at(-1)?.sessions).toBe(1);
@@ -130,12 +130,12 @@ describe("trainingInsightsVM", () => {
   });
 
   it("leaves an unscored session out of the effort but in the count", () => {
-    const vm = trainingInsightsVM(log, "7d", ACTIVITY_KINDS, grip, NOW);
+    const vm = trainingInsightsVM(log, "7d", TRAINED_KINDS, grip, NOW);
     expect(vm.line).toBe("Effort 6.8, up 0.8 · 5 sessions a week");
   });
 
   it("splits what was trained by sessions, with each kind's time", () => {
-    const vm = trainingInsightsVM(log, "1m", ACTIVITY_KINDS, grip, NOW);
+    const vm = trainingInsightsVM(log, "1m", TRAINED_KINDS, grip, NOW);
     expect(vm.trained.map((k) => [k.kind, k.share])).toEqual([
       ["climbing", 3 / 7],
       ["hangboard", 2 / 7],
@@ -150,7 +150,7 @@ describe("trainingInsightsVM", () => {
       hangSessions: [{ ...hang("2026-10-16", 6), focus: "power_endurance" as const }],
       activities: [{ ...lift("2026-10-19", 110), focus: "strength" as const }],
     };
-    const vm = trainingInsightsVM(focused, "1m", ACTIVITY_KINDS, grip, NOW);
+    const vm = trainingInsightsVM(focused, "1m", TRAINED_KINDS, grip, NOW);
     expect(vm.byFocus.map((f) => [f.focus, f.name, f.share])).toEqual([
       ["strength", "Strength", 1 / 5],
       ["power_endurance", "Power endurance", 1 / 5],
@@ -159,7 +159,7 @@ describe("trainingInsightsVM", () => {
   });
 
   it("groups exercises by kind with their change on their own metric", () => {
-    const vm = trainingInsightsVM(log, "1m", ACTIVITY_KINDS, grip, NOW);
+    const vm = trainingInsightsVM(log, "1m", TRAINED_KINDS, grip, NOW);
     expect(vm.exercises.map((g) => g.kind)).toEqual(["hangboard", "strength"]);
     expect(vm.exercises[0]?.rows[0]).toMatchObject({
       name: "Half crimp",
@@ -187,7 +187,7 @@ describe("trainingInsightsVM", () => {
         ],
       },
       "1m",
-      ACTIVITY_KINDS,
+      TRAINED_KINDS,
       grip,
       NOW
     );

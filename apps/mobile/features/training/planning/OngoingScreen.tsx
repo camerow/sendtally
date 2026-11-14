@@ -10,9 +10,13 @@ import {
   scheduleOf,
   usePlan,
   useTrainingLog,
+  ongoingMembers,
+  planGridRows,
+  useLit,
 } from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
+import { confirmDiscard, useDiscardGuard } from "../../../lib/useDiscardGuard";
 import { Button } from "../components/Button";
 import { DetailActions } from "../components/DetailActions";
 import { EditorHeader } from "../components/EditorHeader";
@@ -20,7 +24,7 @@ import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { PlanGrid } from "../plan/PlanGrid";
-import { ongoingMembers, planGridRows } from "../plan/planGridRows";
+import { openMembership } from "../plan/openMembership";
 import { type } from "../type";
 import { AddWorkoutsSheet } from "./AddWorkoutsSheet";
 import { OngoingWorkouts } from "./OngoingWorkouts";
@@ -38,13 +42,9 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
   const plan = usePlan(api);
   const { log } = useTrainingLog(api);
   const draft = usePlanDraft(log.plan);
+  const release = useDiscardGuard(draft.dirty);
   const [adding, setAdding] = React.useState(false);
-  const [added, setAdded] = React.useState<readonly string[]>([]);
-  React.useEffect(() => {
-    if (added.length === 0) return;
-    const fade = setTimeout(() => setAdded([]), 2400);
-    return () => clearTimeout(fade);
-  }, [added]);
+  const [added, setAdded] = useLit();
 
   if (plan.state.status !== "ready")
     return <LoadState state={plan.state} onRetry={() => void plan.reload()} framed />;
@@ -57,16 +57,19 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
     model,
     draft.editing
       ? {
-          back: name,
+          open: (m) => openMembership(m, name),
           toggle: (m, day) => () =>
             draft.toggle(m.id, { week: 1, day: day as Weekday, following: true, last: 1 }),
         }
-      : { back: name }
+      : { open: (m) => openMembership(m, name) }
   );
   const dayless = members.filter((m) => !hasDays(scheduleOf(draft.plan, m)));
   const save = (): void => {
     draft.save();
-    if (members.length === 0) router.back();
+    if (members.length === 0) {
+      release();
+      router.back();
+    }
   };
 
   return (
@@ -74,7 +77,12 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
       backLabel={back}
       {...(draft.editing && {
         header: (
-          <EditorHeader title={t("plan.editOngoing")} onCancel={draft.cancel} onSave={save} solid />
+          <EditorHeader
+            title={t("plan.editOngoing")}
+            onCancel={draft.dirty ? () => confirmDiscard(draft.cancel) : draft.cancel}
+            onSave={save}
+            solid
+          />
         ),
       })}
       action={<DetailActions onEdit={draft.begin} />}

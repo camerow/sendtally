@@ -4,12 +4,12 @@ export const settings = {
     "The scale you log in. Climbs you have already logged keep the scale they were entered in.",
   "settings.stravaActive":
     "Linked to your Strava account. Sessions you log can post to your feed as Rock Climbing activities.",
-  "settings.stravaLapsedMobile":
+  "settings.stravaLapsed":
     "Strava access has lapsed. Re-link it and your sessions can post to your feed again.",
-  "settings.stravaNotConnectedMobile":
+  "settings.stravaConnectBody":
     "Each logged session can post to your feed as a Rock Climbing activity. You approve it on strava.com and can revoke it there any time.",
   "settings.postingOn": "Logged sessions post to your feed as Rock Climbing activities.",
-  "settings.postingOffMobile": "Off. Each session page keeps its own Post to Strava button.",
+  "settings.postingOff": "Off. Each session page keeps its own Post to Strava button.",
   "settings.postSince": "Post sessions logged from",
   "settings.postSinceBody": "Anything earlier stays in sendtally only.",
   "settings.postSinceAny": "Any date",
@@ -21,27 +21,15 @@ export const settings = {
   "settings.stravaNotConnected": "Not connected",
   "settings.stravaConnected": "Connected",
   "settings.stravaReconnectNeeded": "Reconnect needed",
-  "settings.relink": "Re-link",
-  "settings.stravaLapsed":
-    "Strava access has lapsed. Re-link it to start posting your sessions again.",
-  "settings.stravaConnectBody":
-    "Connect Strava and your logged sessions can post to your feed as Rock Climbing activities.",
   "settings.relinkStrava": "Re-link Strava",
-  "settings.postToStrava": "Post sessions to Strava",
-  "settings.postingOff":
-    "Off. Sessions stay in sendtally, and each one keeps a Post to Strava action on its own page.",
-  "settings.membershipPitch": "A membership unlocks trends and insights in your climbing habits.",
-  "settings.billedThrough": "Billed through {store}. Manage it there.",
   "settings.openingStrava": "Opening Strava…",
   "settings.stravaUnreachable": "Could not reach Strava. Try again.",
   "settings.embeddedBundle": "Embedded",
   "settings.yourData": "Your data",
   "settings.yourDataBody":
-    "Bring a climbing history in from a spreadsheet or a Kaya export, or take everything you have logged here with you.",
+    "Bring a climbing history in from a spreadsheet or another climbing app's export, or take everything you have logged here with you.",
   "settings.importCsv": "Import CSV",
   "settings.exportCsv": "Export CSV",
-  "settings.exportBodyMobile":
-    "Take everything you have logged here with you as a CSV file. Importing one happens on sendtally.com.",
   "settings.exportSaved": "Saved to the folder you picked.",
   "settings.exportFailed": "The export did not go through. Try again in a moment.",
   "settings.weightUnit": "Weight units",
@@ -51,4 +39,17 @@ export const settings = {
   "settings.postHangboardBody": "Each hangboard session posts as a Workout.",
   "settings.postTraining": "Post other training",
   "settings.postTrainingBody": "Strength, runs, yoga and mobility post as their own activities.",
+  "settings.assistant": "Connect an AI assistant",
+  "settings.assistantBody":
+    "Let Claude or ChatGPT import an old climbing log and build workouts and training blocks from your history.",
+  "settings.assistantUrl": "Connector URL",
+  "settings.copyUrl": "Copy URL",
+  "settings.assistantClaude":
+    "Open Settings, then Connectors, and choose Add custom connector. Paste the URL and sign in to sendtally.",
+  "settings.assistantChatgpt":
+    "Turn on developer mode, add an MCP server, paste the URL and sign in to sendtally.",
+  "settings.assistantUntested": "Expected steps, not tested yet.",
+  "settings.assistantRevoke":
+    "To disconnect, remove sendtally in the assistant's own connector settings.",
+  "settings.assistantLearnMore": "What an assistant can do",
 } as const;

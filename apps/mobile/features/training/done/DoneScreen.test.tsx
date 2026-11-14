@@ -6,7 +6,7 @@ import type * as LogSession from "@sendtally/features/log-session";
 import { statsSegmentStorage } from "../../../lib/statsSegmentStorage";
 import { hangData, renderWithHang, TODAY } from "../data/renderWithHang";
 import { DoneScreen } from "./DoneScreen";
-import type { DoneParams } from "./doneParams";
+import type { DoneParams } from "@sendtally/features/workouts";
 
 jest.mock("expo-router", () => ({
   router: { dismissTo: jest.fn(), push: jest.fn(), back: jest.fn() },

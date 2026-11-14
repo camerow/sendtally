@@ -3,8 +3,8 @@ import { ActivityIndicator, Text } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
-  ACTIVITY_KINDS,
-  focusKey,
+  TRAINED_KINDS,
+  mixRows,
   pickedWorkouts,
   useTrainingInsights,
   type TrainedBy,
@@ -24,7 +24,7 @@ import { WorkoutsDone } from "./WorkoutsDone";
 export function TrainingInsights({ range }: { range: TrendRange }): React.ReactElement {
   const api = useApi();
   const { model } = useHangData();
-  const state = useTrainingInsights(api, range, ACTIVITY_KINDS, model.gripName);
+  const state = useTrainingInsights(api, range, TRAINED_KINDS, model.gripName);
   const [by, setBy] = React.useState<TrainedBy>("category");
   const [pick, setPick] = React.useState<string | null>(null);
 
@@ -37,11 +37,7 @@ export function TrainingInsights({ range }: { range: TrendRange }): React.ReactE
       </Text>
     );
   if (state.data.sessions === 0) return <DashedPanel body={t("statistics.empty")} />;
-  const legend =
-    by === "category"
-      ? state.data.trained.map((k) => ({ key: k.kind, name: k.name }))
-      : state.data.byFocus.map((f) => ({ key: focusKey(f.focus), name: f.name }));
-  const picked = legend.find((r) => r.key === pick) ?? null;
+  const picked = mixRows(state.data, by).find((r) => r.key === pick) ?? null;
   return (
     <>
       <Text style={[type.mono, { fontSize: 12.5, color: colors.textSecondary }]}>

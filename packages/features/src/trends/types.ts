@@ -33,6 +33,18 @@ export const yearsOf = (dates: readonly string[]): number[] =>
     .filter(Number.isFinite)
     .sort((a, b) => b - a);
 
+/** The years Stats can show: anything climbed, hung or otherwise trained in, newest first. */
+export const statsYears = (logged: {
+  sessions: readonly { start_at: string }[];
+  hangSessions: readonly { date: string }[];
+  activities: readonly { date: string }[];
+}): number[] =>
+  yearsOf([
+    ...logged.sessions.map((s) => s.start_at),
+    ...logged.hangSessions.map((h) => h.date),
+    ...logged.activities.map((a) => a.date),
+  ]);
+
 /** Everything for a member; the one unlocked range for anyone else. */
 export const defaultRange = (member: boolean | null): TrendRange =>
   member === true ? "all" : PREVIEW_TREND_RANGE;
@@ -44,8 +56,6 @@ export const isLockedRange = (member: boolean | null, range: TrendRange): boolea
 /** The range drawn: the one picked, unless it is locked. */
 export const shownRange = (member: boolean | null, picked: TrendRange): TrendRange =>
   isLockedRange(member, picked) ? PREVIEW_TREND_RANGE : picked;
-
-export const ENDURANCE_RANGES: readonly TrendRange[] = ["3m", "6m", "1y", "all"];
 
 export function trendRangeLabel(range: TrendRange): string {
   if (isYearRange(range)) return String(yearOf(range));
@@ -60,11 +70,7 @@ export function trendRangeLabel(range: TrendRange): string {
  */
 export type TrendScope = Discipline | "all" | "circuit";
 
-export const TREND_SCOPES: readonly TrendScope[] = ["boulder", "route", "all"];
-
 export type TrendSetting = "all" | "indoor" | "outdoor";
-
-export const TREND_SETTINGS: readonly TrendSetting[] = ["all", "indoor", "outdoor"];
 
 /** Ranks on the scope's own ladder: V number, route index, or circuit position. */
 export type GradeRange = { lo: number; hi: number };
@@ -90,8 +96,6 @@ export const DEFAULT_TREND_FILTER: TrendFilter = {
 };
 
 export type TrendPage = "endurance" | "days";
-
-export const TREND_PAGES: readonly TrendPage[] = ["endurance", "days"];
 
 /** Series name a colour; each platform owns the palette, so the VM never carries a hex. */
 export type TrendSeries =

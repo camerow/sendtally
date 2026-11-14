@@ -32,7 +32,8 @@ function mount(
   onChange: (climb: ClimbDraft) => void = () => {},
   name = "",
   gyms: Gym[] = [],
-  climb: ClimbDraft = newClimb("climb-1", "v")
+  climb: ClimbDraft = newClimb("climb-1", "v"),
+  onRemove: () => void = () => {}
 ): HTMLDialogElement {
   act(() =>
     root.render(
@@ -48,7 +49,7 @@ function mount(
         onChangeName={() => {}}
         onPick={() => {}}
         onToggleProject={() => {}}
-        onRemove={() => {}}
+        onRemove={onRemove}
         onClose={onClose}
       />
     )
@@ -285,5 +286,28 @@ describe("ClimbEditorSheet drag to dismiss", () => {
       grip.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientY: 140 }));
     });
     expect(panel.style.transform).toBe("translateY(40px)");
+  });
+
+  it("asks before removing the climb, naming it", () => {
+    const onRemove = vi.fn();
+    mount(
+      () => {},
+      () => {},
+      "The Arete",
+      [],
+      newClimb("climb-1", "v"),
+      onRemove
+    );
+    act(() =>
+      container.querySelector<HTMLButtonElement>("button[aria-label='Remove climb']")?.click()
+    );
+    expect(onRemove).not.toHaveBeenCalled();
+    const confirm = [...container.querySelectorAll("dialog")].at(-1);
+    expect(confirm?.textContent).toContain("The Arete");
+    const remove = [...(confirm?.querySelectorAll("button") ?? [])].find(
+      (b) => b.textContent === "Remove"
+    );
+    act(() => remove?.click());
+    expect(onRemove).toHaveBeenCalledOnce();
   });
 });

@@ -5,7 +5,7 @@ import { LIVE_HEADER, MinimiseButton } from "../../../components/MinimiseButton"
 import { Button } from "../components/Button";
 import { IconButton } from "../components/IconButton";
 import { Label } from "../components/Label";
-import { ON_DARK, ON_DARK_LINE, ON_DARK_SOFT } from "../components/onDark";
+import { ON_DARK, ON_DARK_LINE, ON_DARK_SOFT } from "@sendtally/features/workouts";
 import { WorkoutInfo } from "../components/WorkoutInfo";
 import { type } from "../type";
 

@@ -5,12 +5,16 @@ import type { Membership } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import { blockOfMembership, daysThisWeek, type WorkoutLookup } from "@sendtally/features/training";
+import {
+  blockOfMembership,
+  daysThisWeek,
+  type WorkoutLookup,
+  KIND_LOOK,
+} from "@sendtally/features/training";
 import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
-import { membershipTag, oneOffDate } from "../plans/planText";
+import { membershipTag, oneOffDate } from "@sendtally/features/training";
 import { DayMark } from "../today/DayMark";
-import { KIND_LOOK } from "../today/kindLook";
 import { MiniWeek } from "./MiniWeek";
 import { openMembership } from "./openMembership";
 import { usePlanActions } from "./usePlanActions";

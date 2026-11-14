@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { focusLabel } from "@sendtally/features/training";
+import { focusLabel, workoutLines } from "@sendtally/features/training";
 import { libraryShelves } from "@sendtally/features/workouts";
 import { DashedPanel } from "../components/DashedPanel";
 import { Label } from "../components/Label";
@@ -12,7 +12,6 @@ import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
 import { LibrarySearch } from "../library/LibrarySearch";
 import { useLibrary } from "../library/useLibrary";
-import { workoutLines } from "../plan/planGridRows";
 import { LogWorkoutRow } from "./LogWorkoutRow";
 
 export type LogWorkoutSheetProps = { visible: boolean; onClose: () => void };

@@ -1,57 +1,42 @@
 import React from "react";
-import { Link } from "react-router";
 import type { JournalEntry } from "@sendtally/api-client";
 import { formatDate, t } from "@sendtally/features/i18n";
-import { entryKindLabel, entryTitle } from "@sendtally/features/journal";
+import { NoteRow } from "../../components/detail/NoteRow";
+import { SectionHeading } from "../../components/detail/SectionHeading";
 
-/**
- * A session takes as many entries as the user writes. The old single notes
- * field could hold exactly one, which is most of why it stayed empty.
- */
+/** A session's notes: a click edits one in the note sheet, and + writes another. */
 export function SessionJournal({
-  fingerprint,
-  date,
   entries,
+  onAdd,
+  onOpen,
 }: {
-  fingerprint: string;
-  date: string;
   entries: JournalEntry[];
+  onAdd: () => void;
+  onOpen: (entry: JournalEntry) => void;
 }): React.ReactElement {
-  const newEntryHref = `/app/journal/new?date=${date}&session=${encodeURIComponent(fingerprint)}`;
-
   return (
-    <section className="session-journal">
-      <div className="session-journal-head">
-        <span className="journal-card-label">{t("common.notes")}</span>
-        <div style={{ flex: 1 }} />
-        <Link to={newEntryHref} className="journal-action">
-          {t("climbs.addNote")}
-        </Link>
-      </div>
-      {entries.length === 0 && <p className="journal-muted">{t("journal.emptyTitle")}</p>}
+    <section className="detail-section">
+      <SectionHeading
+        title={t("common.notes")}
+        add={{ label: t("climbs.addNote"), onPress: onAdd }}
+      />
+      {entries.length === 0 && (
+        <p style={{ margin: 0, fontSize: 14, color: "var(--text-on-white-secondary)" }}>
+          {t("journal.emptyTitle")}
+        </p>
+      )}
       {entries.map((entry) => (
-        <Link
+        <NoteRow
           key={entry.id}
-          to={`/app/journal/${encodeURIComponent(entry.id)}`}
-          className="session-journal-entry"
-        >
-          <span className="session-journal-entry-head">
-            <span className={`entry-kind entry-kind--${entry.kind}`}>
-              {entryKindLabel(entry.kind)}
-            </span>
-            <span className="journal-card-label">
-              {formatDate(new Date(`${entry.occurred_at}T00:00:00Z`), {
-                day: "numeric",
-                month: "short",
-                timeZone: "UTC",
-              })}
-            </span>
-          </span>
-          <span className="session-journal-entry-title">{entryTitle(entry)}</span>
-          {entry.title !== null && entry.body.trim() !== "" && (
-            <span className="session-journal-entry-body">{entry.body}</span>
-          )}
-        </Link>
+          date={formatDate(new Date(`${entry.occurred_at}T00:00:00Z`), {
+            day: "numeric",
+            month: "short",
+            timeZone: "UTC",
+          })}
+          title={entry.title}
+          body={entry.body}
+          onPress={() => onOpen(entry)}
+        />
       ))}
     </section>
   );

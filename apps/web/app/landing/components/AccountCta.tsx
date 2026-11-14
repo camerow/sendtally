@@ -11,7 +11,7 @@ export type AccountCtaProps = {
 
 export function AccountCta({
   label,
-  variant = "gold",
+  variant = "azure",
   size = "md",
   className,
 }: AccountCtaProps): React.ReactElement {

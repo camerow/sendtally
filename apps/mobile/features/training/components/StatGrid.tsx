@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { type } from "../type";
 import { Label } from "./Label";
-import type { Stat } from "./types";
+import type { Stat } from "@sendtally/features/activities";
 
 export type StatGridProps = { stats: readonly Stat[]; columns: 2 | 3; valueSize?: number };
 

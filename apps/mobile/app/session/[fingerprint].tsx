@@ -21,7 +21,7 @@ import { Label } from "../../features/training/components/Label";
 import { LoadState } from "../../features/training/data/LoadState";
 import { StravaStatusRow } from "../../features/training/summary/StravaStatusRow";
 import { stravaRow } from "../../features/training/summary/stravaRow";
-import { effortTile } from "../../features/training/summary/summaryText";
+import { effortTile } from "@sendtally/features/activities";
 import { SummaryTiles } from "../../features/training/summary/SummaryTiles";
 import { useApi } from "../../lib/api";
 import { useSessions } from "../../lib/useSessions";

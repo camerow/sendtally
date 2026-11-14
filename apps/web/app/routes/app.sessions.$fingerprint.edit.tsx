@@ -11,6 +11,7 @@ import logSessionStyles from "../log-session/log-session.css?url";
 import projectsStyles from "../projects/projects.css?url";
 import { BackLink } from "../components/BackLink";
 import { t } from "@sendtally/features/i18n";
+import { monoLabel } from "../components/styles";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: logSessionStyles },
@@ -22,15 +23,6 @@ export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string
   await requireApi(args);
   return { apiUrl: args.context.get(cloudflareContext).env.API_URL };
 }
-
-const monoLabel: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  textTransform: "uppercase",
-  fontWeight: 500,
-  fontSize: 11,
-  letterSpacing: "0.08em",
-  color: "rgba(64,63,76,0.72)",
-};
 
 /** Inside the form (with a summary) the form's own gap spaces it; before it loads, the margin does. */
 function EditHeader({ summary }: { summary?: string }): React.ReactElement {

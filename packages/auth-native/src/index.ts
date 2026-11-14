@@ -8,4 +8,5 @@ export type {
   Phase,
   SignInFlow,
   SignInFlowOptions,
+  SignInOutcome,
 } from "./types";

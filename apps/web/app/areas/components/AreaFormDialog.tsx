@@ -10,12 +10,12 @@ import {
   type AreaSummary,
 } from "@sendtally/features/areas";
 import { t } from "@sendtally/features/i18n";
-import { inputStyle } from "../styles";
 import { AreaDialog } from "./AreaDialog";
 import { AreaPicker } from "./AreaPicker";
 import { Candidates } from "./Candidates";
 import { Field } from "./Field";
 import { useDraftForm } from "../useDraftForm";
+import { inputStyle } from "../../components/styles";
 
 export type AreaFormDialogProps = {
   api: SendtallyApi;

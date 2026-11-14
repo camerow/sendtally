@@ -1,7 +1,7 @@
 import { Redirect, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { ChecklistScreen } from "../../features/training/checklist/ChecklistScreen";
-import { readWorkoutRun } from "../../features/training/data/workoutRunParams";
+import { readWorkoutRun } from "@sendtally/features/workouts";
 
 export default function ChecklistRoute(): React.ReactElement {
   const params = useLocalSearchParams();

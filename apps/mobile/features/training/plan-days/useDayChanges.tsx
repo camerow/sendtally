@@ -1,7 +1,6 @@
 import React from "react";
-import type { Occurrence } from "@sendtally/features/training";
+import { type Occurrence, isOneOff } from "@sendtally/features/training";
 import { usePlanActions } from "../plan/usePlanActions";
-import { isOneOff } from "./dayRows";
 import { MoveSheet } from "./MoveSheet";
 import { SkipSheet } from "./SkipSheet";
 

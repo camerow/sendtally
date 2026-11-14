@@ -1,28 +1,17 @@
 import React from "react";
 import { Text, View } from "react-native";
 import type { Plan } from "@sendtally/api-client";
-import {
-  addDays,
-  isDated,
-  weekday,
-  type Block,
-  type Membership,
-  type Weekday,
-} from "@sendtally/core/hang";
+import { isDated, type Block, type Membership } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
-  daysInWeek,
-  hasDays,
-  scheduleOf,
-  withFollowing,
-  withoutFollowing,
-  trainingDay,
   useTrainingLog,
   type DaySchedule,
   type DayToggle,
   type Occurrence,
   type WorkoutLookup,
+  useLit,
+  useBlockWeekGrid,
 } from "@sendtally/features/training";
 import { Switch } from "../../../components/Switch";
 import { useApi } from "../../../lib/api";
@@ -31,7 +20,7 @@ import { DashedPanel } from "../components/DashedPanel";
 import { AMBER } from "../components/tints";
 import { useHangData } from "../data/HangDataContext";
 import { PlanGrid } from "../plan/PlanGrid";
-import { planGridRows, type CellMark, type GridOptions } from "../plan/planGridRows";
+import { openMembership } from "../plan/openMembership";
 import { DaySheet } from "../plan-days/DaySheet";
 import { useDayChanges } from "../plan-days/useDayChanges";
 import { useLibrary } from "../library/useLibrary";
@@ -69,8 +58,6 @@ export type BlockWeekProps = {
   onMove?: (membershipId: string, by: -1 | 1) => void;
 };
 
-const DAYS = [0, 1, 2, 3, 4, 5, 6];
-
 /**
  * A block's week, a row per workout opening it in the block, and + Add workout under it in Edit mode. On a
  * scheduled block a week shows its dates; in Edit mode a cell sets the workout's day.
@@ -103,92 +90,27 @@ export function BlockWeek({
   const library = (id: string): LibraryWorkout | undefined =>
     libraryState.status === "ready" ? libraryState.data.workout(id) : undefined;
   const template = !isDated(block);
-  const shownWeek = week ?? 1;
-  // The days before Apply to following weeks went on, which turning it off puts back.
-  const [before, setBefore] = React.useState<readonly DaySchedule[] | null>(null);
-  const [wasShowing, setWasShowing] = React.useState({ editing, shownWeek });
-  if (editing !== wasShowing.editing || shownWeek !== wasShowing.shownWeek) {
-    setWasShowing({ editing, shownWeek });
-    setBefore(null);
-  }
-  const following = before !== null;
-  const setFollowing = (on: boolean): void => {
-    const now = members.map((m) => scheduleOf(plan, m));
-    onSchedules?.(
-      now.map((s, i) =>
-        on
-          ? withFollowing(s, shownWeek, block.weeks)
-          : withoutFollowing(s, before?.[i] ?? s, shownWeek, block.weeks)
-      )
-    );
-    setBefore(on ? now : null);
-  };
-  const from = isDated(block) && week !== undefined ? addDays(block.start, (week - 1) * 7) : null;
-  // A block week runs from its start's weekday, so each weekday column finds its own date.
-  const dates = from === null ? null : DAYS.map((d) => addDays(from, (d - weekday(from) + 7) % 7));
-  const statuses = dates === null ? null : dates.map((date) => trainingDay(log, date, today).plans);
-  const marks =
-    statuses === null
-      ? undefined
-      : (m: Membership): (CellMark | null)[] =>
-          statuses.map((plans) => {
-            const o = plans.find((x) => x.membership.id === m.id);
-            return o === undefined
-              ? null
-              : o.movedFrom !== null && o.status === "planned"
-                ? "movedIn"
-                : o.status;
-          });
   const picksWeek = onPickWeek !== undefined && week !== undefined;
-  const options: GridOptions = editing
-    ? {
-        back: block.name,
-        ...(marks !== undefined && { marks }),
-        // A day gone by keeps how it went; today and later are set.
-        toggle: (m: Membership, day: number) =>
-          dates !== null && (dates[day] ?? today) < today
-            ? undefined
-            : () =>
-                onToggle?.(m.id, {
-                  week: shownWeek,
-                  day: day as Weekday,
-                  following,
-                  last: block.weeks,
-                }),
-      }
-    : {
-        back: block.name,
-        ...(template &&
-          week !== undefined &&
-          week > 1 && {
-            week: { n: week, changes: plan.weekChanges, unit: model.settings.units },
-          }),
-        ...(marks !== undefined && {
-          marks,
-          // A planned day from today on opens its day; anything else opens the workout.
-          press: (m: Membership, day: number) => {
-            const o = statuses?.[day]?.find((x) => x.membership.id === m.id);
-            const w = library(m.workoutId);
-            return o === undefined || o.status !== "planned" || w === undefined
-              ? undefined
-              : () => setOpen({ occurrence: o, workout: w });
-          },
-        }),
-      };
-  const shown = members.map((m) => ({
-    ...m,
-    weekdays: daysInWeek(scheduleOf(plan, m), shownWeek),
-  }));
-  const rows = planGridRows(shown, workout, model, options);
-  // Plans with no day in any week, such as ones just added: named, to tap their days in.
-  const dayless = members.filter((m) => !hasDays(scheduleOf(plan, m)));
+  const { rows, dates, columns, following, setFollowing, shownWeek, dayless } = useBlockWeekGrid({
+    block,
+    members,
+    plan,
+    log,
+    model,
+    workout,
+    today,
+    week,
+    editing,
+    ...(onToggle !== undefined && { onToggle }),
+    ...(onSchedules !== undefined && { onSchedules }),
+    open: (m) => openMembership(m, block.name),
+    openDay: (o, m) => {
+      const w = library(m.workoutId);
+      return w === undefined ? undefined : () => setOpen({ occurrence: o, workout: w });
+    },
+  });
   const daylessNames = dayless.map((m) => workout(m.workoutId)?.name ?? "").join(", ");
-  const [added, setAdded] = React.useState<readonly string[]>([]);
-  React.useEffect(() => {
-    if (added.length === 0) return;
-    const fade = setTimeout(() => setAdded([]), 2400);
-    return () => clearTimeout(fade);
-  }, [added]);
+  const [added, setAdded] = useLit();
   const add = (
     <Button
       label={t("plan.addWorkout")}
@@ -246,8 +168,8 @@ export function BlockWeek({
           head={
             picksWeek ? <WeekNav week={week} weeks={block.weeks} onPick={onPickWeek} /> : undefined
           }
-          dates={dates === null ? undefined : dates.map((d) => String(Number(d.slice(8))))}
-          columns={from === null ? undefined : DAYS.map((i) => weekday(addDays(from, i)))}
+          dates={dates}
+          columns={columns}
           footer={
             editing &&
             shownWeek < block.weeks && (

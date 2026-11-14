@@ -83,8 +83,6 @@ export const logSession = {
   "logSession.defaultNameMorning": "Morning session",
   "logSession.defaultNameAfternoon": "Afternoon session",
   "logSession.defaultNameEvening": "Evening session",
-  "logSession.wrapUpTitle": "Wrap up",
-  "logSession.wrapUpSubtitle": "Times come from your climbs · effort is scored when you save",
   "logSession.noSendsYet": "No sends yet",
   "logSession.sendStyle": "Style",
   "logSession.removeClimbTitle": "Remove this climb?",
@@ -93,5 +91,4 @@ export const logSession = {
   "logSession.sentTapToAttempt": "Sent, tap to mark as attempt",
   "logSession.attemptTapToSent": "Attempt, tap to mark as sent",
   "logSession.joinsThatDay": "Joins that day's session",
-  "logSession.climbSaveFailed": "Could not save the climb. Try again.",
 } as const;

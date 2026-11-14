@@ -10,7 +10,7 @@ import { DetailActions } from "../components/DetailActions";
 import { deleteRow } from "../components/deleteRow";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
-import type { Stat } from "../components/types";
+import type { Stat } from "@sendtally/features/activities";
 import { StravaStatusRow } from "./StravaStatusRow";
 import { stravaRow } from "./stravaRow";
 import { SummaryTiles } from "./SummaryTiles";

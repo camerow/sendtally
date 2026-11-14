@@ -2,7 +2,7 @@ import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { HangDataProvider } from "../../features/training/data/HangDataProvider";
 import { WorkoutScreen } from "../../features/training/library-detail/WorkoutScreen";
-import { addFlowOf, type RawAddParams } from "../../features/training/planning/flowParams";
+import { addFlowOf, type RawAddParams } from "@sendtally/features/training";
 
 export default function WorkoutRoute(): React.ReactElement {
   const { id, grip, add, date, membershipId, ...params } = useLocalSearchParams<

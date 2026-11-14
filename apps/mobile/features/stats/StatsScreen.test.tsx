@@ -24,6 +24,13 @@ const mockClimb = (vGrade: number, kind: "send" | "attempt"): object => ({
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 jest.mock("../../lib/api", () => ({ useApi: () => undefined }));
 let mockMember: boolean | null = true;
+const mockDefaultClimbs = [
+  mockClimb(4, "send"),
+  mockClimb(6, "send"),
+  mockClimb(7, "send"),
+  mockClimb(8, "attempt"),
+];
+let mockClimbs = mockDefaultClimbs;
 jest.mock("../billing/useBilling", () => ({ useCanSeeInsights: () => mockMember }));
 jest.mock("@sendtally/features/query", () => ({
   ...jest.requireActual<object>("@sendtally/features/query"),
@@ -54,14 +61,13 @@ jest.mock("../../lib/statsSegmentStorage", () => {
       }),
   };
 });
-jest.mock("@sendtally/features/gyms", () => ({
+jest.mock("../../../../packages/features/src/gyms/useGyms", () => ({
   useGyms: () => ({ state: { status: "ready", data: [] } }),
 }));
-jest.mock("@sendtally/features/settings", () => ({
+jest.mock("../../../../packages/features/src/settings/useGradeScales", () => ({
   useGradeScalePrefs: () => ({ scales: { boulder: "font", route: "yds" }, ready: true }),
 }));
-jest.mock("@sendtally/features/climbs", () => ({
-  ...jest.requireActual<object>("@sendtally/features/climbs"),
+jest.mock("../../../../packages/features/src/climbs/useClimbs", () => ({
   useClimbs: () => ({
     state: {
       status: "ready",
@@ -71,12 +77,9 @@ jest.mock("@sendtally/features/climbs", () => ({
             fingerprint: "s1",
             start_at: mockToday,
             location: "outdoor",
-            climbs: [
-              mockClimb(4, "send"),
-              mockClimb(6, "send"),
-              mockClimb(7, "send"),
-              mockClimb(8, "attempt"),
-            ],
+            get climbs() {
+              return mockClimbs;
+            },
           },
         ],
         activities: [],
@@ -96,6 +99,7 @@ describe("Stats", () => {
   beforeEach(() => {
     statsSegmentStorage.remove();
     mockMember = true;
+    mockClimbs = mockDefaultClimbs;
   });
 
   it("opens on Climbing: the pyramid, then the average send in the climber's scale, then the days", async () => {
@@ -105,6 +109,16 @@ describe("Stats", () => {
     expect(screen.getByLabelText("3 sends")).toBeTruthy();
     expect(screen.queryByText(/days? outside/)).toBeNull();
     expect(screen.getByLabelText("Days climbing, All time: 1 outside, 0 in the gym.")).toBeTruthy();
+  });
+
+  it("keeps a three-digit sends by grade count on one line, in a column no row fixes the width of", async () => {
+    mockClimbs = [
+      ...Array.from({ length: 999 }, (_, i) => mockClimb(5, i < 998 ? "send" : "attempt")),
+    ];
+    await render(<StatsScreen />);
+    const count = screen.getByText("998/999");
+    expect(count.props.numberOfLines).toBe(1);
+    expect(count.props.style).not.toHaveProperty("width");
   });
 
   it("keeps the range across segments and remembers the segment on the device", async () => {

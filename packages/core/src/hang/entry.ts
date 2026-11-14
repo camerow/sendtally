@@ -139,3 +139,20 @@ export function numberEntry(
       return openNumber(entryNumber(state), limits);
   }
 }
+
+/** Seconds from a time typed as text, "1:30" or "130", read as the same digits on the keypad; null when nothing was typed. */
+export function typedSeconds(text: string, limits: TimeLimits = {}): number | null {
+  const digits = text.replace(/\D/g, "");
+  if (digits === "") return null;
+  const typed = { digits: digits.slice(-TIME_DIGITS), fresh: false };
+  return entrySeconds(timeEntry(typed, { type: "done" }, limits));
+}
+
+/** A number typed as text, a comma read as the decimal point, clamped as the keypad would; null when it is not one. */
+export function typedNumber(text: string, limits: NumberLimits): number | null {
+  const trimmed = text.trim().replace(",", ".");
+  const n = Number(trimmed);
+  if (trimmed === "" || !Number.isFinite(n)) return null;
+  const whole = limits.decimals === true ? n : Math.round(n);
+  return entryNumber(openNumber(limits.signed === true ? whole : Math.abs(whole), limits));
+}

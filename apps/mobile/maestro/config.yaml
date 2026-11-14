@@ -9,6 +9,7 @@ executionOrder:
     - log-session-sheet
     - draft-survives-leaving
     - cancel-discards-draft
+    - back-asks-before-discarding
     - climb-note
     - climb-session-opens
     - result-sheet-stays-open

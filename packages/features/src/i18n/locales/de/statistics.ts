@@ -2,7 +2,6 @@ export const statistics = {
   "statistics.climbing": "Klettern",
   "statistics.training": "Training",
   "statistics.tab": "Statistik",
-  "statistics.sessions": "Sessions",
   "statistics.empty": "Trag eine Session ein, dann füllen sich hier deine Wochen.",
   "statistics.exercisesEmpty":
     "Trag Sätze in einer Trainingseinheit ein, dann bekommt hier jede Übung ihren Verlauf.",
@@ -18,15 +17,7 @@ export const statistics = {
   "statistics.legendDone": "Geschafft",
   "statistics.exerciseSessions_one": "{count} Session · neueste",
   "statistics.exerciseSessions_other": "Alle {count} Sessions · neueste",
-  "statistics.insightUp": "{exercise} ist seit {date} um {change} gestiegen.",
-  "statistics.insightDown": "{exercise} ist seit {date} um {change} gesunken.",
-  "statistics.insightHeld": "{exercise} liegt seit {date} bei {value}.",
-  "statistics.insightAttempted":
-    "Noch nichts ist als geschafft markiert; dein bester Versuch ist {set}.",
-  "statistics.insightE1rm": "Dein geschätztes Ein-Wiederholungs-Maximum liegt bei {value}.",
   "statistics.best": "Bestwert",
-  "statistics.latest": "Zuletzt",
-  "statistics.volumeThisMonth": "Volumen diesen Monat",
   "statistics.effortIs": "Anstrengung {effort}",
   "statistics.effortUp": "Anstrengung {effort}, plus {change}",
   "statistics.effortDown": "Anstrengung {effort}, minus {change}",

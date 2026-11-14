@@ -1,20 +1,11 @@
 import { SubscriptionDetailsButton, useSubscription } from "@clerk/react/experimental";
 import React from "react";
 import { useRevalidator } from "react-router";
-import { colors, radius } from "@sendtally/design/tokens";
+import { clerkAppearance } from "./clerkAppearance";
 import { formatRenewalDate, planLabel } from "@sendtally/features/billing";
 import { t } from "@sendtally/features/i18n";
 import { MEMBER_PLAN_SLUG } from "./MembershipCheckout";
 import { panelGhostButton, panelMono } from "./MembershipPanel";
-
-const appearance = {
-  variables: {
-    colorPrimary: colors.azureInk,
-    colorBackground: colors.white,
-    colorForeground: colors.gunmetal,
-    borderRadius: `${radius.control}px`,
-  },
-} as const;
 
 type SubscriptionItem = NonNullable<
   ReturnType<typeof useSubscription>["data"]
@@ -56,7 +47,7 @@ export function WebMembershipStrip({
     <>
       <span style={panelMono}>{status.line}</span>
       <SubscriptionDetailsButton
-        subscriptionDetailsProps={{ appearance }}
+        subscriptionDetailsProps={{ appearance: clerkAppearance }}
         onSubscriptionCancel={() => void revalidate()}
       >
         <button type="button" style={panelGhostButton}>

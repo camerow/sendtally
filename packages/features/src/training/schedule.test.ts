@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { Block } from "@sendtally/core/hang";
-import { blockDates, newSchedule, scheduledMemberships, scheduleReady, toggled } from "./schedule";
+import {
+  blockDates,
+  newSchedule,
+  scheduleAddLabel,
+  scheduledMemberships,
+  scheduleReady,
+  toggled,
+} from "./schedule";
 import { daysInWeek } from "./weekDays";
 
 const TODAY = "2026-10-22";
@@ -73,5 +80,19 @@ describe("scheduledMemberships", () => {
     const outside = { ...draft, mode: "dates" as const, dates: ["2026-10-28"] };
     expect(scheduleReady(outside, null)).toBe(true);
     expect(scheduleReady(outside, block)).toBe(false);
+  });
+});
+
+describe("scheduleAddLabel", () => {
+  const draft = newSchedule(null, TODAY);
+  it("says the weekdays when repeating, the date or count when on days", () => {
+    expect(scheduleAddLabel({ ...draft, mode: "repeat", weekdays: [] }, 0, undefined)).toBe("Add");
+    expect(scheduleAddLabel({ ...draft, mode: "repeat", weekdays: [1, 4] }, 0, undefined)).toBe(
+      "Add every Tue, Fri"
+    );
+    expect(scheduleAddLabel({ ...draft, mode: "dates" }, 1, "2026-11-05")).toBe(
+      "Add on Thu, Nov 5"
+    );
+    expect(scheduleAddLabel({ ...draft, mode: "dates" }, 3, "2026-11-05")).toBe("Add on 3 days");
   });
 });

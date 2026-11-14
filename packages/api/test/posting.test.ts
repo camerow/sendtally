@@ -95,7 +95,51 @@ function postRow(userId: string, fingerprint: string) {
     }>();
 }
 
+async function callConnector(
+  userId: string,
+  fetchImpl: typeof fetch,
+  name: string,
+  args: unknown
+): Promise<void> {
+  const ctx = createExecutionContext();
+  const res = await testApp(fetchImpl).request(
+    "https://api.sendtally.test/mcp",
+    {
+      method: "POST",
+      headers: {
+        "x-test-user": userId,
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: { name, arguments: args },
+      }),
+    },
+    env,
+    ctx
+  );
+  expect(res.status).toBe(200);
+  await waitOnExecutionContext(ctx);
+}
+
 describe("strava posting", () => {
+  it("posts a session logged through the connector, never an imported one", async () => {
+    const userId = "user_post_connector";
+    await connectStrava(userId);
+    const { fetchImpl, calls } = stravaRoutes();
+    await callConnector(userId, fetchImpl, "import_climbing_log", {
+      csv: "date,grade\n2026-03-01,V4\n",
+      timeZone: "UTC",
+    });
+    expect(calls.some((c) => c.method === "POST")).toBe(false);
+
+    await callConnector(userId, fetchImpl, "log_session", sessionBody);
+    expect(calls.filter((c) => c.method === "POST")).toHaveLength(1);
+  });
+
   it("posts a new session in a single call, carrying the effort score in the description", async () => {
     const userId = "user_post_create";
     await connectStrava(userId);

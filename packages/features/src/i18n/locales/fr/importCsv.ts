@@ -4,8 +4,9 @@ export const importCsv = {
   "import.stepReview": "2 Vérifier",
   "import.stepDone": "3 Terminé",
   "import.dropLabel": "Dépose un CSV ici, ou choisis un fichier",
+  "import.exportFrom": "Où exporter",
   "import.dropHint":
-    "Les exports Kaya sont reconnus automatiquement. Tout le reste utilise le format CSV Sendtally ci-dessous. Rien n'est enregistré avant ta confirmation à l'étape suivante.",
+    "Les exports de ces apps sont reconnus automatiquement. Tout le reste utilise le format CSV Sendtally ci-dessous. Rien n'est enregistré avant ta confirmation à l'étape suivante.",
   "import.formatLabel": "Format CSV Sendtally",
   "import.downloadTemplate": "Télécharger le modèle",
   "import.formatBody":
@@ -27,15 +28,14 @@ export const importCsv = {
     "flash, onsight ou redpoint. Réussites seulement ; onsight pour les voies uniquement.",
   "import.colTriesRpe": "Nombres entiers. RPE de 1 à 10 ; laisse vide et Sendtally note la séance.",
   "import.copyPrompt": "Copier le prompt",
-  "import.copied": "Copié",
   "import.convertTitle": "Convertir un tableur avec un assistant IA",
   "import.convertHelp":
     "Colle ceci dans Claude ou ChatGPT avec ton tableur (exporte-le d'abord en CSV). Vérifie une ou deux séances dans le résultat, puis importe le fichier obtenu.",
-  "import.kayaSkip":
-    "Utilisateurs de Kaya, passez cette étape : importez l'export des réglages de profil Kaya tel quel.",
+  "import.exportSkip":
+    "Un export d'une de ces apps ? Passe cette étape et importe l'export tel quel.",
   "import.reviewTitle": "Vérifier avant d'importer",
   "import.chooseAnother": "Choisir un autre fichier",
-  "import.formatKaya": "Export Kaya",
+  "import.formatExport": "Export {service}",
   "import.formatSendtally": "Format Sendtally",
   "import.statSessions": "séances",
   "import.statClimbs": "voies",
@@ -49,9 +49,10 @@ export const importCsv = {
   "import.skippedBody":
     "Tout le reste s'importe comme indiqué ci-dessous. Corrige le fichier et choisis-le à nouveau, ou continue sans ces lignes.",
   "import.nothingFound":
-    "Ce fichier n'est ni un export Kaya ni au format CSV Sendtally. Convertis-le avec le prompt ci-dessous, puis choisis le fichier converti.",
+    "Ce fichier n'est ni un export que Sendtally reconnaît ni au format CSV Sendtally. Convertis-le avec le prompt ci-dessous, puis choisis le fichier converti.",
   "import.issueNoHeader": "La première ligne n'est pas un en-tête que Sendtally reconnaît.",
   "import.issueMissingDate": "Pas de date, et pas de séance au-dessus à continuer.",
+  "import.issueNoDate": "Pas de date.",
   "import.issueBadDate": "« {value} » n'est pas une date au format AAAA-MM-JJ.",
   "import.issueMissingGrade": "Pas de cotation.",
   "import.issueUnknownGrade": "« {value} » n'est pas une cotation que Sendtally connaît.",
@@ -81,6 +82,13 @@ export const importCsv = {
     "Les tendances et les projets incluent tout de suite les séances importées. Ouvre-en une pour ajouter un RPE, des tags ou des notes.",
   "import.openLog": "Ouvrir le journal",
   "import.importAnother": "Importer un autre fichier",
+  "import.likelyTitle_one": "{count} séance ressemble à une séance de ton journal",
+  "import.likelyTitle_other": "{count} séances ressemblent à des séances de ton journal",
+  "import.likelyMatch": "Correspond à {name} dans ton journal",
+  "import.importAnyway_one": "L'importer quand même",
+  "import.importAnyway_other": "Les importer quand même",
+  "import.likelySkipped_one": "{count} doublon probable ignoré",
+  "import.likelySkipped_other": "{count} doublons probables ignorés",
   "import.showAllRows": "Afficher les {total} lignes",
   "import.tagSelected": "Taguer les séances choisies",
   "import.tagSelectedHint":
@@ -91,4 +99,19 @@ export const importCsv = {
   "import.selectNone": "Effacer",
   "import.selectNamed": "Choisir les séances nommées…",
   "import.selectSession": "Choisir {name}, {date}",
+  "import.connectorLine":
+    "Ou connecte Claude ou ChatGPT à sendtally et laisse-le importer le fichier pour toi.",
+  "import.supportedApps": "Applications prises en charge",
+  "import.chooseFile": "Choisir un fichier CSV",
+  "import.notRecognized": "Non reconnu",
+  "import.nothingToImport": "Rien à importer",
+  "import.nothingFoundMobile":
+    "Ce fichier n'est ni un export que Sendtally reconnaît, ni au format CSV Sendtally. Convertis-le avec un assistant IA, puis choisis le fichier converti.",
+  "import.convertHelpMobile":
+    "Envoie ce prompt à Claude ou ChatGPT avec ton tableur en pièce jointe.",
+  "import.sharePrompt": "Partager le prompt",
+  "import.added_one": "{count} séance ajoutée",
+  "import.added_other": "{count} séances ajoutées",
+  "import.addedSome": "{added} ajoutées · {skipped} déjà présentes",
+  "import.allThere": "Les {total} sont déjà dans ton journal",
 } as const;

@@ -8,10 +8,10 @@ import { hangWorkoutOf, setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
-  occurrenceLink,
   trainingDay,
   useTrainingLog,
   type Occurrence,
+  plannedItems,
 } from "@sendtally/features/training";
 import { workoutMinutes, type LibraryWorkout, type WorkoutUse } from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
@@ -24,9 +24,9 @@ import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { HistoryList } from "../history/HistoryList";
-import { activityItem, hangItem, ofWorkout } from "../history/historyItems";
+import { activityItem, hangItem, ofWorkout } from "@sendtally/features/activities";
 import { useLibrary, useNextSession } from "../library/useLibrary";
-import type { AddFlow } from "../planning/flowParams";
+import type { AddFlow } from "@sendtally/features/training";
 import { AddButton } from "../planning/AddButton";
 import { useDayChanges } from "../plan-days/useDayChanges";
 import { PlanList } from "../plans/PlanList";
@@ -88,10 +88,7 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
           activityItem(a, model.settings.units)
         )
       : ofWorkout(model.sessions, workout.id).map((s) => hangItem(s, model));
-  const planned =
-    run === undefined
-      ? undefined
-      : { link: occurrenceLink(run), items: run.items, session: run.session };
+  const planned = run === undefined ? undefined : plannedItems(run);
   const missed = run?.status === "missed";
   const logIt = (
     <LogItButton

@@ -5,7 +5,7 @@ import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { LiveClock } from "../../../components/LiveClock";
 import { LIVE_HEADER, MinimiseButton } from "../../../components/MinimiseButton";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
 import { Label } from "./Label";
 import { Title } from "./Title";

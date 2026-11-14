@@ -1,12 +1,10 @@
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
-import { useLoaderData, useSearchParams } from "react-router";
+import { useLoaderData } from "react-router";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
-import { sessionDraftStorage } from "../lib/sessionDraftStorage";
 import { useHydrated } from "../lib/useHydrated";
-import { storedDraft } from "@sendtally/features/log-session";
 import { LogSessionForm } from "../log-session/components/LogSessionForm";
 import areasStyles from "../areas/areas.css?url";
 import logSessionStyles from "../log-session/log-session.css?url";
@@ -29,16 +27,6 @@ export default function LogSessionRoute(): React.ReactElement {
   const { apiUrl } = useLoaderData<typeof loader>();
   const api = useClientApi(apiUrl);
   const hydrated = useHydrated();
-  const [searchParams] = useSearchParams();
-  const resumed =
-    hydrated && searchParams.get("resume") === "1" ? storedDraft(sessionDraftStorage) : null;
-  const title =
-    resumed === null
-      ? t("common.logASession")
-      : searchParams.get("wrapUp") === "1"
-        ? t("logSession.wrapUpTitle")
-        : resumed.name.trim() || t("sessions.unfinishedSession");
-
   return (
     <div>
       <BackLink to="/app">{t("journal.log")}</BackLink>
@@ -53,22 +41,8 @@ export default function LogSessionRoute(): React.ReactElement {
             letterSpacing: "-0.03em",
           }}
         >
-          {title}
+          {t("common.logASession")}
         </h1>
-        {resumed !== null && (
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontWeight: 500,
-              fontSize: 11,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "rgba(64,63,76,0.55)",
-            }}
-          >
-            {t("logSession.wrapUpSubtitle")}
-          </span>
-        )}
       </div>
       {/* The session starts on the visitor's clock, so the form waits for their browser. */}
       {hydrated && <LogSessionForm api={api} />}

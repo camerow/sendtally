@@ -12,7 +12,7 @@ import {
   type GradeScales,
 } from "../sessions/grades";
 import { isUnscored } from "../sessions/meta";
-import { durationLabel as minutesLabel, hasStart } from "../sessions/years";
+import { durationLabel, hasStart } from "../sessions/years";
 import type {
   ClimbFilter,
   ClimbResult,
@@ -20,15 +20,15 @@ import type {
   ClimbVM,
   GradeBarVM,
   PostingStatus,
-  PostStatusVM,
   SessionDetailVM,
   StatVM,
 } from "./types";
 import { BOARD_LABELS } from "./types";
 import { namesClimbAreas } from "./rows";
 
-export function durationLabel(startAt: string, endAt: string): string {
-  return minutesLabel(Math.max(0, Math.round((Date.parse(endAt) - Date.parse(startAt)) / 60_000)));
+/** How long a session ran, from its start to its end: "1h 30m". */
+export function spanLabel(startAt: string, endAt: string): string {
+  return durationLabel(Math.max(0, Math.round((Date.parse(endAt) - Date.parse(startAt)) / 60_000)));
 }
 
 function resultOf(c: SessionClimb, firstEncounter: boolean): ClimbResult {
@@ -149,67 +149,9 @@ export function postingStatus(status: ConnectionStatus | null): PostingStatus | 
   return { connected: true, active: strava.status === "active", since: strava.postSince };
 }
 
-function postedLabel(session: SessionDetail, start: Date): string {
-  const on = session.posted_at !== null ? new Date(session.posted_at) : start;
-  const day = formatDate(on, { month: "short", day: "numeric", timeZone: "UTC" });
-  return t("sessionDetail.postedOn", { date: day });
-}
-
-export function postStatusVM(
-  session: SessionDetail,
-  posting: PostingStatus | null,
-  start: Date
-): PostStatusVM {
-  const base = { detail: null, alert: false, action: null, actionLabel: null } as const;
-
-  if (session.strava_activity_id !== null) {
-    return { ...base, kind: "posted", label: postedLabel(session, start) };
-  }
-  if (session.source !== "manual") {
-    const board = BOARD_LABELS[session.board ?? ""] ?? t("sessions.boardSession");
-    return { ...base, kind: "legacy", label: t("sessionDetail.readOnlyHistory", { board }) };
-  }
-  if (session.post_state === "pending") {
-    return { ...base, kind: "pending", label: t("sessionDetail.postingToStrava") };
-  }
-
-  // Nothing to post to: no action, and no explanation the user can act on.
-  const postable = posting !== null && posting.connected && posting.active;
-
-  if (session.post_state === "failed") {
-    return {
-      kind: "failed",
-      label: t("sessionDetail.notPostedToStrava"),
-      detail: session.post_error,
-      alert: true,
-      action: postable ? "retry" : null,
-      actionLabel: postable ? t("sessionDetail.retry") : null,
-    };
-  }
-  if (postable && posting.since !== null && session.start_at < posting.since) {
-    return {
-      kind: "before-start",
-      label: t("sessionDetail.notPostedToStrava"),
-      detail: t("sessionDetail.beforePostingStart"),
-      alert: false,
-      action: "post",
-      actionLabel: t("sessionDetail.postAnyway"),
-    };
-  }
-  return {
-    kind: "off",
-    label: t("sessionDetail.loggedManually"),
-    detail: null,
-    alert: false,
-    action: postable ? "post" : null,
-    actionLabel: postable ? t("sessionDetail.postToStrava") : null,
-  };
-}
-
 export function sessionDetailVM(
   session: SessionDetail,
   scales: GradeScales,
-  posting: PostingStatus | null = null,
   workedBefore: ReadonlySet<string> = new Set(),
   gymName: string | null = null
 ): SessionDetailVM {
@@ -250,7 +192,7 @@ export function sessionDetailVM(
       ? [
           {
             label: t("sessionDetail.statTime"),
-            value: durationLabel(session.start_at, session.end_at),
+            value: spanLabel(session.start_at, session.end_at),
             accent: false,
           },
         ]
@@ -301,7 +243,7 @@ export function sessionDetailVM(
     session.location === null
       ? null
       : t(session.location === "outdoor" ? "common.outdoor" : "common.indoor");
-  const length = timed ? durationLabel(session.start_at, session.end_at) : null;
+  const length = timed ? spanLabel(session.start_at, session.end_at) : null;
   const when = [
     `${weekday} ${dateLabel}`,
     ...(hasStart(session) ? [time] : []),
@@ -329,10 +271,5 @@ export function sessionDetailVM(
     bars,
     pyramid: sessionPyramid(session.climbs, scales),
     filterCounts,
-    post: postStatusVM(session, posting, start),
-    stravaUrl:
-      session.strava_activity_id !== null
-        ? `https://www.strava.com/activities/${session.strava_activity_id}`
-        : null,
   };
 }

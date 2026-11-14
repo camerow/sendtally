@@ -36,9 +36,9 @@ import { FocusField } from "../components/FocusField";
 import { Label } from "../components/Label";
 import { SheetSection } from "../components/SheetSection";
 import { Title } from "../components/Title";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
-import { clearLiveRun } from "../../live-session/liveRun";
+import { liveRun } from "../../live-session/liveRun";
 import { DoneDetails } from "./DoneDetails";
 import { ReadRow } from "./ReadRow";
 import { KindChips } from "./KindChips";
@@ -126,7 +126,7 @@ export function ActivityForm({
       void actions.saveActivity(activityFromDraft(id, draft));
       router.back();
     } else hang.save(draft);
-    if (live) clearLiveRun();
+    if (live) liveRun.clear();
   };
   const discard = (): void =>
     confirmDestructive({
@@ -135,7 +135,7 @@ export function ActivityForm({
       action: t("hang.discard"),
       onConfirm: () => {
         router.back();
-        clearLiveRun();
+        liveRun.clear();
       },
     });
   const name = draft.title.trim() || kindLabel(draft.kind);

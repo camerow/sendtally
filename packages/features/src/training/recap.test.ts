@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Activity, HangSessionRecord } from "@sendtally/api-client";
 import type { DatedBlock, PlanChange, Workout } from "@sendtally/core/hang";
 import type { TrainingLog } from "./days";
+import { currentBlockLine } from "./blockText";
 import { blockDone, blockRecap, blockTagOf } from "./recap";
 
 // Mondays from 28 September for two weeks.
@@ -235,5 +236,17 @@ describe("blockTagOf", () => {
   it("says nothing for a session outside a block's workouts", () => {
     expect(blockTagOf(plan, "m2", "2026-10-06")).toBeNull();
     expect(blockTagOf(plan, null, "2026-10-06")).toBeNull();
+  });
+});
+
+describe("currentBlockLine", () => {
+  it("names the block running today, how far in and how much is done", () => {
+    const line = currentBlockLine(log([activity("2026-09-28")]), "2026-10-06");
+    expect(line?.block.id).toBe("b1");
+    expect(line?.meta).toBe("Week 2 of 2 · 1 of 4 done");
+  });
+
+  it("is null outside a block", () => {
+    expect(currentBlockLine(log([]), "2026-10-30")).toBeNull();
   });
 });

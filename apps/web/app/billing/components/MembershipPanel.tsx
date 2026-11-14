@@ -89,7 +89,7 @@ function LedgerRow({ row, link }: { row: MembershipPanelRow; link: boolean }): R
     );
   }
   return (
-    <Link to={`/app/trends/${row.metric}`} style={style}>
+    <Link to="/app/stats" style={style}>
       {bars}
       {text}
       <span style={{ ...panelEyebrow, fontSize: 11 }}>{t("billing.openTrend")} →</span>
@@ -101,7 +101,7 @@ export type MembershipPanelProps = {
   eyebrow: string;
   title: string;
   body?: string;
-  /** Members get the ledger rows as links into the trends they unlock. */
+  /** Members get the ledger rows as links into the stats they unlock. */
   linkRows?: boolean;
   /** The action strip at the bottom: price and checkout, or status and manage. */
   children: React.ReactNode;

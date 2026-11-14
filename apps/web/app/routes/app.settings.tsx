@@ -9,6 +9,7 @@ import { useGradeScales, useSettings, useStravaPosting } from "@sendtally/featur
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { getMembership } from "../lib/billing.server";
 import { useClientApi } from "../lib/useClientApi";
+import { useIsModerator } from "../lib/useIsModerator";
 import { SettingsView } from "../settings/components/SettingsView";
 
 type LoaderData = { apiUrl: string; membership: MembershipStatus };
@@ -28,6 +29,7 @@ export default function SettingsRoute(): React.ReactElement {
   const posting = useStravaPosting(api, vm, reload);
   const scales = useGradeScales(api, vm, reload);
   const gyms = useGyms(api);
+  const moderator = useIsModerator();
 
   return (
     <SettingsView
@@ -38,6 +40,7 @@ export default function SettingsRoute(): React.ReactElement {
       scales={scales}
       gyms={gyms.gyms}
       gymsReady={gyms.ready}
+      moderator={moderator}
     />
   );
 }

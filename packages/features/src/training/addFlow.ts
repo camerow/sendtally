@@ -1,0 +1,35 @@
+import { isCalendarDate, type Block, type CalendarDate } from "@sendtally/core/hang";
+import { shortDate } from "../hang/format";
+import { t } from "../i18n";
+import { blockName } from "./blockText";
+
+/** Where an add started: a day to schedule on, or a block to add to. */
+export type AddFlow = { date: CalendarDate | null; blockId: string | null };
+
+export type RawAddParams = { date?: string; blockId?: string };
+
+/** The add flow a route was opened with, ignoring what is not a real date. */
+export function addFlowOf(p: RawAddParams): AddFlow {
+  return {
+    date: p.date !== undefined && isCalendarDate(p.date) ? p.date : null,
+    blockId: p.blockId === undefined || p.blockId === "" ? null : p.blockId,
+  };
+}
+
+/** The add flow as route params, leaving out what it has not got. */
+export function addFlowParams(flow: AddFlow): RawAddParams {
+  return {
+    ...(flow.date === null ? {} : { date: flow.date }),
+    ...(flow.blockId === null ? {} : { blockId: flow.blockId }),
+  };
+}
+
+/** Where the add goes, the sheet's title saying what it does: the day, or the block. */
+export function addKicker(flow: AddFlow, blocks: readonly Block[]): string {
+  const block = flow.blockId === null ? undefined : blocks.find((b) => b.id === flow.blockId);
+  return flow.date !== null
+    ? shortDate(flow.date)
+    : block !== undefined
+      ? blockName(block)
+      : t("plan.addToPlan");
+}

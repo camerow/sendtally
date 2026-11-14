@@ -16,22 +16,26 @@ const linkStyle: React.CSSProperties = {
   textDecoration: "none",
 };
 
-export function Footer(): React.ReactElement {
+export type FooterProps = {
+  stores?: boolean;
+};
+
+export function Footer({ stores = true }: FooterProps): React.ReactElement {
   const { copy } = useLanding();
   return (
     <div className="l-footer">
-      <AppStores />
+      {stores && <AppStores />}
       <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "rgba(64,63,76,0.58)" }}>
         {copy.footer.line}
       </span>
-      <div style={{ display: "flex", gap: 22 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 22px" }}>
         {copy.footer.links.map(({ label, href }) => (
           <a key={label} href={href} style={linkStyle}>
             {label}
           </a>
         ))}
       </div>
-      <div style={{ display: "flex", gap: 22 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 22px" }}>
         {LANGUAGES.map(({ label, href }) => (
           <a
             key={href}

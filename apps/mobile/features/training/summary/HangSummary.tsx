@@ -7,15 +7,14 @@ import { gripSessions, hangGrid, pastSessions } from "@sendtally/features/activi
 import { newBestOf, type HangActions, type HangModel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
-import type { TrainingLog } from "@sendtally/features/training";
+import { type TrainingLog, KIND_LOOK } from "@sendtally/features/training";
 import { HistoryList } from "../history/HistoryList";
-import { hangItem } from "../history/historyItems";
-import { KIND_LOOK } from "../today/kindLook";
+import { hangItem } from "@sendtally/features/activities";
 import { GripTrend } from "./GripTrend";
 import { HangResultCard } from "./HangResultCard";
 import { NewBestCard } from "./NewBestCard";
 import { SummaryFrame } from "./SummaryFrame";
-import { effortTile } from "./summaryText";
+import { effortTile } from "@sendtally/features/activities";
 
 export type HangSummaryProps = {
   session: HangSessionRecord;

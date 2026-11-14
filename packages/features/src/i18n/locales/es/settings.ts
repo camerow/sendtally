@@ -4,13 +4,13 @@ export const settings = {
     "La escala en la que registras. Lo que ya has registrado conserva la escala con la que se introdujo.",
   "settings.stravaActive":
     "Vinculado a tu cuenta de Strava. Las sesiones que registres pueden publicarse en tu feed como actividades Rock Climbing.",
-  "settings.stravaLapsedMobile":
+  "settings.stravaLapsed":
     "El acceso a Strava ha caducado. Vuelve a vincularlo y tus sesiones podrán publicarse de nuevo en tu feed.",
-  "settings.stravaNotConnectedMobile":
+  "settings.stravaConnectBody":
     "Cada sesión registrada puede publicarse en tu feed como actividad Rock Climbing. Lo apruebas en strava.com y puedes revocarlo allí cuando quieras.",
   "settings.postingOn":
     "Las sesiones registradas se publican en tu feed como actividades Rock Climbing.",
-  "settings.postingOffMobile":
+  "settings.postingOff":
     "Desactivado. Cada página de sesión conserva su propio botón Publicar en Strava.",
   "settings.postSince": "Publicar sesiones registradas desde",
   "settings.postSinceBody": "Todo lo anterior se queda solo en sendtally.",
@@ -23,28 +23,15 @@ export const settings = {
   "settings.stravaNotConnected": "No conectado",
   "settings.stravaConnected": "Conectado",
   "settings.stravaReconnectNeeded": "Hay que volver a conectar",
-  "settings.relink": "Volver a vincular",
-  "settings.stravaLapsed":
-    "El acceso a Strava ha caducado. Vuelve a vincularlo para publicar tus sesiones de nuevo.",
-  "settings.stravaConnectBody":
-    "Conecta Strava y tus sesiones registradas podrán publicarse en tu feed como actividades Rock Climbing.",
   "settings.relinkStrava": "Volver a vincular Strava",
-  "settings.postToStrava": "Publicar sesiones en Strava",
-  "settings.postingOff":
-    "Desactivado. Las sesiones se quedan en sendtally y cada una conserva una acción Publicar en Strava en su propia página.",
-  "settings.membershipPitch":
-    "La suscripción desbloquea tendencias e ideas sobre tus hábitos de escalada.",
-  "settings.billedThrough": "Se cobra a través de {store}. Gestiónala allí.",
   "settings.openingStrava": "Abriendo Strava…",
   "settings.stravaUnreachable": "No se pudo conectar con Strava. Inténtalo de nuevo.",
   "settings.embeddedBundle": "Integrado",
   "settings.yourData": "Tus datos",
   "settings.yourDataBody":
-    "Trae un historial de escalada desde una hoja de cálculo o una exportación de Kaya, o llévate todo lo que has registrado aquí.",
+    "Trae un historial de escalada desde una hoja de cálculo o la exportación de otra app de escalada, o llévate todo lo que has registrado aquí.",
   "settings.importCsv": "Importar CSV",
   "settings.exportCsv": "Exportar CSV",
-  "settings.exportBodyMobile":
-    "Llévate todo lo que has registrado aquí en un archivo CSV. La importación se hace en sendtally.com.",
   "settings.exportSaved": "Guardado en la carpeta que elegiste.",
   "settings.exportFailed": "La exportación no salió bien. Inténtalo de nuevo en un momento.",
   "settings.weightUnit": "Unidad de peso",
@@ -55,4 +42,17 @@ export const settings = {
   "settings.postTraining": "Publicar otros entrenamientos",
   "settings.postTrainingBody":
     "Fuerza, carrera, yoga y movilidad se publican como actividades propias.",
+  "settings.assistant": "Conectar un asistente de IA",
+  "settings.assistantBody":
+    "Deja que Claude o ChatGPT importe un registro de escalada antiguo y cree entrenamientos y bloques a partir de tu historial.",
+  "settings.assistantUrl": "URL del conector",
+  "settings.copyUrl": "Copiar URL",
+  "settings.assistantClaude":
+    "Abre Ajustes, luego Conectores, y elige Añadir conector personalizado. Pega la URL e inicia sesión en sendtally.",
+  "settings.assistantChatgpt":
+    "Activa el modo desarrollador, añade un servidor MCP, pega la URL e inicia sesión en sendtally.",
+  "settings.assistantUntested": "Pasos esperados, aún sin probar.",
+  "settings.assistantRevoke":
+    "Para desconectar, quita sendtally en los ajustes de conectores del asistente.",
+  "settings.assistantLearnMore": "Qué puede hacer un asistente",
 } as const;

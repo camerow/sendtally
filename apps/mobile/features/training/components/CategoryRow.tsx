@@ -5,7 +5,7 @@ import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { pressRow } from "../../../lib/press";
 import { CategoryMark } from "../library/CategoryMark";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
 
 export type CategoryRowProps = {

@@ -4,7 +4,7 @@ import { colors } from "@sendtally/design/tokens";
 import { pressRow } from "../../../lib/press";
 import { EffortMark } from "../components/EffortMark";
 import { type } from "../type";
-import type { HistoryItem } from "./types";
+import type { HistoryItem } from "@sendtally/features/activities";
 
 export type HistoryRowProps = { item: HistoryItem; onPress: () => void };
 

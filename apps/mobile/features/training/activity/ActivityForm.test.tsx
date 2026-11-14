@@ -20,7 +20,10 @@ jest.mock("expo-router", () => ({
   router: { back: jest.fn(), push: jest.fn(), dismiss: jest.fn() },
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "w-new" }));
-jest.mock("@sendtally/features/workouts", () => ({ useWorkoutActions: () => mockWorkouts }));
+jest.mock("@sendtally/features/workouts", () => ({
+  ...jest.requireActual<object>("@sendtally/features/workouts"),
+  useWorkoutActions: () => mockWorkouts,
+}));
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("@sendtally/features/activities", () => {
   const actual = jest.requireActual<typeof Activities>("@sendtally/features/activities");

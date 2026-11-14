@@ -1,6 +1,6 @@
 import { Redirect, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { readWorkoutRun } from "../../features/training/data/workoutRunParams";
+import { readWorkoutRun } from "@sendtally/features/workouts";
 import { SetsScreen } from "../../features/training/sets/SetsScreen";
 
 export default function SetsRoute(): React.ReactElement {

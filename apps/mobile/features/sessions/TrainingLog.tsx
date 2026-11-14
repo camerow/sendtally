@@ -1,12 +1,7 @@
 import React from "react";
 import { RefreshControl, SectionList, Text, View, type ViewToken } from "react-native";
 import { monthScopeItems, logCountLabel, logYearGroups } from "@sendtally/features/sessions";
-import {
-  logItemWorkout,
-  logScopeItems,
-  logWorkoutItems,
-  type LogItem,
-} from "@sendtally/features/journal";
+import { logWorkoutName, trainingLogItems, type LogItem } from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
 import { entryRowHeight } from "../journal/EntryRow";
@@ -79,17 +74,11 @@ export function TrainingLog({
   const [currentKey, setCurrentKey] = React.useState<string | null>(null);
   const all = React.useMemo(() => items ?? [], [items]);
 
-  const inScope = React.useMemo(() => {
-    const scoped = logScopeItems(all, filters.scope);
-    return workout === null ? scoped : logWorkoutItems(scoped, workout);
-  }, [all, filters.scope, workout]);
-  const workoutName = React.useMemo(
-    () =>
-      workout === null
-        ? null
-        : (all.map(logItemWorkout).find((w) => w?.key === workout)?.name ?? null),
-    [all, workout]
+  const inScope = React.useMemo(
+    () => trainingLogItems(all, filters.scope, workout),
+    [all, filters.scope, workout]
   );
+  const workoutName = React.useMemo(() => logWorkoutName(all, workout), [all, workout]);
 
   const { sections, scopeItems } = React.useMemo(() => {
     const years = logYearGroups(inScope);

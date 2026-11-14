@@ -6,7 +6,7 @@ import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
 import { canCompareGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
-  exerciseKey,
+  exerciseByKey,
   useExercises,
   type ExerciseGroupKind,
   type ExerciseGroupVM,
@@ -16,7 +16,7 @@ import { press } from "../../../lib/press";
 import { HangIcon } from "../components/HangIcon";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
-import { KIND_LOOK } from "../today/kindLook";
+import { KIND_LOOK } from "@sendtally/features/training";
 import { ExerciseTrendRow } from "./ExerciseTrendRow";
 
 /** Every exercise in range, grouped by kind, the most done first; each opens its trend, a grip its own screen. */
@@ -34,10 +34,7 @@ export function ExerciseGroups({
   const openOf = (kind: ExerciseGroupKind, key: string): (() => void) | undefined => {
     if (kind === "hangboard")
       return () => router.push({ pathname: "/grip/[id]", params: { id: key } });
-    const exercise =
-      exercises.status === "ready"
-        ? exercises.data.find((e) => exerciseKey(e.name) === key)
-        : undefined;
+    const exercise = exercises.status === "ready" ? exerciseByKey(exercises.data, key) : undefined;
     return exercise === undefined
       ? undefined
       : () => router.push({ pathname: "/exercise/[id]", params: { id: exercise.id } });

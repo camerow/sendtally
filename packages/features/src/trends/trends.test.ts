@@ -7,9 +7,7 @@ import type {
   SessionWithClimbs,
 } from "@sendtally/api-client";
 import { bucketsFor } from "./buckets";
-import { daysVM } from "./days";
-import { enduranceVM } from "./endurance";
-import { gradeTap, isRefined, resetFilter, withPlace, withScope } from "./filter";
+import { gradeTap } from "./filter";
 import { trendsVM } from "./overview";
 import { DEFAULT_TREND_FILTER, type TrendFilter, type TrendTileVM, type TrendsVM } from "./types";
 import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
@@ -274,7 +272,7 @@ describe("trendsVM", () => {
     const vm = trendsVM(
       gymRows,
       [gym],
-      withScope(filter({ range: "1m" }), "circuit", "g1"),
+      filter({ range: "1m", scope: "circuit", gymId: "g1", setting: "indoor" }),
       SCALES,
       NOW
     );
@@ -331,81 +329,6 @@ describe("filter helpers", () => {
     const first = gradeTap(null, 6);
     expect(first).toEqual({ grade: { lo: 6, hi: 6 }, anchor: 6 });
     expect(gradeTap(first.anchor, 3)).toEqual({ grade: { lo: 3, hi: 6 }, anchor: null });
-  });
-
-  it("clears the grade and the gym when the scope changes", () => {
-    const f = withScope(filter({ grade: { lo: 3, hi: 4 } }), "circuit", "g1");
-    expect(f).toMatchObject({ scope: "circuit", gymId: "g1", setting: "indoor", grade: null });
-    expect(withScope(f, "route")).toMatchObject({ scope: "route", gymId: null, setting: "all" });
-    expect(withPlace(f, "outdoor", null)).toMatchObject({
-      scope: "boulder",
-      setting: "outdoor",
-      gymId: null,
-    });
-  });
-
-  it("knows when anything is refined and resets it all but the scope", () => {
-    const f = filter({ scope: "route", grade: { lo: 1, hi: 2 }, tags: ["x"] });
-    expect(isRefined(f)).toBe(true);
-    expect(resetFilter(f)).toEqual(filter({ scope: "route" }));
-    expect(isRefined(resetFilter(f))).toBe(false);
-  });
-});
-
-describe("enduranceVM", () => {
-  const circuit = (laps: number[], name = "Blue ARC"): ClimbSpec => ({
-    vGrade: 3,
-    name,
-    style: "redpoint",
-    tries: 1,
-    endurance: { unit: "moves", target: 40, laps },
-  });
-
-  it("draws the pump curve and reads where it fades", () => {
-    const rows = [
-      session("2026-07-01T18:00:00.000Z", [circuit([40, 40, 30])]),
-      session("2026-07-10T18:00:00.000Z", [circuit([40, 40, 20, 10])]),
-    ];
-    const vm = enduranceVM(rows, "3m", NOW);
-    const curve = vm.tiles.find((t) => t.id === "pumpCurve")!;
-    expect(curve.points.map((p) => p.a)).toEqual([100, 100, 62.5, 25]);
-    expect(vm.insight).toBe("You hold 95%+ for 2 laps, then fade to 25% by lap 4.");
-    expect(vm.stats.find((s) => s.key === "moves")?.value).toBe("220");
-    expect(vm.circuits).toEqual([
-      expect.objectContaining({
-        label: "Blue ARC",
-        sets: 2,
-        laps: 7,
-        rate: "57%",
-        best: "2 in a row",
-        trend: "▼ 17 pts",
-      }),
-    ]);
-  });
-});
-
-describe("daysVM", () => {
-  it("colours the calendar and counts weekly streaks", () => {
-    const rows = [
-      session("2026-08-05T18:00:00.000Z", [{ vGrade: 3 }]),
-      session("2026-07-29T18:00:00.000Z", [{ vGrade: 3 }], {
-        location: "outdoor",
-        tags: [tag("Bishop")],
-      }),
-      session("2026-07-01T18:00:00.000Z", [{ vGrade: 3 }], { tags: [tag("Bishop")] }),
-    ];
-    const vm = daysVM(rows, [], NOW);
-    const cells = vm.weeks.flat();
-    expect(cells.filter((c) => c.state === "indoor")).toHaveLength(2);
-    expect(cells.find((c) => c.state === "outdoor")?.detail).toBe(
-      "Outside, Bishop · 1 climb · RPE 6"
-    );
-    expect(vm.stats.find((s) => s.key === "current")?.value).toBe("2 weeks");
-    expect(vm.stats.find((s) => s.key === "break")?.value).toBe("27 days");
-    expect(vm.tags).toEqual([
-      expect.objectContaining({ name: "Bishop", inside: 1, outside: 1, total: 2 }),
-    ]);
-    expect(vm.weeks.every((w) => w.length === 7)).toBe(true);
   });
 });
 

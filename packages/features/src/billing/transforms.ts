@@ -100,3 +100,14 @@ export function membershipVM(
     renewalLine: null,
   };
 }
+
+/** The one line under the membership status saying what it is and where it is billed. */
+export function membershipSummary(vm: MembershipVM): string {
+  if (!vm.active) return t("settings.membershipFree");
+  if (vm.managedIn === "play_store" || vm.managedIn === "app_store") {
+    const plan = vm.plan === null ? t("common.membership") : planLabel(vm.plan);
+    return t("settings.membershipStore", { plan, store: storeName(vm.managedIn) });
+  }
+  if (vm.managedIn === "web") return t("settings.membershipWeb");
+  return t("billing.activeOnAccount");
+}

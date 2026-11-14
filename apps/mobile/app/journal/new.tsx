@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { t } from "@sendtally/features/i18n";
 import {
   ENTRY_KINDS,
-  emptyDraft,
+  emptyEntryDraft,
   newEntryHeading,
   today,
   useLogRows,
@@ -29,7 +29,7 @@ export default function NewEntryScreen(): React.ReactElement {
 
   const initial = React.useMemo(
     () => ({
-      ...emptyDraft(kindParam(params.kind), params.date ?? today()),
+      ...emptyEntryDraft(kindParam(params.kind), params.date ?? today()),
       fingerprints: params.session === undefined ? [] : [params.session],
       parentId: params.parent ?? "",
     }),

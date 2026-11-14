@@ -4,7 +4,7 @@ import type { Dose, WeightUnit } from "@sendtally/core/hang";
 import { TimeField } from "../../../components/TimeField";
 import type { FieldSlot } from "../../../components/useFieldOrder";
 import { NumberField } from "../components/NumberField";
-import { fieldLimits, fieldValue, withField, type DoseField } from "./doseFields";
+import { fieldLimits, fieldValue, withField, type DoseField } from "@sendtally/features/workouts";
 
 export type DoseInputProps = FieldSlot & {
   field: DoseField;

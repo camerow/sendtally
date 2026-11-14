@@ -1,0 +1,50 @@
+import type { WorkoutKind } from "@sendtally/core/hang";
+import { colors } from "@sendtally/design/tokens";
+
+export type KindLook = {
+  ink: string;
+  tint: string;
+  onDark: string;
+  /** The mark: width, height and corner radii clockwise from top left. */
+  shape: MarkShape;
+};
+
+export type MarkShape = { width: number; height: number; radii: readonly number[] };
+
+const corners = (tl: number, tr: number, br: number, bl: number): { radii: number[] } => ({
+  radii: [tl, tr, br, bl],
+});
+
+/** One colour and mark shape per discipline, wherever a day's items show. */
+export const KIND_LOOK: Record<WorkoutKind, KindLook> = {
+  climbing: {
+    ink: colors.azureInk,
+    tint: colors.climbingTint,
+    onDark: colors.dataAzureSoft,
+    shape: { width: 8, height: 8, ...corners(4, 4, 4, 4) },
+  },
+  hangboard: {
+    ink: colors.petalInk,
+    tint: colors.hangboardTint,
+    onDark: colors.petal,
+    shape: { width: 8, height: 8, ...corners(2, 2, 2, 2) },
+  },
+  strength: {
+    ink: colors.fern,
+    tint: colors.strengthTint,
+    onDark: colors.dataFernSoft,
+    shape: { width: 11, height: 5, ...corners(0, 0, 0, 0) },
+  },
+  mobility: {
+    ink: colors.gunmetal,
+    tint: colors.mobilityTint,
+    onDark: colors.white,
+    shape: { width: 8, height: 8, ...corners(4, 0, 4, 0) },
+  },
+  other: {
+    ink: colors.textSecondary,
+    tint: colors.otherTint,
+    onDark: colors.textOnDarkSecondary,
+    shape: { width: 6, height: 6, ...corners(1, 1, 1, 1) },
+  },
+};

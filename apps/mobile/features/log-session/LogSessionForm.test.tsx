@@ -103,6 +103,13 @@ describe("saving a new session", () => {
 });
 
 describe("each climb's area", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   /** The form's Add climb, not the open sheet's heading. */
   const addClimb = () => screen.getAllByText("Add climb")[0]!;
   const pickArea = async (): Promise<void> => {

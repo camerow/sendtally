@@ -50,7 +50,6 @@ export const common = {
   "common.discard": "Discard",
   "common.createAccount": "Create account",
   "common.signIn": "Sign in",
-  "common.trends": "Trends",
   "common.projects": "Projects",
   "common.open": "Open",
   "common.sentStatus": "Sent",
@@ -89,4 +88,5 @@ export const common = {
   "common.offline": "Offline",
   "common.addedTo": "Added to {name}",
   "common.view": "View",
+  "common.copied": "Copied",
 } as const;

@@ -135,6 +135,7 @@ describe("climbs by grade", () => {
       ["V5", "1 attempted"],
       ["V4", "1 sent"],
     ]);
+    expect(vm.byGradeTotal).toBe(4);
   });
 
   it("reads a named climb across its days and opens it", () => {
@@ -169,6 +170,7 @@ describe("climbs by grade", () => {
     );
     const v5 = vm.byGrade.find((g) => g.gradeLabel === "V5");
     expect(v5?.split).toBe("4 attempted");
+    expect(vm.byGradeTotal).toBe(7);
     expect(v5?.climbs).toEqual([
       {
         key: "2026-10-27T09:00:00.000Z:5",

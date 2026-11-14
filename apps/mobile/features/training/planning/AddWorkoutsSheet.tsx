@@ -6,7 +6,7 @@ import type { Block, CalendarDate } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { focusLabel, usePlan } from "@sendtally/features/training";
+import { focusLabel, usePlan, workoutLines, blockName } from "@sendtally/features/training";
 import { libraryShelves, type LibraryWorkout } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -20,9 +20,9 @@ import { LibrarySearch } from "../library/LibrarySearch";
 import { NewWorkoutSheet } from "../library/NewWorkoutSheet";
 import { useLibrary } from "../library/useLibrary";
 import { usePlanActions } from "../plan/usePlanActions";
-import { workoutLines } from "../plan/planGridRows";
+import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
 import { AddWorkoutRow, type AddState } from "./AddWorkoutRow";
-import { addFlowParams, addKicker, type AddFlow } from "./flowParams";
+import { addFlowParams, addKicker, type AddFlow } from "@sendtally/features/training";
 import { PlanAgainStart } from "./PlanAgainStart";
 import { ScheduleBlocks } from "./ScheduleBlocks";
 import { useAddTo } from "./useAddTo";
@@ -52,6 +52,7 @@ export function AddWorkoutsSheet({
 }: AddWorkoutsSheetProps): React.ReactElement {
   const { model, today } = useHangData();
   const actions = usePlanActions();
+  const prompt = useReminderPrompt();
   const newBlock = useNewBlock(t("plan.tab"));
   const [mode, setMode] = React.useState<"workout" | "block">("workout");
   const [picked, setPicked] = React.useState<Block | null>(null);
@@ -105,8 +106,9 @@ export function AddWorkoutsSheet({
     const made = await actions.copyBlock(b.id, id, start);
     setBusy(false);
     if (!made) return;
+    prompt();
     close();
-    onScheduled?.({ id, name: b.name || t("plan.untitled"), start });
+    onScheduled?.({ id, name: blockName(b), start });
   };
   const footer =
     picked !== null ? (
@@ -150,7 +152,7 @@ export function AddWorkoutsSheet({
         <View style={{ gap: 12, paddingBottom: 12 }}>
           {picked !== null ? (
             <SheetHeader
-              kicker={picked.name || t("plan.untitled")}
+              kicker={blockName(picked)}
               title={t("plan.planAgainStart")}
               action={t("common.cancel")}
               onAction={close}
