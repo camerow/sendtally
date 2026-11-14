@@ -233,7 +233,6 @@ Images transformations stay unused, because a canvas makes the two picture sizes
 | ---------------------------------- | ---------------------- | ------------ | ------------ |
 | Descriptions, links                | `Text`, `Linking`      | yes          | over the air |
 | Pictures and thumbnails            | React Native `Image`   | yes          | over the air |
-| Video in the in-app browser        | `expo-web-browser`     | yes          | over the air |
 | Video playing inline               | `react-native-webview` | no           | store build  |
 | Disk-cached images, list recycling | `expo-image`           | no           | store build  |
 
@@ -269,18 +268,17 @@ Built with what is installed, no new native module, over the air with pictures.
 
 ## YouTube videos (decisions 7 and 8)
 
-Will: "Maybe we can use youtube and in app-player instead of uploading our own videos?", then "store build is worth it".
-The target is an inline player; the in-app browser ships first as the stopgap and stays as the fallback.
+Will: "Maybe we can use youtube and in app-player instead of uploading our own videos?", then "store build is worth it", then "ship inline player right away ... we can use the items picture, and Ill be sure to make images for everything we support".
+Videos ship only as the inline player, in the store build; there is no in-app browser stopgap.
 
-### Two levels
+### The player
 
-- **In-app browser (over the air, ships with pictures in slice 3).** Tap opens the video's `youtube.com/watch` page in `expo-web-browser` (Safari View Controller on iOS, Custom Tabs on Android), already in the build and used for Strava connect.
-  It opens the watch page rather than an embed, because Safari View Controller cannot send a Referer and an embed opened top-level can fail with YouTube's error 153.
-  Slice 3 ships it so videos attached in moderation play from day one, and it stays as the fallback for every binary without the web view module, which is all of them until the store build is adopted.
-- **Inline player (store build, slice 4).** Tap swaps the poster for YouTube's player in a `react-native-webview` inside the same frame: a `youtube-nocookie.com/embed/<id>?playsinline=1&rel=0` iframe in an HTML page loaded with `baseUrl: "https://com.sendtally.app"`, which is the Referer YouTube asks WebViews to send.
-  16:9 at full width (390x219 pt on a 390 pt phone) meets the 200x200 minimum; it sits centred on black in the 4:3 frame.
-  The app checks whether the web view module is in the binary and falls back to the in-app browser when it is not, so one JavaScript bundle serves both.
-- Web: the same `youtube-nocookie.com` iframe in the frame, no module needed, shipping with slice 3.
+- Tap swaps the poster for YouTube's player in a `react-native-webview` inside the same frame: a `youtube-nocookie.com/embed/<id>?playsinline=1&rel=0` iframe in an HTML page loaded with `baseUrl: "https://com.sendtally.app"`, which is the Referer YouTube asks WebViews to send (without it the player shows error 153).
+- 16:9 at full width (390x219 pt on a 390 pt phone) meets the 200x200 minimum; it sits centred on black in the 4:3 frame.
+- `react-native-webview` is not in the build, so videos arrive with the store build (slice 4).
+  Older binaries keep running slice 3's JavaScript, which renders only `kind === "picture"`, so a video attached in moderation is simply absent there; the fingerprint keeps slice 4's JavaScript off them.
+- Web: the same `youtube-nocookie.com` iframe in the frame, shipping with slice 4 so both platforms get videos together.
+- Considered and dropped (Will, "ship inline player right away"): opening the `youtube.com` watch page in the in-app browser over the air as a stopgap.
 
 ### What YouTube's policies require
 
@@ -298,8 +296,9 @@ From https://developers.google.com/youtube/terms/developer-policies and https://
 
 ### Poster
 
-- The poster is the item's own first picture when it has one, so the app makes no request to Google until a tap.
-- Without a picture it is YouTube's thumbnail loaded live from `i.ytimg.com`, which is a request to Google and is named in the privacy page; it is never copied to R2, because the policies forbid storing it.
+- The poster is always the item's own first picture, so the app makes no request to Google until a tap; YouTube's thumbnails are never used, stored or loaded.
+- A video shows in the apps only once its item has a picture, the same rule as alt text; the moderation video row says "Hidden until this has a picture" until then.
+  Will makes a picture for every item that gets a video.
 
 ### Links in descriptions
 
@@ -343,10 +342,10 @@ Moderation strings are plain English literals.
 ## Privacy and analytics
 
 - Pictures come from our own domain on Cloudflare, already listed in `apps/web/app/routes/privacy.tsx`.
-- **New third party: Google (YouTube).** `privacy.tsx` names it: when you play a video, or open a screen whose video has no picture of ours, YouTube receives your device's IP address and the usual browser data, and privacy-enhanced mode keeps the view from personalising YouTube or its ads; it links to https://www.google.com/policies/privacy as YouTube requires.
+- **New third party: Google (YouTube).** `privacy.tsx` names it: when you play a video, YouTube receives your device's IP address and the usual browser data, and privacy-enhanced mode keeps the view from personalising YouTube or its ads; it links to https://www.google.com/policies/privacy as YouTube requires.
 - `apps/web/app/routes/terms.tsx` gains a line that videos are YouTube's, under YouTube's Terms of Service, with the link.
 - Add one line that links in descriptions lead to other sites, which have their own privacy terms.
-- Events, counts and enum strings only: `description_link_opened` {`item_type`: exercise | workout | block, `source`: library | mine} and `video_played` {`item_type`, `player`: inline | browser}.
+- Events, counts and enum strings only: `description_link_opened` {`item_type`: exercise | workout | block, `source`: library | mine} and `video_played` {`item_type`}.
   Moderation writes are logged in `library_changes`, not PostHog.
 
 ## Delivery slices
@@ -355,10 +354,10 @@ Moderation strings are plain English literals.
    Removes nothing; `LibraryIntro`'s plain text becomes the shared renderer.
 2. **Built-in library in D1 (over the air, largest).** Table, seed migration, `GET /v1/library`, the apps and Worker reading it, built-in exercises opening `ExerciseScreen`, moderation Library tab with text editing and Changes.
    Removes the built-in content constants, about 130 catalog keys in each of the four locales and the editor artifact; repoints `library-add`.
-3. **Pictures and YouTube in the in-app browser (over the air, plus Terraform).** Bucket, media host, Worker binding, picture upload, the hero on detail screens, media in the info sheet, list and picker thumbnails, alt and credit; YouTube links attached in moderation, posters, the in-app browser on mobile and the `youtube-nocookie.com` iframe on web; privacy and terms lines.
+3. **Pictures (over the air, plus Terraform).** Bucket, media host, Worker binding, picture upload, the hero on detail screens, pictures in the info sheet, the tile column on every list and picker row, alt and credit.
    Adds the R2 bucket; removes nothing.
-4. **Inline YouTube player (one store build).** `react-native-webview` for the inline player in the hero and the info sheet, including the live sheet for the current exercise, with the in-app browser kept as the fallback; `expo-image` swapped in for `Image` in the same build.
-   Removes nothing in code; drops `expo-video` from the plan.
+4. **YouTube videos, inline (one store build).** Attaching links in moderation, `react-native-webview` for the inline player in the hero and the info sheet, including the live sheet for the current exercise, the `youtube-nocookie.com` iframe on web, and the privacy and terms lines; `expo-image` swapped in for `Image` in the same build.
+   Removes nothing in code; drops `expo-video` and the in-app browser stopgap from the plan.
 5. **Ready-made blocks.** `library_items` type `block` once the Starter block lands; block media then comes for free.
 
 ## Deliberately left out
@@ -372,17 +371,13 @@ Moderation strings are plain English literals.
 
 ## Open decisions for Will
 
-1. Ship the in-app browser first, over the air, as the stopgap before the inline player's store build.
-   Recommendation: yes; it is a few lines, makes attached videos playable at once, and stays as the fallback for older binaries.
-2. Every row gets the 44 px tile, a picture or the kind's tinted square mark, replacing the round mark (Will's canvas comment on `TdmThumbs`).
+1. Every row gets the 44 px tile, a picture or the kind's tinted square mark, replacing the round mark (Will's canvas comment on `TdmThumbs`).
    Recommendation: as drawn; it is the one change that touches every library list, so it ships with pictures in slice 3.
-3. Retire the library editor artifact when slice 2 ships.
+2. Retire the library editor artifact when slice 2 ships.
    Recommendation: yes; one editor.
-4. Editing an English field clears its translations.
+3. Editing an English field clears its translations.
    Recommendation: yes, a stale German name is worse than an English one.
-5. Exercise and grip detail screens get the hero too, not only workouts (Will named workouts; `TdmHero` draws all three).
+4. Exercise and grip detail screens get the hero too, not only workouts (Will named workouts; `TdmHero` draws all three).
    Recommendation: yes, it is the same `ScreenFrame` prop and the same hero anatomy.
-6. Moderator tools on the connector (`save_library_item`) so an assistant can draft built-in descriptions.
+5. Moderator tools on the connector (`save_library_item`) so an assistant can draft built-in descriptions.
    Recommendation: later, after the moderation tab has been used by hand.
-7. A video without a picture of ours uses YouTube's live thumbnail as its poster, which is a request to Google before any tap.
-   Recommendation: accept it, disclosed in privacy; add a picture to any item where that matters.
