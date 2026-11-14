@@ -29,11 +29,6 @@ export function trialEndsAt(createdAt: string): string {
   return new Date(start + TRIAL_DAYS * DAY_MS).toISOString();
 }
 
-/** What every member gate asks: a live membership, or a trial still running. */
-export function hasAccess(entitlements: Entitlements, now = new Date()): boolean {
-  return entitlements.membership.active || Date.parse(entitlements.trial.endsAt) > now.getTime();
-}
-
 /**
  * A renewal, a transfer and a plain refresh all re-send the entitlement the
  * user already had, so only the ones missing a moment ago are a conversion.
@@ -75,11 +70,11 @@ export async function resolveEntitlements(
   user: AuthedUser,
   now = new Date()
 ): Promise<Entitlements> {
-  await repo.ensureUser(env.DB, user.userId);
   const [rows, account] = await Promise.all([
     repo.listStoreEntitlements(env.DB, user.userId),
     repo.getUser(env.DB, user.userId),
   ]);
+  if (account === null) await repo.ensureUser(env.DB, user.userId);
   const row = rows.find((r) => r.entitlement === STORE_ENTITLEMENT && isLive(r.expires_at, now));
   const web = user.hasFeature(INSIGHTS_FEATURE);
   const store =

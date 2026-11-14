@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { hasAccess, newlyGranted, trialEndsAt } from "../src/lib/entitlements";
+import { newlyGranted, trialEndsAt } from "../src/lib/entitlements";
 import { INSIGHTS_FEATURE, STORE_ENTITLEMENT, TRIAL_FLOOR } from "../src/features";
 import { storeEntitlementsOf, webhookUserIds } from "../src/lib/revenuecat";
 import { jsonResponse, makeFakeFetch, type RecordedCall } from "./fakes";
@@ -359,23 +359,6 @@ describe("trial", () => {
     expect(trialEndsAt(TRIAL_FLOOR)).toBe("2026-12-31T00:00:00.000Z");
   });
 
-  it("grants access while the trial runs and not from the moment it ends", () => {
-    const free = {
-      membership: { active: false, web: false, store: null },
-      trial: { endsAt: LATER },
-    };
-    expect(hasAccess(free, new Date("2027-03-10T11:59:59.999Z"))).toBe(true);
-    expect(hasAccess(free, new Date(LATER))).toBe(false);
-  });
-
-  it("grants access to a member whose trial is long over", () => {
-    const member = {
-      membership: { active: true, web: true, store: null },
-      trial: { endsAt: PAST },
-    };
-    expect(hasAccess(member, new Date(LATER))).toBe(true);
-  });
-
   it("answers the trial end from the account's sign-up", async () => {
     const { fetchImpl } = revenueCatFetch({});
     await env.DB.prepare(`INSERT INTO users (id, created_at) VALUES ('user_trial_1', ?)`)
@@ -390,5 +373,7 @@ describe("trial", () => {
     const { fetchImpl } = revenueCatFetch({});
     const { trial } = await entitlements(testApp(fetchImpl), "user_trial_new");
     expect(Date.parse(trial.endsAt)).toBeGreaterThan(Date.now());
+    const row = await env.DB.prepare(`SELECT id FROM users WHERE id = 'user_trial_new'`).first();
+    expect(row).not.toBeNull();
   });
 });
