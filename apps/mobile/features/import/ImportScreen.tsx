@@ -44,7 +44,6 @@ export function ImportScreen(): React.ReactElement {
   if (review === null) {
     return (
       <ScreenFrame
-        backLabel={t("common.settings")}
         footer={
           <Button variant="azure" label={t("import.chooseFile")} onPress={() => void pick()} />
         }
