@@ -16,6 +16,7 @@ import {
 } from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
+import { confirmDiscard, useDiscardGuard } from "../../../lib/useDiscardGuard";
 import { Button } from "../components/Button";
 import { DetailActions } from "../components/DetailActions";
 import { EditorHeader } from "../components/EditorHeader";
@@ -41,6 +42,7 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
   const plan = usePlan(api);
   const { log } = useTrainingLog(api);
   const draft = usePlanDraft(log.plan);
+  const release = useDiscardGuard(draft.dirty);
   const [adding, setAdding] = React.useState(false);
   const [added, setAdded] = useLit();
 
@@ -64,7 +66,10 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
   const dayless = members.filter((m) => !hasDays(scheduleOf(draft.plan, m)));
   const save = (): void => {
     draft.save();
-    if (members.length === 0) router.back();
+    if (members.length === 0) {
+      release();
+      router.back();
+    }
   };
 
   return (
@@ -72,7 +77,12 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
       backLabel={back}
       {...(draft.editing && {
         header: (
-          <EditorHeader title={t("plan.editOngoing")} onCancel={draft.cancel} onSave={save} solid />
+          <EditorHeader
+            title={t("plan.editOngoing")}
+            onCancel={draft.dirty ? () => confirmDiscard(draft.cancel) : draft.cancel}
+            onSave={save}
+            solid
+          />
         ),
       })}
       action={<DetailActions onEdit={draft.begin} />}

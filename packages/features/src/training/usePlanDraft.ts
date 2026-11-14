@@ -16,6 +16,8 @@ import { scheduleOf, toggleDay, type DaySchedule, type DayToggle } from "./weekD
 /** Edit mode over a plan: changes held as a draft until Save, dropped on Cancel. */
 export type PlanDraftState = {
   editing: boolean;
+  /** Something was changed since Edit, so Cancel and leaving ask first. */
+  dirty: boolean;
   /** The plan as the draft would leave it; the plan itself while reading. */
   plan: Plan;
   begin: () => void;
@@ -42,6 +44,7 @@ export function usePlanDraft(
     setDraft((d) => change(d ?? emptyPlanDraft));
   return {
     editing: draft !== null,
+    dirty: draft !== null && draft !== emptyPlanDraft,
     plan: shown,
     begin: () => setDraft(emptyPlanDraft),
     cancel: () => setDraft(null),

@@ -44,7 +44,7 @@ import { doseMeasureOf } from "@sendtally/features/workouts";
 import { ItemEditor } from "./ItemEditor";
 import type { AddFlow } from "@sendtally/features/training";
 import { useAddTo } from "../planning/useAddTo";
-import { confirmDestructive } from "../../../lib/confirmDestructive";
+import { useDiscardGuard } from "../../../lib/useDiscardGuard";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { TimeField } from "../../../components/TimeField";
 
@@ -98,6 +98,7 @@ function Editor({
   const [state, setState] = React.useState(initial);
   const estimate = estimatedMinutes(state);
   const [untouched] = React.useState(initial);
+  const release = useDiscardGuard(state !== untouched);
   const [picking, setPicking] = React.useState<{ swap: number } | "add" | null>(null);
   const exerciseNamed = (name: string) =>
     exercises.status === "ready"
@@ -115,26 +116,17 @@ function Editor({
 
   const save = (): void => {
     const saved = id ?? randomUUID();
+    release();
     void actions.saveWorkout(saved, draftOfEditor(state));
     if (adding !== undefined && id === undefined) addTo.add(saved);
     router.back();
-  };
-
-  const cancel = (): void => {
-    if (state === untouched) router.back();
-    else
-      confirmDestructive({
-        title: t("workouts.discardChangesTitle"),
-        action: t("common.discard"),
-        onConfirm: () => router.back(),
-      });
   };
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
       <EditorHeader
         title={id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout")}
-        onCancel={cancel}
+        onCancel={() => router.back()}
         onSave={save}
       />
       <KeyboardAvoidingView

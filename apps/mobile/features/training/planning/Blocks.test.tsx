@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { Alert, Text, type AlertButton } from "react-native";
@@ -76,7 +76,13 @@ const plan: Plan = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
 });
+
+const discard = async (): Promise<void> => {
+  const buttons = jest.mocked(Alert.alert).mock.lastCall?.[2];
+  await act(async () => buttons?.find((b) => b.style === "destructive")?.onPress?.());
+};
 
 describe("blocks", () => {
   it("makes a new block as an untitled four-week template and opens it at once to name", async () => {
@@ -144,11 +150,15 @@ describe("blocks", () => {
     });
     expect(screen.queryByText("Order")).toBeNull();
     await fireEvent.press(screen.getByText("Edit"));
+    await fireEvent.press(screen.getByText("Cancel"));
+    expect(Alert.alert).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText("Edit"));
     expect(screen.getByLabelText("Move Back squat up")).toBeDisabled();
     expect(screen.getByLabelText("Move Max hangs down")).toBeDisabled();
     await fireEvent.press(screen.getByLabelText("Move Max hangs up"));
     expect(screen.getByLabelText("Move Max hangs up")).toBeDisabled();
     await fireEvent.press(screen.getByText("Cancel"));
+    await discard();
     expect(mockPlan.saveDraft).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByText("Edit"));
     expect(screen.getByLabelText("Move Back squat up")).toBeDisabled();
@@ -167,6 +177,7 @@ describe("blocks", () => {
     expect(screen.getByLabelText("Name")).toHaveProp("value", "Winter base");
     await fireEvent.press(screen.getByLabelText("Increase Weeks"));
     await fireEvent.press(screen.getByText("Cancel"));
+    await discard();
     expect(screen.getByText("Mon, Oct 5 to Sun, Nov 1")).toBeTruthy();
     expect(mockPlan.saveDraft).not.toHaveBeenCalled();
   });
