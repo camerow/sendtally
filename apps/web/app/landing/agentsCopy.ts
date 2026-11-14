@@ -18,7 +18,7 @@ export const AGENTS = {
     points: [
       "A spreadsheet, a journal or another app's export",
       "Blocks and workouts built, then changed when you ask",
-      "Never edits or deletes a session you logged",
+      "Fixes a logged session when you ask, and asks before deleting one",
     ],
     more: "How it works ›",
     ask: {
@@ -67,8 +67,8 @@ export const AGENTS = {
       id: "change",
       eyebrow: "Change",
       title: "“Add a mobility flow to every Sunday of my block.”",
-      body: "Ask for a change and your agent edits the block, workout or exercise in place. Before it deletes anything, it asks you first.",
-      points: ["Sessions you already logged stay exactly as they are"],
+      body: "Ask for a change and your agent edits the session, block, workout or exercise in place. Before it deletes anything, it asks you first.",
+      points: ["A logged session changes only when you ask, and keeps its Strava activity"],
       media: [
         { key: "block", alt: "A training block: week chips and the week grid" },
         { key: "calendar", alt: "The calendar: a month with a block running" },
@@ -97,11 +97,11 @@ export const AGENTS = {
     items: [
       {
         q: "What can an agent see and change?",
-        a: "It reads your sessions, your training library and your plan. It can add sessions, and save, change and delete your exercises, workouts and blocks.",
+        a: "It reads your sessions, your training library and your plan. It can add, change and delete your sessions, and save, change and delete your exercises, workouts and blocks.",
       },
       {
         q: "Can it change or delete my logged sessions?",
-        a: "No. It adds sessions but never edits or deletes one already in your log. Do that in the app.",
+        a: "Yes, when you ask: an import that went wrong can be fixed or undone in one go. An edit works as it does in the app and keeps the session's Strava activity. Before it deletes, your agent names the sessions and asks you first; a deleted session cannot be restored, and an activity already on Strava stays there.",
       },
       {
         q: "Does it take my data from other apps?",
