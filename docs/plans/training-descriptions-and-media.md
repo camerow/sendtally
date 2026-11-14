@@ -9,9 +9,10 @@ The v3 page is untouched; it was read for reference only.
 | ----------------- | ------------------------------------------------- | ---------------------------- |
 | `TdmDescriptions` | Descriptions on detail screens                    | x 0, y 0                     |
 | `TdmWriting`      | Writing a description, and reading it mid-workout | x 0, y 1680                  |
-| `TdmThumbs`       | Thumbnails in lists and pickers                   | x 0, y ~3400                 |
-| `TdmMedia`        | Pictures and clips on detail screens              | x 0, y ~5100                 |
-| `TdmModLibrary`   | Moderation: Library tab                           | x 0, y ~6900                 |
+| `TdmThumbs`       | Thumbnails in lists and pickers                   | x 0, y 3320                  |
+| `TdmHero`         | A picture as the hero of a detail screen          | x 0, y 5060                  |
+| `TdmSheet`        | The info sheet holds the picture or clip          | x 0, y 7120                  |
+| `TdmModLibrary`   | Moderation: Library tab                           | x 0, below `TdmSheet`        |
 
 ## What the code says today
 
@@ -65,6 +66,7 @@ The brief's facts, checked against `main` at `fdae200c`.
    Collapsed past 5 lines with a More / Less text button.
 9. Live: the existing `WorkoutInfo` sheet for workouts; for the current exercise an info button after its name in `SetsCard`, and the existing info slot in `TimerHeader` for hangboard.
    The button exists only when there is a description or media.
+   Picker rows get the same info `IconButton` at the row end, opening the info sheet, while a tap on the row still ticks it.
 10. Built-in exercises open `ExerciseScreen` even before the user has picked one, with the hero, description, media and the existing "nothing logged" `DashedPanel`; no new screen type.
 11. The connector reads and writes descriptions on exercises and blocks too (`save_exercise`, `save_block`, `get_training_library`, `get_plan`).
 12. English only for new text (Will, decision 4).
@@ -84,8 +86,10 @@ The brief's facts, checked against `main` at `fdae200c`.
    A clip's poster is its first frame, captured in the browser, with the same two sizes.
 7. Each item has alt text (required, English only), an order and an optional credit line.
 8. Delivery: immutable keys (`library/<itemType>/<itemId>/<uuid>-<size>.jpg|.mp4`), `Cache-Control: public, max-age=31536000, immutable`, a Cache Everything rule on the media host so MP4s cache.
-9. Where it shows: exercise and grip detail screens, as the first section under the hero, one 4:3 frame with page dots and the credit in small muted mono.
-   **Changed (decision 5):** a workout with a picture shows its first picture as a full-bleed hero image behind the top of the screen, and the content scrolls up and over it; its other media sit in the 4:3 frame.
+9. Where it shows (`TdmHero`): on workout, exercise and grip detail screens, media is a full-bleed 4:3 hero behind the top of the screen, and the content scrolls up and over it.
+   Several items swipe sideways inside that one frame with page dots, and the credit sits in small muted mono under the title area; there is no second media frame, so everything below the hero stays exactly today's anatomy.
+   Blocks keep their header until ready-made blocks have media.
+   An item without media keeps today's screen exactly (decision 5, extended to exercises and grips on the board).
    A workout without a picture keeps today's screen exactly.
    **Changed (decision 6):** the info sheet (`WorkoutInfo`, and the exercise info button in R1.9) holds the item's media at the top with the same hero treatment and the description below; media only, description only, or both; neither means no info button.
    **Changed (decision 3):** items with a picture also show its thumbnail in list rows and pickers, 44x44 with a 2 px `KIND_LOOK` ink border in place of the category mark; items without keep today's row exactly.
@@ -253,8 +257,11 @@ Built with what is installed, no new native module, over the air with pictures.
 - The content below the spacer has an opaque white background, so scrolling slides it up and over the still picture.
   The picture never moves, so there is no scroll-driven animation to run or to switch off.
 - The bar (Back, Edit, ···) floats over the picture; its buttons sit on white circles, and a top gradient drawn with `react-native-svg` (installed) keeps the status bar legible, with `expo-status-bar` set to light while the picture is under it.
-- Pull to stretch on iOS overscroll is optional polish: a Reanimated scroll handler (Reanimated 4.5 is installed) scales the picture on a negative offset, off under reduced motion (`useReducedMotion`).
-  Without it, overscroll shows white between picture and content, so the default is to ship the stretch.
+- Several pictures swipe inside the hero with a horizontal paging `ScrollView` and page dots; the vertical scroll still covers the whole frame.
+- Pull to stretch is Deferred on the board.
+  Without it, iOS overscroll would show white between picture and content, so hero screens set `bounces={false}` on the scroll view; the stretch, when it comes, is a Reanimated scroll handler (Reanimated 4.5 is installed), off under reduced motion (`useReducedMotion`).
+- A clip tapped offline shows a Toast, "Can't play this offline" (`workouts.clipOffline`), checked with the installed `expo-network`; the play button's label is `workouts.playClip`.
+  Both keys go into all four catalogs.
 - Content shorter than the screen does not scroll; the screen reads as picture then content, which is the same design.
 - Web: the same layering in CSS alone.
   The picture is `position: sticky; top: 0` inside `DetailFrame`, capped at `max-height: 420px` with `object-fit: cover`, and the content follows with `position: relative`, a higher `z-index` and the page background.
@@ -317,7 +324,7 @@ Built with what is installed, no new native module, over the air with pictures.
    Recommendation: yes; one editor.
 4. Editing an English field clears its translations.
    Recommendation: yes, a stale German name is worse than an English one.
-5. Exercise detail screens get the hero image too, not only workouts (Will named workouts).
-   Recommendation: yes, one `ScreenFrame` prop; ship it on workouts first and add exercises if the workout screen reads well.
+5. Exercise and grip detail screens get the hero too, not only workouts (Will named workouts; `TdmHero` draws all three).
+   Recommendation: yes, it is the same `ScreenFrame` prop and the same hero anatomy.
 6. Moderator tools on the connector (`save_library_item`) so an assistant can draft built-in descriptions.
    Recommendation: later, after the moderation tab has been used by hand.
