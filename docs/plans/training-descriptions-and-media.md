@@ -11,7 +11,7 @@ The v3 page is untouched; it was read for reference only.
 | `TdmWriting`      | Writing a description, and reading it mid-workout | x 0, y 1680                  |
 | `TdmThumbs`       | Thumbnails in lists and pickers                   | x 0, y 3320                  |
 | `TdmHero`         | A picture as the hero of a detail screen          | x 0, y 5060                  |
-| `TdmSheet`        | The info sheet holds the picture or clip          | x 0, y 7120                  |
+| `TdmSheet`        | The info sheet holds the picture or video         | x 0, y 7120                  |
 | `TdmModLibrary`   | Moderation: a Library tab for the built-ins       | x 0, y 8960                  |
 
 ## What the code says today
@@ -91,7 +91,8 @@ The brief's facts, checked against `main` at `fdae200c`.
    An item without media keeps today's screen exactly (decision 5, extended to exercises and grips on the board).
    A workout without a picture keeps today's screen exactly.
    **Changed (decision 6):** the info sheet (`WorkoutInfo`, and the exercise info button in R1.9) holds the item's media at the top with the same hero treatment and the description below; media only, description only, or both; neither means no info button.
-   **Changed (decision 3):** items with a picture also show its thumbnail in list rows and pickers, 44x44 with a 2 px `KIND_LOOK` ink border in place of the category mark; items without keep today's row exactly.
+   **Changed (decision 3, then Will's canvas comment):** every list row and picker row gets one 44 px tile column: an item with a picture shows it inside a 2 px `KIND_LOOK` ink border, and every other item, including one with only a video, shows its kind's tint with its mark scaled up (a square `CategoryMark`).
+   The 36 px round mark leaves `CategoryRow` everywhere, and exercise and picker rows gain the tile, so mixed lists keep one column.
 10. Videos never autoplay: a poster and a play button; a tap plays.
     This one rule removes the reduced-motion and metered-connection branches, and it is also what YouTube's policies ask, since a loaded player shares data with YouTube.
 11. Offline: a cached picture shows; an uncached one shows the soft surface frame with its alt text.
@@ -220,7 +221,7 @@ Images transformations stay unused, because a canvas makes the two picture sizes
 - The moderation page sends the file straight to the Worker (`POST /v1/moderation/library/:type/:id/media`), which streams it into R2 through a bucket binding.
 - 5 MB fits well inside the 100 MB body limit, and it needs no S3 credentials, presigned URLs or bucket CORS; the role check is the existing gate.
 - The Worker checks the declared type against the allowlist (JPEG, PNG, WebP), the size, and the magic bytes, and rejects with a clear message.
-- Errors shown, one line per file: "Too large", "Use a JPEG, PNG or WebP"; a row without alt text says "Alt text is required" and stays hidden in the apps.
+- Errors shown, one line per file: "Too large", "Use JPEG, PNG or WebP"; a row without alt text says "Alt text is required" and stays hidden in the apps.
 - A video is attached with `POST /v1/moderation/library/:type/:id/videos` and a pasted link; the Worker reduces it to an 11-character video id (watch, `youtu.be`, shorts, embed and `youtube-nocookie.com` forms) or rejects it with "Not a YouTube video link".
   Nothing is fetched from YouTube on attach.
   Deleting a video removes only the row, so Restore works for videos.
@@ -311,7 +312,9 @@ The poster shows from cache when it is our picture; a tap offline shows the "Can
 
 ## Thumbnails, caching and list performance
 
-- One 144 px square JPEG per picture (around 10 KB), drawn at 44 pt; no server-side resizing.
+- Every row has the 44 pt tile (`TdmThumbs`): the picture's 144 px square JPEG (around 10 KB, made in the browser) inside the kind's border, or the kind's tint with a square `CategoryMark` when there is no picture.
+  No server-side resizing.
+- The round 36 px mark in `CategoryRow` is removed, and exercise rows and `PickerRow` gain the tile column, so this slice touches every library list, not only items with pictures.
 - Lists are short (at most about 80 rows per category) and rows are fixed-size, so `Image` with fixed dimensions is enough; `expo-image` replaces it in the store build.
 - A video never gives a list thumbnail: a thumbnail of YouTube content needs YouTube attribution in the row, and a stored copy is not allowed.
 - Immutable keys mean a replaced picture is a new URL, so no cache ever serves a stale image.
@@ -327,7 +330,7 @@ The poster shows from cache when it is our picture; a tap offline shows the "Can
 - The description textarea with "n of 2,000" beside a phone preview rendered by the apps' parser.
 - A Media card with "Add picture" and "Add YouTube video" (azure).
   A picture row has thumbnail, alt text, optional credit, "Picture · added <date> by <name>", up and down, and Delete (red outline, confirm says it is permanent).
-  A video row has the pasted link reduced to its id, a required title, "Video · added <date> by <name>", up and down, and Delete.
+  A video row has a required title, optional credit, "Video · youtu.be/<id> · added <date> by <name>", up and down, and Delete with no confirm; the Changes list shows "Video removed" with Restore.
   Media saves as it is added, not with Save.
 - The Changes list with Restore; rows for deleted picture files say "Permanent" instead, while a deleted video restores.
 - The Retire confirm says logs, plans and workouts keep it by name; Unretire lives under the Retired filter.
@@ -371,8 +374,8 @@ Moderation strings are plain English literals.
 
 1. Ship the in-app browser first, over the air, as the stopgap before the inline player's store build.
    Recommendation: yes; it is a few lines, makes attached videos playable at once, and stays as the fallback for older binaries.
-2. Thumbnails replace the category mark rather than sitting beside it (`TdmThumbs`).
-   Recommendation: replace, so rows keep their height.
+2. Every row gets the 44 px tile, a picture or the kind's tinted square mark, replacing the round mark (Will's canvas comment on `TdmThumbs`).
+   Recommendation: as drawn; it is the one change that touches every library list, so it ships with pictures in slice 3.
 3. Retire the library editor artifact when slice 2 ships.
    Recommendation: yes; one editor.
 4. Editing an English field clears its translations.
