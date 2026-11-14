@@ -82,6 +82,8 @@ export const importCsv = {
     "Las tendencias y los proyectos incluyen las sesiones importadas de inmediato. Abre cualquiera para añadir un RPE, etiquetas o notas.",
   "import.openLog": "Abrir el registro",
   "import.importAnother": "Importar otro archivo",
+  "import.likelyTitle_one": "{count} sesión parece una que ya está en tu registro",
+  "import.likelyTitle_other": "{count} sesiones parecen unas que ya están en tu registro",
   "import.likelyMatch": "Coincide con {name} en tu registro",
   "import.importAnyway_one": "Importarla igualmente",
   "import.importAnyway_other": "Importarlas igualmente",

@@ -79,6 +79,8 @@ export const importCsv = {
     "Trends and projects include the imported sessions straight away. Open any of them to add an RPE, tags or notes.",
   "import.openLog": "Open the log",
   "import.importAnother": "Import another file",
+  "import.likelyTitle_one": "{count} session looks like one already in your log",
+  "import.likelyTitle_other": "{count} sessions look like ones already in your log",
   "import.likelyMatch": "Matches {name} in your log",
   "import.importAnyway_one": "Import it anyway",
   "import.importAnyway_other": "Import them anyway",

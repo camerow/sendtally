@@ -82,6 +82,8 @@ export const importCsv = {
     "Les tendances et les projets incluent tout de suite les séances importées. Ouvre-en une pour ajouter un RPE, des tags ou des notes.",
   "import.openLog": "Ouvrir le journal",
   "import.importAnother": "Importer un autre fichier",
+  "import.likelyTitle_one": "{count} séance ressemble à une séance de ton journal",
+  "import.likelyTitle_other": "{count} séances ressemblent à des séances de ton journal",
   "import.likelyMatch": "Correspond à {name} dans ton journal",
   "import.importAnyway_one": "L'importer quand même",
   "import.importAnyway_other": "Les importer quand même",

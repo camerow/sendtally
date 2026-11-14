@@ -1,9 +1,16 @@
+import { CryptoDigestAlgorithm, digestStringAsync } from "expo-crypto";
 import { File } from "expo-file-system";
 import { getCalendars } from "expo-localization";
 import { router } from "expo-router";
 import React from "react";
 import { Text } from "react-native";
-import { planImport, type ImportPlan } from "@sendtally/core/import";
+import {
+  likelyDuplicates,
+  planImport,
+  type ImportPlan,
+  type ImportSession,
+  type LikelyDuplicate,
+} from "@sendtally/core/import";
 import { importAll } from "@sendtally/features/import";
 import { t } from "@sendtally/features/i18n";
 import { ScreenFrame } from "../../components/ScreenFrame";
@@ -15,7 +22,20 @@ import { ImportReview } from "./ImportReview";
 import { NotRecognized } from "./NotRecognized";
 import { SupportedApps } from "./SupportedApps";
 
-type Review = { fileName: string; plan: ImportPlan; busy: boolean; error: string | null };
+type Review = {
+  fileName: string;
+  plan: ImportPlan;
+  duplicates: LikelyDuplicate[];
+  importAnyway: boolean;
+  busy: boolean;
+  error: string | null;
+};
+
+function split(review: Review): { unflagged: ImportSession[]; importing: ImportSession[] } {
+  const flagged = new Set(review.duplicates.map((d) => d.index));
+  const unflagged = review.plan.sessions.filter((_, i) => !flagged.has(i));
+  return { unflagged, importing: review.importAnyway ? review.plan.sessions : unflagged };
+}
 
 /** Import a climbing history: which apps' exports it reads, the file picked, then a review to confirm. */
 export function ImportScreen(): React.ReactElement {
@@ -27,14 +47,26 @@ export function ImportScreen(): React.ReactElement {
     if (picked.canceled) return;
     const timeZone = getCalendars()[0]?.timeZone ?? "UTC";
     const plan = planImport(await picked.result.text(), timeZone);
-    setReview({ fileName: picked.result.name, plan, busy: false, error: null });
+    const log = await api.sessionsWithClimbs();
+    const duplicates = await likelyDuplicates(plan.sessions, log.sessions, (text) =>
+      digestStringAsync(CryptoDigestAlgorithm.SHA256, text)
+    );
+    setReview({
+      fileName: picked.result.name,
+      plan,
+      duplicates,
+      importAnyway: false,
+      busy: false,
+      error: null,
+    });
   };
 
   const confirm = async (current: Review): Promise<void> => {
     setReview({ ...current, busy: true, error: null });
     try {
-      const { imported, skipped } = await importAll(api, current.plan.sessions);
-      router.dismissTo({ pathname: "/profile", params: { imported, skipped } });
+      const { imported, skipped } = await importAll(api, split(current).importing);
+      const likely = current.importAnyway ? 0 : current.duplicates.length;
+      router.dismissTo({ pathname: "/profile", params: { imported, skipped, likely } });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       setReview({ ...current, busy: false, error: t("import.failed", { message }) });
@@ -55,6 +87,8 @@ export function ImportScreen(): React.ReactElement {
   }
 
   const usable = review.plan.sessions.length > 0;
+  const { unflagged, importing } = split(review);
+  const count = importing.length;
   return (
     <ScreenFrame
       backLabel={t("settings.importCsv")}
@@ -65,13 +99,9 @@ export function ImportScreen(): React.ReactElement {
             {review.error !== null && <Text style={messageText}>{review.error}</Text>}
             <Button
               variant="azure"
-              label={
-                review.busy
-                  ? t("import.importing")
-                  : t("import.confirm", { count: review.plan.sessions.length })
-              }
+              label={review.busy ? t("import.importing") : t("import.confirm", { count })}
               onPress={() => void confirm(review)}
-              disabled={review.busy}
+              disabled={review.busy || count === 0}
             />
           </>
         ) : (
@@ -80,7 +110,15 @@ export function ImportScreen(): React.ReactElement {
       }
     >
       {usable ? (
-        <ImportReview fileName={review.fileName} plan={review.plan} />
+        <ImportReview
+          fileName={review.fileName}
+          plan={review.plan}
+          duplicates={review.duplicates}
+          unflagged={unflagged}
+          importing={importing}
+          importAnyway={review.importAnyway}
+          onImportAnyway={(importAnyway) => setReview({ ...review, importAnyway })}
+        />
       ) : (
         <NotRecognized fileName={review.fileName} />
       )}
