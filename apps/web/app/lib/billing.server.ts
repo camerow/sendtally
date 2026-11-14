@@ -1,6 +1,6 @@
-import { redirect } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import type { MembershipStatus } from "@sendtally/api-client";
+import { hasAccess } from "@sendtally/features/billing";
 import { requireApi } from "./api.server";
 
 type Args = LoaderFunctionArgs | ActionFunctionArgs;
@@ -10,8 +10,8 @@ export async function getMembership(args: Args): Promise<MembershipStatus> {
   return (await api.entitlements()).membership;
 }
 
-export async function requireMembership(args: Args): Promise<MembershipStatus> {
-  const membership = await getMembership(args);
-  if (!membership.active) throw redirect("/app/membership");
-  return membership;
+/** A live membership or a trial still running: what every member gate asks. */
+export async function canAccess(args: Args): Promise<boolean> {
+  const api = await requireApi(args);
+  return hasAccess(await api.entitlements());
 }

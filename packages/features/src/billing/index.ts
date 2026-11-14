@@ -1,3 +1,4 @@
+export { hasAccess } from "./access";
 export { membershipPanel } from "./benefits";
 export type { MembershipPanel, MembershipPanelRow } from "./benefits";
 export {

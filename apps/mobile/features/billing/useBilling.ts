@@ -8,5 +8,5 @@ export function useBilling(): BillingContextValue | null {
 export function useCanSeeInsights(): boolean | null {
   const billing = useBilling();
   if (billing === null) return false;
-  return billing.membership.active;
+  return billing.membership.access;
 }
