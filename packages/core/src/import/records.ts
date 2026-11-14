@@ -82,8 +82,12 @@ function prefixLength(a: string[], b: string[]): number {
 }
 
 // The discipline settles a grade whose text reads as the other one: a 6c
-// boulder is Font 6C, a 7A route French 7a.
-export function gradeIn(text: string | undefined, boulder: boolean): string | undefined {
-  if (text === undefined || !/^\d[abc]\+?$/i.test(text)) return text;
+// boulder is Font 6C, a 7A route French 7a. With no discipline the text is
+// read as written.
+export function gradeIn(
+  text: string | undefined,
+  boulder: boolean | undefined
+): string | undefined {
+  if (text === undefined || boulder === undefined || !/^\d[abc]\+?$/i.test(text)) return text;
   return boulder ? text.toUpperCase() : text.toLowerCase();
 }

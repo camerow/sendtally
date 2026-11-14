@@ -66,7 +66,7 @@ const HEADERS: [Exclude<ImportFormat, "sendtally">, string[]][] = [
   ["kaya", ["date", "ascent_type", "grade", "climb_name"]],
   ["8a", ["route_boulder", "date", "type", "difficulty"]],
   ["mountainProject", ["date", "route", "rating", "location", "style", "lead_style"]],
-  ["sendage", ["date", "send_type", "climb", "climb_type", "grade", "area"]],
+  ["sendage", ["date", "send_type", "climb", "grade", "area"]],
   ["theCrag", ["route_name", "ascent_type", "route_grade", "crag_name", "ascent_date"]],
 ];
 
@@ -76,6 +76,15 @@ export function detectFormat(header: string[]): ImportFormat | null {
   if (found !== undefined) return found[0];
   if (names.includes("date") && names.includes("grade")) return "sendtally";
   return null;
+}
+
+const SENDTALLY = new Set<string>(SENDTALLY_COLUMNS);
+const SEND_RESULT_COLUMNS = new Set(["send_type", "ascent_type", "lead_style"]);
+
+// Another app's send result in a file read as ours would be dropped without a
+// word and every climb imported as a send, so the file is refused instead.
+function unreadColumn(header: string[]): string | undefined {
+  return header.find((h) => SEND_RESULT_COLUMNS.has(normaliseHeader(h)))?.trim();
 }
 
 export function planImport(text: string, timeZone: string): ImportPlan {
@@ -89,6 +98,14 @@ export function planImport(text: string, timeZone: string): ImportPlan {
   if (header === undefined || format === null) {
     return { format: "sendtally", sessions: [], issues: [{ row: 1, code: "noHeader" }] };
   }
+  const unread = format === "sendtally" ? unreadColumn(header) : undefined;
+  if (unread !== undefined) {
+    return {
+      format,
+      sessions: [],
+      issues: [{ row: lines[at]?.row ?? 1, code: "unreadColumn", value: unread }],
+    };
+  }
   const records = RECORDS[format](header, lines.slice(at + 1), timeZone);
   const { sessions, issues } = groupSessions(records, format === "sendtally");
   // Not one usable row means the file is some other layout, not a file of
@@ -100,8 +117,7 @@ export function planImport(text: string, timeZone: string): ImportPlan {
 }
 
 function sendtallyRecords(header: string[], rows: Line[]): Record[] {
-  const known = new Set<string>(SENDTALLY_COLUMNS);
-  return recordsOf(header, rows, (name) => (known.has(name) ? (name as Column) : undefined));
+  return recordsOf(header, rows, (name) => (SENDTALLY.has(name) ? (name as Column) : undefined));
 }
 
 const RECORDS: {

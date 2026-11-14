@@ -59,6 +59,8 @@ export const importCsv = {
   "import.issueBadRpe": '"{value}" is not an RPE from 1 to 10.',
   "import.issueBadLocation": '"{value}" is not indoor or outdoor.',
   "import.issueBadTime": '"{value}" is not a time in HH:MM form.',
+  "import.issueUnreadColumn":
+    '"{value}" is a column from another app\'s export that Sendtally cannot read here. Convert the file to the Sendtally format first.',
   "import.sessionsLabel": "Sessions",
   "import.showing": "newest first · showing {shown} of {total}",
   "import.showAll": "Show all {total} sessions",

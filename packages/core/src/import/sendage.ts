@@ -14,12 +14,13 @@ export function sendageRecords(header: string[], rows: Line[]): Record[] {
   const records = rowsByName(header, rows).map(({ row, get }): Record => {
     const sendType = get("send_type");
     const comments = get("comments");
+    const climbType = get("climb_type")?.toLowerCase();
     return {
       row,
       date: get("date"),
       session: get("area"),
       climb: get("climb"),
-      grade: gradeIn(get("grade"), get("climb_type")?.toLowerCase() === "boulder"),
+      grade: gradeIn(get("grade"), climbType === undefined ? undefined : climbType === "boulder"),
       climb_notes: comments === undefined ? undefined : decodeEntities(decodeEntities(comments)),
       ...(SEND_TYPES[sendType?.toLowerCase() ?? ""] ?? { kind: sendType }),
     };

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import sendage from "./fixtures/sendage.csv?raw";
+import sends from "./fixtures/sendage-sends.csv?raw";
 import { summary } from "./fixtures/summary";
 import { planImport } from "./plan";
 
@@ -53,6 +54,29 @@ describe("Sendage export", () => {
     const plan = planImport(edited("2026-10-18,flash,", "2026-10-18,toprope,"), "UTC");
     expect(plan.issues).toEqual([
       { row: 7, code: "badKind", value: "toprope", climb: "Pterodactyl" },
+    ]);
+  });
+
+  it("reads the sends export, which has no preamble or Climb Type, by its Send Type", () => {
+    const plan = planImport(sends, "UTC");
+    expect(plan.format).toBe("sendage");
+    expect(plan.issues).toEqual([]);
+    expect(summary(plan)).toEqual([
+      ["2013-07-20 | Fontainebleau | outdoor", "Élan | 6C | send flash | 1"],
+      [
+        "2014-09-02 | Smoke Bluffs | outdoor",
+        "Crime of the Century | 5.11b | send onsight | 1 | I\u2019ve never been so pumped",
+      ],
+      [
+        "2015-10-17 | Moe's Valley | outdoor",
+        'Pork Chop Express | 10 | attempt | 1 | Linked the "crux" from the second move',
+        "Indolence | 7 | send | 1",
+      ],
+      [
+        "2015-10-18 | Moe's Valley | outdoor",
+        "Lindners Roof | 9 | send redpoint | 1 | Stuck the start move, finally",
+        "Pterodactyl | 1 | send flash | 1",
+      ],
     ]);
   });
 });

@@ -69,6 +69,7 @@ A date-only log sits at local midnight expressed in UTC, so:
 ## Exports from other climbing logs
 
 Each service's export is recognised by its header, and its columns are read by name, never by position.
+A file read as the Sendtally format that carries another app's send result column (`Send Type`, `Ascent Type` or `Lead Style`) is refused with `unreadColumn` naming it, rather than imported with every climb as a send: such a file is almost always a service export missing a column. Any other unknown column is ignored.
 Only a file the user exported reaches Sendtally; nothing fetches from these services.
 A header that does not match, for example after a service changes its export, falls back to the Sendtally format check and then the conversion prompt.
 Grades are read as written, as in the Sendtally format, and a grade that cannot be read is reported for its row while the rest of the file imports.
@@ -104,13 +105,14 @@ A Mountain Project tick export has the columns `Date, Route, Rating, Notes, URL,
 A Sendage export opens with a few lines of preamble (`"These climbs were exported from Sendage Climbing."`, the climber's name and the export date, two blank lines) and then the header `Date, Send Type, Climb, Climb Type, Grade, Area, Country, Rating, Comments`.
 The importer looks for a known header in the first four non-blank lines, so the preamble is skipped.
 Kaya's import template uses the same header and reads the same way.
+Sendage's sends export has no preamble, the header `Climb, Area, Date, Send Type, Grade, Difficulty, Comments`, and no `Climb Type`; it is recognised by `Date`, `Send Type`, `Climb`, `Grade` and `Area`, and its grades are read as written.
 
 - `Date` is the session date.
 - `Send Type` `onsight`, `flash` and `redpoint` import as that style, `repeat` as a send with no style, and `project` as an attempt. Any other value is reported for its row.
 - There is no tries count, so every climb imports as one try.
 - `Grade` is the climber's own grade. `Climb Type` `boulder` settles a grade whose letter case says route, as in 8a.nu exports.
 - `Area` names the session. `Comments` becomes the climb note, with HTML entities such as `&rsquo;` decoded, including ones Sendage encoded twice.
-- `Country` and `Rating` are not imported.
+- `Country`, `Rating` and `Difficulty` (the climber's feel for the grade, `easy` or `hard`) are not imported.
 
 This layout comes from another project's importer test rather than a real export, so it is the least certain of the formats here.
 
