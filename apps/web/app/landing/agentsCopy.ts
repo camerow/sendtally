@@ -1,3 +1,4 @@
+import type { FaqProps } from "./components/Faq";
 import type { FeatureCopy, MediaCopy } from "./copy";
 
 /** The Agents page and the homepage row: English only, served at /agents and on the English homepage. */
@@ -27,33 +28,36 @@ export const AGENTS = {
       reply:
         "Saved “Winter strength” to your sendtally calendar: six weeks, starting Monday 26 October.",
     },
-    media: { key: "block", alt: "A training block: week chips and the week grid" } as MediaCopy,
+    media: {
+      key: "block",
+      alt: "A training block: week chips and the week grid",
+    } satisfies MediaCopy,
   },
   features: [
     {
       id: "import",
       eyebrow: "Import",
       title: "“Here's my climbing spreadsheet from the last four years. Put it in sendtally.”",
-      body: "Hand your agent a spreadsheet, a journal or an export you downloaded from another climbing app. Every day becomes a session with its climbs, grades, sends and attempts, and each one gets an effort score, the same as a session you log yourself.",
+      body: "Hand your agent a spreadsheet, a journal or an export you downloaded from another climbing app. Every day becomes a session in your Log with its climbs, grades, sends and tries, and the sends count in Stats the same as a session you log yourself.",
       points: [
         "Exports from Kaya, 8a.nu, Mountain Project, Sendage and theCrag go in as they are",
         "Anything else, your agent puts in sendtally's format first",
         "Run it twice and nothing is added twice",
       ],
       media: [
-        { key: "logClimbing", alt: "The Log tab with past sessions and their effort scores" },
-        { key: "climbPage", alt: "A climb's page with its sessions and attempts" },
+        {
+          key: "logClimbing",
+          alt: "The Log tab: past sessions with their climbs, grades and sends",
+        },
+        { key: "statsClimbing", alt: "Stats, Climbing: the sends-by-grade pyramid" },
       ],
     },
     {
       id: "build",
       eyebrow: "Build",
-      title: "“Build me a four-week power endurance block, three days a week.”",
+      title: "“Build me a six-week strength block for the winter.”",
       body: "Your agent reads your recent sessions and what you already have planned, picks workouts from your library or writes new ones, and puts the block on your calendar. Open the app and press Start.",
-      points: [
-        "Built-ins like 4x4s and ARC, or workouts written for you",
-        "Or save it as a template and schedule it yourself",
-      ],
+      points: ["Built-ins like max hangs and limit bouldering, or workouts written for you"],
       media: [
         { key: "block", alt: "A training block: week chips and the week grid" },
         { key: "plan", alt: "The Plan tab: the week strip and today's workout" },
@@ -62,7 +66,7 @@ export const AGENTS = {
     {
       id: "change",
       eyebrow: "Change",
-      title: "“Move the hangboard workout to Thursdays from week 3.”",
+      title: "“Add a mobility flow to every Sunday of my block.”",
       body: "Ask for a change and your agent edits the block, workout or exercise in place. Before it deletes anything, it asks you first.",
       points: ["Sessions you already logged stay exactly as they are"],
       media: [
@@ -70,12 +74,12 @@ export const AGENTS = {
         { key: "calendar", alt: "The calendar: a month with a block running" },
       ],
     },
-  ] as FeatureCopy[],
+  ] satisfies FeatureCopy[],
   connect: {
     eyebrow: "Connect",
     title: "Three steps, about a minute.",
     steps: [
-      { label: "Step 1", title: "Copy the connector URL", body: "" },
+      { label: "Step 1", title: "Copy the connector URL" },
       {
         label: "Step 2",
         title: "Add it to your agent",
@@ -112,7 +116,7 @@ export const AGENTS = {
         q: "How do I disconnect?",
         a: "Remove sendtally from your agent's connectors. Access ends straight away, and what it added stays in your account until you delete it.",
       },
-    ] as Array<{ q: string; a: string; link?: { label: string; href: string } }>,
+    ] satisfies FaqProps["items"],
   },
   closing: {
     title: "Get sendtally, then connect your agent.",

@@ -10,11 +10,15 @@ export function ConnectSteps({ url }: { url: string }): React.ReactElement {
       <Label on="accent">{connect.eyebrow}</Label>
       <h2 className="l-pricing-h2">{connect.title}</h2>
       <ol className="l-connect-steps">
-        {connect.steps.map((step, i) => (
+        {connect.steps.map((step) => (
           <li key={step.title} className="l-extra">
             <Label on="accent">{step.label}</Label>
             <span className="l-extra-title">{step.title}</span>
-            {i === 0 ? <CopyUrl url={url} /> : <span className="l-extra-body">{step.body}</span>}
+            {"body" in step ? (
+              <span className="l-extra-body">{step.body}</span>
+            ) : (
+              <CopyUrl url={url} />
+            )}
           </li>
         ))}
       </ol>

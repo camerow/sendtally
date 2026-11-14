@@ -9,7 +9,7 @@ import { Shot } from "./Shot";
 /** The homepage row for agents: what to ask, the connector URL, and what lands in the app. */
 export function AgentsRow({ url }: { url: string }): React.ReactElement {
   return (
-    <section id="agents" className="l-feature l-feature--white">
+    <section id="agents" className="l-feature l-feature--white l-agents">
       <Reveal className="l-feature-copy">
         <Label on="accent">{agents.eyebrow}</Label>
         <h2 className="l-feature-title">{agents.title}</h2>
