@@ -60,7 +60,7 @@ export function KeypadField({
   accessibilityLabel = label,
   mode,
   value,
-  text: [dim, rest],
+  text,
   unit,
   before,
   after,
@@ -76,6 +76,9 @@ export function KeypadField({
   const box = React.useRef<View>(null);
   const [openOwn, setOpenOwn] = React.useState(false);
   const open = openSlot ?? openOwn;
+  const [typing, setTyping] = React.useState<readonly [string, string] | null>(null);
+  if (!open && typing !== null) setTyping(null);
+  const [dim, rest] = open && typing !== null ? typing : text;
   const close = onClose ?? (() => setOpenOwn(false));
   const latest = React.useRef({
     accessibilityLabel,
@@ -118,6 +121,7 @@ export function KeypadField({
       prev: () => latest.current.onPrev?.(),
       note: field.note,
       reset: field.onReset === undefined ? undefined : () => latest.current.onReset?.(),
+      type: setTyping,
     });
     return () => host.close(id);
   }, [open, host, id]);
@@ -222,6 +226,7 @@ export function KeypadField({
           onPrev={onPrev}
           note={note}
           onReset={onReset}
+          onType={setTyping}
         />
       )}
     </View>

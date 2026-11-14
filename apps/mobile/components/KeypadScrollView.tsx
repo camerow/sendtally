@@ -63,6 +63,7 @@ export function KeypadScrollView({
           onPrev={request.hasPrev ? request.prev : undefined}
           note={request.note}
           onReset={request.reset}
+          onType={request.type}
         />
       )}
     </KeypadHostContext.Provider>

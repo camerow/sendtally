@@ -39,6 +39,8 @@ export type KeypadProps = {
   note?: string;
   /** Beside the note: closes without committing and calls this. */
   onReset?: () => void;
+  /** The value as typed so far, without its unit, after every key. */
+  onType?: (text: readonly [dim: string, rest: string]) => void;
 };
 
 type Entries = {
@@ -84,6 +86,7 @@ export function Keypad({
   field,
   note,
   onReset,
+  onType,
 }: KeypadProps): React.ReactElement | null {
   const limits = mode.kind === "number" ? mode : NUMBER_DEFAULTS;
   const open = (): Entries => ({
@@ -130,13 +133,14 @@ export function Keypad({
     onPrev?.();
   };
 
-  const [zeros, shown] =
+  const [zeros, typed] =
     mode.kind === "time"
       ? timeText(entries.time)
-      : [
-          "",
-          `${entries.number.text.replace(".", decimalMark()).replace("-", "−")}${mode.unit === undefined ? "" : ` ${mode.unit}`}`,
-        ];
+      : ["", entries.number.text.replace(".", decimalMark()).replace("-", "−")];
+  const shown = mode.kind === "number" && mode.unit !== undefined ? `${typed} ${mode.unit}` : typed;
+  React.useEffect(() => {
+    if (visible) onType?.([zeros, typed]);
+  }, [visible, zeros, typed, onType]);
   const step = mode.kind === "time" ? "30s" : formatNumber(limits.step);
 
   const key = (

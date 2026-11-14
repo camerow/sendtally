@@ -65,13 +65,57 @@ describe("NumberField", () => {
     expect(input.value).toBe("12");
   });
 
-  it("shows time as m:ss and commits a typed time on blur", () => {
+  it("shows time as HH:MM:SS and commits a typed time on blur", () => {
     const onChange = vi.fn();
     const input = mount({ kind: "time" }, 10, onChange);
-    expect(input.value).toBe("0:10");
+    expect(input.value).toBe("00:00:10");
+    expect(input.inputMode).toBe("numeric");
     type(input, "130");
     act(() => input.blur());
     expect(onChange).toHaveBeenCalledWith(90);
+  });
+
+  it("formats time after every key typed, filling from the right", () => {
+    const onChange = vi.fn();
+    const input = mount({ kind: "time" }, 180, onChange);
+    type(input, "1");
+    expect(input.value).toBe("00:00:01");
+    for (const [key, shown] of [
+      ["0", "00:00:10"],
+      ["0", "00:01:00"],
+      ["x", "00:01:00"],
+      ["5", "00:10:05"],
+    ]) {
+      type(input, input.value + key);
+      expect(input.value).toBe(shown);
+    }
+    type(input, input.value.slice(0, -1));
+    expect(input.value).toBe("00:01:00");
+    for (const d of "234") type(input, input.value + d);
+    expect(input.value).toBe("10:02:34");
+    type(input, `${input.value}9`);
+    expect(input.value).toBe("10:02:34");
+    expect(onChange).not.toHaveBeenCalled();
+    act(() => input.blur());
+    expect(onChange).toHaveBeenCalledWith(36154);
+  });
+
+  it.each([
+    ["1:30", "00:01:30", 90],
+    ["90", "00:00:90", 90],
+    ["2 min", "00:00:02", 2],
+  ])("reads a pasted %s as %s", (text, shown, seconds) => {
+    const onChange = vi.fn();
+    const input = mount({ kind: "time" }, 5, onChange);
+    act(() => {
+      input.focus();
+      const paste = new Event("paste", { bubbles: true, cancelable: true });
+      Object.assign(paste, { clipboardData: { getData: () => text } });
+      input.dispatchEvent(paste);
+    });
+    expect(input.value).toBe(shown);
+    act(() => input.blur());
+    expect(onChange).toHaveBeenCalledWith(seconds);
   });
 
   it("leaves the value alone when nothing was changed or nothing typed", () => {
