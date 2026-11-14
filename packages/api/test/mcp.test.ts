@@ -211,7 +211,7 @@ describe("connector", () => {
     });
     expect(ranged.sessions).toHaveLength(1);
     expect(ranged.sessions[0]?.climbs).toEqual([
-      { name: "Crimp line", grade: "V3", kind: "send", tries: 2 },
+      { name: "Crimp line", grade: { scale: "v", value: 3 }, kind: "send", tries: 2 },
     ]);
     const plain = await toolJson<Listed>(user, "list_sessions");
     expect(plain.sessions).toHaveLength(2);
@@ -773,6 +773,129 @@ describe("connector", () => {
         deleted: true,
       });
       expect(await mine(user)).toEqual([]);
+    });
+  });
+
+  describe("sessions", () => {
+    type Listed = {
+      sessions: Array<{
+        id: string;
+        title: string;
+        rpe: number;
+        climbs: Array<Record<string, unknown>>;
+      }>;
+    };
+    const climb = { name: "Arete", grade: { scale: "v", value: 6 }, kind: "send", tries: 3 };
+    const logged = async (user: string): Promise<Listed["sessions"][number]> => {
+      await put(user, "/v1/sessions", {
+        ...(session("2026-09-05", [
+          climb,
+          { ...climb, name: "Slab", tries: 1, note: "Smeary" },
+        ]) as object),
+        tags: ["Power"],
+      });
+      const { sessions } = await toolJson<Listed>(user, "list_sessions", { includeClimbs: true });
+      return sessions[0]!;
+    };
+    const boardRow = async (user: string, fingerprint: string): Promise<void> => {
+      await env.DB.prepare(`INSERT INTO users (id, timezone, created_at) VALUES (?, 'UTC', '')`)
+        .bind(user)
+        .run();
+      await env.DB.prepare(
+        `INSERT INTO sessions (user_id, fingerprint, board, source, start_at, end_at, climb_count, top_grade, top_send_grade, rpe, title, summary)
+         VALUES (?, ?, 'tension', 'board', '2026-01-01T00:00:00.000Z', '2026-01-01T01:00:00.000Z', 4, 5, 5, 6, 'Board session', 's')`
+      )
+        .bind(user, fingerprint)
+        .run();
+    };
+
+    it("edits one climb from what list_sessions returned, keeping the rest and the id, and re-scores", async () => {
+      const user = "user_edit_session";
+      const before = await logged(user);
+      const [arete, slab] = before.climbs;
+      const edited = await toolJson<{ id: string; rpe: number }>(user, "update_session", {
+        id: before.id,
+        climbs: [
+          { ...arete, kind: "attempt", tries: 8 },
+          { ...slab, grade: { scale: "v", value: 2 }, style: "flash" },
+        ],
+      });
+      expect(edited.id).toBe(before.id);
+      const { sessions } = await toolJson<
+        Listed & { sessions: Array<{ tags: string[]; name: string; startTime: string }> }
+      >(user, "list_sessions", { includeClimbs: true });
+      expect(sessions).toHaveLength(1);
+      expect(sessions[0]).toMatchObject({
+        id: before.id,
+        rpe: edited.rpe,
+        topSendGrade: "V2",
+        name: "Tuesday night session",
+        startTime: "18:00",
+        tags: ["Power"],
+      });
+      expect(sessions[0]?.climbs).toEqual([
+        { ...arete, kind: "attempt", tries: 8 },
+        { ...slab, grade: { scale: "v", value: 2 }, style: "flash" },
+      ]);
+      expect(before).toMatchObject({ topSendGrade: "V6" });
+    });
+
+    it("refuses an edit the log form would refuse, and a board session", async () => {
+      const user = "user_edit_refused";
+      const before = await logged(user);
+      const bad = await callTool(user, env, "update_session", {
+        id: before.id,
+        climbs: [{ ...before.climbs[0], kind: "attempt", style: "flash" }],
+      });
+      expect(bad.isError).toBe(true);
+      expect(bad.content[0]?.text).toMatch(/an attempt has no send style/);
+      const tooLong = await toolJson<{ error: string }>(user, "update_session", {
+        id: before.id,
+        endTime: "07:00",
+      });
+      expect(tooLong.error).toMatch(/too long/);
+      await boardRow(user + "_board", "fp_board_edit");
+      const board = await toolJson<{ error: string }>(user + "_board", "update_session", {
+        id: "fp_board_edit",
+        name: "Renamed",
+      });
+      expect(board.error).toMatch(/read-only history/);
+    });
+
+    it("treats another user's session as not found, for edits and deletes", async () => {
+      const user = "user_session_owner";
+      const before = await logged(user);
+      expect(
+        await toolJson(user + "_other", "update_session", { id: before.id, name: "Mine now" })
+      ).toEqual({ error: `No session with id ${before.id}.` });
+      expect(await toolJson(user + "_other", "delete_session", { ids: [before.id] })).toEqual({
+        results: [{ id: before.id, deleted: false, error: "not found" }],
+      });
+      const { sessions } = await toolJson<Listed>(user, "list_sessions");
+      expect(sessions.map((s) => [s.id, s.title])).toEqual([[before.id, "Tuesday night session"]]);
+    });
+
+    it("deletes several sessions, board history included, reporting each id on its own", async () => {
+      const user = "user_delete_sessions";
+      const manual = await logged(user);
+      await env.DB.prepare(
+        `INSERT INTO sessions (user_id, fingerprint, board, source, start_at, end_at, climb_count, top_grade, top_send_grade, rpe, title, summary)
+         VALUES (?, 'fp_board_delete', 'tension', 'board', '2026-01-01T00:00:00.000Z', '2026-01-01T01:00:00.000Z', 4, 5, 5, 6, 'Board session', 's')`
+      )
+        .bind(user)
+        .run();
+      expect(
+        await toolJson(user, "delete_session", {
+          ids: [manual.id, "manual-unknown", "fp_board_delete"],
+        })
+      ).toEqual({
+        results: [
+          { id: manual.id, deleted: true },
+          { id: "manual-unknown", deleted: false, error: "not found" },
+          { id: "fp_board_delete", deleted: true },
+        ],
+      });
+      expect(await toolJson(user, "list_sessions")).toEqual({ sessions: [] });
     });
   });
 });

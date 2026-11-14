@@ -155,7 +155,7 @@ Climbs inside one session are never compared with each other: two unnamed climbs
 
 ## Importing from an AI assistant
 
-The connector at `/mcp` has two tools that write sessions; neither fetches anything from another service, and the only input is text the assistant passes in.
+The connector at `/mcp` has four tools that write sessions; none fetches anything from another service, and the only input is text the assistant passes in.
 
 `import_climbing_log({ csv, timeZone, dryRun })` runs the same planner as `/app/import` on the CSV text, then the same insert path as `POST /v1/sessions/import`.
 Its description carries the Sendtally format and the conversion rules from the prompt below, so the assistant converts an unknown spreadsheet or journal itself and passes a recognised export through unchanged.
@@ -169,6 +169,15 @@ Imported sessions are never posted to Strava.
 
 `log_session` logs one session the user describes, with the log form's fields and the gym as a name, through the same save as `POST /v1/sessions`.
 It is posted to Strava when the user has posting on.
+
+`update_session({ id, ...changes })` edits one session through the same save as `PUT /v1/sessions/:fingerprint`, so it is re-scored, keeps its fingerprint, and an activity already on Strava is updated rather than posted again.
+Fields left out keep their current value; `climbs` replaces the whole list, in the shape `list_sessions` returns with `includeClimbs`, so an assistant fixes a bad import one climb at a time without retyping the rest.
+A changed climb keeps the Areas links of the climb with the same name, as links are keyed by the name's slug.
+Legacy `source = "board"` sessions are refused.
+
+`delete_session({ ids })` deletes up to 100 sessions through the same path as `DELETE /v1/sessions/:fingerprint`, board history included.
+It reports each id on its own, `deleted: false` with `not found` for one that is unknown or belongs to someone else, so one bad id never stops the rest.
+Like deleting in the app, it leaves an activity already posted to Strava on Strava, and journal entries about the session stay.
 
 ## The export
 

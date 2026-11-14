@@ -1,6 +1,7 @@
 import { climbingSummary } from "./climbingSummary";
 import { deleteBlock } from "./deleteBlock";
 import { deleteExercise } from "./deleteExercise";
+import { deleteSession } from "./deleteSession";
 import { deleteWorkout } from "./deleteWorkout";
 import { importClimbingLog } from "./importClimbingLog";
 import { listSessions } from "./listSessions";
@@ -10,6 +11,7 @@ import { saveBlock } from "./saveBlock";
 import { saveExercise } from "./saveExercise";
 import { saveWorkout } from "./saveWorkout";
 import { trainingLibrary } from "./trainingLibrary";
+import { updateSession } from "./updateSession";
 import type { ConnectorTool } from "./types";
 
 export const tools: ConnectorTool[] = [
@@ -25,4 +27,6 @@ export const tools: ConnectorTool[] = [
   deleteBlock,
   importClimbingLog,
   logSession,
+  updateSession,
+  deleteSession,
 ];
