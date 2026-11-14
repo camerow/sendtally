@@ -367,6 +367,7 @@ Moderation strings are plain English literals.
 - Dropped with decision 7: self-hosted clips, their 20 second / 1080 px / 8 MB limits and errors, first-frame posters made in the browser, video in R2, MP4 caching rules, Cloudflare Stream and Media Transformations, and `expo-video`.
 - Per-locale descriptions, alt text and credit.
 - Restoring deleted picture files, server-side resizing.
+- Moderator tools on the connector (`save_library_item`) for editing built-ins (Will: "yeah we can skip that").
 - Creating new built-ins in moderation (slice 2 follow-up; `library-add` covers it until then).
 
 ## Open decisions for Will
@@ -379,5 +380,3 @@ Moderation strings are plain English literals.
    Recommendation: yes, a stale German name is worse than an English one.
 4. Exercise and grip detail screens get the hero too, not only workouts (Will named workouts; `TdmHero` draws all three).
    Recommendation: yes, it is the same `ScreenFrame` prop and the same hero anatomy.
-5. Moderator tools on the connector (`save_library_item`) so an assistant can draft built-in descriptions.
-   Recommendation: later, after the moderation tab has been used by hand.
