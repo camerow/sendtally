@@ -1,7 +1,7 @@
 # Training descriptions and media
 
 Status: proposal, waiting on Will's approval of the designs.
-Brief: Will, 2026-11-14, with his decisions of the same day (custom workout descriptions first, the built-in library moves to D1, thumbnails in lists, English only for new text).
+Brief: Will, 2026-11-14, with his decisions of the same day (custom workout descriptions first, the built-in library moves to D1, thumbnails in lists, English only for new text, a hero image on workout detail, media in the info sheet).
 Designs: a new page "Training descriptions and media" (page id `training-media`) on the canvas https://claude.ai/artifact/CNPnNQwgvzgvxk4ZAYTyto.
 The v3 page is untouched; it was read for reference only.
 
@@ -84,7 +84,10 @@ The brief's facts, checked against `main` at `fdae200c`.
    A clip's poster is its first frame, captured in the browser, with the same two sizes.
 7. Each item has alt text (required, English only), an order and an optional credit line.
 8. Delivery: immutable keys (`library/<itemType>/<itemId>/<uuid>-<size>.jpg|.mp4`), `Cache-Control: public, max-age=31536000, immutable`, a Cache Everything rule on the media host so MP4s cache.
-9. Where it shows: detail screens, as the first section under the hero, one 4:3 frame with page dots and the credit in small muted mono.
+9. Where it shows: exercise and grip detail screens, as the first section under the hero, one 4:3 frame with page dots and the credit in small muted mono.
+   **Changed (decision 5):** a workout with a picture shows its first picture as a full-bleed hero image behind the top of the screen, and the content scrolls up and over it; its other media sit in the 4:3 frame.
+   A workout without a picture keeps today's screen exactly.
+   **Changed (decision 6):** the info sheet (`WorkoutInfo`, and the exercise info button in R1.9) holds the item's media at the top with the same hero treatment and the description below; media only, description only, or both; neither means no info button.
    **Changed (decision 3):** items with a picture also show its thumbnail in list rows and pickers, 44x44 with a 2 px `KIND_LOOK` ink border in place of the category mark; items without keep today's row exactly.
 10. Clips never autoplay: poster and a play button; a tap plays muted and loops, another pauses.
     This one rule removes the reduced-motion and metered-connection branches, since nothing downloads before a tap.
@@ -237,6 +240,35 @@ Why not the others: Images adds a zone setting and a monthly cap for something a
 
 Pictures ship over the air on `Image`; the clip slice adds `expo-video` and swaps `Image` for `expo-image` in the same store build, for its disk cache and list recycling.
 
+Clips need a store build, so slice 3's code renders only `kind === "picture"` and ignores anything else.
+That way clips uploaded later never break a binary without `expo-video`; the fingerprint keeps slice 4's JavaScript off older binaries.
+
+## Hero image on workout detail (decision 5)
+
+Built with what is installed, no new native module, over the air with pictures.
+
+- `ScreenFrame` gains an optional `hero` (a picture).
+  Without it, nothing about the frame changes.
+- With it, the picture is absolutely positioned at the top of the screen, full width at 4:3, under the status bar (the top safe-area edge moves to the bar), and the `KeypadScrollView` content starts with a transparent spacer of the picture's height.
+- The content below the spacer has an opaque white background, so scrolling slides it up and over the still picture.
+  The picture never moves, so there is no scroll-driven animation to run or to switch off.
+- The bar (Back, Edit, ···) floats over the picture; its buttons sit on white circles, and a top gradient drawn with `react-native-svg` (installed) keeps the status bar legible, with `expo-status-bar` set to light while the picture is under it.
+- Pull to stretch on iOS overscroll is optional polish: a Reanimated scroll handler (Reanimated 4.5 is installed) scales the picture on a negative offset, off under reduced motion (`useReducedMotion`).
+  Without it, overscroll shows white between picture and content, so the default is to ship the stretch.
+- Content shorter than the screen does not scroll; the screen reads as picture then content, which is the same design.
+- Web: the same layering in CSS alone.
+  The picture is `position: sticky; top: 0` inside `DetailFrame`, capped at `max-height: 420px` with `object-fit: cover`, and the content follows with `position: relative`, a higher `z-index` and the page background.
+  No script, so nothing to respect for reduced motion.
+
+## Media in the info sheet (decision 6)
+
+- `Sheet` (`@gorhom/bottom-sheet`, installed) gains an optional `hero`, rendered behind its `BottomSheetScrollView` the same way: absolute at the top, a transparent spacer, the description on white scrolling over it, clipped to the sheet's top radius.
+- A picture works over the air with React Native `Image`.
+- A clip plays inline in the sheet on tap, muted and looping, through `expo-video`'s `VideoView`, which is not in the build: store build, slice 4.
+  On Android it uses `surfaceType="textureView"`, because the sheet moves the view and a surface view does not follow transforms.
+  The player pauses on dismiss and is released on unmount.
+- Until the store build, the sheet shows pictures only (the same `kind` filter).
+
 ## Thumbnails, caching and list performance
 
 - One 144 px square JPEG per picture (around 10 KB), drawn at 44 pt; no server-side resizing.
@@ -262,9 +294,9 @@ Pictures ship over the air on `Image`; the clip slice adds `expo-video` and swap
    Removes nothing; `LibraryIntro`'s plain text becomes the shared renderer.
 2. **Built-in library in D1 (over the air, largest).** Table, seed migration, `GET /v1/library`, the apps and Worker reading it, built-in exercises opening `ExerciseScreen`, moderation Library tab with text editing and Changes.
    Removes the built-in content constants, about 130 catalog keys in each of the four locales and the editor artifact; repoints `library-add`.
-3. **Pictures (over the air, plus Terraform).** Bucket, media host, cache rule, Worker binding, upload, detail frame, list and picker thumbnails, alt and credit.
+3. **Pictures (over the air, plus Terraform).** Bucket, media host, cache rule, Worker binding, upload, detail frame, the workout hero image, pictures in the info sheet, list and picker thumbnails, alt and credit.
    Adds the R2 bucket; removes nothing.
-4. **Clips (store build).** `expo-video` and `expo-image`, posters, tap to play, the live sheet showing the current exercise's clip.
+4. **Clips (store build).** `expo-video` and `expo-image`, posters, tap to play on detail screens and inline in the info sheet, including the live sheet for the current exercise.
 5. **Ready-made blocks.** `library_items` type `block` once the Starter block lands; block media then comes for free.
 
 ## Deliberately left out
@@ -285,5 +317,7 @@ Pictures ship over the air on `Image`; the clip slice adds `expo-video` and swap
    Recommendation: yes; one editor.
 4. Editing an English field clears its translations.
    Recommendation: yes, a stale German name is worse than an English one.
-5. Moderator tools on the connector (`save_library_item`) so an assistant can draft built-in descriptions.
+5. Exercise detail screens get the hero image too, not only workouts (Will named workouts).
+   Recommendation: yes, one `ScreenFrame` prop; ship it on workouts first and add exercises if the workout screen reads well.
+6. Moderator tools on the connector (`save_library_item`) so an assistant can draft built-in descriptions.
    Recommendation: later, after the moderation tab has been used by hand.
