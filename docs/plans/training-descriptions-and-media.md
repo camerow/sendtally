@@ -12,7 +12,7 @@ The v3 page is untouched; it was read for reference only.
 | `TdmThumbs`       | Thumbnails in lists and pickers                   | x 0, y 3320                  |
 | `TdmHero`         | A picture as the hero of a detail screen          | x 0, y 5060                  |
 | `TdmSheet`        | The info sheet holds the picture or clip          | x 0, y 7120                  |
-| `TdmModLibrary`   | Moderation: Library tab                           | x 0, below `TdmSheet`        |
+| `TdmModLibrary`   | Moderation: a Library tab for the built-ins       | x 0, y 8960                  |
 
 ## What the code says today
 
@@ -84,7 +84,8 @@ The brief's facts, checked against `main` at `fdae200c`.
    No transcoding anywhere: the browser checks duration, size and codec before upload and refuses the rest with a clear message.
 6. Every picture is resized in the browser before upload to two files: 1600 px on the long side for detail and a 144 px square crop for thumbnails (44 pt at 3x).
    A clip's poster is its first frame, captured in the browser, with the same two sizes.
-7. Each item has alt text (required, English only), an order and an optional credit line.
+7. Each item has alt text (English only), an order and an optional credit line.
+   Media saves as it uploads; an item without alt text stays hidden in the apps until it has some, so alt is required to publish rather than to upload.
 8. Delivery: immutable keys (`library/<itemType>/<itemId>/<uuid>-<size>.jpg|.mp4`), `Cache-Control: public, max-age=31536000, immutable`, a Cache Everything rule on the media host so MP4s cache.
 9. Where it shows (`TdmHero`): on workout, exercise and grip detail screens, media is a full-bleed 4:3 hero behind the top of the screen, and the content scrolls up and over it.
    Several items swipe sideways inside that one frame with page dots, and the credit sits in small muted mono under the title area; there is no second media frame, so everything below the hero stays exactly today's anatomy.
@@ -231,7 +232,8 @@ Why not the others: Images adds a zone setting and a monthly cap for something a
 - 8 MB fits well inside the 100 MB body limit, and it needs no S3 credentials, presigned URLs or bucket CORS; the role check is the existing gate.
 - The Worker checks the declared type against the allowlist (JPEG, PNG, WebP; MP4), the size, and the magic bytes, and rejects with a clear message.
 - The browser checks a clip's duration and dimensions from its metadata and its codec from the `avc1` sample entry before sending.
-- Errors shown: "Too large", "Use an MP4 (H.264)", "Clips are 20 seconds at most", "Alt text is required".
+- Errors shown, one line per file: "Too large", "Use an MP4 (H.264)", "Clips are 20 seconds at most"; a row without alt text says "Alt text is required" and stays hidden in the apps.
+- The upload row shows the browser resize to 1600 px, then a progress bar with Cancel.
 
 ## Native cost
 
@@ -285,8 +287,21 @@ Built with what is installed, no new native module, over the air with pictures.
 ## Moderation Library tab (`TdmModLibrary`)
 
 - A fifth tab, Library, in `MODERATION_TABS`, built from the existing `mod-card` and tab styles, with plain English strings (moderation is never localised).
-- The list: every built-in by kind (exercises, grips, workouts), each showing "No description" and "No media" when missing, retired items last.
-- The item: English name, folded de/fr/es names, the description textarea beside its live preview (the same renderer the apps use), media with upload, reorder, alt, credit and delete (danger outline button, confirm says it is permanent), Retire (outline button with confirm), and the Changes list with Restore.
+- The tab's count is the number of built-ins missing a description or a picture.
+- The list: filter pills All / No description / No picture / Retired, rows grouped workouts first, then exercises by category.
+  Columns: thumbnail, name, category, description (its start, or a gold "No description" label), media count or a gold "No picture", and the changed date or "Seeded".
+- The item: a back link, kicker and English name, and header buttons Retire (plain outline, not red, because retiring is reversible) and Save (azure) for name and description.
+- A folded "Other languages · 3 names" group for the de/fr/es names.
+- The description textarea with "n of 2,000" beside a phone preview rendered by the apps' parser.
+- A Media card with "Add picture or clip" (azure); each row has thumbnail, alt text, optional credit, "Picture · added <date> by <name>", up and down, and Delete (red outline, confirm says it is permanent).
+  Media saves as it uploads, not with Save.
+- The Changes list with Restore; rows for deleted files say "Permanent" instead.
+- The Retire confirm says logs, plans and workouts keep it by name; Unretire lives under the Retired filter.
+
+## New interface strings
+
+`common.more`, `common.less`, `workouts.playClip`, `workouts.clipOffline`, plus the exercise and block Description field labels (the workout ones, `workouts.description` and `workouts.descriptionPlaceholder`, are reused), in all four catalogs.
+Moderation strings are plain English literals.
 
 ## Privacy and analytics
 
