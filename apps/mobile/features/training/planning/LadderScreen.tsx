@@ -17,6 +17,7 @@ import { exerciseName } from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { useApi } from "../../../lib/api";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
+import { confirmDiscard, useDiscardGuard } from "../../../lib/useDiscardGuard";
 import { Button } from "../components/Button";
 import { DetailActions } from "../components/DetailActions";
 import { EditorHeader } from "../components/EditorHeader";
@@ -49,6 +50,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
   const { log } = useTrainingLog(useApi());
   const actions = usePlanActions();
   const draft = usePlanDraft(log.plan);
+  useDiscardGuard(draft.dirty);
   const [turn, setTurn] = React.useState(0);
   const [open, setOpen] = React.useState<readonly number[]>([0]);
   const { plan } = draft;
@@ -106,7 +108,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
         header: (
           <EditorHeader
             title={t("plan.editInBlock", { block: block.name })}
-            onCancel={draft.cancel}
+            onCancel={draft.dirty ? () => confirmDiscard(draft.cancel) : draft.cancel}
             onSave={draft.save}
             solid
           />

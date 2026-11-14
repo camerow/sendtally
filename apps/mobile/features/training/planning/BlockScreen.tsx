@@ -16,6 +16,7 @@ import {
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
+import { confirmDiscard, useDiscardGuard } from "../../../lib/useDiscardGuard";
 import { Button } from "../components/Button";
 import { DetailActions } from "../components/DetailActions";
 import { EditorHeader } from "../components/EditorHeader";
@@ -76,6 +77,7 @@ export function BlockScreen({
     actions,
     newId: randomUUID,
   });
+  useDiscardGuard(draft.dirty);
 
   if (plan.state.status !== "ready")
     return <LoadState state={plan.state} onRetry={() => void plan.reload()} framed />;
@@ -94,7 +96,7 @@ export function BlockScreen({
         header: (
           <EditorHeader
             title={t("plan.editBlock")}
-            onCancel={draft.cancel}
+            onCancel={draft.dirty ? () => confirmDiscard(draft.cancel) : draft.cancel}
             onSave={draft.save}
             solid
           />

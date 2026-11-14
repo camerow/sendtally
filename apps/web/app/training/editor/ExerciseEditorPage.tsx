@@ -16,6 +16,7 @@ import { Sheet } from "../../components/Sheet";
 import { useToast } from "../../components/Toast";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { useAppApi } from "../../lib/useAppApi";
+import { useDiscardGuard } from "../../lib/useDiscardGuard";
 import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
@@ -29,7 +30,8 @@ type FormProps = {
   editing: boolean;
   /** Sets are logged on it, so changing its measure warns first. */
   logged: boolean;
-  onSave: (form: ExerciseForm) => void;
+  /** Saves it; `release` lets the page go without asking, called once the save leaves. */
+  onSave: (form: ExerciseForm, release: () => void) => void;
   /** A built-in's name, which stays as it is. */
   locked?: boolean;
   /** What is wrong with a name, if anything. */
@@ -46,23 +48,23 @@ function Form({
   nameError = () => undefined,
   children,
 }: FormProps): React.ReactElement {
-  const back = useGoBack(EXERCISES_VIEW);
-  const [form, setForm] = React.useState(initial);
-  const [asking, setAsking] = React.useState<"discard" | "measure" | null>(null);
+  const [untouched] = React.useState(initial);
+  const [form, setForm] = React.useState(untouched);
+  const [warning, setWarning] = React.useState(false);
+  const guard = useDiscardGuard(form !== untouched);
   const trimmed = form.name.trim();
   const error = nameError(trimmed);
   const blocked = trimmed === "" || error !== undefined;
   const saved = { ...form, name: trimmed };
   const save = (): void => {
     if (blocked) return;
-    if (measureChangeNeedsWarning(initial.measure, form.measure, logged)) setAsking("measure");
-    else onSave(saved);
+    if (measureChangeNeedsWarning(untouched.measure, form.measure, logged)) setWarning(true);
+    else onSave(saved, guard.release);
   };
   return (
     <DetailFrame
       backTo={EXERCISES_VIEW}
       backLabel={t("common.cancel")}
-      onBack={form === initial ? undefined : () => setAsking("discard")}
       footer={
         <button type="button" className="detail-primary" disabled={blocked} onClick={save}>
           {t("common.save")}
@@ -80,17 +82,16 @@ function Form({
         autoFocus={!editing}
         onSubmit={save}
       />
+      {guard.sheet}
       <Sheet
-        open={asking === "discard"}
-        title={t("workouts.discardChangesTitle")}
-        onClose={() => setAsking(null)}
-        action={{ label: t("common.discard"), danger: true, onPress: back }}
-      />
-      <Sheet
-        open={asking === "measure"}
+        open={warning}
         title={t("workouts.changeMeasureTitle", { name: trimmed })}
-        onClose={() => setAsking(null)}
-        action={{ label: t("workouts.changeMeasure"), danger: true, onPress: () => onSave(saved) }}
+        onClose={() => setWarning(false)}
+        action={{
+          label: t("workouts.changeMeasure"),
+          danger: true,
+          onPress: () => onSave(saved, guard.release),
+        }}
       >
         <p className="sheet-body">{t("workouts.changeMeasureBody")}</p>
       </Sheet>
@@ -103,9 +104,10 @@ function NewExercise({ kind, name }: { kind: WorkoutKind; name: string }): React
   const make = useMake();
   const navigate = useNavigate();
   const back = useGoBack(EXERCISES_VIEW);
-  const save = (form: ExerciseForm): void => {
+  const save = (form: ExerciseForm, release: () => void): void => {
     void make(form).then((made) => {
       if (made === null) return;
+      release();
       if ("exercise" in made) void navigate(exercisePath(made.exercise.id), { replace: true });
       else back();
     });
@@ -131,8 +133,11 @@ function EditExercise({
     [toast]
   );
   const actions = useExerciseActions(api, failed);
-  const [taken, setTaken] = React.useState<Exercise | null>(null);
-  const save = ({ name, kind, measure, eachSide, progress }: ExerciseForm): void => {
+  const [taken, setTaken] = React.useState<{ into: Exercise; release: () => void } | null>(null);
+  const save = (
+    { name, kind, measure, eachSide, progress }: ExerciseForm,
+    release: () => void
+  ): void => {
     void api
       .saveExercise(exercise.id, {
         name,
@@ -144,12 +149,13 @@ function EditExercise({
       .then(
         () => {
           void actions.refresh();
+          release();
           back();
         },
         (error: unknown) => {
           const clash = takenBy(error);
           if (clash === undefined) failed();
-          else setTaken(clash);
+          else setTaken({ into: clash, release });
         }
       );
   };
@@ -168,7 +174,10 @@ function EditExercise({
     >
       <Sheet
         open={taken !== null}
-        title={t("workouts.mergeExerciseTitle", { from: exercise.name, into: taken?.name ?? "" })}
+        title={t("workouts.mergeExerciseTitle", {
+          from: exercise.name,
+          into: taken?.into.name ?? "",
+        })}
         onClose={() => setTaken(null)}
         action={{
           label: t("workouts.merge"),
@@ -176,14 +185,19 @@ function EditExercise({
           onPress: () => {
             if (taken === null) return;
             setTaken(null);
-            void actions.merge(exercise, taken).then((done) => {
-              if (done) void navigate(exercisePath(taken.id), { replace: true });
+            void actions.merge(exercise, taken.into).then((done) => {
+              if (!done) return;
+              taken.release();
+              void navigate(exercisePath(taken.into.id), { replace: true });
             });
           },
         }}
       >
         <p className="sheet-body">
-          {t("workouts.mergeExerciseBody", { from: exercise.name, into: taken?.name ?? "" })}
+          {t("workouts.mergeExerciseBody", {
+            from: exercise.name,
+            into: taken?.into.name ?? "",
+          })}
         </p>
       </Sheet>
     </Form>
@@ -196,7 +210,8 @@ function EditGrip({ id }: { id: string }): React.ReactElement | null {
   const grip = model.grips.find((g) => g.id === id);
   if (grip === undefined) return null;
   const measure = grip.measure ?? "hang";
-  const save = (form: ExerciseForm): void => {
+  const save = (form: ExerciseForm, release: () => void): void => {
+    release();
     back();
     const picked = GRIP_MEASURES.find((m) => m === form.measure) ?? measure;
     if (form.name !== grip.name || picked !== measure)

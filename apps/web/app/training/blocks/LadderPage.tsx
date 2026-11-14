@@ -18,6 +18,7 @@ import { Segmented } from "../../components/Segmented";
 import { Sheet } from "../../components/Sheet";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { useAppApi } from "../../lib/useAppApi";
+import { useDiscardGuard } from "../../lib/useDiscardGuard";
 import { useGoBack } from "../../lib/useGoBack";
 import { useNavigate } from "react-router";
 import { useHangData } from "../data/HangDataContext";
@@ -46,6 +47,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
   const navigate = useNavigate();
   const leave = useGoBack(BACK_TO);
   const draft = usePlanDraft(log.plan, actions);
+  const guard = useDiscardGuard(draft.dirty);
   const workoutOf = workoutIn(useLibrary());
   const [turn, setTurn] = React.useState(0);
   const [open, setOpen] = React.useState<readonly number[]>([0]);
@@ -101,7 +103,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
       backTo={BACK_TO}
       {...(editing && {
         backLabel: t("common.cancel"),
-        onBack: draft.cancel,
+        onBack: () => guard.ask(draft.cancel),
         footer: (
           <button type="button" className="detail-primary" onClick={draft.save}>
             {t("common.save")}
@@ -212,6 +214,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
       >
         <p className="sheet-body">{t("plan.removeBody")}</p>
       </Sheet>
+      {guard.sheet}
     </DetailFrame>
   );
 }

@@ -1,0 +1,42 @@
+appId: com.sendtally.app
+name: back-asks-before-discarding
+# Going back out of a workout being made, by the swipe on iOS or the back key on Android,
+# must ask before dropping it as Cancel does, and staying keeps what was typed.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- tapOn: "Train(, tab.*)?"
+- tapOn:
+    id: "fab"
+- tapOn: "Create workout"
+- assertVisible: "What kind of workout\\?"
+- waitForAnimationToEnd
+- tapOn: "Strength"
+- extendedWaitUntil:
+    visible: "New workout"
+    timeout: 10000
+- tapOn: "(Name )?Tuesday gym"
+- inputText: "Maestro circuit"
+- runFlow: ../helpers/hide-keyboard.yaml
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - swipe:
+          start: 0%, 30%
+          end: 90%, 30%
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - back
+- assertVisible: "Discard your changes\\?"
+- tapOn:
+    text: "Cancel"
+    leftOf: "Discard"
+- assertVisible: ".*Maestro circuit"
+- tapOn: "Cancel"
+- tapOn:
+    text: "Discard"
+    rightOf: "Cancel"
+- assertNotVisible: "New workout"

@@ -100,3 +100,10 @@ jest.mock("react-native-gesture-handler/ReanimatedSwipeable", () => ({
   __esModule: true,
   default: ({ children }: { children: MockReact.ReactNode }) => children,
 }));
+
+// A component test has no navigator, so a screen's guard against leaving holds nothing; a test
+// reads what the guard was handed from the mock.
+jest.mock("expo-router/react-navigation", () => ({
+  ...jest.requireActual<object>("expo-router/react-navigation"),
+  usePreventRemove: jest.fn(),
+}));

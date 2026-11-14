@@ -16,6 +16,7 @@ import { Icon } from "../../../components/Icon";
 import { Switch } from "../../../components/Switch";
 import { useApi } from "../../../lib/api";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
+import { useDiscardGuard } from "../../../lib/useDiscardGuard";
 import { pressRow } from "../../../lib/press";
 import { ChipRow } from "../components/ChipRow";
 import { EditorHeader } from "../components/EditorHeader";
@@ -52,7 +53,8 @@ type FormProps = {
   editing: boolean;
   /** Sets are logged on it, so changing its measure warns first. */
   logged: boolean;
-  onSave: (form: ExerciseForm) => void;
+  /** Saves it; `release` lets the screen go without asking, called once the save leaves. */
+  onSave: (form: ExerciseForm, release: () => void) => void;
   /** A built-in's name, which stays as it is. */
   locked?: boolean;
   /** What is wrong with a name, if anything. */
@@ -83,6 +85,7 @@ function Form({
   const { model } = useHangData();
   const [untouched] = React.useState(initial);
   const [form, setForm] = React.useState(untouched);
+  const release = useDiscardGuard(form !== untouched);
   const [advanced, setAdvanced] = React.useState(false);
   const { kind } = form;
   const trimmed = form.name.trim();
@@ -104,18 +107,9 @@ function Form({
         title: t("workouts.changeMeasureTitle", { name: trimmed }),
         body: t("workouts.changeMeasureBody"),
         action: t("workouts.changeMeasure"),
-        onConfirm: () => onSave(saved),
+        onConfirm: () => onSave(saved, release),
       });
-    else onSave(saved);
-  };
-  const cancel = (): void => {
-    if (form === untouched) router.back();
-    else
-      confirmDestructive({
-        title: t("workouts.discardChangesTitle"),
-        action: t("common.discard"),
-        onConfirm: () => router.back(),
-      });
+    else onSave(saved, release);
   };
 
   return (
@@ -123,7 +117,7 @@ function Form({
       header={
         <EditorHeader
           title={editing ? t("workouts.editExercise") : t("workouts.newExercise")}
-          onCancel={cancel}
+          onCancel={() => router.back()}
           onSave={save}
           saveDisabled={trimmed === "" || error !== undefined}
         />
@@ -223,15 +217,17 @@ function NewExercise({ kind, name = "", ret }: ExerciseEditorScreenProps): React
     measure: kind === "hangboard" ? "hang" : defaultMeasure(exerciseKindOf(kind) ?? "other"),
     eachSide: false,
   };
-  const save = (form: ExerciseForm): void => {
+  const save = (form: ExerciseForm, release: () => void): void => {
     const opener = openerOf(ret);
     if (opener !== undefined) {
+      release();
       router.back();
       opener(form);
       return;
     }
     void make(form).then((made) => {
       if (made === null) return;
+      release();
       if ("exercise" in made)
         router.replace({ pathname: "/exercise/[id]", params: { id: made.exercise.id } });
       else router.back();
@@ -252,7 +248,11 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
   const logged =
     series.status === "ready" && series.data.some((s) => s.key === exerciseKey(exercise.name));
 
-  const save = ({ name, kind, measure, eachSide, progress }: ExerciseForm): void => {
+  const save = (
+    { name, kind, measure, eachSide, progress }: ExerciseForm,
+    release: () => void
+  ): void => {
+    release();
     router.back();
     void api
       .saveExercise(exercise.id, {
@@ -290,7 +290,8 @@ function EditGrip({ id }: { id: string }): React.ReactElement | null {
   if (grip === undefined) return null;
   const measure = grip.measure ?? "hang";
 
-  const save = (form: ExerciseForm): void => {
+  const save = (form: ExerciseForm, release: () => void): void => {
+    release();
     router.back();
     const picked = GRIP_MEASURES.find((m) => m === form.measure) ?? measure;
     if (form.name !== grip.name || picked !== measure)

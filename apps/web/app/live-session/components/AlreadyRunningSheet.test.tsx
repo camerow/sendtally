@@ -44,7 +44,7 @@ afterEach(() => {
 });
 
 const runOne = (): void =>
-  void writeStoredDraft(storage, tallyDraft(new Date()), new Date(), undefined);
+  act(() => void writeStoredDraft(storage, tallyDraft(new Date()), new Date(), undefined));
 
 describe("starting while a session runs", () => {
   it("starts straight away when nothing runs", () => {
@@ -88,14 +88,16 @@ describe("starting while a session runs", () => {
 
   it("records a running workout through its player, and starts the new one once it is saved", () => {
     const { store } = liveRunOf("u1");
-    store.write({
-      title: "Leg day",
-      workoutId: "w1",
-      pathname: "/workout/sets",
-      params: { title: "Leg day" },
-      startedAt: Date.now(),
-      state: { player: "sets", done: [], ticked: [] },
-    });
+    act(() =>
+      store.write({
+        title: "Leg day",
+        workoutId: "w1",
+        pathname: "/workout/sets",
+        params: { title: "Leg day" },
+        startedAt: Date.now(),
+        state: { player: "sets", done: [], ticked: [] },
+      })
+    );
     const start = vi.fn();
     act(() => startLive(running(storage, store, go), start));
     expect(document.body.textContent).toContain("Leg day");
