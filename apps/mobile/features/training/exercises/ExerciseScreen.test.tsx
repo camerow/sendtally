@@ -91,6 +91,18 @@ beforeEach(() => {
 });
 
 describe("exercise screen", () => {
+  it("opens a built-in by its id, or the user's own copy once they have one", async () => {
+    await renderWithHang(<ExerciseScreen id="pullUps" />, hangData(), { exercises: [] });
+    expect(screen.getByText("Pull-ups")).toBeTruthy();
+    expect(screen.getByText(/Nothing logged yet/)).toBeTruthy();
+    expect(screen.queryByText("Edit")).toBeNull();
+
+    await renderWithHang(<ExerciseScreen id="pullUps" />, hangData(), {
+      exercises: [anExercise("e9", "Weighted pull-ups", "strength", { builtIn: "pullUps" })],
+    });
+    expect(screen.getByText("Edit")).toBeTruthy();
+  });
+
   it("shows its best set and the workouts that use it", async () => {
     await renderWithHang(<ExerciseScreen id="e1" />, hangData(), world);
     expect(screen.getByText("Heaviest set done")).toBeTruthy();

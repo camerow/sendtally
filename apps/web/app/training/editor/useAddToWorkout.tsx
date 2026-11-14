@@ -16,7 +16,8 @@ import { useLibrary, workoutPath } from "../library/useLibrary";
 
 export type AddToWorkoutArgs = {
   name: string;
-  picked: Picked;
+  /** What it adds; a built-in becomes the user's own exercise first. */
+  pick: () => Promise<Picked | null>;
   /** A Fingers exercise goes in Fingers workouts, any other in the rest. */
   fingers: boolean;
   /** The workouts already using it. */
@@ -31,7 +32,7 @@ const newId = (): string => crypto.randomUUID();
  * An exercise's Add to workout: any of the user's own workouts it fits, at the end. One press
  * adds it and closes; a toast says where it went, with View.
  */
-export function useAddToWorkout({ name, picked, fingers, usedIn }: AddToWorkoutArgs): AddToWorkout {
+export function useAddToWorkout({ name, pick, fingers, usedIn }: AddToWorkoutArgs): AddToWorkout {
   const navigate = useNavigate();
   const toast = useToast();
   const failed = React.useCallback(
@@ -65,10 +66,13 @@ export function useAddToWorkout({ name, picked, fingers, usedIn }: AddToWorkoutA
                 disabled={there}
                 onClick={() => {
                   setOpen(false);
-                  void actions.saveWorkout(
-                    w.id,
-                    withItemsAdded(withEditorIds(draftOf(w), newId), [picked], newId)
-                  );
+                  void pick().then((picked) => {
+                    if (picked !== null)
+                      void actions.saveWorkout(
+                        w.id,
+                        withItemsAdded(withEditorIds(draftOf(w), newId), [picked], newId)
+                      );
+                  });
                   toast.show({
                     message: t("common.addedTo", { name: w.name }),
                     action: {

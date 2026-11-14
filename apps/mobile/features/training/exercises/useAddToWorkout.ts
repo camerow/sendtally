@@ -13,7 +13,8 @@ const failed = (): void => Alert.alert(t("workouts.saveFailed"));
 
 export type AddToWorkoutArgs = {
   name: string;
-  picked: Picked;
+  /** What it adds; a built-in becomes the user's own exercise first. */
+  pick: () => Promise<Picked | null>;
   /** A Fingers exercise goes in Fingers workouts, any other in the rest. */
   fingers: boolean;
   /** The workouts already using it. */
@@ -21,7 +22,7 @@ export type AddToWorkoutArgs = {
 };
 
 /** An exercise's Add to workout: any of the user's own workouts it fits, at the end. */
-export function useAddToWorkout({ name, picked, fingers, usedIn }: AddToWorkoutArgs): AddToMenu {
+export function useAddToWorkout({ name, pick, fingers, usedIn }: AddToWorkoutArgs): AddToMenu {
   const library = useLibrary().state;
   const actions = useWorkoutActions(useApi(), failed);
   const workouts =
@@ -40,11 +41,14 @@ export function useAddToWorkout({ name, picked, fingers, usedIn }: AddToWorkoutA
     })),
     add: (id) => {
       const w = workouts.find((x) => x.id === id);
-      if (w !== undefined)
-        void actions.saveWorkout(
-          id,
-          withItemsAdded(withEditorIds(draftOf(w), randomUUID), [picked], randomUUID)
-        );
+      if (w === undefined) return;
+      void pick().then((picked) => {
+        if (picked !== null)
+          void actions.saveWorkout(
+            id,
+            withItemsAdded(withEditorIds(draftOf(w), randomUUID), [picked], randomUUID)
+          );
+      });
     },
     view: (id) => router.push({ pathname: "/workout/[id]", params: { id } }),
   });

@@ -4,7 +4,7 @@ import { Alert, View } from "react-native";
 import type { Exercise } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
-import { exerciseLabel } from "@sendtally/features/exercises";
+import { builtInExercise, exerciseLabel } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import {
   exerciseKey,
@@ -26,6 +26,7 @@ import { LoadState } from "../data/LoadState";
 import { pickedOf } from "../exercise-picker/usePick";
 import { CategoryMark } from "../library/CategoryMark";
 import { useLibrary } from "../library/useLibrary";
+import { BuiltInExerciseScreen } from "./BuiltInExerciseScreen";
 import { ExerciseTrendCard } from "./ExerciseTrendCard";
 import { MergeExerciseSheet } from "./MergeExerciseSheet";
 import { ExerciseHistory } from "./ExerciseHistory";
@@ -54,7 +55,7 @@ function Detail({ exercise, all }: DetailProps): React.ReactElement {
     library.status === "ready" ? workoutsUsing(library.data.workouts, exercise.name) : [];
   const addTo = useAddToWorkout({
     name,
-    picked: pickedOf({ exercise }),
+    pick: async () => pickedOf({ exercise }),
     fingers: false,
     usedIn,
   });
@@ -137,12 +138,17 @@ function Detail({ exercise, all }: DetailProps): React.ReactElement {
   );
 }
 
-/** One exercise: its best-set trend, its last sessions and the workouts that use it. */
+/**
+ * One exercise: its best-set trend, its last sessions and the workouts that use it. A built-in id
+ * opens the user's own copy once they have one, else the built-in itself.
+ */
 export function ExerciseScreen({ id }: ExerciseScreenProps): React.ReactElement | null {
   const exercises = useExercises(useApi());
   if (exercises.state.status !== "ready")
     return <LoadState state={exercises.state} onRetry={() => void exercises.reload()} framed />;
   const all = exercises.state.data;
-  const exercise = all.find((e) => e.id === id);
-  return exercise === undefined ? null : <Detail exercise={exercise} all={all} />;
+  const exercise = all.find((e) => e.id === id || (e.builtIn === id && !e.archived));
+  if (exercise !== undefined) return <Detail exercise={exercise} all={all} />;
+  const builtIn = builtInExercise(id);
+  return builtIn === undefined ? null : <BuiltInExerciseScreen builtIn={builtIn} />;
 }

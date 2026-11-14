@@ -304,35 +304,35 @@ describe("Workout editor", () => {
 
   it("makes a new exercise from what was searched in its editor and adds it once saved", async () => {
     mockApi.saveExercise.mockResolvedValue({
-      exercise: anExercise("new-id", "Nordic curl", "strength", { measure: "reps" }),
+      exercise: anExercise("new-id", "Sissy squat", "strength", { measure: "reps" }),
     });
     const editor = await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
     await fireEvent.press(screen.getByText("Add exercises"));
-    await fireEvent.changeText(screen.getByLabelText("Search exercises"), "Nordic curl");
-    expect(screen.getByText("No exercise called Nordic curl")).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText("Search exercises"), "Sissy squat");
+    expect(screen.getByText("No exercise called Sissy squat")).toBeTruthy();
     await fireEvent.press(screen.getAllByText("New")[1]!);
     expect(editor.queryByLabelText("Search exercises")).toBeNull();
     const [[route]] = jest.mocked(router.push).mock.calls as unknown as [
       [{ pathname: string; params: { kind: "strength"; name: string; ret: string } }],
     ];
     expect(route.pathname).toBe("/exercise/edit");
-    expect(route.params).toMatchObject({ kind: "strength", name: "Nordic curl" });
+    expect(route.params).toMatchObject({ kind: "strength", name: "Sissy squat" });
 
     const exercise = await renderWithHang(<ExerciseEditorScreen {...route.params} />);
-    expect(exercise.getByDisplayValue("Nordic curl")).toBeTruthy();
+    expect(exercise.getByDisplayValue("Sissy squat")).toBeTruthy();
     await fireEvent.press(exercise.getByRole("radio", { name: "Reps" }));
     await fireEvent.press(exercise.getByText("Save"));
     await act(async () => undefined);
 
     expect(mockApi.saveExercise).toHaveBeenCalledWith("w-new", {
-      name: "Nordic curl",
+      name: "Sissy squat",
       kind: "strength",
       measure: "reps",
       eachSide: false,
       progress: null,
       builtIn: null,
     });
-    expect(editor.getByText("Nordic curl")).toBeTruthy();
+    expect(editor.getByText("Sissy squat")).toBeTruthy();
     expect(editor.getByLabelText("Reps")).toBeTruthy();
     expect(editor.queryByLabelText("Weight (kg)")).toBeNull();
   });

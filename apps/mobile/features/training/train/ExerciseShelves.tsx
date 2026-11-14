@@ -46,7 +46,10 @@ export function ExerciseShelves(): React.ReactElement {
             open: () =>
               "grip" in c.opens
                 ? router.push({ pathname: "/grip/[id]", params: { id: c.opens.grip } })
-                : router.push({ pathname: "/exercise/[id]", params: { id: c.opens.exercise } }),
+                : router.push({
+                    pathname: "/exercise/[id]",
+                    params: { id: "exercise" in c.opens ? c.opens.exercise : c.opens.builtIn },
+                  }),
           }))}
           onAdd={() => openExerciseEditor(s.kind)}
           onSeeAll={() => router.push({ pathname: "/exercise/category", params: { kind: s.kind } })}

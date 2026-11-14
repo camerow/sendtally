@@ -62,7 +62,7 @@ export function GripPage({ id }: { id: string }): React.ReactElement {
       : [];
   const addTo = useAddToWorkout({
     name,
-    picked: grip === undefined ? { exercise: id } : pickedOf({ grip }),
+    pick: async () => (grip === undefined ? { exercise: id } : pickedOf({ grip })),
     fingers: true,
     usedIn,
   });

@@ -50,6 +50,9 @@ describe("pickerEntries", () => {
   it("searches every category with All, ignoring case and accents", () => {
     expect(names({ category: "all", text: "CURL" })).toEqual([
       "Jefferson curl",
+      "Biceps curl",
+      "Hammer curl",
+      "Nordic hamstring curl",
       "Reverse wrist curls",
       "Wrist curls",
     ]);

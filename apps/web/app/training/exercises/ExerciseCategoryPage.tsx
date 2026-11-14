@@ -22,12 +22,12 @@ import { EXERCISES_VIEW, exercisePath, gripPath } from "./paths";
 const mine = ({ source }: PickerEntry): boolean =>
   "exercise" in source || ("grip" in source && source.grip.custom);
 
-const pathOf = ({ source }: PickerEntry): string | undefined =>
+const pathOf = ({ source }: PickerEntry): string =>
   "exercise" in source
     ? exercisePath(source.exercise.id)
     : "grip" in source
       ? gripPath(source.grip.id)
-      : undefined;
+      : exercisePath(source.builtIn.id);
 
 function metaOf(entry: PickerEntry, { model, today }: HangData): string {
   if ("grip" in entry.source)
@@ -41,7 +41,6 @@ function metaOf(entry: PickerEntry, { model, today }: HangData): string {
 
 function EntryRow({ entry }: { entry: PickerEntry }): React.ReactElement {
   const meta = metaOf(entry, useHangData());
-  const to = pathOf(entry);
   const body = (
     <>
       <span className="entry-row-name">
@@ -51,10 +50,8 @@ function EntryRow({ entry }: { entry: PickerEntry }): React.ReactElement {
       {meta !== "" && <span className="entry-row-meta">{meta}</span>}
     </>
   );
-  return to === undefined ? (
-    <div className="entry-row">{body}</div>
-  ) : (
-    <Link to={to} className="entry-row entry-row--link">
+  return (
+    <Link to={pathOf(entry)} className="entry-row entry-row--link">
       {body}
     </Link>
   );
