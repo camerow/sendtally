@@ -17,18 +17,27 @@ The v3 page is untouched; it was read for reference only.
 
 The brief's facts, checked against `main` at `fdae200c`.
 
-- Built-in exercises (77) and workouts (20) are constants in `packages/core/src/hang/builtIns.ts`; the 12 hangboard grips are `BUILT_IN_GRIPS` in `packages/core/src/hang/library.ts`. None touch D1.
+- Built-in exercises (77) and workouts (20) are constants in `packages/core/src/hang/builtIns.ts`; the 12 hangboard grips are `BUILT_IN_GRIPS` in `packages/core/src/hang/library.ts`.
+  None touch D1.
 - Their translated names and blurbs are catalog keys (`workouts.exercise.<id>`, `workouts.builtIn.<id>.name` / `.blurb`, `hang.grip.*`) in all four locales.
-- **Correction:** the blurb is already the built-in workout's description. `builtInWorkouts()` in `packages/features/src/workouts/builtIns.ts` sets `description: t("workouts.builtIn.<id>.blurb")`.
-- **Correction:** custom workout descriptions already exist end to end. `workouts.description` in D1, `z.string().trim().max(2000)` in `packages/api/src/lib/plan.ts`, an `EditorTextField` in the mobile and web workout editors, plain text in `LibraryIntro` (between title and mono meta), and the live screens' `WorkoutInfo` button, which opens it in a sheet. The connector's `get_training_library` and `save_workout` already read and write it.
+- **Correction:** the blurb is already the built-in workout's description.
+  `builtInWorkouts()` in `packages/features/src/workouts/builtIns.ts` sets `description: t("workouts.builtIn.<id>.blurb")`.
+- **Correction:** custom workout descriptions already exist end to end.
+  `workouts.description` in D1, `z.string().trim().max(2000)` in `packages/api/src/lib/plan.ts`, an `EditorTextField` in the mobile and web workout editors, plain text in `LibraryIntro` (between title and mono meta), and the live screens' `WorkoutInfo` button, which opens it in a sheet.
+  The connector's `get_training_library` and `save_workout` already read and write it.
 - So for workouts, R1.2, R1.6 (live access) and R1.7 are done; what is missing is formatting, collapsing long text, and the same for exercises and blocks.
-- Exercises: `exercises` rows have no description. A built-in exercise only gets a row (with `built_in` set and its name locked, `workouts.builtInNameLocked`) once the user first picks it. Until then it has no detail screen: `ExerciseCategoryScreen` gives its row no `onPress`.
+- Exercises: `exercises` rows have no description.
+  A built-in exercise only gets a row (with `built_in` set and its name locked, `workouts.builtInNameLocked`) once the user first picks it.
+  Until then it has no detail screen: `ExerciseCategoryScreen` gives its row no `onPress`.
 - Hangboard exercises are grips, with their own `GripScreen` at `/grip/[id]`.
-- Blocks (`training_blocks`) have no description. Blocks are edited inline in `BlockHeader`'s editing mode, not in a separate editor.
+- Blocks (`training_blocks`) have no description.
+  Blocks are edited inline in `BlockHeader`'s editing mode, not in a separate editor.
 - Ready-made library blocks do not exist; `docs/plans/first-run-onboarding.md` on `feat/first-run-onboarding` proposes one Starter block.
-- Moderators: `users.role` is `user | moderator | admin`; one `requireRole("moderator")` middleware is mounted on `/v1/moderation/*` in `packages/api/src/app.ts`. The web page is `apps/web/app/moderation/components/ModerationPage.tsx`, with four tabs from `MODERATION_TABS`.
+- Moderators: `users.role` is `user | moderator | admin`; one `requireRole("moderator")` middleware is mounted on `/v1/moderation/*` in `packages/api/src/app.ts`.
+  The web page is `apps/web/app/moderation/components/ModerationPage.tsx`, with four tabs from `MODERATION_TABS`.
 - No R2, Images or Stream binding exists in either `wrangler.jsonc`; `infra/terraform/` holds zone, DNS, D1 and redirects only.
-- Mobile native modules: `expo-image`, `expo-video` and any image picker are **not** in the build. `expo-network`, `expo-file-system`, `expo-web-browser` and `expo-audio` are.
+- Mobile native modules: `expo-image`, `expo-video` and any image picker are **not** in the build.
+  `expo-network`, `expo-file-system`, `expo-web-browser` and `expo-audio` are.
 - Mobile query results are persisted to disk by default (`QueryProvider` with `expo-file-system`), so anything the API serves is available offline after the first fetch.
 - The CSV export holds sessions only, so descriptions and media change nothing there.
 - Strava activity text names grips through `BUILT_IN_GRIP_NAMES` on the Worker.
@@ -37,33 +46,51 @@ The brief's facts, checked against `main` at `fdae200c`.
 
 ### R1. Descriptions
 
-1. Exercises (custom and built-in, grips included), workouts and blocks each have an optional description. Empty renders nothing: no heading, no placeholder, no gap.
-2. Custom items: the owner writes it in the existing editor. The exercise editor gains the workout editor's `EditorTextField`; a block gets a Description field in `BlockHeader` editing mode. A built-in-linked exercise row shows the library's description and has no field, the same way its name is locked.
+1. Exercises (custom and built-in, grips included), workouts and blocks each have an optional description.
+   Empty renders nothing: no heading, no placeholder, no gap.
+2. Custom items: the owner writes it in the existing editor.
+   The exercise editor gains the workout editor's `EditorTextField`; a block gets a Description field in `BlockHeader` editing mode.
+   A built-in-linked exercise row shows the library's description and has no field, the same way its name is locked.
 3. Built-ins: Will writes it in the moderation Library tab (R3).
-4. Format: plain text with a tiny Markdown subset, typed without a toolbar. A blank line separates paragraphs, a line starting `- ` is a bullet, a line starting `1. ` is a numbered item, a bare `https://` URL is a link and `[label](https://...)` is a labelled link. Nothing else is interpreted; no HTML, no images in text.
-5. One pure parser, `packages/core/src/text/description.ts`, returns blocks (`paragraph | bullets | numbered`) of inline runs (`text | link`). Mobile renders it with nested `Text`, web with React elements; never a web view, never `innerHTML`.
-6. Links are `https` only (anything else stays text) and open with the system (`Linking.openURL` on mobile, a new tab on web), so a video link opens the video app where one is installed. No embedded players: that needs a web view and sends viewer data to the host.
+4. Format: plain text with a tiny Markdown subset, typed without a toolbar.
+   A blank line separates paragraphs, a line starting `- ` is a bullet, a line starting `1.
+` is a numbered item, a bare `https://` URL is a link and `[label](https://...)` is a labelled link.
+   Nothing else is interpreted; no HTML, no images in text.
+5. One pure parser, `packages/core/src/text/description.ts`, returns blocks (`paragraph | bullets | numbered`) of inline runs (`text | link`).
+   Mobile renders it with nested `Text`, web with React elements; never a web view, never `innerHTML`.
+6. Links are `https` only (anything else stays text) and open with the system (`Linking.openURL` on mobile, a new tab on web), so a video link opens the video app where one is installed.
+   No embedded players: that needs a web view and sends viewer data to the host.
 7. Limit 2000 characters everywhere, the value `plan.ts` already uses, checked by Zod at the edge and by `maxLength` in the editors.
-8. Placement: in the hero, under the title and before the mono meta, the slot `LibraryIntro` uses today, on every detail screen. Collapsed past 5 lines with a More / Less text button.
-9. Live: the existing `WorkoutInfo` sheet for workouts; for the current exercise an info button after its name in `SetsCard`, and the existing info slot in `TimerHeader` for hangboard. The button exists only when there is a description or media.
+8. Placement: in the hero, under the title and before the mono meta, the slot `LibraryIntro` uses today, on every detail screen.
+   Collapsed past 5 lines with a More / Less text button.
+9. Live: the existing `WorkoutInfo` sheet for workouts; for the current exercise an info button after its name in `SetsCard`, and the existing info slot in `TimerHeader` for hangboard.
+   The button exists only when there is a description or media.
 10. Built-in exercises open `ExerciseScreen` even before the user has picked one, with the hero, description, media and the existing "nothing logged" `DashedPanel`; no new screen type.
 11. The connector reads and writes descriptions on exercises and blocks too (`save_exercise`, `save_block`, `get_training_library`, `get_plan`).
-12. English only for new text (Will, decision 4). Interface strings stay in all four catalogs as today.
+12. English only for new text (Will, decision 4).
+    Interface strings stay in all four catalogs as today.
 
 ### R2. Media
 
 1. Exercises, grips and workouts can have zero or more pictures and clips; none renders nothing.
-2. Version one is curator media on built-ins only. The table carries an owner column so user media on custom items is a later addition, not a rewrite.
-3. A clip is a short silent loop demonstrating the movement: H.264 MP4, at most 20 seconds, 1080 px on the long side and 8 MB. Anything longer is a link in the description.
+2. Version one is curator media on built-ins only.
+   The table carries an owner column so user media on custom items is a later addition, not a rewrite.
+3. A clip is a short silent loop demonstrating the movement: H.264 MP4, at most 20 seconds, 1080 px on the long side and 8 MB.
+   Anything longer is a link in the description.
 4. Storage: R2 alone (below), one bucket created in Terraform, served from `media.sendtally.com`.
-5. Upload: through the Worker, which validates and writes to R2 (below). No transcoding anywhere: the browser checks duration, size and codec before upload and refuses the rest with a clear message.
-6. Every picture is resized in the browser before upload to two files: 1600 px on the long side for detail and a 144 px square crop for thumbnails (44 pt at 3x). A clip's poster is its first frame, captured in the browser, with the same two sizes.
+5. Upload: through the Worker, which validates and writes to R2 (below).
+   No transcoding anywhere: the browser checks duration, size and codec before upload and refuses the rest with a clear message.
+6. Every picture is resized in the browser before upload to two files: 1600 px on the long side for detail and a 144 px square crop for thumbnails (44 pt at 3x).
+   A clip's poster is its first frame, captured in the browser, with the same two sizes.
 7. Each item has alt text (required, English only), an order and an optional credit line.
 8. Delivery: immutable keys (`library/<itemType>/<itemId>/<uuid>-<size>.jpg|.mp4`), `Cache-Control: public, max-age=31536000, immutable`, a Cache Everything rule on the media host so MP4s cache.
-9. Where it shows: detail screens, as the first section under the hero, one 4:3 frame with page dots and the credit in small muted mono. **Changed (decision 3):** items with a picture also show its thumbnail in list rows and pickers, 44x44 with a 2 px `KIND_LOOK` ink border in place of the category mark; items without keep today's row exactly.
-10. Clips never autoplay: poster and a play button; a tap plays muted and loops, another pauses. This one rule removes the reduced-motion and metered-connection branches, since nothing downloads before a tap.
+9. Where it shows: detail screens, as the first section under the hero, one 4:3 frame with page dots and the credit in small muted mono.
+   **Changed (decision 3):** items with a picture also show its thumbnail in list rows and pickers, 44x44 with a 2 px `KIND_LOOK` ink border in place of the category mark; items without keep today's row exactly.
+10. Clips never autoplay: poster and a play button; a tap plays muted and loops, another pauses.
+    This one rule removes the reduced-motion and metered-connection branches, since nothing downloads before a tap.
 11. Offline: a cached picture shows; an uncached one shows the soft surface frame with its alt text.
-12. Rights: only media Will owns or has licence for. Deleting removes the R2 objects, then the row, and cannot be undone.
+12. Rights: only media Will owns or has licence for.
+    Deleting removes the R2 objects, then the row, and cannot be undone.
 
 ### R3. The built-in library in D1 (replaces the lead's content-table recommendation)
 
@@ -75,7 +102,8 @@ Covered in full in "Moving the built-in library to D1" below.
 
 ### R4. Cross-cutting
 
-- Schema through Drizzle, additive only. The seed is a data migration, like `0036_backfill_climb_crags.sql`.
+- Schema through Drizzle, additive only.
+  The seed is a data migration, like `0036_backfill_climb_crags.sql`.
 - Privacy and analytics as below.
 - No board brand names in seeded or sample content.
 
@@ -107,35 +135,44 @@ Grip ids stay a typed union in core (`BUILT_IN_GRIPS`), because the hangboard en
 ### Stable ids
 
 - The primary key is today's id, so user `exercises.built_in`, hang sessions' `workoutId`, plans and the connector keep resolving.
-- Nothing is ever deleted. Retired items leave pickers and the library list but still resolve names for history.
+- Nothing is ever deleted.
+  Retired items leave pickers and the library list but still resolve names for history.
 - New built-ins get an id from their English name (camelCase for exercises, kind-prefixed kebab-case for workouts, as now), checked unique against retired ids too, and frozen at creation.
 
 ### Seed
 
-- A generated script reads `BUILT_IN_EXERCISES`, `BUILT_IN_WORKOUTS`, `BUILT_IN_GRIPS` and the four catalogs and writes one data migration of `INSERT ... ON CONFLICT (type, id) DO NOTHING`.
+- A generated script reads `BUILT_IN_EXERCISES`, `BUILT_IN_WORKOUTS`, `BUILT_IN_GRIPS` and the four catalogs and writes one data migration of `INSERT ...
+ON CONFLICT (type, id) DO NOTHING`.
 - Wrangler applies it once per database; re-running it by hand is safe and never overwrites an edit.
 - Fresh local and preview databases get the full library from the migration chain, so tests and PR previews keep working.
-- The same PR deletes the constants' content (ids for grips stay), the `workouts.exercise.*`, `workouts.builtIn.*` and `hang.grip.*` catalog keys, and moves the core and features tests that used them onto a small fixture. The `i18n.test.ts` parity test keeps passing because the keys go from all four catalogs at once.
+- The same PR deletes the constants' content (ids for grips stay), the `workouts.exercise.*`, `workouts.builtIn.*` and `hang.grip.*` catalog keys, and moves the core and features tests that used them onto a small fixture.
+  The `i18n.test.ts` parity test keeps passing because the keys go from all four catalogs at once.
 
 ### Translations
 
-- The seed copies every catalog name and blurb into `translations`, so nothing regresses for de, fr and es users. The blurb seeds the English `description` and the translated `description`.
+- The seed copies every catalog name and blurb into `translations`, so nothing regresses for de, fr and es users.
+  The blurb seeds the English `description` and the translated `description`.
 - The apps show `translations[locale].<field>` when present, else the English field.
 - Editing an English field in moderation clears that field's translations, so a rename or a new description reaches everyone in English rather than a stale translation (decision 4 accepts English).
 - The folded "Other languages" group lets Will set a translated name by hand; there is none for descriptions.
 
 ### Serving, offline and first launch
 
-- `GET /v1/library` returns every active and retired item with all translations and media, about 60 KB, with an `ETag` from the newest `updated_at` and `Cache-Control: public, max-age=300, stale-while-revalidate=86400`. It needs no user, so the web Worker and the edge cache serve it for everyone.
+- `GET /v1/library` returns every active and retired item with all translations and media, about 60 KB, with an `ETag` from the newest `updated_at` and `Cache-Control: public, max-age=300, stale-while-revalidate=86400`.
+  It needs no user, so the web Worker and the edge cache serve it for everyone.
 - Mobile reads it through a normal query, persisted to disk like every other query, so it works offline after the first fetch.
-- First launch needs the network anyway (sign-in), and the library loads alongside the user's own training data, which already does. Screens that need it already render `LoadState`.
-- Today `builtInWorkouts()` and friends are synchronous; they become selectors over the library query. Callers are `features/workouts/library.ts`, `features/sessions/hang.ts`, `features/exercises/picker.ts`, `features/hang/model.ts` and `names.ts`, plus their tests.
-- The Worker reads the table through one `repo.library(db)` call. Consumers: the connector (`trainingLibrary`, `saveWorkout`, `saveBlock`, `saveExercise`, `deleteWorkout`, `deleteExercise`), `lib/hang.ts`, `hang.ts` and `posting.ts` (grip names in Strava text, which stay English).
+- First launch needs the network anyway (sign-in), and the library loads alongside the user's own training data, which already does.
+  Screens that need it already render `LoadState`.
+- Today `builtInWorkouts()` and friends are synchronous; they become selectors over the library query.
+  Callers are `features/workouts/library.ts`, `features/sessions/hang.ts`, `features/exercises/picker.ts`, `features/hang/model.ts` and `names.ts`, plus their tests.
+- The Worker reads the table through one `repo.library(db)` call.
+  Consumers: the connector (`trainingLibrary`, `saveWorkout`, `saveBlock`, `saveExercise`, `deleteWorkout`, `deleteExercise`), `lib/hang.ts`, `hang.ts` and `posting.ts` (grip names in Strava text, which stay English).
 
 ### Moderation writes
 
 - `PUT /v1/moderation/library/:type/:id` (name, translations, description, status), `POST .../media`, `PATCH /v1/moderation/library/media/:id` (alt, credit, position), `DELETE /v1/moderation/library/media/:id`.
-- Each write appends to `library_changes` (type, id, changed_by, changed_at, before JSON, after JSON). Restore writes `before` back as a new change, so history is never rewritten.
+- Each write appends to `library_changes` (type, id, changed_by, changed_at, before JSON, after JSON).
+  Restore writes `before` back as a new change, so history is never rewritten.
 - A media delete is logged without a Restore, because the file is gone.
 
 ### The `library-add` skill and its editor artifact
@@ -148,7 +185,8 @@ Grip ids stay a typed union in core (`BUILT_IN_GRIPS`), because the hangboard en
 
 - `exercises.description` and `training_blocks.description`: nullable text, like `workouts.description`.
 - `library_media`: id, `item_type`, `item_id`, `owner_id` (null for the library; a user id later), `kind` (`picture | clip`), `key`, `thumb_key`, `poster_key`, width, height, `duration_ms`, bytes, alt, credit, position, `created_by`, `created_at`.
-- Account deletion: no change in version one, since media has no user owner. When user media arrives, `repo.deleteUserData` deletes rows and objects.
+- Account deletion: no change in version one, since media has no user owner.
+  When user media arrives, `repo.deleteUserData` deletes rows and objects.
 
 ## API and connector changes
 
@@ -163,8 +201,10 @@ At both 100 and 1,000 clips (plus as many pictures) it costs $0 a month, and it 
 
 Prices fetched 2026-11-14:
 
-- R2: 10 GB-month, 1 million Class A and 10 million Class B operations free; then $0.015 per GB-month, $4.50 and $0.36 per million; egress free. A custom domain on a zone in the same account enables caching; MP4 needs a Cache Everything rule. https://developers.cloudflare.com/r2/pricing/ , https://developers.cloudflare.com/r2/buckets/public-buckets/
-- Images transformations: 5,000 unique transformations a month free (past that, error 9422 rather than a bill), then $0.50 per 1,000. Media Transformations (video frames and resizing) share that allowance; frame output counts 1, video output 1 per second. https://developers.cloudflare.com/images/pricing/ , https://developers.cloudflare.com/stream/transform-videos/
+- R2: 10 GB-month, 1 million Class A and 10 million Class B operations free; then $0.015 per GB-month, $4.50 and $0.36 per million; egress free.
+  A custom domain on a zone in the same account enables caching; MP4 needs a Cache Everything rule. https://developers.cloudflare.com/r2/pricing/ , https://developers.cloudflare.com/r2/buckets/public-buckets/
+- Images transformations: 5,000 unique transformations a month free (past that, error 9422 rather than a bill), then $0.50 per 1,000.
+  Media Transformations (video frames and resizing) share that allowance; frame output counts 1, video output 1 per second. https://developers.cloudflare.com/images/pricing/ , https://developers.cloudflare.com/stream/transform-videos/
 - Stream: $5 per 1,000 minutes stored (prepaid), $1 per 1,000 minutes delivered, no free tier; HLS and DASH URLs work in native players. https://developers.cloudflare.com/stream/pricing/ , https://developers.cloudflare.com/stream/viewing-videos/using-own-player/
 - Worker request bodies: 100 MB on Free and Pro zones. https://developers.cloudflare.com/workers/platform/limits/
 
@@ -211,14 +251,19 @@ Pictures ship over the air on `Image`; the clip slice adds `expo-video` and swap
 
 ## Privacy and analytics
 
-- No new third party: media comes from our own domain on Cloudflare, already listed in `apps/web/app/routes/privacy.tsx`. Add one line there that links in descriptions lead to other sites, which have their own privacy terms.
-- Events, counts and enum strings only: `description_link_opened` {`item_type`: exercise | workout | block, `source`: library | mine} and `clip_played` {`item_type`}. Moderation writes are logged in `library_changes`, not PostHog.
+- No new third party: media comes from our own domain on Cloudflare, already listed in `apps/web/app/routes/privacy.tsx`.
+  Add one line there that links in descriptions lead to other sites, which have their own privacy terms.
+- Events, counts and enum strings only: `description_link_opened` {`item_type`: exercise | workout | block, `source`: library | mine} and `clip_played` {`item_type`}.
+  Moderation writes are logged in `library_changes`, not PostHog.
 
 ## Delivery slices
 
-1. **Custom descriptions (smallest useful first slice, over the air).** Parser, formatted rendering with More / Less for the workout descriptions that already exist, `description` on custom exercises and blocks with their editor fields, the live info button for the current exercise, connector fields. Removes nothing; `LibraryIntro`'s plain text becomes the shared renderer.
-2. **Built-in library in D1 (over the air, largest).** Table, seed migration, `GET /v1/library`, the apps and Worker reading it, built-in exercises opening `ExerciseScreen`, moderation Library tab with text editing and Changes. Removes the built-in content constants, about 130 catalog keys in each of the four locales and the editor artifact; repoints `library-add`.
-3. **Pictures (over the air, plus Terraform).** Bucket, media host, cache rule, Worker binding, upload, detail frame, list and picker thumbnails, alt and credit. Adds the R2 bucket; removes nothing.
+1. **Custom descriptions (smallest useful first slice, over the air).** Parser, formatted rendering with More / Less for the workout descriptions that already exist, `description` on custom exercises and blocks with their editor fields, the live info button for the current exercise, connector fields.
+   Removes nothing; `LibraryIntro`'s plain text becomes the shared renderer.
+2. **Built-in library in D1 (over the air, largest).** Table, seed migration, `GET /v1/library`, the apps and Worker reading it, built-in exercises opening `ExerciseScreen`, moderation Library tab with text editing and Changes.
+   Removes the built-in content constants, about 130 catalog keys in each of the four locales and the editor artifact; repoints `library-add`.
+3. **Pictures (over the air, plus Terraform).** Bucket, media host, cache rule, Worker binding, upload, detail frame, list and picker thumbnails, alt and credit.
+   Adds the R2 bucket; removes nothing.
 4. **Clips (store build).** `expo-video` and `expo-image`, posters, tap to play, the live sheet showing the current exercise's clip.
 5. **Ready-made blocks.** `library_items` type `block` once the Starter block lands; block media then comes for free.
 
@@ -232,8 +277,13 @@ Pictures ship over the air on `Image`; the clip slice adds `expo-video` and swap
 
 ## Open decisions for Will
 
-1. Clip limits of 20 seconds, 1080 px and 8 MB. Recommendation: keep them; long demonstrations are links.
-2. Thumbnails replace the category mark rather than sitting beside it (`TdmThumbs`). Recommendation: replace, so rows keep their height.
-3. Retire the library editor artifact when slice 2 ships. Recommendation: yes; one editor.
-4. Editing an English field clears its translations. Recommendation: yes, a stale German name is worse than an English one.
-5. Moderator tools on the connector (`save_library_item`) so an assistant can draft built-in descriptions. Recommendation: later, after the moderation tab has been used by hand.
+1. Clip limits of 20 seconds, 1080 px and 8 MB.
+   Recommendation: keep them; long demonstrations are links.
+2. Thumbnails replace the category mark rather than sitting beside it (`TdmThumbs`).
+   Recommendation: replace, so rows keep their height.
+3. Retire the library editor artifact when slice 2 ships.
+   Recommendation: yes; one editor.
+4. Editing an English field clears its translations.
+   Recommendation: yes, a stale German name is worse than an English one.
+5. Moderator tools on the connector (`save_library_item`) so an assistant can draft built-in descriptions.
+   Recommendation: later, after the moderation tab has been used by hand.
