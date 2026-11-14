@@ -37,7 +37,7 @@ The brief's facts, checked against `main` at `fdae200c`.
 - Moderators: `users.role` is `user | moderator | admin`; one `requireRole("moderator")` middleware is mounted on `/v1/moderation/*` in `packages/api/src/app.ts`.
   The web page is `apps/web/app/moderation/components/ModerationPage.tsx`, with four tabs from `MODERATION_TABS`.
 - No R2, Images or Stream binding exists in either `wrangler.jsonc`; `infra/terraform/` holds zone, DNS, D1 and redirects only.
-- Mobile native modules: `expo-image`, `expo-video` and any image picker are **not** in the build.
+- Mobile native modules: `expo-image`, `expo-video`, `react-native-webview` and any image picker are **not** in the build.
   `expo-network`, `expo-file-system`, `expo-web-browser` and `expo-audio` are.
 - Mobile query results are persisted to disk by default (`QueryProvider` with `expo-file-system`), so anything the API serves is available offline after the first fetch.
 - The CSV export holds sessions only, so descriptions and media change nothing there.
@@ -74,19 +74,17 @@ The brief's facts, checked against `main` at `fdae200c`.
 
 ### R2. Media
 
-1. Exercises, grips and workouts can have zero or more pictures and clips; none renders nothing.
+1. Exercises, grips and workouts can have zero or more pictures and YouTube videos; none renders nothing.
 2. Version one is curator media on built-ins only.
    The table carries an owner column so user media on custom items is a later addition, not a rewrite.
-3. A clip is a short silent loop demonstrating the movement: H.264 MP4, at most 20 seconds, 1080 px on the long side and 8 MB.
-   Anything longer is a link in the description.
-4. Storage: R2 alone (below), one bucket created in Terraform, served from `media.sendtally.com`.
-5. Upload: through the Worker, which validates and writes to R2 (below).
-   No transcoding anywhere: the browser checks duration, size and codec before upload and refuses the rest with a clear message.
+3. **Changed (decision 7):** a video is a YouTube video, attached by pasting its link in the moderation Library and played inside the app; we host no video at all.
+   See "YouTube videos" below.
+4. Storage: pictures on R2 alone (below), one bucket created in Terraform, served from `media.sendtally.com`.
+5. Upload: pictures through the Worker, which validates and writes to R2 (below).
 6. Every picture is resized in the browser before upload to two files: 1600 px on the long side for detail and a 144 px square crop for thumbnails (44 pt at 3x).
-   A clip's poster is its first frame, captured in the browser, with the same two sizes.
 7. Each item has alt text (English only), an order and an optional credit line.
    Media saves as it uploads; an item without alt text stays hidden in the apps until it has some, so alt is required to publish rather than to upload.
-8. Delivery: immutable keys (`library/<itemType>/<itemId>/<uuid>-<size>.jpg|.mp4`), `Cache-Control: public, max-age=31536000, immutable`, a Cache Everything rule on the media host so MP4s cache.
+8. Delivery: immutable keys (`library/<itemType>/<itemId>/<uuid>-<size>.jpg`), `Cache-Control: public, max-age=31536000, immutable`, cached by Cloudflare on the media host.
 9. Where it shows (`TdmHero`): on workout, exercise and grip detail screens, media is a full-bleed 4:3 hero behind the top of the screen, and the content scrolls up and over it.
    Several items swipe sideways inside that one frame with page dots, and the credit sits in small muted mono under the title area; there is no second media frame, so everything below the hero stays exactly today's anatomy.
    Blocks keep their header until ready-made blocks have media.
@@ -94,8 +92,8 @@ The brief's facts, checked against `main` at `fdae200c`.
    A workout without a picture keeps today's screen exactly.
    **Changed (decision 6):** the info sheet (`WorkoutInfo`, and the exercise info button in R1.9) holds the item's media at the top with the same hero treatment and the description below; media only, description only, or both; neither means no info button.
    **Changed (decision 3):** items with a picture also show its thumbnail in list rows and pickers, 44x44 with a 2 px `KIND_LOOK` ink border in place of the category mark; items without keep today's row exactly.
-10. Clips never autoplay: poster and a play button; a tap plays muted and loops, another pauses.
-    This one rule removes the reduced-motion and metered-connection branches, since nothing downloads before a tap.
+10. Videos never autoplay: a poster and a play button; a tap plays.
+    This one rule removes the reduced-motion and metered-connection branches, and it is also what YouTube's policies ask, since a loaded player shares data with YouTube.
 11. Offline: a cached picture shows; an uncached one shows the soft surface frame with its alt text.
 12. Rights: only media Will owns or has licence for.
     Deleting removes the R2 objects, then the row, and cannot be undone.
@@ -192,7 +190,7 @@ ON CONFLICT (type, id) DO NOTHING`.
 ## Data model for descriptions and media
 
 - `exercises.description` and `training_blocks.description`: nullable text, like `workouts.description`.
-- `library_media`: id, `item_type`, `item_id`, `owner_id` (null for the library; a user id later), `kind` (`picture | clip`), `key`, `thumb_key`, `poster_key`, width, height, `duration_ms`, bytes, alt, credit, position, `created_by`, `created_at`.
+- `library_media`: id, `item_type`, `item_id`, `owner_id` (null for the library; a user id later), `kind` (`picture | youtube`), `key` and `thumb_key` (pictures), `video_id` (YouTube), width, height, bytes, alt (a picture's alt text or a video's title), credit, position, `created_by`, `created_at`.
 - Account deletion: no change in version one, since media has no user owner.
   When user media arrives, `repo.deleteUserData` deletes rows and objects.
 
@@ -200,54 +198,47 @@ ON CONFLICT (type, id) DO NOTHING`.
 
 - `exerciseBody` and the block body gain `description` (`z.string().trim().max(2000)`), with the response types following.
 - `get_training_library` returns descriptions for user exercises and every built-in (from D1); `save_exercise` and `save_block` accept one; `get_plan` returns block descriptions.
-- Media URLs come back on library items as `{kind, url, thumbUrl, posterUrl, width, height, alt, credit}`; the apps never build URLs.
+- Media comes back on library items as `{kind: "picture", url, thumbUrl, width, height, alt, credit}` or `{kind: "youtube", videoId, title}`; the apps never build picture URLs, and build the YouTube embed from the id in one shared helper.
 
 ## Storage recommendation and cost
 
-Recommendation: **R2 alone**, with sizes and posters made in the browser at upload.
-At both 100 and 1,000 clips (plus as many pictures) it costs $0 a month, and it stays free until roughly 10 GB, about 40,000 clips.
+Recommendation: **pictures on R2 alone**, with sizes made in the browser at upload; **videos on YouTube**, which costs us nothing and hosts nothing of ours.
+Pictures cost $0 a month at 100 and at 1,000 items (about 0.3 GB at 1,000, against a 10 GB free allowance).
 
 Prices fetched 2026-11-14:
 
 - R2: 10 GB-month, 1 million Class A and 10 million Class B operations free; then $0.015 per GB-month, $4.50 and $0.36 per million; egress free.
-  A custom domain on a zone in the same account enables caching; MP4 needs a Cache Everything rule. https://developers.cloudflare.com/r2/pricing/ , https://developers.cloudflare.com/r2/buckets/public-buckets/
-- Images transformations: 5,000 unique transformations a month free (past that, error 9422 rather than a bill), then $0.50 per 1,000.
-  Media Transformations (video frames and resizing) share that allowance; frame output counts 1, video output 1 per second. https://developers.cloudflare.com/images/pricing/ , https://developers.cloudflare.com/stream/transform-videos/
-- Stream: $5 per 1,000 minutes stored (prepaid), $1 per 1,000 minutes delivered, no free tier; HLS and DASH URLs work in native players. https://developers.cloudflare.com/stream/pricing/ , https://developers.cloudflare.com/stream/viewing-videos/using-own-player/
+  A custom domain on a zone in the same account enables caching. https://developers.cloudflare.com/r2/pricing/ , https://developers.cloudflare.com/r2/buckets/public-buckets/
+- Images transformations: 5,000 unique transformations a month free, then $0.50 per 1,000. https://developers.cloudflare.com/images/pricing/
 - Worker request bodies: 100 MB on Free and Pro zones. https://developers.cloudflare.com/workers/platform/limits/
 
-Assumptions: 10-second 2 MB clips with a 150 KB poster, as many 300 KB pictures, 10,000 plays a month at 100 clips and 100,000 at 1,000, nothing cached.
-
-| Option                                          | 100 clips   | 1,000 clips  |
-| ----------------------------------------------- | ----------- | ------------ |
-| R2 alone, sizes and posters made in the browser | $0          | $0           |
-| R2 plus Images and Media Transformations        | $0          | $0 to $4.50  |
-| Stream for clips, R2 for pictures               | about $6.67 | about $21.67 |
-
-Why not the others: Images adds a zone setting and a monthly cap for something a canvas does once at upload, and Stream bills from the first minute for transcoding we avoid by constraining the format.
+Dropped with self-hosted clips: Cloudflare Stream (about $6.67 a month at 100 clips and $21.67 at 1,000), Media Transformations for posters, MP4 caching rules, and the clip cost rows.
+Images transformations stay unused, because a canvas makes the two picture sizes once at upload.
 
 ## Upload path
 
 - The moderation page sends the file straight to the Worker (`POST /v1/moderation/library/:type/:id/media`), which streams it into R2 through a bucket binding.
-- 8 MB fits well inside the 100 MB body limit, and it needs no S3 credentials, presigned URLs or bucket CORS; the role check is the existing gate.
-- The Worker checks the declared type against the allowlist (JPEG, PNG, WebP; MP4), the size, and the magic bytes, and rejects with a clear message.
-- The browser checks a clip's duration and dimensions from its metadata and its codec from the `avc1` sample entry before sending.
-- Errors shown, one line per file: "Too large", "Use an MP4 (H.264)", "Clips are 20 seconds at most"; a row without alt text says "Alt text is required" and stays hidden in the apps.
+- 5 MB fits well inside the 100 MB body limit, and it needs no S3 credentials, presigned URLs or bucket CORS; the role check is the existing gate.
+- The Worker checks the declared type against the allowlist (JPEG, PNG, WebP), the size, and the magic bytes, and rejects with a clear message.
+- Errors shown, one line per file: "Too large", "Use a JPEG, PNG or WebP"; a row without alt text says "Alt text is required" and stays hidden in the apps.
+- A video is attached with `POST /v1/moderation/library/:type/:id/videos` and a pasted link; the Worker reduces it to an 11-character video id (watch, `youtu.be`, shorts, embed and `youtube-nocookie.com` forms) or rejects it with "Not a YouTube video link".
+  Nothing is fetched from YouTube on attach.
+  Deleting a video removes only the row, so Restore works for videos.
 - The upload row shows the browser resize to 1600 px, then a progress bar with Cancel.
 
 ## Native cost
 
-| Need                            | Module               | In the build | Ships            |
-| ------------------------------- | -------------------- | ------------ | ---------------- |
-| Descriptions, links             | `Text`, `Linking`    | yes          | over the air     |
-| Pictures and thumbnails         | React Native `Image` | yes          | over the air     |
-| Clips                           | `expo-video`         | no           | store build      |
-| Disk-cached images (with clips) | `expo-image`         | no           | same store build |
+| Need                               | Module                 | In the build | Ships        |
+| ---------------------------------- | ---------------------- | ------------ | ------------ |
+| Descriptions, links                | `Text`, `Linking`      | yes          | over the air |
+| Pictures and thumbnails            | React Native `Image`   | yes          | over the air |
+| Video in the in-app browser        | `expo-web-browser`     | yes          | over the air |
+| Video playing inline               | `react-native-webview` | no           | store build  |
+| Disk-cached images, list recycling | `expo-image`           | no           | store build  |
 
-Pictures ship over the air on `Image`; the clip slice adds `expo-video` and swaps `Image` for `expo-image` in the same store build, for its disk cache and list recycling.
-
-Clips need a store build, so slice 3's code renders only `kind === "picture"` and ignores anything else.
-That way clips uploaded later never break a binary without `expo-video`; the fingerprint keeps slice 4's JavaScript off older binaries.
+One store build carries every native addition in the plan: `react-native-webview` and `expo-image`.
+`expo-video` drops out.
+Nothing else needs native code: moderation is web only, so no image picker, and `expo-network` is already installed for the offline check.
 
 ## Hero image on workout detail (decision 5)
 
@@ -262,7 +253,7 @@ Built with what is installed, no new native module, over the air with pictures.
 - Several pictures swipe inside the hero with a horizontal paging `ScrollView` and page dots; the vertical scroll still covers the whole frame.
 - Pull to stretch is Deferred on the board.
   Without it, iOS overscroll would show white between picture and content, so hero screens set `bounces={false}` on the scroll view; the stretch, when it comes, is a Reanimated scroll handler (Reanimated 4.5 is installed), off under reduced motion (`useReducedMotion`).
-- A clip tapped offline shows a Toast, "Can't play this offline" (`workouts.clipOffline`), checked with the installed `expo-network`; the play button's label is `workouts.playClip`.
+- A video tapped offline shows a Toast, "Can't play this offline" (`workouts.videoOffline`), checked with the installed `expo-network`; the play button's label is `workouts.playVideo`.
   Both keys go into all four catalogs.
 - Content shorter than the screen does not scroll; the screen reads as picture then content, which is the same design.
 - Web: the same layering in CSS alone.
@@ -273,15 +264,56 @@ Built with what is installed, no new native module, over the air with pictures.
 
 - `Sheet` (`@gorhom/bottom-sheet`, installed) gains an optional `hero`, rendered behind its `BottomSheetScrollView` the same way: absolute at the top, a transparent spacer, the description on white scrolling over it, clipped to the sheet's top radius.
 - A picture works over the air with React Native `Image`.
-- A clip plays inline in the sheet on tap, muted and looping, through `expo-video`'s `VideoView`, which is not in the build: store build, slice 4.
-  On Android it uses `surfaceType="textureView"`, because the sheet moves the view and a surface view does not follow transforms.
-  The player pauses on dismiss and is released on unmount.
-- Until the store build, the sheet shows pictures only (the same `kind` filter).
+- A video shows as its poster with a play button; how it plays is in "YouTube videos" below, the same in the sheet as in the hero.
+
+## YouTube videos (decisions 7 and 8)
+
+Will: "Maybe we can use youtube and in app-player instead of uploading our own videos?", then "store build is worth it".
+The target is an inline player; the in-app browser ships first as the stopgap and stays as the fallback.
+
+### Two levels
+
+- **In-app browser (over the air, ships with pictures in slice 3).** Tap opens the video's `youtube.com/watch` page in `expo-web-browser` (Safari View Controller on iOS, Custom Tabs on Android), already in the build and used for Strava connect.
+  It opens the watch page rather than an embed, because Safari View Controller cannot send a Referer and an embed opened top-level can fail with YouTube's error 153.
+  Slice 3 ships it so videos attached in moderation play from day one, and it stays as the fallback for every binary without the web view module, which is all of them until the store build is adopted.
+- **Inline player (store build, slice 4).** Tap swaps the poster for YouTube's player in a `react-native-webview` inside the same frame: a `youtube-nocookie.com/embed/<id>?playsinline=1&rel=0` iframe in an HTML page loaded with `baseUrl: "https://com.sendtally.app"`, which is the Referer YouTube asks WebViews to send.
+  16:9 at full width (390x219 pt on a 390 pt phone) meets the 200x200 minimum; it sits centred on black in the 4:3 frame.
+  The app checks whether the web view module is in the binary and falls back to the in-app browser when it is not, so one JavaScript bundle serves both.
+- Web: the same `youtube-nocookie.com` iframe in the frame, no module needed, shipping with slice 3.
+
+### What YouTube's policies require
+
+From https://developers.google.com/youtube/terms/developer-policies and https://developers.google.com/youtube/terms/required-minimum-functionality, fetched 2026-11-14:
+
+- The embedded player is a YouTube API Service; a plain embed needs no API key or project (III.D.1, III.D.2).
+- Nothing may overlay any part of a playing player (Required Minimum Functionality).
+  So the covered-hero behaviour applies to the poster only: once a video plays, its frame scrolls up with the content instead of being covered, and it pauses when it leaves the screen, since background play is not allowed (III.I.9).
+- No storing or caching YouTube content, thumbnails included (III.E.1), and no offline playback.
+- No hiding or replacing YouTube's ads, links or branding (III.I.4 to III.I.6).
+  End-of-video suggestions cannot be switched off: `rel=0` only limits them to the same channel (https://developers.google.com/youtube/player_parameters).
+- Any screen showing YouTube content, a thumbnail included, must make clear that YouTube is the source (III.F.2.a); the poster carries a small "YouTube" label.
+- The privacy policy must link to Google's privacy policy, and the terms must say users agree to YouTube's Terms of Service (III.A.1, III.A.2).
+- Selling ads on a screen that shows YouTube content needs enough independent content around it (III.G.1.d); detail screens have it, and the mobile ads plan should keep video screens in mind.
+
+### Poster
+
+- The poster is the item's own first picture when it has one, so the app makes no request to Google until a tap.
+- Without a picture it is YouTube's thumbnail loaded live from `i.ytimg.com`, which is a request to Google and is named in the privacy page; it is never copied to R2, because the policies forbid storing it.
+
+### Links in descriptions
+
+A YouTube link typed in any description, including a user's own custom workout, stays a plain link opened with the system (R1.6).
+Only videos attached in moderation get the poster and the player.
+
+### Offline
+
+The poster shows from cache when it is our picture; a tap offline shows the "Can't play this offline" Toast.
 
 ## Thumbnails, caching and list performance
 
 - One 144 px square JPEG per picture (around 10 KB), drawn at 44 pt; no server-side resizing.
-- Lists are short (at most about 80 rows per category) and rows are fixed-size, so `Image` with fixed dimensions is enough; `expo-image` replaces it in the clip slice.
+- Lists are short (at most about 80 rows per category) and rows are fixed-size, so `Image` with fixed dimensions is enough; `expo-image` replaces it in the store build.
+- A video never gives a list thumbnail: a thumbnail of YouTube content needs YouTube attribution in the row, and a stored copy is not allowed.
 - Immutable keys mean a replaced picture is a new URL, so no cache ever serves a stale image.
 
 ## Moderation Library tab (`TdmModLibrary`)
@@ -293,21 +325,25 @@ Built with what is installed, no new native module, over the air with pictures.
 - The item: a back link, kicker and English name, and header buttons Retire (plain outline, not red, because retiring is reversible) and Save (azure) for name and description.
 - A folded "Other languages · 3 names" group for the de/fr/es names.
 - The description textarea with "n of 2,000" beside a phone preview rendered by the apps' parser.
-- A Media card with "Add picture or clip" (azure); each row has thumbnail, alt text, optional credit, "Picture · added <date> by <name>", up and down, and Delete (red outline, confirm says it is permanent).
-  Media saves as it uploads, not with Save.
-- The Changes list with Restore; rows for deleted files say "Permanent" instead.
+- A Media card with "Add picture" and "Add YouTube video" (azure).
+  A picture row has thumbnail, alt text, optional credit, "Picture · added <date> by <name>", up and down, and Delete (red outline, confirm says it is permanent).
+  A video row has the pasted link reduced to its id, a required title, "Video · added <date> by <name>", up and down, and Delete.
+  Media saves as it is added, not with Save.
+- The Changes list with Restore; rows for deleted picture files say "Permanent" instead, while a deleted video restores.
 - The Retire confirm says logs, plans and workouts keep it by name; Unretire lives under the Retired filter.
 
 ## New interface strings
 
-`common.more`, `common.less`, `workouts.playClip`, `workouts.clipOffline`, plus the exercise and block Description field labels (the workout ones, `workouts.description` and `workouts.descriptionPlaceholder`, are reused), in all four catalogs.
+`common.more`, `common.less`, `workouts.playVideo`, `workouts.videoOffline`, plus the exercise and block Description field labels (the workout ones, `workouts.description` and `workouts.descriptionPlaceholder`, are reused), in all four catalogs.
 Moderation strings are plain English literals.
 
 ## Privacy and analytics
 
-- No new third party: media comes from our own domain on Cloudflare, already listed in `apps/web/app/routes/privacy.tsx`.
-  Add one line there that links in descriptions lead to other sites, which have their own privacy terms.
-- Events, counts and enum strings only: `description_link_opened` {`item_type`: exercise | workout | block, `source`: library | mine} and `clip_played` {`item_type`}.
+- Pictures come from our own domain on Cloudflare, already listed in `apps/web/app/routes/privacy.tsx`.
+- **New third party: Google (YouTube).** `privacy.tsx` names it: when you play a video, or open a screen whose video has no picture of ours, YouTube receives your device's IP address and the usual browser data, and privacy-enhanced mode keeps the view from personalising YouTube or its ads; it links to https://www.google.com/policies/privacy as YouTube requires.
+- `apps/web/app/routes/terms.tsx` gains a line that videos are YouTube's, under YouTube's Terms of Service, with the link.
+- Add one line that links in descriptions lead to other sites, which have their own privacy terms.
+- Events, counts and enum strings only: `description_link_opened` {`item_type`: exercise | workout | block, `source`: library | mine} and `video_played` {`item_type`, `player`: inline | browser}.
   Moderation writes are logged in `library_changes`, not PostHog.
 
 ## Delivery slices
@@ -316,23 +352,25 @@ Moderation strings are plain English literals.
    Removes nothing; `LibraryIntro`'s plain text becomes the shared renderer.
 2. **Built-in library in D1 (over the air, largest).** Table, seed migration, `GET /v1/library`, the apps and Worker reading it, built-in exercises opening `ExerciseScreen`, moderation Library tab with text editing and Changes.
    Removes the built-in content constants, about 130 catalog keys in each of the four locales and the editor artifact; repoints `library-add`.
-3. **Pictures (over the air, plus Terraform).** Bucket, media host, cache rule, Worker binding, upload, detail frame, the workout hero image, pictures in the info sheet, list and picker thumbnails, alt and credit.
+3. **Pictures and YouTube in the in-app browser (over the air, plus Terraform).** Bucket, media host, Worker binding, picture upload, the hero on detail screens, media in the info sheet, list and picker thumbnails, alt and credit; YouTube links attached in moderation, posters, the in-app browser on mobile and the `youtube-nocookie.com` iframe on web; privacy and terms lines.
    Adds the R2 bucket; removes nothing.
-4. **Clips (store build).** `expo-video` and `expo-image`, posters, tap to play on detail screens and inline in the info sheet, including the live sheet for the current exercise.
+4. **Inline YouTube player (one store build).** `react-native-webview` for the inline player in the hero and the info sheet, including the live sheet for the current exercise, with the in-app browser kept as the fallback; `expo-image` swapped in for `Image` in the same build.
+   Removes nothing in code; drops `expo-video` from the plan.
 5. **Ready-made blocks.** `library_items` type `block` once the Starter block lands; block media then comes for free.
 
 ## Deliberately left out
 
 - User uploads on custom items (the model allows them later).
-- Embedded third-party players, autoplay, a rich text toolbar, images inside text.
+- Autoplay, players for YouTube links typed in descriptions, a rich text toolbar, images inside text.
+- Dropped with decision 7: self-hosted clips, their 20 second / 1080 px / 8 MB limits and errors, first-frame posters made in the browser, video in R2, MP4 caching rules, Cloudflare Stream and Media Transformations, and `expo-video`.
 - Per-locale descriptions, alt text and credit.
-- Restoring deleted files, picking a poster frame, server-side resizing or transcoding.
+- Restoring deleted picture files, server-side resizing.
 - Creating new built-ins in moderation (slice 2 follow-up; `library-add` covers it until then).
 
 ## Open decisions for Will
 
-1. Clip limits of 20 seconds, 1080 px and 8 MB.
-   Recommendation: keep them; long demonstrations are links.
+1. Ship the in-app browser first, over the air, as the stopgap before the inline player's store build.
+   Recommendation: yes; it is a few lines, makes attached videos playable at once, and stays as the fallback for older binaries.
 2. Thumbnails replace the category mark rather than sitting beside it (`TdmThumbs`).
    Recommendation: replace, so rows keep their height.
 3. Retire the library editor artifact when slice 2 ships.
@@ -343,3 +381,5 @@ Moderation strings are plain English literals.
    Recommendation: yes, it is the same `ScreenFrame` prop and the same hero anatomy.
 6. Moderator tools on the connector (`save_library_item`) so an assistant can draft built-in descriptions.
    Recommendation: later, after the moderation tab has been used by hand.
+7. A video without a picture of ours uses YouTube's live thumbnail as its poster, which is a request to Google before any tap.
+   Recommendation: accept it, disclosed in privacy; add a picture to any item where that matters.
