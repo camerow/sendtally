@@ -55,25 +55,6 @@ Current scope: sign up, log sessions via the form, session list and detail, tren
 
 ## Monorepo structure (target)
 
-```
-sendtally/
-├── apps/
-│   ├── mobile/          Expo (iOS + Android), EAS builds
-│   └── web/             React Router 7 on Workers: marketing, SEO content, Strava connect, dashboard
-├── packages/
-│   ├── core/            ported session/effort/grades logic - pure, no I/O, no platform deps
-│   ├── api/             Hono Worker: API + D1 schema/migrations (cron/queue handlers are legacy, being removed)
-│   ├── api-client/      hono/client (hc<AppType>) wrapper consumed by mobile and web
-│   ├── features/        shared feature logic, hooks, i18n catalogs and query keys for web and mobile
-│   ├── design/          design tokens (CSS variables + TS) and the web React component library
-│   └── auth-native/     Clerk sign-in helpers for the mobile app
-├── infra/
-│   ├── terraform/       Cloudflare account resources (zone, DNS, D1)
-│   └── scripts/         operator scripts (secret push, D1 copy)
-└── tools/
-    └── cli-go/          the original Go CLI (go.mod lives here)
-```
-
 - **Package manager:** `pnpm`. Never `npm` or `yarn`.
 - **Build system:** Turborepo. Tasks run from the repo root: `pnpm dev`, `pnpm build`, `pnpm check-types`, `pnpm test`, `pnpm format`.
   `pnpm lint` is ESLint, run once at the root rather than per package; the flat config is `eslint.config.js`.
@@ -96,9 +77,8 @@ The product was briefly named boardsync; that name was dropped because `boardsyn
 
 ### Environments and deploys
 
-- Wrangler environments `staging` and `production` for `api` and `web`: separate D1 databases, secrets via `wrangler secret`. There is a single Clerk instance shared by both.
 - **The Cloudflare account is pinned as `account_id` in both `wrangler.jsonc` files** (`f3514650...`, the "Chalk and Circuits" account that owns the `sendtally.com` zone and everything else). The login also sees the older personal account (`7b398a51...`) that sendtally was migrated out of in September 2026; without the pin wrangler can resolve to it - deploys and `secret bulk` then silently land on a shadow Worker in an account with no zone and no D1, while `tail` watches nothing and the live site never changes. Never remove the pin.
-- **Account-level resources are Terraform-managed** in `infra/terraform/` (zone, zone settings, non-Worker DNS records, D1 databases). Wrangler owns Worker scripts, bindings, secrets, and Worker custom domains. Create a D1 database in Terraform, then pin its id in `wrangler.jsonc`; never create them in the dashboard. State lives in the R2 bucket `sendtally-tfstate` (S3 backend, credentials from `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`); the API token comes from `TF_VAR_CLOUDFLARE_API_TOKEN`. Migration runbook: `docs/cloudflare-account-migration.md`.
+- Account-level resources (zone, DNS, D1) are Terraform-managed in `infra/terraform/`; never create them in the dashboard.
 - `main` is the only long-lived branch and is production. All work branches off `main` and PRs target `main`; merging a PR triggers the production deploy and D1 migrations. There is no `staging` branch: the staging environment is the pull request preview sandbox, described below.
 - D1 migrations: `wrangler d1 migrations apply`, additive and forward-only. Never delete or rewrite prior migrations.
 - Schema source of truth is Drizzle (`packages/api/src/db/schema.ts`).
@@ -106,42 +86,13 @@ The product was briefly named boardsync; that name was dropped because `boardsyn
   Wrangler remains the applier - CI applies migrations on every deploy, and PR CI validates them against a fresh local D1.
   Never hand-write migration SQL for schema changes; never edit `migrations/meta/` by hand.
 - Database access goes through the typed Drizzle queries in `packages/api/src/lib/repo.ts` - no raw SQL strings in Worker code.
-- CI: `.github/workflows/deploy.yml` runs checks (types, tests, format, Go) then deploys both Workers - push to `main` deploys production (a push to a `staging` branch, if one is ever created, deploys the staging env). Needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repo secrets. Each deploy is gated on a secret preflight, so a Worker never ships without the secrets it needs to answer a request.
-  There is no post-deploy check against the live domain: Cloudflare challenges the GitHub runner's requests as datacenter traffic, so the check failed on a healthy site. Bot Fight Mode cannot be skipped by a WAF rule (it runs outside the Ruleset Engine), so this is not worth re-adding against `sendtally.com`. A Workers Builds preview URL is a hostname outside the zone's bot protection, which is where such a check belongs if we want one back.
-- **Pull request previews are Cloudflare Workers Builds, and they target staging.** The connection lives on the `sendtally-web-staging` Worker (production branch `main`, "Builds for non-production branches" on) and reports as the `Workers Builds: sendtally-web-staging` check, which carries the preview URL. `sendtally-web-production` has no git connection - a build must never be able to reach live traffic.
-  Its three command fields split by branch: **Build** runs for every build, **Version** runs for non-production branches, and **Deploy** runs only for `main`. A pull request therefore executes Build then Version - editing the Deploy command changes nothing about PR previews, which is worth remembering before debugging one.
-
-  | Field   | Command                   | Effect                                           |
-  | ------- | ------------------------- | ------------------------------------------------ |
-  | Build   | `pnpm run preview:build`  | Builds `apps/web` with `CLOUDFLARE_ENV=staging`  |
-  | Version | `pnpm run preview:upload` | Uploads a web version and prints its preview URL |
-  | Deploy  | `pnpm run staging:web`    | Puts `main` on `staging.sendtally.com`           |
-
-  **Nothing in these fields may run a real `wrangler deploy` for another Worker.**
-  Workers Builds reports the last deployment it sees in the build output as _the_ deployment for that build, so while the Version field also deployed the API, every pull request comment said "Deployment successful" and its Visit link went to `api-staging.sendtally.com` - the web preview URL never appeared at all.
-  The staging API is deployed from `.github/workflows/ci.yml` instead (job `staging-api`, `pnpm run staging:api`), which keeps the branch's API in front of its own preview without confusing the Builds comment.
-
-  A preview is a sandbox, not production: the dev Clerk instance (which is why sign-in works on a `workers.dev` origin at all - the live instance is locked to `sendtally.com`), the `sendtally-staging` D1, and the staging secrets from Doppler `stg`. Nothing a preview does touches real user data, and staging D1 starts empty, so log a session or two there to have something to look at.
-  The API job is a real `wrangler deploy`, so `api-staging.sendtally.com` runs whichever branch built last. With one open pull request that is what you want; with several, the newest build wins and an older preview is talking to a newer API. Per-branch API previews via `versions upload --preview-alias` are the upgrade if that ever bites.
-  `staging:api` applies D1 migrations before deploying, so a preview of a schema change is a preview of the migrated schema.
-  The commands live in the root `package.json` rather than in the dashboard, so they are reviewable and stay in step with the app. Two things they must keep doing: build with `CLOUDFLARE_ENV=staging` (without it the generated `build/server/wrangler.json` carries the base environment - name `sendtally-web`, empty `vars`, so no `API_URL` or `CLERK_PUBLISHABLE_KEY`), and run wrangler from `apps/web` (the Vite plugin writes the `.wrangler/deploy/config.json` redirect there; from the repo root wrangler finds no config and fails with "Missing entry-point to Worker script"). The web commands pass no `--env` for the same reason - the generated config already names `sendtally-web-staging`.
-  `preview_urls: true` in the staging env is necessary but not sufficient: a newly created Worker starts with `previews_enabled: false`, and while it is off wrangler uploads a version and prints no URL at all, so there is nothing for Cloudflare's pull request comment to carry. Turn it on once - the Preview toggle under the Worker's Domains tab, or `POST /accounts/:account/workers/scripts/sendtally-web-staging/subdomain` with `{"enabled": false, "previews_enabled": true}` - and it holds from there. Check it first if a build passes and the comment has only a logs link.
-  `preview:upload` passes `--preview-alias`, so every build prints two URLs: the per-version one and a branch-stable `https://<branch>-sendtally-web-staging.chalk-and-circuits.workers.dev`. The alias is a hostname label, so `preview:alias` lowercases the branch, turns every other character into a hyphen, and truncates to 63 - two branches whose names differ only past that point would land on the same alias.
-  The API's CORS allowlist is one origin, `WEB_APP_URL`, which no preview URL matches. Staging additionally sets `PREVIEW_ORIGIN_SUFFIX`, and an origin ending in it is echoed back; production leaves the var unset, so nothing changes there.
-  The mobile app gets the same treatment without ever building: `.github/workflows/ci.yml` (job `mobile-preview`) publishes the branch as an Android EAS Update and comments a link to it, which an installed development build opens. Runbook: `docs/mobile-release.md`, "Previewing a pull request on a phone".
+- Nothing in the Workers Builds Build, Version, or Deploy fields may run a real `wrangler deploy` for another Worker.
+- Wrangler environments, Terraform, CI deploys, and pull request previews (Workers Builds, staging sandbox, preview URLs): load the `deploys-and-secrets` skill before touching or debugging any of them.
 
 ### Secrets
 
-- Source of truth is the **Doppler project `sendtally`** (configs `stg` and `prd`): `TOKEN_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SIGNING_SECRET`, `VITE_CLERK_PUBLISHABLE_KEY`, `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_WEBHOOK_VERIFY_TOKEN`, `REVENUECAT_SECRET_API_KEY`, `REVENUECAT_WEBHOOK_AUTH`.
-- Push to Workers with `infra/scripts/push-secrets.sh <production|staging>`, which runs `doppler secrets download ... | wrangler secret bulk` for both Workers. The script pushes an explicit allowlist per Worker, so a new secret must be added there as well as to Doppler or it is silently skipped. Never paste secret values into files, commits, or chat.
-- **Both Workers need secrets.** For `packages/api`: `TOKEN_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SIGNING_SECRET`, `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_WEBHOOK_VERIFY_TOKEN`, `REVENUECAT_SECRET_API_KEY`, `REVENUECAT_WEBHOOK_AUTH`. For `apps/web`: `CLERK_SECRET_KEY` - `apps/web` renders every route through `clerkMiddleware()`, so without it the Worker throws on every request and the whole site 500s while the deploy still reports success.
-- Doppler `stg` deliberately lacks `CLERK_WEBHOOK_SIGNING_SECRET` and `REVENUECAT_SECRET_API_KEY`: neither Clerk nor RevenueCat has a staging webhook endpoint, so the staging Worker runs without them and `push-secrets.sh staging` skips them. Only the two webhook routes are dead on staging; previews do not use them.
-- `push-secrets.sh` fails for `apps/web` with Cloudflare error 10215 ("latest version of your Worker isn't currently deployed") whenever a PR preview has been uploaded with `versions upload` since the last production deploy. The `api` half still succeeds. If the web Worker needs a changed secret, merge or deploy first, then push again; otherwise the error can be ignored.
-- Secrets live on the Worker, not in the config, so **a Worker deleted and recreated in the dashboard comes back with none of them**. `deploy.yml` runs `.github/scripts/require-secrets.sh` before each deploy to fail loudly instead of shipping a Worker that 500s.
-- The Strava credentials originate from the maker's Strava API app; Clerk keys from the Clerk dashboard (kept in 1Password, vault "Send Tally").
-- `CLERK_WEBHOOK_SIGNING_SECRET` is generated by Clerk when the webhook endpoint `POST https://api.sendtally.com/webhooks/clerk` (subscribed to `user.deleted`) is created in the dashboard; signing secrets are per endpoint. Only `prd` carries it - there is a single Clerk instance and no staging endpoint. It verifies the `user.deleted` webhook that purges D1 rows and revokes Strava when an account is deleted from Clerk's portal or dashboard rather than in-app; without it that webhook is rejected and those deletions leave orphaned data.
-- `CLERK_WEBHOOK_SIGNING_SECRET` comes from the Clerk dashboard endpoint for `POST https://api.sendtally.com/webhooks/clerk` subscribed to `user.deleted`; each Clerk instance signs with its own secret, so staging and production hold different values. Without it the Worker rejects every Clerk webhook and account deletions made outside the app leave orphaned D1 rows.
-- `REVENUECAT_SECRET_API_KEY` is the RevenueCat project's secret key (API keys page); the Worker uses it to read subscribers and to delete them on account deletion. `REVENUECAT_WEBHOOK_AUTH` is a random string we generate and paste into the webhook's Authorization header field in RevenueCat; the Worker rejects any `/webhooks/revenuecat` call that does not carry it. The public SDK keys (`goog_…`, later `appl_…`) are not secrets and live in `apps/mobile/eas.json`. Setup runbook: `docs/mobile-release.md`, "Billing on mobile".
+- Source of truth is the Doppler project `sendtally` (configs `stg` and `prd`). Push with `infra/scripts/push-secrets.sh <production|staging>`, and add a new secret to its per-Worker allowlist as well as to Doppler or it is silently skipped. Never paste secret values into files, commits, or chat.
+- Both Workers need secrets: without `CLERK_SECRET_KEY` the `apps/web` Worker 500s on every route while the deploy reports success. The per-Worker lists, staging gaps, error 10215, and where each value comes from are in the `deploys-and-secrets` skill.
 
 ## Session flow (hosted)
 
@@ -193,36 +144,18 @@ Design work (Claude-generated or otherwise) targets the token vocabulary; each p
 
 ## Migration order
 
-1. ~~Restructure commit: move the Go CLI to `tools/cli-go/`, scaffold pnpm + Turborepo at the root.~~ Done.
-2. ~~`@sendtally/core`: port `grades`, `session`, `effort` with table-driven Vitest tests mirroring the Go tests.~~ Done.
-3. ~~`@sendtally/api`: Strava client, D1 schema, manual session CRUD.~~ Done.
-4. ~~`apps/web` and `apps/mobile`: sign-in, log-session form, session list and detail, trends, Strava connect.~~ Done.
 5. **Aurora removal (in progress):** delete the board connect flow, cron + queue pipeline, Aurora client, catalogue cron, and the `board_*` tables; drop board-sync copy from the apps and web. Keep `source = "board"` rows readable.
 6. Journal entries (free-text, attachable to a session).
-7. ~~Project tracking (climbs worked across many sessions before sending).~~ Done: climb names autocomplete from the user's own history, and a named climb can be flagged as a project (`projects` table, `GET /v1/climbs`) to total its sessions and attempts.
-8. Apply for the Strava quota increase; open sign-ups on approval.
+7. Apply for the Strava quota increase; open sign-ups on approval.
 
 ---
 
 ## Analytics
 
-PostHog is the product analytics tool (project "Sendtally", proxied through `v.sendtally.com` on web).
-Google Analytics still runs on the marketing pages for aggregate traffic; PostHog is what answers product questions.
-
-- **The distinct id is always the Clerk user id.**
-  The browser sets it with `identify()` in `apps/web/app/root.tsx`; the Worker sets it in `captureEvent`, which defaults to the signed-in `userId`.
-  A capture without one lands on a throwaway anonymous person, which is what the whole event history looked like before this rule.
-- **Identify carries the email.**
-  The project's "Internal / Test users" cohort matches `cameron.will@gmail.com` and `@chalkandcircuits.com` on the person, and every insight filters that cohort out by default, so our own use is excluded only when the email is on the person.
-  `user.created` on the Clerk webhook is the exactly-once identify that covers mobile and Google sign-up too.
-- **Conversion events.**
-  Account creation: `signup_started` / `auth_code_sent` / `signup_completed` on the web form, and `account_created` from the Clerk webhook as the canonical, all-channel one.
-  Membership: `membership_started` with `channel` = `web` (the Clerk checkout redirect) or the store (a new RevenueCat entitlement, never a renewal).
-- The logbook itself never goes to PostHog - event properties stay counts and enum-ish strings.
-- Google Analytics for Firebase runs in the mobile app only so Google Ads can attribute installs (`first_open`) and the in-app `account_created` and `membership_started`, named after their PostHog twins.
-  It is not a second product analytics tool: no user id, no email, no other events of ours, and on iOS no IDFA, so no tracking prompt.
-  Runbook: `docs/mobile-release.md`, "Install attribution for Google Ads".
-- Anything added here has to be reflected in `apps/web/app/routes/privacy.tsx`.
+PostHog is the product analytics tool; Google Analytics only covers marketing-page traffic and mobile install attribution.
+Load the `analytics` skill before adding, renaming, or removing an event, an identify call, or a tracking SDK.
+The logbook itself never goes to PostHog - event properties stay counts and enum-ish strings.
+Anything added here has to be reflected in `apps/web/app/routes/privacy.tsx`.
 
 ## Copy
 
