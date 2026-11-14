@@ -26,6 +26,7 @@ export const COPY_DE: LandingCopy = {
         href: "#stats",
       },
     ],
+    agents: "KI-Agenten",
     pricing: "Pricing", // follows en
     signIn: "Anmelden",
     createAccount: "Konto erstellen",
@@ -379,8 +380,8 @@ export const COPY_DE: LandingCopy = {
         href: "/support",
       },
       {
-        label: "KI-Assistenten",
-        href: "/ai-assistants",
+        label: "KI-Agenten",
+        href: "/agents",
       },
     ],
   },

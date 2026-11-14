@@ -6,9 +6,10 @@ import { AccountCta } from "./AccountCta";
 
 export type NavProps = {
   sections?: boolean;
+  current?: "agents" | "pricing";
 };
 
-export function Nav({ sections = true }: NavProps): React.ReactElement {
+export function Nav({ sections = true, current }: NavProps): React.ReactElement {
   const { signedIn, copy, locale } = useLanding();
   const home = landingPath(locale);
   return (
@@ -23,9 +24,16 @@ export function Nav({ sections = true }: NavProps): React.ReactElement {
               {section.label}
             </a>
           ))}
-        <a href="/pricing" className="l-nav-anchor">
-          {copy.nav.pricing}
-        </a>
+        {(["agents", "pricing"] as const).map((page) => (
+          <a
+            key={page}
+            href={`/${page}`}
+            className="l-nav-anchor"
+            aria-current={current === page ? "page" : undefined}
+          >
+            {copy.nav[page]}
+          </a>
+        ))}
         <div className="l-nav-actions">
           {!signedIn && (
             <a href="/sign-in" className="l-nav-signin">

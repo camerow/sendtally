@@ -7,7 +7,7 @@ import type { MediaKey, PhotoKey } from "./media";
 export type MediaCopy = { key: MediaKey; alt: string };
 
 export type FeatureCopy = {
-  id: "log" | "train" | "plan" | "live" | "hangboard" | "stats";
+  id: "log" | "train" | "plan" | "live" | "hangboard" | "stats" | "import" | "build" | "change";
   eyebrow: string;
   title: string;
   body: string;
@@ -33,6 +33,7 @@ export const COPY = {
       { label: "Plan", href: "#plan" },
       { label: "Stats", href: "#stats" },
     ],
+    agents: "Agents",
     pricing: "Pricing",
     signIn: "Sign in",
     createAccount: "Create account",
@@ -304,7 +305,7 @@ export const COPY = {
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
       { label: "Support", href: "/support" },
-      { label: "AI assistants", href: "/ai-assistants" },
+      { label: "Agents", href: "/agents" },
     ],
   },
 };

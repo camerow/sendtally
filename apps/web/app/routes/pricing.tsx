@@ -6,12 +6,12 @@ import { isSignedIn } from "../auth/session.server";
 import { requestLocale } from "../lib/locale";
 import { pageMeta } from "../lib/seo";
 import { CompareTable } from "../landing/components/CompareTable";
+import { Closing } from "../landing/components/Closing";
 import { Faq } from "../landing/components/Faq";
 import { Footer } from "../landing/components/Footer";
 import { Nav } from "../landing/components/Nav";
+import { PageHeader } from "../landing/components/PageHeader";
 import { PlanCards } from "../landing/components/PlanCards";
-import { PricingClosing } from "../landing/components/PricingClosing";
-import { PricingHeader } from "../landing/components/PricingHeader";
 import { COPIES } from "../landing/copies";
 import { LandingProvider } from "../landing/LandingContext";
 import { storePlatform, type StorePlatform } from "../lib/stores";
@@ -41,19 +41,20 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
 
 export default function Pricing(): React.ReactElement {
   const loaderData = useLoaderData<typeof loader>();
+  const { pricing } = COPIES[loaderData.locale];
   return (
     <LandingProvider
       signedIn={loaderData.signedIn}
       locale={loaderData.locale}
       platform={loaderData.platform}
     >
-      <Nav />
+      <Nav current="pricing" />
       <main>
-        <PricingHeader />
+        <PageHeader eyebrow={pricing.eyebrow} title={pricing.title} body={pricing.body} />
         <PlanCards />
         <CompareTable />
-        <Faq />
-        <PricingClosing />
+        <Faq title={pricing.faq.title} items={pricing.faq.items} />
+        <Closing title={pricing.closing.title} webAccount={pricing.closing.webAccount} />
       </main>
       <Footer stores={false} />
     </LandingProvider>

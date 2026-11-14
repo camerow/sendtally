@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router";
 import { CONVERSION_PROMPT } from "@sendtally/features/import";
 import { t } from "@sendtally/features/i18n";
+import { useCopy } from "../../lib/useCopy";
 import { Section } from "../../settings/components/Section";
 import { bodyText, linkAction, secondaryButton } from "../../settings/components/styles";
 import { code } from "../styles";
@@ -9,11 +10,7 @@ import { ServiceLinks } from "./ServiceLinks";
 import { sectionLabel } from "../../components/styles";
 
 export function ConversionPrompt({ showApps = false }: { showApps?: boolean }): React.ReactElement {
-  const [copied, setCopied] = React.useState(false);
-  const copy = async (): Promise<void> => {
-    await navigator.clipboard.writeText(CONVERSION_PROMPT);
-    setCopied(true);
-  };
+  const { copied, copy } = useCopy(CONVERSION_PROMPT);
   return (
     <Section>
       <div
@@ -22,7 +19,7 @@ export function ConversionPrompt({ showApps = false }: { showApps?: boolean }): 
         <span style={sectionLabel}>{t("import.convertTitle")}</span>
         <button
           type="button"
-          onClick={() => void copy()}
+          onClick={copy}
           style={{ ...secondaryButton, fontSize: 13, padding: "9px 16px" }}
         >
           {copied ? t("common.copied") : t("import.copyPrompt")}
@@ -38,7 +35,7 @@ export function ConversionPrompt({ showApps = false }: { showApps?: boolean }): 
           <ServiceLinks />
         </>
       )}
-      <Link to="/ai-assistants" style={linkAction}>
+      <Link to="/agents" style={linkAction}>
         {t("import.connectorLine")}
       </Link>
     </Section>
