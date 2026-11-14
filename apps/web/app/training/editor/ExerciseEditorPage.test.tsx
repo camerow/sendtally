@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { Route, Routes } from "react-router";
+import { TestRouter } from "../../lib/TestRouter";
 import type { Exercise } from "@sendtally/api-client";
 import type * as Exercises from "@sendtally/features/exercises";
 import type * as Statistics from "@sendtally/features/statistics";
@@ -66,14 +67,14 @@ function mount(page: React.ReactNode): void {
   act(() =>
     root.render(
       <ToastProvider>
-        <MemoryRouter initialEntries={["/app/train", "/edit"]} initialIndex={1}>
+        <TestRouter initialEntries={["/app/train", "/edit"]} initialIndex={1}>
           <WithHang data={hangData({ sessions: [aHang()] })} actions={{ saveGrip: state.saveGrip }}>
             <Routes>
               <Route path="/edit" element={page} />
               <Route path="*" element={<p data-left>left</p>} />
             </Routes>
           </WithHang>
-        </MemoryRouter>
+        </TestRouter>
       </ToastProvider>
     )
   );
@@ -102,13 +103,13 @@ describe("ExerciseEditorPage", () => {
     );
   });
 
-  it("warns before changing how a logged exercise is measured", () => {
+  it("warns before changing how a logged exercise is measured", async () => {
     mount(<ExerciseEditorPage exercise="s" />);
     expect(container.querySelector<HTMLInputElement>(".name-field")?.value).toBe("Zercher squat");
     click(radio("Reps"));
     click(container.querySelector(".detail-primary"));
     expect(state.saveExercise).not.toHaveBeenCalled();
-    click(document.querySelector(".sheet-action--danger"));
+    await act(async () => document.querySelector<HTMLElement>(".sheet-action--danger")?.click());
     expect(state.saveExercise).toHaveBeenCalledWith(
       "s",
       expect.objectContaining({ measure: "reps" })

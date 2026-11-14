@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React, { act, StrictMode } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, Route, Routes, useLocation, useParams } from "react-router";
+import { Route, Routes, useLocation, useParams } from "react-router";
+import { TestRouter } from "../../lib/TestRouter";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
 import type { Block, Weekday } from "@sendtally/core/hang";
 import { hangModel } from "@sendtally/features/hang";
@@ -123,13 +124,13 @@ const mount = (fresh = false): void =>
     root.render(
       <StrictMode>
         <ToastProvider>
-          <MemoryRouter initialEntries={["/app/train", "/app/plan/block/b1"]} initialIndex={1}>
+          <TestRouter initialEntries={["/app/train", "/app/plan/block/b1"]} initialIndex={1}>
             <Spy />
             <Routes>
               <Route path="/app/train" element={<p>Train</p>} />
               <Route path="/app/plan/block/:id" element={<Page fresh={fresh} />} />
             </Routes>
-          </MemoryRouter>
+          </TestRouter>
         </ToastProvider>
       </StrictMode>
     )
@@ -198,10 +199,15 @@ describe("BlockPage", () => {
     state.plan = withBlock(template);
     mount();
     click(button("Edit"));
+    click(button("Cancel"));
+    expect(document.querySelector(".sheet")).toBeNull();
+    click(button("Edit"));
     type(container.querySelector<HTMLInputElement>(".block-name-field")!, "Strength");
     click(container.querySelector('[aria-label="Increase Weeks"]'));
     click(container.querySelector('[role="checkbox"][aria-label="Gym, legs, Monday"]'));
     click(button("Cancel"));
+    expect(container.querySelector(".block-name-field")).not.toBeNull();
+    click(document.querySelector(".sheet-action--danger"));
     expect(state.saveDraft).not.toHaveBeenCalled();
     expect(container.querySelector(".block-title")?.textContent).toBe("Power phase");
 

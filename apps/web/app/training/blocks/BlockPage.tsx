@@ -15,6 +15,7 @@ import { Sheet } from "../../components/Sheet";
 import { useToast } from "../../components/Toast";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { useAppApi } from "../../lib/useAppApi";
+import { useDiscardGuard } from "../../lib/useDiscardGuard";
 import { useGoBack } from "../../lib/useGoBack";
 import { NameSheet } from "../components/NameSheet";
 import { useHangData } from "../data/HangDataContext";
@@ -63,6 +64,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
     actions,
     newId: () => crypto.randomUUID(),
   });
+  const guard = useDiscardGuard(draft.dirty);
 
   if (plan.state.status !== "ready")
     return (
@@ -82,6 +84,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
       action: { label: t("plan.viewTemplate"), onPress: () => void navigate(blockPath(copy)) },
     });
   };
+  const cancel = draft.dirty ? () => guard.ask(draft.cancel) : draft.cancel;
   const remove = (): void => {
     setDeleting(false);
     leave();
@@ -107,7 +110,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
     <DetailFrame
       wide
       backTo={BACK_TO}
-      {...(editing && { backLabel: t("common.cancel"), onBack: draft.cancel })}
+      {...(editing && { backLabel: t("common.cancel"), onBack: cancel })}
       {...(footer !== undefined && { footer })}
       action={
         !editing && (
@@ -195,6 +198,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
         />
       )}
       {again && <PlanAgainSheet block={block} onClose={() => setAgain(false)} />}
+      {guard.sheet}
       <Sheet
         open={deleting}
         title={t("plan.deleteBlockTitle", { name })}

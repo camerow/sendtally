@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, Route, Routes, useLocation } from "react-router";
+import { Route, Routes, useLocation } from "react-router";
+import { TestRouter } from "../../lib/TestRouter";
 import type { Exercise, WorkoutRecord } from "@sendtally/api-client";
 import type * as Statistics from "@sendtally/features/statistics";
 import type * as Workouts from "@sendtally/features/workouts";
@@ -117,7 +118,7 @@ function mount(page: React.ReactNode): void {
     root.render(
       <QueryClientProvider client={new QueryClient()}>
         <ToastProvider>
-          <MemoryRouter initialEntries={["/app/train", "/edit"]} initialIndex={1}>
+          <TestRouter initialEntries={["/app/train", "/edit"]} initialIndex={1}>
             <Spy />
             <WithHang>
               <Routes>
@@ -125,7 +126,7 @@ function mount(page: React.ReactNode): void {
                 <Route path="*" element={<p data-left>left</p>} />
               </Routes>
             </WithHang>
-          </MemoryRouter>
+          </TestRouter>
         </ToastProvider>
       </QueryClientProvider>
     )

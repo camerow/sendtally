@@ -16,6 +16,7 @@ import {
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { Icon } from "../../components/Icon";
 import { useAppApi } from "../../lib/useAppApi";
+import { useDiscardGuard } from "../../lib/useDiscardGuard";
 import { CategoryMark } from "../components/CategoryMark";
 import { PlanGrid } from "../components/PlanGrid";
 import { useHangData } from "../data/HangDataContext";
@@ -32,6 +33,7 @@ export function OngoingPage(): React.ReactElement {
   const plan = usePlan(api);
   const { log } = useTrainingLog(api);
   const draft = usePlanDraft(log.plan, usePlanActions());
+  const guard = useDiscardGuard(draft.dirty);
   const [adding, setAdding] = React.useState(false);
   const [added, setAdded] = useLit();
 
@@ -59,7 +61,11 @@ export function OngoingPage(): React.ReactElement {
       backTo="/app/train"
       action={
         draft.editing ? (
-          <button type="button" className="outline-action" onClick={draft.cancel}>
+          <button
+            type="button"
+            className="outline-action"
+            onClick={draft.dirty ? () => guard.ask(draft.cancel) : draft.cancel}
+          >
             {t("common.cancel")}
           </button>
         ) : (
@@ -132,6 +138,7 @@ export function OngoingPage(): React.ReactElement {
           }}
         />
       )}
+      {guard.sheet}
     </DetailFrame>
   );
 }

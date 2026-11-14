@@ -24,10 +24,10 @@ import {
   type WorkoutLibrary,
 } from "@sendtally/features/workouts";
 import { NumberField } from "../../components/NumberField";
-import { Sheet } from "../../components/Sheet";
 import { useToast } from "../../components/Toast";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { useAppApi } from "../../lib/useAppApi";
+import { useDiscardGuard } from "../../lib/useDiscardGuard";
 import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
@@ -86,8 +86,9 @@ function Editor({
   const actions = useWorkoutActions(api, failed);
   const exercises = useExercises(api).state;
   const { model } = useHangData();
-  const [state, setState] = React.useState(initial);
-  const [discarding, setDiscarding] = React.useState(false);
+  const [untouched] = React.useState(initial);
+  const [state, setState] = React.useState(untouched);
+  const guard = useDiscardGuard(state !== untouched);
   const [picking, setPicking] = React.useState<{ swap: number } | "add" | null>(null);
   const descriptionId = React.useId();
   const estimate = estimatedMinutes(state);
@@ -106,6 +107,7 @@ function Editor({
   };
   const save = (): void => {
     const saved = id ?? newId();
+    guard.release();
     void actions.saveWorkout(saved, draftOfEditor(state));
     if (id === undefined) void navigate(workoutPath(saved), { replace: true });
     else back();
@@ -115,7 +117,6 @@ function Editor({
     <DetailFrame
       backTo={WORKOUTS_VIEW}
       backLabel={t("common.cancel")}
-      onBack={state === initial ? undefined : () => setDiscarding(true)}
       footer={
         <button type="button" className="detail-primary" onClick={save}>
           {t("common.save")}
@@ -218,12 +219,7 @@ function Editor({
           onClose={() => setPicking(null)}
         />
       )}
-      <Sheet
-        open={discarding}
-        title={t("workouts.discardChangesTitle")}
-        onClose={() => setDiscarding(false)}
-        action={{ label: t("common.discard"), danger: true, onPress: back }}
-      />
+      {guard.sheet}
     </DetailFrame>
   );
 }

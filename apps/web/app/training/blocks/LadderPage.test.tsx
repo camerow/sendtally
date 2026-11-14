@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, Route, Routes, useLocation } from "react-router";
+import { Route, Routes, useLocation } from "react-router";
+import { TestRouter } from "../../lib/TestRouter";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
 import { itemIdOf, type Block } from "@sendtally/core/hang";
 import { hangModel } from "@sendtally/features/hang";
@@ -106,7 +107,7 @@ beforeEach(() => {
   act(() =>
     root.render(
       <ToastProvider>
-        <MemoryRouter
+        <TestRouter
           initialEntries={["/app/plan/block/b1", "/app/plan/membership/m1"]}
           initialIndex={1}
         >
@@ -117,7 +118,7 @@ beforeEach(() => {
             <Route path="/app/train/workouts/:id/edit" element={<p>Editor</p>} />
             <Route path="/app/train" element={<p>Train</p>} />
           </Routes>
-        </MemoryRouter>
+        </TestRouter>
       </ToastProvider>
     )
   );

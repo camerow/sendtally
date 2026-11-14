@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router";
+import { TestRouter } from "../../lib/TestRouter";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
 import { hangModel } from "@sendtally/features/hang";
 import { libraryOf } from "@sendtally/features/workouts";
@@ -75,11 +75,11 @@ beforeEach(() => {
   root = createRoot(container);
   act(() =>
     root.render(
-      <MemoryRouter>
+      <TestRouter>
         <ToastProvider>
           <OngoingPage />
         </ToastProvider>
-      </MemoryRouter>
+      </TestRouter>
     )
   );
 });
