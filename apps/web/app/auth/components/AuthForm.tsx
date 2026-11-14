@@ -126,6 +126,15 @@ type Phase = { name: "email" } | { name: "code"; mode: CodeMode } | { name: "pas
 
 type SignIn = NonNullable<ReturnType<typeof useClerk>["client"]>["signIn"];
 
+function codeStillValid(signIn: SignIn): boolean {
+  const verification = signIn.secondFactorVerification;
+  return (
+    verification.strategy === "email_code" &&
+    verification.status === "unverified" &&
+    (verification.expireAt?.getTime() ?? 0) > Date.now()
+  );
+}
+
 function needsSecondFactor(status: string | null): boolean {
   return status === "needs_second_factor" || status === "needs_client_trust";
 }
@@ -240,16 +249,12 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     );
     if (factor === undefined) {
       const hosted = new URL(clerk.buildSignInUrl());
-      hosted.hash = signIn.status === "needs_second_factor" ? "/factor-two" : "/client-trust";
+      const step = signIn.status === "needs_second_factor" ? "factor-two" : "client-trust";
+      hosted.hash = `/${step}${hosted.hash.replace(/^#\/?/, "")}`;
       await clerk.navigate(hosted.href);
       return;
     }
-    const verification = signIn.secondFactorVerification;
-    const sent =
-      verification.strategy === "email_code" &&
-      verification.status === "unverified" &&
-      (verification.expireAt?.getTime() ?? 0) > Date.now();
-    if (resend || !sent) {
+    if (resend || !codeStillValid(signIn)) {
       await signIn.prepareSecondFactor({
         strategy: "email_code",
         emailAddressId: factor.emailAddressId,
@@ -260,20 +265,24 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     setPhase({ name: "code", mode: "second-factor" });
   }
 
-  // The callback marks its return with ?sso. The marker is read once and stripped, so Back,
-  // a refresh or a shared link never resumes, and only a sign-in started with Google is
-  // resumed, never an older password attempt the browser still holds.
+  // The callback marks its return with ?sso, read once and stripped. Only a sign-in started
+  // with Google is resumed: on that return it requests the code, and after a reload it shows
+  // the code step again only while the code already sent is still valid, never sending one.
   const resumeFromCallback = React.useEffectEvent(() => {
+    if (clerk.client === undefined) return;
     const url = new URL(window.location.href);
-    if (!url.searchParams.has(SSO_RETURN_PARAM) || clerk.client === undefined) return;
-    url.searchParams.delete(SSO_RETURN_PARAM);
-    window.history.replaceState(window.history.state, "", url);
+    const fromCallback = url.searchParams.has(SSO_RETURN_PARAM);
+    if (fromCallback) {
+      url.searchParams.delete(SSO_RETURN_PARAM);
+      window.history.replaceState(window.history.state, "", url);
+    }
     const { signIn, signUp } = clerk.client;
     const viaOAuth = signIn.firstFactorVerification.strategy?.startsWith("oauth_") === true;
-    if (viaOAuth && needsSecondFactor(signIn.status)) {
+    if (viaOAuth && needsSecondFactor(signIn.status) && (fromCallback || codeStillValid(signIn))) {
       startSecondFactor(signIn).catch((err: unknown) => setError(clerkErrorMessage(err)));
       return;
     }
+    if (!fromCallback) return;
     const failure =
       (viaOAuth ? signIn.firstFactorVerification.error : null) ??
       signUp.verifications.externalAccount.error;

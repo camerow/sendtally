@@ -16,9 +16,9 @@ const clerk = vi.hoisted(() => ({
   loaded: true,
   setActive: vi.fn(),
   navigate: vi.fn(),
-  // clerk-js 6 puts the return address in the hash, which is what the web app loads.
+  // Production shape from clerk-js 6: empty query, every parameter in the hash.
   buildSignInUrl: () =>
-    "https://accounts.sendtally.com/sign-in#/?redirect_url=http%3A%2F%2Flocalhost%2Fsign-in%3Fsso",
+    "https://accounts.sendtally.com/sign-in#/?redirect_url=https%3A%2F%2Fsendtally.com%2Fsign-in",
   client: {
     signIn: {} as Record<string, unknown>,
     signUp: { verifications: { externalAccount: { error: null as Failure } } },
@@ -154,6 +154,20 @@ describe("AuthForm", () => {
     expect(container.textContent).toContain(t("auth.checkInbox"));
   });
 
+  it("shows the code step again after a reload while the code sent is still valid", async () => {
+    const signIn = signInWith({
+      status: "needs_client_trust",
+      secondFactorVerification: {
+        strategy: "email_code",
+        status: "unverified",
+        expireAt: inTenMinutes(),
+      },
+    });
+    await render("/sign-in");
+    expect(signIn.prepareSecondFactor).not.toHaveBeenCalled();
+    expect(container.textContent).toContain(t("auth.checkInbox"));
+  });
+
   it("emails a new code when the one sent earlier has expired", async () => {
     const signIn = signInWith({
       status: "needs_client_trust",
@@ -219,7 +233,7 @@ describe("AuthForm", () => {
     await render("/sign-in?sso");
     expect(signIn.prepareSecondFactor).not.toHaveBeenCalled();
     expect(clerk.navigate).toHaveBeenCalledWith(
-      "https://accounts.sendtally.com/sign-in#/factor-two"
+      "https://accounts.sendtally.com/sign-in#/factor-two?redirect_url=https%3A%2F%2Fsendtally.com%2Fsign-in"
     );
   });
 
