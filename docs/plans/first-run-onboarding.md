@@ -1,7 +1,7 @@
 # First-run onboarding
 
-Status: spec, agreed between onboarding-eng and onboarding-designer on 2026-11-14, pending Will's review.
-Design board: "First run: open on Log, one starter block, no tour" (`FirstRun.dc.html`, x 0, y 95220, below LikelyDuplicates) on the "sendtally - v3" page of the canvas https://claude.ai/artifact/CNPnNQwgvzgvxk4ZAYTyto.
+Status: spec for direction A, agreed between onboarding-eng and onboarding-designer on 2026-11-14; Will found A had not simplified enough and is choosing between A and B, and this document is rewritten for his pick.
+Design boards, on the "First run onboarding" page (id `first-run`) of the canvas https://claude.ai/artifact/CNPnNQwgvzgvxk4ZAYTyto: A "First run: open on Log, one starter block, no tour" (`FirstRun.dc.html`, x 0, y 0), which this document describes, and B "First run B: one question, then straight into the first real thing" (`FirstRunB.dc.html`, x 0, y 2460).
 
 ## The question
 
