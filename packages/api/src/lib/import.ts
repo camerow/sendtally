@@ -38,17 +38,9 @@ export type PlannedImportSession = Agrees<
   ImportBody["sessions"][number]
 >;
 
-// The same rows produce the same fingerprint, so importing a file twice adds
-// nothing the second time. The user's edits afterwards do not change it.
-export async function importFingerprint(session: ImportSessionBody): Promise<string> {
-  const canonical = JSON.stringify([
-    session.date,
-    session.name ?? "",
-    session.climbs.map((c) => [c.name, c.grade.scale, c.grade.value, c.kind, c.tries]),
-  ]);
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical));
-  const hex = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-  return `import-${hex.slice(0, 32)}`;
+export async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export function manualBodyOf(

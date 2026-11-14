@@ -79,6 +79,11 @@ export const importCsv = {
     "Trends and projects include the imported sessions straight away. Open any of them to add an RPE, tags or notes.",
   "import.openLog": "Open the log",
   "import.importAnother": "Import another file",
+  "import.likelyMatch": "Matches {name} in your log",
+  "import.importAnyway_one": "Import it anyway",
+  "import.importAnyway_other": "Import them anyway",
+  "import.likelySkipped_one": "{count} likely duplicate skipped",
+  "import.likelySkipped_other": "{count} likely duplicates skipped",
   "import.showAllRows": "Show all {total} rows",
   "import.tagSelected": "Tag selected sessions",
   "import.tagSelectedHint":

@@ -1,6 +1,18 @@
-import { planImport, type ImportIssue } from "@sendtally/core/import";
+import { parseClimbs } from "@sendtally/core";
+import {
+  likelyDuplicates,
+  planImport,
+  type ImportIssue,
+  type ImportSession,
+} from "@sendtally/core/import";
 import { z } from "zod";
-import { IMPORT_BATCH_MAX, importSessionShape, type ImportSessionBody } from "../lib/import";
+import {
+  IMPORT_BATCH_MAX,
+  importSessionShape,
+  sha256Hex,
+  type ImportSessionBody,
+} from "../lib/import";
+import * as repo from "../lib/repo";
 import { importSessions } from "../sessions";
 import type { ConnectorTool } from "./types";
 
@@ -33,6 +45,8 @@ Conversion rules:
 - session_notes holds anything written about the day; climb_notes anything written about that climb. Quote fields that contain commas or line breaks.
 - Skip rows with no grade and no climb name. Do not invent values.
 
+A dry run also returns likelyDuplicates: sessions on the same date as one already in the user's log that share most of its climbs (same grade, and same name when both have one), each with the session it matches. These usually come from the same day logged in another app or by hand. Ask the user whether to import each one anyway; to leave one out, remove its rows before importing. Nothing already in the log is ever changed.
+
 Rows with problems are skipped and returned in issues with their row number (row 1 is the first line of the text). Run with dryRun first, fix every issue, then import the corrected text: the rest of a session imports without its bad rows, and a fixed row sent later on its own becomes a separate session. The same rows never import twice, so a resend or a retry is safe. Send a large file in chunks of up to ${IMPORT_BATCH_MAX} sessions, each with the header row, keeping all of one day's rows in one chunk. Imported sessions are never posted to Strava.`;
 
 export const importClimbingLog: ConnectorTool<typeof inputSchema> = {
@@ -41,21 +55,23 @@ export const importClimbingLog: ConnectorTool<typeof inputSchema> = {
   description,
   inputSchema,
   annotations: { readOnlyHint: false, destructiveHint: false },
-  run: async ({ csv, timeZone, dryRun }, { c }) => {
+  run: async ({ csv, timeZone, dryRun }, { c, env, userId }) => {
     const plan = planImport(csv, timeZone);
     const issues: (ImportIssue | { row: number; code: "invalidSession"; value: string })[] = [
       ...plan.issues,
     ];
-    const sessions: ImportSessionBody[] = [];
-    for (const { rows, ...planned } of plan.sessions) {
+    const valid: { planned: ImportSession; body: ImportSessionBody }[] = [];
+    for (const session of plan.sessions) {
+      const { rows, ...planned } = session;
       const parsed = importSessionShape.safeParse(planned);
-      if (parsed.success) sessions.push(parsed.data);
+      if (parsed.success) valid.push({ planned: session, body: parsed.data });
       else
         for (const { path, message } of parsed.error.issues) {
           const row = path[0] === "climbs" ? rows[Number(path[1])] : rows[0];
           issues.push({ row: row ?? 1, code: "invalidSession", value: message });
         }
     }
+    const sessions = valid.map((v) => v.body);
     if (sessions.length > IMPORT_BATCH_MAX) {
       return {
         error: `${sessions.length} sessions is more than ${IMPORT_BATCH_MAX}; send the file in chunks.`,
@@ -63,7 +79,25 @@ export const importClimbingLog: ConnectorTool<typeof inputSchema> = {
     }
     if (dryRun || sessions.length === 0) {
       const climbs = sessions.reduce((n, s) => n + s.climbs.length, 0);
-      return { format: plan.format, sessions: sessions.length, climbs, issues };
+      const logged = (await repo.listSessions(env.DB, userId, true)).map((row) => ({
+        ...row,
+        climbs: parseClimbs(row.climbs_json),
+      }));
+      const planned = valid.map((v) => v.planned);
+      const duplicates = await likelyDuplicates(planned, logged, sha256Hex);
+      const likely = duplicates.map(({ index, logged: match }) => ({
+        row: planned[index]?.rows[0] ?? 1,
+        date: planned[index]?.date,
+        name: planned[index]?.name,
+        matches: { title: match.title, date: match.start_at.slice(0, 10) },
+      }));
+      return {
+        format: plan.format,
+        sessions: sessions.length,
+        climbs,
+        issues,
+        likelyDuplicates: likely,
+      };
     }
     return { format: plan.format, ...(await importSessions(c, sessions)), issues };
   },

@@ -395,8 +395,28 @@ describe("connector", () => {
       sessions: 2,
       climbs: 3,
       issues: [{ row: 5, code: "unknownGrade", value: "V99", climb: "" }],
+      likelyDuplicates: [],
     });
     expect(await toolJson(user, "list_sessions")).toEqual({ sessions: [] });
+  });
+
+  it("returns sessions that look like one already in the log on a dry run", async () => {
+    const user = "user_import_duplicate";
+    await toolJson(user, "log_session", {
+      date: "2026-09-03",
+      name: "Gym night",
+      climbs: [{ grade: { scale: "v", value: 6 } }],
+    });
+    const dry = await importLog(user, { csv: CSV, dryRun: true });
+    expect(dry.likelyDuplicates).toEqual([
+      {
+        row: 4,
+        date: "2026-09-03",
+        name: "Thursday session",
+        matches: { title: expect.any(String), date: "2026-09-03" },
+      },
+    ]);
+    expect(await importLog(user, { csv: CSV })).toMatchObject({ imported: 2, skipped: 0 });
   });
 
   it("imports a log once and reports each bad row by its number", async () => {
