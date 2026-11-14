@@ -15,7 +15,8 @@ export type ImportIssueCode =
   | "badTries"
   | "badRpe"
   | "badLocation"
-  | "badTime";
+  | "badTime"
+  | "unreadColumn";
 
 export type ImportIssue = {
   row: number;

@@ -17,6 +17,7 @@ const ISSUE_KEYS = {
   badRpe: "import.issueBadRpe",
   badLocation: "import.issueBadLocation",
   badTime: "import.issueBadTime",
+  unreadColumn: "import.issueUnreadColumn",
 } as const;
 
 export const issueText = (issue: ImportIssue): string =>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseCsv, toCsv } from "./csv";
 import { exportPageUrl, gradeFromText, planImport } from "./plan";
+import type { ImportPlan } from "./types";
 
 const kaya = `date,stiffness,rating,ascent_type,attempts,grade,color,climb_name,gym,location,country
 Fri Nov 05 2021 03:49:59 GMT+0000 (GMT+00:00),0,,Flash,1,5.10c,,Scrum Felcher,,Sun City,United States
@@ -123,6 +124,19 @@ describe("planImport", () => {
     expect(planImport("Name,Sent\nFoo,y\n", "UTC").issues).toEqual([{ row: 1, code: "noHeader" }]);
     expect(planImport("Date,Name,Grade\n11/22/2022,Roof,v9\n", "UTC").issues).toEqual([
       { row: 1, code: "noHeader" },
+    ]);
+  });
+
+  it("refuses a file in our format that carries a column from another app's export", () => {
+    const issues = (csv: string): ImportPlan["issues"] => planImport(csv, "UTC").issues;
+    expect(issues("Date,Send Type,Grade\n2022-11-22,project,V9\n")).toEqual([
+      { row: 1, code: "unreadColumn", value: "Send Type" },
+    ]);
+    expect(issues("date,ascent_type,grade\n2022-11-22,Flash,v4\n")).toEqual([
+      { row: 1, code: "unreadColumn", value: "ascent_type" },
+    ]);
+    expect(issues("date,grade,lead_style\n2022-11-22,5.10a,Fell/Hung\n")).toEqual([
+      { row: 1, code: "unreadColumn", value: "lead_style" },
     ]);
   });
 

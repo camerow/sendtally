@@ -62,6 +62,8 @@ export const importCsv = {
   "import.issueBadRpe": "„{value}“ ist kein RPE von 1 bis 10.",
   "import.issueBadLocation": "„{value}“ ist weder indoor noch outdoor.",
   "import.issueBadTime": "„{value}“ ist keine Uhrzeit im Format HH:MM.",
+  "import.issueUnreadColumn":
+    "„{value}“ ist eine Spalte aus dem Export einer anderen App, die Sendtally hier nicht lesen kann. Wandle die Datei zuerst ins Sendtally-Format um.",
   "import.sessionsLabel": "Sessions",
   "import.showing": "Neueste zuerst · {shown} von {total}",
   "import.showAll": "Alle {total} Sessions anzeigen",
