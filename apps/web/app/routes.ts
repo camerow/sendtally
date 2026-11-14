@@ -10,6 +10,7 @@ export default [
   route("privacy", "routes/privacy.tsx"),
   route("terms", "routes/terms.tsx"),
   route("support", "routes/support.tsx"),
+  route("agents", "routes/agents.tsx"),
   route("ai-assistants", "routes/ai-assistants.tsx"),
   layout("routes/clerk-layout.tsx", [
     route("sign-in", "routes/sign-in.tsx"),

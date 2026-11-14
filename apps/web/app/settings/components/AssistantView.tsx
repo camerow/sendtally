@@ -42,7 +42,7 @@ export function AssistantView({ url }: { url: string }): React.ReactElement {
       </Section>
 
       <p style={bodyText}>{t("settings.assistantRevoke")}</p>
-      <Link to="/ai-assistants" style={linkAction}>
+      <Link to="/agents" style={linkAction}>
         {t("settings.assistantLearnMore")}
       </Link>
     </div>

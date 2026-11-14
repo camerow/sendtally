@@ -4,7 +4,12 @@ import { AppStores } from "./AppStores";
 import { PhotoBackdrop } from "./PhotoBackdrop";
 import { WebAccountLink } from "./WebAccountLink";
 
-export function PricingClosing(): React.ReactElement {
+export type ClosingProps = {
+  title: string;
+  webAccount: string;
+};
+
+export function Closing({ title, webAccount }: ClosingProps): React.ReactElement {
   const { copy } = useLanding();
   return (
     <section id="start" className="l-closing">
@@ -15,9 +20,9 @@ export function PricingClosing(): React.ReactElement {
         scrim="even"
       />
       <div className="l-closing-inner">
-        <h2 className="l-closing-title">{copy.pricing.closing.title}</h2>
+        <h2 className="l-closing-title">{title}</h2>
         <AppStores prominent />
-        <WebAccountLink label={copy.pricing.closing.webAccount} tone="dark" />
+        <WebAccountLink label={webAccount} tone="dark" />
       </div>
     </section>
   );

@@ -3,8 +3,10 @@ import type { LinksFunction, LoaderFunctionArgs, MetaFunction } from "react-rout
 import { useLoaderData } from "react-router";
 import type { Locale } from "@sendtally/features/i18n";
 import { isSignedIn } from "../auth/session.server";
+import { connectorUrl } from "../lib/connector";
 import { landingLocale } from "../lib/locale";
 import { landingPath, pageMeta, SITE_URL } from "../lib/seo";
+import { AgentsRow } from "../landing/components/AgentsRow";
 import { Extras } from "../landing/components/Extras";
 import { FeatureSection } from "../landing/components/FeatureSection";
 import { Footer } from "../landing/components/Footer";
@@ -47,13 +49,14 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   ];
 };
 
-type LoaderData = { signedIn: boolean; locale: Locale; platform: StorePlatform };
+type LoaderData = { signedIn: boolean; locale: Locale; platform: StorePlatform; url: string };
 
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
   return {
     signedIn: await isSignedIn(args),
     locale: landingLocale(new URL(args.request.url).pathname) ?? "en",
     platform: storePlatform(args.request.headers.get("user-agent")),
+    url: connectorUrl(args),
   };
 }
 
@@ -72,6 +75,7 @@ export default function Home(): React.ReactElement {
         {COPIES[loaderData.locale].features.map((feature, i) => (
           <FeatureSection key={feature.id} feature={feature} flip={i % 2 === 1} />
         ))}
+        {loaderData.locale === "en" && <AgentsRow url={loaderData.url} />}
         <Extras />
         <MadeBy />
         <StartSection />

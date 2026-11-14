@@ -38,7 +38,7 @@ export function ConversionPrompt({ showApps = false }: { showApps?: boolean }): 
           <ServiceLinks />
         </>
       )}
-      <Link to="/ai-assistants" style={linkAction}>
+      <Link to="/agents" style={linkAction}>
         {t("import.connectorLine")}
       </Link>
     </Section>

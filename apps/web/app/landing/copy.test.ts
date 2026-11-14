@@ -13,6 +13,7 @@ const files = [
     .map((f) => `${here}components/${f}`),
   `${here}../routes/home.tsx`,
   `${here}../routes/pricing.tsx`,
+  `${here}../routes/agents.tsx`,
 ];
 
 function literalText(node: ts.JsxAttribute["initializer"]): string | null {

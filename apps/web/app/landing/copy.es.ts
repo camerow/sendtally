@@ -26,6 +26,7 @@ export const COPY_ES: LandingCopy = {
         href: "#stats",
       },
     ],
+    agents: "Agentes IA",
     pricing: "Pricing", // follows en
     signIn: "Iniciar sesión",
     createAccount: "Crear cuenta",
@@ -379,8 +380,8 @@ export const COPY_ES: LandingCopy = {
         href: "/support",
       },
       {
-        label: "Asistentes de IA",
-        href: "/ai-assistants",
+        label: "Agentes IA",
+        href: "/agents",
       },
     ],
   },
