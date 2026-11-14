@@ -2,10 +2,11 @@ import { useClerk } from "@clerk/react-router";
 import { isClerkAPIResponseError } from "@clerk/react-router/errors";
 import React from "react";
 import { useNavigate } from "react-router";
-import type { EmailCodeFactor, SignInSecondFactor } from "@clerk/types";
+import type { EmailCodeFactor } from "@clerk/types";
 import { AuthShell, StepBody, StepCard, StepTitle } from "./AuthShell";
 import { adsConversion, capture } from "../../lib/analytics";
 import { PRIVACY_PATH, TERMS_PATH } from "../../legal/constants";
+import { SSO_RETURN_PARAM } from "../ssoReturn";
 import type { AuthIntent } from "../types";
 import { t } from "@sendtally/features/i18n";
 
@@ -123,6 +124,21 @@ function clerkErrorMessage(err: unknown): string {
 type CodeMode = AuthIntent | "second-factor";
 type Phase = { name: "email" } | { name: "code"; mode: CodeMode } | { name: "password" };
 
+type SignIn = NonNullable<ReturnType<typeof useClerk>["client"]>["signIn"];
+
+function codeStillValid(signIn: SignIn): boolean {
+  const verification = signIn.secondFactorVerification;
+  return (
+    verification.strategy === "email_code" &&
+    verification.status === "unverified" &&
+    (verification.expireAt?.getTime() ?? 0) > Date.now()
+  );
+}
+
+function needsSecondFactor(status: string | null): boolean {
+  return status === "needs_second_factor" || status === "needs_client_trust";
+}
+
 function funnel(intent: AuthIntent): "signup" | "signin" {
   return intent === "sign-up" ? "signup" : "signin";
 }
@@ -224,21 +240,58 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     }
   }
 
-  // Clerk answers a challenged credential with "needs_second_factor" instead of throwing,
-  // so treating every non-complete status as a failure would tell someone with a correct
-  // password that it was wrong. Device Trust raises this on any unrecognised device.
-  async function startSecondFactor(factors: SignInSecondFactor[] | null): Promise<boolean> {
-    if (!clerk.loaded || clerk.client === undefined) return false;
-    const factor = factors?.find((f): f is EmailCodeFactor => f.strategy === "email_code");
-    if (factor === undefined) return false;
-    await clerk.client.signIn.prepareSecondFactor({
-      strategy: "email_code",
-      emailAddressId: factor.emailAddressId,
-    });
-    capture("auth_code_sent", { mode: "second-factor" });
+  // Clerk answers a challenged credential with a second-factor status instead of throwing.
+  // This form finishes an email code; any other step (authenticator app, SMS) goes to
+  // Clerk's hosted page for it. A code already sent is reused unless the user asks again.
+  async function startSecondFactor(signIn: SignIn, resend = false): Promise<void> {
+    const factor = signIn.supportedSecondFactors?.find(
+      (f): f is EmailCodeFactor => f.strategy === "email_code"
+    );
+    if (factor === undefined) {
+      const hosted = new URL(clerk.buildSignInUrl());
+      const step = signIn.status === "needs_second_factor" ? "factor-two" : "client-trust";
+      hosted.hash = `/${step}${hosted.hash.replace(/^#\/?/, "")}`;
+      await clerk.navigate(hosted.href);
+      return;
+    }
+    if (resend || !codeStillValid(signIn)) {
+      await signIn.prepareSecondFactor({
+        strategy: "email_code",
+        emailAddressId: factor.emailAddressId,
+      });
+      capture("auth_code_sent", { mode: "second-factor" });
+    }
+    setEmail((current) => current || factor.safeIdentifier);
     setPhase({ name: "code", mode: "second-factor" });
-    return true;
   }
+
+  // The callback marks its return with ?sso, read once and stripped. Only a sign-in started
+  // with Google is resumed: on that return it requests the code, and after a reload it shows
+  // the code step again only while the code already sent is still valid, never sending one.
+  const resumeFromCallback = React.useEffectEvent(() => {
+    if (clerk.client === undefined) return;
+    const url = new URL(window.location.href);
+    const fromCallback = url.searchParams.has(SSO_RETURN_PARAM);
+    if (fromCallback) {
+      url.searchParams.delete(SSO_RETURN_PARAM);
+      window.history.replaceState(window.history.state, "", url);
+    }
+    const { signIn, signUp } = clerk.client;
+    const viaOAuth = signIn.firstFactorVerification.strategy?.startsWith("oauth_") === true;
+    if (viaOAuth && needsSecondFactor(signIn.status) && (fromCallback || codeStillValid(signIn))) {
+      startSecondFactor(signIn).catch((err: unknown) => setError(clerkErrorMessage(err)));
+      return;
+    }
+    if (!fromCallback) return;
+    const failure =
+      (viaOAuth ? signIn.firstFactorVerification.error : null) ??
+      signUp.verifications.externalAccount.error;
+    if (failure !== null) setError(failure.longMessage ?? failure.message);
+  });
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the pending sign-in only exists once Clerk loads in the browser
+    if (clerk.loaded) resumeFromCallback();
+  }, [clerk.loaded]);
 
   async function signInWithPassword(): Promise<void> {
     if (!clerk.loaded || clerk.client === undefined || phase.name !== "password") return;
@@ -259,10 +312,8 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
         await navigate("/app");
         return;
       }
-      if (
-        result.status === "needs_second_factor" &&
-        (await startSecondFactor(result.supportedSecondFactors))
-      ) {
+      if (needsSecondFactor(result.status)) {
+        await startSecondFactor(result);
         setBusy(false);
         return;
       }
@@ -364,7 +415,10 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           code: code.trim(),
         });
         if (result.status === "complete" && result.createdSessionId !== null) {
-          capture("signin_completed", { method: "password_second_factor" });
+          const firstFactor = result.firstFactorVerification.strategy ?? "unknown";
+          capture("signin_completed", {
+            method: `${firstFactor.replace(/^oauth_/, "")}_second_factor`,
+          });
           await clerk.setActive({ session: result.createdSessionId });
           await navigate("/app");
           return;
@@ -385,10 +439,8 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           await navigate("/app");
           return;
         }
-        if (
-          result.status === "needs_second_factor" &&
-          (await startSecondFactor(result.supportedSecondFactors))
-        ) {
+        if (needsSecondFactor(result.status)) {
+          await startSecondFactor(result);
           setCode("");
           setBusy(false);
           return;
@@ -444,11 +496,8 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
     setError(null);
     setBusy(true);
     try {
-      const resent =
-        phase.mode === "second-factor"
-          ? await startSecondFactor(clerk.client.signIn.supportedSecondFactors)
-          : await prepareEmailCode();
-      if (!resent) setError(t("auth.resendFailed"));
+      if (phase.mode === "second-factor") await startSecondFactor(clerk.client.signIn, true);
+      else if (!(await prepareEmailCode())) setError(t("auth.resendFailed"));
     } catch (err) {
       setError(clerkErrorMessage(err));
     }
@@ -554,7 +603,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
             <button onClick={backToEmail} style={linkButton}>
               {t("auth.useDifferentEmail")}
             </button>
-            <button onClick={() => void resendCode()} style={linkButton}>
+            <button onClick={() => void resendCode()} disabled={busy} style={linkButton}>
               {t("auth.resendCode")}
             </button>
           </div>
