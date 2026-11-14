@@ -221,6 +221,7 @@ export const workouts = {
   "workouts.moveDown": "Move {name} down",
   "workouts.seeAll": "See all",
   "workouts.seeAllCount": "See all {n}",
+  "workouts.allExercises": "All {n} exercises",
   "workouts.seeAllOf": "See all {kind}",
   "workouts.exerciseBest": "Best {value}",
   "workouts.exerciseBestBodyweight": "Best bodyweight",

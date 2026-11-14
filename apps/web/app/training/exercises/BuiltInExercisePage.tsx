@@ -1,0 +1,51 @@
+import React from "react";
+import { kindLabel } from "@sendtally/features/activities";
+import type { BuiltInExercise } from "@sendtally/features/exercises";
+import { t } from "@sendtally/features/i18n";
+import { workoutsUsing } from "@sendtally/features/statistics";
+import { MoreMenu } from "../../components/MoreMenu";
+import { DetailFrame } from "../../components/detail/DetailFrame";
+import { CategoryMark } from "../components/CategoryMark";
+import { DashedPanel } from "../components/DashedPanel";
+import { UsedIn } from "../components/UsedIn";
+import { useLibrary } from "../library/useLibrary";
+import { usePick } from "../editor/useMake";
+import { useAddToWorkout } from "../editor/useAddToWorkout";
+import { EXERCISES_VIEW } from "./paths";
+
+/** A built-in the user has not made their own: nothing logged yet, and Add to workout makes it theirs. */
+export function BuiltInExercisePage({ builtIn }: { builtIn: BuiltInExercise }): React.ReactElement {
+  const pick = usePick();
+  const library = useLibrary().state;
+  const usedIn =
+    library.status === "ready" ? workoutsUsing(library.data.workouts, builtIn.name) : [];
+  const addTo = useAddToWorkout({
+    name: builtIn.name,
+    pick: () => pick({ builtIn }),
+    fingers: false,
+    usedIn,
+  });
+  return (
+    <DetailFrame
+      backTo={EXERCISES_VIEW}
+      action={
+        addTo.item === null ? undefined : (
+          <span className="detail-actions">
+            <MoreMenu label={t("summary.more")} items={[addTo.item]} />
+          </span>
+        )
+      }
+    >
+      <div className="intro">
+        <span className="intro-kicker">
+          <CategoryMark kind={builtIn.kind} size={28} />
+          <span className="train-label">{kindLabel(builtIn.kind)}</span>
+        </span>
+        <h1 className="train-title intro-title">{builtIn.name}</h1>
+      </div>
+      <DashedPanel body={t("workouts.exerciseNothingLogged")} />
+      <UsedIn workouts={usedIn} />
+      {addTo.sheet}
+    </DetailFrame>
+  );
+}

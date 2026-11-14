@@ -42,14 +42,36 @@ describe("exerciseShelves", () => {
   it("shelves every category, leaving out archived exercises and hidden grips", () => {
     const shelves = exerciseShelves(world());
     const of = (kind: string): string[] =>
-      shelves.find((s) => s.kind === kind)?.entries.map((e) => e.name) ?? [];
+      shelves
+        .find((s) => s.kind === kind)
+        ?.entries.filter((e) => !e.library)
+        .map((e) => e.name) ?? [];
     expect(of("strength")).toEqual(["Back squat", "Bench press"]);
     expect(of("hangboard")).toEqual(["Half crimp"]);
     expect(shelves.find((s) => s.kind === "hangboard")?.entries[0]?.opens).toEqual({ grip: "g1" });
   });
 
-  it("reads an exercise not yet done by the dose a workout gives it, else nothing", () => {
+  it("adds the built-ins the user has not made their own, by link or by name", () => {
+    const strength = exerciseShelves(
+      world({
+        exercises: [exercise("e1", "Back squat"), exercise("e2", "Mine", { builtIn: "dips" })],
+      })
+    ).find((s) => s.kind === "strength")!.entries;
+    const library = strength.filter((e) => e.library);
+    expect(library.some((e) => e.name === "Pull-ups")).toBe(true);
+    expect(library.find((e) => e.name === "Pull-ups")?.opens).toEqual({ builtIn: "pullUps" });
+    expect(library.some((e) => e.name === "Back squat" || e.name === "Dips")).toBe(false);
+  });
+
+  it("lists the user's own before the library on a shelf", () => {
     const strength = exerciseShelves(world()).find((s) => s.kind === "strength")!.entries;
+    expect(shelfRows(strength, 2).map((c) => c.name)).toEqual(["Back squat", "Bench press"]);
+  });
+
+  it("reads an exercise not yet done by the dose a workout gives it, else nothing", () => {
+    const strength = exerciseShelves(world())
+      .find((s) => s.kind === "strength")!
+      .entries.filter((e) => !e.library);
     expect(strength[0]?.meta).toContain("5 × 5");
     expect(strength[1]?.meta).toBeNull();
   });

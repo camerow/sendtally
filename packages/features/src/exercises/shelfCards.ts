@@ -18,7 +18,7 @@ import {
   type ExerciseSeries,
 } from "../statistics/exercises";
 import { doseSummary } from "../workouts/library";
-import { exerciseLabel } from "./builtIns";
+import { exerciseLabel, unclaimedBuiltIns } from "./builtIns";
 import { metricText } from "./exerciseText";
 import { categoryShelves } from "./shelves";
 import type { CategoryShelf } from "./types";
@@ -29,7 +29,9 @@ export type ShelfCard = {
   kind: WorkoutKind;
   name: string;
   meta: string | null;
-  opens: { grip: string } | { exercise: string };
+  /** A built-in the user has not made their own yet. */
+  library: boolean;
+  opens: { grip: string } | { exercise: string } | { builtIn: string };
 };
 
 export type ShelfWorld = {
@@ -63,7 +65,8 @@ function exerciseMeta(name: string, kind: WorkoutKind, w: ShelfWorld): string | 
 
 /**
  * Train > Exercises: every category, each exercise with its best result or its last dose.
- * Fingers holds the user's own grips and the built-in ones they have hung on.
+ * Fingers holds the user's own grips and the built-in ones they have hung on; every other
+ * category also holds the built-ins the user has not made their own.
  */
 export function exerciseShelves(w: ShelfWorld): CategoryShelf<ShelfCard>[] {
   const notDone = (meta: string): string | null =>
@@ -75,6 +78,7 @@ export function exerciseShelves(w: ShelfWorld): CategoryShelf<ShelfCard>[] {
       kind: "hangboard",
       name: g.name,
       meta: notDone(gripMeta(w.sessions, g.id, w.today, w.unit)),
+      library: false,
       opens: { grip: g.id },
     }));
   const mine = w.exercises
@@ -84,14 +88,28 @@ export function exerciseShelves(w: ShelfWorld): CategoryShelf<ShelfCard>[] {
       kind: e.kind,
       name: exerciseLabel(e),
       meta: exerciseMeta(e.name, e.kind, w),
+      library: false,
       opens: { exercise: e.id },
     }));
-  return categoryShelves([...grips, ...mine]);
+  const library = unclaimedBuiltIns(w.exercises).map((b): ShelfCard => ({
+    key: `builtIn:${b.id}`,
+    kind: b.kind,
+    name: b.name,
+    meta: null,
+    library: true,
+    opens: { builtIn: b.id },
+  }));
+  return categoryShelves([...grips, ...mine, ...library]);
 }
 
-/** A shelf's first rows: done ones first. */
-export const shelfRows = <C extends Pick<ShelfCard, "meta">>(
+/** A shelf's first rows: done ones first, the user's own before the library. */
+export const shelfRows = <C extends Pick<ShelfCard, "meta" | "library">>(
   cards: readonly C[],
   rows: number
 ): C[] =>
-  [...cards].sort((a, b) => Number(a.meta === null) - Number(b.meta === null)).slice(0, rows);
+  [...cards]
+    .sort(
+      (a, b) =>
+        Number(a.meta === null) - Number(b.meta === null) || Number(a.library) - Number(b.library)
+    )
+    .slice(0, rows);

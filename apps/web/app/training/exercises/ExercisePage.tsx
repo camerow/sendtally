@@ -7,7 +7,7 @@ import {
   useActivities,
   useWeightUnit,
 } from "@sendtally/features/activities";
-import { exerciseLabel, pickedOf } from "@sendtally/features/exercises";
+import { builtInExercise, exerciseLabel, pickedOf } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import {
   exerciseKey,
@@ -28,6 +28,7 @@ import { editExercisePath } from "../editor/paths";
 import { useAddToWorkout } from "../editor/useAddToWorkout";
 import { useLibrary } from "../library/useLibrary";
 import { activityPath } from "../log/paths";
+import { BuiltInExercisePage } from "./BuiltInExercisePage";
 import { EXERCISES_VIEW } from "./paths";
 import { useExerciseMenu } from "./useExerciseMenu";
 
@@ -51,7 +52,7 @@ function Detail({
     library.status === "ready" ? workoutsUsing(library.data.workouts, exercise.name) : [];
   const addTo = useAddToWorkout({
     name: exerciseLabel(exercise),
-    picked: pickedOf({ exercise }),
+    pick: async () => pickedOf({ exercise }),
     fingers: false,
     usedIn,
   });
@@ -105,12 +106,17 @@ function Detail({
   );
 }
 
-/** One exercise: its best-set trend, its last sessions and the workouts that use it. */
+/**
+ * One exercise: its best-set trend, its last sessions and the workouts that use it. A built-in id
+ * opens the user's own copy once they have one, else the built-in itself.
+ */
 export function ExercisePage({ id }: { id: string }): React.ReactElement | null {
   const exercises = useExercises(useAppApi());
   if (exercises.state.status !== "ready")
     return <LoadState state={exercises.state} onRetry={() => void exercises.reload()} />;
   const all = exercises.state.data;
-  const exercise = all.find((e) => e.id === id);
-  return exercise === undefined ? null : <Detail exercise={exercise} all={all} />;
+  const exercise = all.find((e) => e.id === id || (e.builtIn === id && !e.archived));
+  if (exercise !== undefined) return <Detail exercise={exercise} all={all} />;
+  const builtIn = builtInExercise(id);
+  return builtIn === undefined ? null : <BuiltInExercisePage builtIn={builtIn} />;
 }

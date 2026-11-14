@@ -1,5 +1,6 @@
 import React from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { Icon } from "../../components/Icon";
 import { newExercisePath } from "../editor/paths";
 import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
 import { exerciseShelves, shelfRows, type ShelfCard } from "@sendtally/features/exercises";
@@ -16,7 +17,9 @@ import { useLibrary } from "../library/useLibrary";
 import { exerciseCategoryPath, exercisePath, gripPath } from "./paths";
 
 const pathOf = ({ opens }: ShelfCard): string =>
-  "grip" in opens ? gripPath(opens.grip) : exercisePath(opens.exercise);
+  "grip" in opens
+    ? gripPath(opens.grip)
+    : exercisePath("exercise" in opens ? opens.exercise : opens.builtIn);
 
 /**
  * Train > Exercises: every category, each exercise with its best result or its last dose.
@@ -52,11 +55,6 @@ export function ExerciseShelves(): React.ReactElement {
               label: t("workouts.newExerciseIn", { category: kindLabel(kind) }),
               onPress: () => void navigate(newExercisePath(kind)),
             }}
-            seeAll={
-              entries.length > SHELF_ROWS
-                ? { to: exerciseCategoryPath(kind), count: entries.length }
-                : undefined
-            }
           />
           {entries.length === 0 ? (
             <DashedPanel body={t(`workouts.categoryEmpty.${kind}`)} />
@@ -66,13 +64,19 @@ export function ExerciseShelves(): React.ReactElement {
                 key={c.key}
                 kind={kind}
                 name={c.name}
-                meta={c.meta ?? t("workouts.notDoneYet")}
+                meta={c.meta ?? t(c.library ? "workouts.fromLibrary" : "workouts.notDoneYet")}
                 faded={c.meta === null}
                 showKind={false}
                 showMark={false}
                 to={pathOf(c)}
               />
             ))
+          )}
+          {entries.length > SHELF_ROWS && (
+            <Link to={exerciseCategoryPath(kind)} className="link-row">
+              {t("workouts.allExercises", { n: entries.length })}
+              <Icon name="chevron" size={18} />
+            </Link>
           )}
         </section>
       ))}

@@ -3,6 +3,7 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import type { ActivityRecord } from "@sendtally/api-client";
+import { BUILT_IN_EXERCISES } from "@sendtally/core/hang";
 import { aHang, anExercise, renderWithHang, hangData } from "../data/renderWithHang";
 import { ExerciseShelves } from "./ExerciseShelves";
 
@@ -44,7 +45,7 @@ describe("exercise shelves", () => {
     expect(router.push).toHaveBeenCalledWith({ pathname: "/exercise/[id]", params: { id: "e2" } });
   });
 
-  it("shows every category with a hint when empty, See all past three, and a plus for each", async () => {
+  it("fills shelves with unclaimed built-ins after the user's own, and ends each long one in a library row", async () => {
     await renderWithHang(<ExerciseShelves />, hangData(), {
       exercises: [
         anExercise("e1", "Plank", "strength"),
@@ -54,18 +55,22 @@ describe("exercise shelves", () => {
     for (const kind of ["Fingers", "Climbing", "Strength", "Mobility", "Other"])
       expect(screen.getByText(kind)).toBeTruthy();
     expect(screen.queryByText("Pigeon")).toBeNull();
-    expect(screen.getByLabelText("See all Fingers")).toBeTruthy();
-    expect(screen.getAllByText("Not done yet").length).toBeGreaterThan(0);
-    expect(screen.getByText("A stretch or a hold, like Pancake.")).toBeTruthy();
-    expect(screen.queryByText("1")).toBeNull();
-    expect(screen.queryByLabelText("See all Strength")).toBeNull();
-    expect(screen.queryByLabelText("See all Climbing")).toBeNull();
-    expect(screen.queryByLabelText("See all Mobility")).toBeNull();
+    expect(screen.queryByLabelText(/^See all/)).toBeNull();
+    expect(screen.getAllByText("Library").length).toBeGreaterThan(0);
 
-    await fireEvent.press(screen.getByLabelText("See all Fingers"));
+    await fireEvent.press(screen.getByText("Back squat"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/exercise/[id]",
+      params: { id: "backSquat" },
+    });
+    await fireEvent.press(
+      screen.getByText(
+        `All ${BUILT_IN_EXERCISES.filter((b) => b.kind === "strength").length + 1} exercises`
+      )
+    );
     expect(router.push).toHaveBeenLastCalledWith({
       pathname: "/exercise/category",
-      params: { kind: "hangboard" },
+      params: { kind: "strength" },
     });
     await fireEvent.press(screen.getByLabelText("New exercise in Climbing"));
     expect(router.push).toHaveBeenLastCalledWith({

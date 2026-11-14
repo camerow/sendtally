@@ -1,6 +1,6 @@
 import type { Exercise } from "@sendtally/api-client";
 import type { Grip } from "@sendtally/core/hang";
-import { builtInExercises, exerciseLabel } from "./builtIns";
+import { exerciseLabel, unclaimedBuiltIns } from "./builtIns";
 import type { PickerEntry, PickerFilter } from "./types";
 
 export type PickerWorld = {
@@ -34,8 +34,6 @@ function allEntries(world: PickerWorld): PickerEntry[] {
       source: { grip },
     }));
   const mine = world.mine.filter((e) => !e.archived);
-  const taken = new Set(mine.map((e) => nameKey(e.name)));
-  const linked = new Set(world.mine.map((e) => e.builtIn));
   return [
     ...mine.map((exercise): PickerEntry => ({
       key: `mine:${exercise.id}`,
@@ -46,17 +44,15 @@ function allEntries(world: PickerWorld): PickerEntry[] {
       inWorkout: listed.has(nameKey(exercise.name)),
       source: { exercise },
     })),
-    ...builtInExercises()
-      .filter((b) => !linked.has(b.id) && !taken.has(nameKey(b.name)))
-      .map((builtIn): PickerEntry => ({
-        key: `builtIn:${builtIn.id}`,
-        kind: builtIn.kind,
-        name: builtIn.name,
-        uses: world.uses.get(nameKey(builtIn.name)) ?? 0,
-        library: true,
-        inWorkout: listed.has(nameKey(builtIn.name)),
-        source: { builtIn },
-      })),
+    ...unclaimedBuiltIns(world.mine).map((builtIn): PickerEntry => ({
+      key: `builtIn:${builtIn.id}`,
+      kind: builtIn.kind,
+      name: builtIn.name,
+      uses: world.uses.get(nameKey(builtIn.name)) ?? 0,
+      library: true,
+      inWorkout: listed.has(nameKey(builtIn.name)),
+      source: { builtIn },
+    })),
   ];
 }
 

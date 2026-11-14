@@ -31,12 +31,12 @@ export function ExerciseCategoryScreen({ kind }: ExerciseCategoryScreenProps): R
   const [text, setText] = React.useState("");
   const label = kindLabel(kind);
   const entries = pickerEntries(world, { category: kind, text });
-  const open = ({ source }: PickerEntry): (() => void) | undefined =>
+  const open = ({ source }: PickerEntry): (() => void) =>
     "exercise" in source
       ? () => router.push({ pathname: "/exercise/[id]", params: { id: source.exercise.id } })
       : "grip" in source
         ? () => router.push({ pathname: "/grip/[id]", params: { id: source.grip.id } })
-        : undefined;
+        : () => router.push({ pathname: "/exercise/[id]", params: { id: source.builtIn.id } });
 
   return (
     <ScreenFrame

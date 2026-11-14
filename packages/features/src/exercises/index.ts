@@ -1,4 +1,10 @@
-export { builtInDose, builtInExercises, exerciseLabel } from "./builtIns";
+export {
+  builtInDose,
+  builtInExercise,
+  builtInExercises,
+  exerciseLabel,
+  unclaimedBuiltIns,
+} from "./builtIns";
 export {
   exerciseKindOf,
   measureChangeNeedsWarning,
