@@ -127,7 +127,15 @@ describe("planImport", () => {
     ]);
   });
 
-  it("refuses a file in our format that carries a column from another app's export", () => {
+  it("reads our format with an extra column it ignores", () => {
+    const plan = planImport("date,climb,grade,Area,Rating\n2022-11-22,Roof,V9,Moe's,4\n", "UTC");
+    expect(plan.issues).toEqual([]);
+    expect(plan.sessions[0]?.climbs).toEqual([
+      { name: "Roof", grade: { scale: "v", value: 9 }, kind: "send", tries: 1 },
+    ]);
+  });
+
+  it("refuses a file in our format that carries another app's send result", () => {
     const issues = (csv: string): ImportPlan["issues"] => planImport(csv, "UTC").issues;
     expect(issues("Date,Send Type,Grade\n2022-11-22,project,V9\n")).toEqual([
       { row: 1, code: "unreadColumn", value: "Send Type" },

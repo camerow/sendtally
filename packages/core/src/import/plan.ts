@@ -79,14 +79,12 @@ export function detectFormat(header: string[]): ImportFormat | null {
 }
 
 const SENDTALLY = new Set<string>(SENDTALLY_COLUMNS);
-const SERVICE_COLUMNS = new Set(
-  HEADERS.flatMap(([, columns]) => columns).filter((c) => !SENDTALLY.has(c))
-);
+const SEND_RESULT_COLUMNS = new Set(["send_type", "ascent_type", "lead_style"]);
 
-// A column from another app's export in a file read as ours would be dropped
-// without a word, so the file is refused instead.
+// Another app's send result in a file read as ours would be dropped without a
+// word and every climb imported as a send, so the file is refused instead.
 function unreadColumn(header: string[]): string | undefined {
-  return header.find((h) => SERVICE_COLUMNS.has(normaliseHeader(h)))?.trim();
+  return header.find((h) => SEND_RESULT_COLUMNS.has(normaliseHeader(h)))?.trim();
 }
 
 export function planImport(text: string, timeZone: string): ImportPlan {

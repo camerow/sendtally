@@ -69,7 +69,7 @@ A date-only log sits at local midnight expressed in UTC, so:
 ## Exports from other climbing logs
 
 Each service's export is recognised by its header, and its columns are read by name, never by position.
-A file read as the Sendtally format that carries a column one of these exports uses (`Send Type`, `ascent_type`, `Lead Style`, ...) is refused with `unreadColumn` naming it, rather than imported with that column dropped: such a file is almost always a service export missing a column, and reading it as ours would lose every send type in it.
+A file read as the Sendtally format that carries another app's send result column (`Send Type`, `Ascent Type` or `Lead Style`) is refused with `unreadColumn` naming it, rather than imported with every climb as a send: such a file is almost always a service export missing a column. Any other unknown column is ignored.
 Only a file the user exported reaches Sendtally; nothing fetches from these services.
 A header that does not match, for example after a service changes its export, falls back to the Sendtally format check and then the conversion prompt.
 Grades are read as written, as in the Sendtally format, and a grade that cannot be read is reported for its row while the rest of the file imports.
