@@ -61,11 +61,7 @@ export function OngoingPage(): React.ReactElement {
       backTo="/app/train"
       action={
         draft.editing ? (
-          <button
-            type="button"
-            className="outline-action"
-            onClick={draft.dirty ? () => guard.ask(draft.cancel) : draft.cancel}
-          >
+          <button type="button" className="outline-action" onClick={() => guard.ask(draft.cancel)}>
             {t("common.cancel")}
           </button>
         ) : (

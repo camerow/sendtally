@@ -6,7 +6,7 @@ import { Sheet } from "../components/Sheet";
 export type DiscardGuard = {
   /** Lets the page go without asking; a save calls it before it navigates away. */
   release: () => void;
-  /** Asks before `discard` runs, as the Cancel of an Edit mode that stays on its page. */
+  /** Runs `discard`, asking first when there are changes: the Cancel of an Edit mode that stays on its page. */
   ask: (discard: () => void) => void;
   /** The dialog that asks, rendered once on the page. */
   sheet: React.ReactNode;
@@ -29,7 +29,7 @@ export function useDiscardGuard(dirty: boolean): DiscardGuard {
     release: () => {
       released.current = true;
     },
-    ask: (discard) => setAsked(() => discard),
+    ask: (discard) => (dirty ? setAsked(() => discard) : discard()),
     sheet: (
       <Sheet
         open={blocked || asked !== null}

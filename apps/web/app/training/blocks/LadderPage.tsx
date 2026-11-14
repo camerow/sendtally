@@ -103,7 +103,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
       backTo={BACK_TO}
       {...(editing && {
         backLabel: t("common.cancel"),
-        onBack: draft.dirty ? () => guard.ask(draft.cancel) : draft.cancel,
+        onBack: () => guard.ask(draft.cancel),
         footer: (
           <button type="button" className="detail-primary" onClick={draft.save}>
             {t("common.save")}

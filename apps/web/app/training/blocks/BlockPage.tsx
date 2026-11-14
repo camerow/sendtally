@@ -84,7 +84,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
       action: { label: t("plan.viewTemplate"), onPress: () => void navigate(blockPath(copy)) },
     });
   };
-  const cancel = draft.dirty ? () => guard.ask(draft.cancel) : draft.cancel;
+  const cancel = (): void => guard.ask(draft.cancel);
   const remove = (): void => {
     setDeleting(false);
     leave();
