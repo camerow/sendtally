@@ -2,7 +2,7 @@ import { z } from "zod";
 import { climbSlug } from "../lib/climbs";
 import { manualSessionBody, manualSessionShape } from "../lib/manual";
 import { editManualSession, gymIdsByName, sessionResponse } from "../sessions";
-import { editableSession } from "./sessionForm";
+import { dayAreaId, editableSession } from "./sessionForm";
 import type { ConnectorTool } from "./types";
 
 const { name, date, startTime, endTime, rpe, location, tags, notes, climbs } =
@@ -51,7 +51,7 @@ export const updateSession: ConnectorTool<typeof inputSchema> = {
       gym === undefined ? base.gymId : (await gymIdsByName(env.DB, userId)).get(gym.toLowerCase());
     if (gymId === undefined && gym !== undefined) return { error: `No gym named ${gym}.` };
     const named = new Map(base.climbs.map((climb) => [climbSlug(climb.name?.trim() ?? ""), climb]));
-    const dayArea = named.get("")?.areaId;
+    const dayArea = dayAreaId(current);
     const form = {
       ...base,
       ...changes,

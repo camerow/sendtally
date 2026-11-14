@@ -29,6 +29,12 @@ export const listSessions: ConnectorTool<typeof inputSchema> = {
       includeClimbs ? repo.listClimbNotes(env.DB, userId) : [],
     ]);
     const gymName = new Map(gyms.map((g) => [g.id, g.name]));
+    const notesBySession = new Map<string, repo.ClimbNoteRow[]>();
+    for (const note of notes) {
+      const list = notesBySession.get(note.fingerprint);
+      if (list === undefined) notesBySession.set(note.fingerprint, [note]);
+      else list.push(note);
+    }
     const sessions = rows
       .filter(
         (r) =>
@@ -52,7 +58,7 @@ export const listSessions: ConnectorTool<typeof inputSchema> = {
         climbs: includeClimbs
           ? withClimbNotes(
               parseClimbs(row.climbs_json),
-              notes.filter((n) => n.fingerprint === row.fingerprint)
+              notesBySession.get(row.fingerprint) ?? []
             ).map(climbInput)
           : undefined,
       }));

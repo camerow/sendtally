@@ -840,6 +840,100 @@ describe("connector", () => {
       expect(before).toMatchObject({ topSendGrade: "V6" });
     });
 
+    it("keeps a sent-back climb's record and Areas links by its name", async () => {
+      const user = "user_edit_links";
+      const post = async (
+        path: string,
+        body: unknown
+      ): Promise<Record<string, Record<string, string>>> => {
+        const res = await testApp().request(
+          path,
+          {
+            method: "POST",
+            headers: { "x-test-user": user, "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          },
+          env
+        );
+        expect(res.ok).toBe(true);
+        return (await res.json()) as Record<string, Record<string, string>>;
+      };
+      const { area } = await post("/v1/areas", {
+        parentId: "region-us-ca",
+        name: "Buttermilks",
+        lat: 37.327,
+        lon: -118.577,
+      });
+      const { climb: mandala } = await post("/v1/area-climbs", {
+        areaId: area!.id,
+        name: "The Mandala",
+        type: "boulder",
+        gradeScale: "v",
+        grade: "V12",
+      });
+      const id = `manual-${crypto.randomUUID()}`;
+      const logLinked = (userClimbId?: string) =>
+        post("/v1/sessions", {
+          fingerprint: id,
+          date: "2026-09-12",
+          location: "outdoor",
+          climbs: [
+            {
+              name: "The Mandala",
+              climbId: mandala!.id,
+              areaId: area!.id,
+              ...(userClimbId === undefined ? {} : { userClimbId }),
+              grade: { scale: "v", value: 12 },
+              kind: "attempt",
+              tries: 4,
+            },
+            { name: "", areaId: area!.id, grade: { scale: "v", value: 3 } },
+          ],
+        });
+      await logLinked();
+      const record = await env.DB.prepare("SELECT id FROM user_climbs WHERE user_id = ?")
+        .bind(user)
+        .first<{ id: string }>();
+      await logLinked(record!.id);
+      type Detail = {
+        area: { id: string } | null;
+        climbs: Array<{
+          userClimbId?: string;
+          area: { id: string } | null;
+          link: { id: string } | null;
+        }>;
+      };
+      const links = async (): Promise<unknown> => {
+        const res = await testApp().request(
+          `/v1/sessions/${id}`,
+          { headers: { "x-test-user": user } },
+          env
+        );
+        const { session } = (await res.json()) as { session: Detail };
+        return {
+          day: session.area?.id,
+          climbs: session.climbs.map((c) => [c.userClimbId, c.area?.id, c.link?.id]),
+        };
+      };
+      const before = await links();
+      expect(before).toEqual({
+        day: area!.id,
+        climbs: [
+          [record!.id, area!.id, mandala!.id],
+          [undefined, undefined, undefined],
+        ],
+      });
+      const { sessions } = await toolJson<Listed>(user, "list_sessions", { includeClimbs: true });
+      const [project, warmUp] = sessions[0]!.climbs;
+      expect(
+        await toolJson(user, "update_session", {
+          id,
+          climbs: [{ ...project, kind: "send", style: "redpoint", tries: 5 }, warmUp],
+        })
+      ).toMatchObject({ id });
+      expect(await links()).toEqual(before);
+    });
+
     it("refuses an edit the log form would refuse, and a board session", async () => {
       const user = "user_edit_refused";
       const before = await logged(user);

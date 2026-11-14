@@ -31,10 +31,16 @@ export const sessionTimes = (row: {
   ...(row.times === "both" || row.times === "end" ? { endTime: time(row.end_at) } : {}),
 });
 
+// A grade-only climb outdoors sits at the day's area, unless a named climb places the day.
+export const dayAreaId = (session: SessionResponse): string | undefined =>
+  session.location === "outdoor" && !session.climbs.some((c) => c.area !== null)
+    ? session.areas[0]?.id
+    : undefined;
+
 // The session as the edit form would send it back unchanged, Areas links included.
 export const editableSession = (session: SessionResponse): SessionInput => {
   const outdoor = session.location === "outdoor";
-  const dayArea = session.climbs.some((c) => c.area !== null) ? undefined : session.areas[0];
+  const dayArea = dayAreaId(session);
   return {
     ...(session.name === null ? {} : { name: session.name }),
     date: session.start_at.slice(0, 10),
@@ -46,12 +52,12 @@ export const editableSession = (session: SessionResponse): SessionInput => {
     tags: session.tags.map((t) => t.name),
     ...(session.notes === null ? {} : { notes: session.notes }),
     climbs: session.climbs.map((c) => {
-      const area = c.area ?? (outdoor && c.name.trim() === "" ? dayArea : undefined);
+      const areaId = c.area?.id ?? (c.name.trim() === "" ? dayArea : undefined);
       return {
         ...climbInput(c),
         ...(c.userClimbId === undefined ? {} : { userClimbId: c.userClimbId }),
-        ...(area == null ? {} : { areaId: area.id }),
-        ...((outdoor || area != null) && c.link !== null ? { climbId: c.link.id } : {}),
+        ...(areaId === undefined ? {} : { areaId }),
+        ...((outdoor || areaId !== undefined) && c.link !== null ? { climbId: c.link.id } : {}),
       };
     }),
   };
