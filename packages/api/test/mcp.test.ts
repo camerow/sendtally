@@ -1,23 +1,9 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import { PostHog } from "posthog-node";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Env } from "../src/bindings";
-import type * as harness from "./harness";
-import type * as posthog from "../src/lib/posthog";
-
-const posthogClient = vi.hoisted(() => ({ current: null as PostHog | null }));
-vi.mock("../src/lib/posthog", async (importOriginal) => ({
-  ...(await importOriginal<typeof posthog>()),
-  getPostHog: () => posthogClient.current,
-}));
-
-// The pool loads the Worker's modules before this file's mock exists, so the app
-// is imported afresh for the mock to reach the capture helper.
-let testApp: typeof harness.testApp;
-beforeAll(async () => {
-  vi.resetModules();
-  ({ testApp } = await import("./harness"));
-});
+import * as posthog from "../src/lib/posthog";
+import { testApp } from "./harness";
 
 type ToolResult = { isError?: boolean; content: Array<{ text: string }> };
 
@@ -142,12 +128,12 @@ describe("connector", () => {
       fetch: async () => new Response("{}"),
     });
     const capture = vi.spyOn(client, "capture");
-    posthogClient.current = client;
+    const getPostHog = vi.spyOn(posthog, "getPostHog").mockReturnValue(client);
     try {
       await callTool("user_mcp", env, "list_sessions", { from: "2026-10-01", includeClimbs: true });
       await callTool("user_mcp", env, "delete_block", { id: "winter-base-2026" });
     } finally {
-      posthogClient.current = null;
+      getPostHog.mockRestore();
     }
 
     const toolCall = capture.mock.calls.find(([e]) => e.event === "$mcp_tool_call")?.[0];
@@ -169,13 +155,13 @@ describe("connector", () => {
       fetch: async () => new Response("{}"),
     });
     const capture = vi.spyOn(client, "capture");
-    posthogClient.current = client;
+    const getPostHog = vi.spyOn(posthog, "getPostHog").mockReturnValue(client);
     let tools: { result: { tools: { name: string }[] } };
     try {
       tools = (await (await rpc("tools/list", {}, "user_mcp")).json()) as typeof tools;
       await callTool("user_mcp", env, "get_more_tools", { context: "Rename a training block" });
     } finally {
-      posthogClient.current = null;
+      getPostHog.mockRestore();
     }
 
     expect(tools.result.tools.map((t) => t.name)).toContain("get_more_tools");

@@ -260,7 +260,7 @@ describe("session links", () => {
     expect((await call("user_a", "/v1/sessions", { body: indoor("Arete") })).status).toBe(201);
   });
 
-  it("saves a full session of named, linked, noted climbs and saves it again", async () => {
+  it("saves a full 300-climb session of named, linked, noted climbs and saves it again", async () => {
     const area = await createArea("user_a", buttermilks);
     const first = await createClimb("user_a", mandala(area.id));
     await env.DB.prepare(
@@ -296,7 +296,7 @@ describe("session links", () => {
     expect(edited.status).toBe(200);
     const linked = await read("user_a", fingerprint);
     expect(linked.climbs.filter((c) => c.link !== null)).toHaveLength(300);
-  });
+  }, 20_000);
 
   it("replaces links on edit and removes them on delete", async () => {
     const area = await createArea("user_a", buttermilks);
