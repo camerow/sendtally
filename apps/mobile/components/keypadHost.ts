@@ -18,6 +18,8 @@ export type KeypadRequest = {
   /** Under the value, such as what the number was as written, with Reset beside it. */
   note?: string;
   reset?: () => void;
+  /** Shows the value as typed in the field while the keypad is up. */
+  type: (text: readonly [dim: string, rest: string]) => void;
 };
 
 export type KeypadHost = {

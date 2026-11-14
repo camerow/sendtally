@@ -1,12 +1,12 @@
 import React from "react";
 import {
-  clock,
   entryNumber,
   entrySeconds,
   numberEntry,
   openNumber,
   openTime,
   timeEntry,
+  timeText,
   typedNumber,
   typedSeconds,
   type NumberLimits,
@@ -33,7 +33,15 @@ export type NumberFieldProps = {
 };
 
 const shown = (mode: NumberFieldMode, value: number): string =>
-  mode.kind === "time" ? clock(value, true) : String(value);
+  mode.kind === "time" ? timeText(openTime(value, mode)).join("") : String(value);
+
+/** Typed text as HH:MM:SS filling from the right, as on the keypad; a seventh digit is refused. */
+function liveTime(text: string, previous: string): string {
+  const digits = text.replace(/\D/g, "");
+  if (digits === "") return "";
+  const kept = digits.replace(/^0+/, "") || "0";
+  return kept.length > 6 ? previous : timeText({ digits: kept, fresh: false }).join("");
+}
 
 const typed = (mode: NumberFieldMode, text: string): number | null =>
   mode.kind === "time" ? typedSeconds(text, mode) : typedNumber(text, mode);
@@ -53,7 +61,7 @@ function focusNext(from: HTMLInputElement): void {
 
 /**
  * A typable number in the keypad field's look: typed on desktop with ↑ ↓ stepping, the
- * phone's own number pad at 375. Time reads and parses as m:ss.
+ * phone's own number pad at 375. Time reads HH:MM:SS and fills from the right as digits are typed.
  */
 export function NumberField({
   label,
@@ -68,6 +76,7 @@ export function NumberField({
   const id = React.useId();
   const [draft, setDraft] = React.useState<string | null>(null);
   const text = value === null ? "" : shown(mode, value);
+  const time = mode.kind === "time";
 
   const commit = (next: number | null): void => {
     setDraft(null);
@@ -83,13 +92,26 @@ export function NumberField({
         <input
           id={id}
           className="number-field-input"
-          inputMode="decimal"
+          inputMode={time ? "numeric" : "decimal"}
           autoComplete="off"
           placeholder={placeholder}
           size={compact ? Math.max(2, (text === "" ? placeholder : text).length) : undefined}
           value={draft ?? text}
           onFocus={(e) => e.currentTarget.select()}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) =>
+            setDraft(time ? liveTime(e.target.value, draft ?? text) : e.target.value)
+          }
+          onPaste={(e) => {
+            if (!time) return;
+            e.preventDefault();
+            setDraft(liveTime(e.clipboardData.getData("text"), draft ?? text));
+          }}
+          onSelect={(e) => {
+            const input = e.currentTarget;
+            const end = input.value.length;
+            const all = input.selectionStart === 0 && input.selectionEnd === end;
+            if (time && !all && input.selectionStart !== end) input.setSelectionRange(end, end);
+          }}
           onBlur={() => commit(draft === null ? null : typed(mode, draft))}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
