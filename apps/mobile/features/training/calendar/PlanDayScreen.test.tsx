@@ -30,7 +30,9 @@ const legs: WorkoutRecord = {
 
 // Legs on Mondays and Tuesdays in a block; today is Tuesday 29 September.
 const plan: Plan = {
-  blocks: [{ id: "b1", name: "Autumn power", start: "2026-09-28", weeks: 4, focus: null }],
+  blocks: [
+    { id: "b1", name: "Autumn power", description: "", start: "2026-09-28", weeks: 4, focus: null },
+  ],
   memberships: [
     {
       id: "m1",

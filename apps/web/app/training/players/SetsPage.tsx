@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { useActivities, useWeightUnit } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { useLiveSession } from "@sendtally/features/log-session";
+import { exerciseAbout } from "@sendtally/features/exercises";
 import { useExercises } from "@sendtally/features/statistics";
 import {
   afterKey,
@@ -35,13 +36,14 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
   const unit = useWeightUnit(api);
   const activities = useActivities(api).state;
   const exercises = useExercises(api).state;
+  const mine = exercises.status === "ready" ? exercises.data : null;
   const tally = useLiveSession(useExerciseTallyStorage());
   const player = useSetsPlayer({
     run,
     store: useLiveRunStore(),
     tally,
     activities: activities.status === "ready" ? activities.data : null,
-    exercises: exercises.status === "ready" ? exercises.data : null,
+    exercises: mine,
   });
   const { shown, ticked, current, rest, hold, previous, nameOf } = player;
   const finish = useFinishRun(
@@ -129,6 +131,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                 holdRow={(set) => holdRow({ item: i, set })}
                 go={(set) => go({ item: i, set })}
                 restUnder={(set) => restAt(setKey({ item: i, set }))}
+                about={exerciseAbout(mine, item.exercise, nameOf(i))}
               />
             )}
             {climbing === null && between}

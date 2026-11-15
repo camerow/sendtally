@@ -9,7 +9,9 @@ import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
 import { Label } from "./Label";
 import { Title } from "./Title";
-import { WorkoutInfo } from "./WorkoutInfo";
+import { t } from "@sendtally/features/i18n";
+import { useRunWorkout } from "../library/useLibrary";
+import { AboutButton } from "./AboutButton";
 import { WorkoutNotes } from "./WorkoutNotes";
 
 export type PlayerHeaderProps = {
@@ -30,6 +32,7 @@ export function PlayerHeader({
   workoutId,
   startedAt,
 }: PlayerHeaderProps): React.ReactElement {
+  const workout = useRunWorkout(workoutId);
   return (
     <View style={{ gap: 8 }}>
       <View style={[LIVE_HEADER, { marginHorizontal: -18, justifyContent: "space-between" }]}>
@@ -48,7 +51,7 @@ export function PlayerHeader({
           <Title size={32} style={{ flexShrink: 1 }}>
             {title}
           </Title>
-          <WorkoutInfo workoutId={workoutId} color={colors.textMuted} />
+          <AboutButton about={workout} label={t("workouts.about")} color={colors.textMuted} />
         </View>
         <WorkoutNotes workoutId={workoutId} />
       </View>

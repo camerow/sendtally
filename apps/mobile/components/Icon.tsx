@@ -28,7 +28,8 @@ export type IconName =
   | "copy"
   | "merge"
   | "import"
-  | "external";
+  | "external"
+  | "arrowUpRight";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -87,6 +88,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   merge: <Path d="M7 4v5a5 5 0 0 0 5 5v6M17 4v5a5 5 0 0 1-5 5" />,
   import: <Path d="M12 4v10M7.5 9.5 12 14l4.5-4.5M4.5 15v4.5h15V15" />,
   external: <Path d="M14 5h5v5M19 5l-8 8M17 14v5H5V7h5" />,
+  arrowUpRight: <Path d="M7 17 17 7M8 7h9v9" />,
 };
 
 export type IconProps = {

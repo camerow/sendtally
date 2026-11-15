@@ -34,6 +34,8 @@ type FormProps = {
   onSave: (form: ExerciseForm, release: () => void) => void;
   /** A built-in's name, which stays as it is. */
   locked?: boolean;
+  /** Whether it takes a description of its own; one picked from the library reads the library's. */
+  describable?: boolean;
   /** What is wrong with a name, if anything. */
   nameError?: (name: string) => string | undefined;
   children?: React.ReactNode;
@@ -45,6 +47,7 @@ function Form({
   logged,
   onSave,
   locked = false,
+  describable = true,
   nameError = () => undefined,
   children,
 }: FormProps): React.ReactElement {
@@ -55,7 +58,7 @@ function Form({
   const trimmed = form.name.trim();
   const error = nameError(trimmed);
   const blocked = trimmed === "" || error !== undefined;
-  const saved = { ...form, name: trimmed };
+  const saved = { ...form, name: trimmed, description: form.description?.trim() };
   const save = (): void => {
     if (blocked) return;
     if (measureChangeNeedsWarning(untouched.measure, form.measure, logged)) setWarning(true);
@@ -79,6 +82,7 @@ function Form({
         onChange={setForm}
         locked={locked ? t("workouts.builtInNameLocked") : undefined}
         error={error}
+        describable={describable}
         autoFocus={!editing}
         onSubmit={save}
       />
@@ -135,7 +139,7 @@ function EditExercise({
   const actions = useExerciseActions(api, failed);
   const [taken, setTaken] = React.useState<{ into: Exercise; release: () => void } | null>(null);
   const save = (
-    { name, kind, measure, eachSide, progress }: ExerciseForm,
+    { name, kind, measure, eachSide, progress, description }: ExerciseForm,
     release: () => void
   ): void => {
     void api
@@ -145,6 +149,7 @@ function EditExercise({
         measure: measure === "hang" ? exercise.measure : measure,
         eachSide,
         progress: progress ?? null,
+        ...(exercise.builtIn === null && { description: description ?? "" }),
       })
       .then(
         () => {
@@ -167,8 +172,10 @@ function EditExercise({
         measure: exercise.measure,
         eachSide: exercise.eachSide,
         progress: exercise.progress,
+        description: exercise.description,
       }}
       editing
+      describable={exercise.builtIn === null}
       logged={logged}
       onSave={save}
     >

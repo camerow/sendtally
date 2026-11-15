@@ -6,7 +6,14 @@ import { pastMeta, templateMeta } from "./blockMeta";
 import { blockWeekColumns, blockWeekDates, cellMark, weekPlans } from "./blockWeekDays";
 
 // Starts on a Wednesday, so its weeks run Wednesday to Tuesday.
-const block: DatedBlock = { id: "b1", name: "Base", start: "2026-09-30", weeks: 2, focus: null };
+const block: DatedBlock = {
+  id: "b1",
+  name: "Base",
+  description: "",
+  start: "2026-09-30",
+  weeks: 2,
+  focus: null,
+};
 const template: Block = { ...block, start: null };
 
 const legs: Workout = {

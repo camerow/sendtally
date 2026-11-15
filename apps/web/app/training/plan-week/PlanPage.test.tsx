@@ -191,7 +191,9 @@ describe("PlanPage", () => {
   it("schedules a template from the Block side, then says so with View", async () => {
     state.plan = {
       ...state.plan,
-      blocks: [{ id: "t1", name: "Power phase", start: null, weeks: 4, focus: null }],
+      blocks: [
+        { id: "t1", name: "Power phase", description: "", start: null, weeks: 4, focus: null },
+      ],
     };
     act(() => container.querySelector<HTMLButtonElement>(".page-action")?.click());
     const sheet = (): Element => document.querySelector("dialog")!;

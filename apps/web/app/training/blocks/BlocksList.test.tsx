@@ -63,7 +63,14 @@ vi.mock("@sendtally/features/training", async (actual) => ({
   useAddTo: () => ({ add: vi.fn(), undo: vi.fn(), plans: [] }),
 }));
 
-const template: Block = { id: "b1", name: "Power phase", start: null, weeks: 4, focus: null };
+const template: Block = {
+  id: "b1",
+  name: "Power phase",
+  description: "",
+  start: null,
+  weeks: 4,
+  focus: null,
+};
 // Monday to two Sundays on, running this week.
 const running: Block = { ...template, start: "2026-11-09", weeks: 2 };
 const over: Block = { ...template, start: "2026-10-05", weeks: 2 };

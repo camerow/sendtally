@@ -10,7 +10,7 @@ import {
   type WorkoutKind,
 } from "@sendtally/core/hang";
 import { z } from "zod";
-import { id, title } from "./plan";
+import { description, id, title } from "./plan";
 import type { ExerciseRow } from "./repo";
 
 // Older app builds send a name and kind only: a new exercise then takes its kind's
@@ -22,6 +22,7 @@ export const exerciseBody = z.object({
   eachSide: z.boolean().optional(),
   progress: z.enum(EXERCISE_PROGRESS).nullable().optional(),
   builtIn: id.nullable().optional(),
+  description: description.optional(),
 });
 
 export const mergeBody = z.object({ into: id });
@@ -38,6 +39,8 @@ export type Exercise = {
   progress: ExerciseProgress | null;
   /** The library exercise it was picked from, whose name the apps translate. */
   builtIn: string | null;
+  /** Empty when it has none; a built-in's comes from the library instead. */
+  description: string;
   archived: boolean;
 };
 
@@ -68,5 +71,6 @@ export const exerciseOf = (row: ExerciseRow): Exercise => ({
   eachSide: row.each_side,
   progress: row.progress,
   builtIn: row.built_in,
+  description: row.description ?? "",
   archived: row.archived,
 });

@@ -229,8 +229,8 @@ describe("WorkoutPage", () => {
     writes.plan = {
       ...writes.plan,
       blocks: [
-        { id: "base", name: "Winter base", start: null, weeks: 4, focus: null },
-        { id: "old", name: "Autumn", start: "2026-09-01", weeks: 2, focus: null },
+        { id: "base", name: "Winter base", description: "", start: null, weeks: 4, focus: null },
+        { id: "old", name: "Autumn", description: "", start: "2026-09-01", weeks: 2, focus: null },
       ],
     };
     mount("legs");

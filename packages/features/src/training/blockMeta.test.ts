@@ -10,7 +10,14 @@ import {
   newBlock,
 } from "./blockMeta";
 
-const template: Block = { id: "t1", name: "Power", start: null, weeks: 4, focus: null };
+const template: Block = {
+  id: "t1",
+  name: "Power",
+  description: "",
+  start: null,
+  weeks: 4,
+  focus: null,
+};
 const running: Block = { ...template, id: "b1", name: "Base", start: "2026-11-09" };
 const over: Block = { ...template, id: "b0", name: "Autumn", start: "2026-09-01", weeks: 2 };
 
@@ -36,7 +43,14 @@ describe("keptName", () => {
 
 describe("newBlock", () => {
   it("is an untitled four-week template", () => {
-    expect(newBlock("n1")).toEqual({ id: "n1", name: "", start: null, weeks: 4, focus: null });
+    expect(newBlock("n1")).toEqual({
+      id: "n1",
+      name: "",
+      description: "",
+      start: null,
+      weeks: 4,
+      focus: null,
+    });
   });
 });
 

@@ -508,6 +508,38 @@ describe("connector", () => {
       expect(await mine(user + "_other")).toEqual([]);
     });
 
+    it("writes and reads descriptions on exercises and blocks", async () => {
+      const user = "user_connector_descriptions";
+      const text = "Hold it still.\n- Shoulders down";
+      const saved = await toolJson<Saved & { exercise: { description?: string } }>(
+        user,
+        "save_exercise",
+        { key: "lever", name: "Front lever", kind: "strength", description: text }
+      );
+      expect(saved.exercise.description).toBe(text);
+      const library = await toolJson<{ exercises: Array<{ name: string; description?: string }> }>(
+        user,
+        "get_training_library"
+      );
+      expect(library.exercises.find((e) => e.name === "Front lever")?.description).toBe(text);
+      await toolJson(user, "save_workout", {
+        key: "pull",
+        kind: "strength",
+        name: "Pull day",
+        description: "",
+        minutes: 40,
+        targetRpe: 7,
+        items: [{ exercise: "Front lever", doses: [{ sets: 3, onS: 10 }] }],
+      });
+      await toolJson(user, "save_block", {
+        key: "base",
+        block: { name: "Base", description: "Volume first.", start: null, weeks: 4 },
+        workouts: [{ workout: "Pull day", weekdays: [0] }],
+      });
+      const plan = await toolJson<{ blocks: Array<{ description?: string }> }>(user, "get_plan");
+      expect(plan.blocks.map((b) => b.description)).toEqual(["Volume first."]);
+    });
+
     it("saves a workout whose items reuse the user's exercises, then built-ins, then new ones", async () => {
       const user = "user_save_workout";
       await toolJson(user, "save_exercise", { name: "Pinch block", kind: "strength" });

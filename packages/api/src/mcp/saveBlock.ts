@@ -24,7 +24,7 @@ const inputSchema = {
 export const saveBlock: ConnectorTool<typeof inputSchema> = {
   name: "save_block",
   title: "Save training block",
-  description: `Plans a training block in one call: the block, the workouts in it and the weekdays each runs on. block: name, start (YYYY-MM-DD, any weekday), weeks (1-${MAX_BLOCK_WEEKS}), focus optional. A block with a start is dated: it is on the user's calendar from that day. start null saves an unscheduled template instead, a reusable plan with no dates that the user schedules from the app. To schedule a template you saved, or to change any block, pass its id from get_plan with the full new block and workouts rather than saving a second block of the same name; workouts it already has keep their skipped days and week changes, and one left out leaves the block. Block week 1 is the 7 days from start, week 2 the next 7, and so on. Each entry of workouts names a workout from get_training_library (the user's own or a built-in, by name; save new ones with save_workout first) and its weekdays, 0 Monday to 6 Sunday, e.g. [0, 3] for Monday and Thursday. weeks optionally changes those weekdays from a later block week on, e.g. [{fromWeek: 4, weekdays: [0, 2, 4]}]. Nothing is saved if a workout name is unknown.`,
+  description: `Plans a training block in one call: the block, the workouts in it and the weekdays each runs on. block: name, start (YYYY-MM-DD, any weekday), weeks (1-${MAX_BLOCK_WEEKS}), focus and description optional (plain text up to 2000 characters, formatted like a workout's description; left out on a change it keeps the one saved). A block with a start is dated: it is on the user's calendar from that day. start null saves an unscheduled template instead, a reusable plan with no dates that the user schedules from the app. To schedule a template you saved, or to change any block, pass its id from get_plan with the full new block and workouts rather than saving a second block of the same name; workouts it already has keep their skipped days and week changes, and one left out leaves the block. Block week 1 is the 7 days from start, week 2 the next 7, and so on. Each entry of workouts names a workout from get_training_library (the user's own or a built-in, by name; save new ones with save_workout first) and its weekdays, 0 Monday to 6 Sunday, e.g. [0, 3] for Monday and Thursday. weeks optionally changes those weekdays from a later block week on, e.g. [{fromWeek: 4, weekdays: [0, 2, 4]}]. Nothing is saved if a workout name is unknown.`,
   inputSchema,
   annotations: { readOnlyHint: false, destructiveHint: false },
   run: async ({ key, id: editing, block, workouts }, { env, userId }) => {
@@ -71,6 +71,7 @@ export const saveBlock: ConnectorTool<typeof inputSchema> = {
       block: {
         id: saved.id,
         name: saved.name,
+        description: saved.description || undefined,
         start: saved.start,
         weeks: saved.weeks,
         focus: saved.focus,

@@ -43,6 +43,7 @@ export const plan: ConnectorTool<typeof inputSchema> = {
       blocks: rows.blocks.map(blockOf).map((b) => ({
         id: b.id,
         name: b.name,
+        description: b.description || undefined,
         start: b.start,
         weeks: b.weeks,
         workouts: workoutsIn(b.id),

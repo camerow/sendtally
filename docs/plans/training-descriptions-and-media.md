@@ -54,9 +54,9 @@ The brief's facts, checked against `main` at `fdae200c`.
    A built-in-linked exercise row shows the library's description and has no field, the same way its name is locked.
 3. Built-ins: Will writes it in the moderation Library tab (R3).
 4. Format: plain text with a tiny Markdown subset, typed without a toolbar.
-   A blank line separates paragraphs, a line starting `- ` is a bullet, a line starting `1.
-` is a numbered item, a bare `https://` URL is a link and `[label](https://...)` is a labelled link.
+   A blank line separates paragraphs, a line starting `- ` is a bullet, a line starting with a number and a full stop (`1. `) is a numbered item, and a pasted `https://` address is a link, shown without its scheme and `www.` and cut at 24 characters.
    Nothing else is interpreted; no HTML, no images in text.
+   Named links (`[label](https://...)`) are Deferred on `TdmDescriptions`: their brackets stay text, and only the address inside becomes a link.
 5. One pure parser, `packages/core/src/text/description.ts`, returns blocks (`paragraph | bullets | numbered`) of inline runs (`text | link`).
    Mobile renders it with nested `Text`, web with React elements; never a web view, never `innerHTML`.
 6. Links are `https` only (anything else stays text) and open with the system (`Linking.openURL` on mobile, a new tab on web), so a video link opens the video app where one is installed.
@@ -370,6 +370,8 @@ Moderation strings are plain English literals.
 - Restoring deleted picture files, server-side resizing.
 - Moderator tools on the connector (`save_library_item`) for editing built-ins (Will: "yeah we can skip that").
 - Creating new built-ins in moderation (slice 2 follow-up; `library-add` covers it until then).
+- Named links in descriptions, Deferred on `TdmDescriptions` until Will decides.
+- A Description field on custom grips: grips live in `hang_grips`, which has no description column; built-in grips get theirs from the library in slice 2.
 
 ## Decided
 

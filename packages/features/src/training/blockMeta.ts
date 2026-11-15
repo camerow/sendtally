@@ -27,6 +27,7 @@ const DEFAULT_BLOCK_WEEKS = 4;
 export const newBlock = (id: string): Block => ({
   id,
   name: "",
+  description: "",
   start: null,
   weeks: DEFAULT_BLOCK_WEEKS,
   focus: null,

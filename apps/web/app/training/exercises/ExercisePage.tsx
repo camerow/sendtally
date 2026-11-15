@@ -28,6 +28,7 @@ import { editExercisePath } from "../editor/paths";
 import { useAddToWorkout } from "../editor/useAddToWorkout";
 import { useLibrary } from "../library/useLibrary";
 import { activityPath } from "../log/paths";
+import { Description } from "../components/Description";
 import { BuiltInExercisePage } from "./BuiltInExercisePage";
 import { EXERCISES_VIEW } from "./paths";
 import { useExerciseMenu } from "./useExerciseMenu";
@@ -90,6 +91,7 @@ function Detail({
           <span className="train-label">{kindLabel(exercise.kind)}</span>
         </span>
         <h1 className="train-title intro-title">{exerciseLabel(exercise)}</h1>
+        <Description text={exercise.description} fold />
       </div>
       {logged === undefined ? (
         <DashedPanel body={t("workouts.exerciseNothingLogged")} />

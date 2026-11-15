@@ -50,7 +50,16 @@ const mount = (blocks: Plan["blocks"]): void => {
 
 describe("CurrentBlockRow", () => {
   it("names the running block and its week, opening the block", () => {
-    mount([{ id: "b1", name: "Winter base", start: "2026-11-09", weeks: 4, focus: null }]);
+    mount([
+      {
+        id: "b1",
+        name: "Winter base",
+        description: "",
+        start: "2026-11-09",
+        weeks: 4,
+        focus: null,
+      },
+    ]);
     const row = container.querySelector(".current-block");
     expect(row?.getAttribute("href")).toBe("/app/plan/block/b1");
     expect(row?.textContent).toContain("Winter base");

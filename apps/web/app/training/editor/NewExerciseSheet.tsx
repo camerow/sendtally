@@ -38,7 +38,13 @@ export function NewExerciseSheet({
       action={{ label: t("common.save"), onPress: save, disabled: trimmed === "" }}
     >
       <div className="sheet-form">
-        <ExerciseFields form={form} onChange={setForm} autoFocus onSubmit={save} />
+        <ExerciseFields
+          form={form}
+          onChange={setForm}
+          autoFocus
+          describable={false}
+          onSubmit={save}
+        />
       </div>
     </Sheet>
   );

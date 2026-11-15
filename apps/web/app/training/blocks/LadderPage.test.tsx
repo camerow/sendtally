@@ -70,7 +70,14 @@ vi.mock("@sendtally/features/training", async (actual) => ({
   usePlanActions: () => state,
 }));
 
-const template: Block = { id: "b1", name: "Power phase", start: null, weeks: 3, focus: null };
+const template: Block = {
+  id: "b1",
+  name: "Power phase",
+  description: "",
+  start: null,
+  weeks: 3,
+  focus: null,
+};
 const itemId = itemIdOf(legs.items[0] ?? {}, 0);
 
 let container: HTMLDivElement;

@@ -5,6 +5,7 @@ import { bandOn, bandText, blockOn, calendarDay, monthWeeks } from "./calendarGr
 const autumn: Block = {
   id: "b1",
   name: "Autumn power",
+  description: "",
   start: "2026-09-28",
   weeks: 4,
   focus: null,

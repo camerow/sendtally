@@ -43,6 +43,7 @@ const zercher: Exercise = {
   eachSide: false,
   progress: null,
   builtIn: null,
+  description: "",
   archived: false,
 };
 

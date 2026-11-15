@@ -4,7 +4,7 @@ import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { KIND_LOOK } from "@sendtally/features/training";
 import { useLibrary, workoutIn } from "../library/useLibrary";
-import { WorkoutInfo } from "./WorkoutInfo";
+import { AboutButton } from "./AboutButton";
 
 export type PlayerHeaderProps = { kind: ActivityKind; title: string; workoutId: string | null };
 
@@ -21,7 +21,7 @@ export function PlayerHeader({ kind, title, workoutId }: PlayerHeaderProps): Rea
       </span>
       <span className="player-title-row">
         <h1 className="train-title player-title">{title}</h1>
-        {workoutId !== null && <WorkoutInfo workoutId={workoutId} />}
+        <AboutButton about={workout} label={t("workouts.about")} />
       </span>
       {workout?.targetRpe != null && (
         <span className="player-target">{t("plan.targetValue", { n: workout.targetRpe })}</span>

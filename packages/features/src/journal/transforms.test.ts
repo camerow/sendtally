@@ -223,6 +223,7 @@ describe("blocks in the log", () => {
   const block: DatedBlock = {
     id: "b1",
     name: "Winter base",
+    description: "",
     start: "2026-05-04",
     weeks: 4,
     focus: null,
@@ -292,8 +293,8 @@ describe("blocks in the log", () => {
 describe("logTraining", () => {
   const plan = {
     blocks: [
-      { id: "over", name: "Base", start: "2026-05-04", weeks: 1, focus: null },
-      { id: "running", name: "Power", start: "2026-06-08", weeks: 2, focus: null },
+      { id: "over", name: "Base", description: "", start: "2026-05-04", weeks: 1, focus: null },
+      { id: "running", name: "Power", description: "", start: "2026-06-08", weeks: 2, focus: null },
     ],
     memberships: [],
     weekChanges: [],

@@ -18,6 +18,7 @@ import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
 import { AddToSheet } from "../components/AddToSheet";
 import { DashedPanel } from "../components/DashedPanel";
+import { Description } from "../components/Description";
 import { DetailActions } from "../components/DetailActions";
 import { deleteRow } from "../components/deleteRow";
 import { Label } from "../components/Label";
@@ -102,6 +103,7 @@ function Detail({ exercise, all }: DetailProps): React.ReactElement {
           <Label color={colors.textSecondary}>{kindLabel(exercise.kind)}</Label>
         </View>
         <Title size={38}>{name}</Title>
+        <Description text={exercise.description} fold />
       </View>
       {logged === undefined ? (
         <DashedPanel body={t("workouts.exerciseNothingLogged")} />

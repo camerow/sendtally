@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { isDated, type Block, type CalendarDate } from "@sendtally/core/hang";
+import { MAX_DESCRIPTION } from "@sendtally/core/text";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { press } from "../../../lib/press";
@@ -12,6 +13,8 @@ import {
   clampWeeks,
   keptName,
 } from "@sendtally/features/training";
+import { Description } from "../components/Description";
+import { EditorTextField } from "../components/EditorTextField";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { type } from "../type";
@@ -53,6 +56,7 @@ export function BlockHeader({
 }: BlockHeaderProps): React.ReactElement {
   const dated = isDated(block) ? block : null;
   const [name, setName] = React.useState(block.name);
+  const [description, setDescription] = React.useState(block.description);
   const [focused, setFocused] = React.useState(autoFocus);
   const kept = (typed: string): string => keptName(typed, block, savedName);
   const typeName = (text: string): void => {
@@ -107,6 +111,11 @@ export function BlockHeader({
           {kicker}
           <Title size={34}>{blockName(block)}</Title>
           {when}
+          {block.description !== "" && (
+            <View style={{ marginTop: 8 }}>
+              <Description text={block.description} fold />
+            </View>
+          )}
         </View>
         {chips}
       </>
@@ -182,6 +191,17 @@ export function BlockHeader({
           {step("+", t("hang.increase", { field: t("plan.weeks") }), 1)}
         </View>
       </View>
+      <EditorTextField
+        label={t("workouts.description")}
+        value={description}
+        placeholder={t("plan.blockDescriptionPlaceholder")}
+        maxLength={MAX_DESCRIPTION}
+        multiline
+        onChange={(text) => {
+          setDescription(text);
+          onSave({ ...block, description: text.trim() });
+        }}
+      />
       {chips}
     </>
   );

@@ -85,7 +85,7 @@ import { exerciseKindOf, exerciseNameKey, workoutExercises, type ExerciseInput }
 import type { ContentEntity, Viewer } from "./areas";
 import type { RegradedSession } from "./climbs";
 import type { ClimbLink } from "./manual";
-import type { FocusOptional } from "./plan";
+import type { BlockInput, FocusOptional } from "./plan";
 import type { EntryWrite } from "./entries";
 import type { StoreEntitlement } from "./revenuecat";
 import type { NormalizedTag } from "./tags";
@@ -3119,10 +3119,11 @@ export async function getBlock(
 export async function saveBlock(
   db: D1Database,
   userId: string,
-  b: FocusOptional<Block>
+  b: BlockInput & { id: string }
 ): Promise<BlockRow> {
   const fields = {
     name: b.name,
+    description: b.description === undefined ? undefined : b.description || null,
     start: b.start,
     weeks: b.weeks,
     focus: b.focus,
@@ -3445,7 +3446,12 @@ export async function copyBlock(
     from === null || to === null ? (to ?? start) : addDays(start, daysBetween(from, to));
   const ids = new Map(kept.map((m) => [m.id, crypto.randomUUID()]));
   await d.batch([
-    d.insert(trainingBlocks).values({ user_id: userId, ...copy, updated_at: now }),
+    d.insert(trainingBlocks).values({
+      user_id: userId,
+      ...copy,
+      description: copy.description || null,
+      updated_at: now,
+    }),
     ...kept.map((m) =>
       d.insert(memberships).values({
         ...m,
@@ -3522,6 +3528,7 @@ const exerciseValues = (userId: string, id: string, e: ExerciseInput, now: strin
   each_side: e.eachSide ?? false,
   progress: e.progress ?? null,
   built_in: e.builtIn ?? null,
+  description: e.description || null,
   archived: false,
   created_at: now,
   updated_at: now,
@@ -3671,6 +3678,7 @@ export async function updateExercise(
     each_side: e.eachSide ?? row.each_side,
     progress: e.progress === undefined ? row.progress : e.progress,
     built_in: e.builtIn === undefined ? row.built_in : e.builtIn,
+    description: e.description === undefined ? row.description : e.description || null,
     archived: false,
     updated_at: new Date().toISOString(),
   };

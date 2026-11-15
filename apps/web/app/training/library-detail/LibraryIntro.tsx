@@ -5,6 +5,7 @@ import { durationLabel } from "@sendtally/features/sessions";
 import { focusBeside, KIND_LOOK } from "@sendtally/features/training";
 import { workoutMinutes, type LibraryWorkout, type WorkoutUse } from "@sendtally/features/workouts";
 import { CategoryMark } from "../components/CategoryMark";
+import { Description } from "../components/Description";
 
 export type LibraryIntroProps = { workout: LibraryWorkout; use: WorkoutUse | undefined };
 
@@ -27,7 +28,7 @@ export function LibraryIntro({ workout, use }: LibraryIntroProps): React.ReactEl
         </span>
       </span>
       <h1 className="train-title intro-title">{workout.name}</h1>
-      {workout.description !== "" && <p className="intro-body">{workout.description}</p>}
+      <Description text={workout.description} fold />
       <span className="intro-meta">{meta}</span>
     </div>
   );

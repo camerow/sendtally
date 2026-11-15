@@ -140,7 +140,7 @@ export const blocks = new Hono<AppEnv>()
       if (source === null) return c.json({ error: "not found" }, 404);
       const existing = await repo.getBlock(c.env.DB, userId, to);
       if (existing !== null) return c.json({ block: blockOf(existing) });
-      const block = { id: to, name: source.name, start, weeks: source.weeks, focus: source.focus };
+      const block = { ...blockOf(source), id: to, start };
       await repo.copyBlock(c.env.DB, userId, source, block);
       return c.json({ block });
     }

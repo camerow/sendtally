@@ -11,6 +11,7 @@ const exercise = (id: string, name: string, extra: Partial<Exercise> = {}): Exer
   eachSide: false,
   progress: null,
   builtIn: null,
+  description: "",
   archived: false,
   ...extra,
 });
