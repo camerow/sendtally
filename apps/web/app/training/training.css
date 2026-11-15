@@ -1703,6 +1703,11 @@
   min-width: 0;
 }
 
+/* A lone last field keeps the half width of the pairs above it. */
+.dose-input:last-child:nth-child(odd) {
+  flex: 0 1 calc(50% - 4px);
+}
+
 .dose-name {
   flex: 1 1 30%;
   display: flex;
