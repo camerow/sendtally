@@ -136,9 +136,18 @@ The connector reads and writes through the same schemas, so it gets the dose fie
 
 Slices 2 to 4 are independent of each other once slice 1 is live, so they can ship in any order or together.
 
+## Range entry: the board's two options
+
+- Option A (recommended): the count keypad gains a To key in place of 00, so "3, To, 5" types 3-5 into the existing Sets or Reps box.
+  `Keypad` commits one number today, so this needs a range entry in `packages/core/src/hang/entry.ts`, a pair commit through `KeypadField`, and the step keys stepping the end being typed.
+  That is three or four files plus tests, no native code, over the air.
+  The web `NumberField` is a text input with its own parser and counts are unsigned, so it takes "3-5" typed with a hyphen.
+- Option B: a Ranges switch on the card adds "up to" boxes, which reuses `NumberField` as it is and costs nothing new, at one more row and two more boxes per card.
+
 ## Open questions for Will
 
-1. When an exercise moves in the editor, does its rest move with it (the rest belongs to the exercise before the gap) or stay in the gap? The plan moves it with the exercise.
-2. Should the rest between exercises be changeable by block week? The plan says no, since only the target was asked for.
-3. Should the sets player prefill reps at the bottom of the range, or leave them empty for the climber to type? The plan prefills the minimum.
-4. Is the per-exercise target one number, or a range too (RPE 7-8)? The plan keeps one number.
+1. Option A or option B for typing a range?
+2. When an exercise moves in the editor, does its rest move with it (the rest belongs to the exercise before the gap) or stay in the gap? The plan moves it with the exercise.
+3. Should the rest between exercises be changeable by block week? The plan says no, since only the target was asked for.
+4. Should the sets player prefill reps at the bottom of the range, or leave them empty for the climber to type? The plan prefills the minimum.
+5. Is the per-exercise target one number, or a range too (RPE 7-8)? The plan keeps one number.
