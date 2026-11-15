@@ -41,10 +41,10 @@ export function setText(set: SetDone, unit: WeightUnit, repsMax?: number): strin
 }
 
 /** A set as a chip under its exercise, whose unit the card states once: "5 × 180", "8", "60s". */
-export function setChip(set: SetDone, unit: WeightUnit): string {
+export function setChip(set: SetDone, unit: WeightUnit, repsMax?: number): string {
   if (set.climbs !== undefined) return climbingSetText(set);
   const weight = set.weightKg ? weightValue(set.weightKg, unit) : undefined;
-  const work = [set.reps === undefined ? undefined : formatNumber(set.reps), weight]
+  const work = [set.reps === undefined ? undefined : countText(set.reps, repsMax), weight]
     .filter((p) => p !== undefined)
     .join(" × ");
   return [work, set.onS === undefined ? "" : setSeconds(set.onS)]

@@ -1,4 +1,5 @@
 import React from "react";
+import { NameField } from "../components/NameField";
 import { useNavigate } from "react-router";
 import {
   gripMeasureOf,
@@ -134,16 +135,12 @@ function Editor({
       <span className="train-label form-mode">
         {id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout")}
       </span>
-      <input
-        className="name-field"
-        aria-label={t("hang.name")}
+      <NameField
+        label={t("hang.name")}
         value={state.name}
         maxLength={80}
         placeholder={t("workouts.namePlaceholder")}
-        onChange={(e) => {
-          const name = e.target.value;
-          setState((s) => ({ ...s, name }));
-        }}
+        onChange={(name) => setState((s) => ({ ...s, name }))}
       />
       <div className="form-section">
         <label htmlFor={descriptionId} className="train-label">

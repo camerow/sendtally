@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { SetDone, WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { setText } from "@sendtally/features/activities";
+import { setChip, setText } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { holdShort } from "@sendtally/features/workouts";
 import { press } from "../../../lib/press";
@@ -60,8 +60,13 @@ export function SetRow({
         {formatNumber(n)}
       </Text>
       <View style={[SET_COLUMNS.target, { gap: 2 }]}>
-        <Text style={[type.mono, { fontSize: 14, color: colors.textSecondary }]}>
-          {setText(target, unit, repsMax) || "-"}
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+          style={[type.mono, { fontSize: 14, color: colors.textSecondary }]}
+        >
+          {setChip(target, unit, repsMax) || "-"}
         </Text>
         {previous !== undefined && setText(previous, unit) !== "" && (
           <Text style={[type.mono, { fontSize: 11, color: colors.textMuted }]}>

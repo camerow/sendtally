@@ -68,7 +68,8 @@ export function LoadTable({
   const headOf = (f: WeekField): string => {
     const name = columnLabel(kind, written, f);
     const shown = weekFieldUnit(f, unit);
-    return shown === null ? name : `${name} · ${shown}`;
+    if (shown === null) return name;
+    return f === "weightKg" && kind !== "hangboard" ? shown : `${name} · ${shown}`;
   };
   const head = (text: string, width?: number): React.ReactElement => (
     <Label

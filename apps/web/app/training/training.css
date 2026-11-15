@@ -1587,8 +1587,11 @@
 }
 
 .name-field {
+  display: block;
   width: 100%;
   box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
   padding: 4px 0;
   border: none;
   border-bottom: 1px solid transparent;

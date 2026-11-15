@@ -80,9 +80,14 @@ function mount(page: React.ReactNode): void {
   );
 }
 
-const type = (el: HTMLInputElement, value: string): void =>
+const type = (el: HTMLInputElement | HTMLTextAreaElement, value: string): void =>
   act(() => {
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(el, value);
+    Object.getOwnPropertyDescriptor(
+      el instanceof HTMLTextAreaElement
+        ? HTMLTextAreaElement.prototype
+        : HTMLInputElement.prototype,
+      "value"
+    )!.set!.call(el, value);
     el.dispatchEvent(new Event("input", { bubbles: true }));
   });
 const click = (el: Element | null | undefined): void => act(() => (el as HTMLElement).click());
@@ -96,7 +101,7 @@ describe("ExerciseEditorPage", () => {
     mount(<ExerciseEditorPage making="strength" name="" />);
     const save = container.querySelector<HTMLButtonElement>(".detail-primary")!;
     expect(save.disabled).toBe(true);
-    type(container.querySelector<HTMLInputElement>(".name-field")!, "  Sled push ");
+    type(container.querySelector<HTMLTextAreaElement>(".name-field")!, "  Sled push ");
     await act(async () => save.click());
     expect(state.make).toHaveBeenCalledWith(
       expect.objectContaining({ name: "Sled push", kind: "strength" })
@@ -105,7 +110,9 @@ describe("ExerciseEditorPage", () => {
 
   it("warns before changing how a logged exercise is measured", async () => {
     mount(<ExerciseEditorPage exercise="s" />);
-    expect(container.querySelector<HTMLInputElement>(".name-field")?.value).toBe("Zercher squat");
+    expect(container.querySelector<HTMLTextAreaElement>(".name-field")?.value).toBe(
+      "Zercher squat"
+    );
     click(radio("Reps"));
     click(container.querySelector(".detail-primary"));
     expect(state.saveExercise).not.toHaveBeenCalled();
@@ -118,7 +125,7 @@ describe("ExerciseEditorPage", () => {
 
   it("locks a built-in grip's name", () => {
     mount(<ExerciseEditorPage grip="half" />);
-    const name = container.querySelector<HTMLInputElement>(".name-field")!;
+    const name = container.querySelector<HTMLTextAreaElement>(".name-field")!;
     expect(name.readOnly).toBe(true);
     expect(container.querySelector(".name-locked")).not.toBeNull();
   });

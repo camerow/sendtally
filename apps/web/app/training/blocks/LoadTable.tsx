@@ -54,7 +54,8 @@ export function LoadTable({
   const headOf = (f: WeekField): string => {
     const name = columnLabel(kind, written, f);
     const shown = unitOf(f);
-    return shown === null ? name : `${name} · ${shown}`;
+    if (shown === null) return name;
+    return f === "weightKg" && kind !== "hangboard" ? shown : `${name} · ${shown}`;
   };
   return (
     <table className="load-table">

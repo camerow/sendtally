@@ -86,11 +86,11 @@ describe("Sets player", () => {
     await fireEvent.press(screen.getByLabelText("About this workout"));
     expect(screen.getByText("Heavy squats, then rows.")).toBeTruthy();
     expect(screen.getByText("Target effort 8")).toBeTruthy();
-    expect(screen.getAllByText("5 × 100 kg")).toHaveLength(2);
+    expect(screen.getAllByText("5 × 100")).toHaveLength(2);
     expect(screen.getByText("30s")).toBeTruthy();
     expect(screen.getByText("Last 5 × 97.5 kg")).toBeTruthy();
     expect(screen.getByText("Last 8 × 60 kg")).toBeTruthy();
-    expect(screen.getByText("8 × 60 kg")).toBeTruthy();
+    expect(screen.getByText("8 × 60")).toBeTruthy();
     expect(screen.getByText("1:30 rest")).toBeTruthy();
     expect(screen.getAllByText("Rest 2:00")).toHaveLength(2);
     expect(readingOrder("Back squat, set 1", "Rest 1:30", "Back squat, set 2")).toEqual([

@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { Button } from "../components/Button";
+import { RowFill } from "../components/RowFill";
 import { type } from "../type";
 import { holdRowVM, type Hold } from "@sendtally/features/workouts";
 
@@ -43,17 +44,7 @@ export function HoldRow({
         backgroundColor: colors.surfaceSoft,
       }}
     >
-      <View
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: `${vm.share * 100}%`,
-          backgroundColor: colors.fern,
-          opacity: 0.16,
-        }}
-      />
+      <RowFill share={vm.share} color={colors.fern} opacity={0.16} />
       {lead ?? <View style={{ width: 12 }} />}
       <View style={{ flex: 1, flexDirection: "row", alignItems: "baseline", gap: 6 }}>
         {vm.word !== null && (
