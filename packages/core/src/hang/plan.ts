@@ -411,9 +411,22 @@ export function intervalsOf(
 export const itemsSeconds = (items: readonly SessionItem[]): number =>
   items.reduce((sum, i) => sum + totalSeconds(doseProtocol(i.exercise, i.dose)), 0);
 
-/** Seconds a hangboard session takes as the timer runs it: every item, with the rest between exercises between them. */
+/** The rest after item `i`, before the next: its own, else the workout's; none after the last. */
+export const restAfterItem = (
+  items: readonly Pick<SessionItem, "restAfterS">[],
+  i: number,
+  exerciseRestS: number
+): number => (i >= items.length - 1 ? 0 : (items[i]?.restAfterS ?? exerciseRestS));
+
+/** Every rest between exercises, first gap first. */
+export const gapRests = (
+  items: readonly Pick<SessionItem, "restAfterS">[],
+  exerciseRestS: number
+): number[] => items.slice(1).map((_, i) => restAfterItem(items, i, exerciseRestS));
+
+/** Seconds a hangboard session takes as the timer runs it: every item, with each gap's rest between them. */
 export const hangboardSeconds = (items: readonly SessionItem[], exerciseRestS: number): number =>
-  itemsSeconds(items) + Math.max(0, items.length - 1) * exerciseRestS;
+  itemsSeconds(items) + gapRests(items, exerciseRestS).reduce((a, b) => a + b, 0);
 
 /** Every set of every item done as prescribed. */
 export function doneAsPrescribed(items: readonly SessionItem[]): ItemDone[] {

@@ -27,6 +27,15 @@ describe("rest after a tick", () => {
     });
   });
 
+  it("rests the finished exercise's own rest before the next, where it sets one", () => {
+    const own = [{ ...items[0]!, restAfterS: 90 }, items[1]!];
+    expect(restAfterTick(own, ticked("0:0", "0:1"), { item: 0, set: 1 }, 180)).toEqual({
+      at: afterKey(0),
+      seconds: 90,
+      next: 1,
+    });
+  });
+
   it("rests no more after the last exercise", () => {
     const all = ticked("0:0", "0:1", "1:0");
     expect(restAfterTick(items, all, { item: 1, set: 0 }, 180)).toBeNull();

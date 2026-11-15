@@ -135,7 +135,7 @@ export const workouts = {
   "workouts.alternatesWith": "En alternance : {letter} est {dose}",
   "workouts.sameEverySession": "Identique à chaque séance",
   "workouts.totalTime": "Durée totale",
-  "workouts.exerciseRest": "Repos entre exercices",
+  "workouts.restAfter": "Repos après {name}",
   "workouts.removeExercise": "Retirer {name}",
   "workouts.moveUp": "Monter {name}",
   "workouts.moveDown": "Descendre {name}",

@@ -1,6 +1,12 @@
 import React from "react";
 import { useNavigate } from "react-router";
-import { gripMeasureOf, type Focus, type Item, type WorkoutKind } from "@sendtally/core/hang";
+import {
+  gripMeasureOf,
+  restAfterItem,
+  type Focus,
+  type Item,
+  type WorkoutKind,
+} from "@sendtally/core/hang";
 import { exerciseLabel } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { durationLabel } from "@sendtally/features/sessions";
@@ -17,6 +23,7 @@ import {
   withExerciseSwapped,
   withItem,
   withItemMoved,
+  withRestAfter,
   withItemsAdded,
   withoutItem,
   workoutMinutes,
@@ -24,6 +31,7 @@ import {
   type WorkoutLibrary,
 } from "@sendtally/features/workouts";
 import { NumberField } from "../../components/NumberField";
+import { GapRest } from "./GapRest";
 import { useToast } from "../../components/Toast";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { useAppApi } from "../../lib/useAppApi";
@@ -155,28 +163,30 @@ function Editor({
       </div>
       <FocusField value={state.focus} onChange={(focus) => setState((s) => ({ ...s, focus }))} />
       {state.items.map((item, i) => (
-        <ItemEditor
-          key={item.id ?? i}
-          kind={state.kind}
-          item={item}
-          name={nameOf(item.exercise)}
-          measure={measureOf(item)}
-          unit={model.settings.units}
-          onChange={(next) => setState((s) => withItem(s, i, next))}
-          onRemove={() => setState((s) => withoutItem(s, i))}
-          onSwap={() => setPicking({ swap: i })}
-          {...(i > 0 && { onMoveUp: () => setState((s) => withItemMoved(s, i, i - 1)) })}
-          {...(i < state.items.length - 1 && {
-            onMoveDown: () => setState((s) => withItemMoved(s, i, i + 1)),
-          })}
-        />
+        <React.Fragment key={item.id ?? i}>
+          {i > 0 && (
+            <GapRest
+              after={nameOf(state.items[i - 1]?.exercise ?? "")}
+              seconds={restAfterItem(state.items, i - 1, state.exerciseRestS)}
+              onChange={(seconds) => setState((s) => withRestAfter(s, i - 1, seconds))}
+            />
+          )}
+          <ItemEditor
+            kind={state.kind}
+            item={item}
+            name={nameOf(item.exercise)}
+            measure={measureOf(item)}
+            unit={model.settings.units}
+            onChange={(next) => setState((s) => withItem(s, i, next))}
+            onRemove={() => setState((s) => withoutItem(s, i))}
+            onSwap={() => setPicking({ swap: i })}
+            {...(i > 0 && { onMoveUp: () => setState((s) => withItemMoved(s, i, i - 1)) })}
+            {...(i < state.items.length - 1 && {
+              onMoveDown: () => setState((s) => withItemMoved(s, i, i + 1)),
+            })}
+          />
+        </React.Fragment>
       ))}
-      <NumberField
-        label={t("workouts.exerciseRest")}
-        value={state.exerciseRestS}
-        mode={{ kind: "time", max: 3600 }}
-        onChange={(exerciseRestS) => setState((s) => ({ ...s, exerciseRestS }))}
-      />
       <button
         type="button"
         className="outline-button outline-button--wide"

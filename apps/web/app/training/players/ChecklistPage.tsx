@@ -1,4 +1,5 @@
 import React from "react";
+import { restAfterItem } from "@sendtally/core/hang";
 import { useWeightUnit } from "@sendtally/features/activities";
 import { eachSideOf } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
@@ -93,8 +94,9 @@ export function ChecklistPage({ run, end }: { run: WorkoutRun; end: boolean }): 
               {rest.rest?.at === afterKey(i) ? (
                 <RestRow rest={rest.rest} left={rest.left} onMore={rest.more} onSkip={rest.skip} />
               ) : (
-                i < run.items.length - 1 &&
-                run.exerciseRestS > 0 && <RestPreview seconds={run.exerciseRestS} />
+                restAfterItem(run.items, i, run.exerciseRestS) > 0 && (
+                  <RestPreview seconds={restAfterItem(run.items, i, run.exerciseRestS)} />
+                )
               )}
             </React.Fragment>
           );

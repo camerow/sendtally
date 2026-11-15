@@ -1,4 +1,4 @@
-import type { ItemDone } from "@sendtally/core/hang";
+import { restAfterItem, type ItemDone } from "@sendtally/core/hang";
 import type { Hold } from "./holdClock";
 import { exerciseName } from "./library";
 import { restAfter, type Rest } from "./restCountdown";
@@ -52,7 +52,9 @@ function finished(live: HeldRun, held: number, now: number): HeldRun {
     const ticked = [...new Set([...state.ticked, i])];
     const next = { ...rest, state: { ...state, ticked } };
     const following = run.items.findIndex((_, j) => j > i && !ticked.includes(j));
-    return following === -1 ? next : withRest(next, afterKey(i), run.exerciseRestS, following);
+    return following === -1
+      ? next
+      : withRest(next, afterKey(i), restAfterItem(run.items, i, run.exerciseRestS), following);
   }
   return rest;
 }

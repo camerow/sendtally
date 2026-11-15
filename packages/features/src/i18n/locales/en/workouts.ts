@@ -216,7 +216,7 @@ export const workouts = {
   "workouts.alternatesWith": "Alternates: {letter} is {dose}",
   "workouts.sameEverySession": "Same every session",
   "workouts.totalTime": "Total time",
-  "workouts.exerciseRest": "Rest between exercises",
+  "workouts.restAfter": "Rest after {name}",
   "workouts.removeExercise": "Remove {name}",
   "workouts.moveUp": "Move {name} up",
   "workouts.moveDown": "Move {name} down",

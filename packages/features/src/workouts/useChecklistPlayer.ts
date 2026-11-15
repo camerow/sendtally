@@ -1,5 +1,5 @@
 import React from "react";
-import { doneAsPrescribed, type ItemDone } from "@sendtally/core/hang";
+import { doneAsPrescribed, restAfterItem, type ItemDone } from "@sendtally/core/hang";
 import type { Hold } from "./holdClock";
 import { exerciseName } from "./library";
 import type { LiveRunStore } from "./liveRun";
@@ -57,7 +57,7 @@ export function useChecklistPlayer(
     const following = run.items.findIndex((_, j) => j > i && !next.has(j));
     const name = run.items[following]?.exercise;
     if (!ticking || name === undefined) rest.skip();
-    else rest.tick(afterKey(i), run.exerciseRestS, exerciseName(name));
+    else rest.tick(afterKey(i), restAfterItem(run.items, i, run.exerciseRestS), exerciseName(name));
   };
   const endHold = (h: Hold, seconds: number | null): void => {
     store.writeHold(null);

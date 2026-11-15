@@ -1,4 +1,5 @@
 import React from "react";
+import { restAfterItem } from "@sendtally/core/hang";
 import { useNavigate } from "react-router";
 import { useActivities, useWeightUnit } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
@@ -94,8 +95,8 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
         const climbing = player.climbing(i);
         const between =
           restAt(afterKey(i)) ||
-          (i < run.items.length - 1 && run.exerciseRestS > 0 && (
-            <RestPreview seconds={run.exerciseRestS} />
+          (restAfterItem(run.items, i, run.exerciseRestS) > 0 && (
+            <RestPreview seconds={restAfterItem(run.items, i, run.exerciseRestS)} />
           ));
         return (
           <React.Fragment key={i}>

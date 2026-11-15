@@ -1,4 +1,5 @@
 import React from "react";
+import { restAfterItem } from "@sendtally/core/hang";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
@@ -120,8 +121,9 @@ export function ChecklistScreen({
                   />
                 </View>
               ) : (
-                i < run.items.length - 1 &&
-                run.exerciseRestS > 0 && <RestPreview seconds={run.exerciseRestS} />
+                restAfterItem(run.items, i, run.exerciseRestS) > 0 && (
+                  <RestPreview seconds={restAfterItem(run.items, i, run.exerciseRestS)} />
+                )
               )}
             </React.Fragment>
           ))}

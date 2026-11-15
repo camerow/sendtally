@@ -10,23 +10,28 @@ export type HangPhase = Phase & { item: number };
  * Every item's phases in turn. Each item after the first opens with the rest
  * between exercises where the first has Get ready; no rest still gets Get ready.
  */
-export function workoutPhases(protocols: readonly Protocol[], exerciseRestS: number): HangPhase[] {
+export function workoutPhases(
+  protocols: readonly Protocol[],
+  rests: readonly number[]
+): HangPhase[] {
   return protocols.flatMap((p, item) =>
-    phasesFor(p).map((phase, i) =>
-      item > 0 && i === 0
-        ? { ...phase, seconds: exerciseRestS > 0 ? exerciseRestS : GET_READY_S, item }
-        : { ...phase, item }
-    )
+    phasesFor(p).map((phase, i) => {
+      const rest = rests[item - 1] ?? 0;
+      return item > 0 && i === 0
+        ? { ...phase, seconds: rest > 0 ? rest : GET_READY_S, item }
+        : { ...phase, item };
+    })
   );
 }
 
 export function startWorkoutRun(
   protocols: readonly Protocol[],
-  exerciseRestS: number,
+  /** Each gap's rest between exercises, first gap first. */
+  rests: readonly number[],
   now: number
 ): Run<HangPhase> {
   return startPhases(
-    workoutPhases(protocols, exerciseRestS),
+    workoutPhases(protocols, rests),
     protocols[0]?.sets ?? 0,
     protocols.reduce((sum, p) => sum + plannedWork(p), 0),
     now

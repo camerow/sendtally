@@ -136,7 +136,7 @@ export const workouts = {
   "workouts.alternatesWith": "Im Wechsel: {letter} ist {dose}",
   "workouts.sameEverySession": "Jede Einheit gleich",
   "workouts.totalTime": "Gesamtzeit",
-  "workouts.exerciseRest": "Pause zwischen Übungen",
+  "workouts.restAfter": "Pause nach {name}",
   "workouts.removeExercise": "{name} entfernen",
   "workouts.moveUp": "{name} nach oben",
   "workouts.moveDown": "{name} nach unten",

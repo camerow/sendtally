@@ -4,6 +4,7 @@ import {
   doseIndex,
   intervalPhases,
   intervalsOf,
+  restAfterItem,
   sessionItems,
   turnsOf,
   type Dose,
@@ -97,9 +98,9 @@ export function BodyPreview({
       )}
       {items.map((item, i) => (
         <React.Fragment key={i}>
-          {i > 0 && workout.exerciseRestS > 0 && (
+          {i > 0 && restAfterItem(items, i - 1, workout.exerciseRestS) > 0 && (
             <div className="rest-divider">
-              <span>{restOf(workout.exerciseRestS)}</span>
+              <span>{restOf(restAfterItem(items, i - 1, workout.exerciseRestS))}</span>
             </div>
           )}
           <PreviewRow

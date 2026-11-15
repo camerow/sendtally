@@ -2,6 +2,7 @@ import React from "react";
 import {
   protocolOf,
   startIntervalsRun,
+  gapRests,
   startWorkoutRun,
   stepsDone,
   type HangPhase,
@@ -79,7 +80,7 @@ export function useHangTimerPlayer({
       (resumed?.run as Run<HangPhase> | undefined) ??
       startWorkoutRun(
         planned.items.map((i) => protocolOf(i.workout)),
-        planned.exerciseRestS,
+        gapRests(planned.items, planned.exerciseRestS),
         now
       ),
     playSound

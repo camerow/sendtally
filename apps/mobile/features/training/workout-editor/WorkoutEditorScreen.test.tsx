@@ -108,7 +108,7 @@ describe("Workout editor", () => {
     await fireEvent.changeText(screen.getByLabelText("Name A"), "Heavy");
     await fireEvent.changeText(screen.getByLabelText("Name B"), " Light ");
     await type("Rest between sets", "200");
-    await type("Rest between exercises", "300");
+    expect(screen.queryByText("Rest")).toBeNull();
     await fireEvent.press(screen.getByText("Save"));
 
     expect(mockWorkouts.saveWorkout).toHaveBeenCalledWith("w-new", {
@@ -127,7 +127,7 @@ describe("Workout editor", () => {
           ],
         },
       ],
-      exerciseRestS: 180,
+      exerciseRestS: 0,
       focus: null,
     });
     expect(router.back).toHaveBeenCalled();
@@ -205,7 +205,10 @@ describe("Workout editor", () => {
     expect(screen.getByText("13m")).toBeTruthy();
     await pick("Open hand");
     expect(screen.getByText("29m")).toBeTruthy();
-    await type("Rest between exercises", "200");
+    expect(screen.getByLabelText("Rest after Open hand").props.accessibilityValue).toEqual({
+      text: "00:03:00",
+    });
+    await type("Rest after Open hand", "200");
     expect(screen.getByText("28m")).toBeTruthy();
     await fireEvent.press(screen.getByText("Save"));
 
@@ -215,9 +218,14 @@ describe("Workout editor", () => {
         kind: "hangboard",
         name: "Max hangs (copy)",
         minutes: null,
-        exerciseRestS: 120,
+        exerciseRestS: 180,
         items: [
-          { id: "0", exercise: "open", doses: [{ sets: 5, reps: 1, onS: 12, setRestS: 180 }] },
+          {
+            id: "0",
+            exercise: "open",
+            doses: [{ sets: 5, reps: 1, onS: 12, setRestS: 180 }],
+            restAfterS: 120,
+          },
           { id: "w-new", exercise: "open", doses: [{ sets: 5, reps: 1, onS: 12, setRestS: 180 }] },
         ],
       })

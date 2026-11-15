@@ -5,7 +5,7 @@ import { usePrescribed } from "./usePrescribed";
 import { useWorkoutLibrary } from "./useWorkoutLibrary";
 
 /** One item as the timer runs it. */
-export type PlannedItem = { workout: HangWorkout; dose: Dose | undefined };
+export type PlannedItem = { workout: HangWorkout; dose: Dose | undefined; restAfterS?: number };
 
 /** Every item in turn, the first always there, and the rest between them. */
 export type PlannedRun = { items: [PlannedItem, ...PlannedItem[]]; exerciseRestS: number };
@@ -30,6 +30,7 @@ export function usePlannedRun(
   const [first = { workout: written, dose: undefined }, ...rest] = items.map((item) => ({
     workout: hangWorkoutFromItem(written, item),
     dose: item.dose,
+    restAfterS: item.restAfterS,
   }));
   return { items: [first, ...rest], exerciseRestS };
 }

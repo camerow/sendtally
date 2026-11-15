@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { restAfterItem } from "@sendtally/core/hang";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
@@ -92,8 +93,8 @@ export function SetsScreen({
     );
   const restBetween = (item: number): React.ReactNode =>
     restAt(afterKey(item)) ||
-    (item < run.items.length - 1 && run.exerciseRestS > 0 && (
-      <RestPreview seconds={run.exerciseRestS} />
+    (restAfterItem(run.items, item, run.exerciseRestS) > 0 && (
+      <RestPreview seconds={restAfterItem(run.items, item, run.exerciseRestS)} />
     ));
   const finish = (): void => {
     const { done, off } = player.finished();

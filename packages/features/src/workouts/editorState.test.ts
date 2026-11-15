@@ -8,6 +8,8 @@ import {
   withExerciseSwapped,
   withItemsAdded,
   withoutLastDose,
+  withItemMoved,
+  withRestAfter,
   withSetRest,
 } from "./editorState";
 
@@ -24,6 +26,13 @@ const legs: WorkoutDraft = {
 };
 
 describe("workout editor state", () => {
+  it("sets the rest after an exercise, which moves with it", () => {
+    const bench = { exercise: "Bench press", doses: [{ sets: 3, reps: 8 }] };
+    const rested = withRestAfter({ ...legs, items: [squat, bench] }, 0, 240);
+    expect(rested.items).toEqual([{ ...squat, restAfterS: 240 }, bench]);
+    expect(withItemMoved(rested, 0, 1).items).toEqual([bench, { ...squat, restAfterS: 240 }]);
+  });
+
   it("starts a grip that pulls on its own dose, and copies the grip before it otherwise", () => {
     const hang = { sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 180 };
     const fingers: WorkoutDraft = {

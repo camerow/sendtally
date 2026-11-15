@@ -5,6 +5,8 @@ import {
   blockLastDay,
   blockWeekOn,
   changeFrom,
+  gapRests,
+  restAfterItem,
   doneAsPrescribed,
   doseProtocol,
   focusOf,
@@ -310,6 +312,7 @@ describe("hangboard duration", () => {
     expect(hangboardSeconds([a], 180)).toBe(411);
     expect(hangboardSeconds([a, b], 180)).toBe(411 + 180 + 770);
     expect(hangboardSeconds([a, b, a], 90)).toBe(411 + 90 + 770 + 90 + 411);
+    expect(hangboardSeconds([{ ...a, restAfterS: 30 }, b, a], 90)).toBe(411 + 30 + 770 + 90 + 411);
   });
 });
 
@@ -386,5 +389,19 @@ describe("focusOf", () => {
     expect(focusOf({ focus: "strength" })).toBe("strength");
     expect(focusOf({ focus: null })).toBeNull();
     expect(focusOf(undefined)).toBeNull();
+  });
+});
+
+describe("rests between exercises", () => {
+  const items = [
+    { exercise: "a", dose: { sets: 1 }, restAfterS: 60 },
+    { exercise: "b", dose: { sets: 1 } },
+    { exercise: "c", dose: { sets: 1 }, restAfterS: 30 },
+  ];
+
+  it("rests each gap its own rest, else the workout's, and none after the last", () => {
+    expect(gapRests(items, 180)).toEqual([60, 180]);
+    expect(restAfterItem(items, 2, 180)).toBe(0);
+    expect(gapRests([], 180)).toEqual([]);
   });
 });
