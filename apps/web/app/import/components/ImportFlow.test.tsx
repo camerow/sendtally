@@ -26,8 +26,6 @@ const render = (props: { then?: string; from?: ImportSource }): void =>
     )
   );
 const text = (): string => host.textContent ?? "";
-const links = (): string[] =>
-  [...host.querySelectorAll("a")].map((a) => a.getAttribute("href") ?? "");
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -37,12 +35,12 @@ beforeEach(() => {
 afterEach(() => act(() => root.unmount()));
 
 describe("import on the web", () => {
-  it("opened from first run, shows the picked source's steps and site, and Skip for now", () => {
+  it("opened from first run, shows the picked source's steps and site in place of every app's", () => {
     render({ then: "/app/start", from: "mountainProject" });
-    expect(text()).toContain("Select Export CSV to download the file.");
+    expect(text()).toContain("Select “Export CSV” to download the file.");
     expect(text()).toContain("Open mountainproject.com");
     expect(text()).not.toContain("Where to export");
-    expect(links()).toContain("/app/start?later=1");
+    expect(text()).not.toContain("Exports from these apps");
     expect(host.querySelector("input[type=file]")?.getAttribute("accept")).toBe(
       ".csv,text/csv,text/comma-separated-values,text/plain"
     );

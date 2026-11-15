@@ -1,12 +1,21 @@
 import React from "react";
-import type { LoaderFunctionArgs } from "react-router";
+import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useSearchParams } from "react-router";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
 import { useHydrated } from "../lib/useHydrated";
 import { importSourceOf } from "@sendtally/features/import";
+import { FirstRunImport } from "../first-run/FirstRunImport";
+import firstRunStyles from "../first-run/first-run.css?url";
 import { ImportFlow } from "../import/components/ImportFlow";
+import trainingStyles from "../training/training.css?url";
+
+// First run's frame, and its steps, drawn as a training description.
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: firstRunStyles },
+  { rel: "stylesheet", href: trainingStyles },
+];
 
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   await requireApi(args);
@@ -18,7 +27,11 @@ export default function ImportRoute(): React.ReactElement {
   const api = useClientApi(apiUrl);
   const hydrated = useHydrated();
   const [params] = useSearchParams();
-  const then = params.get("then") === "/app/start" ? "/app/start" : undefined;
   const from = importSourceOf(params.get("from"));
-  return hydrated ? <ImportFlow api={api} then={then} from={from} /> : <div />;
+  if (!hydrated) return <div />;
+  return params.get("then") === "/app/start" ? (
+    <FirstRunImport api={api} from={from} />
+  ) : (
+    <ImportFlow api={api} />
+  );
 }

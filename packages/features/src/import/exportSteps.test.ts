@@ -6,13 +6,15 @@ describe("exportSteps", () => {
   it("names each service's menus as the service writes them, and ends on choosing the file", () => {
     expect(exportSteps("mountainProject")).toEqual([
       "Sign in at mountainproject.com.",
-      "Open your profile, then Ticks.",
-      "Select Export CSV to download the file.",
+      "Open your profile, then “Ticks”.",
+      "Select “Export CSV” to download the file.",
       "Choose the file here.",
     ]);
-    expect(exportSteps("theCrag")[1]).toBe("From the Action menu, select Select logbook as CSV.");
+    expect(exportSteps("theCrag")[1]).toBe(
+      "From the “Action” menu, choose “Select logbook as CSV”."
+    );
     expect(exportSteps("8a")[2]).toBe(
-      "At the bottom, under Logbook Export (CSV), download the file."
+      "At the bottom, under “Logbook Export (CSV)”, download the file."
     );
   });
 

@@ -10,7 +10,7 @@ export function DropZone({
   links = true,
 }: {
   onFile: (file: File) => void;
-  /** Off where the page already shows the one source's steps and link. */
+  /** Off where the page already shows the one source's steps and link, which the hint names. */
   links?: boolean;
 }): React.ReactElement {
   const [over, setOver] = React.useState(false);
@@ -74,10 +74,14 @@ export function DropZone({
           if (file !== undefined) onFile(file);
         }}
       />
-      <span style={{ ...monoMuted, textAlign: "center", maxWidth: 480 }}>
-        {t("import.dropHint")}
-      </span>
-      {links && <ServiceLinks />}
+      {links && (
+        <>
+          <span style={{ ...monoMuted, textAlign: "center", maxWidth: 480 }}>
+            {t("import.dropHint")}
+          </span>
+          <ServiceLinks />
+        </>
+      )}
     </div>
   );
 }

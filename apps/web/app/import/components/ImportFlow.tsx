@@ -146,21 +146,6 @@ export function ImportFlow({
         <>
           {from !== undefined && from !== "spreadsheet" && <ExportHowTo service={from} />}
           <DropZone onFile={(file) => void choose(file)} links={from === undefined} />
-          {then !== undefined && (
-            <Link
-              to={`${then}?later=1`}
-              style={{
-                alignSelf: "center",
-                padding: "8px 0",
-                fontSize: 15,
-                fontWeight: 600,
-                color: "var(--bs-azure-ink)",
-                textDecoration: "none",
-              }}
-            >
-              {t("import.skipForNow")}
-            </Link>
-          )}
           <FormatGuide />
         </>
       )}

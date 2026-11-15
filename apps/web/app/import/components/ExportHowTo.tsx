@@ -28,6 +28,7 @@ export function ExportHowTo({ service }: { service: ExportService }): React.Reac
           fontSize: 15,
           fontWeight: 600,
           color: "var(--bs-azure-ink)",
+          textDecoration: "none",
         }}
       >
         {exportLinkLabel(service, url, name)} <span aria-hidden="true">↗</span>

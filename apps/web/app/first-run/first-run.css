@@ -25,6 +25,7 @@
 }
 
 .first-run-link {
+  text-decoration: none;
   border: none;
   background: none;
   padding: 8px 0;
@@ -41,6 +42,10 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+.first-run-body--wide {
+  width: min(640px, 100%);
 }
 
 .first-run-title {

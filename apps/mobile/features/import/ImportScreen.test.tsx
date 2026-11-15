@@ -17,7 +17,7 @@ describe("import", () => {
   it("opened from first run, shows only the picked source's steps and its site", async () => {
     await render(<ImportScreen then="/first-run" from="mountainProject" />);
     expect(screen.getByText("Get your log out")).toBeTruthy();
-    expect(screen.getByText("Select Export CSV to download the file.")).toBeTruthy();
+    expect(screen.getByText("Select “Export CSV” to download the file.")).toBeTruthy();
     expect(screen.getByText("Open mountainproject.com")).toBeTruthy();
     expect(screen.queryByText("Supported apps")).toBeNull();
   });

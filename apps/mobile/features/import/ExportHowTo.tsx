@@ -52,6 +52,7 @@ export function ExportHowTo({ source }: { source: ImportSource }): React.ReactEl
           variant="link"
           label={exportLinkLabel(source, url, name)}
           onPress={() => void Linking.openURL(url)}
+          style={{ paddingHorizontal: 0 }}
         />
       </View>
     </View>
