@@ -48,6 +48,8 @@ export type ExerciseForm = {
   eachSide: boolean;
   /** What a climbing exercise's trend follows; unset follows the climbs completed. */
   progress?: ExerciseProgress | null;
+  /** Its description as typed; a grip or a built-in has none of its own. */
+  description?: string;
 };
 
 /** What saving a new exercise gave: a grip for Fingers, else the user's exercise. */

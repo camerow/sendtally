@@ -126,7 +126,9 @@ describe("Other workouts", () => {
       workouts: [legs],
       plan: {
         ...planned,
-        blocks: [{ id: "b1", name: "Base", start: "2026-09-21", weeks: 4, focus: null }],
+        blocks: [
+          { id: "b1", name: "Base", description: "", start: "2026-09-21", weeks: 4, focus: null },
+        ],
         memberships: [
           {
             id: "m1",

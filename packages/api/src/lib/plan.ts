@@ -17,6 +17,7 @@ import {
   type Workout,
   withItemIds,
 } from "@sendtally/core/hang";
+import { MAX_DESCRIPTION } from "@sendtally/core/text";
 import { z } from "zod";
 import type {
   BlockRow,
@@ -94,10 +95,13 @@ export type FocusOptional<T extends { focus: Focus | null }> = Omit<T, "focus"> 
   focus?: Focus | null | undefined;
 };
 
+/** A description as typed; the apps read its few formatting marks. */
+export const description = z.string().trim().max(MAX_DESCRIPTION);
+
 export const workoutFields = {
   kind: z.enum(WORKOUT_KINDS),
   name: title,
-  description: z.string().trim().max(2000),
+  description,
   minutes: minutes.nullable(),
   targetRpe: rpe.nullable(),
   // Older app builds send none.
@@ -143,6 +147,8 @@ export const workoutBody = z
 export const blockBody = z
   .object({
     name: z.string().trim().max(80),
+    // Older app builds send none, which keeps the one saved.
+    description: description.optional(),
     start: calendarDate.nullable(),
     weeks: z.number().int().min(1).max(MAX_BLOCK_WEEKS),
     focus,
@@ -266,6 +272,7 @@ export const workoutOf = (row: WorkoutRow): WorkoutRecord => ({
 export const blockOf = (row: BlockRow): Block => ({
   id: row.id,
   name: row.name,
+  description: row.description ?? "",
   start: row.start,
   weeks: row.weeks,
   focus: row.focus,

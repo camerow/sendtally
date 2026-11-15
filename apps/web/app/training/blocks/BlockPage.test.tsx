@@ -81,7 +81,14 @@ vi.mock("@sendtally/features/training", async (actual) => ({
   useAddTo: () => ({ add: vi.fn(), undo: vi.fn(), plans: [] }),
 }));
 
-const template: Block = { id: "b1", name: "Power phase", start: null, weeks: 4, focus: null };
+const template: Block = {
+  id: "b1",
+  name: "Power phase",
+  description: "",
+  start: null,
+  weeks: 4,
+  focus: null,
+};
 // Monday to two Sundays on, running this week.
 const running: Block = { ...template, start: "2026-11-09", weeks: 2 };
 const over: Block = { ...template, start: "2026-10-05", weeks: 2 };
@@ -164,9 +171,10 @@ const menu = (): string[] => {
   return [...document.querySelectorAll(".more-item")].map((b) => b.textContent ?? "");
 };
 
-const type = (input: HTMLInputElement, value: string): void =>
+const type = (input: HTMLInputElement | HTMLTextAreaElement, value: string): void =>
   act(() => {
-    const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    const proto = input instanceof HTMLTextAreaElement ? HTMLTextAreaElement : HTMLInputElement;
+    const set = Object.getOwnPropertyDescriptor(proto.prototype, "value")?.set;
     set?.call(input, value);
     input.dispatchEvent(new Event("input", { bubbles: true }));
   });
@@ -221,6 +229,23 @@ describe("BlockPage", () => {
         block: expect.objectContaining({ name: "Strength", weeks: 5 }),
         schedules: [expect.objectContaining({ membershipId: "m1" })],
       })
+    );
+  });
+
+  it("writes what the block is for in Edit, saved with the rest, and reads it under its dates", () => {
+    state.plan = withBlock(template);
+    mount();
+    click(button("Edit"));
+    type(container.querySelector<HTMLTextAreaElement>("textarea.form-notes")!, " Volume first. ");
+    click(button("Save"));
+    expect(state.saveDraft).toHaveBeenCalledWith(
+      expect.objectContaining({ block: expect.objectContaining({ description: "Volume first." }) })
+    );
+    act(() => root.render(<></>));
+    state.plan = withBlock({ ...template, description: "Volume first.\n- Easy days easy" });
+    mount();
+    expect(container.querySelector(".block-head .block-desc")?.textContent).toBe(
+      "Volume first.•Easy days easy"
     );
   });
 

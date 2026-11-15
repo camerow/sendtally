@@ -60,7 +60,9 @@ const legs: WorkoutRecord = {
 };
 
 const winter: Plan = {
-  blocks: [{ id: "b1", name: "Winter base", start: "2026-10-05", weeks: 6, focus: null }],
+  blocks: [
+    { id: "b1", name: "Winter base", description: "", start: "2026-10-05", weeks: 6, focus: null },
+  ],
   memberships: [],
   weekChanges: [],
   planChanges: [],
@@ -130,8 +132,8 @@ describe("adding to the plan", () => {
       ...winter,
       blocks: [
         ...winter.blocks,
-        { id: "t1", name: "Power phase", start: null, weeks: 4, focus: null },
-        { id: "old", name: "Summer", start: "2026-06-01", weeks: 4, focus: null },
+        { id: "t1", name: "Power phase", description: "", start: null, weeks: 4, focus: null },
+        { id: "old", name: "Summer", description: "", start: "2026-06-01", weeks: 4, focus: null },
       ],
       memberships: [
         {
@@ -278,7 +280,9 @@ describe("adding to the plan", () => {
   it("adds to a template with no days, straight back to the sheet", async () => {
     const template = {
       ...winter,
-      blocks: [{ id: "t1", name: "Base to peak", start: null, weeks: 6, focus: null }],
+      blocks: [
+        { id: "t1", name: "Base to peak", description: "", start: null, weeks: 6, focus: null },
+      ],
     };
     await renderWithHang(
       <WorkoutScreen id="legs" adding={{ date: null, blockId: "t1" }} />,

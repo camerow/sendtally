@@ -50,7 +50,9 @@ const squat: WorkoutRecord = {
 };
 
 const plan: Plan = {
-  blocks: [{ id: "b1", name: "Winter base", start: "2026-10-05", weeks: 4, focus: null }],
+  blocks: [
+    { id: "b1", name: "Winter base", description: "", start: "2026-10-05", weeks: 4, focus: null },
+  ],
   memberships: [
     {
       id: "m1",
@@ -95,6 +97,7 @@ describe("blocks", () => {
     expect(mockPlan.saveBlock).toHaveBeenCalledWith({
       id: "b-new",
       name: "",
+      description: "",
       start: null,
       weeks: 4,
       focus: null,
@@ -122,10 +125,47 @@ describe("blocks", () => {
     await fireEvent.press(screen.getByText("Save"));
     expect(mockPlan.saveDraft).toHaveBeenCalledWith(
       expect.objectContaining({
-        block: { id: "b1", name: "Winter power", start: "2026-10-06", weeks: 3, focus: null },
+        block: {
+          id: "b1",
+          name: "Winter power",
+          description: "",
+          start: "2026-10-06",
+          weeks: 3,
+          focus: null,
+        },
       })
     );
     expect(screen.getByText("Edit")).toBeTruthy();
+  });
+
+  it("writes what the block is for in Edit, saved with the rest, and reads it under its dates", async () => {
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan });
+    await fireEvent.press(screen.getByText("Edit"));
+    await fireEvent.changeText(
+      screen.getByLabelText("Description"),
+      " Volume first.\n- Easy days easy "
+    );
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockPlan.saveDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        block: expect.objectContaining({ description: "Volume first.\n- Easy days easy" }),
+      })
+    );
+
+    const described: Plan = {
+      ...plan,
+      blocks: plan.blocks.map((b) => ({ ...b, description: "Volume first.\n- Easy days easy" })),
+    };
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), {
+      workouts: [squat],
+      plan: described,
+    });
+    for (const text of ["Volume first.", "Easy days easy"]) {
+      const [measured] = screen.getAllByText(text, { includeHiddenElements: true });
+      await fireEvent(measured!, "textLayout", { nativeEvent: { lines: [{}] } });
+    }
+    expect(screen.getByText("Volume first.")).toBeTruthy();
+    expect(screen.getByText("Easy days easy")).toBeTruthy();
   });
 
   it("orders a block's workouts in Edit, saved with the rest and dropped on Cancel", async () => {
@@ -185,7 +225,16 @@ describe("blocks", () => {
   it("keeps a running block's weeks to no fewer than it has run, and its first day", async () => {
     const running: Plan = {
       ...plan,
-      blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 2, focus: null }],
+      blocks: [
+        {
+          id: "b1",
+          name: "Winter base",
+          description: "",
+          start: "2026-09-21",
+          weeks: 2,
+          focus: null,
+        },
+      ],
     };
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
     await fireEvent.press(screen.getByText("Edit"));
@@ -211,7 +260,16 @@ describe("block overview", () => {
   // Today is Tuesday 29 September, in week 2 of 4.
   const running: Plan = {
     ...plan,
-    blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null }],
+    blocks: [
+      {
+        id: "b1",
+        name: "Winter base",
+        description: "",
+        start: "2026-09-21",
+        weeks: 4,
+        focus: null,
+      },
+    ],
     memberships: [
       {
         id: "m1",
@@ -258,7 +316,16 @@ describe("block card", () => {
   it("opens a workout in its block, back naming Train", async () => {
     const running: Plan = {
       ...plan,
-      blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null }],
+      blocks: [
+        {
+          id: "b1",
+          name: "Winter base",
+          description: "",
+          start: "2026-09-21",
+          weeks: 4,
+          focus: null,
+        },
+      ],
     };
     await renderWithHang(<BlocksList />, hangData(), { workouts: [squat], plan: running });
     await fireEvent.press(screen.getAllByLabelText("Back squat")[0]!);
@@ -274,7 +341,16 @@ describe("a dated week", () => {
     // Wednesday 23 September: week 2 runs Wednesday 30 to Tuesday 6 October.
     const midweek: Plan = {
       ...plan,
-      blocks: [{ id: "b1", name: "Winter base", start: "2026-09-23", weeks: 4, focus: null }],
+      blocks: [
+        {
+          id: "b1",
+          name: "Winter base",
+          description: "",
+          start: "2026-09-23",
+          weeks: 4,
+          focus: null,
+        },
+      ],
     };
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: midweek });
     expect(readingOrder("28", "29", "23", "24", "25", "26", "27")).toEqual([
@@ -293,7 +369,16 @@ describe("a day on a scheduled block", () => {
   // Today is Tuesday 29 September, in week 2 of 4.
   const running: Plan = {
     ...plan,
-    blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null }],
+    blocks: [
+      {
+        id: "b1",
+        name: "Winter base",
+        description: "",
+        start: "2026-09-21",
+        weeks: 4,
+        focus: null,
+      },
+    ],
     memberships: [
       {
         id: "m1",
@@ -421,7 +506,14 @@ describe("plan again", () => {
     ...plan,
     blocks: [
       ...plan.blocks,
-      { id: "b0", name: "Summer base", start: "2026-08-03", weeks: 4, focus: null },
+      {
+        id: "b0",
+        name: "Summer base",
+        description: "",
+        start: "2026-08-03",
+        weeks: 4,
+        focus: null,
+      },
     ],
     memberships: [
       ...plan.memberships,
@@ -501,7 +593,7 @@ describe("templates", () => {
     ...plan,
     blocks: [
       ...plan.blocks,
-      { id: "t1", name: "Base to peak", start: null, weeks: 6, focus: null },
+      { id: "t1", name: "Base to peak", description: "", start: null, weeks: 6, focus: null },
     ],
     memberships: [
       ...plan.memberships,
@@ -605,7 +697,7 @@ describe("templates", () => {
     await fireEvent.press(screen.getByLabelText("Increase Weeks"));
     await fireEvent.press(screen.getByText("Save"));
     expect(mockPlan.saveDraft).toHaveBeenCalledWith({
-      block: { id: "t1", name: "Peak", start: null, weeks: 7, focus: null },
+      block: { id: "t1", name: "Peak", description: "", start: null, weeks: 7, focus: null },
       schedules: [{ membershipId: "m9", weekdays: [2], weeks: [] }],
       weekChanges: [],
       order: [],
@@ -648,7 +740,7 @@ describe("templates", () => {
   it("drops an untitled template left with nothing in it", async () => {
     const bare: Plan = {
       ...plan,
-      blocks: [{ id: "t2", name: "", start: null, weeks: 4, focus: null }],
+      blocks: [{ id: "t2", name: "", description: "", start: null, weeks: 4, focus: null }],
     };
     const view = await renderWithHang(<BlockScreen id="t2" />, hangData(), { plan: bare });
     expect(screen.getByText("Add the workouts this block repeats each week.")).toBeTruthy();

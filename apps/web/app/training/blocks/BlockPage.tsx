@@ -175,6 +175,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
             finished
             kicker={t("plan.finished")}
             title={block.name}
+            description={block.description}
             when={`${blockDateRange(dated)} · ${t("calendar.weeks", { count: block.weeks })}`}
           />
           <BlockRecapView recap={blockRecap(log, dated, today)} workout={log.workout} />

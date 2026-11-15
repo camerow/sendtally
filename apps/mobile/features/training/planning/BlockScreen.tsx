@@ -34,6 +34,7 @@ import { BlockRecapView } from "./BlockRecapView";
 import { BlockWeek } from "./BlockWeek";
 import { PlanAgainSheet } from "./PlanAgainSheet";
 import { BlockHeader } from "./BlockHeader";
+import { Description } from "../components/Description";
 import { MoveStartSheet } from "./MoveStartSheet";
 
 export type BlockScreenProps = {
@@ -196,6 +197,11 @@ export function BlockScreen({
             <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
               {`${blockDateRange(dated)} · ${t("calendar.weeks", { count: block.weeks })}`}
             </Text>
+            {block.description !== "" && (
+              <View style={{ marginTop: 8 }}>
+                <Description text={block.description} fold />
+              </View>
+            )}
           </View>
           <BlockRecapView recap={blockRecap(log, dated, today)} workout={log.workout} />
           <BlockWeek

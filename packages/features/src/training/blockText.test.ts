@@ -5,6 +5,7 @@ import { blockDateRange, blockName, blockTag } from "./blockText";
 const block: DatedBlock = {
   id: "b1",
   name: "Autumn finger block",
+  description: "",
   start: "2026-09-28",
   weeks: 3,
   focus: null,

@@ -13,6 +13,7 @@ const weekly: Membership = {
 };
 const inBlock: Membership = { ...weekly, blockId: "b1" };
 const block = (start: string | null, weeks = 4): Block => ({
+  description: "",
   id: "b1",
   name: "Power phase",
   start,

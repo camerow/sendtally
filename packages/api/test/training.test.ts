@@ -53,7 +53,13 @@ const squatWorkout = {
   exerciseRestS: 120,
 };
 
-const blockBody = { name: "Winter base", start: "2026-11-02", weeks: 6, focus: null };
+const blockBody = {
+  name: "Winter base",
+  description: "",
+  start: "2026-11-02",
+  weeks: 6,
+  focus: null,
+};
 
 const membershipBody = {
   workoutId: "w1",
@@ -758,12 +764,61 @@ describe("blocks and memberships", () => {
   });
 });
 
-type ExerciseList = { exercises: { id: string; name: string; kind: string }[] };
+type ExerciseList = {
+  exercises: { id: string; name: string; kind: string; description: string }[];
+};
 
 const exerciseNames = async (userId: string): Promise<string[]> =>
   (await json<ExerciseList>(await call(userId, "GET", "/v1/exercises"))).exercises.map(
     (e) => e.name
   );
+
+describe("descriptions", () => {
+  const text = "Build the base.\n\n- Easy volume\n- https://sendtally.com";
+
+  it("saves a block's, keeps it when an older app sends none, and plans it again with it", async () => {
+    const userId = "user_block_description";
+    const saved = await call(userId, "PUT", "/v1/blocks/b1", {
+      ...blockBody,
+      description: ` ${text} `,
+    });
+    expect(await json(saved)).toEqual({ block: { id: "b1", ...blockBody, description: text } });
+    const { description: _, ...older } = blockBody;
+    await call(userId, "PUT", "/v1/blocks/b1", { ...older, weeks: 8 });
+    expect((await plan(userId)).blocks).toEqual([
+      { id: "b1", ...blockBody, weeks: 8, description: text },
+    ]);
+    const copy = await call(userId, "POST", "/v1/blocks/b1/copy", { id: "t1", start: null });
+    expect(await json(copy)).toMatchObject({ block: { id: "t1", description: text } });
+    await call(userId, "PUT", "/v1/blocks/b1", { ...blockBody, weeks: 8 });
+    expect((await plan(userId)).blocks.find((b) => b.id === "b1")?.description).toBe("");
+  });
+
+  it("saves an exercise's, keeps it on a rename from an older app, and clears it", async () => {
+    const userId = "user_exercise_description";
+    const body = { name: "Front lever", kind: "strength", description: text };
+    const created = await json<{ exercise: { description: string } }>(
+      await call(userId, "PUT", "/v1/exercises/e1", body)
+    );
+    expect(created.exercise.description).toBe(text);
+    await call(userId, "PUT", "/v1/exercises/e1", { name: "Tuck lever", kind: "strength" });
+    const listed = await json<ExerciseList>(await call(userId, "GET", "/v1/exercises"));
+    expect(listed.exercises.map((e) => [e.name, e.description])).toEqual([["Tuck lever", text]]);
+    await call(userId, "PUT", "/v1/exercises/e1", { ...body, description: "" });
+    const cleared = await json<ExerciseList>(await call(userId, "GET", "/v1/exercises"));
+    expect(cleared.exercises[0]?.description).toBe("");
+  });
+
+  it("rejects one past 2000 characters", async () => {
+    const userId = "user_description_long";
+    const long = "x".repeat(2001);
+    expect(
+      (await call(userId, "PUT", "/v1/blocks/b1", { ...blockBody, description: long })).status
+    ).toBe(400);
+    const exercise = { name: "Front lever", kind: "strength", description: long };
+    expect((await call(userId, "PUT", "/v1/exercises/e1", exercise)).status).toBe(400);
+  });
+});
 
 describe("exercises", () => {
   it("lists every name a workout or activity writes once, leaving grips out", async () => {
@@ -802,6 +857,7 @@ describe("exercises", () => {
         eachSide: false,
         progress: null,
         builtIn: null,
+        description: "",
         archived: false,
       },
     });

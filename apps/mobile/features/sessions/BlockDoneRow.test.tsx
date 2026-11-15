@@ -7,7 +7,14 @@ import { ActivityRow } from "./ActivityRow";
 import { BlockDoneRow } from "./BlockDoneRow";
 
 const recap: BlockRecap = {
-  block: { id: "b1", name: "Winter base", start: "2026-09-28", weeks: 4, focus: null },
+  block: {
+    id: "b1",
+    name: "Winter base",
+    description: "",
+    start: "2026-09-28",
+    weeks: 4,
+    focus: null,
+  },
   done: 12,
   planned: 15,
   missed: 3,

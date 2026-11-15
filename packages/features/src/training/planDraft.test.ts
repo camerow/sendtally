@@ -14,7 +14,14 @@ import {
 } from "./planDraft";
 import { scheduleOf, toggleDay } from "./weekDays";
 
-const block: DatedBlock = { id: "b", name: "Base", start: "2026-11-09", weeks: 4, focus: null };
+const block: DatedBlock = {
+  id: "b",
+  name: "Base",
+  description: "",
+  start: "2026-11-09",
+  weeks: 4,
+  focus: null,
+};
 const plan: Plan = {
   blocks: [block],
   memberships: [

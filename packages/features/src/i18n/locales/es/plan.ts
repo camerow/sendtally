@@ -36,6 +36,7 @@ export const plan = {
   "plan.create": "Crear",
   "plan.createBlock": "Crear bloque",
   "plan.blockNamePlaceholder": "Base de invierno",
+  "plan.blockDescriptionPlaceholder": "Para qué sirve este bloque",
   "plan.weeks": "Semanas",
   "plan.addWorkout": "Añadir entrenamiento",
   "plan.addToBlock": "Añadir un entrenamiento a {name}",

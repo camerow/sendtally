@@ -9,6 +9,7 @@ import {
 import { t } from "@sendtally/features/i18n";
 import { exerciseName, setKey, type SetAt } from "@sendtally/features/workouts";
 import { LetterBadge } from "../components/LetterBadge";
+import { AboutButton, type About } from "./AboutButton";
 import { RestPreview } from "./RestPreview";
 import { SetRow } from "./SetRow";
 
@@ -31,6 +32,8 @@ export type SetsCardProps = {
   go: (set: number) => React.ReactNode;
   /** What shows under a set: the rest its tick started, if it is running. */
   restUnder: (set: number) => React.ReactNode;
+  /** The exercise's description behind an info button beside its name; none without one. */
+  about?: About | undefined;
 };
 
 /** One exercise of the workout as a table of its sets, with its dose's letter when it alternates. */
@@ -48,13 +51,17 @@ export function SetsCard({
   holdRow,
   go,
   restUnder,
+  about,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
   const { name: doseName, setRestS = 0 } = item.dose;
   return (
     <section className="player-card">
       <div className="player-card-head">
-        <h2 className="player-card-name">{name}</h2>
+        <span className="player-card-title">
+          <h2 className="player-card-name">{name}</h2>
+          <AboutButton about={about} label={t("workouts.aboutExercise")} />
+        </span>
         {item.turn !== undefined && (
           <span className="player-card-turn">
             <LetterBadge dose={item.turn} />

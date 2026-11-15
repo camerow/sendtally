@@ -188,7 +188,35 @@ describe("exercise editor", () => {
       measure: "seconds",
       eachSide: false,
       progress: null,
+      description: "",
     });
+  });
+
+  it("writes its own description, trimmed, but none for a library exercise or a grip", async () => {
+    mockApi.saveExercise.mockResolvedValue({ exercise: anExercise("new-id", "Dips", "strength") });
+    await renderWithHang(<ExerciseEditorScreen kind="strength" />);
+    await fireEvent.changeText(screen.getByLabelText("Name"), "Dips");
+    await fireEvent.changeText(
+      screen.getByLabelText("Description"),
+      " Lean forward.\n\n- Slow down "
+    );
+    await fireEvent.press(screen.getByText("Save"));
+    await act(async () => undefined);
+    expect(mockApi.saveExercise).toHaveBeenCalledWith(
+      "new-id",
+      expect.objectContaining({ description: "Lean forward.\n\n- Slow down" })
+    );
+
+    await renderWithHang(<ExerciseEditorScreen kind="strength" id="e1" />, undefined, {
+      exercises: [anExercise("e1", "Plank", "strength", { description: "Brace." })],
+    });
+    expect(screen.getByLabelText("Description").props.value).toBe("Brace.");
+    await renderWithHang(<ExerciseEditorScreen kind="strength" id="e2" />, undefined, {
+      exercises: [anExercise("e2", "Pull-up", "strength", { builtIn: "pullUp" })],
+    });
+    expect(screen.queryByLabelText("Description")).toBeNull();
+    await renderWithHang(<ExerciseEditorScreen kind="hangboard" />);
+    expect(screen.queryByLabelText("Description")).toBeNull();
   });
 
   it("sets what a climbing exercise's progress follows, the climbs completed until picked", async () => {

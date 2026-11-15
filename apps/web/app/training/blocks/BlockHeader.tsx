@@ -9,6 +9,7 @@ import {
   keptName,
 } from "@sendtally/features/training";
 import { BlockHead } from "./BlockHead";
+import { MAX_DESCRIPTION } from "@sendtally/core/text";
 import { BlockWeekChips } from "./BlockWeekChips";
 
 export type BlockHeaderProps = {
@@ -48,6 +49,8 @@ export function BlockHeader({
 }: BlockHeaderProps): React.ReactElement {
   const dated = isDated(block) ? block : null;
   const [name, setName] = React.useState(block.name);
+  const [description, setDescription] = React.useState(block.description);
+  const descriptionId = React.useId();
   const kept = (typed: string): string => keptName(typed, block, savedName);
   const weeks = (n: number): void => {
     const next = clampWeeks(n, minWeeks);
@@ -76,6 +79,7 @@ export function BlockHeader({
           kicker={dated === null ? t("plan.template") : t("plan.scheduled")}
           title={blockName(block)}
           when={whenText}
+          description={block.description}
         />
         {chips}
       </>
@@ -119,6 +123,22 @@ export function BlockHeader({
           <span className="weeks-count">{t("calendar.weeks", { count: block.weeks })}</span>
           {step("+", t("hang.increase", { field: t("plan.weeks") }), 1)}
         </span>
+      </div>
+      <div className="form-section">
+        <label htmlFor={descriptionId} className="train-label">
+          {t("workouts.description")}
+        </label>
+        <textarea
+          id={descriptionId}
+          className="form-input form-notes"
+          value={description}
+          maxLength={MAX_DESCRIPTION}
+          placeholder={t("plan.blockDescriptionPlaceholder")}
+          onChange={(e) => {
+            setDescription(e.target.value);
+            onSave({ ...block, description: e.target.value.trim() });
+          }}
+        />
       </div>
       {chips}
     </>

@@ -20,6 +20,7 @@ export const workouts = {
   "workouts.namePlaceholder": "Dienstag im Gym",
   "workouts.description": "Beschreibung",
   "workouts.descriptionPlaceholder": "Wofür es ist und wie es geht",
+  "workouts.aboutExercise": "Über diese Übung",
   "workouts.noBody": "Keine Übungen oder Schritte. Bearbeite es, um welche hinzuzufügen.",
   "workouts.duplicate": "Duplizieren",
   "workouts.delete": "Workout löschen",

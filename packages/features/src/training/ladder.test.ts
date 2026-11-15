@@ -19,7 +19,14 @@ import type { DayToggle } from "./weekDays";
 import { doneAll, doneText, isTimeField, weekFieldMarked, weekFieldUnit } from "./weeks";
 
 // Mondays from 28 September, three weeks; Legs on Monday and Thursday.
-const block: DatedBlock = { id: "b1", name: "Base", start: "2026-09-28", weeks: 3, focus: null };
+const block: DatedBlock = {
+  id: "b1",
+  name: "Base",
+  description: "",
+  start: "2026-09-28",
+  weeks: 3,
+  focus: null,
+};
 const template: Block = { ...block, start: null };
 
 const legs: Workout = {

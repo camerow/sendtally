@@ -10,6 +10,7 @@ import {
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { exerciseName } from "@sendtally/features/workouts";
+import { AboutButton, type About } from "../components/AboutButton";
 import { Label } from "../components/Label";
 import { LetterBadge } from "../components/LetterBadge";
 import { RestPreview } from "../rest/RestPreview";
@@ -37,6 +38,8 @@ export type SetsCardProps = {
   go: (set: number) => React.ReactNode;
   /** What shows under a set: the rest its tick started, if it is running, else its rest to come. */
   restUnder: (set: number) => React.ReactNode;
+  /** The exercise's description behind an info button beside its name; none without one. */
+  about?: About | undefined;
 };
 
 /** One exercise of the workout as a table of its sets, with its dose's letter when it alternates. */
@@ -54,6 +57,7 @@ export function SetsCard({
   holdRow,
   go,
   restUnder,
+  about,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
   const { name: doseName, setRestS } = item.dose;
@@ -68,9 +72,12 @@ export function SetsCard({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8, paddingBottom: 4 }}>
-        <Text style={[type.bodyBold, { flex: 1, fontSize: 17, color: colors.gunmetal }]}>
-          {name}
-        </Text>
+        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <Text style={[type.bodyBold, { flexShrink: 1, fontSize: 17, color: colors.gunmetal }]}>
+            {name}
+          </Text>
+          <AboutButton about={about} label={t("workouts.aboutExercise")} color={colors.textMuted} />
+        </View>
         {item.turn !== undefined && (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "center" }}>
             <LetterBadge dose={item.turn} size={22} />

@@ -34,9 +34,11 @@ vi.mock("../library/useLibrary", async (actual) => ({
     },
   }),
 }));
+const mine = vi.hoisted(() => ({ exercises: [] as unknown[] }));
+
 vi.mock("@sendtally/features/statistics", async (actual) => ({
   ...(await actual<typeof T_statistics>()),
-  useExercises: () => ({ state: { status: "ready", data: [] } }),
+  useExercises: () => ({ state: { status: "ready", data: mine.exercises } }),
 }));
 vi.mock("@sendtally/features/activities", async (actual) => ({
   ...(await actual<typeof T_activities>()),
@@ -116,6 +118,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  mine.exercises = [];
   act(() => root.unmount());
   container.remove();
   store.clear();
@@ -123,6 +126,21 @@ afterEach(() => {
 });
 
 describe("Sets player", () => {
+  it("opens an exercise's description from the info button beside its name", () => {
+    mine.exercises = [
+      { id: "e1", name: "row", kind: "strength", description: "Pull to the hip." },
+      { id: "e2", name: "Back squat", kind: "strength", description: "" },
+    ];
+    mount();
+    const info = document.querySelectorAll('[aria-label="About this exercise"]');
+    expect(info).toHaveLength(1);
+    expect(info[0]?.closest(".player-card-title")?.textContent).toBe("Row");
+    act(() => (info[0] as HTMLElement).click());
+    expect(document.querySelector("dialog[open] .sheet-body")?.textContent).toBe(
+      "Pull to the hip."
+    );
+  });
+
   it("shows each set's target and last time, with the rests still to come", () => {
     mount();
     expect(container.querySelector(".player-title")?.textContent).toBe("Lower body A");

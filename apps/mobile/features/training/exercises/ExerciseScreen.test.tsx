@@ -129,6 +129,7 @@ describe("exercise screen", () => {
       measure: "repsWeight",
       eachSide: false,
       progress: null,
+      description: "",
     });
     await act(async () => undefined);
     expect(Alert.alert).toHaveBeenLastCalledWith(
@@ -165,6 +166,7 @@ describe("exercise screen", () => {
       measure: "seconds",
       eachSide: true,
       progress: null,
+      description: "",
     });
   });
 

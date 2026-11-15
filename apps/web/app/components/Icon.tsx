@@ -22,6 +22,7 @@ export type IconName =
   | "climbs"
   | "import"
   | "external"
+  | "arrowUpRight"
   | "train"
   | "star"
   | "stop"
@@ -81,6 +82,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   climbs: <path d="M3 19l6.5-11 4 6.5 2.5-3.5L21 19z" />,
   import: <path d="M12 4v10M7.5 9.5 12 14l4.5-4.5M4.5 15v4.5h15V15" />,
   external: <path d="M14 5h5v5M19 5l-8 8M17 14v5H5V7h5" />,
+  arrowUpRight: <path d="M7 17 17 7M8 7h9v9" />,
   up: <path d="M6 15l6-6 6 6" />,
   down: <path d="M6 9l6 6 6-6" />,
   restart: <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v4h4" />,

@@ -23,6 +23,7 @@ export type {
   PickerSource,
   TallyMeasure,
 } from "./types";
+export { exerciseAbout, type ExerciseAbout } from "./about";
 export * from "./exerciseText";
 export { usePickerWorld } from "./usePickerWorld";
 export { useExerciseActions, type ExerciseActions } from "./useExerciseActions";

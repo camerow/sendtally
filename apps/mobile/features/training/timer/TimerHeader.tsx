@@ -6,7 +6,8 @@ import { Button } from "../components/Button";
 import { IconButton } from "../components/IconButton";
 import { Label } from "../components/Label";
 import { ON_DARK, ON_DARK_LINE, ON_DARK_SOFT } from "@sendtally/features/workouts";
-import { WorkoutInfo } from "../components/WorkoutInfo";
+import { AboutButton } from "../components/AboutButton";
+import { useRunWorkout } from "../library/useLibrary";
 import { type } from "../type";
 
 export type TimerHeaderProps = {
@@ -28,6 +29,7 @@ export function TimerHeader({
   onEnd,
   onToggleMute,
 }: TimerHeaderProps): React.ReactElement {
+  const workout = useRunWorkout(workoutId);
   return (
     <View style={LIVE_HEADER}>
       <MinimiseButton color={ON_DARK} />
@@ -39,7 +41,7 @@ export function TimerHeader({
           >
             {name}
           </Text>
-          {workoutId !== null && <WorkoutInfo workoutId={workoutId} color={ON_DARK_SOFT} />}
+          <AboutButton about={workout} label={t("workouts.about")} color={ON_DARK_SOFT} />
         </View>
         <Label small color={ON_DARK_SOFT}>
           {meta}

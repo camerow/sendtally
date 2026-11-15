@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 import { defaultMeasure, GRIP_MEASURES, measuresFor, type WorkoutKind } from "@sendtally/core/hang";
+import { MAX_DESCRIPTION } from "@sendtally/core/text";
 import { colors } from "@sendtally/design/tokens";
 import {
   exerciseKindOf,
@@ -19,6 +20,7 @@ import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { useDiscardGuard } from "../../../lib/useDiscardGuard";
 import { pressRow } from "../../../lib/press";
 import { ChipRow } from "../components/ChipRow";
+import { EditorTextField } from "../components/EditorTextField";
 import { EditorHeader } from "../components/EditorHeader";
 import { NameField } from "../components/NameField";
 import { SheetSection } from "../components/SheetSection";
@@ -57,6 +59,8 @@ type FormProps = {
   onSave: (form: ExerciseForm, release: () => void) => void;
   /** A built-in's name, which stays as it is. */
   locked?: boolean;
+  /** Whether it takes a description of its own; one picked from the library reads the library's. */
+  describable?: boolean;
   /** What is wrong with a name, if anything. */
   nameError?: (name: string) => string | undefined;
 };
@@ -80,6 +84,7 @@ function Form({
   logged,
   onSave,
   locked = false,
+  describable = true,
   nameError = () => undefined,
 }: FormProps): React.ReactElement {
   const { model } = useHangData();
@@ -101,7 +106,7 @@ function Form({
 
   const save = (): void => {
     if (trimmed === "" || error !== undefined) return;
-    const saved = { ...form, name: trimmed };
+    const saved = { ...form, name: trimmed, description: form.description?.trim() };
     if (measureChangeNeedsWarning(untouched.measure, form.measure, logged))
       confirmDestructive({
         title: t("workouts.changeMeasureTitle", { name: trimmed }),
@@ -133,6 +138,16 @@ function Form({
         locked={locked ? t("workouts.builtInNameLocked") : undefined}
         error={error}
       />
+      {describable && !fingers && (
+        <EditorTextField
+          label={t("workouts.description")}
+          value={form.description ?? ""}
+          placeholder={t("workouts.descriptionPlaceholder")}
+          maxLength={MAX_DESCRIPTION}
+          multiline
+          onChange={(description) => setForm((f) => ({ ...f, description }))}
+        />
+      )}
       <SheetSection label={t("workouts.measuredIn")}>
         <ChipRow<Measure>
           value={form.measure}
@@ -249,7 +264,7 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
     series.status === "ready" && series.data.some((s) => s.key === exerciseKey(exercise.name));
 
   const save = (
-    { name, kind, measure, eachSide, progress }: ExerciseForm,
+    { name, kind, measure, eachSide, progress, description }: ExerciseForm,
     release: () => void
   ): void => {
     release();
@@ -261,6 +276,7 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
         measure: measure === "hang" ? exercise.measure : measure,
         eachSide,
         progress: progress ?? null,
+        ...(exercise.builtIn === null && { description: description ?? "" }),
       })
       .catch((error: unknown) => {
         const taken = takenBy(error);
@@ -276,8 +292,10 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
         measure: exercise.measure,
         eachSide: exercise.eachSide,
         progress: exercise.progress,
+        description: exercise.description,
       }}
       editing
+      describable={exercise.builtIn === null}
       logged={logged}
       onSave={save}
     />
