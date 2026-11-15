@@ -25,6 +25,8 @@ const clerkIssuer = (publishableKey: string): string =>
 // own title, or on a missing-capability report the assistant's description of what it lacked.
 const LOGBOOK_PROPERTIES = ["$mcp_parameters", "$mcp_response", "$mcp_error_message"];
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const TITLES = new Map(tools.map((t) => [t.name, t.title]));
 
 const RATE_LIMITED = "Too many requests from this connector. Wait a minute, then try again.";
@@ -48,6 +50,8 @@ function serverFor(c: Context<AppEnv>, user: ConnectorUser, posthog: PostHog | n
           event.event === "$mcp_missing_capability" ||
           event.properties.$mcp_intent_source === "inferred";
         if (!keepIntent) delete event.properties.$mcp_intent;
+        if (!UUID.test(String(event.properties.$mcp_conversation_id ?? "")))
+          delete event.properties.$mcp_conversation_id;
         return event;
       },
     });

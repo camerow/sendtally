@@ -201,6 +201,28 @@ describe("connector", () => {
     expect(new Set(sessions).size).toBe(1);
   });
 
+  it("never records a conversation handle the assistant made up", async () => {
+    const client = new PostHog("phc_test", {
+      host: "https://us.i.posthog.com",
+      fetch: async () => new Response("{}"),
+    });
+    const capture = vi.spyOn(client, "capture");
+    const getPostHog = vi.spyOn(posthog, "getPostHog").mockReturnValue(client);
+    const madeUp = "Crimp line project with Sam";
+    try {
+      await callTool("user_mcp", env, "list_sessions", { conversation_id: madeUp });
+      await callTool("user_mcp", env, "get_more_tools", {
+        context: "Rename",
+        conversation_id: madeUp,
+      });
+    } finally {
+      getPostHog.mockRestore();
+    }
+
+    expect(capture.mock.calls).toHaveLength(2);
+    expect(JSON.stringify(capture.mock.calls)).not.toContain("Crimp line");
+  });
+
   it("records a missing capability report with its text, and nothing else", async () => {
     const client = new PostHog("phc_test", {
       host: "https://us.i.posthog.com",
