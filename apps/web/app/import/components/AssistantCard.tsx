@@ -4,6 +4,7 @@ import { t } from "@sendtally/features/i18n";
 import { sectionLabel } from "../../components/styles";
 import { Section } from "../../settings/components/Section";
 import { bodyText } from "../../settings/components/styles";
+import { linkStyle } from "../styles";
 
 /** Importing through an AI app connected to sendtally, as the Agents page sets up. */
 export function AssistantCard(): React.ReactElement {
@@ -11,15 +12,7 @@ export function AssistantCard(): React.ReactElement {
     <Section>
       <span style={sectionLabel}>{t("import.assistantTitle")}</span>
       <p style={bodyText}>{t("import.assistantBody")}</p>
-      <Link
-        to="/agents"
-        style={{
-          fontSize: 15,
-          fontWeight: 600,
-          color: "var(--bs-azure-ink)",
-          textDecoration: "none",
-        }}
-      >
+      <Link to="/agents" style={linkStyle}>
         sendtally.com/agents
       </Link>
     </Section>

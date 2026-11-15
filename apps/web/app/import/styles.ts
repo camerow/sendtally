@@ -137,3 +137,12 @@ export const checkbox: React.CSSProperties = {
   accentColor: "var(--bs-gunmetal)",
   cursor: "pointer",
 };
+
+/** A link out of the import page: the source's site, or the Agents page. */
+export const linkStyle: React.CSSProperties = {
+  alignSelf: "flex-start",
+  fontSize: 15,
+  fontWeight: 600,
+  color: "var(--bs-azure-ink)",
+  textDecoration: "none",
+};

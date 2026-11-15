@@ -11,14 +11,7 @@ import {
 import { firstRunSourceLabel } from "@sendtally/features/settings";
 import { Section } from "../../settings/components/Section";
 import { Description } from "../../training/components/Description";
-
-const linkStyle: React.CSSProperties = {
-  alignSelf: "flex-start",
-  fontSize: 15,
-  fontWeight: 600,
-  color: "var(--bs-azure-ink)",
-  textDecoration: "none",
-};
+import { linkStyle } from "../styles";
 
 /** How to get the file out of the source first run picked: its steps, and a link to its site. */
 export function ExportHowTo({ source }: { source: ImportSource }): React.ReactElement {
