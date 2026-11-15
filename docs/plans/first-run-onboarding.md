@@ -101,6 +101,7 @@ Agreed with the designer; the two boards draw every state named here.
 - The signed-out `/onboarding` screen keeps `OnboardingCarousel`, Create account and Sign in.
 - Four new slides replace the current Log, Effort score, Strava and Stats slides (Will, 2026-11-14): What is sendtally? (the log, with the effort score folded into its copy), Exercises, Workouts, Blocks.
 - Each slide's art plays once when the slide shows; under Reduce Motion it shows its last frame.
+- No red text (Will, 2026-11-14; red is for destructive actions only): the eyebrows and the sent grades in the slide art move from `colors.labelAccent` to `colors.gunmetal`. Today that colour is set in `OnboardingCarousel.tsx:93` (eyebrow), `SlideArt.tsx:57` (`ClimbRow` sent grade) and `SlideArt.tsx:184`; any of them that survive the new slides change.
 - The Strava slide, and with it "a re-sync never posts twice", goes.
 - This is where exercise, workout and block are explained, before the person needs them.
 
