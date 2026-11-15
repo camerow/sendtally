@@ -15,6 +15,7 @@ import { Button } from "../training/components/Button";
 import { Description } from "../training/components/Description";
 import { Label } from "../training/components/Label";
 import { Title } from "../training/components/Title";
+import { AssistantCard } from "./AssistantCard";
 import { ConvertCard } from "./ConvertCard";
 
 /** How to get the file out of the source first run picked, with a link to its site. */
@@ -30,6 +31,7 @@ export function ExportHowTo({ source }: { source: ImportSource }): React.ReactEl
           text={stepsText([t("import.howToSpreadsheet1"), t("import.howToSpreadsheet2")])}
         />
         <ConvertCard />
+        <AssistantCard />
       </View>
     );
   const name = IMPORT_SERVICES[source];
@@ -50,7 +52,7 @@ export function ExportHowTo({ source }: { source: ImportSource }): React.ReactEl
       <View style={{ flexDirection: "row" }}>
         <Button
           variant="link"
-          label={exportLinkLabel(source, url, name)}
+          label={exportLinkLabel(source)}
           onPress={() => void Linking.openURL(url)}
           style={{ paddingHorizontal: 0 }}
         />

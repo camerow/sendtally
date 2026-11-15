@@ -1,4 +1,4 @@
-import { IMPORT_SERVICES } from "@sendtally/core/import";
+import { exportPageUrl, IMPORT_SERVICES } from "@sendtally/core/import";
 import { t } from "../i18n";
 
 export type ExportService = keyof typeof IMPORT_SERVICES;
@@ -12,36 +12,26 @@ export const importSourceOf = (from: string | null | undefined): ImportSource | 
     ? (from as ImportSource)
     : undefined;
 
-// Menu names stay as each service writes them, in English, in every locale. 8a.nu's come from
-// Kaya's and theCrag's help pages, since 8a.nu documents none; keep them here to update in one place.
-const MENUS = {
-  logbook: "My Logbook",
-  about: "About",
-  eightAExport: "Logbook Export (CSV)",
-  ticks: "Ticks",
-  ticksExport: "Export CSV",
-  action: "Action",
-  logbookCsv: "Select logbook as CSV",
-};
-
 /** How to get the export out of a service, in order; Kaya documents none, so it has no steps. */
 export function exportSteps(service: ExportService): string[] {
   const choose = t("import.howToChoose");
+  // Menu names stay as each service writes them, in English, in every locale. 8a.nu's come from
+  // Kaya's and theCrag's help pages, since 8a.nu documents none.
   switch (service) {
     case "kaya":
       return [];
     case "8a":
       return [
-        t("import.howTo8a1", { logbook: MENUS.logbook }),
-        t("import.howTo8a2", { about: MENUS.about }),
-        t("import.howTo8a3", { export: MENUS.eightAExport }),
-        t("import.howTo8a4"),
+        t("import.howTo8a1", { logbook: "My Logbook" }),
+        t("import.howTo8a2", { about: "About" }),
+        t("import.howTo8a3", { export: "Logbook Export (CSV)" }),
+        `${choose} ${t("import.howTo8aTries")}`,
       ];
     case "mountainProject":
       return [
         t("import.howToMountainProject1"),
-        t("import.howToMountainProject2", { ticks: MENUS.ticks }),
-        t("import.howToMountainProject3", { export: MENUS.ticksExport }),
+        t("import.howToMountainProject2", { ticks: "Ticks" }),
+        t("import.howToMountainProject3", { export: "Export CSV" }),
         choose,
       ];
     case "sendage":
@@ -49,7 +39,7 @@ export function exportSteps(service: ExportService): string[] {
     case "theCrag":
       return [
         t("import.howToTheCrag1"),
-        t("import.howToTheCrag2", { menu: MENUS.action, export: MENUS.logbookCsv }),
+        t("import.howToTheCrag2", { menu: "Action", export: "Select logbook as CSV" }),
         t("import.howToTheCrag3"),
         choose,
       ];
@@ -57,10 +47,12 @@ export function exportSteps(service: ExportService): string[] {
 }
 
 /** The label of the link beside the steps: the site it opens, or a search where there is none. */
-export function exportLinkLabel(service: ExportService, url: string, name: string): string {
+export function exportLinkLabel(service: ExportService): string {
   return service === "kaya"
-    ? t("import.howToSearch", { service: name })
-    : t("import.howToOpen", { site: new URL(url).hostname.replace(/^www\./, "") });
+    ? t("import.howToSearch", { service: IMPORT_SERVICES.kaya })
+    : t("import.howToOpen", {
+        site: new URL(exportPageUrl(service)).hostname.replace(/^www\./, ""),
+      });
 }
 
 /** Steps as a description's numbered lines, so both apps draw them as any other steps. */

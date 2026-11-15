@@ -95,6 +95,7 @@ export function ImportScreen({
   if (review === null) {
     return (
       <ScreenFrame
+        backLabel={then === "/first-run" ? t("import.backToFirstRun") : undefined}
         footer={
           <View style={{ gap: 6 }}>
             <Button variant="azure" label={t("import.chooseFile")} onPress={() => void pick()} />

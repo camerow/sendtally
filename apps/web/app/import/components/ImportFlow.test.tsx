@@ -51,4 +51,12 @@ describe("import on the web", () => {
     expect(text()).toContain("Where to export");
     expect(text()).not.toContain("Skip for now");
   });
+
+  it("opened from first run for a spreadsheet, points at the column guide and the prompt below", () => {
+    render({ then: "/app/start", from: "spreadsheet" });
+    expect(text()).toContain("The column guide and a template are below.");
+    expect(text()).toContain("Sendtally CSV format");
+    expect(text()).toContain("Use your own AI app");
+    expect(host.querySelector('a[href="/agents"]')?.textContent).toBe("sendtally.com/agents");
+  });
 });

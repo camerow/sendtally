@@ -3,6 +3,7 @@ import { Text } from "react-native";
 import { t } from "@sendtally/features/i18n";
 import { bodyText } from "../../lib/styles";
 import { AMBER } from "../training/components/tints";
+import { AssistantCard } from "./AssistantCard";
 import { ConvertCard } from "./ConvertCard";
 import { ImportHero } from "./ImportHero";
 
@@ -20,6 +21,7 @@ export function NotRecognized({ fileName }: { fileName: string }): React.ReactEl
         {t("import.nothingFoundMobile")}
       </Text>
       <ConvertCard />
+      <AssistantCard />
     </>
   );
 }

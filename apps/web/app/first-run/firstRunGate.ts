@@ -7,3 +7,7 @@ export function firstRunGate(path: string, firstRun: boolean | undefined): strin
     return path === "/app/start" || path === "/app/import" ? null : "/app/start";
   return path === "/app/start" ? "/app" : null;
 }
+
+/** Whether an import page was opened from first run, which takes it back there. */
+export const fromFirstRun = (search: string): boolean =>
+  new URLSearchParams(search).get("then") === "/app/start";

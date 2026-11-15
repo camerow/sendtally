@@ -7,7 +7,7 @@ import { t } from "@sendtally/features/i18n";
 import { ErrorPage } from "../components/ErrorPage";
 import { Icon, type IconName } from "../components/Icon";
 import { requireApi } from "../lib/api.server";
-import { firstRunGate } from "../first-run/firstRunGate";
+import { firstRunGate, fromFirstRun } from "../first-run/firstRunGate";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { AccountButton } from "../components/AccountButton";
 import { LiveBar } from "../components/LiveBar";
@@ -177,9 +177,7 @@ export default function AppLayout(): React.ReactElement {
   const { userId } = useAuth();
   const { pathname, search } = useLocation();
   // First run and the import it opens draw their own frame, as the phone's are full screens.
-  const bare =
-    pathname === "/app/start" ||
-    (pathname === "/app/import" && new URLSearchParams(search).get("then") === "/app/start");
+  const bare = pathname === "/app/start" || (pathname === "/app/import" && fromFirstRun(search));
   return (
     <GradeScalesProvider api={api}>
       <LibraryProvider api={api}>

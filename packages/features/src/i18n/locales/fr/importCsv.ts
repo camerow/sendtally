@@ -99,8 +99,6 @@ export const importCsv = {
   "import.selectNone": "Effacer",
   "import.selectNamed": "Choisir les séances nommées…",
   "import.selectSession": "Choisir {name}, {date}",
-  "import.connectorLine":
-    "Ou connecte Claude ou ChatGPT à sendtally et laisse-le importer le fichier pour toi.",
   "import.supportedApps": "Applications prises en charge",
   "import.chooseFile": "Choisir un fichier CSV",
   "import.notRecognized": "Non reconnu",
@@ -125,8 +123,8 @@ export const importCsv = {
   "import.howTo8a1": "Sur un ordinateur, connectez-vous à 8a.nu et ouvrez « {logbook} ».",
   "import.howTo8a2": "Sélectionnez le crayon à côté de « {about} ».",
   "import.howTo8a3": "Tout en bas, sous « {export} », téléchargez le fichier.",
-  "import.howTo8a4":
-    "Choisissez le fichier ici. 8a.nu ne compte pas les essais, chaque voie est donc importée avec un essai.",
+  "import.howTo8aTries":
+    "8a.nu ne compte pas les essais, chaque voie est donc importée avec un essai.",
   "import.howToMountainProject1": "Connectez-vous à mountainproject.com.",
   "import.howToMountainProject2": "Ouvrez votre profil, puis « {ticks} ».",
   "import.howToMountainProject3": "Sélectionnez « {export} » pour télécharger le fichier.",
@@ -141,4 +139,12 @@ export const importCsv = {
   "import.howToSpreadsheet2":
     "Pour le reste : partagez le prompt ci-dessous avec Claude ou ChatGPT avec votre tableau, puis choisissez le CSV qu'il vous renvoie.",
   "import.skipForNow": "Passer pour l'instant",
+  "import.assistantTitle": "Utiliser votre propre app d'IA",
+  "import.assistantBody":
+    "Connectez Claude ou ChatGPT à sendtally et demandez-lui d'importer le fichier pour vous.",
+  "import.backToFirstRun": "Votre ancien carnet",
+  "import.howToSpreadsheetWeb1":
+    "Seuls les tableaux aux colonnes sendtally s'importent tels quels. Le guide des colonnes et un modèle sont ci-dessous.",
+  "import.howToSpreadsheetWeb2":
+    "Pour le reste : copiez le prompt ci-dessous dans Claude ou ChatGPT avec votre tableau, puis choisissez le CSV qu'il vous renvoie.",
 } as const;

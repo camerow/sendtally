@@ -96,8 +96,6 @@ export const importCsv = {
   "import.selectNone": "Clear",
   "import.selectNamed": "Select sessions named…",
   "import.selectSession": "Select {name}, {date}",
-  "import.connectorLine":
-    "Or connect Claude or ChatGPT to sendtally and let it import the file for you.",
   "import.supportedApps": "Supported apps",
   "import.chooseFile": "Choose a CSV file",
   "import.notRecognized": "Not recognized",
@@ -122,8 +120,7 @@ export const importCsv = {
   "import.howTo8a1": "On a computer, sign in at 8a.nu and open “{logbook}”.",
   "import.howTo8a2": "Select the pencil next to “{about}”.",
   "import.howTo8a3": "At the bottom, under “{export}”, download the file.",
-  "import.howTo8a4":
-    "Choose the file here. 8a.nu does not count tries, so each climb imports as one try.",
+  "import.howTo8aTries": "8a.nu does not count tries, so each climb imports as one try.",
   "import.howToMountainProject1": "Sign in at mountainproject.com.",
   "import.howToMountainProject2": "Open your profile, then “{ticks}”.",
   "import.howToMountainProject3": "Select “{export}” to download the file.",
@@ -138,4 +135,12 @@ export const importCsv = {
   "import.howToSpreadsheet2":
     "Anything else: share the prompt below with Claude or ChatGPT along with your sheet, then choose the CSV it gives back.",
   "import.skipForNow": "Skip for now",
+  "import.assistantTitle": "Use your own AI app",
+  "import.assistantBody":
+    "Connect Claude or ChatGPT to sendtally and ask it to import the file for you.",
+  "import.backToFirstRun": "Your old log",
+  "import.howToSpreadsheetWeb1":
+    "Only sheets in the sendtally columns import as they are. The column guide and a template are below.",
+  "import.howToSpreadsheetWeb2":
+    "Anything else: copy the prompt below into Claude or ChatGPT along with your sheet, then choose the CSV it gives back.",
 } as const;

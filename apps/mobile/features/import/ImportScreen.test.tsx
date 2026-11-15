@@ -37,4 +37,17 @@ describe("import", () => {
     expect(screen.getByText("Supported apps")).toBeTruthy();
     expect(screen.queryByText("Skip for now")).toBeNull();
   });
+
+  it("for a spreadsheet, gives the steps, the prompt to share and the AI app route", async () => {
+    await render(<ImportScreen then="/first-run" from="spreadsheet" />);
+    expect(screen.getByText("Bring in your spreadsheet")).toBeTruthy();
+    expect(screen.getByText("Share prompt")).toBeTruthy();
+    expect(screen.getByText("Use your own AI app")).toBeTruthy();
+    expect(screen.getByText("sendtally.com/agents")).toBeTruthy();
+  });
+
+  it("goes back to first run's question as Your old log", async () => {
+    await render(<ImportScreen then="/first-run" from="8a" />);
+    expect(screen.getByText("Your old log")).toBeTruthy();
+  });
 });

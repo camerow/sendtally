@@ -120,7 +120,7 @@ export function ImportFlow({
         (then === undefined ? (
           <BackLink to="/app/settings">{t("common.settings")}</BackLink>
         ) : (
-          <BackLink to={then}>{t("common.back")}</BackLink>
+          <BackLink to={then}>{t("import.backToFirstRun")}</BackLink>
         ))}
       {state.step === "review" && (
         <button
@@ -144,7 +144,7 @@ export function ImportFlow({
 
       {state.step === "choose" && (
         <>
-          {from !== undefined && from !== "spreadsheet" && <ExportHowTo service={from} />}
+          {from !== undefined && <ExportHowTo source={from} />}
           <DropZone onFile={(file) => void choose(file)} links={from === undefined} />
           <FormatGuide />
         </>

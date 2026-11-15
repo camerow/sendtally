@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { exportPageUrl } from "@sendtally/core/import";
 import { exportLinkLabel, exportSteps, importSourceOf, stepsText } from "./exportSteps";
 
 describe("exportSteps", () => {
@@ -20,15 +19,17 @@ describe("exportSteps", () => {
 
   it("gives Kaya no steps, only its search", () => {
     expect(exportSteps("kaya")).toEqual([]);
-    expect(exportLinkLabel("kaya", exportPageUrl("kaya"), "Kaya")).toBe(
-      "Search for the Kaya export"
-    );
+    expect(exportLinkLabel("kaya")).toBe("Search for the Kaya export");
   });
 
   it("labels a link by the site it opens", () => {
-    expect(exportLinkLabel("8a", exportPageUrl("8a"), "8a.nu")).toBe("Open 8a.nu");
-    expect(exportLinkLabel("theCrag", exportPageUrl("theCrag"), "theCrag")).toBe(
-      "Open thecrag.com"
+    expect(exportLinkLabel("8a")).toBe("Open 8a.nu");
+    expect(exportLinkLabel("theCrag")).toBe("Open thecrag.com");
+  });
+
+  it("ends 8a.nu on choosing the file, then why each climb is one try", () => {
+    expect(exportSteps("8a")[3]).toBe(
+      "Choose the file here. 8a.nu does not count tries, so each climb imports as one try."
     );
   });
 

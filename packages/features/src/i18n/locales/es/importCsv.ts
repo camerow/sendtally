@@ -99,8 +99,6 @@ export const importCsv = {
   "import.selectNone": "Borrar",
   "import.selectNamed": "Elegir sesiones llamadas…",
   "import.selectSession": "Elegir {name}, {date}",
-  "import.connectorLine":
-    "O conecta Claude o ChatGPT a sendtally y deja que importe el archivo por ti.",
   "import.supportedApps": "Apps compatibles",
   "import.chooseFile": "Elegir un archivo CSV",
   "import.notRecognized": "No reconocido",
@@ -125,8 +123,8 @@ export const importCsv = {
   "import.howTo8a1": "En un ordenador, inicia sesión en 8a.nu y abre «{logbook}».",
   "import.howTo8a2": "Selecciona el lápiz junto a «{about}».",
   "import.howTo8a3": "Abajo del todo, en «{export}», descarga el archivo.",
-  "import.howTo8a4":
-    "Elige el archivo aquí. 8a.nu no cuenta los intentos, así que cada vía se importa con un intento.",
+  "import.howTo8aTries":
+    "8a.nu no cuenta los intentos, así que cada vía se importa con un intento.",
   "import.howToMountainProject1": "Inicia sesión en mountainproject.com.",
   "import.howToMountainProject2": "Abre tu perfil y luego «{ticks}».",
   "import.howToMountainProject3": "Selecciona «{export}» para descargar el archivo.",
@@ -141,4 +139,12 @@ export const importCsv = {
   "import.howToSpreadsheet2":
     "Para todo lo demás: comparte el prompt de abajo con Claude o ChatGPT junto con tu hoja y luego elige el CSV que te devuelva.",
   "import.skipForNow": "Omitir por ahora",
+  "import.assistantTitle": "Usa tu propia app de IA",
+  "import.assistantBody":
+    "Conecta Claude o ChatGPT a sendtally y pídele que importe el archivo por ti.",
+  "import.backToFirstRun": "Tu registro anterior",
+  "import.howToSpreadsheetWeb1":
+    "Solo las hojas con las columnas de sendtally se importan tal cual. La guía de columnas y una plantilla están abajo.",
+  "import.howToSpreadsheetWeb2":
+    "Para todo lo demás: copia el prompt de abajo en Claude o ChatGPT junto con tu hoja y luego elige el CSV que te devuelva.",
 } as const;

@@ -7,6 +7,7 @@ import { useClientApi } from "../lib/useClientApi";
 import { useHydrated } from "../lib/useHydrated";
 import { importSourceOf } from "@sendtally/features/import";
 import { FirstRunImport } from "../first-run/FirstRunImport";
+import { fromFirstRun } from "../first-run/firstRunGate";
 import firstRunStyles from "../first-run/first-run.css?url";
 import { ImportFlow } from "../import/components/ImportFlow";
 import trainingStyles from "../training/training.css?url";
@@ -29,7 +30,7 @@ export default function ImportRoute(): React.ReactElement {
   const [params] = useSearchParams();
   const from = importSourceOf(params.get("from"));
   if (!hydrated) return <div />;
-  return params.get("then") === "/app/start" ? (
+  return fromFirstRun(params.toString()) ? (
     <FirstRunImport api={api} from={from} />
   ) : (
     <ImportFlow api={api} />

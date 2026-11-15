@@ -99,8 +99,6 @@ export const importCsv = {
   "import.selectNone": "Auswahl aufheben",
   "import.selectNamed": "Sessions mit Namen auswählen…",
   "import.selectSession": "{name}, {date} auswählen",
-  "import.connectorLine":
-    "Oder verbinde Claude oder ChatGPT mit sendtally und lass die Datei für dich importieren.",
   "import.supportedApps": "Unterstützte Apps",
   "import.chooseFile": "CSV-Datei auswählen",
   "import.notRecognized": "Nicht erkannt",
@@ -125,8 +123,8 @@ export const importCsv = {
   "import.howTo8a1": "Melde dich am Computer bei 8a.nu an und öffne „{logbook}“.",
   "import.howTo8a2": "Wähle den Stift neben „{about}“.",
   "import.howTo8a3": "Lade die Datei ganz unten unter „{export}“ herunter.",
-  "import.howTo8a4":
-    "Wähle die Datei hier aus. 8a.nu zählt keine Versuche, daher wird jede Route mit einem Versuch importiert.",
+  "import.howTo8aTries":
+    "8a.nu zählt keine Versuche, daher wird jede Route mit einem Versuch importiert.",
   "import.howToMountainProject1": "Melde dich bei mountainproject.com an.",
   "import.howToMountainProject2": "Öffne dein Profil, dann „{ticks}“.",
   "import.howToMountainProject3": "Wähle „{export}“, um die Datei herunterzuladen.",
@@ -141,4 +139,12 @@ export const importCsv = {
   "import.howToSpreadsheet2":
     "Alles andere: Teile den Prompt unten zusammen mit deiner Tabelle mit Claude oder ChatGPT und wähle dann die CSV-Datei, die du zurückbekommst.",
   "import.skipForNow": "Vorerst überspringen",
+  "import.assistantTitle": "Deine eigene KI-App nutzen",
+  "import.assistantBody":
+    "Verbinde Claude oder ChatGPT mit sendtally und lass die Datei für dich importieren.",
+  "import.backToFirstRun": "Dein altes Logbuch",
+  "import.howToSpreadsheetWeb1":
+    "Nur Tabellen mit den sendtally-Spalten werden direkt importiert. Spaltenanleitung und Vorlage findest du unten.",
+  "import.howToSpreadsheetWeb2":
+    "Alles andere: Kopiere den Prompt unten zusammen mit deiner Tabelle in Claude oder ChatGPT und wähle dann die CSV-Datei, die du zurückbekommst.",
 } as const;
