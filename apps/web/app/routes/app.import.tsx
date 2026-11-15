@@ -5,6 +5,7 @@ import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
 import { useHydrated } from "../lib/useHydrated";
+import { importSourceOf } from "@sendtally/features/import";
 import { ImportFlow } from "../import/components/ImportFlow";
 
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
@@ -18,5 +19,6 @@ export default function ImportRoute(): React.ReactElement {
   const hydrated = useHydrated();
   const [params] = useSearchParams();
   const then = params.get("then") === "/app/start" ? "/app/start" : undefined;
-  return hydrated ? <ImportFlow api={api} then={then} /> : <div />;
+  const from = importSourceOf(params.get("from"));
+  return hydrated ? <ImportFlow api={api} then={then} from={from} /> : <div />;
 }

@@ -42,7 +42,7 @@ describe("first run", () => {
     await fireEvent.press(screen.getByText("Import from Mountain Project"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/import",
-      params: { then: "/first-run" },
+      params: { then: "/first-run", from: "mountainProject" },
     });
     expect(mockStep.mock.calls).toEqual([
       [{ step: "started" }],

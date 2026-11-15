@@ -17,7 +17,8 @@ describe("review helpers", () => {
   it("sums the plan for the review step", () => {
     expect(planStats(planImport(sendtally, "UTC").sessions)).toEqual({
       sessions: 5,
-      climbs: 7,
+      sends: 6,
+      attempts: 1,
       topGrade: "V9",
     });
   });

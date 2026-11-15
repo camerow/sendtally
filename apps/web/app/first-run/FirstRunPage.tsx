@@ -20,13 +20,17 @@ export function FirstRunPage(): React.ReactElement {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const imported = readImportResult((k) => params.get(k)) !== null;
+  const later = params.get("later") === "1";
   const flow = useFirstRunFlow(useAppApi(), {
-    imported,
+    imported: imported || later,
     today: useToday(),
     newId: () => crypto.randomUUID(),
     actions: usePlanActions(),
     go: (to) => {
-      if (to === "import") void navigate("/app/import?then=/app/start");
+      if (to === "import")
+        void navigate(
+          `/app/import?then=/app/start${flow.source === null ? "" : `&from=${flow.source}`}`
+        );
       else if (to === "log") void navigate("/app", { replace: true });
       else void navigate(imported ? `/app/plan?${params}` : "/app/plan", { replace: true });
     },

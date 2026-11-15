@@ -73,8 +73,8 @@ export function ImportReview({
         <SummaryTiles
           stats={[
             { value: formatNumber(stats.sessions), label: t("import.statSessions") },
-            { value: formatNumber(stats.climbs), label: t("import.statClimbs") },
-            { value: stats.topGrade ?? "–", label: t("import.statTopGrade") },
+            { value: formatNumber(stats.sends), label: t("import.statSends") },
+            { value: formatNumber(stats.attempts), label: t("import.statAttempts") },
           ]}
         />
       </View>

@@ -24,16 +24,25 @@ import { useReminderPrompt } from "../training/reminders/ReminderPromptProvider"
 
 /** Once per account: the log they keep already, then the days they climb, ending on Plan. */
 export function FirstRunScreen(): React.ReactElement {
-  const params = useLocalSearchParams<{ imported?: string; skipped?: string; likely?: string }>();
+  const params = useLocalSearchParams<{
+    imported?: string;
+    skipped?: string;
+    likely?: string;
+    later?: string;
+  }>();
   const result = readImportResult((k) => params[k as keyof typeof params]);
   const flow = useFirstRunFlow(useApi(), {
-    imported: result !== null,
+    imported: result !== null || params.later === "1",
     today: useToday(),
     newId: randomUUID,
     actions: usePlanActions(),
     onPlanned: useReminderPrompt(),
     go: (to) => {
-      if (to === "import") router.push({ pathname: "/import", params: { then: "/first-run" } });
+      if (to === "import")
+        router.push({
+          pathname: "/import",
+          params: { then: "/first-run", ...(flow.source !== null && { from: flow.source }) },
+        });
       else if (to === "log") router.replace("/(tabs)/sessions");
       else router.replace({ pathname: "/(tabs)/today", params: result === null ? {} : params });
     },

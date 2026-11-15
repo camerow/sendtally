@@ -51,7 +51,12 @@ export const IMPORT_SERVICES: { [F in Exclude<ImportFormat, "sendtally">]: strin
   theCrag: "theCrag",
 };
 
+// Each service's own export help where it has a public one, else its site: an export lives
+// on a per-account page. Kaya documents none, so it keeps a search.
 const EXPORT_PAGES: { [F in keyof typeof IMPORT_SERVICES]?: string } = {
+  "8a": "https://www.8a.nu",
+  mountainProject: "https://www.mountainproject.com",
+  sendage: "https://sendage.com",
   theCrag: "https://www.thecrag.com/en/article/exportlogbook",
 };
 

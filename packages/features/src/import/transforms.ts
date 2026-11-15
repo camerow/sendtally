@@ -2,20 +2,28 @@ import { effortGrade, formatGrade, type Grade } from "@sendtally/core";
 import type { ImportSession } from "@sendtally/core/import";
 import { sameTagName } from "../sessions/tags";
 
-export type PlanStats = { sessions: number; climbs: number; topGrade: string | null };
+export type PlanStats = {
+  sessions: number;
+  sends: number;
+  attempts: number;
+  topGrade: string | null;
+};
 
 export function planStats(sessions: ImportSession[]): PlanStats {
   let top: Grade | undefined;
-  let climbs = 0;
+  let sends = 0;
+  let attempts = 0;
   for (const s of sessions) {
     for (const c of s.climbs) {
-      climbs++;
+      if (c.kind === "send") sends++;
+      else attempts++;
       if (top === undefined || effortGrade(c.grade) > effortGrade(top)) top = c.grade;
     }
   }
   return {
     sessions: sessions.length,
-    climbs,
+    sends,
+    attempts,
     topGrade: top === undefined ? null : formatGrade(top),
   };
 }

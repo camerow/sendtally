@@ -1,10 +1,18 @@
 import React from "react";
 import { Button } from "@sendtally/design";
+import { CSV_TYPES } from "@sendtally/features/import";
 import { t } from "@sendtally/features/i18n";
 import { monoMuted } from "../../settings/components/styles";
 import { ServiceLinks } from "./ServiceLinks";
 
-export function DropZone({ onFile }: { onFile: (file: File) => void }): React.ReactElement {
+export function DropZone({
+  onFile,
+  links = true,
+}: {
+  onFile: (file: File) => void;
+  /** Off where the page already shows the one source's steps and link. */
+  links?: boolean;
+}): React.ReactElement {
   const [over, setOver] = React.useState(false);
   const input = React.useRef<HTMLInputElement>(null);
   return (
@@ -60,7 +68,7 @@ export function DropZone({ onFile }: { onFile: (file: File) => void }): React.Re
         className="visually-hidden"
         tabIndex={-1}
         type="file"
-        accept=".csv,text/csv"
+        accept={[".csv", ...CSV_TYPES].join(",")}
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file !== undefined) onFile(file);
@@ -69,7 +77,7 @@ export function DropZone({ onFile }: { onFile: (file: File) => void }): React.Re
       <span style={{ ...monoMuted, textAlign: "center", maxWidth: 480 }}>
         {t("import.dropHint")}
       </span>
-      <ServiceLinks />
+      {links && <ServiceLinks />}
     </div>
   );
 }

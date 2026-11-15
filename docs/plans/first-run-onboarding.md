@@ -277,7 +277,10 @@ Slice 4 adds: "Logging a workout is recorded as whether it was on your plan and 
 ## 6. Delivery slices
 
 1. **The two steps, on mobile and web (built).** The "Climbing" built-in with no items, `users.first_run_step`, both steps with the import exit, the reminder sheet as is on the phone, the end on Plan with the import toast, the three first-run events, the privacy line, and Start on a web Climbing day opening the live session.
-2. **Per-source import steps, both apps**: the steps view, direct links, sends and attempts on the review, the wider mobile picker, and on the web `/app/import?from=<source>` (Import board, frame 10).
+2. **Per-source import steps, both apps (built).** The steps view, links, sends and attempts on the review, the wider mobile picker and web accept list, Skip for now from the import page to the days step, and on the web `/app/import?from=<source>` (Import board, frame 10).
+   Links: theCrag keeps its export article; 8a.nu, Mountain Project and Sendage open their sites, since each export sits on a per-account page and none has a public export help page; Kaya keeps its search.
+   Sendage's steps name no menu and leave out the 30-day limit, because neither could be confirmed from a public source. 8a.nu's menu names come from Kaya's help, since 8a.nu documents none; they live in `MENUS` in `packages/features/src/import/exportSteps.ts`.
+   The board's new MCP card on the spreadsheet and Not recognized frames is left for later; the spreadsheet frame reuses the convert card.
 3. **The carousel, mobile only**: four new slides replacing the current four, with play-once art and Reduce Motion; the web marketing landing stays as is.
 4. **Measuring the planned week (built, `feat/workout-logged-event`)**: `workout_logged` with `built_in` and `planned`, on the Worker.
 

@@ -145,8 +145,8 @@ export function ImportReview({
             }}
           >
             <Stat value={stats.sessions} label={t("import.statSessions")} />
-            <Stat value={stats.climbs} label={t("import.statClimbs")} />
-            <Stat value={stats.topGrade ?? "–"} label={t("import.statTopGrade")} />
+            <Stat value={stats.sends} label={t("import.statSends")} />
+            <Stat value={stats.attempts} label={t("import.statAttempts")} />
             <Stat
               value={plan.issues.length}
               label={t("import.statSkipped")}

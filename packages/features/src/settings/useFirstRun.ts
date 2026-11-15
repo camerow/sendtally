@@ -32,7 +32,7 @@ type FirstRunEnd = Extract<FirstRunStep, { step: "finished" }>["endedAt"];
 export type FirstRunExit = "import" | "plan" | "log";
 
 export type FirstRunFlowOptions = {
-  /** Back from an import, so on the days step. */
+  /** Back from the import, imported or skipped for now, so on the days step. */
   imported: boolean;
   today: CalendarDate;
   newId: () => string;
