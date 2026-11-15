@@ -208,7 +208,7 @@ export async function showsFirstRun(
   id: string,
   user: UserRow | null
 ): Promise<boolean> {
-  if (user?.first_run_done === 1) return false;
+  if (user?.first_run_step === 3) return false;
   const d = drizzle(db);
   const any = (t: typeof sessions | typeof hangSessions | typeof activities | typeof memberships) =>
     d.select({ id: t.user_id }).from(t).where(eq(t.user_id, id)).limit(1);
@@ -216,23 +216,18 @@ export async function showsFirstRun(
   return used.every((rows) => rows.length === 0);
 }
 
-/** Moves first run on to a step, never back; true only the first time, so its event fires once. */
+/** Moves first run on to a step (1 started, 2 answered, 3 done), never back; true only the first time. */
 export async function reachFirstRunStep(
   db: D1Database,
   id: string,
-  step: 1 | 2,
-  log?: NonNullable<UserRow["first_run_log"]>
+  step: 1 | 2 | 3
 ): Promise<boolean> {
   const moved = await drizzle(db)
     .update(users)
-    .set({ first_run_step: step, ...(log !== undefined && { first_run_log: log }) })
+    .set({ first_run_step: step })
     .where(and(eq(users.id, id), lt(users.first_run_step, step)))
     .returning({ id: users.id });
   return moved.length > 0;
-}
-
-export async function finishFirstRun(db: D1Database, id: string): Promise<void> {
-  await drizzle(db).update(users).set({ first_run_done: 1 }).where(eq(users.id, id));
 }
 
 export type StravaConnectionInput = {

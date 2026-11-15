@@ -19,7 +19,6 @@ import { z } from "zod";
 import { auth } from "./auth";
 import type { Env } from "./bindings";
 import { type AppEnv, captureEvent, invalidBody } from "./context";
-import { users } from "./db/schema";
 import { hang } from "./hang";
 import { activities, blocks, exercises, memberships, plan, workouts } from "./training";
 import { purgeAccount } from "./lib/account";
@@ -194,13 +193,15 @@ const saveEntry = async (
   return { entry: await entryResponse(c.env, userId, id) };
 };
 
-/** Step 1 answered, by any way out of it; its event fires once per account. */
+/** Step 1 answered, by any way out of it; its event and the person property are set once. */
 const answerFirstRunLog = async (
   c: Context<AppEnv>,
   existingLog: z.output<typeof firstRunLog>
 ): Promise<void> => {
-  if (await repo.reachFirstRunStep(c.env.DB, c.get("userId"), 2, existingLog))
-    await captureEvent(c, "first_run_log_answered", { existing_log: existingLog });
+  const userId = c.get("userId");
+  if (!(await repo.reachFirstRunStep(c.env.DB, userId, 2))) return;
+  await identifyUser(c.env, userId, { existing_log: existingLog });
+  await captureEvent(c, "first_run_log_answered", { existing_log: existingLog });
 };
 
 const saveGym = async (c: Context<AppEnv>, id: string, form: z.output<typeof gymBody>) => {
@@ -592,18 +593,26 @@ const trainingRemindersBody = z.object({
   promptSeen: z.boolean().optional(),
 });
 
-const firstRunLog = z.enum(users.first_run_log.enumValues);
-
-const firstRunStepBody = z.discriminatedUnion("step", [
-  z.object({ step: z.literal("started") }),
-  z.object({ step: z.literal("log_answered"), existingLog: firstRunLog }),
+const firstRunLog = z.enum([
+  "kaya",
+  "8a",
+  "mountainProject",
+  "sendage",
+  "theCrag",
+  "spreadsheet",
+  "none",
+  "skipped",
 ]);
 
-const firstRunBody = z.object({
-  existingLog: firstRunLog,
-  climbingDays: z.number().int().min(0).max(7),
-  endedAt: z.enum(["plan", "skip_log", "skip_days"]),
-});
+const firstRunBody = z.discriminatedUnion("step", [
+  z.object({ step: z.literal("started") }),
+  z.object({ step: z.literal("log_answered"), existingLog: firstRunLog }),
+  z.object({
+    step: z.literal("finished"),
+    climbingDays: z.number().int().min(0).max(7),
+    endedAt: z.enum(["plan", "skip_log", "skip_days"]),
+  }),
+]);
 
 const stravaPostingBody = z.object({
   enabled: z.boolean(),
@@ -2000,35 +2009,24 @@ const app = new Hono<AppEnv>()
     }
   )
 
-  .put(
-    "/v1/preferences/first-run/step",
-    zValidator("json", firstRunStepBody, invalidBody),
-    async (c) => {
-      const form = c.req.valid("json");
-      await repo.ensureUser(c.env.DB, c.get("userId"));
-      if (form.step === "log_answered") await answerFirstRunLog(c, form.existingLog);
-      else if (await repo.reachFirstRunStep(c.env.DB, c.get("userId"), 1))
-        await captureEvent(c, "first_run_started");
-      return c.json({ ok: true });
-    }
-  )
-
   .put("/v1/preferences/first-run", zValidator("json", firstRunBody, invalidBody), async (c) => {
     const userId = c.get("userId");
     const form = c.req.valid("json");
     await repo.ensureUser(c.env.DB, userId);
-    const user = await repo.getUser(c.env.DB, userId);
-    if (user?.first_run_done === 1) return c.json({ firstRun: false });
-    await answerFirstRunLog(c, form.existingLog);
-    const existingLog = user?.first_run_log ?? form.existingLog;
-    await repo.finishFirstRun(c.env.DB, userId);
-    await identifyUser(c.env, userId, { existing_log: existingLog });
-    await captureEvent(c, "first_run_finished", {
-      existing_log: existingLog,
-      climbing_days: form.climbingDays,
-      ended_at: form.endedAt,
-    });
-    return c.json({ firstRun: false });
+    if (form.step === "started") {
+      if (await repo.reachFirstRunStep(c.env.DB, userId, 1))
+        await captureEvent(c, "first_run_started");
+    } else if (form.step === "log_answered") {
+      await answerFirstRunLog(c, form.existingLog);
+    } else {
+      await answerFirstRunLog(c, "skipped");
+      if (await repo.reachFirstRunStep(c.env.DB, userId, 3))
+        await captureEvent(c, "first_run_finished", {
+          climbing_days: form.climbingDays,
+          ended_at: form.endedAt,
+        });
+    }
+    return c.json({ ok: true });
   })
 
   .put(

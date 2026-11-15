@@ -18,5 +18,5 @@ export default function ImportRoute(): React.ReactElement {
   const hydrated = useHydrated();
   const [params] = useSearchParams();
   const then = params.get("then") === "/app/start" ? "/app/start" : undefined;
-  return hydrated ? <ImportFlow api={api} {...(then && { then })} /> : <div />;
+  return hydrated ? <ImportFlow api={api} then={then} /> : <div />;
 }

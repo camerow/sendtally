@@ -704,21 +704,10 @@ describe("app", () => {
           firstRun: unknown;
         }
       ).firstRun;
-    const finish = async (json: unknown): Promise<Response> =>
-      testApp().request(
-        "/v1/preferences/first-run",
-        { method: "PUT", headers, body: JSON.stringify(json) },
-        env
-      );
-
-    expect(await firstRun(headers)).toBe(true);
-    expect((await finish({ existingLog: "strava", climbingDays: 2, endedAt: "plan" })).status).toBe(
-      400
-    );
     const step = async (json: unknown, user = "user_firstrun"): Promise<number> =>
       (
         await testApp().request(
-          "/v1/preferences/first-run/step",
+          "/v1/preferences/first-run",
           {
             method: "PUT",
             headers: { ...headers, "x-test-user": user },
@@ -727,6 +716,11 @@ describe("app", () => {
           env
         )
       ).status;
+    const finished = { step: "finished", climbingDays: 2, endedAt: "plan" };
+
+    expect(await firstRun(headers)).toBe(true);
+    expect(await step({ step: "log_answered", existingLog: "strava" })).toBe(400);
+    expect(await step({ step: "finished", climbingDays: 8, endedAt: "plan" })).toBe(400);
     const capture = vi.spyOn(posthog, "captureUserEvent").mockResolvedValue();
     const identify = vi.spyOn(posthog, "identifyUser").mockResolvedValue();
     const events = () =>
@@ -734,7 +728,6 @@ describe("app", () => {
         .filter(([, , event]) => event.startsWith("first_run_"))
         .map(([, id, event, properties]) => [id, event, properties] as const);
     try {
-      expect(await step({ step: "log_answered", existingLog: "strava" })).toBe(400);
       for (const again of [
         { step: "started" },
         { step: "started" },
@@ -743,40 +736,27 @@ describe("app", () => {
         { step: "log_answered", existingLog: "none" },
       ])
         expect(await step(again)).toBe(200);
-      const done = await finish({ existingLog: "skipped", climbingDays: 2, endedAt: "plan" });
-      expect(done.status).toBe(200);
+      expect(await Promise.all([step(finished), step(finished)])).toEqual([200, 200]);
       expect(await firstRun(headers)).toBe(false);
-      const again = await finish({ existingLog: "none", climbingDays: 0, endedAt: "skip_log" });
-      expect(again.status).toBe(200);
+      expect(await step({ step: "finished", climbingDays: 0, endedAt: "skip_log" })).toBe(200);
       expect(events()).toEqual([
         ["user_firstrun", "first_run_started", {}],
         ["user_firstrun", "first_run_log_answered", { existing_log: "kaya" }],
-        [
-          "user_firstrun",
-          "first_run_finished",
-          { existing_log: "kaya", climbing_days: 2, ended_at: "plan" },
-        ],
+        ["user_firstrun", "first_run_finished", { climbing_days: 2, ended_at: "plan" }],
       ]);
-      expect(identify.mock.calls.map(([, , properties]) => properties)).toEqual([
-        { existing_log: "kaya" },
+      expect(identify.mock.calls.map(([, id, properties]) => [id, properties])).toEqual([
+        ["user_firstrun", { existing_log: "kaya" }],
       ]);
 
       capture.mockClear();
       expect(await step({ step: "started" }, "user_firstrun_skip")).toBe(200);
-      const skipped = await testApp().request(
-        "/v1/preferences/first-run",
-        {
-          method: "PUT",
-          headers: { ...headers, "x-test-user": "user_firstrun_skip" },
-          body: JSON.stringify({ existingLog: "skipped", climbingDays: 0, endedAt: "skip_log" }),
-        },
-        env
-      );
-      expect(skipped.status).toBe(200);
+      expect(
+        await step({ step: "finished", climbingDays: 0, endedAt: "skip_log" }, "user_firstrun_skip")
+      ).toBe(200);
       expect(events().map(([, event, properties]) => [event, properties])).toEqual([
         ["first_run_started", {}],
         ["first_run_log_answered", { existing_log: "skipped" }],
-        ["first_run_finished", { existing_log: "skipped", climbing_days: 0, ended_at: "skip_log" }],
+        ["first_run_finished", { climbing_days: 0, ended_at: "skip_log" }],
       ]);
     } finally {
       capture.mockRestore();

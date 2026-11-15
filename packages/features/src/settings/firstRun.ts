@@ -1,9 +1,12 @@
-import type { FirstRunAnswers } from "@sendtally/api-client";
+import type { FirstRunStep } from "@sendtally/api-client";
 import { IMPORT_SERVICES } from "@sendtally/core/import";
 import { t } from "../i18n";
 
 /** An answer to "Do you keep a log already?". */
-export type FirstRunSource = Exclude<FirstRunAnswers["existingLog"], "skipped">;
+export type FirstRunSource = Exclude<
+  Extract<FirstRunStep, { step: "log_answered" }>["existingLog"],
+  "skipped"
+>;
 
 export const FIRST_RUN_SOURCES: readonly FirstRunSource[] = [
   ...(Object.keys(IMPORT_SERVICES) as (keyof typeof IMPORT_SERVICES)[]),

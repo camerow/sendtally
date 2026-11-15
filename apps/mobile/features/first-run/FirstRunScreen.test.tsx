@@ -13,9 +13,8 @@ const show = (): Promise<unknown> =>
   );
 
 const mockSave = jest.fn(async () => undefined);
-const mockFinish = jest.fn(async () => undefined);
 const mockStep = jest.fn(async () => undefined);
-const mockApi = { finishFirstRun: mockFinish, firstRunStep: mockStep };
+const mockApi = { firstRunStep: mockStep };
 const mockPrompt = jest.fn();
 
 jest.mock("expo-crypto", () => ({ randomUUID: () => "m-new" }));
@@ -68,8 +67,8 @@ describe("first run", () => {
       position: 0,
     });
     expect(mockPrompt).toHaveBeenCalled();
-    expect(mockFinish).toHaveBeenCalledWith({
-      existingLog: "none",
+    expect(mockStep).toHaveBeenCalledWith({
+      step: "finished",
       climbingDays: 2,
       endedAt: "plan",
     });
@@ -82,8 +81,8 @@ describe("first run", () => {
     await fireEvent.press(screen.getByText("Continue"));
     expect(mockSave).not.toHaveBeenCalled();
     expect(mockPrompt).not.toHaveBeenCalled();
-    expect(mockFinish).toHaveBeenCalledWith({
-      existingLog: "skipped",
+    expect(mockStep).toHaveBeenCalledWith({
+      step: "finished",
       climbingDays: 0,
       endedAt: "plan",
     });
@@ -92,12 +91,15 @@ describe("first run", () => {
   it("skips to an empty Log from the first question", async () => {
     await show();
     await fireEvent.press(screen.getByText("Skip"));
-    expect(mockFinish).toHaveBeenCalledWith({
-      existingLog: "skipped",
+    expect(mockStep).toHaveBeenCalledWith({
+      step: "finished",
       climbingDays: 0,
       endedAt: "skip_log",
     });
     expect(router.replace).toHaveBeenCalledWith("/(tabs)/sessions");
-    expect(mockStep.mock.calls).toEqual([[{ step: "started" }]]);
+    expect(mockStep.mock.calls).toEqual([
+      [{ step: "started" }],
+      [expect.objectContaining({ step: "finished" })],
+    ]);
   });
 });

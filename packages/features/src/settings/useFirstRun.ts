@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient, type FetchStatus } from "@tanstack/react-query";
 import React from "react";
-import type { ConnectionStatus, FirstRunAnswers, SendtallyApi } from "@sendtally/api-client";
+import type { ConnectionStatus, FirstRunStep, SendtallyApi } from "@sendtally/api-client";
 import type { CalendarDate, Weekday } from "@sendtally/core/hang";
 import { queries } from "../query";
 import type { PlanActions } from "../training/usePlanActions";
@@ -14,18 +14,19 @@ import type { FirstRunSource } from "./firstRun";
  */
 export function firstRunShows(
   data: Pick<ConnectionStatus, "firstRun"> | undefined,
-  failureCount: number,
   fetchStatus: FetchStatus
 ): boolean | null {
   if (data !== undefined) return data.firstRun === true;
-  return failureCount > 0 || fetchStatus === "paused" ? false : null;
+  return fetchStatus === "fetching" ? null : false;
 }
 
 /** First run's gate, for the app shell. */
 export function useFirstRun(api: SendtallyApi): boolean | null {
-  const { data, failureCount, fetchStatus } = useQuery(queries.status(api));
-  return firstRunShows(data, failureCount, fetchStatus);
+  const { data, fetchStatus } = useQuery(queries.status(api));
+  return firstRunShows(data, fetchStatus);
 }
+
+type FirstRunEnd = Extract<FirstRunStep, { step: "finished" }>["endedAt"];
 
 /** Where a step leaves to: the import, Plan once the days are saved, or Log after a skip. */
 export type FirstRunExit = "import" | "plan" | "log";
@@ -66,21 +67,20 @@ export function useFirstRunFlow(
   const [days, setDays] = React.useState<readonly Weekday[]>([]);
   const step = onDays || imported ? 2 : 1;
 
+  const send = React.useCallback(
+    (to: FirstRunStep): void => void api.firstRunStep(to).catch(() => undefined),
+    [api]
+  );
   React.useEffect(() => {
-    if (!imported) void api.firstRunStep({ step: "started" }).catch(() => undefined);
-  }, [api, imported]);
+    if (!imported) send({ step: "started" });
+  }, [send, imported]);
 
-  const leaveLog = (): void =>
-    void api
-      .firstRunStep({ step: "log_answered", existingLog: source ?? "skipped" })
-      .catch(() => undefined);
+  const leaveLog = (): void => send({ step: "log_answered", existingLog: source ?? "skipped" });
 
-  const end = (endedAt: FirstRunAnswers["endedAt"], climbingDays: number): void => {
+  const end = (endedAt: FirstRunEnd, climbingDays: number): void => {
     const { queryKey } = queries.status(api);
     client.setQueryData(queryKey, (status) => status && { ...status, firstRun: false });
-    void api
-      .finishFirstRun({ existingLog: source ?? "skipped", climbingDays, endedAt })
-      .catch(() => undefined);
+    send({ step: "finished", climbingDays, endedAt });
     go(endedAt === "plan" ? "plan" : "log");
   };
 

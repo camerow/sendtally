@@ -196,7 +196,7 @@ New work across all sources:
 | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Four carousel slides with play-once art                                                            | `apps/mobile/features/onboarding/slides.ts` and `SlideArt.tsx`; Reduce Motion through `AccessibilityInfo.isReduceMotionEnabled`                                                                                                                                   |
 | Built-in workout "Climbing" (`climb-session`, kind `climbing`), whose Start opens the live session | The built-in catalogue in `@sendtally/core` with no items; the "every built-in has items" rule now allows a climbing workout with none                                                                                                                            |
-| `users.first_run_done`, `first_run_step`, `first_run_log`                                          | Drizzle columns, one generated migration; `GET /v1/status` returns `firstRun`, `PUT /v1/preferences/first-run/step` moves the step on, and `PUT /v1/preferences/first-run` sets `first_run_done`                                                                  |
+| `users.first_run_step`                                                                             | Drizzle column (integer: 0 none, 1 started, 2 answered, 3 done), one generated migration; `GET /v1/status` returns `firstRun`, and `PUT /v1/preferences/first-run` moves the step forward                                                                         |
 | The two flow steps                                                                                 | Mobile: `apps/mobile/app/first-run.tsx` and `features/first-run/`, from `OptionRow`, `WeekdayChips` and `Button`. Web: `/app/start` (`apps/web/app/first-run/`), outside the app shell, from the `option-row` radio group, `WeekdayChips` and the design `Button` |
 | Per-source import steps and links                                                                  | A steps view in `features/import`, direct links in `EXPORT_PAGES` (`packages/core/src/import/plan.ts`)                                                                                                                                                            |
 | Sends and attempts on the review                                                                   | `planStats` in `packages/features/src/import/transforms.ts`                                                                                                                                                                                                       |
@@ -207,7 +207,7 @@ Everything else (Ongoing memberships, reminders, the import review, the live ses
 
 ### When the flow shows
 
-- The server decides it once: `GET /v1/status` returns `firstRun: true` only while `first_run_done` is 0 and the account has no session, workout log, activity or plan (the existence checks run only while the flag is off).
+- The server decides it once: `GET /v1/status` returns `firstRun: true` only while `first_run_step` is below 3 and the account has no session, workout log, activity or plan (the existence checks run only until first run is done).
 - Mobile: the tabs layout reads it through `useFirstRun` and sends the account to `/first-run`; a brand new account waits for that one request, everyone else has the status in the persisted cache.
 - Web: the Log index loader (`app._index.tsx`) redirects to `/app/start`.
 - A missing field, from an older API, reads as "do not show", so a new build never traps anyone; older builds ignore the column.
@@ -243,19 +243,19 @@ Everything else (Ongoing memberships, reminders, the import review, the live ses
 
 Three new PostHog events, captured on the Worker so the Clerk user id and the internal cohort filter apply; properties are enum strings or counts only.
 They make the funnel `account_created` -> `first_run_started` -> `first_run_log_answered` -> `first_run_finished` -> `manual_session_created`.
-Each fires once per account: `users.first_run_step` (0, 1 started, 2 answered) only moves forward, and a repeat call captures nothing.
+Each fires once per account: every move of `users.first_run_step` is a conditional update that only goes forward, so a repeat or concurrent call captures nothing.
 
-| Event                    | Where                                                                                                                                                         | Properties                                                                                                                                                                    |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `first_run_started`      | Worker, `PUT /v1/preferences/first-run/step` with `step: "started"`, sent when step 1 shows                                                                   | none                                                                                                                                                                          |
-| `first_run_log_answered` | Worker, the same route with `step: "log_answered"`, sent on leaving step 1 to the import or the days; Skip on step 1 records it from the finish route instead | `existing_log`: `kaya`, `8a`, `mountainProject`, `sendage`, `theCrag`, `spreadsheet`, `none`, `skipped`                                                                       |
-| `first_run_finished`     | Worker, `PUT /v1/preferences/first-run`                                                                                                                       | `existing_log`: `kaya`, `8a`, `mountainProject`, `sendage`, `theCrag`, `spreadsheet`, `none`, `skipped`; `climbing_days` (count); `ended_at`: `plan`, `skip_log`, `skip_days` |
-| `workout_logged`         | Worker (slice 4)                                                                                                                                              | `built_in`, `planned`: true or false                                                                                                                                          |
+| Event                    | Where                                                                                                                                                                | Properties                                                                                              |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `first_run_started`      | Worker, `PUT /v1/preferences/first-run` with `step: "started"`, sent when step 1 shows                                                                               | none                                                                                                    |
+| `first_run_log_answered` | Worker, the same route with `step: "log_answered"`, sent on leaving step 1 to the import or the days; Skip on step 1 records it as `skipped` from `step: "finished"` | `existing_log`: `kaya`, `8a`, `mountainProject`, `sendage`, `theCrag`, `spreadsheet`, `none`, `skipped` |
+| `first_run_finished`     | Worker, the same route with `step: "finished"`                                                                                                                       | `climbing_days` (count); `ended_at`: `plan`, `skip_log`, `skip_days`                                    |
+| `workout_logged`         | Worker (slice 4)                                                                                                                                                     | `built_in`, `planned`: true or false                                                                    |
 
-The step-1 answer is kept in `users.first_run_log`, and `first_run_finished` reports it, so a web import, which reloads the page and forgets the pick, still finishes with the app picked.
-A relaunch mid-flow shows step 1 again and records nothing new until Skip or the days are saved: `first_run_started` and `first_run_log_answered` keep their first values, and `first_run_finished` carries the first answer.
+`existing_log` lives on `first_run_log_answered` and on the person, so `first_run_finished` never needs the pick that a web import, which reloads the page, forgets.
+A relaunch mid-flow shows step 1 again and records nothing new until Skip or the days are saved: `first_run_started` and `first_run_log_answered` keep their first values.
 
-The same route sets `existing_log` as a person property through `identifyUser`.
+The `log_answered` step also sets `existing_log` as a person property through `identifyUser`.
 `onboarding_slide_viewed` and `workout_started` are dropped: the first would be the mobile app's first client-side event, and the second is not needed to see whether the planned week is used.
 Existing events cover the rest: `training_reminders_updated` and `sessions_imported`.
 
@@ -276,7 +276,7 @@ Slice 4 adds a line for `workout_logged`.
 
 ## 6. Delivery slices
 
-1. **The two steps, on mobile and web (built).** The "Climbing" built-in with no items, `users.first_run_done`, both steps with the import exit, the reminder sheet as is on the phone, the end on Plan with the import toast, `first_run_finished`, the privacy line, and Start on a web Climbing day opening the live session.
+1. **The two steps, on mobile and web (built).** The "Climbing" built-in with no items, `users.first_run_step`, both steps with the import exit, the reminder sheet as is on the phone, the end on Plan with the import toast, the three first-run events, the privacy line, and Start on a web Climbing day opening the live session.
 2. **Per-source import steps, both apps**: the steps view, direct links, sends and attempts on the review, the wider mobile picker, and on the web `/app/import?from=<source>` (Import board, frame 10).
 3. **The carousel, mobile only**: four new slides replacing the current four, with play-once art and Reduce Motion; the web marketing landing stays as is.
 4. **Measuring the planned week**: `workout_logged` with `built_in` and `planned`, on the Worker.
@@ -298,7 +298,7 @@ Will, 2026-11-14:
 - The four new slides replace the current Log, Effort score, Strava and Stats slides; effort is folded into the first slide's copy.
 - A repeating Ongoing week of built-in workouts stays free after the trial.
 - The day-6 import email skips people who imported in the flow; that change belongs to the email work, not this plan.
-  Slice 1 adds no `from` on `sessions_imported`, so the email reads it as a `sessions_imported` before `first_run_finished` with an `existing_log` source.
+  Slice 1 adds no `from` on `sessions_imported`, so the email reads it as a `sessions_imported` before `first_run_log_answered` with an `existing_log` source.
 - The day-25 "trial ends" email is held until the trial (#259) lands.
 
 ## 9. Open decisions for Will

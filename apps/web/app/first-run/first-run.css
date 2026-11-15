@@ -59,7 +59,7 @@
 .first-run-detail {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--text-on-white-muted);
+  color: var(--text-muted);
 }
 
 .first-run-check {

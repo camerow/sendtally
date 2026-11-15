@@ -59,7 +59,6 @@ import type {
   SessionTag,
   TagSummary,
   TrainingReminderSettings,
-  FirstRunAnswers,
   FirstRunStep,
   MembershipDays,
   PlanChange,
@@ -207,12 +206,8 @@ export class SendtallyApi {
     return body(this.client.v1.preferences["training-reminders"].$put({ json: settings }));
   }
 
-  finishFirstRun(answers: FirstRunAnswers): Promise<{ firstRun: false }> {
-    return body(this.client.v1.preferences["first-run"].$put({ json: answers }));
-  }
-
   firstRunStep(step: FirstRunStep): Promise<{ ok: true }> {
-    return body(this.client.v1.preferences["first-run"].step.$put({ json: step }));
+    return body(this.client.v1.preferences["first-run"].$put({ json: step }));
   }
 
   climbs(): Promise<{ climbs: ClimbSummary[] }> {

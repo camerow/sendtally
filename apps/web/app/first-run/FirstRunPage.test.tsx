@@ -5,11 +5,8 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FirstRunPage } from "./FirstRunPage";
 
-const api = vi.hoisted(() => ({
-  finishFirstRun: vi.fn(async () => undefined),
-  firstRunStep: vi.fn(async () => undefined),
-}));
-const { finishFirstRun: finish, firstRunStep: step } = api;
+const api = vi.hoisted(() => ({ firstRunStep: vi.fn(async () => undefined) }));
+const { firstRunStep: step } = api;
 const saveMembership = vi.hoisted(() => vi.fn(async () => undefined));
 
 vi.mock("../lib/useAppApi", () => ({ useAppApi: () => api }));
@@ -91,25 +88,28 @@ describe("first run on the web", () => {
       start: "2026-11-15",
       position: 0,
     });
-    expect(finish).toHaveBeenCalledWith({
-      existingLog: "skipped",
+    expect(step).toHaveBeenCalledWith({
+      step: "finished",
       climbingDays: 2,
       endedAt: "plan",
     });
     expect(path()).toBe("/app/plan?imported=5&skipped=0&likely=0");
-    expect(step).not.toHaveBeenCalled();
+    expect(step).toHaveBeenCalledTimes(1);
   });
 
   it("skips to Log from the first question, saving nothing", () => {
     render("/app/start");
     click("Skip");
     expect(saveMembership).not.toHaveBeenCalled();
-    expect(finish).toHaveBeenCalledWith({
-      existingLog: "skipped",
+    expect(step).toHaveBeenCalledWith({
+      step: "finished",
       climbingDays: 0,
       endedAt: "skip_log",
     });
     expect(path()).toBe("/app");
-    expect(step.mock.calls).toEqual([[{ step: "started" }]]);
+    expect(step.mock.calls).toEqual([
+      [{ step: "started" }],
+      [expect.objectContaining({ step: "finished" })],
+    ]);
   });
 });

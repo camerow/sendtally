@@ -95,7 +95,7 @@ export function FirstRunScreen(): React.ReactElement {
           <OptionRow
             key={s}
             label={firstRunSourceLabel(s)}
-            {...(s === "spreadsheet" && { detail: "CSV" })}
+            detail={s === "spreadsheet" ? "CSV" : undefined}
             mono={false}
             selected={flow.source === s}
             onPress={() => flow.pick(s)}
