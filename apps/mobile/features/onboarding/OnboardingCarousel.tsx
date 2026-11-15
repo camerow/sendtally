@@ -12,8 +12,8 @@ const PAGE_PADDING = 22;
  * Both blocks are sized to their tallest slide so every slide's column is the same height. A
  * centered column of varying height would slide the headline up and down as you page through.
  */
-const ART_BOX_HEIGHT = 250;
-const TEXT_BOX_HEIGHT = 200;
+const ART_BOX_HEIGHT = 310;
+const TEXT_BOX_HEIGHT = 170;
 
 function Dots({ count, active }: { count: number; active: number }): React.ReactElement {
   return (
@@ -70,7 +70,7 @@ export function OnboardingCarousel({
         scrollEventThrottle={16}
         style={{ flex: fill ? 1 : undefined }}
       >
-        {slides.map((slide) => (
+        {slides.map((slide, i) => (
           <View
             key={slide.key}
             style={{
@@ -81,7 +81,7 @@ export function OnboardingCarousel({
             }}
           >
             <View style={{ height: ART_BOX_HEIGHT, justifyContent: "flex-end" }}>
-              <SlideArt slide={slide.key} />
+              <SlideArt slide={slide.key} show={i === active} />
             </View>
             <View style={{ gap: 10, minHeight: TEXT_BOX_HEIGHT }}>
               <Text
@@ -90,7 +90,7 @@ export function OnboardingCarousel({
                   fontSize: 11,
                   letterSpacing: 1,
                   textTransform: "uppercase",
-                  color: colors.labelAccent,
+                  color: colors.gunmetal,
                 }}
               >
                 {slide.eyebrow}

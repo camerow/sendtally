@@ -1,37 +1,38 @@
 import { t } from "@sendtally/features/i18n";
 
 export type OnboardingSlide = {
-  key: "log" | "effort" | "strava" | "trends";
+  key: "intro" | "exercises" | "workouts" | "blocks";
   eyebrow: string;
   title: string;
   body: string;
 };
 
+/** What sendtally is, then the three things it trains with, one slide each. */
 export function onboardingSlides(): OnboardingSlide[] {
   return [
     {
-      key: "log",
-      eyebrow: t("onboarding.log.eyebrow"),
-      title: t("onboarding.log.title"),
-      body: t("onboarding.log.body"),
+      key: "intro",
+      eyebrow: t("onboarding.intro.eyebrow"),
+      title: t("onboarding.intro.title"),
+      body: t("onboarding.intro.body"),
     },
     {
-      key: "effort",
-      eyebrow: t("onboarding.effort.eyebrow"),
-      title: t("onboarding.effort.title"),
-      body: t("onboarding.effort.body"),
+      key: "exercises",
+      eyebrow: t("plan.tabExercises"),
+      title: t("onboarding.exercises.title"),
+      body: t("onboarding.exercises.body"),
     },
     {
-      key: "strava",
-      eyebrow: "Strava",
-      title: t("onboarding.strava.title"),
-      body: t("onboarding.strava.body"),
+      key: "workouts",
+      eyebrow: t("plan.tabWorkouts"),
+      title: t("onboarding.workouts.title"),
+      body: t("onboarding.workouts.body"),
     },
     {
-      key: "trends",
-      eyebrow: t("statistics.tab"),
-      title: t("onboarding.trends.title"),
-      body: t("onboarding.trends.body"),
+      key: "blocks",
+      eyebrow: t("plan.tabBlocks"),
+      title: t("onboarding.blocks.title"),
+      body: t("onboarding.blocks.body"),
     },
   ];
 }
