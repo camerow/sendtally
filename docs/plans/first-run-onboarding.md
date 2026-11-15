@@ -99,9 +99,9 @@ Agreed with the designer; the two boards draw every state named here.
 ### Before sign-up: the carousel
 
 - The signed-out `/onboarding` screen keeps `OnboardingCarousel`, Create account and Sign in.
-- It gets four new slides: What is sendtally? (the log), Exercises, Workouts, Blocks.
+- Four new slides replace the current Log, Effort score, Strava and Stats slides (Will, 2026-11-14): What is sendtally? (the log, with the effort score folded into its copy), Exercises, Workouts, Blocks.
 - Each slide's art plays once when the slide shows; under Reduce Motion it shows its last frame.
-- The Strava slide's "a re-sync never posts twice" goes, since it describes syncing.
+- The Strava slide, and with it "a re-sync never posts twice", goes.
 - This is where exercise, workout and block are explained, before the person needs them.
 
 ### Step 1 of 2: Do you keep a log already?
@@ -119,7 +119,7 @@ The importer recognises a file by its header (`detectFormat` in `packages/core/s
 
 | Answer               | Imports today                                                          | How the person gets the file                                                                                                                         | New work                                                                                                                                                                                                                                                                                                          |
 | -------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Kaya                 | Yes, pinned to a real export's layout (#379)                           | Not documented anywhere public; Kaya's help covers importing into Kaya only                                                                          | The in-app steps; Will has exported one, so the menu path comes from him. The day of a date-only climb follows the phone's time zone                                                                                                                                                                              |
+| Kaya                 | Yes, pinned to a real export's layout (#379)                           | Not documented anywhere public                                                                                                                       | No steps (Will, 2026-11-14): the existing Google search link, as today. The day of a date-only climb follows the phone's time zone                                                                                                                                                                                |
 | 8a.nu                | Yes                                                                    | On the 8a.nu website: My Logbook, the pencil under About, then "Logbook Export (CSV)" at the bottom (per Kaya's and theCrag's help, not 8a.nu's own) | Steps and a direct link; today the link is a Google search. `tries` is not a real count there, so every climb imports as one try                                                                                                                                                                                  |
 | Mountain Project     | Yes                                                                    | On the website: your profile's Ticks page, "Export CSV"                                                                                              | Steps and a direct link to the Ticks page; today a Google search                                                                                                                                                                                                                                                  |
 | Sendage              | Yes, both the preamble export and the sends export (#418)              | "Export My Sends"; free Sendage accounts can export once every 30 days and four times a year                                                         | Steps, a direct link, and saying the 30-day limit. The preamble layout comes from another project's test, the least certain format                                                                                                                                                                                |
@@ -222,7 +222,7 @@ Everything else (Ongoing memberships, reminders, the import review, the live ses
 ### Trial and member gates
 
 - The flow uses one built-in workout in an Ongoing week.
-- `billing-training-gates` keeps built-ins planned on single days free after the trial; whether a repeating Ongoing week of built-ins stays free is open for Will, and this plan makes no claim either way.
+- A repeating Ongoing week of built-in workouts stays free after the trial (Will, 2026-11-14), as built-ins planned on single days already do; the trial's gates (#259) must treat an Ongoing membership of a built-in as free.
 - The trial (#259), the locks (#258) and library blocks (#255) are not built, so today nothing in the flow is gated.
 
 ## 5. Events and privacy
@@ -258,7 +258,7 @@ What will show it worked, against section 2:
 
 1. **The two-step mobile flow (smallest useful slice).** The "Climbing" built-in, `users.start_answered`, both steps with the import exit and the wider picker, the reminder sheet as is, the end on Plan, the `first_run_*` events, `sessions_imported.from`, and the privacy line.
 2. **Per-source import steps**: the steps view, direct links, sends and attempts on the review.
-3. **The carousel**: four new slides with play-once art, Reduce Motion, the Strava line fixed, `onboarding_slide_viewed`.
+3. **The carousel**: four new slides replacing the current four, with play-once art, Reduce Motion, and `onboarding_slide_viewed`.
 4. **Measuring the planned week**: `workout_started` and `workout_logged`.
 5. **Web flow**, if web signups grow.
 
@@ -271,11 +271,16 @@ What will show it worked, against section 2:
 - Paste in the import; files only.
 - Changes to the email series (branch `feat/onboarding-email-journey`) or to PostHog.
 
-## 8. Open decisions for Will
+## 8. Decisions
 
-- The Kaya export steps: how a Kaya user exports their logbook is not documented publicly; the board captions it "Steps to confirm with Will".
-- Whether a repeating Ongoing week of built-in workouts stays free after the trial.
-- Whether the four new slides replace the current Log, Effort score, Strava and Stats slides or sit beside them.
-- The email series no longer matches the in-app order: import is asked on day 0, while the emails send the first session on day 2 and import on day 6; the day 6 email could skip people who already imported (`sessions_imported` with `from = first_run`).
-- The day-25 "trial ends" email assumes the trial in #259, which is not built; ship the trial first or hold that email.
+Will, 2026-11-14:
+
+- Kaya gets no export steps; it keeps the Google search link the other sources had. Steps and direct links stay for 8a.nu, Mountain Project, Sendage and theCrag.
+- The four new slides replace the current Log, Effort score, Strava and Stats slides; effort is folded into the first slide's copy.
+- A repeating Ongoing week of built-in workouts stays free after the trial.
+- The day-6 import email skips people who imported in the flow (`sessions_imported` with `from = first_run`); that change belongs to the email work, not this plan.
+- The day-25 "trial ends" email is held until the trial (#259) lands.
+
+## 9. Open decisions for Will
+
 - Web flow now or later (spec: later).
