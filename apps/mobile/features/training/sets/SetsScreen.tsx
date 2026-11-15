@@ -93,10 +93,9 @@ export function SetsScreen({
       <RestRow rest={rest.rest} left={rest.left} onMore={rest.more} onSkip={rest.skip} />
     );
   const restBetween = (item: number): React.ReactNode =>
-    restAt(afterKey(item)) ||
-    (restAfterItem(run.items, item, run.exerciseRestS) > 0 && (
+    restAt(afterKey(item)) || (
       <RestPreview seconds={restAfterItem(run.items, item, run.exerciseRestS)} />
-    ));
+    );
   const finish = (): void => {
     const { done, off } = player.finished();
     logRun(run, done, player.startedAt, off);

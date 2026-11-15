@@ -2,7 +2,7 @@ import React from "react";
 import type { Dose, WeightUnit } from "@sendtally/core/hang";
 import {
   fieldLimits,
-  fieldTop,
+  fieldRange,
   fieldValue,
   withFieldRange,
   type DoseField,
@@ -30,7 +30,7 @@ export function DoseInput({
 }: DoseInputProps): React.ReactElement {
   const set = (typed: number, max?: number): void =>
     onChange(withFieldRange(dose, field, typed, max, unit));
-  const range = field.range === undefined ? undefined : { max: fieldTop(field, dose) };
+  const range = fieldRange(field, dose);
   return (
     <div className="dose-input">
       <NumberField

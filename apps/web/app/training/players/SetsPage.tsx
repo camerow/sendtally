@@ -95,11 +95,9 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
         if (d === undefined) return null;
         const climbing = player.climbing(i);
         const range = player.extra(i);
-        const between =
-          restAt(afterKey(i)) ||
-          (restAfterItem(run.items, i, run.exerciseRestS) > 0 && (
-            <RestPreview seconds={restAfterItem(run.items, i, run.exerciseRestS)} />
-          ));
+        const between = restAt(afterKey(i)) || (
+          <RestPreview seconds={restAfterItem(run.items, i, run.exerciseRestS)} />
+        );
         return (
           <React.Fragment key={i}>
             {climbing !== null ? (

@@ -121,9 +121,7 @@ export function ChecklistScreen({
                   />
                 </View>
               ) : (
-                restAfterItem(run.items, i, run.exerciseRestS) > 0 && (
-                  <RestPreview seconds={restAfterItem(run.items, i, run.exerciseRestS)} />
-                )
+                <RestPreview seconds={restAfterItem(run.items, i, run.exerciseRestS)} />
               )}
             </React.Fragment>
           ))}

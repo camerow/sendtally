@@ -6,7 +6,7 @@ import type { FieldSlot } from "../../../components/useFieldOrder";
 import { NumberField } from "../components/NumberField";
 import {
   fieldLimits,
-  fieldTop,
+  fieldRange,
   fieldValue,
   withFieldRange,
   type DoseField,
@@ -36,7 +36,7 @@ export function DoseInput({
   const value = fieldValue(field, dose, unit);
   const set = (typed: number, max?: number): void =>
     onChange(withFieldRange(dose, field, typed, max, unit));
-  const range = field.range === undefined ? undefined : { max: fieldTop(field, dose) };
+  const range = fieldRange(field, dose);
   return (
     <View style={{ flexGrow: 1, flexBasis: "40%" }}>
       {field.measure === "time" ? (

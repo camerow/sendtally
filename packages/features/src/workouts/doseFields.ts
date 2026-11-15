@@ -180,9 +180,9 @@ export function fieldPlaceholder(field: DoseField): string | undefined {
   return field.range === true && isRanged(field.key) ? RANGE_PLACEHOLDER[field.key] : undefined;
 }
 
-/** The top of a range in a field that takes one; none when it holds one number. */
-export const fieldTop = (field: DoseField, dose: Dose): number | undefined =>
-  field.range === true && isRanged(field.key) ? dose[RANGE_TOP[field.key]] : undefined;
+/** A field's range as the keypad types it, with the top it has now; none when it takes one number. */
+export const fieldRange = (field: DoseField, dose: Dose): { max?: number } | undefined =>
+  field.range === true && isRanged(field.key) ? { max: dose[RANGE_TOP[field.key]] } : undefined;
 
 /** The dose with a field set to a range in the user's unit; a top at or under the bottom is none. */
 export function withFieldRange(

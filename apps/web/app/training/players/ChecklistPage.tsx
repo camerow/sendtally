@@ -94,9 +94,7 @@ export function ChecklistPage({ run, end }: { run: WorkoutRun; end: boolean }): 
               {rest.rest?.at === afterKey(i) ? (
                 <RestRow rest={rest.rest} left={rest.left} onMore={rest.more} onSkip={rest.skip} />
               ) : (
-                restAfterItem(run.items, i, run.exerciseRestS) > 0 && (
-                  <RestPreview seconds={restAfterItem(run.items, i, run.exerciseRestS)} />
-                )
+                <RestPreview seconds={restAfterItem(run.items, i, run.exerciseRestS)} />
               )}
             </React.Fragment>
           );
