@@ -3,6 +3,11 @@
 Status: spec for direction A, agreed between onboarding-eng and onboarding-designer on 2026-11-14; Will found A had not simplified enough and is choosing between A and B, and this document is rewritten for his pick.
 Design boards, on the "First run onboarding" page (id `first-run`) of the canvas https://claude.ai/artifact/CNPnNQwgvzgvxk4ZAYTyto: A "First run: open on Log, one starter block, no tour" (`FirstRun.dc.html`, x 0, y 0), which this document describes, and B "First run B: one question, then straight into the first real thing" (`FirstRunB.dc.html`, x 0, y 2460).
 
+> **Correction, 2026-11-14:** Will made Log the first tab and the screen the app opens on, for every account (tab order Log, Plan, Train, Stats; agent log-first is building it on `feat/log-tab-first`).
+> Everything below that says mobile opens on Plan describes the app before that change.
+> Direction A's landing rule (section 3.A, the `app/index.tsx` part of section 4 and of slice 1) is therefore covered by that branch and drops out of this plan.
+> Will has since asked for a short onboarding flow instead of A or B; this document is being rewritten for it.
+
 ## The question
 
 A person who has never heard of Sendtally installs the app and signs up.
