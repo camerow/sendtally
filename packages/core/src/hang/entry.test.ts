@@ -2,8 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   entryNumber,
   entrySeconds,
+  entryRange,
   numberEntry,
   openNumber,
+  openRange,
+  rangeEntry,
+  rangeText,
+  typedRange,
   typedNumber,
   typedSeconds,
   openTime,
@@ -145,5 +150,52 @@ describe("typed text", () => {
   it("reads a number that is not one as null", () => {
     expect(typedNumber("", { step: 1 })).toBeNull();
     expect(typedNumber("x", { step: 1 })).toBeNull();
+  });
+});
+
+const counts: NumberLimits = { step: 1, min: 1, max: 100 };
+
+const typeRange = (start: { min: number; max?: number }, keys: string): string =>
+  keys.split(" ").reduce((s, k) => rangeEntry(s, action(k), counts), openRange(start, counts)).text;
+
+describe("rangeEntry", () => {
+  it("types one number until To, then the top after a hyphen", () => {
+    expect(typeRange({ min: 3 }, "4")).toBe("4");
+    expect(typeRange({ min: 3 }, "to 5")).toBe("3-5");
+    expect(typeRange({ min: 3 }, "8 to 1 2")).toBe("8-12");
+    expect(typeRange({ min: 3 }, "8 to to")).toBe("8-");
+  });
+
+  it("replaces a range opened on with the first digit, and steps the end being typed", () => {
+    expect(typeRange({ min: 3, max: 5 }, "4")).toBe("4");
+    expect(typeRange({ min: 3, max: 5 }, "plus")).toBe("3-6");
+    expect(typeRange({ min: 3 }, "plus")).toBe("4");
+    expect(typeRange({ min: 3 }, "to minus")).toBe("3-1");
+  });
+
+  it("deletes back past the hyphen to one number", () => {
+    expect(typeRange({ min: 3 }, "8 to 1 2 back")).toBe("8-1");
+    expect(typeRange({ min: 3 }, "8 to 1 2 back back back")).toBe("8");
+  });
+
+  it("reads its ends in order, and a top at the bottom or none as one number", () => {
+    const read = (text: string) => entryRange({ text, fresh: false }, counts);
+    expect(read("8-12")).toEqual({ min: 8, max: 12 });
+    expect(read("5-3")).toEqual({ min: 3, max: 5 });
+    expect(read("4-4")).toEqual({ min: 4 });
+    expect(read("4-")).toEqual({ min: 4 });
+    expect(read("0-200")).toEqual({ min: 1, max: 100 });
+    expect(typeRange({ min: 3 }, "5 to 3 done")).toBe("3-5");
+    expect(rangeText({ min: 3, max: 3 })).toBe("3");
+  });
+
+  it("reads a range typed as text, refusing what is not one", () => {
+    expect(typedRange("8-12", counts)).toEqual({ min: 8, max: 12 });
+    expect(typedRange(" 8 – 12 ", counts)).toEqual({ min: 8, max: 12 });
+    expect(typedRange("5", counts)).toEqual({ min: 5 });
+    expect(typedRange("5-3", counts)).toEqual({ min: 3, max: 5 });
+    expect(typedRange("", counts)).toBeNull();
+    expect(typedRange("a-3", counts)).toBeNull();
+    expect(typedRange("1-2-3", counts)).toBeNull();
   });
 });

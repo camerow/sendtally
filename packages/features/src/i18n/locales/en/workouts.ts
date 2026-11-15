@@ -198,6 +198,7 @@ export const workouts = {
 
   "workouts.dose.sets": "Sets",
   "workouts.dose.rpe": "RPE",
+  "workouts.rangeTo": "To",
   "workouts.dose.reps": "Reps",
   "workouts.dose.hangs": "Hangs",
   "workouts.dose.hangTime": "Hang time",

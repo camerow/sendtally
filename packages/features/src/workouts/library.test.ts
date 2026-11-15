@@ -281,6 +281,10 @@ describe("summaries", () => {
       "5 × 5 · 100 kg"
     );
     expect(doseSummary("mobility", { sets: 3, onS: 45 }, "kg")).toBe("3 × 45s");
+    expect(
+      doseSummary("strength", { sets: 3, setsMax: 5, reps: 8, repsMax: 12, weightKg: 60 }, "kg")
+    ).toBe("3-5 × 8-12 · 60 kg");
+    expect(doseSummary("strength", { sets: 3, setsMax: 3, reps: 8 }, "kg")).toBe("3 × 8");
     expect(doseSummary("other", { sets: 2 }, "kg")).toBe("2 sets");
     expect(
       doseSummary(

@@ -174,6 +174,17 @@ describe("Workout editor", () => {
     ]);
   });
 
+  it("types a set and rep range with To on the keypad", async () => {
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
+    await pick("Back squat");
+    await fireEvent.press(screen.getByLabelText("Sets"));
+    await keys("3", "To", "5", "Next", "8", "To", "1", "2", "Done");
+    expect(screen.getByLabelText("Sets").props.accessibilityValue).toEqual({ text: "3-5" });
+    await fireEvent.press(screen.getByText("Save"));
+    const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
+    expect(saved.items[0]?.doses).toEqual([{ sets: 3, setsMax: 5, reps: 8, repsMax: 12 }]);
+  });
+
   it("types a weight in pounds and keeps it in kg", async () => {
     const data = hangData();
     await renderWithHang(

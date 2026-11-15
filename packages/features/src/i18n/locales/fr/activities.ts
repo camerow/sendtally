@@ -63,6 +63,8 @@ export const activities = {
   "activities.partialCounts": "Coche ce que tu as fait. Les jours partiels comptent aussi.",
   "activities.addSet": "Ajouter une série",
   "activities.addSetTo": "Ajouter une série à {exercise}",
+  "activities.addSetUpTo": "Ajouter une série, jusqu'à {n}",
+  "activities.setsOfMax": "{n} séries sur {max}",
   "activities.started": "Début",
   "activities.removeSet": "Retirer la série {n}",
   "activities.removeLastSet": "Retirer la série",

@@ -23,7 +23,7 @@ import {
 import { climbingDoseLine } from "../activities/climbing";
 import { weightValue } from "../activities/done";
 import { ACTIVITY_KINDS, kindLabel } from "../activities/format";
-import { humanDuration, protocolSummary } from "../hang/format";
+import { countText, humanDuration, protocolSummary } from "../hang/format";
 import { builtInGripName } from "../hang/names";
 import { formatNumber, t } from "../i18n";
 import { builtInWorkouts } from "./builtIns";
@@ -137,14 +137,14 @@ export function doseSummary(
     return [protocolSummary(p, timeUnitsOf(p)), edge, weight].filter((x) => x !== null).join(" · ");
   }
   const work = [
-    dose.reps === undefined ? null : formatNumber(dose.reps),
+    dose.reps === undefined ? null : countText(dose.reps, dose.repsMax),
     dose.onS === undefined ? null : humanDuration(dose.onS),
   ].filter((x) => x !== null);
   const done = work.join(" · ");
   const main =
     work.length === 0
       ? t("activities.setCount", { count: dose.sets })
-      : `${formatNumber(dose.sets)} × ${eachSide ? t("workouts.aSide", { value: done }) : done}`;
+      : `${countText(dose.sets, dose.setsMax)} × ${eachSide ? t("workouts.aSide", { value: done }) : done}`;
   return [main, weight, edge].filter((x) => x !== null).join(" · ");
 }
 

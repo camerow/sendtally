@@ -8,7 +8,7 @@ import {
   lapsLine,
   wallLine,
 } from "../activities/climbing";
-import { changeSet, previousSets } from "../activities/done";
+import { addSet, changeSet, previousSets } from "../activities/done";
 import { tallyMeasuresOf } from "../exercises/measure";
 import type { TallyMeasure } from "../exercises/types";
 import { eachSideOf } from "../exercises/sides";
@@ -25,6 +25,8 @@ import {
   itemDone,
   restAfterTick,
   setKey,
+  setsRange,
+  withDoneSets,
   withPrevious,
   type SetAt,
 } from "./setsRun";
@@ -72,8 +74,12 @@ export type SetsPlayer = {
   lifting: (item: number) => boolean;
   nameOf: (item: number) => string;
   sided: (exercise: string) => boolean;
-  /** A finished card folds until it is opened again. */
+  /** A finished card folds until it is opened again, unless it may add a set. */
   folded: (item: number) => boolean;
+  /** An item with a set range: the sets it has and its top, and whether it may add one now. */
+  extra: (item: number) => { sets: number; max: number; canAdd: boolean } | null;
+  /** One more set like the last, which ends the rest to the next exercise and rests between sets. */
+  addSet: (item: number) => void;
   open: (item: number) => void;
   toggle: (at: SetAt) => void;
   change: (item: number, set: number, value: SetDone) => void;
@@ -126,7 +132,8 @@ export function useSetsPlayer({
   const tallyMeasure = tallyMeasuresOf(exercises ?? [], run.kind);
   const tallyOf = (item: number): TallyMeasure | null =>
     tallyMeasure(run.items[item]?.exercise ?? "");
-  const sets = allSets(run.items).filter((at) => tallyOf(at.item) === null);
+  const live = withDoneSets(run.items, done);
+  const sets = allSets(live).filter((at) => tallyOf(at.item) === null);
   const previous = (exercise: string): SetDone[] =>
     activities === null || run.workoutId === null
       ? []
@@ -143,7 +150,7 @@ export function useSetsPlayer({
     if (ticking) next.add(key);
     setTicked(next);
     setOpened((was) => new Set([...was].filter((i) => i !== at.item)));
-    const after = ticking ? restAfterTick(run.items, next, at, run.exerciseRestS) : null;
+    const after = ticking ? restAfterTick(live, next, at, run.exerciseRestS) : null;
     if (after === null) rest.skip();
     else rest.tick(after.at, after.seconds, after.next === null ? undefined : nameOf(after.next));
   };
@@ -167,6 +174,12 @@ export function useSetsPlayer({
           tallyOf(item) === "wallTime" ? run.items[item]?.dose.onS : undefined
         );
 
+  const extra = (item: number): { sets: number; max: number; canAdd: boolean } | null => {
+    const range = setsRange(run.items[item], live[item]);
+    return range === null
+      ? null
+      : { ...range, canAdd: range.sets < range.max && itemDone(live, ticked, item) };
+  };
   const sided = eachSideOf(exercises ?? []);
   const holdTarget = (at: SetAt): number | null => {
     const targetS = run.items[at.item]?.dose.onS;
@@ -222,7 +235,17 @@ export function useSetsPlayer({
     lifting,
     nameOf,
     sided,
-    folded: (item) => itemDone(run.items, ticked, item) && !opened.has(item),
+    folded: (item) =>
+      itemDone(live, ticked, item) && !opened.has(item) && extra(item)?.canAdd !== true,
+    extra,
+    addSet: (item) => {
+      const range = extra(item);
+      if (range?.canAdd !== true) return;
+      setDone((all) => addSet(all, item));
+      const restS = run.items[item]?.dose.setRestS ?? 0;
+      if (restS > 0) rest.tick(setKey({ item, set: range.sets - 1 }), restS);
+      else rest.skip();
+    },
     open: (item) => setOpened((was) => new Set([...was, item])),
     toggle,
     change,

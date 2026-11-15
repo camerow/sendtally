@@ -6,7 +6,8 @@ import {
   columnLabel,
   weekFieldLimits,
   weekFieldValue,
-  withWeekField,
+  weekRangeOf,
+  withWeekRange,
   type DoneCount,
   type WeekField,
   doneAll,
@@ -110,8 +111,9 @@ export function LoadTable({
                             : { kind: "number", ...weekFieldLimits(f, unit) }
                         }
                         {...(unitShown !== null && { unit: unitShown })}
-                        onChange={(typed) => {
-                          const next = withWeekField(dose, f, typed, unit);
+                        range={weekRangeOf(kind, dose, f)}
+                        onChange={(typed, max) => {
+                          const next = withWeekRange(written, dose, f, typed, max, unit);
                           if (next !== null) onChange(week, changeFrom(written, next));
                         }}
                       />

@@ -4,7 +4,13 @@ import type { Dose, WeightUnit } from "@sendtally/core/hang";
 import { TimeField } from "../../../components/TimeField";
 import type { FieldSlot } from "../../../components/useFieldOrder";
 import { NumberField } from "../components/NumberField";
-import { fieldLimits, fieldValue, withField, type DoseField } from "@sendtally/features/workouts";
+import {
+  fieldLimits,
+  fieldTop,
+  fieldValue,
+  withFieldRange,
+  type DoseField,
+} from "@sendtally/features/workouts";
 
 export type DoseInputProps = FieldSlot & {
   field: DoseField;
@@ -28,7 +34,9 @@ export function DoseInput({
   ...rest
 }: DoseInputProps): React.ReactElement {
   const value = fieldValue(field, dose, unit);
-  const set = (typed: number): void => onChange(withField(dose, field, typed, unit));
+  const set = (typed: number, max?: number): void =>
+    onChange(withFieldRange(dose, field, typed, max, unit));
+  const range = field.range === undefined ? undefined : { max: fieldTop(field, dose) };
   return (
     <View style={{ flexGrow: 1, flexBasis: "40%" }}>
       {field.measure === "time" ? (
@@ -39,6 +47,7 @@ export function DoseInput({
           {...fieldLimits(field, unit)}
           value={value}
           onChange={set}
+          range={range}
           placeholder={placeholder}
           unit={field.measure === "weight" ? unit : undefined}
         />

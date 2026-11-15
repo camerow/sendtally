@@ -190,6 +190,28 @@ describe("Sets player", () => {
     expect(screen.getAllByText(/RPE/)).toHaveLength(1);
   });
 
+  it("offers optional sets once the minimum is ticked, up to the top of the range", async () => {
+    const ranged: WorkoutRun = {
+      ...run,
+      items: [
+        { exercise: "Bench press", dose: { sets: 1, setsMax: 2, reps: 8, repsMax: 12 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    };
+    await renderWithHang(<SetsScreen run={ranged} />, hangData());
+    expect(screen.getAllByText("8-12")).toHaveLength(1);
+    expect(screen.queryByLabelText("Add a set to Bench press")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Bench press, set 1"));
+    expect(screen.getByText("Add set, up to 2")).toBeTruthy();
+    expect(liveRun.read()?.rest).toMatchObject({ at: "after:0" });
+    await fireEvent.press(screen.getByLabelText("Add a set to Bench press"));
+    expect(liveRun.read()?.rest).toBeUndefined();
+    expect(screen.getByLabelText("Bench press, set 2")).toBeTruthy();
+    expect(screen.queryByLabelText("Add a set to Bench press")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Bench press, set 2"));
+    expect(liveRun.read()?.state).toMatchObject({ ticked: ["0:0", "0:1"] });
+  });
+
   it("shows which dose an alternating exercise runs, with its name when it has one", async () => {
     const alternating: WorkoutRun = {
       ...run,

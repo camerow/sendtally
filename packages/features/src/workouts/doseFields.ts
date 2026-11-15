@@ -28,12 +28,16 @@ export type DoseField = {
   measure: "count" | "time" | "weight";
   /** What an empty field means, when it means something. */
   placeholder?: MessageKey;
+  /** Where the top of a range typed in it goes, when it takes one. */
+  range?: "setsMax" | "repsMax";
 };
 
 const count = (key: DoseKey, label: MessageKey): DoseField => ({ key, label, measure: "count" });
 const time = (key: DoseKey, label: MessageKey): DoseField => ({ key, label, measure: "time" });
 const weight: DoseField = { key: "weightKg", label: "hang.weight", measure: "weight" };
 const rpe: DoseField = { key: "targetRpe", label: "workouts.dose.rpe", measure: "count" };
+const sets: DoseField = { ...count("sets", "workouts.dose.sets"), range: "setsMax" };
+const reps: DoseField = { ...count("reps", "workouts.dose.reps"), range: "repsMax" };
 
 /** The dose numbers a grip asks for: hangs, or a ground pull's lifts or time. Weight is chosen per use. */
 const FINGERS_FIELDS: Record<GripMeasure, readonly DoseField[]> = {
@@ -51,13 +55,8 @@ const FINGERS_FIELDS: Record<GripMeasure, readonly DoseField[]> = {
 export const DOSE_FIELDS_OF: Record<WorkoutKind, readonly DoseField[]> = {
   hangboard: FINGERS_FIELDS.hang,
   climbing: [count("sets", "workouts.dose.sets"), count("reps", "workouts.dose.reps"), rpe],
-  strength: [count("sets", "workouts.dose.sets"), count("reps", "workouts.dose.reps"), weight, rpe],
-  mobility: [
-    count("sets", "workouts.dose.sets"),
-    count("reps", "workouts.dose.reps"),
-    time("onS", "workouts.dose.hold"),
-    rpe,
-  ],
+  strength: [sets, reps, weight, rpe],
+  mobility: [sets, reps, time("onS", "workouts.dose.hold"), rpe],
   other: [
     count("sets", "workouts.dose.rounds"),
     time("onS", "workouts.dose.work"),
@@ -74,13 +73,8 @@ export const DOSE_FIELDS_BY_MEASURE: Record<Exclude<DoseMeasure, "hang">, readon
   ],
   wallTime: [count("sets", "workouts.dose.sets"), time("onS", "workouts.dose.time"), rpe],
   laps: [count("sets", "workouts.dose.laps"), count("reps", "workouts.dose.moves"), rpe],
-  reps: [count("sets", "workouts.dose.sets"), count("reps", "workouts.dose.reps"), rpe],
-  repsWeight: [
-    count("sets", "workouts.dose.sets"),
-    count("reps", "workouts.dose.reps"),
-    weight,
-    rpe,
-  ],
+  reps: [sets, reps, rpe],
+  repsWeight: [sets, reps, weight, rpe],
   seconds: [count("sets", "workouts.dose.sets"), time("onS", "workouts.dose.hold"), rpe],
   secondsWeight: [
     count("sets", "workouts.dose.sets"),
@@ -170,6 +164,27 @@ export function fieldValue(field: DoseField, dose: Dose, unit: WeightUnit): numb
   const value = dose[field.key];
   if (value === undefined) return null;
   return field.measure === "weight" ? toUnit(value, unit) : value;
+}
+
+/** The top of a range in a field that takes one; none when it holds one number. */
+export const fieldTop = (field: DoseField, dose: Dose): number | undefined =>
+  field.range === undefined ? undefined : dose[field.range];
+
+/** The dose with a field set to a range in the user's unit; a top at or under the bottom is none. */
+export function withFieldRange(
+  dose: Dose,
+  field: DoseField,
+  value: number,
+  max: number | undefined,
+  unit: WeightUnit
+): Dose {
+  const next = withField(dose, field, value, unit);
+  if (field.range === undefined) return next;
+  const { [field.range]: _, ...rest } = next;
+  const min = next[field.key];
+  if (max === undefined || min === undefined || max <= min) return rest;
+  const top = (RANGE[field.key] ?? LIMITS.count)[1];
+  return { ...rest, [field.range]: Math.min(Math.round(max), top) };
 }
 
 /** How a count or weight types on the keypad: weight by 2.5 kg or 5 lb, stepping below zero for assistance. */

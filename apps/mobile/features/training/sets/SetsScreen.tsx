@@ -33,6 +33,7 @@ import { ClimbingCard } from "./ClimbingCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
 import { SET_COLUMNS } from "./setColumns";
 import { SetsCard } from "./SetsCard";
+import { ExtraSets } from "./ExtraSets";
 
 /**
  * A lifting workout as a set table on a clock from Start: tick each set as it is done, rest
@@ -132,6 +133,7 @@ export function SetsScreen({
             const d = shown[i];
             if (d === undefined) return null;
             const climbing = player.climbing(i);
+            const range = player.extra(i);
             if (climbing !== null)
               return (
                 <ClimbingCard
@@ -147,7 +149,7 @@ export function SetsScreen({
                 {folded ? (
                   <FoldedSetsCard
                     name={nameOf(i)}
-                    sets={item.dose.sets}
+                    sets={d.sets.length}
                     onOpen={() => player.open(i)}
                   />
                 ) : (
@@ -165,6 +167,11 @@ export function SetsScreen({
                     holdRow={(set) => holdRow({ item: i, set })}
                     go={(set) => go({ item: i, set })}
                     restUnder={(set) => restAt(setKey({ item: i, set }))}
+                    footer={
+                      range !== null && (
+                        <ExtraSets {...range} exercise={nameOf(i)} onAdd={() => player.addSet(i)} />
+                      )
+                    }
                   />
                 )}
                 {restBetween(i)}

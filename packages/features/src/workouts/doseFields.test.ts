@@ -7,6 +7,7 @@ import {
   fieldValue,
   newDoseFor,
   withField,
+  withFieldRange,
 } from "./doseFields";
 
 const [hangs, hang, rest, sets] = DOSE_FIELDS_OF.hangboard;
@@ -90,5 +91,30 @@ describe("dose fields", () => {
       edgeMm: 0,
       setRestS: 120,
     });
+  });
+});
+
+describe("dose ranges", () => {
+  const [sets, reps, weight] = DOSE_FIELDS_OF.strength;
+
+  it("takes a range in strength sets and reps, and a top at or under the bottom as one number", () => {
+    expect(withFieldRange({ sets: 3, reps: 8 }, sets!, 3, 5, "kg")).toEqual({
+      sets: 3,
+      setsMax: 5,
+      reps: 8,
+    });
+    expect(withFieldRange({ sets: 3, reps: 8 }, reps!, 8, 12, "kg")).toEqual({
+      sets: 3,
+      reps: 8,
+      repsMax: 12,
+    });
+    expect(withFieldRange({ sets: 3, setsMax: 5 }, sets!, 4, undefined, "kg")).toEqual({ sets: 4 });
+    expect(withFieldRange({ sets: 3, setsMax: 5 }, sets!, 5, 5, "kg")).toEqual({ sets: 5 });
+    expect(withFieldRange({ sets: 3, reps: 8, repsMax: 12 }, reps!, 0, 12, "kg")).toEqual({
+      sets: 3,
+    });
+    expect(weight?.range).toBeUndefined();
+    expect(DOSE_FIELDS_OF.hangboard.some((f) => f.range !== undefined)).toBe(false);
+    expect(DOSE_FIELDS_OF.other.some((f) => f.range !== undefined)).toBe(false);
   });
 });

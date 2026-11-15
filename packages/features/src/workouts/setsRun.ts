@@ -11,6 +11,27 @@ export const setKey = ({ item, set }: SetAt): string => setKeyOf(item, set);
 export const allSets = (items: readonly SessionItem[]): SetAt[] =>
   items.flatMap((it, item) => Array.from({ length: it.dose.sets }, (_, set) => ({ item, set })));
 
+/** The items with each one's sets as many as it has so far, extras added past its minimum too. */
+export const withDoneSets = (
+  items: readonly SessionItem[],
+  done: readonly Pick<ItemDone, "item" | "sets">[]
+): SessionItem[] =>
+  items.map((it, i) => {
+    const n = done.find((d) => d.item === i)?.sets.length ?? it.dose.sets;
+    return n > it.dose.sets ? { ...it, dose: { ...it.dose, sets: n } } : it;
+  });
+
+/** An item's set range as the player runs it: the sets it has, and its top; none without one. */
+export function setsRange(
+  written: SessionItem | undefined,
+  live: SessionItem | undefined
+): { sets: number; max: number } | null {
+  const max = written?.dose.setsMax;
+  if (written === undefined || live === undefined || max === undefined || max <= written.dose.sets)
+    return null;
+  return { sets: live.dose.sets, max };
+}
+
 /** Whether every set of an item is ticked. */
 export const itemDone = (
   items: readonly SessionItem[],

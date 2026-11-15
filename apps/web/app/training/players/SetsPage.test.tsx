@@ -123,6 +123,24 @@ afterEach(() => {
 });
 
 describe("Sets player", () => {
+  it("offers optional sets once the minimum is ticked, up to the top of the range", () => {
+    mount({
+      ...run,
+      items: [
+        { exercise: "Bench press", dose: { sets: 1, setsMax: 2, reps: 8, repsMax: 12 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    });
+    expect(container.textContent).toContain("8-12");
+    expect(byLabel("Add a set to Bench press")).toBeNull();
+    act(() => (byLabel("Bench press, set 1") as HTMLInputElement).click());
+    expect(byLabel("Rest, 2:00 left")).not.toBeNull();
+    act(() => (byLabel("Add a set to Bench press") as HTMLButtonElement).click());
+    expect(byLabel("Bench press, set 2")).not.toBeNull();
+    expect(byLabel("Add a set to Bench press")).toBeNull();
+    expect(byLabel("Rest, 2:00 left")).toBeNull();
+  });
+
   it("shows an exercise's own target beside its name, and none where it sets none", () => {
     mount({
       ...run,

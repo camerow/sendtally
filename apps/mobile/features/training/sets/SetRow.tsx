@@ -14,6 +14,8 @@ import { SetDoneFields } from "./SetDoneFields";
 export type SetRowProps = {
   n: number;
   target: SetDone;
+  /** The top of a rep range the target runs to. */
+  repsMax?: number;
   done: SetDone;
   previous: SetDone | undefined;
   lifting: boolean;
@@ -31,6 +33,7 @@ export type SetRowProps = {
 export function SetRow({
   n,
   target,
+  repsMax,
   done,
   previous,
   lifting,
@@ -58,7 +61,7 @@ export function SetRow({
       </Text>
       <View style={[SET_COLUMNS.target, { gap: 2 }]}>
         <Text style={[type.mono, { fontSize: 14, color: colors.textSecondary }]}>
-          {setText(target, unit) || "-"}
+          {setText(target, unit, repsMax) || "-"}
         </Text>
         {previous !== undefined && setText(previous, unit) !== "" && (
           <Text style={[type.mono, { fontSize: 11, color: colors.textMuted }]}>

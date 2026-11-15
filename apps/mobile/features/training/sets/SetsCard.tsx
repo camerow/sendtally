@@ -37,6 +37,8 @@ export type SetsCardProps = {
   go: (set: number) => React.ReactNode;
   /** What shows under a set: the rest its tick started, if it is running, else its rest to come. */
   restUnder: (set: number) => React.ReactNode;
+  /** Under the sets, such as one more to add. */
+  footer?: React.ReactNode;
 };
 
 /** One exercise of the workout as a table of its sets, with its dose's letter when it alternates. */
@@ -54,6 +56,7 @@ export function SetsCard({
   holdRow,
   go,
   restUnder,
+  footer,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
   const { name: doseName, setRestS } = item.dose;
@@ -108,6 +111,7 @@ export function SetsCard({
           {holdRow(i) || (
             <SetRow
               n={i + 1}
+              repsMax={item.dose.repsMax}
               target={targetOf(i)}
               done={set}
               previous={previous[i]}
@@ -127,6 +131,7 @@ export function SetsCard({
             ))}
         </React.Fragment>
       ))}
+      {footer}
     </View>
   );
 }

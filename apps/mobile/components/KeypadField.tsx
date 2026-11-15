@@ -29,7 +29,8 @@ export type KeypadFieldProps = FieldSlot & {
   /** Beside the box, under the label, such as a stepper's − and +. */
   before?: React.ReactNode;
   after?: React.ReactNode;
-  onChange: (value: number) => void;
+  /** A range's top comes with it, none when typed as one number. */
+  onChange: (value: number, max?: number) => void;
 };
 
 const MARKED = "rgba(249,220,92,0.35)";
@@ -115,7 +116,7 @@ export function KeypadField({
       box,
       hasNext: field.onNext !== undefined,
       hasPrev: field.onPrev !== undefined,
-      commit: (typed) => latest.current.onChange(typed),
+      commit: (...typed) => latest.current.onChange(...typed),
       close: () => latest.current.close(),
       next: () => latest.current.onNext?.(),
       prev: () => latest.current.onPrev?.(),

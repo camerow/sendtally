@@ -188,6 +188,25 @@ describe("WorkoutEditorPage", () => {
     expect(saved().items.map((i) => i.restAfterS)).toEqual([90, 120, undefined]);
   });
 
+  it("types a set range with a hyphen, and back to one number", () => {
+    mount(<WorkoutEditorPage id="legs" />);
+    const sets = (): HTMLInputElement => {
+      const label = Array.from(container.querySelectorAll("label")).find(
+        (l) => l.textContent === "Sets"
+      )!;
+      return document.getElementById(label.htmlFor) as HTMLInputElement;
+    };
+    const blur = (): void =>
+      act(() => {
+        sets().dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+      });
+    type(sets(), "5-3");
+    blur();
+    expect(sets().value).toBe("3-5");
+    click(container.querySelector(".detail-primary"));
+    expect(saved().items[0]?.doses).toEqual([{ sets: 3, setsMax: 5, reps: 5 }]);
+  });
+
   it("asks before discarding changes, and leaves at once when nothing changed", () => {
     mount(<WorkoutEditorPage id="legs" />);
     type(container.querySelector<HTMLInputElement>(".name-field")!, "Leg day");

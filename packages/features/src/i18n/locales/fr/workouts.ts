@@ -117,6 +117,7 @@ export const workouts = {
   "workouts.exercise.kneeRaises": "Relevés de genoux suspendu",
   "workouts.dose.sets": "Séries",
   "workouts.dose.rpe": "RPE",
+  "workouts.rangeTo": "à",
   "workouts.dose.reps": "Rép.",
   "workouts.dose.hangs": "Suspensions",
   "workouts.dose.hangTime": "Temps de suspension",

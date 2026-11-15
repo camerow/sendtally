@@ -129,6 +129,16 @@
   color: var(--text-on-white-secondary);
 }
 
+.player-add-set {
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+.player-sets-of-max {
+  margin: 6px 0 0;
+  font-family: var(--font-mono);
+}
+
 .player-card--folded .player-card-meta {
   font-family: var(--font-mono);
 }

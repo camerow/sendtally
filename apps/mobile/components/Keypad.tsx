@@ -2,9 +2,12 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import {
   entryNumber,
+  entryRange,
   entrySeconds,
   numberEntry,
   openNumber,
+  openRange,
+  rangeEntry,
   openTime,
   timeEntry,
   timeText,
@@ -18,7 +21,13 @@ import { press } from "../lib/press";
 import { Sheet } from "./Sheet";
 
 export type KeypadMode =
-  ({ kind: "time" } & TimeLimits) | ({ kind: "number"; unit?: string } & NumberLimits);
+  | ({ kind: "time" } & TimeLimits)
+  | ({
+      kind: "number";
+      unit?: string;
+      /** A count that may run to a top, typed with To in place of 00; the top it has now. */
+      range?: { max?: number };
+    } & NumberLimits);
 
 export type KeypadProps = {
   visible: boolean;
@@ -26,8 +35,8 @@ export type KeypadProps = {
   mode: KeypadMode;
   /** Seconds in time mode. The first digit typed replaces it. */
   value: number;
-  /** Done, Next and a tap outside all commit; an unchanged value is not committed. */
-  onCommit: (value: number) => void;
+  /** Done, Next and a tap outside all commit; an unchanged value is not committed. A range commits its top too. */
+  onCommit: (value: number, max?: number) => void;
   onClose: () => void;
   /** Shows a Next key that commits, closes and calls this. */
   onNext?: () => void;
@@ -89,9 +98,13 @@ export function Keypad({
   onType,
 }: KeypadProps): React.ReactElement | null {
   const limits = mode.kind === "number" ? mode : NUMBER_DEFAULTS;
+  const range = mode.kind === "number" ? mode.range : undefined;
   const open = (): Entries => ({
     time: openTime(value, mode),
-    number: openNumber(value, limits),
+    number:
+      range === undefined
+        ? openNumber(value, limits)
+        : openRange({ min: value, max: range.max }, limits),
     committed: false,
   });
   const [entries, setEntries] = React.useState(open);
@@ -105,7 +118,10 @@ export function Keypad({
   const reduce = (e: Entries, action: EntryAction): Entries =>
     mode.kind === "time"
       ? { ...e, time: timeEntry(e.time, action, mode) }
-      : { ...e, number: numberEntry(e.number, action, limits) };
+      : {
+          ...e,
+          number: (range === undefined ? numberEntry : rangeEntry)(e.number, action, limits),
+        };
   const valueOf = (e: Entries): number =>
     mode.kind === "time" ? entrySeconds(e.time) : entryNumber(e.number);
 
@@ -113,7 +129,10 @@ export function Keypad({
     if (entries.committed) return;
     const done = reduce(entries, { type: "done" });
     setEntries({ ...done, committed: true });
-    if (valueOf(done) !== value) onCommit(valueOf(done));
+    if (range !== undefined) {
+      const typed = entryRange(done.number, limits);
+      if (typed.min !== value || typed.max !== range.max) onCommit(typed.min, typed.max);
+    } else if (valueOf(done) !== value) onCommit(valueOf(done));
   };
   const close = (): void => {
     finish();
@@ -136,7 +155,9 @@ export function Keypad({
   const [zeros, typed] =
     mode.kind === "time"
       ? timeText(entries.time)
-      : ["", entries.number.text.replace(".", decimalMark()).replace("-", "−")];
+      : range !== undefined
+        ? ["", entries.number.text]
+        : ["", entries.number.text.replace(".", decimalMark()).replace("-", "−")];
   const shown = mode.kind === "number" && mode.unit !== undefined ? `${typed} ${mode.unit}` : typed;
   React.useEffect(() => {
     if (visible) onType?.([zeros, typed]);
@@ -235,7 +256,9 @@ export function Keypad({
       digit("0"),
       decimals
         ? key(decimalMark(), send({ type: "decimal" }), "digit", t("common.decimalPoint"))
-        : digit("00"),
+        : range !== undefined
+          ? key(t("workouts.rangeTo"), send({ type: "to" }), "side")
+          : digit("00"),
       key(t("common.done"), close, "done"),
     ],
   ];
