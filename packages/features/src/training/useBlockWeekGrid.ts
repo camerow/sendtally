@@ -78,24 +78,30 @@ export function useBlockWeekGrid({
   openDay,
 }: BlockWeekGridArgs): BlockWeekGrid {
   const shownWeek = week ?? 1;
-  // The days before Apply to following weeks went on, which turning it off puts back.
-  const [before, setBefore] = React.useState<readonly DaySchedule[] | null>(null);
+  const snapshot = (): DaySchedule[] => members.map((m) => scheduleOf(plan, m));
+  // Apply to following weeks starts on; turning it off puts the weeks after back as Edit found them.
+  const [following, setOn] = React.useState(true);
+  const [before, setBefore] = React.useState(snapshot);
   const [wasShowing, setWasShowing] = React.useState({ editing, shownWeek });
   if (editing !== wasShowing.editing || shownWeek !== wasShowing.shownWeek) {
     setWasShowing({ editing, shownWeek });
-    setBefore(null);
+    setOn(true);
+    setBefore(snapshot());
   }
-  const following = before !== null;
   const setFollowing = (on: boolean): void => {
-    const now = members.map((m) => scheduleOf(plan, m));
     onSchedules?.(
-      now.map((s, i) =>
+      snapshot().map((s) =>
         on
           ? withFollowing(s, shownWeek, block.weeks)
-          : withoutFollowing(s, before?.[i] ?? s, shownWeek, block.weeks)
+          : withoutFollowing(
+              s,
+              before.find((b) => b.membershipId === s.membershipId) ?? s,
+              shownWeek,
+              block.weeks
+            )
       )
     );
-    setBefore(on ? now : null);
+    setOn(on);
   };
   const dates = blockWeekDates(block, week);
   const statuses = dates === null ? null : weekPlans(log, dates, today);
