@@ -2,20 +2,21 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import type { LibraryWorkout } from "@sendtally/features/workouts";
+import type { WorkoutKind } from "@sendtally/core/hang";
 import { AddButton } from "../../../components/AddButton";
 import { Icon } from "../../../components/Icon";
 import { press } from "../../../lib/press";
 import { CategoryRow } from "../components/CategoryRow";
 import { type } from "../type";
 
-/** Where the workout stands: addable, just added here, or already there. */
+/** Where it stands: addable, just added here, or already there. */
 export type AddState = "none" | "added" | "there";
 
 export type AddWorkoutRowProps = {
-  workout: LibraryWorkout;
-  /** What it holds in a line, such as "3 × 8" or "20m". */
-  dose: string | null;
+  kind: WorkoutKind;
+  name: string;
+  /** What it holds in a line, such as "3 × 8" or "In 2 workouts". */
+  meta: string | null;
   state: AddState;
   /** "In block", or the day's word for a plan already on it. */
   thereLabel: string;
@@ -24,10 +25,11 @@ export type AddWorkoutRowProps = {
   onToggle: () => void;
 };
 
-/** A workout to add: its kind's tile, name and dose, opening its preview, with + to add it. */
+/** A workout or exercise to add: its kind's tile, name and meta, opening it, with + to add it. */
 export function AddWorkoutRow({
-  workout,
-  dose,
+  kind,
+  name,
+  meta,
   state,
   thereLabel,
   onOpen,
@@ -36,7 +38,7 @@ export function AddWorkoutRow({
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <CategoryRow kind={workout.kind} name={workout.name} meta={dose} onPress={onOpen} />
+        <CategoryRow kind={kind} name={name} meta={meta} onPress={onOpen} />
       </View>
       {state === "there" ? (
         <Text style={[type.mono, { fontSize: 12, color: colors.textMuted }]}>{thereLabel}</Text>
@@ -44,7 +46,7 @@ export function AddWorkoutRow({
         <Pressable
           onPress={onToggle}
           accessibilityRole="button"
-          accessibilityLabel={t("plan.undoAdd", { name: workout.name })}
+          accessibilityLabel={t("plan.undoAdd", { name })}
           hitSlop={6}
           style={press({
             height: 36,
@@ -62,7 +64,7 @@ export function AddWorkoutRow({
           </Text>
         </Pressable>
       ) : (
-        <AddButton label={t("plan.addNamed", { name: workout.name })} onPress={onToggle} />
+        <AddButton label={t("plan.addNamed", { name })} onPress={onToggle} />
       )}
     </View>
   );

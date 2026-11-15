@@ -5,7 +5,7 @@ import React from "react";
 import { Alert, type AlertButton } from "react-native";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
 import type * as Workouts from "@sendtally/features/workouts";
-import { hangData, renderWithHang } from "../data/renderWithHang";
+import { anExercise, hangData, renderWithHang } from "../data/renderWithHang";
 import { AddWorkoutsSheet } from "./AddWorkoutsSheet";
 import { ScheduleScreen } from "./ScheduleScreen";
 import { WorkoutScreen } from "../library-detail/WorkoutScreen";
@@ -125,6 +125,46 @@ describe("adding to the plan", () => {
     expect(screen.queryByLabelText("Add 5x5 strength")).toBeNull();
     await fireEvent.press(screen.getByText("Done"));
     expect(onClose).toHaveBeenCalledWith([]);
+  });
+
+  it("adds an exercise to a block as a workout of it alone", async () => {
+    const there = {
+      id: "m-old",
+      workoutId: "legs",
+      blockId: "b1",
+      weekdays: [],
+      start: "2026-10-05",
+      position: 0,
+    };
+    await renderWithHang(
+      <AddWorkoutsSheet flow={{ date: null, blockId: "b1" }} visible onClose={jest.fn()} />,
+      hangData(),
+      {
+        workouts: [legs],
+        plan: { ...winter, memberships: [there] },
+        exercises: [
+          anExercise("e1", "Pull-ups", "strength"),
+          anExercise("e2", "Back squat", "strength"),
+        ],
+      }
+    );
+    await fireEvent.press(screen.getByText("Exercises"));
+    expect(screen.getAllByText(/Not in a workout yet/).length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText("Add Back squat")).toBeNull();
+    expect(screen.getByText("In block")).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText("Search exercises"), "pull");
+    await fireEvent.press(screen.getByLabelText("Add Pull-ups"));
+    expect(mockWorkouts.saveWorkout).toHaveBeenCalledWith(
+      "m-new",
+      expect.objectContaining({
+        kind: "strength",
+        name: "Pull-ups",
+        items: [expect.objectContaining({ exercise: "Pull-ups" })],
+      })
+    );
+    expect(mockPlan.saveMembership).toHaveBeenCalledWith(
+      expect.objectContaining({ workoutId: "m-new", blockId: "b1", weekdays: [] })
+    );
   });
 
   it("adds a workout to a block from its ···, a block it is in checked, an ended one left out", async () => {

@@ -1,7 +1,8 @@
 import type { Exercise } from "@sendtally/api-client";
 import type { Grip } from "@sendtally/core/hang";
 import { exerciseLabel, unclaimedBuiltIns } from "./builtIns";
-import type { PickerEntry, PickerFilter } from "./types";
+import { categoryShelves } from "./shelves";
+import type { CategoryShelf, PickerEntry, PickerFilter } from "./types";
 
 export type PickerWorld = {
   mine: readonly Exercise[];
@@ -77,4 +78,13 @@ export function entryNamed(world: PickerWorld, name: string): PickerEntry | unde
   return allEntries(world).find(
     (e) => fold(e.name) === key || ("exercise" in e.source && fold(e.source.exercise.name) === key)
   );
+}
+
+/** Every exercise and grip matching what was typed, by category, empty categories left out. */
+export function entryShelves(world: PickerWorld, text: string): CategoryShelf<PickerEntry>[] {
+  const all = { category: "all", text } as const;
+  return categoryShelves([
+    ...pickerEntries({ ...world, fingers: false }, all),
+    ...pickerEntries({ ...world, fingers: true }, all),
+  ]).filter((s) => s.entries.length > 0);
 }
