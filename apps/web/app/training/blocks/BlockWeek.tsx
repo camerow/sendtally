@@ -157,7 +157,9 @@ export function BlockWeek({
         />
       )}
       {dayless.length > 0 && (editing || onEditDays === undefined) && (
-        <p className="block-hint">{t("plan.tapDays", { workout: daylessNames })}</p>
+        <p className="block-hint">
+          {t("plan.tapDays", { workout: daylessNames, count: dayless.length })}
+        </p>
       )}
       {canAdd && !empty && (editing || rows.length === 0) && action}
       {editing && onMove !== undefined && members.length > 1 && (

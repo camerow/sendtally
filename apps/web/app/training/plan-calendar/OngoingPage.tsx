@@ -91,6 +91,7 @@ export function OngoingPage(): React.ReactElement {
         <p className="sheet-copy">
           {t("plan.tapDays", {
             workout: dayless.map((m) => log.workout(m.workoutId)?.name ?? "").join(", "),
+            count: dayless.length,
           })}
         </p>
       )}
