@@ -47,9 +47,9 @@ There is no native code either, so every app slice ships over the air.
 
 ## What each player does
 
-- Sets player (`SetsScreen` / `SetsPage`): only where the exercise's dose has a `targetRpe`, a ticked set row gets a small RPE box beside what was done, on the same line, blank showing the target dim ("RPE 8") the way an empty range field shows its example.
+- Sets player (`SetsScreen` / `SetsPage`): only where the exercise's dose has a `targetRpe`, the card gains an RPE column headed "RPE", and a ticked set's cell holds just the number, blank showing the target dim the way an empty range field shows its example.
   It is entered with the in-app `Keypad` on mobile (number mode, 1 to 10, step 1, no decimals), and Next walks to the next ticked set's RPE through `useFieldOrder`.
-  The web uses its own number input, beside the Done fields on desktop and at 375 alike.
+  The web uses its own number input, a 64 px column.
   Ticking stays one tap and opens nothing; the unticked current row shows no box.
   An exercise with no target draws exactly today's player, which is every existing workout.
 - Checklist player: no live entry, because it has no set rows; its review takes it.
@@ -73,7 +73,8 @@ Entry timing, which the board draws side by side:
 3. Only in the review after the run.
 
 Will picked 1 (the board's option A) in a board comment on 2026-11-15, on ticked rows only, which also covers 3 for free because the review uses the same row; 2 (option B) is drawn as the alternative and adds a second entry point for a subset of sets.
-`SET_COLUMNS` stays Set, Target, Done, tick: the box sits inside the Done cell beside its value, per Will's comment on the board (side by side, not stacked), taking width from the Target column, whose text already shrinks to fit.
+Per Will's two board comments (side by side, then one header instead of "RPE" on every line), cards with a target, and every card in the review, use a fifth column: `SET_COLUMNS` becomes Set 24, Target flex, Done sized to its content, RPE 36, tick 44, with 8 px gaps; cards without a target keep today's four columns.
+At 375 the row is 309 px and a compact reps × weight Done field is about 95 px without its unit, about 113 with it, so the even split v388 drew does not fit: Done keeps its content width, its weight field drops the unit on cards with the column (the card states it once, as the set chips do), and Target wraps to two lines rather than shrink below `minimumFontScale` 0.75.
 
 ## Old builds
 
