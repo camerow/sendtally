@@ -345,32 +345,52 @@ describe("a day on a scheduled block", () => {
     });
   });
 
-  it("edits the picked week's days, and the weeks after it once switched on", async () => {
+  const following = (): ReturnType<typeof screen.getByRole> =>
+    screen.getByRole("switch", { name: "Apply to following weeks" });
+
+  it("starts Edit with Apply to following weeks on, and leaves the days alone until one is set", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
     await fireEvent.press(screen.getByText("Edit"));
-    await fireEvent.press(screen.getByLabelText("Back squat, Thursday"));
-    await fireEvent.press(screen.getByRole("switch", { name: "Apply to following weeks" }));
-    await fireEvent.press(screen.getByLabelText("Back squat, Saturday"));
+    expect(following()).toHaveProp(
+      "accessibilityState",
+      expect.objectContaining({ checked: true })
+    );
     await fireEvent.press(screen.getByText("Save"));
-    const draft = mockPlan.saveDraft.mock.calls[0]?.[0];
-    expect(draft?.schedules[0]?.weeks).toEqual([
-      { membershipId: "m1", fromWeek: 2, weekdays: [0, 1, 3, 5] },
-    ]);
-    expect(screen.getByText("Edit")).toBeTruthy();
+    expect(mockPlan.saveDraft.mock.calls[0]?.[0]?.schedules[0]?.weeks ?? []).toEqual([]);
   });
 
-  it("applies the week to the following weeks as it is switched on, and takes it back off", async () => {
+  it("sets a day in week 2 of 4 for weeks 3 and 4 too", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
     await fireEvent.press(screen.getByText("Edit"));
     await fireEvent.press(screen.getByLabelText("Back squat, Thursday"));
-    const following = (): ReturnType<typeof screen.getByRole> =>
-      screen.getByRole("switch", { name: "Apply to following weeks" });
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockPlan.saveDraft.mock.calls[0]?.[0]?.schedules[0]?.weeks).toEqual([
+      { membershipId: "m1", fromWeek: 2, weekdays: [0, 1, 3] },
+    ]);
+  });
+
+  it("switched off, puts the weeks after back and sets the next day for this week alone", async () => {
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
+    await fireEvent.press(screen.getByText("Edit"));
+    await fireEvent.press(screen.getByLabelText("Back squat, Thursday"));
     await fireEvent.press(following());
+    await fireEvent.press(screen.getByLabelText("Back squat, Saturday"));
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockPlan.saveDraft.mock.calls[0]?.[0]?.schedules[0]?.weeks).toEqual([
+      { membershipId: "m1", fromWeek: 2, weekdays: [0, 1, 3, 5] },
+      { membershipId: "m1", fromWeek: 3, weekdays: [0, 1] },
+    ]);
+  });
+
+  it("switched back on, applies the week to the following weeks", async () => {
+    await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan: running });
+    await fireEvent.press(screen.getByText("Edit"));
+    await fireEvent.press(following());
+    await fireEvent.press(screen.getByLabelText("Back squat, Thursday"));
     await fireEvent.press(following());
     await fireEvent.press(screen.getByText("Save"));
     expect(mockPlan.saveDraft.mock.calls[0]?.[0]?.schedules[0]?.weeks).toEqual([
       { membershipId: "m1", fromWeek: 2, weekdays: [0, 1, 3] },
-      { membershipId: "m1", fromWeek: 3, weekdays: [0, 1] },
     ]);
   });
 
@@ -586,16 +606,7 @@ describe("templates", () => {
     await fireEvent.press(screen.getByText("Save"));
     expect(mockPlan.saveDraft).toHaveBeenCalledWith({
       block: { id: "t1", name: "Peak", start: null, weeks: 7, focus: null },
-      schedules: [
-        {
-          membershipId: "m9",
-          weekdays: [],
-          weeks: [
-            { membershipId: "m9", fromWeek: 1, weekdays: [2] },
-            { membershipId: "m9", fromWeek: 2, weekdays: [] },
-          ],
-        },
-      ],
+      schedules: [{ membershipId: "m9", weekdays: [2], weeks: [] }],
       weekChanges: [],
       order: [],
       removed: [],
