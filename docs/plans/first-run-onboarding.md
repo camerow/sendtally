@@ -1,9 +1,10 @@
 # First-run onboarding
 
 Status: spec for direction D, Will's latest, agreed between onboarding-eng and onboarding-designer on 2026-11-14; directions A, B and C are superseded.
+Slice 1 (both steps, mobile and web) is built on `feat/first-run-onboarding`; slices 2 to 4 wait for its review.
 Design boards on the "First run onboarding" page (id `first-run`) of the canvas https://claude.ai/artifact/CNPnNQwgvzgvxk4ZAYTyto:
 
-- "First run D" (`FirstRunD.dc.html`, x 0, y 0): the carousel and the two-step flow.
+- "First run D" (`FirstRunD.dc.html`, x 0, y 0): the carousel and the two-step flow, with the web steps at 1280 and 375 in frames 10 to 15.
 - "First run: bringing in an existing log" (`FirstRunImport.dc.html`, x 0, y 2020): the nine import frames and a card per source.
 - Superseded C, A and B below them under "Superseded: C, A and B" (y 4120, 6200, 8660).
 
@@ -20,7 +21,7 @@ He also wants to ask about importable logs or a personal spreadsheet, to get a b
 The signed-out carousel explains the product before sign-up: what Sendtally is, then exercises, workouts and blocks, one slide each.
 After sign-up a two-step flow runs once per account: whether you keep a log already (and importing it), then which days you usually climb.
 The days are saved as an Ongoing Climbing workout, the existing reminder sheet follows, and the flow ends on a filled Plan once; from then on the app opens on Log.
-The only new building blocks are four carousel slides, one built-in "Climbing" workout, one flag on the account, per-source import steps, and the events that record the answers.
+The only new building blocks are four carousel slides, one built-in "Climbing" workout, one flag on the account, per-source import steps, and the event that records the answers.
 
 ## 1. What a new account sees today
 
@@ -152,22 +153,26 @@ New work across all sources:
 ### Step 2 of 2: Which days do you usually climb?
 
 - `WeekdayChips`, climbing only; no lifting or hangboard rows, no explanatory line.
-- Continue saves one Ongoing membership of the built-in "Climbing" workout on those weekdays (`block_id` null, `weekdays_json`, start today) through the existing `PUT /v1/memberships/:id`.
+- Continue saves one Ongoing membership of the built-in "Climbing" workout (`climb-session`) on those weekdays (`block_id` null, `weekdays_json`, start today) through the existing `PUT /v1/memberships/:id`.
+- "Climbing" has no exercises, so its Start opens the live session linked to the plan (`workoutStart` in `packages/features/src/workouts/workoutStart.ts`), on the phone and now on the web too.
+- Ending that live session marks the day done on Plan: today's card becomes the logged session with a check, and the week strip's dot fills (checked on both apps).
 - With no days picked, nothing is saved and the reminder sheet does not show.
 
 ### Reminders
 
 - Saving the days is the account's first plan, so the existing `ReminderPromptProvider` shows the unchanged `ReminderPromptSheet`: Remind me (the only route to the system notification dialog) or Not now.
+- The web has no push, so on the web Continue goes straight to Plan.
 - Reminders are the existing local scheduled notifications for planned days (`features/training/reminders`), saved through `PUT /v1/preferences/training-reminders`.
 
 ### End: Plan, once
 
 - The week filled (`WeekStrip` dots), today's `OccurrenceCard` with Start when today is a climbing day, then the coming days.
+- After an import, the existing result toast ("Added 5 sessions", View) shows on Plan; on the phone it waits until the reminder sheet is answered, and the Schedule button hides while it shows.
 - From then on the app opens on Log, as for everyone.
 
 ### Later, and skipping
 
-- Skip on either step moves on; the flag is set when the flow ends.
+- Skip on step 1 ends the flow on Log; Later moves on to step 2; Skip on step 2 ends on Log; the flag is set when the flow ends.
 - The days live in Train > Blocks > Ongoing (`OngoingScreen`, unchanged), the way back to edit them.
 - Someone who skips everything lands on Log, empty (`ClimbingEmpty`, unchanged), where import also lives, as in Settings and the account menu.
 - Strava and gym stay the setup cards on Log.
@@ -187,23 +192,25 @@ New work across all sources:
 
 ### New pieces
 
-| Piece                                                                             | Where                                                                                                                                                                                                           |
-| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Four carousel slides with play-once art                                           | `apps/mobile/features/onboarding/slides.ts` and `SlideArt.tsx`; Reduce Motion through `AccessibilityInfo.isReduceMotionEnabled`                                                                                 |
-| Built-in workout "Climbing" (kind `climbing`), whose Start opens the live session | The built-in catalogue in `@sendtally/core`, added through the `library-add` skill; it needs one item to satisfy the "a built-in workout always has items" rule, and how Log it behaves is decided in the build |
-| `users.start_answered`                                                            | Drizzle column (integer, default 0), generated migration, read and written through the existing preferences route, like `training_reminder_prompt_seen`                                                         |
-| The two flow steps                                                                | `apps/mobile/app/first-run.tsx` and `apps/mobile/features/first-run/`, from `OptionRow`, `WeekdayChips`, `Button` and the existing sheets                                                                       |
-| Per-source import steps and links                                                 | A steps view in `features/import`, direct links in `EXPORT_PAGES` (`packages/core/src/import/plan.ts`)                                                                                                          |
-| Sends and attempts on the review                                                  | `planStats` in `packages/features/src/import/transforms.ts`                                                                                                                                                     |
-| Import exit                                                                       | `ImportScreen` takes where to return; from the flow it goes back to step 2 instead of `/profile` (`features/import/ImportScreen.tsx:69`)                                                                        |
-| Wider file picker                                                                 | `text/plain` and `text/comma-separated-values` beside `text/csv`                                                                                                                                                |
+| Piece                                                                                              | Where                                                                                                                                                                                                                                                             |
+| -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Four carousel slides with play-once art                                                            | `apps/mobile/features/onboarding/slides.ts` and `SlideArt.tsx`; Reduce Motion through `AccessibilityInfo.isReduceMotionEnabled`                                                                                                                                   |
+| Built-in workout "Climbing" (`climb-session`, kind `climbing`), whose Start opens the live session | The built-in catalogue in `@sendtally/core` with no items; the "every built-in has items" rule now allows a climbing workout with none                                                                                                                            |
+| `users.first_run_done`                                                                             | Drizzle column (integer, default 0), generated migration `0037`; `GET /v1/status` returns `firstRun`, and `PUT /v1/preferences/first-run` sets it                                                                                                                 |
+| The two flow steps                                                                                 | Mobile: `apps/mobile/app/first-run.tsx` and `features/first-run/`, from `OptionRow`, `WeekdayChips` and `Button`. Web: `/app/start` (`apps/web/app/first-run/`), outside the app shell, from the `option-row` radio group, `WeekdayChips` and the design `Button` |
+| Per-source import steps and links                                                                  | A steps view in `features/import`, direct links in `EXPORT_PAGES` (`packages/core/src/import/plan.ts`)                                                                                                                                                            |
+| Sends and attempts on the review                                                                   | `planStats` in `packages/features/src/import/transforms.ts`                                                                                                                                                                                                       |
+| Import exit                                                                                        | Mobile `ImportScreen` takes `then`; web `ImportFlow` takes `then` (`/app/import?then=/app/start`); from the flow both go back to step 2 with the result                                                                                                           |
+| Wider file picker                                                                                  | `text/plain` and `text/comma-separated-values` beside `text/csv`                                                                                                                                                                                                  |
 
 Everything else (Ongoing memberships, reminders, the import review, the live session, Plan) is used unchanged.
 
 ### When the flow shows
 
-- Signed in, `start_answered` is 0, and the account has nothing logged and nothing planned.
-- `app/index.tsx` decides it from the persisted query cache (`lib/QueryProvider.tsx`) and the preferences query; a brand new account waits for that one request.
+- The server decides it once: `GET /v1/status` returns `firstRun: true` only while `first_run_done` is 0 and the account has no session, workout log, activity or plan (the existence checks run only while the flag is off).
+- Mobile: the tabs layout reads it through `useFirstRun` and sends the account to `/first-run`; a brand new account waits for that one request, everyone else has the status in the persisted cache.
+- Web: the Log index loader (`app._index.tsx`) redirects to `/app/start`.
+- A missing field, from an older API, reads as "do not show", so a new build never traps anyone; older builds ignore the column.
 - The flag is set when the flow ends, on Plan; quitting mid-flow brings it back next launch, which is acceptable.
 - It lives on the account, so it holds on the web too.
 
@@ -215,12 +222,14 @@ Everything else (Ongoing memberships, reminders, the import review, the live ses
 
 ### Web
 
-- Web signups are a small share (3 `signup_started` against 23 accounts), so the first release is mobile only and the web keeps today's Log.
-- A web version later reuses both steps and the flag, without the reminder sheet (no web push).
+- Everything ships on both (standing rule; mobile wins a divergence), so slice 1 carries the web steps at `/app/start`.
+- No signed-out carousel on the web: people sign up from the marketing site, so the web gets the two steps and the end on Plan.
+- No reminder sheet on the web (no web push).
+- A picked option row now takes the phone's gold tint on the web everywhere (`.option-row[aria-checked="true"]`).
 
 ### Localisation
 
-- New keys in `en`, `de`, `fr`, `es`: the four slides' eyebrow, title and body and their art labels, the two step titles, "{n} of {total}", "No, this is my first", "A spreadsheet (CSV)", "Import from {source}", Later, the per-source steps, the sends and attempts tiles, and the "Climbing" built-in name.
+- New keys in `en`, `de`, `fr`, `es`: the two step titles, "{n} of {total}", Skip, "No, this is my first", "A spreadsheet", "Import from {source}", "Import a spreadsheet", Later, Continue (all `onboarding.firstRun.*`), and the "Climbing" built-in's name and blurb; later slices add the slides, the per-source steps and the sends and attempts tiles.
 - App names and the services' own menu names ("Logbook Export (CSV)", "Export CSV", "Export My Sends", "Select logbook as CSV") stay as each service writes them.
 - Labels are resolved in functions, never at module scope; the parity test in `i18n.test.ts` covers them.
 
@@ -232,19 +241,16 @@ Everything else (Ongoing memberships, reminders, the import review, the live ses
 
 ## 5. Events and privacy
 
-New PostHog events, properties as enum strings or counts only:
+One new PostHog event, captured on the Worker so the Clerk user id and the internal cohort filter apply; properties are enum strings or counts only:
 
-| Event                     | Where              | Properties                                                              |
-| ------------------------- | ------------------ | ----------------------------------------------------------------------- |
-| `onboarding_slide_viewed` | Client, signed out | `slide`: `log`, `exercises`, `workouts`, `blocks` and the existing ones |
-| `first_run_started`       | Client             | none                                                                    |
-| `first_run_log_answered`  | Client             | `existing_log` enum; also set as a person property                      |
-| `first_run_days_saved`    | Client             | `climbing_days` (count)                                                 |
-| `first_run_finished`      | Client             | `ended_at`: `plan`, `skip_log`, `skip_days`                             |
-| `workout_started`         | Client, any player | `built_in`, `planned`: true or false                                    |
-| `workout_logged`          | Worker             | `built_in`, `planned`: true or false                                    |
+| Event                | Where                                   | Properties                                                                                                                                                                    |
+| -------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `first_run_finished` | Worker, `PUT /v1/preferences/first-run` | `existing_log`: `kaya`, `8a`, `mountainProject`, `sendage`, `theCrag`, `spreadsheet`, `none`, `skipped`; `climbing_days` (count); `ended_at`: `plan`, `skip_log`, `skip_days` |
+| `workout_logged`     | Worker (slice 4)                        | `built_in`, `planned`: true or false                                                                                                                                          |
 
-Existing events cover the rest: `training_reminders_updated` and `sessions_imported`, which gains `from`: `first_run` or `import_screen`.
+The same route sets `existing_log` as a person property through `identifyUser`.
+`onboarding_slide_viewed` and `workout_started` are dropped: the first would be the mobile app's first client-side event, and the second is not needed to see whether the planned week is used.
+Existing events cover the rest: `training_reminders_updated` and `sessions_imported`.
 
 What will show it worked, against section 2:
 
@@ -255,17 +261,18 @@ What will show it worked, against section 2:
 - Import rate among those who named a source (1 of 23 imported today).
 - Share active on days 8 to 14 (20% today).
 
-`apps/web/app/routes/privacy.tsx`, in the "Usage" paragraph after the Areas sentence:
+`apps/web/app/routes/privacy.tsx`, in the "Usage" paragraph after the Areas sentence (added in slice 1):
 
-> When you start, which app you kept a log in and how many days you plan to climb are recorded against your account, and which introduction screens you saw before signing up; starting or logging a workout is recorded as whether it was planned and built in, never what you logged.
+> Your answers to the two questions when you first sign in are recorded once: which app you kept a log in, if any, how many days a week you climb, and whether you skipped a question.
+
+Slice 4 adds a line for `workout_logged`.
 
 ## 6. Delivery slices
 
-1. **The two-step mobile flow (smallest useful slice).** The "Climbing" built-in, `users.start_answered`, both steps with the import exit and the wider picker, the reminder sheet as is, the end on Plan, the `first_run_*` events, `sessions_imported.from`, and the privacy line.
-2. **Per-source import steps**: the steps view, direct links, sends and attempts on the review.
-3. **The carousel**: four new slides replacing the current four, with play-once art, Reduce Motion, and `onboarding_slide_viewed`.
-4. **Measuring the planned week**: `workout_started` and `workout_logged`.
-5. **Web flow**, if web signups grow.
+1. **The two steps, on mobile and web (built).** The "Climbing" built-in with no items, `users.first_run_done`, both steps with the import exit, the reminder sheet as is on the phone, the end on Plan with the import toast, `first_run_finished`, the privacy line, and Start on a web Climbing day opening the live session.
+2. **Per-source import steps, both apps**: the steps view, direct links, sends and attempts on the review, the wider mobile picker, and on the web `/app/import?from=<source>` (Import board, frame 10).
+3. **The carousel, mobile only**: four new slides replacing the current four, with play-once art and Reduce Motion; the web marketing landing stays as is.
+4. **Measuring the planned week**: `workout_logged` with `built_in` and `planned`, on the Worker.
 
 ## 7. Left out on purpose
 
@@ -283,9 +290,10 @@ Will, 2026-11-14:
 - Kaya gets no export steps; it keeps the Google search link the other sources had. Steps and direct links stay for 8a.nu, Mountain Project, Sendage and theCrag.
 - The four new slides replace the current Log, Effort score, Strava and Stats slides; effort is folded into the first slide's copy.
 - A repeating Ongoing week of built-in workouts stays free after the trial.
-- The day-6 import email skips people who imported in the flow (`sessions_imported` with `from = first_run`); that change belongs to the email work, not this plan.
+- The day-6 import email skips people who imported in the flow; that change belongs to the email work, not this plan.
+  Slice 1 adds no `from` on `sessions_imported`, so the email reads it as a `sessions_imported` before `first_run_finished` with an `existing_log` source.
 - The day-25 "trial ends" email is held until the trial (#259) lands.
 
 ## 9. Open decisions for Will
 
-- Web flow now or later (spec: later).
+None: the web ships with slice 1 under the standing rule that everything ships on both.
