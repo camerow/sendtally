@@ -41,9 +41,16 @@ const OTHER_MEASURES = EXERCISE_MEASURES.filter((m) => m !== "laps");
 
 /**
  * What a climbing exercise's trend follows: the climbs completed, the average or highest
- * grade sent, or nothing. An exercise with none set follows the climbs completed.
+ * grade sent, the volume score (every send's grade plus one, summed), or nothing. An
+ * exercise with none set follows the climbs completed.
  */
-export const EXERCISE_PROGRESS = ["completed", "averageGrade", "topGrade", "none"] as const;
+export const EXERCISE_PROGRESS = [
+  "completed",
+  "averageGrade",
+  "topGrade",
+  "volume",
+  "none",
+] as const;
 
 export type ExerciseProgress = (typeof EXERCISE_PROGRESS)[number];
 

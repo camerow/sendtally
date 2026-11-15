@@ -34,7 +34,7 @@ const headerOf = (metric: ExerciseMetric): string =>
     ? t("common.sent")
     : metric === "laps"
       ? t("summary.laps")
-      : isGradeMetric(metric)
+      : isGradeMetric(metric) || metric === "volume"
         ? headlineLabel(metric)
         : t("summary.bestSet");
 
@@ -59,6 +59,12 @@ export function OverTime({
   const change = point.change === null ? null : changeText(point.change, unit);
   const first = shown.sessions[0];
   const climbs = climbsTotal(done.find((d) => exerciseKey(d.exercise) === shown.key)?.sets ?? []);
+  const average =
+    at?.average === undefined || shown.grades === undefined
+      ? null
+      : t("trends.averageIs", { grade: shown.grades.average(at.average.grade) });
+  const top = climbs.top === null ? null : t("sessions.topSend", { grade: climbs.top });
+  const under = [average, top].filter((p) => p !== null).join(" · ");
   const headline =
     shown.metric === "sends"
       ? t("summary.sentOf", { sent: climbs.sent, of: climbs.climbs })
@@ -66,7 +72,7 @@ export function OverTime({
         ? t("tally.lapCount", { count: climbs.climbs })
         : at === undefined
           ? ""
-          : isGradeMetric(shown.metric)
+          : isGradeMetric(shown.metric) || shown.metric === "volume"
             ? metricText(at.value, shown.metric, unit, shown.grades)
             : setText(at.best, unit);
 
@@ -104,13 +110,11 @@ export function OverTime({
         <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
           <View style={{ flex: 1, gap: 2 }}>
             <Title size={24}>{headline}</Title>
-            {isClimbingMetric(shown.metric) &&
-              shown.metric !== "topGrade" &&
-              climbs.top !== null && (
-                <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-                  {t("sessions.topSend", { grade: climbs.top })}
-                </Text>
-              )}
+            {isClimbingMetric(shown.metric) && shown.metric !== "topGrade" && under !== "" && (
+              <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
+                {under}
+              </Text>
+            )}
           </View>
           {change !== null && (
             <Text style={[type.monoBold, { fontSize: 11.5, color: colors.fern }]}>

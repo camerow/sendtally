@@ -14,7 +14,7 @@ import { Title } from "../components/Title";
 import { Legend } from "../trends/Legend";
 import { SeriesChart } from "../trends/SeriesChart";
 import { type } from "../type";
-import { headlineLabel, loadText, metricText } from "@sendtally/features/exercises";
+import { headlineLabel, loadText, metricText, volumeLine } from "@sendtally/features/exercises";
 import type { ExerciseChartMetric } from "./types";
 
 export type ExerciseTrendCardProps = {
@@ -33,6 +33,7 @@ const AIR = {
   laps: 1,
   averageGrade: 1,
   topGrade: 1,
+  volume: 2,
 } as const satisfies Record<ExerciseMetric, number>;
 
 /** One exercise over time: the best set per session, or the estimated one-rep max. */
@@ -52,6 +53,7 @@ export function ExerciseTrendCard({
   const fromShown = (v: number): number => (load ? fromUnit(v, unit) : v);
   const latest = points.at(-1);
   const first = points[0];
+  const made = latest === undefined ? null : volumeLine(latest.session, series.grades);
   return (
     <View
       style={{
@@ -71,6 +73,9 @@ export function ExerciseTrendCard({
         </Text>
       </View>
       {latest !== undefined && <Title size={40}>{text(latest.value)}</Title>}
+      {made !== null && (
+        <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{made}</Text>
+      )}
       {first !== undefined && latest !== undefined && (
         <SeriesChart
           values={points.map((p) => shown(p.value))}

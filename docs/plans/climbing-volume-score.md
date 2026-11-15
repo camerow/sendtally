@@ -1,12 +1,12 @@
 # Climbing volume score
 
-Status: design on the canvas, waiting on Will's approval (2026-11-14).
-Board: page "Climbing volume score" on https://claude.ai/artifact/CNPnNQwgvzgvxk4ZAYTyto, frame `ClimbingVolumeScore.dc.html`.
-No product code until the board is approved.
+Status: volume score approved by Will and built (2026-11-14); the Progress dropdown is drawn and waiting on approval.
+Board: page "Climbing volume score" on https://claude.ai/artifact/CNPnNQwgvzgvxk4ZAYTyto, frames `ClimbingVolumeScore.dc.html` and `ProgressDropdown.dc.html`.
+Everything ships on both apps/web and apps/mobile with the same behaviour; the logic lives in `packages/features`.
 
 ## The ask
 
-A fifth Progress choice for climbing exercises, Volume score, so a capacity session can show both average grade and total volume rising over time.
+A fifth Progress choice for climbing exercises, Total volume score, so a capacity session can show both average grade and total volume rising over time.
 Will's formula is total volume = sum of weight times reps; for climbing the weight is the grade and the reps are the sends.
 
 ## Formula
@@ -35,12 +35,28 @@ Without it the score is exactly average x sends, but a V0 or any route up to 5.5
 ## Readers that change
 
 - `exerciseSeries` (`statistics/exercises.ts`): `progress === "volume"` picks the volume metric; `sessionOf` fills `value` from `volumeOf` and `averageGrade` from `gradeOf`.
-- `metricText` and `headlineLabel` (`exercises/exerciseText.ts`): a volume value is `formatNumber(value)`; the headline is a new `trends.volumeScore` key, "Volume score".
+- `metricText` and `headlineLabel` (`exercises/exerciseText.ts`): a volume value is `formatNumber(value)`; the headline is a new `trends.volumeScore` key, "Total volume score".
 - `changeText` (`activities/summaryText.ts`): a volume change reads as a signed number, "+2" or "−3", through `formatNumber`.
 - `ExerciseTrendCard`, mobile and web: an `AIR` entry for volume (2), and one mono line under the number, "Average V3.6 · 5 sent", for a volume series.
-- `OverTime`, mobile and web: the header reads Volume score; the headline is the score; the line under it reads "Average V3.6 · Top send V5" in place of the top send alone.
+- `OverTime`, mobile and web: the header reads Total volume score; the headline is the score; the line under it reads "Average V3.6 · top V5" in place of the top send alone, reusing `sessions.topSend`.
 - `ProgressChips` (mobile) and `ExerciseFields` (web) need no code: they map over `EXERCISE_PROGRESS`.
-- New catalog keys in all four locales: `workouts.progress.volume` ("Volume score"), `trends.volumeScore` ("Volume score"), `trends.averageIs` ("Average {grade}").
+- New catalog keys in all four locales: `workouts.progress.volume` ("Total volume score"), `trends.volumeScore` ("Total volume score"), `trends.averageIs` ("Average {grade}").
+
+## Progress dropdown (Will, 2026-11-14)
+
+Will asked for the Progress setting to be a dropdown where every choice has a second line saying what it tracks.
+Mobile: `SelectRow` shows the current choice and opens its sheet of `OptionRow`s; `OptionRow` gains an optional second line under its label (its `detail` stays the right-aligned mono text other sheets use).
+Web: the `MoreMenu` pattern, a menu anchored to the field on desktop and a bottom sheet at 375, with a field-styled trigger, `menuitemradio` items, a check on the chosen one, and the name and hint anatomy `LogMenu` items already use.
+The second lines, as new `workouts.progressHint.<choice>` keys in all four catalogs:
+
+- Climbs completed: "How many climbs you finish each session."
+- Average grade: "The average grade you send each session."
+- Highest grade: "The hardest grade you send each session."
+- Total volume score: "Your sends' grades added up, so more climbs or harder ones raise it."
+- None: "Keeps the log, shows no trend."
+
+Removed: `ProgressChips` on mobile and the setup-chips radio group on web, plus the Advanced disclosure and its `workouts.progressIs` summary line on both, since one row has nothing left to hide.
+Not built until Will approves the `ProgressDropdown.dc.html` frame.
 
 ## Readers that stay as they are
 
@@ -81,5 +97,6 @@ The API and web ship with the merge deploy.
 
 ## Open questions for Will
 
-1. What a V0 scores: rank plus one (drawn, recommended, every send counts) or rank as is (exactly average x sends, V0 scores 0).
-2. Whether the summary's exercise card should follow the Progress setting for every option; deferred unless asked.
+1. What a V0 scores: Will approved the board as drawn, rank plus one.
+2. The Progress dropdown frame, including dropping the Advanced disclosure.
+3. Whether the summary's exercise card should follow the Progress setting for every option; deferred unless asked.

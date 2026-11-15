@@ -46,6 +46,8 @@ export const trends = {
   "trends.maxGradeSent": "Max grade sent",
   "trends.avgGrade": "Avg grade",
   "trends.avgSendGrade": "Average send grade",
+  "trends.volumeScore": "Total volume score",
+  "trends.averageIs": "Average {grade}",
   "trends.flashRate": "Flash rate",
   "trends.onsightFlashRate": "Onsight + flash rate",
   "trends.firstTrySends": "Sends on the first try",

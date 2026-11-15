@@ -1,6 +1,6 @@
 import React from "react";
 import { fromUnit, toUnit, type WeightUnit } from "@sendtally/core/hang";
-import { headlineLabel, loadText, metricText } from "@sendtally/features/exercises";
+import { headlineLabel, loadText, metricText, volumeLine } from "@sendtally/features/exercises";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import type { ExerciseMetric, ExerciseSeries } from "@sendtally/features/statistics";
@@ -14,6 +14,7 @@ const AIR = {
   laps: 1,
   averageGrade: 1,
   topGrade: 1,
+  volume: 2,
 } as const satisfies Record<ExerciseMetric, number>;
 
 export type ExerciseTrendCardProps = { series: ExerciseSeries; unit: WeightUnit };
@@ -27,6 +28,7 @@ export function ExerciseTrendCard({
   const latest = series.sessions.at(-1);
   if (first === undefined || latest === undefined) return null;
   const load = series.metric === "load";
+  const made = volumeLine(latest, series.grades);
   const text = (v: number): string =>
     load ? loadText(v, unit) : metricText(v, series.metric, unit, series.grades);
   return (
@@ -36,6 +38,7 @@ export function ExerciseTrendCard({
         <span className="trend-card-name">{series.name}</span>
       </div>
       <span className="train-title trend-card-value">{text(latest.value)}</span>
+      {made !== null && <span className="trend-card-name">{made}</span>}
       <SeriesChart
         values={series.sessions.map((s) => (load ? toUnit(s.value, unit) : s.value))}
         air={load ? (unit === "lb" ? 4 : 2) : AIR[series.metric]}
