@@ -117,7 +117,11 @@ let root: Root;
 beforeEach(() => {
   state.plan = {
     blocks: [],
-    memberships: [one("today", TODAY), one("missed", "2026-11-11")],
+    memberships: [
+      one("today", TODAY),
+      one("missed", "2026-11-11"),
+      { ...one("climb", "2026-11-14"), workoutId: "climb-session" },
+    ],
     weekChanges: [],
     planChanges: [],
     membershipDays: [],
@@ -180,6 +184,13 @@ describe("PlanPage", () => {
     );
     expect(container.querySelector(".plan-day-title")?.textContent).toBe("Today");
     expect(container.querySelector(".dashed-panel")).toBeNull();
+  });
+
+  it("gives a Climbing day its name alone, with no meta repeating it", () => {
+    const row = [...container.querySelectorAll(".plan-row")].find(
+      (r) => r.querySelector(".plan-row-name")?.textContent === "Climbing"
+    )!;
+    expect(row.querySelector(".plan-row-meta")).toBeNull();
   });
 
   it("leads a missed workout's ··· with Log it", () => {

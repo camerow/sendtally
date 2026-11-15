@@ -48,7 +48,7 @@ export function OccurrenceRow({
           </span>
         )}
         <span className="plan-row-name">{workout.name}</span>
-        <span className="plan-row-meta">{meta}</span>
+        {meta !== workout.name && <span className="plan-row-meta">{meta}</span>}
       </Link>
       {(o.status === "planned" || missed) && (
         <MoreMenu
