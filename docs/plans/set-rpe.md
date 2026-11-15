@@ -1,6 +1,6 @@
 # Set RPE
 
-Status: plan, waiting on Will's approval of the designer board (canvas page "Set RPE").
+Status: plan, waiting on Will's approval of the designer board (canvas page "Set RPE", board `SetRpe.dc.html`).
 Written 2026-11-15 on branch `feat/set-rpe`, stacked on `feat/exercise-targets-and-rests` (#426, not merged yet).
 RPE means rate of perceived exertion, the 1 to 10 effort scale the app already uses.
 
@@ -47,15 +47,19 @@ There is no native code either, so every app slice ships over the air.
 
 ## What each player does
 
-- Sets player (`SetsScreen` / `SetsPage`): the set row gets a small RPE value, entered with the in-app `Keypad` on mobile as every other number in the row is, and the web's own number input on the web.
-  Ticking stays one tap; the RPE is never required and never blocks the tick or the rest.
-  Where it sits and when it is entered is the board's choice (see Options).
+- Sets player (`SetsScreen` / `SetsPage`): only where the exercise's dose has a `targetRpe`, a ticked set row gets a small RPE box under what was done, blank showing the target dim ("RPE 8") the way an empty range field shows its example.
+  It is entered with the in-app `Keypad` on mobile (number mode, 1 to 10, step 1, no decimals), and Next walks to the next ticked set's RPE through `useFieldOrder`.
+  The web uses its own number input, on the row on desktop and under it at 375.
+  Ticking stays one tap and opens nothing; the unticked current row shows no box.
+  An exercise with no target draws exactly today's player, which is every existing workout.
 - Checklist player: no live entry, because it has no set rows; its review takes it.
 - Hang timer and intervals: no live entry, the timer screen has no room and a hand is on the board.
-  Their review takes it, since it is the same `DoneDetails`.
-- Review (`DoneDetails` + `ReviewSetRow`, mobile and web): each set row takes an RPE the same way as the sets player, so sets can be rated after the fact and on any player's run.
+  Intervals end in the activity review, which takes it.
+  The hang timer's review (`DoneDetails` in hangs mode) does not: it saves a hang session, whose summary is `HangSummary` / `HangResultCard`, so a rated hang set would show nowhere. Deferred.
+- Review (`DoneDetails` + `ReviewSetRow`, mobile and web, not in hangs mode): every set row takes an RPE the same way as the sets player, target or not, so sets can be rated after the fact and on the checklist and intervals players' runs.
   The edit form (`ActivityForm`) is the same component, so editing a saved session can add, change or clear one.
-- Summary (`ActivitySummary` + `ExerciseResultCard`, mobile and web): an exercise with rated sets shows one line, "RPE 7.5 · target 8", or "RPE 7.5" with no target.
+- Summary (`ActivitySummary` + `ExerciseResultCard`, mobile and web): an exercise with rated sets shows one line, an `EffortMark` dot in the effort colour and "RPE 8.8 · aimed 8", or "RPE 8.8" with no target.
+  "Aimed" matches the existing `summary.effortAimed` tile; the line needs new keys in all four catalogs.
   The workout's own RPE tile stays as it is, against the workout's `targetRpe`; set RPE neither fills nor replaces it.
 - Stats exercise trend: unchanged; set RPE is Deferred (`OverTime` plots one metric, a second series is not cheap).
 
@@ -68,8 +72,8 @@ Entry timing, which the board draws side by side:
    It misses every set with no `setRestS`, the last set of each exercise, and the checklist and timed players, so it cannot be the only way in.
 3. Only in the review after the run.
 
-Eng recommendation: 1, which also covers 3 for free because the review uses the same row; 2 adds a second entry point for a subset of sets and is not worth its code.
-Layout cost: `SET_COLUMNS` is Set, Target, Done, tick, and on a phone the Done cell already holds reps and weight, so a fifth full column is tight at 375 points wide; the RPE has to sit small inside the Done cell or under the row.
+Board and eng recommendation: 1 (the board's option A), on ticked rows only, which also covers 3 for free because the review uses the same row; 2 (option B) is drawn as the alternative and adds a second entry point for a subset of sets.
+`SET_COLUMNS` stays Set, Target, Done, tick: a fifth column is tight at 375 points, so the box sits under the row's Done fields.
 
 ## Old builds
 
@@ -96,10 +100,11 @@ If Will wants Claude to see set RPE later, that is a new read of training activi
 
 Slices 1 to 3 are small enough for one pull request once #426 merges; they are split here so each can be checked on its own.
 
-Deferred: set RPE in the Stats exercise trend; set RPE in the Strava description; a live prompt in the rest row.
+Deferred: set RPE in the hang timer's review and hang summary; set RPE in the Stats exercise trend; set RPE in the Strava description; a live prompt in the rest row.
 
 ## Open questions for Will
 
 1. Should the Strava description carry set RPE (for example "Squat 5×100 kg @8")? Eng default: no, the first line already carries the workout's RPE.
 2. Should rated sets suggest the workout's own effort when it is still empty at the end? Eng default: no, the two stay independent.
 3. Whole numbers only, or halves (RPE 7.5 is common in strength training)? Eng default: whole numbers, matching the workout's RPE and the exercise target.
+4. Should the sets player also offer the box where the exercise has no target? Board and eng default: no, so today's workouts stay untouched; the review always asks.
