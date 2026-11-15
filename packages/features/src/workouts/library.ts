@@ -2,7 +2,7 @@ import type { ActivityKind, WorkoutRecord } from "@sendtally/api-client";
 import {
   defaultExerciseRestS,
   doseProtocol,
-  gapRests,
+  gapRestSeconds,
   hangboardSeconds,
   isBuiltInGrip,
   itemsSeconds,
@@ -107,7 +107,7 @@ export function estimatedMinutes(
           Math.max(0, i.dose.sets - 1) * (i.dose.setRestS ?? 0)),
     0
   );
-  return roundMinutes(seconds + gapRests(items, w.exerciseRestS).reduce((a, b) => a + b, 0));
+  return roundMinutes(seconds + gapRestSeconds(items, w.exerciseRestS));
 }
 
 /** An item's exercise as the user reads it: a built-in grip in their language. */

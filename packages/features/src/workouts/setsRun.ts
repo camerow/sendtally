@@ -21,17 +21,6 @@ export const withDoneSets = (
     return n > it.dose.sets ? { ...it, dose: { ...it.dose, sets: n } } : it;
   });
 
-/** An item's set range as the player runs it: the sets it has, and its top; none without one. */
-export function setsRange(
-  written: SessionItem | undefined,
-  live: SessionItem | undefined
-): { sets: number; max: number } | null {
-  const max = written?.dose.setsMax;
-  if (written === undefined || live === undefined || max === undefined || max <= written.dose.sets)
-    return null;
-  return { sets: live.dose.sets, max };
-}
-
 /** Whether every set of an item is ticked. */
 export const itemDone = (
   items: readonly SessionItem[],

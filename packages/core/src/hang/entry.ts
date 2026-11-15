@@ -147,10 +147,6 @@ export function numberEntry(
 /** A count that may run to a top: 3 sets, or 3 to 5. No top, or one at or under the bottom, is one number. */
 export type Range = { min: number; max?: number };
 
-/** "3-5", or "3" with no top. */
-export const rangeText = ({ min, max }: Range): string =>
-  max === undefined || max <= min ? String(min) : `${min}-${max}`;
-
 /** A typed range read with its ends in order, each clamped; equal ends are one number. */
 export function entryRange({ text }: NumberEntry, limits: NumberLimits): Range {
   const [bottom = "", top = ""] = text.split("-");
@@ -161,10 +157,10 @@ export function entryRange({ text }: NumberEntry, limits: NumberLimits): Range {
 }
 
 /** A range entry opened on a value: the first digit typed replaces it. */
-export const openRange = (range: Range, limits: NumberLimits): NumberEntry => ({
-  text: rangeText(entryRange({ text: rangeText(range), fresh: true }, limits)),
-  fresh: true,
-});
+export function openRange(range: Range, limits: NumberLimits): NumberEntry {
+  const { min, max } = entryRange({ text: `${range.min}-${range.max ?? ""}`, fresh: true }, limits);
+  return { text: max === undefined ? String(min) : `${min}-${max}`, fresh: true };
+}
 
 /**
  * The next range entry after a key: To starts the top after what is there, digits and ± work
@@ -196,9 +192,9 @@ export function rangeEntry(
 
 /** A range typed as text, "8-12" or "8", clamped as the keypad would; null when it is not one. */
 export function typedRange(text: string, limits: NumberLimits): Range | null {
-  const parts = text.trim().split(/\s*[-–]\s*/);
-  if (parts.length > 2 || parts.some((p) => p === "" || !/^\d+$/.test(p))) return null;
-  return entryRange({ text: parts.join("-"), fresh: false }, limits);
+  const typed = text.replace(/\s/g, "").replace("–", "-");
+  const range = entryRange({ text: typed, fresh: false }, limits);
+  return typed === "" || Number.isNaN(range.min) || Number.isNaN(range.max ?? 0) ? null : range;
 }
 
 /** Seconds from a time typed as text, "1:30" or "130", read as the same digits on the keypad; null when nothing was typed. */

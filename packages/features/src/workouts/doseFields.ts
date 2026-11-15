@@ -1,5 +1,8 @@
 import {
   clamp,
+  isRanged,
+  RANGE_TOP,
+  withTop,
   fromUnit,
   toUnit,
   type Dose,
@@ -28,16 +31,16 @@ export type DoseField = {
   measure: "count" | "time" | "weight";
   /** What an empty field means, when it means something. */
   placeholder?: MessageKey;
-  /** Where the top of a range typed in it goes, when it takes one. */
-  range?: "setsMax" | "repsMax";
+  /** Whether it takes a range, such as 3-5 sets. */
+  range?: boolean;
 };
 
 const count = (key: DoseKey, label: MessageKey): DoseField => ({ key, label, measure: "count" });
 const time = (key: DoseKey, label: MessageKey): DoseField => ({ key, label, measure: "time" });
 const weight: DoseField = { key: "weightKg", label: "hang.weight", measure: "weight" };
 const rpe: DoseField = { key: "targetRpe", label: "workouts.dose.rpe", measure: "count" };
-const sets: DoseField = { ...count("sets", "workouts.dose.sets"), range: "setsMax" };
-const reps: DoseField = { ...count("reps", "workouts.dose.reps"), range: "repsMax" };
+const sets: DoseField = { ...count("sets", "workouts.dose.sets"), range: true };
+const reps: DoseField = { ...count("reps", "workouts.dose.reps"), range: true };
 
 /** The dose numbers a grip asks for: hangs, or a ground pull's lifts or time. Weight is chosen per use. */
 const FINGERS_FIELDS: Record<GripMeasure, readonly DoseField[]> = {
@@ -168,7 +171,7 @@ export function fieldValue(field: DoseField, dose: Dose, unit: WeightUnit): numb
 
 /** The top of a range in a field that takes one; none when it holds one number. */
 export const fieldTop = (field: DoseField, dose: Dose): number | undefined =>
-  field.range === undefined ? undefined : dose[field.range];
+  field.range === true && isRanged(field.key) ? dose[RANGE_TOP[field.key]] : undefined;
 
 /** The dose with a field set to a range in the user's unit; a top at or under the bottom is none. */
 export function withFieldRange(
@@ -179,25 +182,22 @@ export function withFieldRange(
   unit: WeightUnit
 ): Dose {
   const next = withField(dose, field, value, unit);
-  if (field.range === undefined) return next;
-  const { [field.range]: _, ...rest } = next;
-  const min = next[field.key];
-  if (max === undefined || min === undefined || max <= min) return rest;
-  const top = (RANGE[field.key] ?? LIMITS.count)[1];
-  return { ...rest, [field.range]: Math.min(Math.round(max), top) };
+  if (field.range !== true || !isRanged(field.key)) return next;
+  return withTop(next, field.key, max, limitsOf(field)[1]);
 }
 
 /** How a count or weight types on the keypad: weight by 2.5 kg or 5 lb, stepping below zero for assistance. */
 export function fieldLimits(field: DoseField, unit: WeightUnit): NumberLimits {
   if (field.measure === "weight")
     return { step: unit === "lb" ? 5 : 2.5, decimals: true, min: toUnit(LIMITS.weight[0], unit) };
-  return { step: 1, max: RANGE[field.key]?.[1] ?? 1000, ...(field.key === "sets" && { min: 1 }) };
+  const [min, max] = limitsOf(field);
+  return { step: 1, min, max };
 }
 
 /** The counts held to a range of their own. */
 const RANGE: Partial<Record<DoseKey, readonly [number, number]>> = {
   sets: [1, 100],
-  targetRpe: [1, 10],
+  targetRpe: [0, 10],
 };
 
 const LIMITS: Record<DoseField["measure"], readonly [number, number]> = {
@@ -206,6 +206,9 @@ const LIMITS: Record<DoseField["measure"], readonly [number, number]> = {
   weight: [-200, 1000],
 };
 
+const limitsOf = (field: DoseField): readonly [number, number] =>
+  RANGE[field.key] ?? LIMITS[field.measure];
+
 /** The dose with one field set in the user's unit. Zero clears any field but sets. */
 export function withField(dose: Dose, field: DoseField, value: number, unit: WeightUnit): Dose {
   if (value === 0 && field.key !== "sets") {
@@ -213,6 +216,6 @@ export function withField(dose: Dose, field: DoseField, value: number, unit: Wei
     return rest;
   }
   const typed = field.measure === "weight" ? fromUnit(value, unit) : Math.round(value);
-  const [min, max] = RANGE[field.key] ?? LIMITS[field.measure];
+  const [min, max] = limitsOf(field);
   return { ...dose, [field.key]: clamp(typed, min, max) };
 }

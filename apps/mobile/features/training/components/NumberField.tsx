@@ -1,5 +1,6 @@
 import React from "react";
-import { rangeText, type NumberLimits } from "@sendtally/core/hang";
+import type { NumberLimits } from "@sendtally/core/hang";
+import { countText } from "@sendtally/features/hang";
 import { formatNumber } from "@sendtally/features/i18n";
 import { KeypadField, type KeypadFieldProps } from "../../../components/KeypadField";
 import type { FieldSlot } from "../../../components/useFieldOrder";
@@ -38,7 +39,7 @@ export function NumberField({
       ? null
       : range === undefined
         ? formatNumber(value).replace("-", "−")
-        : rangeText({ min: value, max: range.max });
+        : countText(value, range.max);
   return (
     <KeypadField
       {...field}

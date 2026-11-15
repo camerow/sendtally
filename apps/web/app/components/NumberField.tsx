@@ -8,7 +8,6 @@ import {
   openRange,
   openTime,
   rangeEntry,
-  rangeText,
   timeEntry,
   timeText,
   typedNumber,
@@ -18,6 +17,7 @@ import {
   type Range,
   type TimeLimits,
 } from "@sendtally/core/hang";
+import { countText } from "@sendtally/features/hang";
 
 export type NumberFieldMode = ({ kind: "time" } & TimeLimits) | ({ kind: "number" } & NumberLimits);
 
@@ -86,11 +86,7 @@ export function NumberField({
   const [draft, setDraft] = React.useState<string | null>(null);
   const limits = mode.kind === "number" ? mode : { step: 1 };
   const text =
-    value === null
-      ? ""
-      : range === undefined
-        ? shown(mode, value)
-        : rangeText({ min: value, max: range.max });
+    value === null ? "" : range === undefined ? shown(mode, value) : countText(value, range.max);
   const time = mode.kind === "time";
 
   const commitRange = (next: Range | null): void => {

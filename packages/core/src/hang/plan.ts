@@ -59,8 +59,32 @@ export const DOSE_FIELDS = [
   "repsMax",
 ] as const satisfies readonly (keyof Dose)[];
 
+/** Where the top of a sets or reps range goes. */
+export const RANGE_TOP = { sets: "setsMax", reps: "repsMax" } as const;
+
+export type Ranged = keyof typeof RANGE_TOP;
+
+export const isRanged = (field: string): field is Ranged => field in RANGE_TOP;
+
+/** The dose with the top of a range on a field: none at or under its bottom, else held to `limit`. */
+export function withTop(dose: Dose, field: Ranged, max: number | undefined, limit: number): Dose {
+  const top = RANGE_TOP[field];
+  const { [top]: _, ...rest } = dose;
+  const min = dose[field];
+  if (max === undefined || min === undefined || max <= min) return rest;
+  return { ...rest, [top]: Math.min(Math.round(max), limit) };
+}
+
 /** What a dose prescribes but a set never logs. */
-type PrescriptionOnly = "sets" | "name" | "targetRpe" | "setsMax" | "repsMax";
+export const PRESCRIPTION_ONLY = [
+  "sets",
+  "name",
+  "targetRpe",
+  "setsMax",
+  "repsMax",
+] as const satisfies readonly (keyof Dose)[];
+
+type PrescriptionOnly = (typeof PRESCRIPTION_ONLY)[number];
 
 /**
  * A climb logged on the session tally inside a set: its grade or circuit, how many goes
@@ -424,9 +448,15 @@ export const gapRests = (
   exerciseRestS: number
 ): number[] => items.slice(1).map((_, i) => restAfterItem(items, i, exerciseRestS));
 
+/** Every rest between exercises, added up. */
+export const gapRestSeconds = (
+  items: readonly Pick<SessionItem, "restAfterS">[],
+  exerciseRestS: number
+): number => gapRests(items, exerciseRestS).reduce((a, b) => a + b, 0);
+
 /** Seconds a hangboard session takes as the timer runs it: every item, with each gap's rest between them. */
 export const hangboardSeconds = (items: readonly SessionItem[], exerciseRestS: number): number =>
-  itemsSeconds(items) + gapRests(items, exerciseRestS).reduce((a, b) => a + b, 0);
+  itemsSeconds(items) + gapRestSeconds(items, exerciseRestS);
 
 /** Every set of every item done as prescribed. */
 export function doneAsPrescribed(items: readonly SessionItem[]): ItemDone[] {
@@ -438,13 +468,8 @@ export function doneAsPrescribed(items: readonly SessionItem[]): ItemDone[] {
 }
 
 /** What one set of a dose logs: its numbers, without what only the prescription holds. */
-export function setOf({
-  sets: _,
-  name: _n,
-  targetRpe: _t,
-  setsMax: _s,
-  repsMax: _r,
-  ...set
-}: Dose): SetDone {
-  return set;
+export function setOf<T extends Partial<Dose>>(dose: T): Omit<T, PrescriptionOnly> {
+  const set: Partial<Dose> = { ...dose };
+  for (const key of PRESCRIPTION_ONLY) delete set[key];
+  return set as Omit<T, PrescriptionOnly>;
 }

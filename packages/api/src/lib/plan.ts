@@ -15,6 +15,7 @@ import {
   SKIP_REASONS,
   type WeekChange,
   type Workout,
+  setOf,
   withItemIds,
 } from "@sendtally/core/hang";
 import { z } from "zod";
@@ -228,9 +229,11 @@ const setClimb = z.object({
   name: z.string().trim().max(200).optional(),
 });
 
+// A set logs none of what only the prescription holds, which older builds copy into it.
 const setDone = dose
-  .omit({ sets: true, targetRpe: true, setsMax: true, repsMax: true })
-  .extend({ climbs: z.array(setClimb).max(100).optional() });
+  .partial()
+  .extend({ climbs: z.array(setClimb).max(100).optional() })
+  .transform(setOf);
 
 /** What a session did, per item of what it ran. */
 export const doneBody = z

@@ -15,12 +15,11 @@ export function workoutPhases(
   rests: readonly number[]
 ): HangPhase[] {
   return protocols.flatMap((p, item) =>
-    phasesFor(p).map((phase, i) => {
-      const rest = rests[item - 1] ?? 0;
-      return item > 0 && i === 0
-        ? { ...phase, seconds: rest > 0 ? rest : GET_READY_S, item }
-        : { ...phase, item };
-    })
+    phasesFor(p).map((phase, i) =>
+      item > 0 && i === 0
+        ? { ...phase, seconds: (rests[item - 1] ?? 0) || GET_READY_S, item }
+        : { ...phase, item }
+    )
   );
 }
 

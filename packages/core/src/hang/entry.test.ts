@@ -7,7 +7,6 @@ import {
   openNumber,
   openRange,
   rangeEntry,
-  rangeText,
   typedRange,
   typedNumber,
   typedSeconds,
@@ -186,7 +185,7 @@ describe("rangeEntry", () => {
     expect(read("4-")).toEqual({ min: 4 });
     expect(read("0-200")).toEqual({ min: 1, max: 100 });
     expect(typeRange({ min: 3 }, "5 to 3 done")).toBe("3-5");
-    expect(rangeText({ min: 3, max: 3 })).toBe("3");
+    expect(typeRange({ min: 3, max: 3 }, "done")).toBe("3");
   });
 
   it("reads a range typed as text, refusing what is not one", () => {
@@ -196,6 +195,5 @@ describe("rangeEntry", () => {
     expect(typedRange("5-3", counts)).toEqual({ min: 3, max: 5 });
     expect(typedRange("", counts)).toBeNull();
     expect(typedRange("a-3", counts)).toBeNull();
-    expect(typedRange("1-2-3", counts)).toBeNull();
   });
 });

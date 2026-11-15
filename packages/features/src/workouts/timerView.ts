@@ -87,9 +87,7 @@ export function hangRunDone(
 ): TimerRun {
   const doses = planned.items.map((i) => protocolDose(i.workout));
   const held = setsHeld(run, doses);
-  const dose = (item: number): SetDone => {
-    return setOf(doses[item] ?? { sets: 0 });
-  };
+  const dose = (item: number): SetDone => setOf(doses[item] ?? { sets: 0 });
   return {
     done: held.map((sets, item) => ({
       item,

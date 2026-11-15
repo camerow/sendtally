@@ -25,7 +25,6 @@ import {
   itemDone,
   restAfterTick,
   setKey,
-  setsRange,
   withDoneSets,
   withPrevious,
   type SetAt,
@@ -175,10 +174,10 @@ export function useSetsPlayer({
         );
 
   const extra = (item: number): { sets: number; max: number; canAdd: boolean } | null => {
-    const range = setsRange(run.items[item], live[item]);
-    return range === null
-      ? null
-      : { ...range, canAdd: range.sets < range.max && itemDone(live, ticked, item) };
+    const min = run.items[item]?.dose.sets ?? 0;
+    const max = run.items[item]?.dose.setsMax ?? 0;
+    const sets = live[item]?.dose.sets ?? min;
+    return max <= min ? null : { sets, max, canAdd: sets < max && itemDone(live, ticked, item) };
   };
   const sided = eachSideOf(exercises ?? []);
   const holdTarget = (at: SetAt): number | null => {

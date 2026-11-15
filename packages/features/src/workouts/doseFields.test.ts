@@ -71,7 +71,7 @@ describe("dose fields", () => {
     expect(withField({ sets: 3 }, rpe!, 8, "kg")).toEqual({ sets: 3, targetRpe: 8 });
     expect(withField({ sets: 3 }, rpe!, 14, "kg")).toEqual({ sets: 3, targetRpe: 10 });
     expect(withField({ sets: 3, targetRpe: 8 }, rpe!, 0, "kg")).toEqual({ sets: 3 });
-    expect(fieldLimits(rpe!, "kg")).toEqual({ step: 1, max: 10 });
+    expect(fieldLimits(rpe!, "kg")).toEqual({ step: 1, min: 0, max: 10 });
     expect(doseFieldsFor("other").some((f) => f.key === "targetRpe")).toBe(false);
     expect(doseFieldsFor("hangboard").some((f) => f.key === "targetRpe")).toBe(false);
   });

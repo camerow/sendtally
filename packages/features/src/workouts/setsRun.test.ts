@@ -1,13 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  afterKey,
-  holdShort,
-  itemDone,
-  restAfterTick,
-  setKey,
-  setsRange,
-  withDoneSets,
-} from "./setsRun";
+import { afterKey, holdShort, itemDone, restAfterTick, setKey, withDoneSets } from "./setsRun";
 
 const items = [
   { exercise: "Back squat", dose: { sets: 2, reps: 5, setRestS: 120 } },
@@ -67,16 +59,13 @@ describe("set ranges", () => {
     sets: Array.from({ length: 4 }, () => ({ reps: 8 })),
   };
 
-  it("counts the sets an item has added past its minimum, and its top", () => {
+  it("counts the sets an item has added past its minimum", () => {
     const [live] = withDoneSets([bench], [four]);
     expect(live?.dose.sets).toBe(4);
-    expect(setsRange(bench, live)).toEqual({ sets: 4, max: 5 });
     expect(itemDone([live!], new Set(["0:0", "0:1", "0:2"]), 0)).toBe(false);
   });
 
-  it("has no range without a top above the minimum", () => {
-    const flat = { exercise: "Row", dose: { sets: 3, setsMax: 3 } };
-    expect(setsRange(flat, flat)).toBeNull();
-    expect(withDoneSets([flat], [])).toEqual([flat]);
+  it("leaves an item with no sets added past its minimum as it is", () => {
+    expect(withDoneSets([bench], [])).toEqual([bench]);
   });
 });
