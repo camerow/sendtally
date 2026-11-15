@@ -103,6 +103,8 @@ Agreed with the designer; the two boards draw every state named here.
 - Each slide's art plays once when the slide shows; under Reduce Motion it shows its last frame.
 - Slide 1's art (Will, 2026-11-14): the log card keeps its date line with "Effort 8/10" on the right and its three climb rows, and under them the real `Pyramid` (`apps/mobile/components/Pyramid.tsx`) shows V7 0/2, V6 3/4, V5 5/7 and V4 6/7, sends in `azureInk` and attempts in `dataAzureSoft`; its bars grow in after the rows land. The note line is gone; the slide body still mentions notes.
 - To fit it, `OnboardingCarousel`'s `ART_BOX_HEIGHT` goes from 250 to 310 and `TEXT_BOX_HEIGHT` from 200 to 170, so the dots still clear the buttons on a 390x844 phone.
+- Every `SlideArt` card is the same fixed height, the height of the log-and-pyramid card (303 on the board), so the art does not jump between slides (Will, 2026-11-14).
+  The Max hangs chart and the block's week bars grow to fill the card, and the workout's exercise rows get more padding; the two box heights stay at 310 and 170.
 - No red text (Will, 2026-11-14; red is for destructive actions only): the eyebrows and the sent grades in the slide art move from `colors.labelAccent` to `colors.gunmetal`. Today that colour is set in `OnboardingCarousel.tsx:93` (eyebrow), `SlideArt.tsx:57` (`ClimbRow` sent grade) and `SlideArt.tsx:184`; any of them that survive the new slides change.
 - The Strava slide, and with it "a re-sync never posts twice", goes.
 - This is where exercise, workout and block are explained, before the person needs them.
