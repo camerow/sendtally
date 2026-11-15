@@ -192,7 +192,7 @@
 }
 
 .plan-day-slot--last {
-  min-height: calc(100vh - 220px);
+  min-height: calc(100vh - var(--plan-under-strip, 0px));
 }
 
 .plan-day {

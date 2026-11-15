@@ -156,6 +156,21 @@ describe("PlanPage", () => {
     expect(menuOf(card)).toEqual(["Reschedule", "Skip", "Remove"]);
   });
 
+  it("shows an empty Today as its title alone, as the phone does", () => {
+    state.plan = { ...state.plan, memberships: [] };
+    act(() =>
+      root.render(
+        <MemoryRouter initialEntries={["/app/plan"]}>
+          <ToastProvider>
+            <PlanPage />
+          </ToastProvider>
+        </MemoryRouter>
+      )
+    );
+    expect(container.querySelector(".plan-day-title")?.textContent).toBe("Today");
+    expect(container.querySelector(".dashed-panel")).toBeNull();
+  });
+
   it("leads a missed workout's ··· with Log it", () => {
     const row = container.querySelector(".plan-row")!;
     expect(row.querySelector(".kind-circle-badge--missed")).not.toBeNull();
