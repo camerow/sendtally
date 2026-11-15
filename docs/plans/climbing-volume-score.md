@@ -58,6 +58,11 @@ The second lines, as new `workouts.progressHint.<choice>` keys in all four catal
 Removed: `ProgressChips` on mobile and the setup-chips radio group on web, plus the Advanced disclosure and its `workouts.progressIs` summary line on both, since one row has nothing left to hide.
 Not built until Will approves the `ProgressDropdown.dc.html` frame.
 
+## Found while verifying
+
+The exercise screen's history rows (`exerciseItems`, shared by web and mobile) showed a climbing session's best set only, so every row read "3 climbs · 3 sent · top V4" whatever the session did.
+They now read the climbs over every set of the session, as the summary card does ("6 climbs · 5 sent · top V5").
+
 ## Readers that stay as they are
 
 - Stats: `trainingInsightsVM` builds exercise groups for strength, mobility and other only and calls `exerciseSeries` without the Progress setting, so climbing exercises never reach it.
