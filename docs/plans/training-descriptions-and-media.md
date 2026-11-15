@@ -1,6 +1,6 @@
 # Training descriptions and media
 
-Status: proposal, waiting on Will's approval of the designs.
+Status: approved by Will on 2026-11-14; being built in slice order.
 Brief: Will, 2026-11-14, with his decisions of the same day (custom workout descriptions first, the built-in library moves to D1, thumbnails in lists, English only for new text, a hero image on workout detail, media in the info sheet).
 Designs: a new page "Training descriptions and media" (page id `training-media`) on the canvas https://claude.ai/artifact/CNPnNQwgvzgvxk4ZAYTyto.
 The v3 page is untouched; it was read for reference only.
@@ -371,13 +371,11 @@ Moderation strings are plain English literals.
 - Moderator tools on the connector (`save_library_item`) for editing built-ins (Will: "yeah we can skip that").
 - Creating new built-ins in moderation (slice 2 follow-up; `library-add` covers it until then).
 
-## Open decisions for Will
+## Decided
 
-1. Every row gets the 44 px tile, a picture or the kind's tinted square mark, replacing the round mark (Will's canvas comment on `TdmThumbs`).
-   Recommendation: as drawn; it is the one change that touches every library list, so it ships with pictures in slice 3.
-2. Retire the library editor artifact when slice 2 ships.
-   Recommendation: yes; one editor.
-3. Editing an English field clears its translations.
-   Recommendation: yes, a stale German name is worse than an English one.
-4. Exercise and grip detail screens get the hero too, not only workouts (Will named workouts; `TdmHero` draws all three).
-   Recommendation: yes, it is the same `ScreenFrame` prop and the same hero anatomy.
+Will answered the last four open decisions on 2026-11-14, all yes.
+
+1. Every library and picker row gets the 44 px tile as drawn on `TdmThumbs`, a picture or the kind's tinted square mark, replacing the round mark; it ships with pictures in slice 3.
+2. The library editor artifact is retired when slice 2 ships (Will: "it's not that useful").
+3. Editing an English field in moderation clears that field's translations.
+4. Exercise and grip detail screens get the hero too, the same `ScreenFrame` prop and anatomy as workouts.
