@@ -202,13 +202,13 @@ export async function setTrainingReminders(
     .where(eq(users.id, id));
 }
 
-/** First run shows once, to an account that has logged and planned nothing yet. */
+/** First run shows once, to an account that has logged and planned nothing yet, until it is done. */
 export async function showsFirstRun(
   db: D1Database,
   id: string,
   user: UserRow | null
 ): Promise<boolean> {
-  if (user?.first_run_step === 3) return false;
+  if (user !== null && user.first_run_step > 0) return user.first_run_step < 3;
   const d = drizzle(db);
   const any = (t: typeof sessions | typeof hangSessions | typeof activities | typeof memberships) =>
     d.select({ id: t.user_id }).from(t).where(eq(t.user_id, id)).limit(1);

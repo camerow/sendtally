@@ -781,6 +781,28 @@ describe("app", () => {
     );
     expect(saved.status).toBe(200);
     expect(await firstRun(planned)).toBe(false);
+
+    expect(await step({ step: "log_answered", existingLog: "kaya" }, "user_firstrun_import")).toBe(
+      200
+    );
+    const imported = { ...headers, "x-test-user": "user_firstrun_import" };
+    const membership = await testApp().request(
+      "/v1/memberships/m-2",
+      {
+        method: "PUT",
+        headers: imported,
+        body: JSON.stringify({
+          workoutId: "climb-session",
+          blockId: null,
+          weekdays: [2],
+          start: "2026-11-16",
+          position: 0,
+        }),
+      },
+      env
+    );
+    expect(membership.status).toBe(200);
+    expect(await firstRun(imported)).toBe(true);
   });
 
   it("keeps the grade a project was added with", async () => {

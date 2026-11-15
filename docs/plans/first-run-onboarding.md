@@ -207,7 +207,7 @@ Everything else (Ongoing memberships, reminders, the import review, the live ses
 
 ### When the flow shows
 
-- The server decides it once: `GET /v1/status` returns `firstRun: true` only while `first_run_step` is below 3 and the account has no session, workout log, activity or plan (the existence checks run only until first run is done).
+- The server decides it once: `GET /v1/status` returns `firstRun: true` to an account with no session, workout log, activity or plan, and once first run has started it stays true until it is done (`first_run_step` 3), so an import or the saved days do not end it halfway.
 - Mobile: the tabs layout reads it through `useFirstRun` and sends the account to `/first-run`; a brand new account waits for that one request, everyone else has the status in the persisted cache.
 - Web: the Log index loader (`app._index.tsx`) redirects to `/app/start`.
 - A missing field, from an older API, reads as "do not show", so a new build never traps anyone; older builds ignore the column.
