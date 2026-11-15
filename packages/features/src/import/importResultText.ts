@@ -1,5 +1,5 @@
 import type { ImportResult } from "@sendtally/api-client";
-import { t } from "@sendtally/features/i18n";
+import { t } from "../i18n";
 
 export function importResultText({
   imported,

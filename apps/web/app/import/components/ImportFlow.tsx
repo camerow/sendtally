@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import type { SendtallyApi } from "@sendtally/api-client";
 import {
   likelyDuplicates,
@@ -38,8 +38,16 @@ type State =
 const heldBack = (state: { duplicates: LikelyDuplicate[]; importAnyway: number[] }): number[] =>
   state.duplicates.map((d) => d.index).filter((i) => !state.importAnyway.includes(i));
 
-export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
+export function ImportFlow({
+  api,
+  then,
+}: {
+  api: SendtallyApi;
+  /** Where the result goes once imported, as first run takes it back to its next step. */
+  then?: string;
+}): React.ReactElement {
   const [state, setState] = React.useState<State>({ step: "choose" });
+  const navigate = useNavigate();
   const { suggestionsFor } = useTagVocabulary(api);
 
   const retag = (indexes: number[], change: (tags: string[]) => string[]): void =>
@@ -75,6 +83,14 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
         (_, i) => !held.includes(i)
       );
       const totals = await importAll(api, sessions);
+      if (then !== undefined) {
+        const result = new URLSearchParams({
+          imported: String(totals.imported),
+          skipped: String(totals.skipped),
+          likely: String(held.length),
+        });
+        return void navigate(`${then}?${result}`);
+      }
       setState({
         step: "done",
         ...totals,

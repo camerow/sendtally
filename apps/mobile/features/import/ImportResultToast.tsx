@@ -3,7 +3,7 @@ import React from "react";
 import { t } from "@sendtally/features/i18n";
 import { Toast } from "../../components/Toast";
 import { useReminderPromptOpen } from "../training/reminders/ReminderPromptProvider";
-import { importResultText } from "./importResultText";
+import { importResultText } from "@sendtally/features/import";
 
 /** What an import just added, from the params it came back with, with a way to see them. */
 export function ImportResultToast(): React.ReactElement | null {

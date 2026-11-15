@@ -1,6 +1,6 @@
 import React from "react";
 import type { LoaderFunctionArgs } from "react-router";
-import { useLoaderData } from "react-router";
+import { useLoaderData, useSearchParams } from "react-router";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { requireApi } from "../lib/api.server";
 import { useClientApi } from "../lib/useClientApi";
@@ -16,5 +16,7 @@ export default function ImportRoute(): React.ReactElement {
   const { apiUrl } = useLoaderData<typeof loader>();
   const api = useClientApi(apiUrl);
   const hydrated = useHydrated();
-  return hydrated ? <ImportFlow api={api} /> : <div />;
+  const [params] = useSearchParams();
+  const then = params.get("then") === "/app/start" ? "/app/start" : undefined;
+  return hydrated ? <ImportFlow api={api} {...(then && { then })} /> : <div />;
 }

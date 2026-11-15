@@ -75,7 +75,9 @@ export default function Privacy(): React.ReactElement {
         what you type, except passwords; in the mobile app photos and system pickers stay masked.
         Adding to Areas and moderating it are recorded as events too, such as an area created, an
         edit suggested, or a report resolved, carrying only the kind of action and a few labels,
-        such as whether it was an area or a climb, never what you wrote. When an AI assistant you
+        such as whether it was an area or a climb, never what you wrote. Your answers to the two
+        questions when you first sign in are recorded once: which app you kept a log in, if any, how
+        many days a week you climb, and whether you skipped a question. When an AI assistant you
         connect to your account uses it, its connection and each action it takes are recorded as
         events too, carrying only which action it was, which assistant and model took it, how long
         it took, whether it failed, the names of the options it set, and a random identifier we give

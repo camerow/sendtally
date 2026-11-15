@@ -164,14 +164,19 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
 export default function AppLayout(): React.ReactElement {
   const api = useAppApi();
   const { userId } = useAuth();
+  const bare = useLocation().pathname === "/app/start";
   return (
     <GradeScalesProvider api={api}>
       <LibraryProvider api={api}>
         <ToastProvider>
           <WebOutboxProvider api={api} userId={userId ?? ""}>
-            <Shell>
+            {bare ? (
               <Outlet />
-            </Shell>
+            ) : (
+              <Shell>
+                <Outlet />
+              </Shell>
+            )}
           </WebOutboxProvider>
         </ToastProvider>
       </LibraryProvider>

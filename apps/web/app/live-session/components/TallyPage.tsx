@@ -31,6 +31,7 @@ import { GymSheet } from "./GymSheet";
 import { LiveClimbEditor } from "./LiveClimbEditor";
 import { TallyRow } from "./TallyRow";
 import { UndoSnackbar } from "./UndoSnackbar";
+import { readPlanLink } from "@sendtally/features/training";
 
 export type TallyPageProps = {
   /**
@@ -73,6 +74,10 @@ export function TallyPage({ exercise = false }: TallyPageProps): React.ReactElem
     scales,
     kindStorage: climbKindStorage,
     typicalIndex: (scale) => typicalGradeIndex(vocabulary.climbs, scale),
+    start: {
+      plan: readPlanLink(Object.fromEntries(params)),
+      ...(params.has("name") && { name: params.get("name") ?? "" }),
+    },
   });
   const { draft, gym, circuitGym, selection, snack } = tally;
 
