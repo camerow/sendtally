@@ -36,7 +36,9 @@ const library = (): WorkoutLibrary => {
 };
 
 const plan: Plan = {
-  blocks: [],
+  blocks: [
+    { id: "b1", name: "Winter base", start: "2026-11-09", weeks: 4, focus: null, description: "" },
+  ],
   memberships: [],
   weekChanges: [],
   planChanges: [],
@@ -67,10 +69,7 @@ beforeEach(() => {
       <MemoryRouter initialEntries={["/schedule"]}>
         <ToastProvider>
           <Routes>
-            <Route
-              path="/schedule"
-              element={<SchedulePage workoutId="legs" flow={{ date: null, blockId: null }} />}
-            />
+            <Route path="/schedule" element={<SchedulePage workoutId="legs" />} />
             <Route path="/app/plan" element={<p>plan</p>} />
           </Routes>
         </ToastProvider>
@@ -89,13 +88,19 @@ const add = (): HTMLButtonElement => container.querySelector<HTMLButtonElement>(
 describe("SchedulePage", () => {
   it("adds the workout every week on the days picked, from the start day, then shows the plan", () => {
     expect(add().disabled).toBe(true);
+    expect(container.querySelector("input[type=radio]")).toBeNull();
     const chips = container.querySelectorAll<HTMLButtonElement>(".weekday-chip");
     act(() => chips[1]?.click());
     act(() => chips[4]?.click());
     expect(add().textContent).toBe("Add every Tue, Fri");
     act(() => add().click());
     expect(writes.saveMembership).toHaveBeenCalledWith(
-      expect.objectContaining({ workoutId: "legs", weekdays: [1, 4], start: "2026-11-12" })
+      expect.objectContaining({
+        workoutId: "legs",
+        blockId: null,
+        weekdays: [1, 4],
+        start: "2026-11-12",
+      })
     );
     expect(container.textContent).toBe("plan");
   });

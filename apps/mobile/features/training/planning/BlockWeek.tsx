@@ -113,7 +113,7 @@ export function BlockWeek({
   const [added, setAdded] = useLit();
   const add = (
     <Button
-      label={t("plan.addWorkout")}
+      label={t("plan.addToBlockMenu")}
       accessibilityLabel={t("plan.addToBlock", { name: block.name })}
       onPress={() => setAdding(true)}
       variant="primary"

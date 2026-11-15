@@ -1,23 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router";
-import {
-  blockEnded,
-  blockLastDay,
-  blockWeekOn,
-  isDated,
-  maxDate,
-  type Block,
-} from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import {
-  blockDates,
   newSchedule,
   nextPosition,
   scheduledMemberships,
   scheduleReady,
   toggled,
   usePlan,
-  type AddFlow,
   type ScheduleDraft,
   type ScheduleMode,
   scheduleAddLabel,
@@ -30,59 +20,32 @@ import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { usePlanActions } from "../data/usePlanActions";
 import { useLibrary, workoutPath } from "../library/useLibrary";
-import { BlockChoice } from "./BlockChoice";
 import { StartField } from "./StartField";
 import { WeekdayChips } from "./WeekdayChips";
 
-/** The last step of adding to the plan: every week on some days, or on some dates, in a block or not. */
-export function SchedulePage({
-  workoutId,
-  flow,
-}: {
-  workoutId: string;
-  flow: AddFlow;
-}): React.ReactElement | null {
+/** Scheduling a workout outside any block: every week on some days, or on some dates. */
+export function SchedulePage({ workoutId }: { workoutId: string }): React.ReactElement | null {
   const navigate = useNavigate();
   const { today } = useHangData();
   const library = useLibrary();
   const plan = usePlan(useAppApi()).state;
   const actions = usePlanActions();
-  const [draft, setDraft] = React.useState(() => newSchedule(flow.date, today));
-  const [blockId, setBlockId] = React.useState(flow.blockId);
+  const [draft, setDraft] = React.useState(() => newSchedule(null, today));
   const update = (patch: Partial<ScheduleDraft>): void => setDraft((d) => ({ ...d, ...patch }));
 
   if (library.state.status !== "ready")
     return <LoadState state={library.state} onRetry={() => void library.reload()} />;
   const workout = library.state.data.workout(workoutId);
   if (workout === undefined) return null;
-  const all = plan.status === "ready" ? plan.data.blocks : [];
-  const template = all.find((b) => b.id === flow.blockId && !isDated(b));
-  const blocks =
-    template === undefined ? all.filter(isDated).filter((b) => !blockEnded(b, today)) : [];
-  const block: Block | null = template ?? blocks.find((b) => b.id === blockId) ?? null;
-  const dated = block !== null && isDated(block) ? block : null;
-  const planned = scheduledMemberships(draft, workoutId, block, () => "", 0);
-  // In a block the dates are one plan's days; outside one, a plan each.
-  const days =
-    draft.mode === "dates" && dated !== null
-      ? draft.dates.filter((d) => blockWeekOn(dated, d) !== null).sort()
-      : planned.map((m) => m.start);
+  const days = scheduledMemberships(draft, workoutId, () => "", 0).map((m) => m.start);
 
   const save = (): void => {
-    const position = plan.status === "ready" ? nextPosition(plan.data, block?.id ?? null) : 0;
-    const memberships = scheduledMemberships(
-      draft,
-      workoutId,
-      block,
-      () => crypto.randomUUID(),
-      position
-    );
+    const position = plan.status === "ready" ? nextPosition(plan.data, null) : 0;
+    const memberships = scheduledMemberships(draft, workoutId, () => crypto.randomUUID(), position);
     memberships.forEach((m) => void actions.saveMembership(m));
     const [first] = memberships;
     if (first === undefined) return;
-    if (draft.mode === "dates" && dated !== null)
-      void actions.saveSchedule(blockDates(first.id, dated, draft.dates));
-    void navigate(`/app/plan?date=${days[0] ?? first.start}`);
+    void navigate(`/app/plan?date=${first.start}`);
   };
 
   return (
@@ -92,7 +55,7 @@ export function SchedulePage({
         <button
           type="button"
           className="detail-primary"
-          disabled={!scheduleReady(draft, block)}
+          disabled={!scheduleReady(draft)}
           onClick={save}
         >
           {scheduleAddLabel(draft, days.length, days[0])}
@@ -103,17 +66,15 @@ export function SchedulePage({
         <span className="plan-label">{workout.name}</span>
         <h1 className="schedule-title">{t("plan.howOften")}</h1>
       </div>
-      {template === undefined && (
-        <Segmented<ScheduleMode>
-          label={t("plan.howOften")}
-          value={draft.mode}
-          onChange={(mode) => update({ mode })}
-          options={[
-            { value: "repeat", label: t("plan.repeatEvery") },
-            { value: "dates", label: t("plan.specificDays") },
-          ]}
-        />
-      )}
+      <Segmented<ScheduleMode>
+        label={t("plan.howOften")}
+        value={draft.mode}
+        onChange={(mode) => update({ mode })}
+        options={[
+          { value: "repeat", label: t("plan.repeatEvery") },
+          { value: "dates", label: t("plan.specificDays") },
+        ]}
+      />
       {draft.mode === "repeat" ? (
         <section className="schedule-section">
           <h2 className="plan-label plan-label--muted">{t("plan.days")}</h2>
@@ -124,20 +85,14 @@ export function SchedulePage({
         </section>
       ) : (
         <MonthCalendar
-          key={block?.id ?? "none"}
-          selected={draft.dates[0] ?? maxDate(block?.start ?? today, today)}
+          selected={draft.dates[0] ?? today}
           picked={draft.dates}
-          min={maxDate(block?.start ?? today, today)}
-          max={dated === null ? undefined : blockLastDay(dated)}
+          min={today}
           today={today}
-          blocks={blocks}
           onPick={(d) => update({ dates: toggled(draft.dates, d) })}
         />
       )}
-      {blocks.length > 0 && (
-        <BlockChoice blocks={blocks} value={block?.id ?? null} onChange={setBlockId} />
-      )}
-      {block === null && draft.mode === "repeat" && (
+      {draft.mode === "repeat" && (
         <StartField value={draft.start} min={today} onChange={(start) => update({ start })} />
       )}
     </DetailFrame>

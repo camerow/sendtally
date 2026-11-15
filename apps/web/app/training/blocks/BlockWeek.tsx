@@ -113,7 +113,7 @@ export function BlockWeek({
       onClick={() => setAdding(true)}
     >
       <Icon name="plus" size={18} strokeWidth={2.4} />
-      {t("plan.addWorkout")}
+      {t("plan.addToBlockMenu")}
     </button>
   );
   const edit = onEditDays !== undefined && (

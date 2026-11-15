@@ -81,7 +81,7 @@ function Detail({
           {start !== null && <StartButton start={start} />}
           <div className="footer-row">
             <Link to={schedulePath(workout.id)} className="footer-outline">
-              {t("plan.addToPlan")}
+              {t("plan.schedule")}
             </Link>
             {logIt !== null && (
               <Link to={logIt} className="footer-outline">

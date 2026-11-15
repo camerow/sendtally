@@ -619,29 +619,6 @@
   border-color: var(--bs-gold);
 }
 
-.radio-row {
-  min-height: 56px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid var(--line-on-light-soft);
-  cursor: pointer;
-}
-
-.radio-row input {
-  width: 20px;
-  height: 20px;
-  margin: 0;
-  accent-color: var(--bs-gunmetal);
-}
-
-.radio-row-text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
 .plan-layout {
   display: block;
 }

@@ -218,7 +218,7 @@ describe("WorkoutPage", () => {
       ],
     };
     mount("legs");
-    expect(container.textContent).toContain("Planned in");
+    expect(container.textContent).toContain("Scheduled in");
     expect(container.querySelector(".plan-row-name")?.textContent).toBe("Ongoing");
     click(container.querySelector(".plan-row-remove"));
     click(document.querySelector(".sheet-action--danger"));

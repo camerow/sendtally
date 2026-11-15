@@ -299,16 +299,16 @@ describe("block overview", () => {
     await fireEvent.press(screen.getByLabelText("Previous week"));
     expect(screen.getByText("1 exercise")).toBeTruthy();
     expect(screen.getByText("45m")).toBeTruthy();
-    expect(screen.queryByLabelText("Remove Back squat from your plan")).toBeNull();
+    expect(screen.queryByLabelText("Remove Back squat from Winter base")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Back squat"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/membership/[id]",
       params: { id: "m1", back: "Winter base" },
     });
-    expect(screen.queryByLabelText("Add a workout to Winter base")).toBeNull();
+    expect(screen.queryByLabelText("Add to Winter base")).toBeNull();
     await fireEvent.press(screen.getByText("Edit"));
-    await fireEvent.press(screen.getByLabelText("Add a workout to Winter base"));
-    expect(screen.getByText("Add workouts")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Add to Winter base"));
+    expect(screen.getAllByText("Add to block").length).toBeGreaterThan(1);
   });
 });
 
@@ -531,7 +531,7 @@ describe("plan again", () => {
   it("with nothing planned, shows only the empty panel", async () => {
     const none: Plan = { ...plan, blocks: [], memberships: [] };
     await renderWithHang(<BlocksList />, hangData(), { workouts: [squat], plan: none });
-    expect(screen.getByText(/^Nothing planned yet/)).toBeTruthy();
+    expect(screen.getByText("No blocks yet.")).toBeTruthy();
     for (const section of ["Active", "Upcoming", "Templates", "Completed"])
       expect(screen.queryByText(section)).toBeNull();
   });
@@ -564,12 +564,12 @@ describe("plan again", () => {
       params: { id: "m3", back: "Summer base" },
     });
     expect(screen.getByLabelText("Back squat")).toBeTruthy();
-    expect(screen.queryByLabelText("Add a workout to Summer base")).toBeNull();
+    expect(screen.queryByLabelText("Add to Summer base")).toBeNull();
   });
 
   it("copies a past block from the day picked, its weeks running from that weekday", async () => {
     await renderWithHang(<BlockScreen id="b0" />, hangData(), { workouts: [squat], plan: past });
-    await fireEvent.press(screen.getByText("Plan again"));
+    await fireEvent.press(screen.getByText("Schedule again"));
     expect(screen.getByText("When does it start?")).toBeTruthy();
     expect(
       screen.getByText("Tue, Sep 29 to Mon, Oct 26. Each block week runs Tuesday to Monday.")
@@ -584,7 +584,7 @@ describe("plan again", () => {
 
   it("offers it only once the block is over", async () => {
     await renderWithHang(<BlockScreen id="b1" />, hangData(), { workouts: [squat], plan });
-    expect(screen.queryByText("Plan again")).toBeNull();
+    expect(screen.queryByText("Schedule again")).toBeNull();
   });
 });
 

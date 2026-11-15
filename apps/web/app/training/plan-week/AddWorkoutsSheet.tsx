@@ -4,6 +4,7 @@ import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   addKicker,
+  addTitle,
   focusLabel,
   useAddTo,
   useTrainingLog,
@@ -128,7 +129,7 @@ export function AddWorkoutsSheet({
     <Sheet
       open
       kicker={addKicker(flow, plan.blocks)}
-      title={onScheduled === undefined ? t("plan.addWorkouts") : t("plan.schedule")}
+      title={onScheduled === undefined ? addTitle(flow) : t("plan.schedule")}
       onClose={close}
       cancel={mode === "block"}
       action={action}

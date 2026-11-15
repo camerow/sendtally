@@ -106,7 +106,7 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
       {draft.editing && (
         <>
           <Button
-            label={t("plan.addWorkout")}
+            label={t("plan.addToPlan")}
             onPress={() => setAdding(true)}
             variant="primary"
             icon="plus"

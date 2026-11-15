@@ -31,5 +31,9 @@ export function addKicker(flow: AddFlow, blocks: readonly Block[]): string {
     ? shortDate(flow.date)
     : block !== undefined
       ? blockName(block)
-      : t("plan.addToPlan");
+      : t("plan.ongoing");
 }
+
+/** The sheet's title: Add to block in a block, Add to plan on a day or Ongoing. */
+export const addTitle = (flow: AddFlow): string =>
+  flow.date === null && flow.blockId !== null ? t("plan.addToBlockMenu") : t("plan.addToPlan");

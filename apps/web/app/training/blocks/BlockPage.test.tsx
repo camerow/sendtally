@@ -308,12 +308,12 @@ describe("BlockPage", () => {
     expect(at.path).toBe("/app/train");
   });
 
-  it("recaps a block that is over, with Plan again and no Edit", () => {
+  it("recaps a block that is over, with Schedule again and no Edit", () => {
     state.plan = withBlock(over);
     mount();
     expect(container.querySelector(".block-finished")?.textContent).toBe("Finished");
     expect(container.querySelectorAll(".week-bar")).toHaveLength(2);
     expect(button("Edit")).toBeUndefined();
-    expect(button("Plan again")).toBeDefined();
+    expect(button("Schedule again")).toBeDefined();
   });
 });

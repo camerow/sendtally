@@ -60,7 +60,7 @@ const planned: Plan = {
 
 const labels = (): string[] =>
   screen
-    .getAllByText(/^(Exercises|Over time|History · .*|Planned in)$/)
+    .getAllByText(/^(Exercises|Over time|History · .*|Scheduled in)$/)
     .map((n) => String(n.props.children));
 
 beforeEach(() => {
@@ -145,22 +145,22 @@ describe("Other workouts", () => {
     expect(screen.getByLabelText("Tue")).toBeTruthy();
   });
 
-  it("reads Exercises, Over time, History, then Planned in", async () => {
+  it("reads Exercises, Over time, History, then Scheduled in", async () => {
     await renderWithHang(<WorkoutScreen id="legs" />, hangData(), {
       workouts: [legs],
       activities: [ran("a1", "2026-09-20", 6), ran("a2", "2026-09-27", 8)],
       plan: planned,
     });
-    expect(labels()).toEqual(["Exercises", "Over time", "History · 2 sessions", "Planned in"]);
+    expect(labels()).toEqual(["Exercises", "Over time", "History · 2 sessions", "Scheduled in"]);
     expect(screen.getByText("RPE 8")).toBeTruthy();
     await fireEvent.press(screen.getAllByText("Back squat 5 × 80 kg · 45 min")[0]!);
     expect(router.push).toHaveBeenCalledWith({ pathname: "/activity/[id]", params: { id: "a2" } });
   });
 
-  it("starts or plans it from its footer", async () => {
+  it("starts or schedules it from its footer", async () => {
     await renderWithHang(<WorkoutScreen id="legs" />, hangData(), { workouts: [legs] });
     expect(screen.getByText("Start")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Add to plan"));
+    await fireEvent.press(screen.getByText("Schedule"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/plan/schedule",
       params: { workoutId: "legs" },
@@ -175,7 +175,7 @@ describe("Other workouts", () => {
     );
     expect(screen.getByText("Missed Mon, Sep 28")).toBeTruthy();
     expect(screen.getByText("Reschedule")).toBeTruthy();
-    expect(screen.queryByText("Add to plan")).toBeNull();
+    expect(screen.queryByText("Schedule")).toBeNull();
     expect(screen.queryByText("Edit")).toBeNull();
     await fireEvent.press(screen.getByText("Log it"));
     expect(router.push).toHaveBeenCalledWith({

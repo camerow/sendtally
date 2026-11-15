@@ -18,7 +18,7 @@ export type ScheduleDraft = {
   mode: ScheduleMode;
   weekdays: Weekday[];
   dates: CalendarDate[];
-  /** Where a weekly plan outside a block starts; inside one it starts with the block. */
+  /** Where a weekly plan starts. */
   start: CalendarDate;
 };
 
@@ -40,46 +40,27 @@ export function toggled<T extends string | number>(list: readonly T[], x: T): T[
   return list.includes(x) ? list.filter((y) => y !== x) : [...list, x].sort(ascending);
 }
 
-const inside = (block: Block | null, d: CalendarDate): boolean =>
-  block === null || blockWeekOn(block, d) !== null;
-
-/** Whether the schedule says when: some weekdays, or some dates its block holds. */
-export function scheduleReady(d: ScheduleDraft, block: Block | null): boolean {
-  return d.mode === "repeat" ? d.weekdays.length > 0 : d.dates.some((date) => inside(block, date));
+/** Whether the schedule says when: some weekdays, or some dates. */
+export function scheduleReady(d: ScheduleDraft): boolean {
+  return d.mode === "repeat" ? d.weekdays.length > 0 : d.dates.length > 0;
 }
 
 /**
- * What adding the workout on the schedule saves: one plan on its weekdays, a one-off plan per
- * date, or in a block one plan whose days are those dates' weeks (see `blockDates`). `newId`
- * hands out the id of each.
+ * What adding the workout on the schedule saves, outside any block: one plan on its weekdays,
+ * or a one-off plan per date. `newId` hands out the id of each.
  */
 export function scheduledMemberships(
   d: ScheduleDraft,
   workoutId: string,
-  block: Block | null,
   newId: () => string,
   position: number
 ): Membership[] {
-  const blockId = block?.id ?? null;
+  const plan = { workoutId, blockId: null, position };
   if (d.mode === "repeat")
-    return [
-      {
-        id: newId(),
-        workoutId,
-        blockId,
-        weekdays: [...d.weekdays].sort(ascending),
-        start: block?.start ?? d.start,
-        position,
-      },
-    ];
-  if (block !== null && block.start !== null)
-    return scheduleReady(d, block)
-      ? [{ id: newId(), workoutId, blockId, weekdays: [], start: block.start, position }]
-      : [];
-  return d.dates
-    .filter((date) => inside(block, date))
+    return [{ ...plan, id: newId(), weekdays: [...d.weekdays].sort(ascending), start: d.start }];
+  return [...d.dates]
     .sort(ascending)
-    .map((date) => ({ id: newId(), workoutId, blockId, weekdays: [], start: date, position }));
+    .map((date) => ({ ...plan, id: newId(), weekdays: [], start: date }));
 }
 
 /** A block plan's days on some dates: each date's weekday in its week alone. */

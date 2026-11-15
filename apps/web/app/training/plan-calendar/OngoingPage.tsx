@@ -98,7 +98,7 @@ export function OngoingPage(): React.ReactElement {
         <>
           <button type="button" className="add-workout-button" onClick={() => setAdding(true)}>
             <Icon name="plus" size={18} strokeWidth={2.4} />
-            {t("plan.addWorkout")}
+            {t("plan.addToPlan")}
           </button>
           {members.length > 0 && (
             <section className="ongoing-workouts">

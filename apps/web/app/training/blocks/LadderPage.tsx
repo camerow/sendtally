@@ -11,6 +11,7 @@ import {
   ladderView,
   loadSummary,
   toggleIn,
+  removeText,
 } from "@sendtally/features/training";
 import { exerciseName } from "@sendtally/features/workouts";
 import { MoreMenu } from "../../components/MoreMenu";
@@ -200,7 +201,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
       </section>
       <Sheet
         open={removing}
-        title={t("plan.removeTitle", { title: w.name })}
+        title={removeText(w.name, block).title}
         onClose={() => setRemoving(false)}
         action={{
           label: t("plan.removeAction"),

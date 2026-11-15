@@ -22,7 +22,7 @@ import { useLibrary } from "../library/useLibrary";
 import { usePlanActions } from "../plan/usePlanActions";
 import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
 import { AddWorkoutRow, type AddState } from "./AddWorkoutRow";
-import { addFlowParams, addKicker, type AddFlow } from "@sendtally/features/training";
+import { addFlowParams, addKicker, addTitle, type AddFlow } from "@sendtally/features/training";
 import { PlanAgainStart } from "./PlanAgainStart";
 import { ScheduleBlocks } from "./ScheduleBlocks";
 import { useAddTo } from "./useAddTo";
@@ -161,7 +161,7 @@ export function AddWorkoutsSheet({
           ) : (
             <SheetHeader
               kicker={kicker}
-              title={onScheduled === undefined ? t("plan.addWorkouts") : t("plan.schedule")}
+              title={onScheduled === undefined ? addTitle(flow) : t("plan.schedule")}
               action={t("common.done")}
               onAction={close}
             />
