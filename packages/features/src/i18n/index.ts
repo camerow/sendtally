@@ -63,6 +63,10 @@ export function t(key: MessageKey, vars?: Vars): string {
   );
 }
 
+/** A message in every locale, for recognising text saved in another language. */
+export const inEveryLocale = (key: MessageKey): string[] =>
+  LOCALES.flatMap((locale) => lookup(locale, key, undefined) ?? []);
+
 const formatters = new Map<string, Intl.DateTimeFormat | Intl.NumberFormat>();
 
 /** Building an Intl formatter is slow on Hermes, and a long log formats a date per row. */

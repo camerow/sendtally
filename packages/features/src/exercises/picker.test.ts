@@ -81,4 +81,8 @@ describe("exerciseLabel", () => {
     expect(exerciseLabel({ name: "Kniebeuge", builtIn: "backSquat" })).toBe("Back squat");
     expect(exerciseLabel({ name: "Nordic curl", builtIn: null })).toBe("Nordic curl");
   });
+
+  it("keeps the name the user renamed a built-in to", () => {
+    expect(exerciseLabel({ name: "High bar squat", builtIn: "backSquat" })).toBe("High bar squat");
+  });
 });
