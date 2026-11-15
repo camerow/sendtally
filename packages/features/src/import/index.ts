@@ -9,4 +9,4 @@ export {
   type SessionNameCount,
 } from "./transforms";
 export { importAll, issueText } from "./upload";
-export { importResultText } from "./importResultText";
+export { importResultText, readImportResult } from "./importResultText";

@@ -3,22 +3,14 @@ import React from "react";
 import { t } from "@sendtally/features/i18n";
 import { Toast } from "../../components/Toast";
 import { useReminderPromptOpen } from "../training/reminders/ReminderPromptProvider";
-import { importResultText } from "@sendtally/features/import";
+import { importResultText, readImportResult } from "@sendtally/features/import";
 
 /** What an import just added, from the params it came back with, with a way to see them. */
 export function ImportResultToast(): React.ReactElement | null {
-  const { imported, skipped, likely } = useLocalSearchParams<{
-    imported?: string;
-    skipped?: string;
-    likely?: string;
-  }>();
+  const params = useLocalSearchParams<{ imported?: string; skipped?: string; likely?: string }>();
+  const result = readImportResult((k) => params[k as keyof typeof params]);
   const covered = useReminderPromptOpen();
-  if (imported === undefined || covered) return null;
-  const result = {
-    imported: Number(imported),
-    skipped: Number(skipped ?? 0),
-    likely: Number(likely ?? 0),
-  };
+  if (result === null || covered) return null;
   return (
     <Toast
       message={importResultText(result)}

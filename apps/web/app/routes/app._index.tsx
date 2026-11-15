@@ -1,6 +1,6 @@
 import React from "react";
 import type { LinksFunction, LoaderFunctionArgs } from "react-router";
-import { redirect, useLoaderData } from "react-router";
+import { useLoaderData } from "react-router";
 import type {
   ConnectionStatus,
   Activity,
@@ -43,7 +43,6 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
     api.sessions(),
     api.entries(),
   ]);
-  if (status.firstRun === true) throw redirect("/app/start");
   return {
     status,
     sessions: sessions.sessions,

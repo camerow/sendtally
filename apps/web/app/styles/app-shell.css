@@ -1143,7 +1143,7 @@
 
 .option-row[aria-checked="true"] {
   font-weight: 600;
-  background: rgba(249, 220, 92, 0.35);
+  background: var(--surface-selected);
 }
 
 .already-running-actions {

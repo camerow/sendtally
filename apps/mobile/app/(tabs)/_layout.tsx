@@ -50,7 +50,7 @@ export default function TabsLayout(): React.ReactElement | null {
 
 function SignedInTabs(): React.ReactElement | null {
   const insets = useSafeAreaInsets();
-  const { show } = useFirstRun(useApi());
+  const show = useFirstRun(useApi());
   if (show === null) return null;
   if (show) return <Redirect href="/first-run" />;
 

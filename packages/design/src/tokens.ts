@@ -22,6 +22,7 @@ export const colors = {
   labelAccent: WATERMELON_INK,
   dataBarPeak: PETAL_INK,
   surfaceSoft: "#F7F6F3",
+  surfaceSelected: "rgba(249,220,92,0.35)",
   textSecondary: "rgba(64,63,76,0.72)",
   textMuted: "rgba(64,63,76,0.55)",
   textFaint: "rgba(64,63,76,0.45)",

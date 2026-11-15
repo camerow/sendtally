@@ -33,7 +33,7 @@ export function OptionRow({
         gap: 10,
         paddingHorizontal: 12,
         borderRadius: radius.control,
-        backgroundColor: selected ? "rgba(249,220,92,0.35)" : "transparent",
+        backgroundColor: selected ? colors.surfaceSelected : "transparent",
       })}
     >
       {leading}

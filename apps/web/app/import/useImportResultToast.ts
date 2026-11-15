@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { importResultText } from "@sendtally/features/import";
+import { importResultText, readImportResult } from "@sendtally/features/import";
 import { t } from "@sendtally/features/i18n";
 import { useToast } from "../components/Toast";
 
@@ -9,14 +9,9 @@ export function useImportResultToast(): void {
   const [params, setParams] = useSearchParams();
   const toast = useToast();
   const navigate = useNavigate();
-  const imported = params.get("imported");
   React.useEffect(() => {
-    if (imported === null) return;
-    const result = {
-      imported: Number(imported),
-      skipped: Number(params.get("skipped") ?? 0),
-      likely: Number(params.get("likely") ?? 0),
-    };
+    const result = readImportResult((k) => params.get(k));
+    if (result === null) return;
     toast.show({
       message: importResultText(result),
       ...(result.imported > 0 && {
@@ -24,5 +19,5 @@ export function useImportResultToast(): void {
       }),
     });
     setParams({}, { replace: true });
-  }, [imported, params, setParams, toast, navigate]);
+  }, [params, setParams, toast, navigate]);
 }

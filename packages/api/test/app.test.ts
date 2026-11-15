@@ -1,6 +1,7 @@
 import { env } from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { encryptSecret } from "../src/lib/crypto";
+import * as posthog from "../src/lib/posthog";
 import { jsonResponse, makeFakeFetch } from "./fakes";
 import { testApp } from "./harness";
 
@@ -714,9 +715,25 @@ describe("app", () => {
     expect((await finish({ existingLog: "strava", climbingDays: 2, endedAt: "plan" })).status).toBe(
       400
     );
-    const done = await finish({ existingLog: "none", climbingDays: 2, endedAt: "plan" });
-    expect(done.status).toBe(200);
-    expect(await firstRun(headers)).toBe(false);
+    const capture = vi.spyOn(posthog, "captureUserEvent").mockResolvedValue();
+    const identify = vi.spyOn(posthog, "identifyUser").mockResolvedValue();
+    try {
+      const done = await finish({ existingLog: "kaya", climbingDays: 2, endedAt: "plan" });
+      expect(done.status).toBe(200);
+      expect(await firstRun(headers)).toBe(false);
+      const again = await finish({ existingLog: "none", climbingDays: 0, endedAt: "skip_log" });
+      expect(again.status).toBe(200);
+      const finished = capture.mock.calls.filter(([, , event]) => event === "first_run_finished");
+      expect(finished.map(([, , , properties]) => properties)).toEqual([
+        { existing_log: "kaya", climbing_days: 2, ended_at: "plan" },
+      ]);
+      expect(identify.mock.calls.map(([, , properties]) => properties)).toEqual([
+        { existing_log: "kaya" },
+      ]);
+    } finally {
+      capture.mockRestore();
+      identify.mockRestore();
+    }
 
     const planned = { "x-test-user": "user_firstrun_planned", "Content-Type": "application/json" };
     const saved = await testApp().request(

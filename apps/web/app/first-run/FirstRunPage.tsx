@@ -1,17 +1,14 @@
 import React from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import type { FirstRunAnswers } from "@sendtally/api-client";
-import type { Weekday } from "@sendtally/core/hang";
-import { Button, Logo } from "@sendtally/design";
+import { Button, Label, Logo } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
+import { readImportResult } from "@sendtally/features/import";
 import {
   FIRST_RUN_SOURCES,
   firstRunNextLabel,
   firstRunSourceLabel,
-  useFirstRun,
-  type FirstRunSource,
+  useFirstRunFlow,
 } from "@sendtally/features/settings";
-import { toggleIn } from "@sendtally/features/training";
 import { Icon } from "../components/Icon";
 import { useAppApi } from "../lib/useAppApi";
 import { usePlanActions } from "../training/data/usePlanActions";
@@ -20,41 +17,20 @@ import { WeekdayChips } from "../training/schedule/WeekdayChips";
 
 /** Once per account: the log they keep already, then the days they climb, ending on Plan. */
 export function FirstRunPage(): React.ReactElement {
-  const { finish } = useFirstRun(useAppApi());
-  const actions = usePlanActions();
-  const today = useToday();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const imported = params.get("imported");
-  const [source, setSource] = React.useState<FirstRunSource | null>(null);
-  const [onDays, setOnDays] = React.useState(false);
-  const [days, setDays] = React.useState<readonly Weekday[]>([]);
-  const step = onDays || imported !== null ? 2 : 1;
-
-  const end = (endedAt: FirstRunAnswers["endedAt"], climbingDays: number): void => {
-    void finish({ existingLog: source ?? "skipped", climbingDays, endedAt }).catch(() => undefined);
-    if (endedAt !== "plan") return void navigate("/app", { replace: true });
-    const result = new URLSearchParams(params);
-    void navigate(imported === null ? "/app/plan" : `/app/plan?${result}`, { replace: true });
-  };
-
-  const saveDays = (): void => {
-    if (days.length > 0)
-      void actions.saveMembership({
-        id: crypto.randomUUID(),
-        workoutId: "climb-session",
-        blockId: null,
-        weekdays: [...days],
-        start: today,
-        position: 0,
-      });
-    end("plan", days.length);
-  };
-
-  const next = (): void => {
-    if (source === null || source === "none") return setOnDays(true);
-    void navigate("/app/import?then=/app/start");
-  };
+  const imported = readImportResult((k) => params.get(k)) !== null;
+  const flow = useFirstRunFlow(useAppApi(), {
+    imported,
+    today: useToday(),
+    newId: () => crypto.randomUUID(),
+    actions: usePlanActions(),
+    go: (to) => {
+      if (to === "import") void navigate("/app/import?then=/app/start");
+      else if (to === "log") void navigate("/app", { replace: true });
+      else void navigate(imported ? `/app/plan?${params}` : "/app/plan", { replace: true });
+    },
+  });
 
   return (
     <div className="first-run">
@@ -63,19 +39,13 @@ export function FirstRunPage(): React.ReactElement {
           <Logo tone="on-light" size={24} />
         </a>
         <span className="first-run-top-side">
-          <span className="first-run-step">
-            {t("onboarding.firstRun.step", { n: step, total: 2 })}
-          </span>
-          <button
-            type="button"
-            className="first-run-link"
-            onClick={() => end(step === 1 ? "skip_log" : "skip_days", 0)}
-          >
+          <Label on="light">{t("onboarding.firstRun.step", { n: flow.step, total: 2 })}</Label>
+          <button type="button" className="first-run-link" onClick={flow.skip}>
             {t("onboarding.firstRun.skip")}
           </button>
         </span>
       </header>
-      {step === 1 ? (
+      {flow.step === 1 ? (
         <main className="first-run-body">
           <h1 className="first-run-title">{t("onboarding.firstRun.logQuestion")}</h1>
           <div
@@ -88,23 +58,23 @@ export function FirstRunPage(): React.ReactElement {
                 key={s}
                 type="button"
                 role="radio"
-                aria-checked={source === s}
+                aria-checked={flow.source === s}
                 className="option-row"
-                onClick={() => setSource(s)}
+                onClick={() => flow.pick(s)}
               >
                 <span className="first-run-option">{firstRunSourceLabel(s)}</span>
                 {s === "spreadsheet" && <span className="first-run-detail">CSV</span>}
                 <span className="first-run-check">
-                  {source === s && <Icon name="check" size={18} strokeWidth={2.4} />}
+                  {flow.source === s && <Icon name="check" size={18} strokeWidth={2.4} />}
                 </span>
               </button>
             ))}
           </div>
           <div className="first-run-actions">
-            <Button variant="azure" disabled={source === null} onClick={next}>
-              {firstRunNextLabel(source)}
+            <Button variant="azure" disabled={flow.source === null} onClick={flow.next}>
+              {firstRunNextLabel(flow.source)}
             </Button>
-            <button type="button" className="first-run-link" onClick={() => setOnDays(true)}>
+            <button type="button" className="first-run-link" onClick={flow.later}>
               {t("onboarding.firstRun.later")}
             </button>
           </div>
@@ -112,9 +82,9 @@ export function FirstRunPage(): React.ReactElement {
       ) : (
         <main className="first-run-body">
           <h1 className="first-run-title">{t("onboarding.firstRun.daysQuestion")}</h1>
-          <WeekdayChips days={days} onToggle={(d) => setDays(toggleIn(days, d))} />
+          <WeekdayChips days={flow.days} onToggle={flow.toggleDay} />
           <div className="first-run-actions">
-            <Button variant="azure" onClick={saveDays}>
+            <Button variant="azure" onClick={flow.saveDays}>
               {t("onboarding.firstRun.continue")}
             </Button>
           </div>

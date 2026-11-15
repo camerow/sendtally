@@ -1,7 +1,7 @@
 import { useAuth, useUser } from "@clerk/react-router";
 import React from "react";
-import type { LinksFunction, LoaderFunctionArgs } from "react-router";
-import { NavLink, Outlet, useLocation, useRouteError } from "react-router";
+import type { LinksFunction, LoaderFunctionArgs, ShouldRevalidateFunction } from "react-router";
+import { NavLink, Outlet, redirect, useLocation, useRouteError } from "react-router";
 import { Logo } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
 import { ErrorPage } from "../components/ErrorPage";
@@ -33,10 +33,21 @@ export function meta(): Array<Record<string, string>> {
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: appShellStyles }];
 
+/**
+ * First run shows once, before anything else under /app, and only to an account the server says
+ * has not had it; /app/start sends anyone else on. Checked on a full load only, so moving around
+ * the app, or between first run and its import, never asks again.
+ */
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
-  await requireApi(args);
+  const api = await requireApi(args);
+  const starting = new URL(args.request.url).pathname === "/app/start";
+  const { firstRun } = await api.status();
+  if (firstRun === true && !starting) throw redirect("/app/start");
+  if (firstRun !== true && starting) throw redirect("/app");
   return { apiUrl: args.context.get(cloudflareContext).env.API_URL };
 }
+
+export const shouldRevalidate: ShouldRevalidateFunction = () => false;
 
 type NavItem = { label: () => string; to: string; icon: IconName };
 

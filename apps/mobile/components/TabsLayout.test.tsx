@@ -12,7 +12,7 @@ jest.mock("expo-router", () => {
   return { Tabs, Redirect: ({ href }: { href: string }) => <MockText>{`to ${href}`}</MockText> };
 });
 let mockShow: boolean | null = false;
-jest.mock("@sendtally/features/settings", () => ({ useFirstRun: () => ({ show: mockShow }) }));
+jest.mock("@sendtally/features/settings", () => ({ useFirstRun: () => mockShow }));
 jest.mock("../lib/api", () => ({ useApi: () => ({}) }));
 jest.mock("expo-router/tabs", () => ({ BottomTabBar: () => null }));
 jest.mock("../features/live-session/LiveBar", () => ({ LiveBar: () => null }));

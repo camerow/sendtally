@@ -1996,6 +1996,8 @@ const app = new Hono<AppEnv>()
     const userId = c.get("userId");
     const form = c.req.valid("json");
     await repo.ensureUser(c.env.DB, userId);
+    if ((await repo.getUser(c.env.DB, userId))?.first_run_done === 1)
+      return c.json({ firstRun: false });
     await repo.finishFirstRun(c.env.DB, userId);
     await identifyUser(c.env, userId, { existing_log: form.existingLog });
     await captureEvent(c, "first_run_finished", {

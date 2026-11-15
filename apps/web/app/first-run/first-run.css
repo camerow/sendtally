@@ -24,15 +24,6 @@
   gap: 20px;
 }
 
-.first-run-step {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(64, 63, 76, 0.72);
-}
-
 .first-run-link {
   border: none;
   background: none;
@@ -68,7 +59,7 @@
 .first-run-detail {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(64, 63, 76, 0.55);
+  color: var(--text-on-white-muted);
 }
 
 .first-run-check {

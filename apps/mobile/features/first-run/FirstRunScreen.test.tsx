@@ -2,7 +2,15 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FirstRunScreen } from "./FirstRunScreen";
+
+const show = (): Promise<unknown> =>
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <FirstRunScreen />
+    </QueryClientProvider>
+  );
 
 const mockSave = jest.fn(async () => undefined);
 const mockFinish = jest.fn(async () => undefined);
@@ -13,11 +21,7 @@ jest.mock("expo-router", () => ({
   router: { push: jest.fn(), replace: jest.fn() },
   useLocalSearchParams: () => ({}),
 }));
-jest.mock("@sendtally/features/settings", () => ({
-  ...jest.requireActual<object>("@sendtally/features/settings"),
-  useFirstRun: () => ({ finish: mockFinish }),
-}));
-jest.mock("../../lib/api", () => ({ useApi: () => ({}) }));
+jest.mock("../../lib/api", () => ({ useApi: () => ({ finishFirstRun: mockFinish }) }));
 jest.mock("../training/data/useToday", () => ({ useToday: () => "2026-11-15" }));
 jest.mock("../training/plan/usePlanActions", () => ({
   usePlanActions: () => ({ saveMembership: mockSave }),
@@ -32,7 +36,7 @@ beforeEach(() => {
 
 describe("first run", () => {
   it("imports from the picked source, coming back here", async () => {
-    await render(<FirstRunScreen />);
+    await show();
     await fireEvent.press(screen.getByText("Mountain Project"));
     await fireEvent.press(screen.getByText("Import from Mountain Project"));
     expect(router.push).toHaveBeenCalledWith({
@@ -42,7 +46,7 @@ describe("first run", () => {
   });
 
   it("saves the climbing days as one Ongoing Climbing week, then asks about reminders", async () => {
-    await render(<FirstRunScreen />);
+    await show();
     await fireEvent.press(screen.getByText("No, this is my first"));
     await fireEvent.press(screen.getByText("Continue"));
     expect(screen.getByText("Which days do you usually climb?")).toBeTruthy();
@@ -67,7 +71,7 @@ describe("first run", () => {
   });
 
   it("saves nothing and never asks with no day picked", async () => {
-    await render(<FirstRunScreen />);
+    await show();
     await fireEvent.press(screen.getByText("Later"));
     await fireEvent.press(screen.getByText("Continue"));
     expect(mockSave).not.toHaveBeenCalled();
@@ -80,7 +84,7 @@ describe("first run", () => {
   });
 
   it("skips to an empty Log from the first question", async () => {
-    await render(<FirstRunScreen />);
+    await show();
     await fireEvent.press(screen.getByText("Skip"));
     expect(mockFinish).toHaveBeenCalledWith({
       existingLog: "skipped",

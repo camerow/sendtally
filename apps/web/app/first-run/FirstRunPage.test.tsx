@@ -2,19 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
-import type * as T_settings from "@sendtally/features/settings";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FirstRunPage } from "./FirstRunPage";
 
 const finish = vi.hoisted(() => vi.fn(async () => undefined));
 const saveMembership = vi.hoisted(() => vi.fn(async () => undefined));
 
-vi.mock("../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
+vi.mock("../lib/useAppApi", () => ({ useAppApi: () => ({ finishFirstRun: finish }) }));
 vi.mock("../training/data/useToday", () => ({ useToday: () => "2026-11-15" }));
 vi.mock("../training/data/usePlanActions", () => ({ usePlanActions: () => ({ saveMembership }) }));
-vi.mock("@sendtally/features/settings", async (actual) => ({
-  ...(await actual<typeof T_settings>()),
-  useFirstRun: () => ({ show: true, finish }),
-}));
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -34,13 +30,15 @@ function Where(): null {
 const render = (at: string): void =>
   act(() =>
     root.render(
-      <MemoryRouter initialEntries={[at]}>
-        <Routes>
-          <Route path="/app/start" element={<FirstRunPage />} />
-          <Route path="*" element={null} />
-        </Routes>
-        <Where />
-      </MemoryRouter>
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter initialEntries={[at]}>
+          <Routes>
+            <Route path="/app/start" element={<FirstRunPage />} />
+            <Route path="*" element={null} />
+          </Routes>
+          <Where />
+        </MemoryRouter>
+      </QueryClientProvider>
     )
   );
 
