@@ -122,6 +122,38 @@ Every question step has Skip at top right; Skip ends the flow, keeps the answers
 - A Later link, or No, goes to Plan.
 - Recorded as `existing_log`: `kaya`, `8a`, `mountainProject`, `sendage`, `theCrag`, `spreadsheet`, `none`.
 
+### Step 4 in detail: importing an existing log
+
+Checked against `origin/main` on 2026-11-14, including #418 (Sendage sends exports) and #419 (connector session tools).
+The importer recognises a file by its header (`detectFormat` in `packages/core/src/import/plan.ts`), reads columns by name, and never fetches from any service: the person exports the file themselves.
+
+| Answer               | Imports today                                                          | How the person gets the file                                                                                                                         | New work                                                                                                                                                                                                                                                              |
+| -------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Kaya                 | Yes, pinned to a real export's layout (#379)                           | Not documented anywhere public; Kaya's help covers importing into Kaya only                                                                          | The in-app steps; Will has exported one, so the menu path comes from him. The day of a date-only climb follows the phone's time zone                                                                                                                                  |
+| 8a.nu                | Yes                                                                    | On the 8a.nu website: My Logbook, the pencil under About, then "Logbook Export (CSV)" at the bottom (per Kaya's and theCrag's help, not 8a.nu's own) | Steps and a direct link; today the link is a Google search. `tries` is not a real count there, so every climb imports as one try                                                                                                                                      |
+| Mountain Project     | Yes                                                                    | On the website: your profile's Ticks page, "Export CSV"                                                                                              | Steps and a direct link to the Ticks page; today a Google search                                                                                                                                                                                                      |
+| Sendage              | Yes, both the preamble export and the sends export (#418)              | "Export My Sends"; free Sendage accounts can export once every 30 days and four times a year                                                         | Steps, a direct link, and saying the 30-day limit. The preamble layout comes from another project's test, the least certain format                                                                                                                                    |
+| theCrag              | Yes                                                                    | Logged in, the dashboard's Action menu, "Select logbook as CSV"; it opens in the browser to save                                                     | Steps; the link (`exportlogbook` article) already exists                                                                                                                                                                                                              |
+| A spreadsheet (CSV)  | Only in the Sendtally CSV format; anything else shows "not recognized" | The person's own file                                                                                                                                | Mobile has neither the column guide nor the conversion prompt the web import has; the web's "Connect an AI assistant" page can also import a spreadsheet through Claude or ChatGPT (#419). Spec: on mobile, point to both on the web rather than rebuilding the guide |
+| No, this is my first | Nothing to import                                                      |                                                                                                                                                      | Goes straight to Plan                                                                                                                                                                                                                                                 |
+
+The rest of the flow reuses the import screens as they are:
+
+- Choose file: `ImportScreen`'s `File.pickFileAsync({ mimeTypes: "text/csv" })`; there is no paste, and none is added.
+- Review: `ImportReview` with the format named ("Kaya export"), sessions, climbs, top grade and rows skipped, the skipped rows with their reasons (`RowIssues`), and likely duplicates of sessions already in the log (`LikelyDuplicates`, with Import anyway).
+- Not recognized: `NotRecognized` with Choose a different file.
+- Result: today `ImportScreen` dismisses to `/profile` with `imported`, `skipped` and `likely`; from the flow it returns to Plan with the same counts in the toast.
+- Failure: `importAll` sends batches of 200, so a failure partway leaves the earlier batches saved and shows `import.failed` on the review screen; trying again is safe because the server skips any session already there by fingerprint and counts it as skipped.
+- Skip for now and Later go straight to Plan; afterwards import lives where it does today, in Log's empty state ("Import a log"), Settings and the account menu.
+
+New work across all sources:
+
+- A per-source steps screen between the answer and Choose file (four locales; menu names stay as each service writes them, in English).
+- Sends and attempts counts on the review: today it shows sessions, climbs, top grade and rows skipped (`planStats`); adding the two counts is a small transform change.
+- Direct export links for 8a.nu, Mountain Project and Sendage in `EXPORT_PAGES`.
+- The picker accepts only `text/csv`; a file saved from a browser can arrive as `text/plain` and show greyed out, so widen it to `text/plain` and `text/comma-separated-values` as well.
+- Most exports are website downloads, usually on a computer; the steps say so, and the flow carries on to Plan if the file is not on the phone yet.
+
 ### Step 5: Plan, once
 
 - The week filled (`WeekStrip` dots), today's `OccurrenceCard` with Start, then the coming days.
