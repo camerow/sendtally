@@ -1,5 +1,5 @@
 import { BUILT_IN_EXERCISES, type BuiltInExerciseId, type Dose } from "@sendtally/core/hang";
-import { t } from "../i18n";
+import { inEveryLocale, t } from "../i18n";
 import type { BuiltInExercise } from "./types";
 
 const builtInOf = (id: string | null): (typeof BUILT_IN_EXERCISES)[number] | undefined =>
@@ -38,8 +38,12 @@ export const builtInDose = (builtIn: string | null): Dose | undefined => {
   return b !== undefined && "dose" in b ? b.dose : undefined;
 };
 
-/** An exercise as the user reads it: one picked from the built-ins in their language. */
+/** An exercise as the user reads it: one picked from the built-ins in their language, until they rename it. */
 export function exerciseLabel(e: { name: string; builtIn: string | null }): string {
   const builtIn = builtInOf(e.builtIn);
-  return builtIn === undefined ? e.name : builtInExerciseName(builtIn.id);
+  if (builtIn === undefined) return e.name;
+  const renamed = !inEveryLocale(`workouts.exercise.${builtIn.id}`).some(
+    (name) => nameKey(name) === nameKey(e.name)
+  );
+  return renamed ? e.name : builtInExerciseName(builtIn.id);
 }
