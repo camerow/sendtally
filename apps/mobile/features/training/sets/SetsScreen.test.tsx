@@ -177,6 +177,19 @@ describe("Sets player", () => {
     expect(liveRun.read()?.rest).toBeUndefined();
   });
 
+  it("shows an exercise's own target beside its name, and none where it sets none", async () => {
+    const targeted: WorkoutRun = {
+      ...run,
+      items: [
+        { exercise: "Back squat", dose: { sets: 2, reps: 5, targetRpe: 8 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    };
+    await renderWithHang(<SetsScreen run={targeted} />, hangData());
+    expect(screen.getByText("RPE 8")).toBeTruthy();
+    expect(screen.getAllByText(/RPE/)).toHaveLength(1);
+  });
+
   it("shows which dose an alternating exercise runs, with its name when it has one", async () => {
     const alternating: WorkoutRun = {
       ...run,

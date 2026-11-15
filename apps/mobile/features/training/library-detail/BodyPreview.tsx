@@ -19,6 +19,7 @@ import {
   exerciseName,
   letterName,
   turnName,
+  withTarget,
   type LibraryWorkout,
 } from "@sendtally/features/workouts";
 import { DashedPanel } from "../components/DashedPanel";
@@ -111,7 +112,7 @@ export function BodyPreview({
           <PreviewRow
             title={exerciseName(item.exercise)}
             detail={doseText(item.exercise, item.dose)}
-            note={noteOf(i)}
+            note={withTarget(item.dose, noteOf(i))}
             rest={workout.kind === "hangboard" ? undefined : restOf(item.dose.setRestS)}
             onPress={openExercise?.(item.exercise)}
           />

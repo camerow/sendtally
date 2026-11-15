@@ -42,19 +42,37 @@ describe("dose fields", () => {
     expect(doseFieldsFor("climbing", "climbs").map((f) => f.label)).toEqual([
       "workouts.dose.sets",
       "workouts.dose.climbs",
+      "workouts.dose.rpe",
     ]);
-    expect(doseFieldsFor("climbing", "wallTime").map((f) => f.key)).toEqual(["sets", "onS"]);
+    expect(doseFieldsFor("climbing", "wallTime").map((f) => f.key)).toEqual([
+      "sets",
+      "onS",
+      "targetRpe",
+    ]);
     expect(withField({ sets: 1, reps: 4 }, climbs!, 0, "kg")).toEqual({ sets: 1 });
     expect(newDoseFor("climbing", "wallTime")).toEqual({ sets: 2, onS: 1200, setRestS: 300 });
     expect(doseMeasureOf({ kind: "climbing", measure: "laps" })).toBe("laps");
     expect(doseFieldsFor("climbing", "laps", { sets: 3, reps: 40 }).map((f) => f.label)).toEqual([
       "workouts.dose.laps",
       "workouts.dose.moves",
+      "workouts.dose.rpe",
     ]);
     expect(doseFieldsFor("climbing", "laps", { sets: 3, onS: 240 }).map((f) => f.key)).toEqual([
       "sets",
       "onS",
+      "targetRpe",
     ]);
+  });
+
+  it("asks an exercise for its own target, 1 to 10, blank for none, but not timed rounds or a grip", () => {
+    const rpe = doseFieldsFor("strength", "repsWeight").find((f) => f.key === "targetRpe");
+    expect(rpe).toBeDefined();
+    expect(withField({ sets: 3 }, rpe!, 8, "kg")).toEqual({ sets: 3, targetRpe: 8 });
+    expect(withField({ sets: 3 }, rpe!, 14, "kg")).toEqual({ sets: 3, targetRpe: 10 });
+    expect(withField({ sets: 3, targetRpe: 8 }, rpe!, 0, "kg")).toEqual({ sets: 3 });
+    expect(fieldLimits(rpe!, "kg")).toEqual({ step: 1, max: 10 });
+    expect(doseFieldsFor("other").some((f) => f.key === "targetRpe")).toBe(false);
+    expect(doseFieldsFor("hangboard").some((f) => f.key === "targetRpe")).toBe(false);
   });
 
   it("asks a grip for hangs, or a ground pull for reps or time with no edge", () => {

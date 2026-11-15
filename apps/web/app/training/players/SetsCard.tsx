@@ -7,7 +7,7 @@ import {
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { exerciseName, setKey, type SetAt } from "@sendtally/features/workouts";
+import { exerciseName, exerciseTarget, setKey, type SetAt } from "@sendtally/features/workouts";
 import { LetterBadge } from "../components/LetterBadge";
 import { RestPreview } from "./RestPreview";
 import { SetRow } from "./SetRow";
@@ -51,6 +51,7 @@ export function SetsCard({
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
   const { name: doseName, setRestS = 0 } = item.dose;
+  const aim = exerciseTarget(item.dose);
   return (
     <section className="player-card">
       <div className="player-card-head">
@@ -61,6 +62,7 @@ export function SetsCard({
             {doseName !== undefined && <span className="player-card-meta">{doseName}</span>}
           </span>
         )}
+        {aim !== undefined && <span className="player-card-meta">{aim}</span>}
         {setRestS > 0 && (
           <span className="player-card-meta">{t("plan.chipRest", { value: clock(setRestS) })}</span>
         )}

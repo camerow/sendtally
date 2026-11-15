@@ -5,6 +5,8 @@ export {
   browseLibrary,
   copyName,
   doseSummary,
+  exerciseTarget,
+  withTarget,
   draftOf,
   exerciseName,
   libraryOf,

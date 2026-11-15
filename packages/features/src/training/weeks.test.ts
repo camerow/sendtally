@@ -52,7 +52,13 @@ describe("week fields", () => {
       "weightKg",
       "setRestS",
     ]);
-    expect(weekFields("strength", squat)).toEqual(["sets", "reps", "weightKg", "setRestS"]);
+    expect(weekFields("strength", squat)).toEqual([
+      "sets",
+      "reps",
+      "weightKg",
+      "targetRpe",
+      "setRestS",
+    ]);
     expect(weekFields("other", { sets: 4, onS: 240 })).toEqual(["sets", "onS", "offS", "weightKg"]);
   });
 
@@ -66,5 +72,7 @@ describe("week fields", () => {
     expect(withWeekField(squat, "reps", 3, "kg")).toEqual({ ...squat, reps: 3 });
     expect(withWeekField(squat, "sets", 0, "kg")).toBeNull();
     expect(withWeekField(squat, "reps", Number.NaN, "kg")).toBeNull();
+    expect(withWeekField(squat, "targetRpe", 6, "kg")).toEqual({ ...squat, targetRpe: 6 });
+    expect(withWeekField(squat, "targetRpe", 11, "kg")).toBeNull();
   });
 });

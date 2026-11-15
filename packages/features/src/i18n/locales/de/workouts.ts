@@ -117,6 +117,7 @@ export const workouts = {
   "workouts.exercise.hollowHold": "Hollow Hold",
   "workouts.exercise.kneeRaises": "Knieheben im Hang",
   "workouts.dose.sets": "Sätze",
+  "workouts.dose.rpe": "RPE",
   "workouts.dose.reps": "Wdh.",
   "workouts.dose.hangs": "Hangs",
   "workouts.dose.hangTime": "Hangzeit",

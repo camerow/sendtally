@@ -6,6 +6,7 @@ import { useExercises } from "@sendtally/features/statistics";
 import {
   afterKey,
   doseSummary,
+  exerciseTarget,
   exerciseName,
   heldSeconds,
   useChecklistPlayer,
@@ -70,7 +71,12 @@ export function ChecklistPage({ run, end }: { run: WorkoutRun; end: boolean }): 
               ) : (
                 <ChecklistRow
                   name={name}
-                  dose={doseSummary(run.kind, item.dose, unit, sided(item.exercise))}
+                  dose={[
+                    doseSummary(run.kind, item.dose, unit, sided(item.exercise)),
+                    exerciseTarget(item.dose),
+                  ]
+                    .filter((x) => x !== undefined)
+                    .join(" · ")}
                   ticked={ticked.has(i)}
                   onToggle={() => player.toggle(i)}
                   go={

@@ -81,12 +81,12 @@ function Where(): React.ReactElement {
   return <span data-testid="where">{`${pathname}${search}`}</span>;
 }
 
-function mount(): void {
+function mount(shown: WorkoutRun = run): void {
   act(() =>
     root.render(
       <MemoryRouter initialEntries={["/app/plan", "/app/workout/sets"]} initialIndex={1}>
         <Routes>
-          <Route path="/app/workout/sets" element={<SetsPage run={run} end={false} />} />
+          <Route path="/app/workout/sets" element={<SetsPage run={shown} end={false} />} />
           <Route path="*" element={<Where />} />
         </Routes>
       </MemoryRouter>
@@ -123,6 +123,17 @@ afterEach(() => {
 });
 
 describe("Sets player", () => {
+  it("shows an exercise's own target beside its name, and none where it sets none", () => {
+    mount({
+      ...run,
+      items: [
+        { exercise: "Back squat", dose: { sets: 2, reps: 5, targetRpe: 8 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    });
+    expect(texts(".player-card-meta")).toEqual(["RPE 8"]);
+  });
+
   it("shows each set's target and last time, with the rests still to come", () => {
     mount();
     expect(container.querySelector(".player-title")?.textContent).toBe("Lower body A");

@@ -147,6 +147,14 @@ export function doseSummary(
   return [main, weight, edge].filter((x) => x !== null).join(" · ");
 }
 
+/** "RPE 8": the effort an exercise aims for, when it sets one. */
+export const exerciseTarget = ({ targetRpe }: Pick<Dose, "targetRpe">): string | undefined =>
+  targetRpe === undefined ? undefined : t("hang.rpeValue", { value: formatNumber(targetRpe) });
+
+/** A line with the exercise's target first: "RPE 8 · Same every session". */
+export const withTarget = (dose: Pick<Dose, "targetRpe">, line?: string): string | undefined =>
+  [exerciseTarget(dose), line].filter((x) => x !== undefined && x !== "").join(" · ") || undefined;
+
 /** "B Light": a dose's letter, with its name when it has one. */
 export const letterName = (turn: number, name?: string): string =>
   name === undefined ? letterOf(turn) : `${letterOf(turn)} ${name}`;

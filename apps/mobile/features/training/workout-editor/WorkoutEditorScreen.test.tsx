@@ -149,13 +149,15 @@ describe("Workout editor", () => {
     expect(screen.queryByLabelText("Name C")).toBeNull();
   });
 
-  it("fills a dose row on one keypad, Next walking Sets, Reps, Weight and the rest", async () => {
+  it("fills a dose row on one keypad, Next walking Sets, Reps, Weight, RPE and the rest", async () => {
     await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
     await pick("Back squat");
     await fireEvent.press(screen.getByLabelText("Sets"));
     await keys("4", "Next");
     expect(screen.getByLabelText("Reps").props.accessibilityState).toEqual({ expanded: true });
     await keys("5", "Next", "1", "0", "0", "Add 2.5", "Next");
+    expect(screen.getByLabelText("RPE").props.accessibilityState).toEqual({ expanded: true });
+    await keys("8", "Next");
     expect(screen.getByLabelText("Rest between sets").props.accessibilityState).toEqual({
       expanded: true,
     });
@@ -167,7 +169,9 @@ describe("Workout editor", () => {
     await fireEvent.press(screen.getByText("Save"));
 
     const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
-    expect(saved.items[0]?.doses).toEqual([{ sets: 4, reps: 5, weightKg: 102.5, setRestS: 90 }]);
+    expect(saved.items[0]?.doses).toEqual([
+      { sets: 4, reps: 5, weightKg: 102.5, targetRpe: 8, setRestS: 90 },
+    ]);
   });
 
   it("types a weight in pounds and keeps it in kg", async () => {

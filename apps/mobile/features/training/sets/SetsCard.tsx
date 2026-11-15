@@ -9,7 +9,7 @@ import {
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { exerciseName } from "@sendtally/features/workouts";
+import { exerciseName, exerciseTarget } from "@sendtally/features/workouts";
 import { Label } from "../components/Label";
 import { LetterBadge } from "../components/LetterBadge";
 import { RestPreview } from "../rest/RestPreview";
@@ -57,6 +57,7 @@ export function SetsCard({
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
   const { name: doseName, setRestS } = item.dose;
+  const aim = exerciseTarget(item.dose);
   return (
     <View
       style={{
@@ -80,6 +81,9 @@ export function SetsCard({
               </Text>
             )}
           </View>
+        )}
+        {aim !== undefined && (
+          <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>{aim}</Text>
         )}
         {setRestS !== undefined && setRestS > 0 && (
           <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
