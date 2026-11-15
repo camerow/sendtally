@@ -170,7 +170,8 @@ ON CONFLICT (type, id) DO NOTHING`.
 - Mobile reads it through a normal query, persisted to disk like every other query, so it works offline after the first fetch.
 - First launch needs the network anyway (sign-in), and the library loads alongside the user's own training data, which already does.
   Screens that need it already render `LoadState`.
-- `builtInWorkouts()` and friends stay synchronous: `LibraryProvider` at each app root loads the library query, holds the screens until it has, and hands it to a registry they read, the way `t()` reads the locale.
+- `builtInWorkouts()` and friends stay synchronous: `LibraryProvider` at each app root loads the library query and hands it to a registry they read, the way `t()` reads the locale.
+  It never holds the app, so logging a session never waits on the library; `useHang` and `useWorkoutLibrary` fold its load state into theirs, so the training screens show their own load or retry state until it has loaded.
   Explicit parameters were tried first and reached about seventy call sites, some outside React (the finished-run handler), for no gain in behaviour.
   A moderation edit reaches a screen the next time it renders.
   Callers are `features/workouts/library.ts`, `features/sessions/hang.ts`, `features/exercises/picker.ts`, `features/hang/model.ts` and `names.ts`, plus their tests.

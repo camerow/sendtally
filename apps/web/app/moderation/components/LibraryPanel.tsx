@@ -39,7 +39,7 @@ function Row({ entry, onOpen }: { entry: LibraryEntry; onOpen: () => void }): Re
       ) : (
         <span className="mod-lib-ok">✓ {summary}</span>
       )}
-      <span className="mod-lib-mono mod-muted">
+      <span className="mod-lib-faint">
         {entry.updatedAt === null
           ? "Seeded"
           : formatDate(new Date(entry.updatedAt), { month: "short", day: "numeric" })}

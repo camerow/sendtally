@@ -26,7 +26,6 @@ import { GradeScalesProvider } from "@sendtally/features/settings";
 import appShellStyles from "../styles/app-shell.css?url";
 import { pageMeta } from "../lib/seo";
 import { useReportGoogleSignUp } from "../auth/useReportGoogleSignUp";
-import { LoadState } from "../training/data/LoadState";
 
 export function meta(): Array<Record<string, string>> {
   return pageMeta({ title: "sendtally", path: "/app", noindex: true });
@@ -167,10 +166,7 @@ export default function AppLayout(): React.ReactElement {
   const { userId } = useAuth();
   return (
     <GradeScalesProvider api={api}>
-      <LibraryProvider
-        api={api}
-        fallback={(state, retry) => <LoadState state={state} onRetry={retry} />}
-      >
+      <LibraryProvider api={api}>
         <ToastProvider>
           <WebOutboxProvider api={api} userId={userId ?? ""}>
             <Shell>

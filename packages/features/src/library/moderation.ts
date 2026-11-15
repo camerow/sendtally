@@ -1,6 +1,6 @@
 import type { BuiltInLibrary, LibraryChange, LibraryEntry } from "@sendtally/api-client";
 import { descriptionUnits } from "@sendtally/core/text";
-import type { WorkoutKind } from "@sendtally/core/hang";
+import { EXERCISE_KINDS, type WorkoutKind } from "@sendtally/core/hang";
 
 // Moderation is internal tooling: English only, no i18n.
 
@@ -40,23 +40,15 @@ const matches = (entry: LibraryEntry, filter: LibraryFilter): boolean =>
     ? entry.status === "retired"
     : entry.status === "active" && (filter === "all" || entry.description === "");
 
-/** How many built-ins each filter shows. */
+/** How many built-ins each filter shows; the tab counts the offered ones missing a description. */
 export function filterCounts(library: BuiltInLibrary): Record<LibraryFilter, number> {
   const all = [...library.workouts, ...library.grips, ...library.exercises];
-  return {
-    all: all.filter((e) => matches(e, "all")).length,
-    noDescription: all.filter((e) => matches(e, "noDescription")).length,
-    retired: all.filter((e) => matches(e, "retired")).length,
-  };
+  return Object.fromEntries(
+    LIBRARY_FILTERS.map((f) => [f, all.filter((e) => matches(e, f)).length])
+  ) as Record<LibraryFilter, number>;
 }
 
-/** What the Library tab counts: the offered built-ins still missing something. */
-export const libraryTabCount = (library: BuiltInLibrary): number =>
-  filterCounts(library).noDescription;
-
 export type LibraryGroup = { title: string; entries: LibraryEntry[] };
-
-const EXERCISE_KINDS = ["climbing", "strength", "mobility", "other"] as const;
 
 /** The rows a filter shows, grouped as the apps do: workouts, then exercises by category. */
 export function libraryGroups(library: BuiltInLibrary, filter: LibraryFilter): LibraryGroup[] {

@@ -1,24 +1,30 @@
 import type React from "react";
-import type { SendtallyApi } from "@sendtally/api-client";
-import { queries, useQuery, type QueryState } from "../query";
+import type { BuiltInLibrary, SendtallyApi } from "@sendtally/api-client";
+import { queries, useQuery, type Query } from "../query";
 import { setLibrary } from "./current";
 
 /**
- * Loads the built-in library, the same for everyone, and holds the screens below until it has:
- * they name built-ins as they render. A load that fails shows `fallback` with its retry. A later
- * change reaches each screen the next time it renders.
+ * The built-in library, the same for everyone, handed to the name helpers once it has loaded.
+ * A screen that cannot do without it folds this into its own load state; nothing else waits.
+ */
+export function useBuiltInLibrary(api: SendtallyApi): Query<BuiltInLibrary> {
+  const query = useQuery(queries.library(api));
+  if (query.state.status === "ready") setLibrary(query.state.data);
+  return query;
+}
+
+/**
+ * Starts loading the library at the app root and keeps the name helpers current. It never holds
+ * the app: logging a session must not wait on the library, so screens render with whatever has
+ * loaded, and the training screens show their own load or retry state until it has.
  */
 export function LibraryProvider({
   api,
-  fallback,
   children,
 }: {
   api: SendtallyApi;
-  fallback: (state: QueryState<unknown>, retry: () => void) => React.ReactNode;
   children: React.ReactNode;
 }): React.ReactNode {
-  const { state, reload } = useQuery(queries.library(api));
-  if (state.status !== "ready") return fallback(state, () => void reload());
-  setLibrary(state.data);
+  useBuiltInLibrary(api);
   return children;
 }

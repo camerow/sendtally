@@ -1,6 +1,6 @@
 -- Data-only: the built-in library as it shipped in the apps' constants and catalogs, with
--- every translated name and blurb. Inserting never overwrites a row, so re-running it is safe
--- and a moderation edit always wins.
+-- every translated name and blurb. The one INSERT ends in ON CONFLICT (type, id) DO NOTHING, so
+-- it never overwrites a row: re-running it is safe and a moderation edit always wins.
 INSERT INTO library_items (type, id, position, name, description, translations, spec) VALUES
 ('exercise', 'fourByFours', 0, '4x4s', NULL, '{"de":{"name":"4x4"},"fr":{"name":"4x4"},"es":{"name":"4x4"}}', '{"kind":"climbing","measure":"reps"}'),
 ('exercise', 'limitBouldering', 1, 'Limit bouldering', NULL, '{"de":{"name":"Limit-Bouldern"},"fr":{"name":"Bloc à la limite"},"es":{"name":"Bloque al límite"}}', '{"kind":"climbing","measure":"reps","dose":{"sets":1}}'),

@@ -156,7 +156,7 @@ export function LibraryItemEditor({
               onChange={(e) => setDescription(e.target.value)}
               style={{ ...inputStyle, minHeight: 200 }}
             />
-            <span className="mod-lib-mono mod-muted">
+            <span className="mod-lib-faint">
               {`${formatNumber(description.length)} of ${formatNumber(MAX_DESCRIPTION)}`}
             </span>
           </Field>
@@ -178,18 +178,20 @@ export function LibraryItemEditor({
         {editing.changes.status === "ready" &&
           editing.changes.data.map((change) => (
             <div key={change.id} className="mod-lib-change">
-              <span className="mod-lib-mono mod-muted">
+              <span className="mod-lib-faint">
                 {formatDate(new Date(change.changedAt), {
                   month: "short",
                   day: "numeric",
                   hour: "2-digit",
                   minute: "2-digit",
+                  hourCycle: "h23",
                 })}
               </span>
               <span>{change.changedBy}</span>
               <span>{changeSummary(change)}</span>
               <Button
                 variant="ghostOnLight"
+                size="sm"
                 onClick={() => void run(() => editing.restore(change.id))}
                 disabled={busy}
               >

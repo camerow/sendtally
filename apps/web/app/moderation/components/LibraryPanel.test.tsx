@@ -92,7 +92,7 @@ describe("LibraryPanel", () => {
     mount(null);
     const groups = [...container.querySelectorAll(".mod-lib-group")].map((g) => g.textContent);
     expect(groups[0]).toMatch(/^Workouts · /);
-    expect(groups[1]).toBe("Fingers exercises · 11");
+    expect(groups[1]).toBe(`Fingers exercises · ${library.grips.length - 1}`);
     const half = button("Half crimp");
     expect(half.textContent).toContain("✓ 1 paragraph");
     expect(half.textContent).toContain("Seeded");

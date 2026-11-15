@@ -6,7 +6,6 @@ import {
   entryKicker,
   filterCounts,
   libraryGroups,
-  libraryTabCount,
 } from "./moderation";
 import { TEST_LIBRARY } from "./testLibrary";
 
@@ -47,11 +46,14 @@ describe("moderation library", () => {
     expect(fingers?.entries.map((e) => e.id)).not.toContain("mono");
   });
 
-  it("counts what each filter shows, and the tab counts what is missing a description", () => {
-    const counts = filterCounts(library);
-    expect(counts.retired).toBe(1);
-    expect(counts.all).toBe(TEST_LIBRARY.exercises.length + TEST_LIBRARY.workouts.length + 11);
-    expect(libraryTabCount(library)).toBe(counts.noDescription);
+  it("counts what each filter shows", () => {
+    const offered =
+      TEST_LIBRARY.exercises.length + TEST_LIBRARY.workouts.length + library.grips.length - 1;
+    expect(filterCounts(library)).toEqual({
+      all: offered,
+      noDescription: offered - TEST_LIBRARY.workouts.filter((w) => w.description !== "").length - 1,
+      retired: 1,
+    });
   });
 
   it("says what a description holds", () => {

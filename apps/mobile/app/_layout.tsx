@@ -22,7 +22,6 @@ import { Observe, ObserveInteractiveMarker, ObserveRoot } from "expo-observe";
 import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { colors } from "@sendtally/design/tokens";
 import { resolveLocale, setLocale } from "@sendtally/features/i18n";
@@ -33,7 +32,6 @@ import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { AlreadyRunningSheet } from "../features/live-session/AlreadyRunningSheet";
 import { UpdateReadyOverlay } from "../features/app-update/UpdateReadyOverlay";
 import { BillingProvider } from "../features/billing/BillingProvider";
-import { LoadState } from "../features/training/data/LoadState";
 import { useLiveHold } from "../features/training/hold/useLiveHold";
 import { useRestTone } from "../features/training/rest/useRestTone";
 import { ReminderPromptProvider } from "../features/training/reminders/ReminderPromptProvider";
@@ -103,14 +101,7 @@ function AppStack(): React.ReactElement | null {
   if (!isLoaded) return null;
   return (
     <GradeScalesProvider api={api}>
-      <LibraryProvider
-        api={api}
-        fallback={(state, retry) => (
-          <View style={{ flex: 1, backgroundColor: colors.white }}>
-            <LoadState state={state} onRetry={retry} />
-          </View>
-        )}
-      >
+      <LibraryProvider api={api}>
         <ReminderPromptProvider>
           <Stack
             screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}

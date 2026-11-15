@@ -6,6 +6,7 @@ import { usePlan } from "../training/usePlan";
 import { libraryOf, workoutUsage } from "./library";
 import type { LibraryWorkout, WorkoutUse } from "./types";
 import { useWorkouts } from "./useWorkouts";
+import { useBuiltInLibrary } from "../library/LibraryProvider";
 
 export type WorkoutLibrary = {
   workouts: LibraryWorkout[];
@@ -23,11 +24,13 @@ const ready = <T>(state: QueryState<T>, empty: T): T =>
 
 /** The one library, ready once the user's own workouts are; usage fills in as the log loads. */
 export function useWorkoutLibrary(api: SendtallyApi): WorkoutLibraryQuery {
-  const { state: mine, reload } = useWorkouts(api);
+  const { state: mine, reload: reloadMine } = useWorkouts(api);
+  const { state: builtIns, reload: reloadBuiltIns } = useBuiltInLibrary(api);
   const { state: activities } = useActivities(api);
   const { state: hang } = useQuery(queries.hang(api));
   const { state: plan } = usePlan(api);
   const state = React.useMemo((): QueryState<WorkoutLibrary> => {
+    if (builtIns.status !== "ready") return builtIns;
     if (mine.status !== "ready") return mine;
     const workouts = libraryOf(mine.data);
     const byId = new Map(workouts.map((w) => [w.id, w]));
@@ -38,6 +41,9 @@ export function useWorkoutLibrary(api: SendtallyApi): WorkoutLibraryQuery {
       plan.status === "ready" ? plan.data.memberships : []
     );
     return { status: "ready", data: { workouts, usage, workout: (id) => byId.get(id) } };
-  }, [mine, activities, hang, plan]);
+  }, [builtIns, mine, activities, hang, plan]);
+  const reload = React.useCallback(async () => {
+    await Promise.all([reloadMine(), reloadBuiltIns()]);
+  }, [reloadMine, reloadBuiltIns]);
   return { state, reload };
 }

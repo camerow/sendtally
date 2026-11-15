@@ -106,19 +106,20 @@ describe("exercise screen", () => {
   });
 
   it("shows the library's description on a built-in, and on the user's own copy of one", async () => {
-    setLibrary({
+    const library = {
       ...TEST_LIBRARY,
       exercises: TEST_LIBRARY.exercises.map((e) =>
         e.id === "pullUps" ? { ...e, description: "Shoulders down first." } : e
       ),
-    });
-    await renderWithHang(<ExerciseScreen id="pullUps" />, hangData(), { exercises: [] });
+    };
+    await renderWithHang(<ExerciseScreen id="pullUps" />, hangData(), { exercises: [], library });
     expect(screen.getByText("Shoulders down first.")).toBeTruthy();
 
     await renderWithHang(<ExerciseScreen id="pullUps" />, hangData(), {
       exercises: [
         anExercise("e9", "Pull-ups", "strength", { builtIn: "pullUps", description: "Stale" }),
       ],
+      library,
     });
     expect(screen.getByText("Shoulders down first.")).toBeTruthy();
     expect(screen.queryByText("Stale")).toBeNull();

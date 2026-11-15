@@ -3,6 +3,7 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import type { WorkoutRecord } from "@sendtally/api-client";
+import { TEST_LIBRARY } from "@sendtally/features/library/testing";
 import { hangData, renderWithHang } from "../data/renderWithHang";
 import { CategoryScreen } from "./CategoryScreen";
 import { WorkoutLibrary } from "./WorkoutLibrary";
@@ -50,7 +51,8 @@ describe("Workout library", () => {
       expect(screen.getByLabelText(`New workout in ${focus}`)).toBeTruthy();
     expect(screen.getByText("Movement and technique, well within your limit.")).toBeTruthy();
     expect(screen.getByLabelText("See all Strength")).toBeTruthy();
-    expect(screen.getByText("See all 9")).toBeTruthy();
+    const strength = TEST_LIBRARY.workouts.filter((w) => w.spec.focus === "strength").length;
+    expect(screen.getByText(`See all ${strength + 1}`)).toBeTruthy();
     expect(screen.queryByLabelText("See all Power")).toBeNull();
     expect(screen.getByText("Max hangs")).toBeTruthy();
     expect(screen.queryByText(/Built in/)).toBeNull();
