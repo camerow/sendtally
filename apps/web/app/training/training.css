@@ -1027,6 +1027,7 @@
 .form-notes {
   min-height: 96px;
   line-height: 1.45;
+  field-sizing: content;
   resize: vertical;
 }
 
