@@ -1,8 +1,8 @@
-import { BUILT_IN_GRIP_NAMES, isBuiltInGrip } from "@sendtally/core/hang";
+import { isBuiltInGrip } from "@sendtally/core/hang";
 import type { Env } from "../bindings";
 import { activityOf } from "./activities";
 import { decryptSecret, encryptSecret } from "./crypto";
-import { hangSessionOf, settingsOf } from "./hang";
+import { builtInGripName, hangSessionOf, settingsOf } from "./hang";
 import { hangActivity } from "./hang-activity";
 import * as repo from "./repo";
 import { trainingActivity } from "./training-activity";
@@ -146,7 +146,7 @@ export async function syncSessionToStrava(
 }
 
 async function gripName(db: D1Database, userId: string, gripId: string): Promise<string> {
-  if (isBuiltInGrip(gripId)) return BUILT_IN_GRIP_NAMES[gripId];
+  if (isBuiltInGrip(gripId)) return builtInGripName(await repo.library(db), gripId);
   return (await repo.getHangGrip(db, userId, gripId))?.name ?? "Custom grip";
 }
 

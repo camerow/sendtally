@@ -4,6 +4,8 @@ import { router } from "expo-router";
 import React from "react";
 import { Alert, type AlertButton } from "react-native";
 import { ApiError, type ActivityRecord, type WorkoutRecord } from "@sendtally/api-client";
+import { setLibrary } from "@sendtally/features/library";
+import { TEST_LIBRARY } from "@sendtally/features/library/testing";
 import { anExercise, renderWithHang, hangData } from "../data/renderWithHang";
 import { ExerciseEditorScreen } from "./ExerciseEditorScreen";
 import { ExerciseScreen } from "./ExerciseScreen";
@@ -101,6 +103,26 @@ describe("exercise screen", () => {
       exercises: [anExercise("e9", "Weighted pull-ups", "strength", { builtIn: "pullUps" })],
     });
     expect(screen.getByText("Edit")).toBeTruthy();
+  });
+
+  it("shows the library's description on a built-in, and on the user's own copy of one", async () => {
+    setLibrary({
+      ...TEST_LIBRARY,
+      exercises: TEST_LIBRARY.exercises.map((e) =>
+        e.id === "pullUps" ? { ...e, description: "Shoulders down first." } : e
+      ),
+    });
+    await renderWithHang(<ExerciseScreen id="pullUps" />, hangData(), { exercises: [] });
+    expect(screen.getByText("Shoulders down first.")).toBeTruthy();
+
+    await renderWithHang(<ExerciseScreen id="pullUps" />, hangData(), {
+      exercises: [
+        anExercise("e9", "Pull-ups", "strength", { builtIn: "pullUps", description: "Stale" }),
+      ],
+    });
+    expect(screen.getByText("Shoulders down first.")).toBeTruthy();
+    expect(screen.queryByText("Stale")).toBeNull();
+    setLibrary(TEST_LIBRARY);
   });
 
   it("shows its best set and the workouts that use it", async () => {

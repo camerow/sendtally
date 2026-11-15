@@ -1,4 +1,4 @@
-import { BUILT_IN_WORKOUTS, FOCI, WORKOUT_KINDS } from "@sendtally/core/hang";
+import { FOCI, WORKOUT_KINDS, type BuiltInLibrary } from "@sendtally/core/hang";
 import { exerciseKindOf } from "../lib/exercises";
 import { workoutBody, workoutFields, workoutItems, workoutOf } from "../lib/plan";
 import * as repo from "../lib/repo";
@@ -11,10 +11,15 @@ const { exerciseRestS: _, ...fields } = workoutFields;
 const inputSchema = { key: retryKey, id: editId("workout"), ...fields, items: workoutItems };
 
 // The user's exercise of that name, else the built-in, else a new one saveWorkout adds.
-async function exerciseName(db: D1Database, userId: string, name: string): Promise<string> {
+async function exerciseName(
+  db: D1Database,
+  userId: string,
+  library: BuiltInLibrary,
+  name: string
+): Promise<string> {
   const mine = await repo.findExerciseByName(db, userId, name);
   if (mine !== null) return mine.name;
-  const builtIn = builtInExercise(name);
+  const builtIn = builtInExercise(library, name);
   if (builtIn === undefined) return name;
   return (await saveExercise(db, userId, crypto.randomUUID(), builtIn)).exercise.name;
 }
@@ -26,6 +31,7 @@ export const saveWorkout: ConnectorTool<typeof inputSchema> = {
   inputSchema,
   annotations: { readOnlyHint: false, destructiveHint: false },
   run: async ({ key, id: editing, ...input }, { env, userId }) => {
+    const library = await repo.library(env.DB);
     const old =
       editing === undefined
         ? undefined
@@ -33,7 +39,7 @@ export const saveWorkout: ConnectorTool<typeof inputSchema> = {
             (await repo.listWorkouts(env.DB, userId)).find((w) => w.id === editing),
             "workout",
             editing,
-            BUILT_IN_WORKOUTS
+            library.workouts
           );
     const body = workoutBody.parse({ ...input, exerciseRestS: old?.exercise_rest_s ?? undefined });
     const items = [];
@@ -41,7 +47,7 @@ export const saveWorkout: ConnectorTool<typeof inputSchema> = {
       const exercise =
         exerciseKindOf(body.kind) === null
           ? item.exercise
-          : await exerciseName(env.DB, userId, item.exercise);
+          : await exerciseName(env.DB, userId, library, item.exercise);
       items.push({ ...item, exercise });
     }
     await repo.ensureUser(env.DB, userId);

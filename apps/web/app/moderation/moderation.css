@@ -782,3 +782,216 @@ a.mod-title:hover {
     padding: 0 10px;
   }
 }
+
+/* Library: every built-in, and one edited in place. */
+
+.mod-lib {
+  display: flex;
+  flex-direction: column;
+}
+
+.mod-lib-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.mod-lib-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) 110px 170px 110px;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 0;
+  border: none;
+  border-top: 1px solid var(--line-on-light-soft);
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--bs-gunmetal);
+  text-align: left;
+  cursor: pointer;
+}
+
+button.mod-lib-row:hover {
+  background: var(--surface-soft);
+}
+
+.mod-lib-head {
+  min-height: 32px;
+  border-top: none;
+  cursor: default;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(64, 63, 76, 0.72);
+}
+
+.mod-lib-group {
+  margin: 0;
+  padding: 18px 0 6px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(64, 63, 76, 0.72);
+}
+
+.mod-lib-name {
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mod-lib-mono {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mod-lib-ok {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--bs-fern);
+}
+
+.mod-lib-missing {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(249, 220, 92, 0.45);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mod-lib-item {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.mod-lib-back {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-link);
+}
+
+.mod-lib-item-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mod-lib-item-title {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mod-lib-edit {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+.mod-lib-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.mod-lib-fold summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(64, 63, 76, 0.72);
+}
+
+.mod-lib-fold[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mod-lib-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: none;
+  width: 360px;
+  box-sizing: border-box;
+  padding: 20px 16px;
+  border-radius: 24px;
+  box-shadow: 0 0 0 1px var(--line-on-light);
+  background: var(--bs-white);
+}
+
+.mod-lib-preview-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 30px;
+  color: var(--bs-gunmetal);
+}
+
+.mod-lib-change {
+  display: grid;
+  grid-template-columns: 130px 110px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 44px;
+  border-top: 1px solid var(--line-on-light-soft);
+  font-size: 13.5px;
+}
+
+@media (max-width: 720px) {
+  .mod-lib-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 4px;
+    padding: 10px 0;
+  }
+
+  .mod-lib-head {
+    display: none;
+  }
+
+  .mod-lib-edit {
+    flex-direction: column;
+  }
+
+  .mod-lib-preview {
+    width: 100%;
+  }
+
+  .mod-lib-change {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}

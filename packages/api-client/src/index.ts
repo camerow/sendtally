@@ -44,6 +44,11 @@ import type {
   BulkCreationsInput,
   CreationRef,
   CreationResult,
+  BuiltInLibrary,
+  LibraryChange,
+  LibraryEdit,
+  LibraryEntry,
+  LibraryType,
   ModerationCreations,
   ModerationQueue,
   PostOutcome,
@@ -433,6 +438,30 @@ export class SendtallyApi {
 
   stravaAuthorizeUrl(returnTo: "web" | "app" = "web"): Promise<{ url: string }> {
     return body(this.client.v1.connect.strava.start.$get({ query: { return: returnTo } }));
+  }
+
+  library(): Promise<{ library: BuiltInLibrary }> {
+    return body(this.client.v1.library.$get());
+  }
+
+  saveLibraryEntry(
+    type: LibraryType,
+    id: string,
+    edit: LibraryEdit
+  ): Promise<{ entry: LibraryEntry }> {
+    return body(
+      this.client.v1.moderation.library[":type"][":id"].$put({ param: { type, id }, json: edit })
+    );
+  }
+
+  libraryChanges(type: LibraryType, id: string): Promise<{ changes: LibraryChange[] }> {
+    return body(
+      this.client.v1.moderation.library[":type"][":id"].changes.$get({ param: { type, id } })
+    );
+  }
+
+  restoreLibraryChange(id: string): Promise<{ entry: LibraryEntry }> {
+    return body(this.client.v1.moderation.library.changes[":id"].restore.$post({ param: { id } }));
   }
 
   hang(): Promise<HangData> {

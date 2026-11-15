@@ -1,6 +1,7 @@
 import { queryOptions, type QueryKey } from "@tanstack/react-query";
 import type {
   HangData,
+  LibraryType,
   SendtallyApi,
   SessionDetail,
   SessionLog,
@@ -78,6 +79,17 @@ export const queries = {
     queryOptions({
       queryKey: ["moderation", "creations"],
       queryFn: () => api.moderationCreations(),
+    }),
+  library: (api: SendtallyApi) =>
+    queryOptions({
+      queryKey: ["library"],
+      queryFn: async () => (await api.library()).library,
+      staleTime: 5 * 60 * 1000,
+    }),
+  libraryChanges: (api: SendtallyApi, type: LibraryType, id: string) =>
+    queryOptions({
+      queryKey: ["libraryChanges", type, id],
+      queryFn: async () => (await api.libraryChanges(type, id)).changes,
     }),
   hang: (api: SendtallyApi) =>
     queryOptions({

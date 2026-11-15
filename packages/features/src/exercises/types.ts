@@ -17,6 +17,7 @@ export type CategoryShelf<T> = { kind: WorkoutKind; entries: T[] };
 export type BuiltInExercise = {
   id: string;
   name: string;
+  description: string;
   kind: ExerciseKind;
   measure: ExerciseMeasure;
 };

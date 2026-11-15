@@ -8,6 +8,7 @@ import { ModerationPage } from "../moderation/components/ModerationPage";
 import moderationStyles from "../moderation/moderation.css?url";
 import projectsStyles from "../projects/projects.css?url";
 import sessionsStyles from "../sessions/sessions.css?url";
+import trainingStyles from "../training/training.css?url";
 
 export const meta: MetaFunction = () =>
   pageMeta({ title: "Moderation", path: "/app/moderation", noindex: true });
@@ -16,6 +17,7 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: sessionsStyles },
   { rel: "stylesheet", href: projectsStyles },
   { rel: "stylesheet", href: areasStyles },
+  { rel: "stylesheet", href: trainingStyles },
   { rel: "stylesheet", href: moderationStyles },
 ];
 

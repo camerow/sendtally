@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { WorkoutRecord } from "@sendtally/api-client";
 import { FOCI, WORKOUT_KINDS, type Dose, type Item } from "@sendtally/core/hang";
 import { setLocale } from "../i18n";
-import { BUILT_IN_WORKOUT_IDS, builtInWorkouts } from "./builtIns";
+import { builtInWorkouts } from "./builtIns";
+
+const BUILT_IN_WORKOUT_IDS = builtInWorkouts().map((w) => w.id);
 import {
   bodySummary,
   browseLibrary,

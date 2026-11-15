@@ -4,7 +4,7 @@ import { Alert, View } from "react-native";
 import type { Exercise } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
-import { builtInExercise, exerciseLabel } from "@sendtally/features/exercises";
+import { builtInExercise, exerciseDescription, exerciseLabel } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import {
   exerciseKey,
@@ -103,7 +103,7 @@ function Detail({ exercise, all }: DetailProps): React.ReactElement {
           <Label color={colors.textSecondary}>{kindLabel(exercise.kind)}</Label>
         </View>
         <Title size={38}>{name}</Title>
-        <Description text={exercise.description} fold />
+        <Description text={exerciseDescription(exercise)} fold />
       </View>
       {logged === undefined ? (
         <DashedPanel body={t("workouts.exerciseNothingLogged")} />

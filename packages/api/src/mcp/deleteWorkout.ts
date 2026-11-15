@@ -1,4 +1,3 @@
-import { BUILT_IN_WORKOUTS } from "@sendtally/core/hang";
 import { id } from "../lib/plan";
 import * as repo from "../lib/repo";
 import { owned } from "./saveExercise";
@@ -14,7 +13,7 @@ export const deleteWorkout: ConnectorTool<typeof inputSchema> = {
   inputSchema,
   annotations: { readOnlyHint: false, destructiveHint: true },
   run: async ({ id: workoutId }, { env, userId }) => {
-    owned(true, "workout", workoutId, BUILT_IN_WORKOUTS);
+    owned(true, "workout", workoutId, (await repo.library(env.DB)).workouts);
     const deleted = await repo.deleteWorkout(env.DB, userId, workoutId);
     return { deleted: owned(deleted, "workout", workoutId) };
   },

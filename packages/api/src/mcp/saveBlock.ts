@@ -1,4 +1,3 @@
-import { BUILT_IN_WORKOUTS } from "@sendtally/core/hang";
 import { z } from "zod";
 import { exerciseNameKey } from "../lib/exercises";
 import { blockBody, blockOf, MAX_BLOCK_WEEKS, scheduleBody } from "../lib/plan";
@@ -30,8 +29,11 @@ export const saveBlock: ConnectorTool<typeof inputSchema> = {
   run: async ({ key, id: editing, block, workouts }, { env, userId }) => {
     if (editing !== undefined)
       owned(await repo.getBlock(env.DB, userId, editing), "block", editing);
-    const mine = await repo.listWorkouts(env.DB, userId);
-    const named = [...mine, ...BUILT_IN_WORKOUTS];
+    const [mine, library] = await Promise.all([
+      repo.listWorkouts(env.DB, userId),
+      repo.library(env.DB),
+    ]);
+    const named = [...mine, ...library.workouts.filter((w) => w.status === "active")];
     const planned = workouts.map((w) => {
       const found = named.find((n) => exerciseNameKey(n.name) === exerciseNameKey(w.workout));
       if (found === undefined) {

@@ -1,12 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { BUILT_IN_EXERCISES, BUILT_IN_WORKOUTS } from "./builtIns";
+import { entryNames, entryText, type BuiltInGripEntry } from "./builtIns";
 
-const duplicates = (ids: readonly string[]): string[] =>
-  ids.filter((id, i) => ids.indexOf(id) !== i);
+const half: BuiltInGripEntry = {
+  type: "grip",
+  id: "half",
+  status: "active",
+  name: "Half crimp",
+  description: "Index to ring at ninety degrees.",
+  translations: { de: { name: "Halbe Leiste" }, fr: { name: "", description: "" } },
+  updatedAt: null,
+};
 
-describe("built-in catalogue", () => {
-  it("never repeats an id", () => {
-    expect(duplicates(BUILT_IN_EXERCISES.map((e) => e.id))).toEqual([]);
-    expect(duplicates(BUILT_IN_WORKOUTS.map((w) => w.id))).toEqual([]);
+describe("library entries", () => {
+  it("read in a language, each field falling back to English", () => {
+    expect(entryText(half, "de")).toEqual({
+      name: "Halbe Leiste",
+      description: "Index to ring at ninety degrees.",
+    });
+    expect(entryText(half, "fr").name).toBe("Half crimp");
+    expect(entryText(half, "en").name).toBe("Half crimp");
+  });
+
+  it("go by every name they have", () => {
+    expect(entryNames(half)).toEqual(["Half crimp", "Halbe Leiste"]);
   });
 });

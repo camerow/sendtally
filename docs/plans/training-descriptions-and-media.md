@@ -1,6 +1,6 @@
 # Training descriptions and media
 
-Status: approved by Will on 2026-11-14; being built in slice order.
+Status: approved by Will on 2026-11-14; being built in slice order (slice 1 shipped in #427, slice 2 on `feat/training-library-d1`).
 Brief: Will, 2026-11-14, with his decisions of the same day (custom workout descriptions first, the built-in library moves to D1, thumbnails in lists, English only for new text, a hero image on workout detail, media in the info sheet).
 Designs: a new page "Training descriptions and media" (page id `training-media`) on the canvas https://claude.ai/artifact/CNPnNQwgvzgvxk4ZAYTyto.
 The v3 page is untouched; it was read for reference only.
@@ -165,12 +165,14 @@ ON CONFLICT (type, id) DO NOTHING`.
 
 ### Serving, offline and first launch
 
-- `GET /v1/library` returns every active and retired item with all translations and media, about 60 KB, with an `ETag` from the newest `updated_at` and `Cache-Control: public, max-age=300, stale-while-revalidate=86400`.
+- `GET /v1/library` returns every active and retired item with all translations and media, about 60 KB, with an `ETag` of its body and `Cache-Control: public, no-cache`, so every read revalidates with a cheap 304 and a moderation edit shows on the next fetch (a `max-age` kept the moderator's own browser on the old copy).
   It needs no user, so the web Worker and the edge cache serve it for everyone.
 - Mobile reads it through a normal query, persisted to disk like every other query, so it works offline after the first fetch.
 - First launch needs the network anyway (sign-in), and the library loads alongside the user's own training data, which already does.
   Screens that need it already render `LoadState`.
-- Today `builtInWorkouts()` and friends are synchronous; they become selectors over the library query.
+- `builtInWorkouts()` and friends stay synchronous: `LibraryProvider` at each app root loads the library query, holds the screens until it has, and hands it to a registry they read, the way `t()` reads the locale.
+  Explicit parameters were tried first and reached about seventy call sites, some outside React (the finished-run handler), for no gain in behaviour.
+  A moderation edit reaches a screen the next time it renders.
   Callers are `features/workouts/library.ts`, `features/sessions/hang.ts`, `features/exercises/picker.ts`, `features/hang/model.ts` and `names.ts`, plus their tests.
 - The Worker reads the table through one `repo.library(db)` call.
   Consumers: the connector (`trainingLibrary`, `saveWorkout`, `saveBlock`, `saveExercise`, `deleteWorkout`, `deleteExercise`), `lib/hang.ts`, `hang.ts` and `posting.ts` (grip names in Strava text, which stay English).
@@ -184,7 +186,7 @@ ON CONFLICT (type, id) DO NOTHING`.
 
 ### The `library-add` skill and its editor artifact
 
-- The editor artifact (`XrMUxjdh3vRjEkygfHj7LR`) is retired when this slice ships; editing moves to the moderation tab, and two editors over one library is what Will asked to avoid.
+- The editor artifact (`XrMUxjdh3vRjEkygfHj7LR`) is retired with this slice: `library-add` no longer reads or syncs it, and its source left the repo; deleting the published artifact is Will's call.
 - Until moderation can create items, `library-add` stays for adding new built-ins, repointed to write a new seed data migration instead of editing constants.
 - When "New exercise" / "New workout" lands in moderation (reusing the web `WorkoutEditorPage` for items), the skill is deleted.
 

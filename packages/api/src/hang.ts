@@ -1,8 +1,9 @@
 import { zValidator } from "@hono/zod-validator";
-import { BUILT_IN_GRIP_NAMES, isBuiltInGrip } from "@sendtally/core/hang";
+import { isBuiltInGrip } from "@sendtally/core/hang";
 import { Hono } from "hono";
 import { type AppEnv, invalidBody, postAfterResponse } from "./context";
 import {
+  builtInGripName,
   builtInGripNamed,
   builtInGripRow,
   gripKey,
@@ -56,13 +57,20 @@ export const hang = new Hono<AppEnv>()
       const { id } = c.req.valid("param");
       const { name, measure } = c.req.valid("json");
       const userId = c.get("userId");
+      const library = await repo.library(c.env.DB);
       if (isBuiltInGrip(id)) {
         const existing = await repo.getHangGrip(c.env.DB, userId, id);
         await repo.ensureUser(c.env.DB, userId);
-        await repo.saveHangGrip(c.env.DB, userId, { ...builtInGripRow(id), measure });
+        await repo.saveHangGrip(c.env.DB, userId, { ...builtInGripRow(library, id), measure });
         const saved = measured(measure ?? existing?.measure ?? "hang");
         return c.json({
-          grip: { id, name: BUILT_IN_GRIP_NAMES[id], custom: false, hidden: false, ...saved },
+          grip: {
+            id,
+            name: builtInGripName(library, id),
+            custom: false,
+            hidden: false,
+            ...saved,
+          },
         });
       }
       const nameKey = gripKey(name);
@@ -70,7 +78,8 @@ export const hang = new Hono<AppEnv>()
         repo.getHangGrip(c.env.DB, userId, id),
         repo.findHangGripByKey(c.env.DB, userId, nameKey),
       ]);
-      const clash = taken !== null && taken.id !== id ? gripOf(taken) : builtInGripNamed(name);
+      const clash =
+        taken !== null && taken.id !== id ? gripOf(taken) : builtInGripNamed(library, name);
       if (
         existing !== null &&
         taken !== null &&
@@ -99,7 +108,7 @@ export const hang = new Hono<AppEnv>()
     if (existing === null) {
       if (!isBuiltInGrip(id)) return c.json({ deleted: false });
       await repo.ensureUser(c.env.DB, userId);
-      await repo.saveHangGrip(c.env.DB, userId, builtInGripRow(id));
+      await repo.saveHangGrip(c.env.DB, userId, builtInGripRow(await repo.library(c.env.DB), id));
     }
     await repo.hideHangGrip(c.env.DB, userId, id);
     return c.json({ deleted: true });

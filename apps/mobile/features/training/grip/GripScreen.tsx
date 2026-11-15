@@ -5,6 +5,7 @@ import { gripSeries, setupsOf, summarise, type GripSetup } from "@sendtally/core
 import { colors } from "@sendtally/design/tokens";
 import {
   canCompareGrips,
+  gripDescription,
   gripSessionRows,
   gripSetupLabel,
   gripTiles,
@@ -18,6 +19,7 @@ import { Toast } from "../../../components/Toast";
 import { AddToSheet } from "../components/AddToSheet";
 import { DashedPanel } from "../components/DashedPanel";
 import { DetailActions } from "../components/DetailActions";
+import { Description } from "../components/Description";
 import { deleteRow } from "../components/deleteRow";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
@@ -109,6 +111,7 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
           <Label color={colors.textSecondary}>{kindLabel("hangboard")}</Label>
         </View>
         <Title size={38}>{name}</Title>
+        <Description text={gripDescription(id)} fold />
       </View>
       {setups.length > 1 && (
         <SetupChips setups={setups} picked={setup} onPick={setPicked} withAll />
