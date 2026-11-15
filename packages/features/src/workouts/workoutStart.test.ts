@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { LibraryWorkout } from "./types";
+import { builtInWorkouts } from "./builtIns";
 import { playerRoute, workoutStart } from "./workoutStart";
 
 const climbing = {
@@ -29,6 +30,12 @@ describe("starting a climbing workout", () => {
   it("keeps climbing measured in climbs on the tally", () => {
     const run = { link: PLAN, session: 0, items: [boulders, arc] };
     expect(workoutStart(climbing, "2026-10-30", run, () => false, measure).open).toBe("sets");
+  });
+
+  it("opens the live session for the built-in Climbing day", () => {
+    const day = builtInWorkouts().find((w) => w.id === "climb-session");
+    const run = { link: PLAN, session: 0, items: [] };
+    expect(day && workoutStart(day, "2026-10-30", run, () => false).open).toBe("liveSession");
   });
 });
 
