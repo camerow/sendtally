@@ -4,19 +4,16 @@ import { t, type MessageKey } from "../i18n";
 import { currentLibrary } from "../library/current";
 import { entryDescription, entryName, findEntry } from "../library/entries";
 
-/** A built-in grip's name in the user's language, or its id when the library has none. */
-export function builtInGripName(id: string): string {
-  const entry = findEntry(currentLibrary().grips, id);
-  return entry === undefined ? id : entryName(entry);
-}
-
-/** What a built-in grip's library entry says about it, in the user's language; nothing for a custom grip. */
 /** A built-in grip's name, or none while the library has not loaded, for a line that can go without. */
 export function builtInGripLabel(id: string): string | null {
   const entry = findEntry(currentLibrary().grips, id);
   return entry === undefined ? null : entryName(entry);
 }
 
+/** A built-in grip's name in the user's language, or its id when the library has none. */
+export const builtInGripName = (id: string): string => builtInGripLabel(id) ?? id;
+
+/** What a built-in grip's library entry says about it, in the user's language; nothing for a custom grip. */
 export function gripDescription(id: string): string {
   const entry = findEntry(currentLibrary().grips, id);
   return entry === undefined ? "" : entryDescription(entry);
