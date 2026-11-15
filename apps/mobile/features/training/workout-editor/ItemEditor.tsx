@@ -217,7 +217,7 @@ export function ItemEditor({
               />
             )}
             {!alternating && fields.length % 2 === 1 && (
-              <View style={{ flexGrow: 1, flexBasis: "40%" }} />
+              <View testID="dose-spacer" style={{ flexGrow: 1, flexBasis: "40%" }} />
             )}
           </View>
         </View>

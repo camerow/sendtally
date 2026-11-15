@@ -520,11 +520,17 @@ describe("connector", () => {
         items,
       });
       expect(saved.workout.items).toEqual(items);
-      const library = await toolJson<{ workouts: Array<{ name: string; items: unknown[] }> }>(
-        user,
-        "get_training_library"
-      );
-      expect(library.workouts.find((w) => w.name === "Push")?.items).toEqual(items);
+      const read = async (): Promise<{ id: string; items: unknown[] } | undefined> =>
+        (
+          await toolJson<{ workouts: Array<{ id: string; name: string; items: unknown[] }> }>(
+            user,
+            "get_training_library"
+          )
+        ).workouts.find((w) => w.name === "Push");
+      const push = await read();
+      expect(push?.items).toEqual(items);
+      await toolJson(user, "save_workout", { ...body, id: push?.id, items: push?.items });
+      expect((await read())?.items).toEqual(items);
     });
 
     it("saves a workout whose items reuse the user's exercises, then built-ins, then new ones", async () => {

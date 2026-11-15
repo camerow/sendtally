@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { restAfterItem } from "@sendtally/core/hang";
 import type { WorkoutDraft } from "./types";
 import {
   draftOfEditor,
@@ -7,6 +8,7 @@ import {
   withDoseName,
   withExerciseSwapped,
   withItemsAdded,
+  withoutItem,
   withoutLastDose,
   withItemMoved,
   withRestAfter,
@@ -30,7 +32,11 @@ describe("workout editor state", () => {
     const bench = { exercise: "Bench press", doses: [{ sets: 3, reps: 8 }] };
     const rested = withRestAfter({ ...legs, items: [squat, bench] }, 0, 240);
     expect(rested.items).toEqual([{ ...squat, restAfterS: 240 }, bench]);
-    expect(withItemMoved(rested, 0, 1).items).toEqual([bench, { ...squat, restAfterS: 240 }]);
+    const last = withItemMoved(rested, 0, 1).items;
+    expect(last).toEqual([bench, { ...squat, restAfterS: 240 }]);
+    expect(restAfterItem(last, 0, legs.exerciseRestS)).toBe(180);
+    expect(restAfterItem(last, 1, legs.exerciseRestS)).toBe(0);
+    expect(withoutItem(rested, 0).items).toEqual([bench]);
   });
 
   it("starts a grip that pulls on its own dose, and copies the grip before it otherwise", () => {

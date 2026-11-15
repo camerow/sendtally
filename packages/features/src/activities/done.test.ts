@@ -78,6 +78,7 @@ describe("done", () => {
     expect(setChip({ reps: 8 }, "kg")).toBe("8");
     expect(setChip({ reps: 8, weightKg: 0 }, "kg")).toBe("8");
     expect(setChip({ onS: 60 }, "kg")).toBe("60s");
+    expect(setChip({ reps: 8, weightKg: 60 }, "kg", 12)).toBe("8-12 × 60");
   });
 
   it("saves only the sets left ticked, dropping an exercise with every set off", () => {

@@ -6,6 +6,8 @@ import {
   blockWeekOn,
   changeFrom,
   gapRests,
+  PRESCRIPTION_ONLY,
+  setOf,
   restAfterItem,
   doneAsPrescribed,
   doseProtocol,
@@ -352,6 +354,12 @@ describe("doneAsPrescribed", () => {
   it("leaves a dose's name out of the sets it logs", () => {
     const named = { exercise: "Squat", doses: [{ sets: 1, reps: 5, name: "Heavy" }, { sets: 2 }] };
     expect(doneAsPrescribed(sessionItems([named], 0))[0]?.sets).toEqual([{ reps: 5 }]);
+  });
+
+  it("logs none of what only the prescription holds", () => {
+    const dose = { sets: 3, setsMax: 5, reps: 8, repsMax: 12, targetRpe: 8, name: "Heavy" };
+    expect(setOf({ ...dose, weightKg: 60 })).toEqual({ reps: 8, weightKg: 60 });
+    expect(PRESCRIPTION_ONLY.filter((k) => k in setOf(dose))).toEqual([]);
   });
 
   it("leaves the target and the range's tops out of the sets it logs", () => {
