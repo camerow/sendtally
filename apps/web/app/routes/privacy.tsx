@@ -19,7 +19,7 @@ export default function Privacy(): React.ReactElement {
   return (
     <LegalPage
       title="Privacy policy"
-      updated="13 NOVEMBER 2026"
+      updated="15 NOVEMBER 2026"
       lede="sendtally holds the climbing sessions you type in and almost nothing else. This page lists every piece of data it keeps, who else touches it, and how to get it all deleted."
     >
       <h2>Who this covers</h2>
@@ -75,13 +75,13 @@ export default function Privacy(): React.ReactElement {
         what you type, except passwords; in the mobile app photos and system pickers stay masked.
         Adding to Areas and moderating it are recorded as events too, such as an area created, an
         edit suggested, or a report resolved, carrying only the kind of action and a few labels,
-        such as whether it was an area or a climb, never what you wrote. Your answers to the two
-        questions when you first sign in are recorded once: which app you kept a log in, if any, how
-        many days a week you climb, and whether you skipped a question. The app you kept a log in
-        also stays on your PostHog profile, so we can compare people by where they came from. When
-        an AI assistant you connect to your account uses it, its connection and each action it takes
-        are recorded as events too, carrying only which action it was, which assistant and model
-        took it, how long it took, whether it failed, the names of the options it set, and a random
+        such as whether it was an area or a climb, never what you wrote. When you first sign in, we
+        record once that the two questions were shown, which app you kept a log in, if any, how many
+        days a week you climb, and whether you skipped a question. The app you kept a log in also
+        stays on your PostHog profile, so we can compare people by where they came from. When an AI
+        assistant you connect to your account uses it, its connection and each action it takes are
+        recorded as events too, carrying only which action it was, which assistant and model took
+        it, how long it took, whether it failed, the names of the options it set, and a random
         identifier we give the assistant so the actions of one conversation can be grouped, never
         what it read or wrote. When the assistant cannot do something you asked, it may send us a
         short description of what was missing.

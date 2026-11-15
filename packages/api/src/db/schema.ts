@@ -37,6 +37,10 @@ export const users = sqliteTable("users", {
   training_reminder_time: text("training_reminder_time").notNull().default("08:00"),
   training_reminder_prompt_seen: integer("training_reminder_prompt_seen").notNull().default(0),
   first_run_done: integer("first_run_done").notNull().default(0),
+  first_run_step: integer("first_run_step").notNull().default(0),
+  first_run_log: text("first_run_log", {
+    enum: ["kaya", "8a", "mountainProject", "sendage", "theCrag", "spreadsheet", "none", "skipped"],
+  }),
 });
 
 export const boardConnections = sqliteTable(

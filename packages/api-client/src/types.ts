@@ -94,6 +94,9 @@ export type TrainingReminderSettings = ConnectionStatus["trainingReminders"];
 export type FirstRunAnswers = InferRequestType<
   Client["v1"]["preferences"]["first-run"]["$put"]
 >["json"];
+export type FirstRunStep = InferRequestType<
+  Client["v1"]["preferences"]["first-run"]["step"]["$put"]
+>["json"];
 
 export type Entitlements = Ok<Client["v1"]["entitlements"]["$get"]>;
 

@@ -5,10 +5,14 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { FirstRunPage } from "./FirstRunPage";
 
-const finish = vi.hoisted(() => vi.fn(async () => undefined));
+const api = vi.hoisted(() => ({
+  finishFirstRun: vi.fn(async () => undefined),
+  firstRunStep: vi.fn(async () => undefined),
+}));
+const { finishFirstRun: finish, firstRunStep: step } = api;
 const saveMembership = vi.hoisted(() => vi.fn(async () => undefined));
 
-vi.mock("../lib/useAppApi", () => ({ useAppApi: () => ({ finishFirstRun: finish }) }));
+vi.mock("../lib/useAppApi", () => ({ useAppApi: () => api }));
 vi.mock("../training/data/useToday", () => ({ useToday: () => "2026-11-15" }));
 vi.mock("../training/data/usePlanActions", () => ({ usePlanActions: () => ({ saveMembership }) }));
 
@@ -68,6 +72,10 @@ describe("first run on the web", () => {
     click("Mountain Project");
     click("Import from Mountain Project");
     expect(path()).toBe("/app/import?then=/app/start");
+    expect(step.mock.calls).toEqual([
+      [{ step: "started" }],
+      [{ step: "log_answered", existingLog: "mountainProject" }],
+    ]);
   });
 
   it("saves the climbing days as one Ongoing Climbing week and goes to Plan with the import", () => {
@@ -89,6 +97,7 @@ describe("first run on the web", () => {
       endedAt: "plan",
     });
     expect(path()).toBe("/app/plan?imported=5&skipped=0&likely=0");
+    expect(step).not.toHaveBeenCalled();
   });
 
   it("skips to Log from the first question, saving nothing", () => {
@@ -101,5 +110,6 @@ describe("first run on the web", () => {
       endedAt: "skip_log",
     });
     expect(path()).toBe("/app");
+    expect(step.mock.calls).toEqual([[{ step: "started" }]]);
   });
 });

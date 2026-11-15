@@ -14,6 +14,8 @@ const show = (): Promise<unknown> =>
 
 const mockSave = jest.fn(async () => undefined);
 const mockFinish = jest.fn(async () => undefined);
+const mockStep = jest.fn(async () => undefined);
+const mockApi = { finishFirstRun: mockFinish, firstRunStep: mockStep };
 const mockPrompt = jest.fn();
 
 jest.mock("expo-crypto", () => ({ randomUUID: () => "m-new" }));
@@ -21,7 +23,7 @@ jest.mock("expo-router", () => ({
   router: { push: jest.fn(), replace: jest.fn() },
   useLocalSearchParams: () => ({}),
 }));
-jest.mock("../../lib/api", () => ({ useApi: () => ({ finishFirstRun: mockFinish }) }));
+jest.mock("../../lib/api", () => ({ useApi: () => mockApi }));
 jest.mock("../training/data/useToday", () => ({ useToday: () => "2026-11-15" }));
 jest.mock("../training/plan/usePlanActions", () => ({
   usePlanActions: () => ({ saveMembership: mockSave }),
@@ -43,6 +45,10 @@ describe("first run", () => {
       pathname: "/import",
       params: { then: "/first-run" },
     });
+    expect(mockStep.mock.calls).toEqual([
+      [{ step: "started" }],
+      [{ step: "log_answered", existingLog: "mountainProject" }],
+    ]);
   });
 
   it("saves the climbing days as one Ongoing Climbing week, then asks about reminders", async () => {
@@ -92,5 +98,6 @@ describe("first run", () => {
       endedAt: "skip_log",
     });
     expect(router.replace).toHaveBeenCalledWith("/(tabs)/sessions");
+    expect(mockStep.mock.calls).toEqual([[{ step: "started" }]]);
   });
 });

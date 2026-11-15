@@ -66,6 +66,15 @@ export function useFirstRunFlow(
   const [days, setDays] = React.useState<readonly Weekday[]>([]);
   const step = onDays || imported ? 2 : 1;
 
+  React.useEffect(() => {
+    if (!imported) void api.firstRunStep({ step: "started" }).catch(() => undefined);
+  }, [api, imported]);
+
+  const leaveLog = (): void =>
+    void api
+      .firstRunStep({ step: "log_answered", existingLog: source ?? "skipped" })
+      .catch(() => undefined);
+
   const end = (endedAt: FirstRunAnswers["endedAt"], climbingDays: number): void => {
     const { queryKey } = queries.status(api);
     client.setQueryData(queryKey, (status) => status && { ...status, firstRun: false });
@@ -81,8 +90,15 @@ export function useFirstRunFlow(
     pick: setSource,
     days,
     toggleDay: (day) => setDays(toggleIn(days, day)),
-    next: () => (source === null || source === "none" ? setOnDays(true) : go("import")),
-    later: () => setOnDays(true),
+    next: () => {
+      leaveLog();
+      if (source === null || source === "none") setOnDays(true);
+      else go("import");
+    },
+    later: () => {
+      leaveLog();
+      setOnDays(true);
+    },
     skip: () => end(step === 1 ? "skip_log" : "skip_days", 0),
     saveDays: () => {
       if (days.length > 0) {

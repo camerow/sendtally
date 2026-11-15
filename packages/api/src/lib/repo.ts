@@ -216,6 +216,21 @@ export async function showsFirstRun(
   return used.every((rows) => rows.length === 0);
 }
 
+/** Moves first run on to a step, never back; true only the first time, so its event fires once. */
+export async function reachFirstRunStep(
+  db: D1Database,
+  id: string,
+  step: 1 | 2,
+  log?: NonNullable<UserRow["first_run_log"]>
+): Promise<boolean> {
+  const moved = await drizzle(db)
+    .update(users)
+    .set({ first_run_step: step, ...(log !== undefined && { first_run_log: log }) })
+    .where(and(eq(users.id, id), lt(users.first_run_step, step)))
+    .returning({ id: users.id });
+  return moved.length > 0;
+}
+
 export async function finishFirstRun(db: D1Database, id: string): Promise<void> {
   await drizzle(db).update(users).set({ first_run_done: 1 }).where(eq(users.id, id));
 }
