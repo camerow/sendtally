@@ -216,6 +216,9 @@ export function ItemEditor({
                 onChange={(text) => onChange(withDoseName(item, d, text))}
               />
             )}
+            {!alternating && fields.length % 2 === 1 && (
+              <View style={{ flexGrow: 1, flexBasis: "40%" }} />
+            )}
           </View>
         </View>
       ))}

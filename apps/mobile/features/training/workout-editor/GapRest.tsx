@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { TimeField } from "../../../components/TimeField";
+import { DashedRule } from "../components/DashedRule";
 import { type } from "../type";
 
 export type GapRestProps = {
@@ -12,20 +13,12 @@ export type GapRestProps = {
   onChange: (seconds: number) => void;
 };
 
-const dash = {
-  flex: 1,
-  height: 0,
-  borderTopWidth: 1.5,
-  borderStyle: "dashed",
-  borderColor: colors.lineOnLightStrong,
-} as const;
-
 /** The rest between two exercise cards, where it falls, typed on the keypad. */
 export function GapRest({ after, seconds, onChange }: GapRestProps): React.ReactElement {
   const label = t("workouts.restAfter", { name: after });
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: -6 }}>
-      <View style={dash} />
+      <DashedRule />
       <Text style={[type.mono, { fontSize: 12, color: colors.textMuted }]}>{t("hang.rest")}</Text>
       <TimeField
         compact
@@ -35,7 +28,7 @@ export function GapRest({ after, seconds, onChange }: GapRestProps): React.React
         max={3600}
         onChange={onChange}
       />
-      <View style={dash} />
+      <DashedRule />
     </View>
   );
 }
