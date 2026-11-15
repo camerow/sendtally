@@ -4,6 +4,7 @@ import {
   doseFieldsFor,
   doseMeasureOf,
   fieldLimits,
+  fieldPlaceholder,
   fieldValue,
   newDoseFor,
   withField,
@@ -116,5 +117,21 @@ describe("dose ranges", () => {
     expect(weight?.range).toBeUndefined();
     expect(DOSE_FIELDS_OF.hangboard.some((f) => f.range !== undefined)).toBe(false);
     expect(DOSE_FIELDS_OF.other.some((f) => f.range !== undefined)).toBe(false);
+  });
+});
+
+describe("dose placeholders", () => {
+  it("shows an example range in an empty sets or reps field that takes one, and today's hint elsewhere", () => {
+    const [sets, reps, weight, rpe] = DOSE_FIELDS_OF.strength;
+    expect(fieldPlaceholder(sets!)).toBe("3, 3-5");
+    expect(fieldPlaceholder(reps!)).toBe("8, 8-12");
+    expect(fieldPlaceholder(weight!)).toBe("Bodyweight");
+    expect(fieldPlaceholder(rpe!)).toBeUndefined();
+    expect(DOSE_FIELDS_OF.hangboard.map(fieldPlaceholder)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
   });
 });

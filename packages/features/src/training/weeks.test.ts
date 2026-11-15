@@ -6,6 +6,7 @@ import {
   stepped,
   weekFieldMarked,
   weekFields,
+  weekPlaceholder,
   weekRangeOf,
   withWeekField,
   withWeekRange,
@@ -106,5 +107,13 @@ describe("week ranges", () => {
     expect(single).toMatchObject({ sets: 4, setsMax: 4 });
     expect(cellText("strength", single, "sets", "kg")).toBe("4");
     expect(withWeekRange(squat, squat, "reps", 6, undefined, "kg")).toEqual({ ...squat, reps: 6 });
+  });
+});
+
+describe("week placeholders", () => {
+  it("shows an example range in an empty strength reps cell, and none in a filled one or on a grip", () => {
+    expect(weekPlaceholder("strength", { sets: 3 }, "reps")).toBe("8, 8-12");
+    expect(weekPlaceholder("strength", { sets: 3, reps: 8 }, "reps")).toBeUndefined();
+    expect(weekPlaceholder("hangboard", { sets: 3 }, "reps")).toBeUndefined();
   });
 });

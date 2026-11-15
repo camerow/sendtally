@@ -4,6 +4,7 @@ import { t } from "@sendtally/features/i18n";
 import { enduranceUnitLabel } from "@sendtally/features/log-session";
 import {
   doseFieldsFor,
+  fieldPlaceholder,
   MAX_DOSES,
   withAlternates,
   withDose,
@@ -153,13 +154,7 @@ export function ItemEditor({
                   dose={dose}
                   unit={unit}
                   label={alternating ? `${label} ${letterOf(d)}` : label}
-                  placeholder={
-                    field.measure === "weight"
-                      ? t("hang.bodyweight")
-                      : field.placeholder === undefined
-                        ? undefined
-                        : t(field.placeholder)
-                  }
+                  placeholder={fieldPlaceholder(field)}
                   onChange={(typed) => onChange(withDose(item, d, typed))}
                 />
               );

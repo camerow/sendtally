@@ -8,6 +8,7 @@ import {
   columnLabel,
   weekFieldLimits,
   weekFieldValue,
+  weekPlaceholder,
   weekRangeOf,
   withWeekRange,
   type DoneCount,
@@ -112,6 +113,7 @@ export function LoadTable({
             {columns.map((f) => {
               const name = columnLabel(kind, written, f);
               const marked = weekFieldMarked(change, written, f);
+              const hint = weekPlaceholder(kind, dose, f);
               if (!editing)
                 return (
                   <View key={f} style={{ flex: 1, alignItems: "center" }}>
@@ -150,7 +152,7 @@ export function LoadTable({
                         }
                   }
                   value={weekFieldValue(dose, f, unit)}
-                  text={["", cellText(kind, dose, f, unit)]}
+                  text={hint === undefined ? ["", cellText(kind, dose, f, unit)] : [hint, ""]}
                   note={`${t("plan.asWritten")} ${cellText(kind, written, f, unit)}`}
                   onReset={marked ? () => onChange(week, without(change, f)) : undefined}
                   onChange={(typed, max) => {

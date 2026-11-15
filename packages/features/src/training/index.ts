@@ -69,6 +69,7 @@ export {
   loadColumns,
   stepped,
   weekFields,
+  weekPlaceholder,
   weekRangeOf,
   withWeekField,
   withWeekRange,

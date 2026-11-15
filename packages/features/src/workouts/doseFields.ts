@@ -1,6 +1,7 @@
 import {
   clamp,
   isRanged,
+  type Ranged,
   RANGE_TOP,
   withTop,
   fromUnit,
@@ -15,7 +16,7 @@ import {
 } from "@sendtally/core/hang";
 import { tallyMeasureOf } from "../exercises/measure";
 import type { TallyMeasure } from "../exercises/types";
-import type { MessageKey } from "../i18n";
+import { t, type MessageKey } from "../i18n";
 
 export type DoseKey = Exclude<keyof Dose, "edgeMm" | "name">;
 
@@ -167,6 +168,16 @@ export function fieldValue(field: DoseField, dose: Dose, unit: WeightUnit): numb
   const value = dose[field.key];
   if (value === undefined) return null;
   return field.measure === "weight" ? toUnit(value, unit) : value;
+}
+
+/** An empty count that takes a range shows an example of each way to fill it. */
+export const RANGE_PLACEHOLDER: Record<Ranged, string> = { sets: "3, 3-5", reps: "8, 8-12" };
+
+/** What an empty field reads as: no added weight, its own hint, an example range, else a dash. */
+export function fieldPlaceholder(field: DoseField): string | undefined {
+  if (field.measure === "weight") return t("hang.bodyweight");
+  if (field.placeholder !== undefined) return t(field.placeholder);
+  return field.range === true && isRanged(field.key) ? RANGE_PLACEHOLDER[field.key] : undefined;
 }
 
 /** The top of a range in a field that takes one; none when it holds one number. */

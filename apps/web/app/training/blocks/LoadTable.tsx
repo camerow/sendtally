@@ -6,6 +6,7 @@ import {
   columnLabel,
   weekFieldLimits,
   weekFieldValue,
+  weekPlaceholder,
   weekRangeOf,
   withWeekRange,
   type DoneCount,
@@ -105,7 +106,12 @@ export function LoadTable({
                           n: week,
                           field: columnLabel(kind, written, f),
                         })}
-                        value={weekFieldValue(dose, f, unit)}
+                        value={
+                          weekPlaceholder(kind, dose, f) === undefined
+                            ? weekFieldValue(dose, f, unit)
+                            : null
+                        }
+                        placeholder={weekPlaceholder(kind, dose, f)}
                         mode={
                           isTimeField(f)
                             ? { kind: "time" }

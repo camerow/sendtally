@@ -13,6 +13,7 @@ import {
   type WorkoutKind,
 } from "@sendtally/core/hang";
 import { countText, humanDuration } from "../hang/format";
+import { RANGE_PLACEHOLDER } from "../workouts/doseFields";
 import { formatNumber, t } from "../i18n";
 import type { DoneCount } from "./recap";
 
@@ -126,6 +127,16 @@ export function weekRangeOf(
   const max = dose[RANGE_TOP[field]];
   return max !== undefined && max > (dose[field] ?? 0) ? { max } : {};
 }
+
+/** An empty cell that takes a range shows the editor's example range. */
+export const weekPlaceholder = (
+  kind: WorkoutKind,
+  dose: Dose,
+  field: WeekField
+): string | undefined =>
+  isRanged(field) && dose[field] === undefined && weekRangeOf(kind, dose, field) !== undefined
+    ? RANGE_PLACEHOLDER[field]
+    : undefined;
 
 /**
  * The dose with a range typed into a cell. Dropping a top the workout has keeps it at the bottom,
