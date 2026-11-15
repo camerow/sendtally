@@ -34,6 +34,7 @@ export { useMakeExercise, type MakeExercise } from "./useMakeExercise";
 export type { ExerciseForm, MadeExercise } from "./types";
 export {
   entryOf,
+  exerciseEntry,
   usedInText,
   exerciseWorkout,
   type ExerciseWorkoutArgs,

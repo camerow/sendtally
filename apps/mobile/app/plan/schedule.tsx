@@ -4,10 +4,13 @@ import { HangDataProvider } from "../../features/training/data/HangDataProvider"
 import { ScheduleScreen } from "../../features/training/planning/ScheduleScreen";
 
 export default function ScheduleRoute(): React.ReactElement {
-  const { workoutId } = useLocalSearchParams<{ workoutId: string }>();
+  const { workoutId, exerciseId } = useLocalSearchParams<{
+    workoutId?: string;
+    exerciseId?: string;
+  }>();
   return (
     <HangDataProvider>
-      <ScheduleScreen workoutId={workoutId} />
+      <ScheduleScreen workoutId={workoutId} exerciseId={exerciseId} />
     </HangDataProvider>
   );
 }

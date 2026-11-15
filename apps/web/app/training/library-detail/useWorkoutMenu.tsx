@@ -29,7 +29,7 @@ export function useWorkoutMenu(workout: LibraryWorkout): WorkoutMenu {
   );
   const actions = useWorkoutActions(useAppApi(), failed);
   const [deleting, setDeleting] = React.useState(false);
-  const addToBlock = useAddToBlock(workout);
+  const addToBlock = useAddToBlock(workout.name, workout.id);
   const duplicate = (): void => {
     const id = crypto.randomUUID();
     void actions.saveWorkout(id, { ...draftOf(workout), name: copyName(workout.name) });

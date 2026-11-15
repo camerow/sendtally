@@ -36,6 +36,7 @@ import { activityPath } from "../log/paths";
 import { Description } from "../components/Description";
 import { BuiltInExercisePage } from "./BuiltInExercisePage";
 import { EXERCISES_VIEW } from "./paths";
+import { useExerciseInPlan } from "./useExerciseInPlan";
 import { useExerciseMenu } from "./useExerciseMenu";
 
 function Detail({
@@ -62,6 +63,11 @@ function Detail({
     fingers: false,
     usedIn,
   });
+  const inPlan = useExerciseInPlan({
+    kind: exercise.kind,
+    name: exerciseLabel(exercise),
+    source: { exercise },
+  });
   const menu = useExerciseMenu(
     exercise,
     all.filter((e) => e.id !== exercise.id),
@@ -83,7 +89,9 @@ function Detail({
           <MoreMenu
             label={t("summary.more")}
             items={[
-              ...(addTo.item === null || exercise.archived ? [] : [addTo.item]),
+              ...(exercise.archived
+                ? []
+                : [...[addTo.item, inPlan.block.item].filter((i) => i !== null), inPlan.schedule]),
               ...menu.items,
             ]}
           />
@@ -109,6 +117,7 @@ function Detail({
       <UsedIn workouts={usedIn} />
       {menu.sheets}
       {addTo.sheet}
+      {inPlan.block.sheet}
     </DetailFrame>
   );
 }

@@ -1,7 +1,7 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { Alert, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -16,6 +16,10 @@ import {
   scheduleAddLabel,
 } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
+import { exerciseEntry, exerciseWorkout, pickWith } from "@sendtally/features/exercises";
+import { useExercises } from "@sendtally/features/statistics";
+import { useWorkoutActions } from "@sendtally/features/workouts";
+import { useMakeExercise } from "../exercises/useMakeExercise";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
 import { MonthCalendar } from "../components/MonthCalendar";
@@ -31,16 +35,26 @@ import { ScreenFrame } from "../../../components/ScreenFrame";
 import { StartField } from "./StartField";
 import { WeekdayChips } from "./WeekdayChips";
 
-export type ScheduleScreenProps = { workoutId: string };
+const failed = (): void => Alert.alert(t("workouts.saveFailed"));
+
+/** A workout, or an exercise whose one-exercise workout is made on Add. */
+export type ScheduleScreenProps = { workoutId?: string; exerciseId?: string };
 
 /**
  * Scheduling a workout outside any block: every week on some days, or on some dates. Back on
  * Today at the day it starts.
  */
-export function ScheduleScreen({ workoutId }: ScheduleScreenProps): React.ReactElement | null {
+export function ScheduleScreen({
+  workoutId,
+  exerciseId,
+}: ScheduleScreenProps): React.ReactElement | null {
   const { today } = useHangData();
+  const api = useApi();
   const library = useLibrary();
-  const plan = usePlan(useApi()).state;
+  const exercises = useExercises(api).state;
+  const save = useWorkoutActions(api, failed).saveWorkout;
+  const pick = pickWith(useMakeExercise());
+  const plan = usePlan(api).state;
   const actions = usePlanActions();
   const prompt = useReminderPrompt();
   const [draft, setDraft] = React.useState(() => newSchedule(null, today));
@@ -48,13 +62,26 @@ export function ScheduleScreen({ workoutId }: ScheduleScreenProps): React.ReactE
 
   if (library.state.status !== "ready")
     return <LoadState state={library.state} onRetry={() => void library.reload()} />;
-  const workout = library.state.data.workout(workoutId);
-  if (workout === undefined) return null;
-  const days = scheduledMemberships(draft, workoutId, () => "", 0).map((m) => m.start);
+  const { workouts } = library.state.data;
+  const workout = workoutId === undefined ? undefined : library.state.data.workout(workoutId);
+  const entry =
+    exerciseId === undefined || exercises.status !== "ready"
+      ? undefined
+      : exerciseEntry(exercises.data, exerciseId);
+  const name = workout?.name ?? entry?.name;
+  if (name === undefined) return null;
+  const days = scheduledMemberships(draft, "", () => "", 0).map((m) => m.start);
+  const resolve = async (): Promise<string | null> =>
+    workout?.id ??
+    (entry === undefined
+      ? null
+      : exerciseWorkout({ workouts, pick, save, newId: randomUUID })(entry));
 
-  const save = (): void => {
+  const add = async (): Promise<void> => {
+    const id = await resolve();
+    if (id === null) return;
     const position = plan.status === "ready" ? nextPosition(plan.data, null) : 0;
-    const memberships = scheduledMemberships(draft, workoutId, randomUUID, position);
+    const memberships = scheduledMemberships(draft, id, randomUUID, position);
     memberships.forEach((m) => void actions.saveMembership(m));
     const [first] = memberships;
     if (first === undefined) return;
@@ -70,7 +97,7 @@ export function ScheduleScreen({ workoutId }: ScheduleScreenProps): React.ReactE
       footer={
         <Button
           label={scheduleAddLabel(draft, days.length, days[0])}
-          onPress={save}
+          onPress={() => void add()}
           disabled={!scheduleReady(draft)}
           variant="primary"
           height={54}
@@ -78,7 +105,7 @@ export function ScheduleScreen({ workoutId }: ScheduleScreenProps): React.ReactE
       }
     >
       <View style={{ gap: 4 }}>
-        <Label color={colors.gunmetal}>{workout.name}</Label>
+        <Label color={colors.gunmetal}>{name}</Label>
         <Title size={34}>{t("plan.howOften")}</Title>
       </View>
       <Segmented<ScheduleMode>

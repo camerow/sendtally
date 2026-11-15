@@ -4,7 +4,8 @@ import { workoutsUsing } from "../statistics/exercises";
 import { withItemsAdded } from "../workouts/editorState";
 import { newWorkoutDraft } from "../workouts/library";
 import type { LibraryWorkout, Picked, WorkoutDraft } from "../workouts/types";
-import { exerciseLabel } from "./builtIns";
+import type { Exercise } from "@sendtally/api-client";
+import { builtInExercise, exerciseLabel } from "./builtIns";
 import type { MadeExercise, PickerEntry } from "./types";
 
 /** An exercise as a row offers it: a grip, the user's own, or a built-in. */
@@ -15,6 +16,20 @@ export const entryOf = (made: MadeExercise): ExerciseEntry =>
   "grip" in made
     ? { kind: "hangboard", name: made.grip.name, source: made }
     : { kind: made.exercise.kind, name: exerciseLabel(made.exercise), source: made };
+
+/** The exercise an id opens: the user's own, their copy of a built-in, else the built-in. */
+export function exerciseEntry(
+  exercises: readonly Exercise[],
+  id: string
+): ExerciseEntry | undefined {
+  const exercise = exercises.find((e) => e.id === id || (e.builtIn === id && !e.archived));
+  if (exercise !== undefined)
+    return { kind: exercise.kind, name: exerciseLabel(exercise), source: { exercise } };
+  const builtIn = builtInExercise(id);
+  return builtIn === undefined
+    ? undefined
+    : { kind: builtIn.kind, name: builtIn.name, source: { builtIn } };
+}
 
 /** What the entry's workout items name: a grip by its id, an exercise by its name. */
 const itemName = (e: ExerciseEntry): string =>

@@ -13,6 +13,8 @@ import type * as T_training from "@sendtally/features/training";
 import type * as T_useLibrary from "../library/useLibrary";
 import { hangData } from "../data/testHang";
 import type * as T_statistics from "@sendtally/features/statistics";
+import type * as T_exercises from "@sendtally/features/exercises";
+import type * as T_workouts from "@sendtally/features/workouts";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -56,6 +58,14 @@ const library = (): WorkoutLibrary => {
   return { workouts, usage: new Map(), workout: (id) => workouts.find((w) => w.id === id) };
 };
 
+vi.mock("@sendtally/features/exercises", async (actual) => ({
+  ...(await actual<typeof T_exercises>()),
+  usePickerWorld: () => ({ mine: [], grips: [], uses: new Map(), inWorkout: [], fingers: false }),
+}));
+vi.mock("@sendtally/features/workouts", async (actual) => ({
+  ...(await actual<typeof T_workouts>()),
+  useWorkoutActions: () => ({ saveWorkout: vi.fn(), deleteWorkout: vi.fn() }),
+}));
 vi.mock("@sendtally/features/statistics", async (actual) => ({
   ...(await actual<typeof T_statistics>()),
   useExercises: () => ({ state: { status: "ready", data: [] } }),
@@ -66,6 +76,7 @@ vi.mock("../library/useLibrary", async (actual) => ({
   useLibrary: () => ({ state: { status: "ready", data: library() }, reload: vi.fn() }),
 }));
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
+vi.mock("../editor/useMake", () => ({ useMake: () => vi.fn(), usePick: () => vi.fn() }));
 vi.mock("../../components/AccountButton", () => ({ AccountButton: () => null }));
 vi.mock("../data/HangDataContext", () => ({
   useHangData: () => ({

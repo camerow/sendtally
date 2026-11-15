@@ -32,7 +32,7 @@ export function useWorkoutDetailActions(
   { planned }: { planned: boolean }
 ): WorkoutDetailActions {
   const actions = useWorkoutActions(useApi(), reportFailure);
-  const addToBlock = useAddToBlock(workout);
+  const addToBlock = useAddToBlock(workout.name, workout.id);
   const mine = workout.source === "mine";
   const duplicate: DetailMenuRow = {
     icon: "copy",

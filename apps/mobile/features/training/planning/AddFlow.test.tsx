@@ -1,5 +1,5 @@
 import { describe, expect, it, jest, beforeEach } from "@jest/globals";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { Alert, type AlertButton } from "react-native";
@@ -319,6 +319,25 @@ describe("adding to the plan", () => {
       position: 0,
     });
     expect(router.back).toHaveBeenCalled();
+  });
+
+  it("schedules an exercise, making its one-exercise workout only on Add", async () => {
+    await renderWithHang(<ScheduleScreen exerciseId="e1" />, hangData(), {
+      workouts: [legs],
+      exercises: [anExercise("e1", "Pull-ups", "strength")],
+    });
+    expect(screen.getByText("Pull-ups")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Wednesday"));
+    expect(mockWorkouts.saveWorkout).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText("Add every Wed"));
+    await act(async () => undefined);
+    expect(mockWorkouts.saveWorkout).toHaveBeenCalledWith(
+      "m-new",
+      expect.objectContaining({ name: "Pull-ups", kind: "strength" })
+    );
+    expect(mockPlan.saveMembership).toHaveBeenCalledWith(
+      expect.objectContaining({ workoutId: "m-new", blockId: null, weekdays: [2] })
+    );
   });
 
   it("saves a one-off per picked date", async () => {

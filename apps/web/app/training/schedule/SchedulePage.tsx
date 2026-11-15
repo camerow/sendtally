@@ -20,28 +20,64 @@ import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { usePlanActions } from "../data/usePlanActions";
 import { useLibrary, workoutPath } from "../library/useLibrary";
+import { exerciseEntry, exerciseWorkout, pickWith } from "@sendtally/features/exercises";
+import { useExercises } from "@sendtally/features/statistics";
+import { useWorkoutActions } from "@sendtally/features/workouts";
+import { useToast } from "../../components/Toast";
+import { useMake } from "../editor/useMake";
+import { exercisePath } from "../exercises/paths";
 import { StartField } from "./StartField";
 import { WeekdayChips } from "./WeekdayChips";
 
-/** Scheduling a workout outside any block: every week on some days, or on some dates. */
-export function SchedulePage({ workoutId }: { workoutId: string }): React.ReactElement | null {
+/**
+ * Scheduling a workout outside any block: every week on some days, or on some dates. An
+ * exercise's one-exercise workout is made on Add.
+ */
+export function SchedulePage({
+  workoutId,
+  exerciseId,
+}: {
+  workoutId?: string | undefined;
+  exerciseId?: string | undefined;
+}): React.ReactElement | null {
   const navigate = useNavigate();
   const { today } = useHangData();
+  const api = useAppApi();
+  const toast = useToast();
+  const failed = React.useCallback(
+    () => toast.show({ message: t("workouts.saveFailed") }),
+    [toast]
+  );
   const library = useLibrary();
-  const plan = usePlan(useAppApi()).state;
+  const exercises = useExercises(api).state;
+  const save = useWorkoutActions(api, failed).saveWorkout;
+  const pick = pickWith(useMake());
+  const plan = usePlan(api).state;
   const actions = usePlanActions();
   const [draft, setDraft] = React.useState(() => newSchedule(null, today));
   const update = (patch: Partial<ScheduleDraft>): void => setDraft((d) => ({ ...d, ...patch }));
 
   if (library.state.status !== "ready")
     return <LoadState state={library.state} onRetry={() => void library.reload()} />;
-  const workout = library.state.data.workout(workoutId);
-  if (workout === undefined) return null;
-  const days = scheduledMemberships(draft, workoutId, () => "", 0).map((m) => m.start);
+  const { workouts } = library.state.data;
+  const workout = workoutId === undefined ? undefined : library.state.data.workout(workoutId);
+  const entry =
+    exerciseId === undefined || exercises.status !== "ready"
+      ? undefined
+      : exerciseEntry(exercises.data, exerciseId);
+  const name = workout?.name ?? entry?.name;
+  if (name === undefined) return null;
+  const days = scheduledMemberships(draft, "", () => "", 0).map((m) => m.start);
+  const newId = (): string => crypto.randomUUID();
+  const resolve = async (): Promise<string | null> =>
+    workout?.id ??
+    (entry === undefined ? null : exerciseWorkout({ workouts, pick, save, newId })(entry));
 
-  const save = (): void => {
+  const add = async (): Promise<void> => {
+    const id = await resolve();
+    if (id === null) return;
     const position = plan.status === "ready" ? nextPosition(plan.data, null) : 0;
-    const memberships = scheduledMemberships(draft, workoutId, () => crypto.randomUUID(), position);
+    const memberships = scheduledMemberships(draft, id, newId, position);
     memberships.forEach((m) => void actions.saveMembership(m));
     const [first] = memberships;
     if (first === undefined) return;
@@ -50,20 +86,20 @@ export function SchedulePage({ workoutId }: { workoutId: string }): React.ReactE
 
   return (
     <DetailFrame
-      backTo={workoutPath(workoutId)}
+      backTo={workout === undefined ? exercisePath(exerciseId ?? "") : workoutPath(workout.id)}
       footer={
         <button
           type="button"
           className="detail-primary"
           disabled={!scheduleReady(draft)}
-          onClick={save}
+          onClick={() => void add()}
         >
           {scheduleAddLabel(draft, days.length, days[0])}
         </button>
       }
     >
       <div className="schedule-head">
-        <span className="plan-label">{workout.name}</span>
+        <span className="plan-label">{name}</span>
         <h1 className="schedule-title">{t("plan.howOften")}</h1>
       </div>
       <Segmented<ScheduleMode>

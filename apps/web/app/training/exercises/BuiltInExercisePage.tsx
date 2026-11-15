@@ -13,8 +13,9 @@ import { useLibrary } from "../library/useLibrary";
 import { usePick } from "../editor/useMake";
 import { useAddToWorkout } from "../editor/useAddToWorkout";
 import { EXERCISES_VIEW } from "./paths";
+import { useExerciseInPlan } from "./useExerciseInPlan";
 
-/** A built-in the user has not made their own: nothing logged yet, and Add to workout makes it theirs. */
+/** A built-in the user has not made their own: nothing logged yet, and adding it anywhere makes it theirs. */
 export function BuiltInExercisePage({ builtIn }: { builtIn: BuiltInExercise }): React.ReactElement {
   const pick = usePick();
   const library = useLibrary().state;
@@ -26,15 +27,15 @@ export function BuiltInExercisePage({ builtIn }: { builtIn: BuiltInExercise }): 
     fingers: false,
     usedIn,
   });
+  const inPlan = useExerciseInPlan({ kind: builtIn.kind, name: builtIn.name, source: { builtIn } });
+  const items = [...[addTo.item, inPlan.block.item].filter((i) => i !== null), inPlan.schedule];
   return (
     <DetailFrame
       backTo={EXERCISES_VIEW}
       action={
-        addTo.item === null ? undefined : (
-          <span className="detail-actions">
-            <MoreMenu label={t("summary.more")} items={[addTo.item]} />
-          </span>
-        )
+        <span className="detail-actions">
+          <MoreMenu label={t("summary.more")} items={items} />
+        </span>
       }
     >
       <div className="intro">
@@ -48,6 +49,7 @@ export function BuiltInExercisePage({ builtIn }: { builtIn: BuiltInExercise }): 
       <DashedPanel body={t("workouts.exerciseNothingLogged")} />
       <UsedIn workouts={usedIn} />
       {addTo.sheet}
+      {inPlan.block.sheet}
     </DetailFrame>
   );
 }
