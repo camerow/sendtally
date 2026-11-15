@@ -47,9 +47,9 @@ There is no native code either, so every app slice ships over the air.
 
 ## What each player does
 
-- Sets player (`SetsScreen` / `SetsPage`): only where the exercise's dose has a `targetRpe`, a ticked set row gets a small RPE box under what was done, blank showing the target dim ("RPE 8") the way an empty range field shows its example.
+- Sets player (`SetsScreen` / `SetsPage`): only where the exercise's dose has a `targetRpe`, a ticked set row gets a small RPE box beside what was done, on the same line, blank showing the target dim ("RPE 8") the way an empty range field shows its example.
   It is entered with the in-app `Keypad` on mobile (number mode, 1 to 10, step 1, no decimals), and Next walks to the next ticked set's RPE through `useFieldOrder`.
-  The web uses its own number input, on the row on desktop and under it at 375.
+  The web uses its own number input, beside the Done fields on desktop and at 375 alike.
   Ticking stays one tap and opens nothing; the unticked current row shows no box.
   An exercise with no target draws exactly today's player, which is every existing workout.
 - Checklist player: no live entry, because it has no set rows; its review takes it.
@@ -72,8 +72,8 @@ Entry timing, which the board draws side by side:
    It misses every set with no `setRestS`, the last set of each exercise, and the checklist and timed players, so it cannot be the only way in.
 3. Only in the review after the run.
 
-Board and eng recommendation: 1 (the board's option A), on ticked rows only, which also covers 3 for free because the review uses the same row; 2 (option B) is drawn as the alternative and adds a second entry point for a subset of sets.
-`SET_COLUMNS` stays Set, Target, Done, tick: a fifth column is tight at 375 points, so the box sits under the row's Done fields.
+Will picked 1 (the board's option A) in a board comment on 2026-11-15, on ticked rows only, which also covers 3 for free because the review uses the same row; 2 (option B) is drawn as the alternative and adds a second entry point for a subset of sets.
+`SET_COLUMNS` stays Set, Target, Done, tick: the box sits inside the Done cell beside its value, per Will's comment on the board (side by side, not stacked), taking width from the Target column, whose text already shrinks to fit.
 
 ## Old builds
 
