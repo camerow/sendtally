@@ -59,6 +59,7 @@ import type {
   SessionTag,
   TagSummary,
   TrainingReminderSettings,
+  FirstRunAnswers,
   MembershipDays,
   PlanChange,
   WeekChange,
@@ -203,6 +204,10 @@ export class SendtallyApi {
     settings: Partial<TrainingReminderSettings>
   ): Promise<{ trainingReminders: TrainingReminderSettings }> {
     return body(this.client.v1.preferences["training-reminders"].$put({ json: settings }));
+  }
+
+  finishFirstRun(answers: FirstRunAnswers): Promise<{ firstRun: false }> {
+    return body(this.client.v1.preferences["first-run"].$put({ json: answers }));
   }
 
   climbs(): Promise<{ climbs: ClimbSummary[] }> {

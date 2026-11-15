@@ -695,6 +695,49 @@ describe("app", () => {
     expect((await put({ enabled: "yes" })).status).toBe(400);
   });
 
+  it("shows first run once, to an account with nothing logged or planned", async () => {
+    const headers = { "x-test-user": "user_firstrun", "Content-Type": "application/json" };
+    const firstRun = async (h: Record<string, string>): Promise<unknown> =>
+      (
+        (await (await testApp().request("/v1/status", { headers: h }, env)).json()) as {
+          firstRun: unknown;
+        }
+      ).firstRun;
+    const finish = async (json: unknown): Promise<Response> =>
+      testApp().request(
+        "/v1/preferences/first-run",
+        { method: "PUT", headers, body: JSON.stringify(json) },
+        env
+      );
+
+    expect(await firstRun(headers)).toBe(true);
+    expect((await finish({ existingLog: "strava", climbingDays: 2, endedAt: "plan" })).status).toBe(
+      400
+    );
+    const done = await finish({ existingLog: "none", climbingDays: 2, endedAt: "plan" });
+    expect(done.status).toBe(200);
+    expect(await firstRun(headers)).toBe(false);
+
+    const planned = { "x-test-user": "user_firstrun_planned", "Content-Type": "application/json" };
+    const saved = await testApp().request(
+      "/v1/memberships/m-1",
+      {
+        method: "PUT",
+        headers: planned,
+        body: JSON.stringify({
+          workoutId: "climb-session",
+          blockId: null,
+          weekdays: [1, 3],
+          start: "2026-11-16",
+          position: 0,
+        }),
+      },
+      env
+    );
+    expect(saved.status).toBe(200);
+    expect(await firstRun(planned)).toBe(false);
+  });
+
   it("keeps the grade a project was added with", async () => {
     const headers = { "x-test-user": "user_gradedproject", "Content-Type": "application/json" };
     const created = await testApp().request(

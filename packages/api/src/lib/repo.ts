@@ -202,6 +202,24 @@ export async function setTrainingReminders(
     .where(eq(users.id, id));
 }
 
+/** First run shows once, to an account that has logged and planned nothing yet. */
+export async function showsFirstRun(
+  db: D1Database,
+  id: string,
+  user: UserRow | null
+): Promise<boolean> {
+  if (user?.first_run_done === 1) return false;
+  const d = drizzle(db);
+  const any = (t: typeof sessions | typeof hangSessions | typeof activities | typeof memberships) =>
+    d.select({ id: t.user_id }).from(t).where(eq(t.user_id, id)).limit(1);
+  const used = await d.batch([any(sessions), any(hangSessions), any(activities), any(memberships)]);
+  return used.every((rows) => rows.length === 0);
+}
+
+export async function finishFirstRun(db: D1Database, id: string): Promise<void> {
+  await drizzle(db).update(users).set({ first_run_done: 1 }).where(eq(users.id, id));
+}
+
 export type StravaConnectionInput = {
   user_id: string;
   athlete_id: number;

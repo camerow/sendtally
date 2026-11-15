@@ -91,6 +91,9 @@ export type LibraryChange = Extract<
   { changes: unknown }
 >["changes"][number];
 export type TrainingReminderSettings = ConnectionStatus["trainingReminders"];
+export type FirstRunAnswers = InferRequestType<
+  Client["v1"]["preferences"]["first-run"]["$put"]
+>["json"];
 
 export type Entitlements = Ok<Client["v1"]["entitlements"]["$get"]>;
 

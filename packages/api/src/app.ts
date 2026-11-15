@@ -582,6 +582,21 @@ const trainingRemindersBody = z.object({
   promptSeen: z.boolean().optional(),
 });
 
+const firstRunBody = z.object({
+  existingLog: z.enum([
+    "kaya",
+    "8a",
+    "mountainProject",
+    "sendage",
+    "theCrag",
+    "spreadsheet",
+    "none",
+    "skipped",
+  ]),
+  climbingDays: z.number().int().min(0).max(7),
+  endedAt: z.enum(["plan", "skip_log", "skip_days"]),
+});
+
 const stravaPostingBody = z.object({
   enabled: z.boolean(),
   since: z
@@ -1920,6 +1935,7 @@ const app = new Hono<AppEnv>()
       gradeScales: { boulder: scales.boulder, route: scales.route },
       role: user?.role ?? "user",
       trainingReminders: repo.trainingRemindersOf(user),
+      firstRun: await repo.showsFirstRun(c.env.DB, userId, user),
       strava:
         strava === null
           ? null
@@ -1975,6 +1991,20 @@ const app = new Hono<AppEnv>()
       return c.json({ trainingReminders: reminders });
     }
   )
+
+  .put("/v1/preferences/first-run", zValidator("json", firstRunBody, invalidBody), async (c) => {
+    const userId = c.get("userId");
+    const form = c.req.valid("json");
+    await repo.ensureUser(c.env.DB, userId);
+    await repo.finishFirstRun(c.env.DB, userId);
+    await identifyUser(c.env, userId, { existing_log: form.existingLog });
+    await captureEvent(c, "first_run_finished", {
+      existing_log: form.existingLog,
+      climbing_days: form.climbingDays,
+      ended_at: form.endedAt,
+    });
+    return c.json({ firstRun: false });
+  })
 
   .put(
     "/v1/connections/strava/posting",
