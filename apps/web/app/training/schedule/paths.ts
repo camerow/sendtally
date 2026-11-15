@@ -4,4 +4,4 @@ export const schedulePath = (workoutId: string): string =>
 
 /** The schedule page for an exercise, whose one-exercise workout is made on Add. */
 export const exerciseSchedulePath = (exerciseId: string): string =>
-  `/app/plan/schedule?exercise=${encodeURIComponent(exerciseId)}`;
+  `/app/plan/schedule?exerciseId=${encodeURIComponent(exerciseId)}`;

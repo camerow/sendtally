@@ -3620,7 +3620,7 @@ export async function removeExercise(
 /**
  * Writes `name` over every item and logged exercise named `from` in any case, in the
  * user's workouts and activities, in one batch with `then`. A workout of that one exercise
- * still named after it takes the new name too.
+ * still named after it, in any case, takes the new name too.
  */
 async function renameEverywhere(
   d: DrizzleD1Database,
@@ -3653,7 +3653,7 @@ async function renameEverywhere(
     const items = JSON.parse(w.json) as Item[];
     if (exerciseKindOf(w.kind) === null || !items.some(hit)) return [];
     const json = JSON.stringify(items.map(renamed));
-    const named = items.length === 1 && w.name === from ? { name } : {};
+    const named = items.length === 1 && exerciseNameKey(w.name) === key ? { name } : {};
     return [
       d
         .update(workouts)

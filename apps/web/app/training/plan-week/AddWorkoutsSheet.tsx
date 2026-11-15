@@ -14,8 +14,8 @@ import {
 import { kindLabel } from "@sendtally/features/activities";
 import {
   entryShelves,
-  exerciseWorkout,
   pickWith,
+  useExerciseWorkout,
   usePickerWorld,
   usedInText,
   workoutsWith,
@@ -84,7 +84,7 @@ export function AddWorkoutsSheet({
   const world = usePickerWorld(api, model, [], false);
   const library = state.status === "ready" ? state.data : null;
   const workouts = library?.workouts ?? [];
-  const ensure = exerciseWorkout({ workouts, pick, save, newId: () => crypto.randomUUID() });
+  const ensure = useExerciseWorkout({ workouts, pick, save, newId: () => crypto.randomUUID() });
   const shelves = library === null ? [] : libraryShelves(library.workouts, library.usage, { text });
   const added = addTo.plans.filter((m) => !before.has(m.id));
   const stateOf = (mine: string | undefined, there: readonly string[]): AddState =>

@@ -2,7 +2,7 @@ import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 import {
-  exerciseWorkout,
+  useExerciseWorkout,
   pickWith,
   wrapperOf,
   type ExerciseEntry,
@@ -30,7 +30,7 @@ export function useExerciseInPlan(entry: ExerciseEntry): ExerciseInPlan {
   const pick = pickWith(useMakeExercise());
   const workouts = library.status === "ready" ? library.data.workouts : [];
   const wrapper = wrapperOf(workouts, entry);
-  const ensure = exerciseWorkout({ workouts, pick, save, newId: randomUUID });
+  const ensure = useExerciseWorkout({ workouts, pick, save, newId: randomUUID });
   const { source } = entry;
   const exerciseId =
     "exercise" in source ? source.exercise.id : "builtIn" in source ? source.builtIn.id : "";

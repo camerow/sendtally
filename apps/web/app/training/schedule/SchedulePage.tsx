@@ -20,7 +20,7 @@ import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { usePlanActions } from "../data/usePlanActions";
 import { useLibrary, workoutPath } from "../library/useLibrary";
-import { exerciseEntry, exerciseWorkout, pickWith } from "@sendtally/features/exercises";
+import { exerciseEntry, pickWith, useExerciseWorkout } from "@sendtally/features/exercises";
 import { useExercises } from "@sendtally/features/statistics";
 import { useWorkoutActions } from "@sendtally/features/workouts";
 import { useToast } from "../../components/Toast";
@@ -54,12 +54,18 @@ export function SchedulePage({
   const pick = pickWith(useMake());
   const plan = usePlan(api).state;
   const actions = usePlanActions();
+  const newId = (): string => crypto.randomUUID();
+  const ensure = useExerciseWorkout({
+    workouts: library.state.status === "ready" ? library.state.data.workouts : [],
+    pick,
+    save,
+    newId,
+  });
   const [draft, setDraft] = React.useState(() => newSchedule(null, today));
   const update = (patch: Partial<ScheduleDraft>): void => setDraft((d) => ({ ...d, ...patch }));
 
   if (library.state.status !== "ready")
     return <LoadState state={library.state} onRetry={() => void library.reload()} />;
-  const { workouts } = library.state.data;
   const workout = workoutId === undefined ? undefined : library.state.data.workout(workoutId);
   const entry =
     exerciseId === undefined || exercises.status !== "ready"
@@ -68,10 +74,8 @@ export function SchedulePage({
   const name = workout?.name ?? entry?.name;
   if (name === undefined) return null;
   const days = scheduledMemberships(draft, "", () => "", 0).map((m) => m.start);
-  const newId = (): string => crypto.randomUUID();
   const resolve = async (): Promise<string | null> =>
-    workout?.id ??
-    (entry === undefined ? null : exerciseWorkout({ workouts, pick, save, newId })(entry));
+    workout?.id ?? (entry === undefined ? null : ensure(entry));
 
   const add = async (): Promise<void> => {
     const id = await resolve();

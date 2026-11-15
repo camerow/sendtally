@@ -25,8 +25,6 @@ export const plan = {
   "plan.specificDays": "Días concretos",
   "plan.days": "Días",
   "plan.block": "Bloque",
-  "plan.noBlock": "Sin bloque",
-  "plan.noBlockHint": "Sigue hasta que lo quites",
   "plan.starts": "Empieza",
   "plan.addEvery": "Añadir cada {days}",
   "plan.addOn": "Añadir el {date}",

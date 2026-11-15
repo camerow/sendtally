@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router";
 import {
-  exerciseWorkout,
+  useExerciseWorkout,
   pickWith,
   wrapperOf,
   type ExerciseEntry,
@@ -34,7 +34,7 @@ export function useExerciseInPlan(entry: ExerciseEntry): ExerciseInPlan {
   const pick = pickWith(useMake());
   const workouts = library.status === "ready" ? library.data.workouts : [];
   const wrapper = wrapperOf(workouts, entry);
-  const ensure = exerciseWorkout({ workouts, pick, save, newId: () => crypto.randomUUID() });
+  const ensure = useExerciseWorkout({ workouts, pick, save, newId: () => crypto.randomUUID() });
   const { source } = entry;
   const exerciseId =
     "exercise" in source ? source.exercise.id : "builtIn" in source ? source.builtIn.id : "";

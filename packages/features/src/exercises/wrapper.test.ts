@@ -5,7 +5,6 @@ import {
   exerciseWorkout,
   usedInText,
   workoutsWith,
-  wrapperDraft,
   wrapperOf,
   type ExerciseEntry,
 } from "./wrapper";
@@ -50,7 +49,7 @@ const workout = (
 describe("wrapperOf", () => {
   it("takes the user's one-exercise workout named after it, else any of theirs holding only it", () => {
     const back = workout("w1", "Back day", ["pull-ups"]);
-    const named = workout("w2", "Pull-ups", ["Pull-ups"]);
+    const named = workout("w2", "pull-ups", ["Pull-ups"]);
     const both = workout("w3", "Pull-ups", ["Pull-ups", "Dips"]);
     const builtIn = workout("w4", "Pull-ups", ["Pull-ups"], { source: "library" });
     expect(wrapperOf([back, named, both, builtIn], entry)?.id).toBe("w2");
@@ -66,20 +65,6 @@ describe("wrapperOf", () => {
   });
 });
 
-describe("wrapperDraft", () => {
-  it("is a workout of the exercise's kind named after it, at the dose it starts at", () => {
-    let n = 0;
-    const draft = wrapperDraft(entry, { exercise: "Pull-ups", dose: { sets: 3, reps: 8 } }, () =>
-      String(++n)
-    );
-    expect(draft).toMatchObject({
-      kind: "strength",
-      name: "Pull-ups",
-      items: [{ id: "1", exercise: "Pull-ups", doses: [{ sets: 3, reps: 8 }] }],
-    });
-  });
-});
-
 describe("usedInText", () => {
   it("counts the workouts, or says none uses it yet", () => {
     expect(usedInText(0)).toBe("Not in a workout yet");
@@ -89,17 +74,45 @@ describe("usedInText", () => {
 });
 
 describe("exerciseWorkout", () => {
-  it("reuses the wrapper, else makes the exercise its own and saves a new one", async () => {
+  const newId = (): string => "new";
+
+  it("reuses the wrapper, else saves one of its kind named after it at its starting dose", async () => {
     const save = vi.fn(async () => undefined);
-    const pick = vi.fn(async () => ({ exercise: "Pull-ups" }));
-    const newId = (): string => "new";
+    const pick = vi.fn(async () => ({ exercise: "Pull-ups", dose: { sets: 3, reps: 8 } }));
+    const making = new Set<string>();
     const wrapper = workout("w1", "Pull-ups", ["Pull-ups"]);
-    expect(await exerciseWorkout({ workouts: [wrapper], pick, save, newId })(entry)).toBe("w1");
+    expect(await exerciseWorkout({ workouts: [wrapper], pick, save, newId, making })(entry)).toBe(
+      "w1"
+    );
     expect(save).not.toHaveBeenCalled();
-    expect(await exerciseWorkout({ workouts: [], pick, save, newId })(entry)).toBe("new");
+    expect(await exerciseWorkout({ workouts: [], pick, save, newId, making })(entry)).toBe("new");
     expect(pick).toHaveBeenCalledWith(entry.source);
-    expect(save).toHaveBeenCalledWith("new", expect.objectContaining({ name: "Pull-ups" }));
+    expect(save).toHaveBeenCalledWith(
+      "new",
+      expect.objectContaining({
+        kind: "strength",
+        name: "Pull-ups",
+        items: [{ id: "new", exercise: "Pull-ups", doses: [{ sets: 3, reps: 8 }] }],
+      })
+    );
     pick.mockResolvedValueOnce(null as never);
-    expect(await exerciseWorkout({ workouts: [], pick, save, newId })(entry)).toBeNull();
+    expect(await exerciseWorkout({ workouts: [], pick, save, newId, making })(entry)).toBeNull();
+  });
+
+  it("makes one wrapper when asked twice before the first is saved", async () => {
+    const save = vi.fn(async () => undefined);
+    const waiting: (() => void)[] = [];
+    const pick = vi.fn(
+      () =>
+        new Promise<{ exercise: string }>((resolve) => {
+          waiting.push(() => resolve({ exercise: "Pull-ups" }));
+        })
+    );
+    const ensure = exerciseWorkout({ workouts: [], pick, save, newId, making: new Set() });
+    const first = ensure(entry);
+    const second = ensure(entry);
+    waiting.forEach((go) => go());
+    expect(await Promise.all([first, second])).toEqual(["new", null]);
+    expect(save).toHaveBeenCalledTimes(1);
   });
 });

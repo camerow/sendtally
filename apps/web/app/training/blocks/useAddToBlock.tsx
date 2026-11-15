@@ -30,7 +30,7 @@ export type AddToBlock = { item: MoreMenuItem | null; sheet: React.ReactNode };
 export function useAddToBlock(
   name: string,
   workoutId: string | undefined,
-  resolve: () => Promise<string | null> = async () => null
+  resolve?: () => Promise<string | null>
 ): AddToBlock {
   const { today } = useHangData();
   const { plan } = useTrainingLog(useAppApi()).log;
@@ -63,7 +63,7 @@ export function useAddToBlock(
                     );
                   };
                   if (workoutId !== undefined) save(workoutId);
-                  else void resolve().then(save);
+                  else void resolve?.().then(save);
                   toast.show({
                     message: t("common.addedTo", { name: where }),
                     action: {

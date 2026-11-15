@@ -36,10 +36,8 @@ export {
   entryOf,
   exerciseEntry,
   usedInText,
-  exerciseWorkout,
-  type ExerciseWorkoutArgs,
+  useExerciseWorkout,
   workoutsWith,
-  wrapperDraft,
   wrapperOf,
   type ExerciseEntry,
 } from "./wrapper";

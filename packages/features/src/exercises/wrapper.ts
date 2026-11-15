@@ -1,6 +1,7 @@
+import React from "react";
 import type { Workout } from "@sendtally/core/hang";
 import { t } from "../i18n";
-import { workoutsUsing } from "../statistics/exercises";
+import { exerciseKey, workoutsUsing } from "../statistics/exercises";
 import { withItemsAdded } from "../workouts/editorState";
 import { newWorkoutDraft } from "../workouts/library";
 import type { LibraryWorkout, Picked, WorkoutDraft } from "../workouts/types";
@@ -55,7 +56,7 @@ export const usedInText = (count: number): string =>
 
 /**
  * The one-exercise workout the entry adds as: of the user's own workouts holding only it, the
- * one named after it, else the first.
+ * one named after it in any case, else the first.
  */
 export function wrapperOf(
   workouts: readonly LibraryWorkout[],
@@ -63,35 +64,53 @@ export function wrapperOf(
 ): LibraryWorkout | undefined {
   const name = "grip" in e.source ? e.name : itemName(e);
   const ones = workoutsWith(workouts, e).filter((w) => w.source === "mine" && w.items.length === 1);
-  return ones.find((w) => w.name === name) ?? ones[0];
+  return ones.find((w) => exerciseKey(w.name) === exerciseKey(name)) ?? ones[0];
 }
 
 /** A new workout of the one exercise picked, named after it, at its starting dose. */
-export function wrapperDraft(e: ExerciseEntry, picked: Picked, newId: () => string): WorkoutDraft {
+function wrapperDraft(e: ExerciseEntry, picked: Picked, newId: () => string): WorkoutDraft {
   const name = "grip" in e.source ? e.name : picked.exercise;
   return withItemsAdded({ ...newWorkoutDraft(e.kind), name }, [picked], newId);
 }
 
-export type ExerciseWorkoutArgs = {
+type ExerciseWorkoutArgs = {
   workouts: readonly LibraryWorkout[];
   /** Makes a built-in the user's own first; null when that failed. */
   pick: (source: PickerEntry["source"]) => Promise<Picked | null>;
   save: (id: string, workout: WorkoutDraft) => Promise<void>;
   newId: () => string;
+  /** Entries being made right now; another ask for one of them is dropped. */
+  making: Set<string>;
 };
 
 /**
  * The workout an exercise goes in a block or on a day as: its wrapper, made the first time.
- * Null when making its exercise failed.
+ * Null when making its exercise failed, or while the same exercise is still being made, so
+ * a second quick tap cannot make a second wrapper.
  */
 export const exerciseWorkout =
-  ({ workouts, pick, save, newId }: ExerciseWorkoutArgs) =>
+  ({ workouts, pick, save, newId, making }: ExerciseWorkoutArgs) =>
   async (e: ExerciseEntry): Promise<string | null> => {
     const there = wrapperOf(workouts, e);
     if (there !== undefined) return there.id;
-    const picked = await pick(e.source);
-    if (picked === null) return null;
-    const id = newId();
-    void save(id, wrapperDraft(e, picked, newId));
-    return id;
+    const key = `${e.kind}:${itemName(e)}`;
+    if (making.has(key)) return null;
+    making.add(key);
+    try {
+      const picked = await pick(e.source);
+      if (picked === null) return null;
+      const id = newId();
+      void save(id, wrapperDraft(e, picked, newId));
+      return id;
+    } finally {
+      making.delete(key);
+    }
   };
+
+/** `exerciseWorkout` for a screen, remembering what it is making across renders. */
+export function useExerciseWorkout(
+  args: Omit<ExerciseWorkoutArgs, "making">
+): (e: ExerciseEntry) => Promise<string | null> {
+  const [making] = React.useState(() => new Set<string>());
+  return exerciseWorkout({ ...args, making });
+}

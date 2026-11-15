@@ -10,8 +10,8 @@ import {
   entryOf,
   entryShelves,
   pickWith,
+  useExerciseWorkout,
   usedInText,
-  exerciseWorkout,
   workoutsWith,
   wrapperOf,
   type ExerciseEntry,
@@ -99,7 +99,7 @@ export function AddWorkoutsSheet({
   const save = useWorkoutActions(useApi(), failed).saveWorkout;
   const library = state.status === "ready" ? state.data : null;
   const workouts = library?.workouts ?? [];
-  const ensure = exerciseWorkout({ workouts, pick: pickWith(make), save, newId: randomUUID });
+  const ensure = useExerciseWorkout({ workouts, pick: pickWith(make), save, newId: randomUUID });
   const shelves = library === null ? [] : libraryShelves(library.workouts, library.usage, { text });
   const added = addTo.plans.filter((m) => !before.has(m.id));
   const stateOf = (mine: string | undefined, there: readonly string[]): AddState =>

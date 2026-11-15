@@ -24,7 +24,7 @@ import { blockMembership } from "@sendtally/features/training";
 export function useAddToBlock(
   name: string,
   workoutId: string | undefined,
-  resolve: () => Promise<string | null> = async () => null
+  resolve?: () => Promise<string | null>
 ): AddToMenu {
   const { today } = useHangData();
   const { plan } = useTrainingLog(useApi()).log;
@@ -51,7 +51,7 @@ export function useAddToBlock(
         prompt();
       };
       if (workoutId !== undefined) save(workoutId);
-      else void resolve().then(save);
+      else void resolve?.().then(save);
     },
     view: (id) => router.push({ pathname: "/plan/block/[id]", params: { id } }),
   });

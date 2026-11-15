@@ -9,5 +9,5 @@ export const links: LinksFunction = () => [{ rel: "stylesheet", href: planStyles
 export default function ScheduleRoute(): React.ReactElement {
   const { workoutId } = useParams();
   const [params] = useSearchParams();
-  return <SchedulePage workoutId={workoutId} exerciseId={params.get("exercise") ?? undefined} />;
+  return <SchedulePage workoutId={workoutId} exerciseId={params.get("exerciseId") ?? undefined} />;
 }

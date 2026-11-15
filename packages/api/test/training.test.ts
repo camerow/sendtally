@@ -927,6 +927,7 @@ describe("exercises", () => {
     const userId = "user_exercises_wrapper";
     await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
     await call(userId, "PUT", "/v1/workouts/w2", { ...squatWorkout, name: "Leg day" });
+    await call(userId, "PUT", "/v1/workouts/w4", { ...squatWorkout, name: "back SQUAT" });
     await call(userId, "PUT", "/v1/workouts/w3", {
       ...squatWorkout,
       items: [...squatWorkout.items, { exercise: "Plank", doses: [{ sets: 3 }] }],
@@ -946,6 +947,7 @@ describe("exercises", () => {
       w1: "Squat",
       w2: "Leg day",
       w3: "Back squat",
+      w4: "Squat",
     });
   });
 
