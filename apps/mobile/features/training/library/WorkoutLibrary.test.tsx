@@ -94,7 +94,8 @@ describe("Workout library", () => {
     await show(<WorkoutLibrary />);
     await fireEvent.press(screen.getByLabelText("New workout in Power"));
     expect(screen.getByText("What kind of workout?")).toBeTruthy();
-    await fireEvent.press(screen.getByRole("button", { name: "Climbing" }));
+    const kinds = screen.getAllByRole("button", { name: "Climbing" });
+    await fireEvent.press(kinds[kinds.length - 1]!);
     await act(async () => undefined);
     expect(router.push).toHaveBeenLastCalledWith({
       pathname: "/workout/edit",

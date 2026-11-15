@@ -1,6 +1,8 @@
+import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { ImportScreen } from "../features/import/ImportScreen";
 
 export default function Import(): React.ReactElement {
-  return <ImportScreen />;
+  const { then } = useLocalSearchParams<{ then?: string }>();
+  return <ImportScreen then={then === "/first-run" ? then : "/profile"} />;
 }

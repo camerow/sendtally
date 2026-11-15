@@ -27,4 +27,15 @@ export const onboarding = {
   "onboarding.art.overheadPress": "Schulterdrücken",
   "onboarding.art.dips": "Dips",
   "onboarding.art.externalRotation": "Außenrotation mit Band",
+  "onboarding.firstRun.step": "{n} von {total}",
+  "onboarding.firstRun.skip": "Überspringen",
+  "onboarding.firstRun.logQuestion": "Führst du schon ein Logbuch?",
+  "onboarding.firstRun.spreadsheet": "Eine Tabelle",
+  "onboarding.firstRun.firstLog": "Nein, das ist mein erstes",
+  "onboarding.firstRun.importFrom": "Aus {source} importieren",
+  "onboarding.firstRun.importSpreadsheet": "Tabelle importieren",
+  "onboarding.firstRun.later": "Später",
+  "onboarding.firstRun.daysQuestion": "An welchen Tagen kletterst du meistens?",
+  "onboarding.firstRun.continue": "Weiter",
+
 } as const;

@@ -1,0 +1,92 @@
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { fireEvent, render, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
+import React from "react";
+import { FirstRunScreen } from "./FirstRunScreen";
+
+const mockSave = jest.fn(async () => undefined);
+const mockFinish = jest.fn(async () => undefined);
+const mockPrompt = jest.fn();
+
+jest.mock("expo-crypto", () => ({ randomUUID: () => "m-new" }));
+jest.mock("expo-router", () => ({
+  router: { push: jest.fn(), replace: jest.fn() },
+  useLocalSearchParams: () => ({}),
+}));
+jest.mock("@sendtally/features/settings", () => ({
+  ...jest.requireActual<object>("@sendtally/features/settings"),
+  useFirstRun: () => ({ finish: mockFinish }),
+}));
+jest.mock("../../lib/api", () => ({ useApi: () => ({}) }));
+jest.mock("../training/data/useToday", () => ({ useToday: () => "2026-11-15" }));
+jest.mock("../training/plan/usePlanActions", () => ({
+  usePlanActions: () => ({ saveMembership: mockSave }),
+}));
+jest.mock("../training/reminders/ReminderPromptProvider", () => ({
+  useReminderPrompt: () => mockPrompt,
+}));
+
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
+describe("first run", () => {
+  it("imports from the picked source, coming back here", async () => {
+    await render(<FirstRunScreen />);
+    await fireEvent.press(screen.getByText("Mountain Project"));
+    await fireEvent.press(screen.getByText("Import from Mountain Project"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/import",
+      params: { then: "/first-run" },
+    });
+  });
+
+  it("saves the climbing days as one Ongoing Climbing week, then asks about reminders", async () => {
+    await render(<FirstRunScreen />);
+    await fireEvent.press(screen.getByText("No, this is my first"));
+    await fireEvent.press(screen.getByText("Continue"));
+    expect(screen.getByText("Which days do you usually climb?")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Tuesday"));
+    await fireEvent.press(screen.getByLabelText("Saturday"));
+    await fireEvent.press(screen.getByText("Continue"));
+    expect(mockSave).toHaveBeenCalledWith({
+      id: "m-new",
+      workoutId: "climb-session",
+      blockId: null,
+      weekdays: [1, 5],
+      start: "2026-11-15",
+      position: 0,
+    });
+    expect(mockPrompt).toHaveBeenCalled();
+    expect(mockFinish).toHaveBeenCalledWith({
+      existingLog: "none",
+      climbingDays: 2,
+      endedAt: "plan",
+    });
+    expect(router.replace).toHaveBeenCalledWith({ pathname: "/(tabs)/today", params: {} });
+  });
+
+  it("saves nothing and never asks with no day picked", async () => {
+    await render(<FirstRunScreen />);
+    await fireEvent.press(screen.getByText("Later"));
+    await fireEvent.press(screen.getByText("Continue"));
+    expect(mockSave).not.toHaveBeenCalled();
+    expect(mockPrompt).not.toHaveBeenCalled();
+    expect(mockFinish).toHaveBeenCalledWith({
+      existingLog: "skipped",
+      climbingDays: 0,
+      endedAt: "plan",
+    });
+  });
+
+  it("skips to an empty Log from the first question", async () => {
+    await render(<FirstRunScreen />);
+    await fireEvent.press(screen.getByText("Skip"));
+    expect(mockFinish).toHaveBeenCalledWith({
+      existingLog: "skipped",
+      climbingDays: 0,
+      endedAt: "skip_log",
+    });
+    expect(router.replace).toHaveBeenCalledWith("/(tabs)/sessions");
+  });
+});

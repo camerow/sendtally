@@ -27,4 +27,15 @@ export const onboarding = {
   "onboarding.art.overheadPress": "Développé militaire",
   "onboarding.art.dips": "Dips",
   "onboarding.art.externalRotation": "Rotation externe à l'élastique",
+  "onboarding.firstRun.step": "{n} sur {total}",
+  "onboarding.firstRun.skip": "Passer",
+  "onboarding.firstRun.logQuestion": "Tiens-tu déjà un carnet ?",
+  "onboarding.firstRun.spreadsheet": "Un tableur",
+  "onboarding.firstRun.firstLog": "Non, c'est mon premier",
+  "onboarding.firstRun.importFrom": "Importer depuis {source}",
+  "onboarding.firstRun.importSpreadsheet": "Importer un tableur",
+  "onboarding.firstRun.later": "Plus tard",
+  "onboarding.firstRun.daysQuestion": "Quels jours grimpes-tu d'habitude ?",
+  "onboarding.firstRun.continue": "Continuer",
+
 } as const;

@@ -11,4 +11,11 @@ export { useStravaPosting, type StravaPostingFeature } from "./useStravaPosting"
 export { GradeScalesProvider, useDisplayScales } from "./GradeScalesProvider";
 export { useGradeScales, useGradeScalePrefs, type GradeScalesFeature } from "./useGradeScales";
 export { useTrainingReminders, type TrainingRemindersFeature } from "./useTrainingReminders";
+export { useFirstRun, type FirstRunFeature } from "./useFirstRun";
+export {
+  FIRST_RUN_SOURCES,
+  firstRunNextLabel,
+  firstRunSourceLabel,
+  type FirstRunSource,
+} from "./firstRun";
 export type { DeleteAccountStatus, SettingsVM } from "./types";
