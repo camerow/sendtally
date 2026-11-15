@@ -7,7 +7,7 @@ export default function Route(): React.ReactElement {
   const [params] = useSearchParams();
   const workout = readIntervalsParams(Object.fromEntries(params));
   return workout === null ? (
-    <Navigate to="/app/plan" replace />
+    <Navigate to="/app" replace />
   ) : (
     <IntervalsPage workout={workout} end={params.get("end") === "1"} />
   );

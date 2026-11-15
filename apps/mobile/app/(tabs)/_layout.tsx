@@ -79,12 +79,12 @@ function SignedInTabs(): React.ReactElement {
       }}
     >
       <Tabs.Screen
-        name="today"
-        options={{ tabBarLabel: t("plan.tab"), tabBarIcon: tabIcon("today") }}
-      />
-      <Tabs.Screen
         name="sessions"
         options={{ tabBarLabel: t("journal.log"), tabBarIcon: tabIcon("sessions") }}
+      />
+      <Tabs.Screen
+        name="today"
+        options={{ tabBarLabel: t("plan.tab"), tabBarIcon: tabIcon("today") }}
       />
       <Tabs.Screen
         name="train"
