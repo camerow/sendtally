@@ -48,6 +48,8 @@ export const trends = {
   "trends.maxGradeSent": "Höchster begangener Grad",
   "trends.avgGrade": "Ø Grad",
   "trends.avgSendGrade": "Ø Begehungsgrad",
+  "trends.volumeScore": "Gesamtvolumen",
+  "trends.averageIs": "Ø {grade}",
   "trends.flashRate": "Flash-Quote",
   "trends.onsightFlashRate": "Onsight- + Flash-Quote",
   "trends.firstTrySends": "Begehungen im ersten Versuch",

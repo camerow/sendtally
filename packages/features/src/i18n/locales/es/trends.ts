@@ -46,6 +46,8 @@ export const trends = {
   "trends.maxGradeSent": "Grado máximo encadenado",
   "trends.avgGrade": "Grado medio",
   "trends.avgSendGrade": "Grado medio de encadene",
+  "trends.volumeScore": "Volumen total",
+  "trends.averageIs": "Media {grade}",
   "trends.flashRate": "Porcentaje de flash",
   "trends.onsightFlashRate": "Porcentaje de a vista + flash",
   "trends.firstTrySends": "Encadenes al primer pegue",

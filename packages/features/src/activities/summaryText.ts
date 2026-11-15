@@ -11,6 +11,7 @@ export function changeText({ metric, by }: SetChange, unit: WeightUnit): string 
   if (metric === "seconds") return `${by > 0 ? "+" : "−"}${t("hang.seconds", { n: Math.abs(by) })}`;
   if (metric === "averageGrade" || metric === "topGrade")
     return `${by > 0 ? "+" : "−"}${gradesText(by)}`;
+  if (metric === "volume") return `${by > 0 ? "+" : "−"}${formatNumber(Math.abs(by))}`;
   const count = Math.abs(by);
   if (metric === "sends")
     return by > 0 ? t("summary.sentUp", { count }) : t("summary.sentDown", { count });

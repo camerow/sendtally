@@ -1,11 +1,12 @@
 import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
 import type { CalendarDate, WeightUnit } from "@sendtally/core/hang";
+import { climbsLine, isClimbingSets, wallLine } from "./climbing";
 import { setText } from "./done";
 import { bestSet, hangGrid } from "./summary";
 import { dayMonth, loadLabel } from "../hang/format";
 import type { HangModel } from "../hang/model";
 import { t } from "../i18n";
-import type { ExerciseSeries } from "../statistics";
+import { exerciseKey, type ExerciseSeries } from "../statistics";
 import type { HistoryItem } from "./types";
 
 /** A workout's sessions, newest first. */
@@ -53,7 +54,21 @@ export function hangItem(s: HangSessionRecord, model: HangModel, currentId?: str
   };
 }
 
-/** An exercise's sessions, newest first: the workout it was in and its best set. */
+/** What a session did of one exercise: climbs over all its sets, else its best set. */
+function exerciseMeta(
+  activity: ActivityRecord | undefined,
+  series: ExerciseSeries,
+  best: ExerciseSeries["sessions"][number]["best"],
+  unit: WeightUnit
+): string {
+  const sets = (activity?.done ?? [])
+    .filter((d) => exerciseKey(d.exercise) === series.key)
+    .flatMap((d) => d.sets);
+  if (!isClimbingSets(sets)) return setText(best, unit);
+  return sets.some((s) => s.onS !== undefined) ? wallLine(sets) : climbsLine(sets);
+}
+
+/** An exercise's sessions, newest first: the workout it was in and what it did there. */
 export function exerciseItems(
   series: ExerciseSeries,
   activities: readonly ActivityRecord[],
@@ -65,7 +80,7 @@ export function exerciseItems(
       id: s.activityId,
       date: dayMonth(s.date),
       name: activity?.title ?? series.name,
-      meta: setText(s.best, unit),
+      meta: exerciseMeta(activity, series, s.best, unit),
       rpe: activity?.rpe ?? null,
     };
   });

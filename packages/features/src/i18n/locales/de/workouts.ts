@@ -291,6 +291,7 @@ export const workouts = {
   "workouts.progressIs": "Fortschritt: {pick}",
   "workouts.progress.averageGrade": "Ø Grad",
   "workouts.progress.topGrade": "Höchster Grad",
+  "workouts.progress.volume": "Gesamtvolumen",
   "workouts.progress.completed": "Geschaffte Klettereien",
   "workouts.progress.none": "Keiner",
   "workouts.dose.climbs": "Klettereien",

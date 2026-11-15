@@ -1,7 +1,7 @@
 import { toUnit, type WeightUnit } from "@sendtally/core/hang";
 import { formatNumber, t } from "../i18n";
 import type { GradeFormatter } from "../sessions";
-import type { ExerciseMetric } from "../statistics";
+import type { ExerciseMetric, ExerciseSession } from "../statistics";
 
 export function loadText(kg: number, unit: WeightUnit): string {
   return t("hang.loadPlain", {
@@ -20,6 +20,7 @@ export function metricText(
   if (metric === "topGrade" && grades !== undefined) return grades.label(value);
   if (metric === "averageGrade" && grades !== undefined) return grades.average(value);
   if (metric === "load") return loadText(value, unit);
+  if (metric === "volume") return formatNumber(value);
   if (metric === "seconds") return `${formatNumber(value)}s`;
   if (metric === "sends") return t("tally.sentCount", { count: value });
   if (metric === "laps") return t("tally.lapCount", { count: value });
@@ -35,9 +36,20 @@ export function gradesText(by: number): string {
   });
 }
 
+/** "Average V3.6 · 5 sent": what a volume session's score is made of. */
+export function volumeLine(session: ExerciseSession, grades?: GradeFormatter): string | null {
+  const { average } = session;
+  if (average === undefined || grades === undefined) return null;
+  return `${t("trends.averageIs", { grade: grades.average(average.grade) })} · ${t(
+    "tally.sentCount",
+    { count: average.sends }
+  )}`;
+}
+
 export function headlineLabel(metric: ExerciseMetric): string {
   if (metric === "topGrade") return t("trends.hardestSend");
   if (metric === "averageGrade") return t("trends.avgSendGrade");
+  if (metric === "volume") return t("trends.volumeScore");
   if (metric === "load") return t("statistics.heaviestDone");
   if (metric === "sends") return t("common.sent");
   if (metric === "laps") return t("summary.laps");

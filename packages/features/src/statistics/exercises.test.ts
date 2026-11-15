@@ -141,6 +141,30 @@ describe("grade metrics", () => {
     expect(french?.grades?.label(french.sessions[0]?.value ?? -1)).toBe("6c");
   });
 
+  it("scores volume as every send's grade plus one, with the average beside it", () => {
+    const capacity = limit(
+      climb("V3"),
+      climb("V4"),
+      climb("V2"),
+      climb("V4"),
+      climb("V5"),
+      climb("V6", false),
+      climb("6a", true, "french")
+    );
+    const [series] = exerciseSeries([logged("a", "2026-10-01", [capacity])], () => "volume");
+    expect(series?.metric).toBe("volume");
+    expect(series?.sessions[0]).toMatchObject({ value: 23, average: { grade: 3.6, sends: 5 } });
+    expect(series?.grades?.average(3.6)).toBe("V3.6");
+  });
+
+  it("scores a V0 send, so easy mileage still counts", () => {
+    const [series] = exerciseSeries(
+      [logged("a", "2026-10-01", [limit(climb("V0"), climb("V0"))])],
+      () => "volume"
+    );
+    expect(series?.sessions[0]?.value).toBe(2);
+  });
+
   it("drops a session with nothing sent at a grade", () => {
     const fell = logged("c", "2026-10-15", [limit(climb("V8", false))]);
     const [series] = exerciseSeries([...sessions, fell], () => "averageGrade");

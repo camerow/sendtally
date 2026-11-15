@@ -21,9 +21,10 @@ import { DEFAULT_GRADE_SCALES } from "../settings/transforms";
 /**
  * What an exercise's best set is judged on: the heaviest load, the longest hold, or the most
  * reps. A climbing exercise logged on the tally counts its sends, or its laps on the wall,
- * over the whole session, or reads the average or highest grade it sent.
+ * over the whole session, reads the average or highest grade it sent, or its volume score.
  */
-export type ExerciseMetric = "load" | "seconds" | "reps" | "sends" | "laps" | GradeMetric;
+export type ExerciseMetric =
+  "load" | "seconds" | "reps" | "sends" | "laps" | "volume" | GradeMetric;
 
 export type GradeMetric = "averageGrade" | "topGrade";
 
@@ -32,7 +33,11 @@ export const isGradeMetric = (metric: ExerciseMetric): metric is GradeMetric =>
 
 /** A metric counted over every set of a session rather than taken from its best one. */
 export const isClimbingMetric = (metric: ExerciseMetric): boolean =>
-  metric === "sends" || metric === "laps" || isGradeMetric(metric);
+  metric === "sends" || metric === "laps" || metric === "volume" || isGradeMetric(metric);
+
+/** A metric whose session value is read over the whole session, never from its best set. */
+const isSessionMetric = (metric: ExerciseMetric): boolean =>
+  metric === "volume" || isGradeMetric(metric);
 
 export type ExerciseSession = {
   activityId: string;
@@ -45,6 +50,8 @@ export type ExerciseSession = {
   e1rmKg: number | null;
   /** Reps times weight over the sets. */
   volumeKg: number;
+  /** A volume session's average send grade and the sends it counts. */
+  average?: { grade: number; sends: number };
 };
 
 export type ExerciseSeries = {
@@ -106,24 +113,38 @@ function gradedSends(sets: readonly SetDone[]): GradedClimb[] {
   );
 }
 
-/** The average or highest grade sent, ranked within one discipline, never converted across. */
-export function gradeOf(
+/** The ranks of the sends in one discipline, never converted across. */
+const ranksOf = (
   sets: readonly SetDone[],
-  metric: GradeMetric,
   discipline: Discipline = dominantDiscipline(gradedSends(sets))
-): number | undefined {
-  const ranks = gradedSends(sets)
+): number[] =>
+  gradedSends(sets)
     .filter((c) => climbDiscipline(c) === discipline)
     .map(climbRank)
     .filter((r) => r >= 0);
+
+/** The average or highest grade sent, ranked within one discipline. */
+export function gradeOf(
+  sets: readonly SetDone[],
+  metric: GradeMetric,
+  discipline?: Discipline
+): number | undefined {
+  const ranks = ranksOf(sets, discipline);
   if (ranks.length === 0) return undefined;
   return metric === "topGrade"
     ? Math.max(...ranks)
     : ranks.reduce((a, b) => a + b, 0) / ranks.length;
 }
 
+/** Every send's grade plus one, summed, so a V0 counts: (average + 1) times the sends. */
+export function volumeOf(sets: readonly SetDone[], discipline?: Discipline): number | undefined {
+  const ranks = ranksOf(sets, discipline);
+  return ranks.length === 0 ? undefined : ranks.reduce((a, r) => a + r + 1, 0);
+}
+
 export function valueOf(set: SetDone, metric: ExerciseMetric): number | undefined {
   if (isGradeMetric(metric)) return gradeOf([set], metric);
+  if (metric === "volume") return volumeOf([set]);
   if (metric === "load") return set.weightKg;
   if (metric === "seconds") return set.onS;
   if (metric === "sends") return set.climbs?.filter((c) => c.sent).length;
@@ -164,13 +185,16 @@ function sessionOf(
   const best = bestOf(sets, metric);
   const value = isGradeMetric(metric)
     ? gradeOf(sets, metric, discipline)
-    : isClimbingMetric(metric)
-      ? metricTotal(sets, metric)
-      : best === undefined
-        ? undefined
-        : valueOf(best, metric);
+    : metric === "volume"
+      ? volumeOf(sets, discipline)
+      : isClimbingMetric(metric)
+        ? metricTotal(sets, metric)
+        : best === undefined
+          ? undefined
+          : valueOf(best, metric);
   if (best === undefined || value === undefined) return null;
   const done = lifts(sets);
+  const average = metric === "volume" ? gradeOf(sets, "averageGrade", discipline) : undefined;
   return {
     activityId: activity.id,
     date: activity.date,
@@ -178,6 +202,9 @@ function sessionOf(
     value,
     e1rmKg: done.length === 0 ? null : Math.max(...done.map((l) => epley(l.loadKg, l.reps))),
     volumeKg: done.reduce((sum, l) => sum + l.reps * l.loadKg, 0),
+    ...(average === undefined
+      ? {}
+      : { average: { grade: average, sends: ranksOf(sets, discipline).length } }),
   };
 }
 
@@ -220,13 +247,16 @@ export function exerciseSeries(
       const sets = logs.flatMap((l) => l.sets);
       const counted = metricOf(sets);
       const progress = isClimbingMetric(counted) ? progressOf(key) : undefined;
-      const metric = progress === "averageGrade" || progress === "topGrade" ? progress : counted;
+      const metric =
+        progress === "averageGrade" || progress === "topGrade" || progress === "volume"
+          ? progress
+          : counted;
       const sends = gradedSends(sets);
       const discipline = dominantDiscipline(sends);
       const sessions = logs
         .map((l) => sessionOf(l.activity, l.sets, metric, discipline))
         .filter((s) => s !== null);
-      const grades = isGradeMetric(metric) ? gradeFormatter(discipline, scales) : undefined;
+      const grades = isSessionMetric(metric) ? gradeFormatter(discipline, scales) : undefined;
       return {
         key,
         name,
@@ -257,7 +287,9 @@ export function exerciseSummary(
   const best = done.reduce<ExerciseSession | null>(
     (top, s) =>
       top === null ||
-      (isGradeMetric(series.metric) ? s.value > top.value : better(s.best, top.best, series.metric))
+      (isSessionMetric(series.metric)
+        ? s.value > top.value
+        : better(s.best, top.best, series.metric))
         ? s
         : top,
     null

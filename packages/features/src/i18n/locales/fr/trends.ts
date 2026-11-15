@@ -46,6 +46,8 @@ export const trends = {
   "trends.maxGradeSent": "Cotation max enchaînée",
   "trends.avgGrade": "Cotation moy.",
   "trends.avgSendGrade": "Cotation moyenne des croix",
+  "trends.volumeScore": "Score de volume total",
+  "trends.averageIs": "Moyenne {grade}",
   "trends.flashRate": "Taux de flash",
   "trends.onsightFlashRate": "Taux d’à vue + flash",
   "trends.firstTrySends": "Croix du premier coup",
