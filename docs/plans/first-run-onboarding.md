@@ -1,25 +1,22 @@
 # First-run onboarding
 
-Status: spec for direction A, agreed between onboarding-eng and onboarding-designer on 2026-11-14; Will found A had not simplified enough and is choosing between A and B, and this document is rewritten for his pick.
-Design boards, on the "First run onboarding" page (id `first-run`) of the canvas https://claude.ai/artifact/CNPnNQwgvzgvxk4ZAYTyto: A "First run: open on Log, one starter block, no tour" (`FirstRun.dc.html`, x 0, y 0), which this document describes, and B "First run B: one question, then straight into the first real thing" (`FirstRunB.dc.html`, x 0, y 2460).
-
-> **Correction, 2026-11-14:** Will made Log the first tab and the screen the app opens on, for every account (tab order Log, Plan, Train, Stats; agent log-first is building it on `feat/log-tab-first`).
-> Everything below that says mobile opens on Plan describes the app before that change.
-> Direction A's landing rule (section 3.A, the `app/index.tsx` part of section 4 and of slice 1) is therefore covered by that branch and drops out of this plan.
-> Will has since asked for a short onboarding flow instead of A or B; this document is being rewritten for it.
+Status: spec for direction C, agreed between onboarding-eng and onboarding-designer on 2026-11-14 after Will asked for an onboarding flow; directions A and B are superseded.
+Design board: "First run C: three questions, then a week that is already planned" (`FirstRunC.dc.html`, x 0, y 0) on the "First run onboarding" page (id `first-run`) of the canvas https://claude.ai/artifact/CNPnNQwgvzgvxk4ZAYTyto.
+The superseded boards A and B sit below it under "Superseded: A and B" (y 2380 and y 4840).
 
 ## The question
 
 A person who has never heard of Sendtally installs the app and signs up.
-What is the smallest change that gets them to log a first session, bring in their history, understand that exercises make up workouts and workouts make up blocks, make a first plan, and track a project?
+What gets them to log a first session, bring in their history, understand that exercises make up workouts and workouts make up blocks, make a first plan, and keep coming back?
+
+Will, 2026-11-14: "people want an onboarding, let them schedule their usual climbing days, some lifting or hangboarding if they choose. they need to start creating right away."
+He also wants to ask about importable logs or a personal spreadsheet, to get a basic recurring schedule with reminders in place, and to know what each person is interested in.
 
 ## Recommendation in short
 
-No onboarding flow and no new checklist.
-A new account lands on Log, whose empty state already offers a first session and an import.
-The existing setup cards become the one first-run list, gaining an Import card ahead of Strava and Gym, in the same order as the getting-started emails.
-One ready-made Starter block (four weeks, built-in workouts only) explains exercise, workout and block by being one, and gives a first plan with a single Schedule tap.
-Projects get one faded example row in the climbing empty state, nothing more.
+A short flow, once per account, right after sign-up: what brings you here, your usual week, reminders, and whether you keep a log already.
+The week is saved as the existing Ongoing plan, so the person ends on a Plan that is already filled, with reminders on their days and an import under way if they keep a log.
+The only new building blocks are one built-in "Climbing" workout, one flag on the account, and the events that record the answers.
 
 ## 1. What a new account sees today
 
@@ -31,6 +28,7 @@ Projects get one faded example row in the climbing empty state, nothing more.
 ### After sign-up, mobile
 
 `app/index.tsx` redirects every signed-in person to `/(tabs)/today`, so the first screen is Plan.
+Will has since made Log the first tab and the screen the app opens on (tabs Log, Plan, Train, Stats), built on `feat/log-tab-first`; the table below is the app before that change.
 
 | Tab                 | What an empty account sees                                                                                                                                                                                              | Code                                                                     |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
@@ -54,7 +52,9 @@ The 30-day trial does not exist yet either (#259 is open): there is no trial clo
 
 ### What a newcomer does not understand
 
-- Mobile opens on the emptiest screen in the product, an empty week, before anything is logged.
+- Mobile opened on the emptiest screen in the product, an empty week, before anything was logged (fixed by Log first).
+- Nobody is asked what they came for, so the app cannot start them on it, and we cannot tell who wants training, logging, progress or hangboarding.
+- A recurring week needs Train > Create > block or Plan > Schedule, which a newcomer has no reason to find.
 - Nothing shows what a block is: Train > Blocks is a dashed panel, and the only way to see one is to build one from blank.
 - Import is the last of four rows on Log, below the fold of the setup cards.
 - Projects appear nowhere until a climb exists and its page is opened.
@@ -88,155 +88,159 @@ What cannot be answered, because the events do not exist:
 - Nothing is captured for empty-state or setup-card taps, or for opening the import screen, so we cannot see where people stop, only that they do.
 - Imported sessions are stored as `source = "manual"` and only `sessions_imported` marks them.
 
-## 3. Recommended direction
+## 3. Recommended direction: the flow
 
-Agreed with the designer.
-The board draws every state named here.
+Agreed with the designer; the board draws every state named here.
+Every question step has Skip at top right; Skip ends the flow, keeps the answers already given and sets the flag.
 
-### A. Land on Log until something exists
+### Step 1: What brings you here
 
-- A signed-in account with no session, no workout log and nothing planned opens on Log > Climbing, on mobile as on web.
-- Once any of those exists, mobile opens on Plan as today.
-- Web already lands on Log and keeps doing so.
+- Header "1 of 3".
+- Four `OptionRow`s used as checkboxes (gold tint and check when on): Track my climbing, Follow a training plan, Hangboard workouts, See my progress.
+- Azure Continue.
+- Recorded as `goals`: `track_climbing`, `follow_training`, `hangboard`, `progress`.
 
-### B. The setup cards are the first-run list
+### Step 2: Your usual week
 
-- `SetupStack` gains an Import card first, then Strava, then Gym, the order of the emails.
-- Import card: eyebrow "Import", title "Bring in your climbing history", body "A spreadsheet or another app's export. Your stats start from all of it.", action "Import a log", opens `/import` (web `/app/import`).
-- The body follows the existing gym and Strava cards, which carry one too.
-- The stack carries a "Set up 0/3" count.
-- Each card is done when its thing exists (any imported session, a Strava connection, a gym) or when Not now is tapped, using the existing dismissal.
-- When all three are done the stack is gone; nothing replaces it.
+- Header "2 of 3".
+- `PlanGrid` with editing on; tap cells to set days.
+- The Climbing row always shows; 5x5 strength shows only if Follow a training plan was picked, Max hangs only if Hangboard workouts was picked.
+- Continue saves one Ongoing membership per row with days set (`block_id` null, `weekdays_json`, start today), through the existing `PUT /v1/memberships/:id`.
+- With no days set, nothing is saved and the reminder step is skipped.
 
-### C. One ready-made Starter block
+### Step 3: Reminders
 
-- A four-week block of built-in workouts: Max hangs Monday and Thursday, Limit bouldering Tuesday and Saturday, Antagonist push Wednesday.
-- Drawn with the existing `PlanCard` and `PlanGrid`: the card is the block, its rows are workouts, and tapping a row opens the existing workout screen that lists its exercises.
-  That is the whole explanation of exercise, workout and block; no explanatory copy is added.
-- Shown on Plan above the days while the account has no block and no Ongoing workouts.
-- Shown on Train > Blocks under a new "Ready-made" section, which replaces the `plan.empty` dashed panel and stays there for good, as the way back to it later and the home of future library blocks (#255).
-- Its gold Schedule button opens the existing block start (start date in the sheet), then the existing toast 'Scheduled "Starter block"' with View.
+- Only when a day was set.
+- Saving the week is the account's first plan, so the existing `ReminderPromptProvider` asks with the unchanged `ReminderPromptSheet` over step 2: Remind me (the only route to the system notification dialog) or Not now.
+- Reminders are the existing local scheduled notifications for planned days (`features/training/reminders`), saved through `PUT /v1/preferences/training-reminders`; there is no new trigger.
 
-### D. Projects
+### Step 4: Do you keep a log already?
 
-- `ClimbingEmpty`'s second example row ("Saturday at the crag") becomes a climb logged on its own, "The arete" V6, with the gold-on-gunmetal Project pill.
-- Replacing a row rather than adding one keeps the empty state to one screen.
-- Nothing else: 2 of 23 accounts marked one, and no email covers it.
+- Header "3 of 3".
+- Single-choice `OptionRow`s: Kaya, 8a.nu, Mountain Project, Sendage, theCrag, A spreadsheet (CSV), No, this is my first.
+- With a source picked the azure button reads "Import from Kaya" (and so on) and opens the existing `ImportScreen`; the spreadsheet opens the same screen.
+- A Later link, or No, goes to Plan.
+- Recorded as `existing_log`: `kaya`, `8a`, `mountainProject`, `sendage`, `theCrag`, `spreadsheet`, `none`.
 
-### E. Someone who skips everything
+### Step 5: Plan, once
 
-- Not now on each setup card; Log is today's empty state.
-- Plan keeps the Starter block until something is planned.
-- Ready-made stays on Train > Blocks.
+- The week filled (`WeekStrip` dots), today's `OccurrenceCard` with Start, then the coming days.
+- After an import, the existing import result toast ("Imported N sessions", View).
+- From then on the app opens on Log, as for everyone.
 
-### F. Carousel
+### Later, and skipping
 
-- Rewrite only `onboarding.strava.body` to drop "re-sync"; the slides otherwise stay.
+- The same week lives in Train > Blocks > Ongoing (`OngoingScreen`, unchanged), which is the way back to edit it.
+- Someone who skips everything lands on Log, empty (`ClimbingEmpty`, unchanged).
+- Strava and gym stay the setup cards on Log; they are not in the flow.
+
+### How it answers the brief
+
+- First session: a climbing day planned for today shows Start on Plan, which opens the live session; Log's empty state is unchanged for everyone else.
+- Import: asked once, at the moment someone is most willing, and routed straight into the existing screen.
+- Exercise, workout, block: the week is drawn as the block grid with workouts as rows, and a row opens the workout with its exercises; no copy explains it.
+- First plan: made in the flow, a recurring week rather than a blank builder.
+- Projects: not in the flow; 2 of 23 accounts marked one and no email covers it.
 
 ### Rejected
 
-- A multi-screen onboarding flow: more screens and concepts, against Will's "less is more", and the empty states already hold the actions.
-- A new five-item first-run checklist: a new concept when first session, plan and project already have homes.
-- Explaining the model in copy or a diagram: Will rejects explanatory lines; one real block shows it.
-- A blank-builder prompt for the first plan: a ready-made block is one tap.
-- Interactive tours and coach marks: fragile across two platforms and four locales, and they explain instead of showing.
+- Direction A (open on Log, an Import setup card, one Starter block): Will found it had not simplified or clarified much.
+- Direction B (one start question with three doors): replaced by asking the questions that let us build the person's week.
+- A tour, coach marks or explanatory screens: they explain instead of starting the person on real work.
+- A ready-made multi-week block as the first plan: a person's own usual days are simpler and need no library blocks, which do not exist yet (#255).
 
 ## 4. How it is built from what exists
 
-### State, and where it lives
+### New pieces
 
-No new table and no new column.
+| Piece                                                                             | Where                                                                                                                                                                                                           |
+| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Built-in workout "Climbing" (kind `climbing`), whose Start opens the live session | The built-in catalogue in `@sendtally/core`, added through the `library-add` skill; it needs one item to satisfy the "a built-in workout always has items" rule, and how Log it behaves is decided in the build |
+| `users.start_answered`                                                            | Drizzle column (integer, default 0), generated migration, read and written through the existing preferences route, the same way as `training_reminder_prompt_seen`                                              |
+| The flow screens                                                                  | `apps/mobile/app/first-run.tsx` and `apps/mobile/features/first-run/`, built from `OptionRow`, `PlanGrid`, `Button` and the existing sheets                                                                     |
+| Import exit                                                                       | `ImportScreen` takes where to return; from the flow it dismisses to Plan instead of `/profile` (`features/import/ImportScreen.tsx:69`)                                                                          |
 
-| Need                           | Source                                                                                                                                                 |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Is the account empty (landing) | Sessions list and training log already fetched by the apps; empty means no session, no workout log, no block and no Ongoing membership                 |
-| Import card done               | A successful import sets the card's existing dismissal key on that device; imported sessions are stored as manual, so there is no server field to read |
-| Strava card done               | Existing Strava connection state                                                                                                                       |
-| Gym card done                  | Existing gyms list                                                                                                                                     |
-| Card dismissed                 | Existing `useSetupDismissed` (mobile, AsyncStorage) and `useDismissed` (web, localStorage), key `import`                                               |
-| Show the Starter block on Plan | `plan.blocks` and Ongoing members both empty                                                                                                           |
-| Starter block itself           | A code catalogue next to the built-in workouts, in `@sendtally/core`, one entry for now                                                                |
+Everything else (Ongoing memberships, reminders, import, the live session, Plan) is used unchanged.
 
-Dismissals stay per device, as the gym and Strava cards do today.
-A person who dismisses on the phone sees the card once more on the web; that matches current behaviour and is cheaper than a server setting.
-If Will wants one dismissal everywhere, the precedent is `users.training_reminder_prompt_seen`, generalised to a `setup_dismissed` JSON column.
+### When the flow shows
 
-### Landing on mobile
-
-- `app/index.tsx` decides between `/(tabs)/sessions` and `/(tabs)/today` from the persisted query cache, which `lib/QueryProvider.tsx` already restores on launch.
-- An empty cache (a fresh install or a new account) goes to Log; a cache that holds any session or plan goes to Plan.
-- No new request blocks the first screen.
-
-### The Starter block
-
-- Catalogue: `packages/core/src/hang/libraryBlocks.ts` with id `starter`, name key, weeks 4, and members as built-in workout ids (`max10`, `climb-limit`, `strength-antagonist`) with weekdays.
-- Schedule: a new `POST /v1/blocks/library/:key/schedule` taking `{ id, start }`, the client-chosen id making replays safe like `/:id/copy`; it writes `training_blocks` and memberships through `repo.ts`.
-- The copy is an ordinary user block from then on; editing it never changes the catalogue.
-- Shared hook in `packages/features/src/training` so mobile and web render the same rows.
+- Signed in, `start_answered` is 0, and the account has nothing logged and nothing planned.
+- `app/index.tsx` decides it, reading the persisted query cache (`lib/QueryProvider.tsx`) and the preferences query; a brand new account has an empty cache, so it waits for that one request.
+- The flag is set when the flow ends: on reaching Plan, on Later or No, or on any Skip.
+- Quitting the app mid-flow brings it back on the next launch, which is acceptable.
+- Because it lives on the account, an answer given on the phone holds on the web too.
 
 ### Existing accounts
 
-- An account that has logged or planned anything lands on Plan as today and never sees the Starter block on Plan, because it has a plan; it does see "Ready-made" on Train > Blocks.
-- The Import card shows to existing accounts with no import that have not dismissed it.
-  Accepted: it is one dismissible card, and import is new to them too.
+- Any account with a session, a workout log or a plan never sees it.
+- An existing empty account sees it once on its next launch after release; no backfill.
+
+### Web
+
+- Web signups are a small share (3 `signup_started` against 23 accounts), so the first release is mobile only and the web keeps today's Log.
+- A web version later reuses steps 1, 2 and 4 and the same flag; web has no push notifications, so it has no reminder step.
 
 ### Localisation
 
-- New keys in all four catalogs (`en`, `de`, `fr`, `es`): the Import card eyebrow, title and body (the action reuses `climbs.importLog`), "Set up {done}/{total}", the "Ready-made" section heading, the Starter block name, the example project row's title and meta, as the other example rows are keys, and the rewritten `onboarding.strava.body`.
-- The Starter block name is a catalog key resolved in a function, never at module scope.
-- The parity test in `i18n.test.ts` covers them.
+- New keys in `en`, `de`, `fr`, `es`: the step titles, "{n} of {total}", the four goals, "No, this is my first", "A spreadsheet (CSV)", "Import from {source}", Later, and the "Climbing" built-in name.
+- App names (Kaya, 8a.nu, Mountain Project, Sendage, theCrag) are literals, as in `IMPORT_SERVICES`.
+- Labels are resolved in functions, never at module scope; the parity test in `i18n.test.ts` covers them.
 
 ### Trial and member gates
 
-- During the 30-day trial everyone can schedule the Starter block.
-- After the trial a non-member sees it muted with the lock from the #258 paywall board (`PaywallLocks`, not built yet) and no Schedule button; tapping it opens the paywall, and the Worker refuses the schedule call, as #255 specifies for library blocks.
-- A Starter block scheduled during the trial locks with the user's other blocks after it (#253); nothing is deleted.
-- Until #259 ships there is no trial, so slice 2 ships with the block open to everyone and picks up the gate when #255 lands.
+- The flow uses only built-in workouts and an Ongoing week.
+- `billing-training-gates` keeps built-ins planned on single days free after the trial; whether a repeating Ongoing week of built-ins stays free is open for Will, and this plan makes no claim either way.
+- The trial (#259), the locks (#258) and library blocks (#255) are not built, so today nothing in the flow is gated.
 
 ## 5. Events and privacy
 
-New PostHog events, properties as enum strings only:
+New PostHog events, properties as enum strings or counts only:
 
-| Event                     | Where                          | Properties                                |
-| ------------------------- | ------------------------------ | ----------------------------------------- |
-| `setup_card_tapped`       | Client, Log                    | `key`: import, strava, gym                |
-| `setup_card_dismissed`    | Client, Log                    | `key`                                     |
-| `import_started`          | Client, import screen opened   | `from`: setup_card, empty_state, settings |
-| `starter_block_scheduled` | Worker, library schedule route | `key`: starter                            |
-| `block_created`           | Worker                         | `from`: blank, copy, library              |
-| `workout_started`         | Client, any player             | `built_in`: true or false                 |
-| `workout_logged`          | Worker                         | `built_in`, `planned`: true or false      |
+| Event                      | Where              | Properties                                                           |
+| -------------------------- | ------------------ | -------------------------------------------------------------------- |
+| `first_run_started`        | Client             | none                                                                 |
+| `first_run_goals_answered` | Client             | `goals`: comma list of the four enums; also set as a person property |
+| `first_run_week_saved`     | Client             | `climbing_days`, `strength_days`, `hangboard_days` (counts)          |
+| `first_run_log_answered`   | Client             | `existing_log` enum; also set as a person property                   |
+| `first_run_finished`       | Client             | `ended_at`: `plan`, `skip_goals`, `skip_week`, `skip_log`            |
+| `workout_started`          | Client, any player | `built_in`, `planned`: true or false                                 |
+| `workout_logged`           | Worker             | `built_in`, `planned`: true or false                                 |
 
-What will show it worked, against the baseline in section 2:
+Existing events cover the rest: `training_reminders_updated` (reminders on or off) and `sessions_imported`, which gains `from`: `first_run` or `import_screen`.
 
-- Share of new accounts with `manual_session_created` within 7 days (43% today).
-- Share with `sessions_imported` (1 of 23 today).
-- Share with `starter_block_scheduled` or any `block_created` within 14 days (unmeasurable today).
+What will show it worked, against section 2:
+
+- Share of new accounts finishing the flow, and where the rest skip.
+- Share with a week saved and with reminders on.
+- Share starting or logging a planned workout within 14 days (unmeasurable today).
+- Share with `manual_session_created` within 7 days (43% today).
+- Import rate among those who named a source (1 of 23 imported today).
 - Share active on days 8 to 14 (20% today).
 
 `apps/web/app/routes/privacy.tsx`, in the "Usage" paragraph after the Areas sentence:
 
-> Setting up and training are recorded too, such as a setup card tapped or dismissed, an import started, a block scheduled or a workout started or logged, carrying only the kind of action and labels such as whether a workout is built in, never what you logged.
+> When you start, the answers you give about what you want from sendtally and which app you kept a log in are recorded against your account, along with the number of days you planned; starting or logging a workout is recorded as whether it was planned and built in, never what you logged.
 
 ## 6. Delivery slices
 
-1. **Land on Log and the Import card (smallest useful slice).** Mobile `app/index.tsx` landing rule, the Import card first in `SetupStack` on mobile and web, the 0/3 count, `setup_card_*` and `import_started` events, the privacy line, and the carousel string fix. No new data.
-2. **The Starter block.** Library block catalogue, the schedule route, Plan and Train > Blocks "Ready-made" on mobile and web, `starter_block_scheduled`, `block_created`, `workout_started`, `workout_logged`.
-3. **The project example row** in `ClimbingEmpty`, mobile and web.
-4. **Gate the Starter block** with #255 once #259 lands.
+1. **The mobile flow (smallest useful slice).** The "Climbing" built-in, `users.start_answered`, steps 1 to 5, the import exit to Plan, the `first_run_*` events, `sessions_imported.from`, and the privacy line.
+2. **Measuring the planned week.** `workout_started` and `workout_logged`.
+3. **Web flow**, steps 1, 2 and 4, if web signups grow.
+4. **Spreadsheet column guide on mobile**, which the web import already has.
+5. **Carousel copy**: rewrite `onboarding.strava.body` to drop "re-sync", which breaks the no-sync copy rule; small enough to ride with slice 1.
 
 ## 7. Left out on purpose
 
-- Any onboarding flow, tour, coach marks or video.
-- A server-side first-run state or "onboarding completed" flag.
-- More than one library block; #255 grows the catalogue later.
-- Push notifications or in-app nudges for week two; the email series covers that.
-- Projects in the setup cards or in the emails.
+- Strava, gym and projects in the flow; they keep their homes on Log and the climb page.
+- Ready-made library blocks and any explanation of blocks in copy.
+- Push notifications other than the existing plan reminders.
+- Storing the answers in D1: only PostHog needs them now; the flow keeps them in memory while it runs.
 - Changes to the email series (branch `feat/onboarding-email-journey`) or to PostHog.
 
 ## 8. Open decisions for Will
 
-- The day-25 "trial ends" email assumes the trial in #259; the trial should ship before that email is switched on, or the email held.
-- Whether Starter block's contents are right for a newcomer (two hangboard days a week is heavy for someone new to fingers training); a lighter mix is a catalogue change only.
-- Whether setup dismissals should follow the account across devices (one JSON column) or stay per device as today.
-- Whether "Ready-made" on Train > Blocks should show to members only after the trial, or always with the lock (spec: always, locked).
+- Whether a repeating Ongoing week of built-in workouts stays free after the trial (the free tier keeps built-ins planned on single days).
+- The email series no longer matches the in-app order: the flow plans the week and asks about imports on day 0, while emails cover the first session on day 2, import on day 6 and training on day 18. The day 6 and day 18 emails could skip people who already imported or saved a week (`sessions_imported`, `first_run_week_saved`).
+- The day-25 "trial ends" email assumes the trial in #259, which is not built; ship the trial first or hold that email.
+- Step 2 carries the line "Change them any time in Train > Blocks > Ongoing.", which is the kind of explanatory line Will usually removes; keep it or drop it.
+- Web flow now or later (spec: later).
