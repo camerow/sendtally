@@ -4,16 +4,10 @@ export type DescriptionRun = { kind: "text"; text: string } | { kind: "link"; ur
 /** A line of runs. */
 export type DescriptionLine = DescriptionRun[];
 
-/** A paragraph keeps the line breaks typed inside it; a list holds one line per item. */
-export type DescriptionBlock =
-  | { kind: "paragraph"; lines: DescriptionLine[] }
-  | { kind: "bullets"; items: DescriptionLine[] }
-  | { kind: "numbered"; items: DescriptionLine[] };
-
 /** The longest description any item can have. */
 export const MAX_DESCRIPTION = 2000;
 
-const LINK = /https:\/\/[^\s<>()[\]]+/g;
+const LINK = /https:\/\/(?:[^\s<>()[\]]|\([^\s<>()[\]]*\))+/g;
 const TRAILING = /[.,;:!?'"]+$/;
 const BULLET = /^\s*- +(.*)$/;
 const NUMBERED = /^\s*\d+\. +(.*)$/;
@@ -40,33 +34,6 @@ export function descriptionRuns(line: string): DescriptionLine {
   return runs;
 }
 
-/**
- * A description as typed, in blocks: a blank line ends a paragraph, a line starting `- ` is a
- * bullet and one starting `1. ` a numbered item. Nothing else is read as formatting.
- */
-export function parseDescription(source: string): DescriptionBlock[] {
-  const blocks: DescriptionBlock[] = [];
-  let joins = false;
-  for (const raw of source.replace(/\r\n?/g, "\n").split("\n")) {
-    const line = raw.trim();
-    if (line === "") {
-      joins = false;
-      continue;
-    }
-    const bullet = BULLET.exec(line);
-    const numbered = bullet === null ? NUMBERED.exec(line) : null;
-    const runs = descriptionRuns((bullet ?? numbered)?.[1] ?? line);
-    const kind = bullet !== null ? "bullets" : numbered !== null ? "numbered" : "paragraph";
-    const last = joins ? blocks.at(-1) : undefined;
-    joins = true;
-    if (last?.kind === "paragraph" && kind === "paragraph") last.lines.push(runs);
-    else if (last !== undefined && last.kind !== "paragraph" && last.kind === kind) {
-      last.items.push(runs);
-    } else blocks.push(kind === "paragraph" ? { kind, lines: [runs] } : { kind, items: [runs] });
-  }
-  return blocks;
-}
-
 /** The longest a bare address shows before it is cut. */
 const SHOWN_URL = 24;
 
@@ -82,15 +49,32 @@ export type DescriptionUnit =
   | { kind: "bullet"; line: DescriptionLine }
   | { kind: "step"; n: number; line: DescriptionLine };
 
-/** Every paragraph and list item in order, each list numbered from one. */
-export const descriptionUnits = (blocks: readonly DescriptionBlock[]): DescriptionUnit[] =>
-  blocks.flatMap((b): DescriptionUnit[] =>
-    b.kind === "paragraph"
-      ? [b]
-      : b.items.map((line, i) =>
-          b.kind === "bullets" ? { kind: "bullet", line } : { kind: "step", n: i + 1, line }
-        )
-  );
+/**
+ * A description as typed, as the texts it lays out in order: a blank line ends a paragraph, a
+ * line starting `- ` is a bullet and one starting `1. ` a step, numbered from one in each run of
+ * steps. Nothing else is read as formatting.
+ */
+export function descriptionUnits(source: string): DescriptionUnit[] {
+  const units: DescriptionUnit[] = [];
+  let joins = false;
+  let step = 0;
+  for (const raw of source.replace(/\r\n?/g, "\n").split("\n")) {
+    const line = raw.trim();
+    const bullet = BULLET.exec(line);
+    const numbered = bullet === null ? NUMBERED.exec(line) : null;
+    step = numbered === null ? 0 : step + 1;
+    const joined = joins;
+    joins = line !== "";
+    const last = units.at(-1);
+    if (line === "") continue;
+    if (bullet !== null) units.push({ kind: "bullet", line: descriptionRuns(bullet[1] ?? "") });
+    else if (numbered !== null)
+      units.push({ kind: "step", n: step, line: descriptionRuns(numbered[1] ?? "") });
+    else if (joined && last?.kind === "paragraph") last.lines.push(descriptionRuns(line));
+    else units.push({ kind: "paragraph", lines: [descriptionRuns(line)] });
+  }
+  return units;
+}
 
 /** How many lines a folded description shows. */
 export const FOLD_LINES = 5;
@@ -100,13 +84,12 @@ export const FOLD_LINES = 5;
  * the last one keeps when it crosses the fold. None when it all fits.
  */
 export function foldAt(
-  lines: readonly number[],
-  max = FOLD_LINES
+  lines: readonly number[]
 ): { units: number; lastLines: number | null } | null {
   let used = 0;
   for (const [i, n] of lines.entries()) {
-    if (used + n > max) {
-      const left = max - used;
+    if (used + n > FOLD_LINES) {
+      const left = FOLD_LINES - used;
       return left === 0 ? { units: i, lastLines: null } : { units: i + 1, lastLines: left };
     }
     used += n;

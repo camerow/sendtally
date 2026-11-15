@@ -1,41 +1,45 @@
 import { describe, expect, it } from "vitest";
-import {
-  descriptionRuns,
-  descriptionUnits,
-  foldAt,
-  linkText,
-  parseDescription,
-} from "./description";
+import { descriptionRuns, descriptionUnits, foldAt, linkText } from "./description";
 
 const text = (t: string) => ({ kind: "text", text: t });
 const link = (url: string) => ({ kind: "link", url });
 
-describe("parseDescription", () => {
+describe("descriptionUnits", () => {
   it("is empty for blank text", () => {
-    expect(parseDescription("")).toEqual([]);
-    expect(parseDescription("  \n\n ")).toEqual([]);
+    expect(descriptionUnits("")).toEqual([]);
+    expect(descriptionUnits("  \n\n ")).toEqual([]);
   });
 
   it("splits paragraphs on a blank line and keeps the line breaks inside one", () => {
-    expect(parseDescription("Warm up well.\nThen go.\n\n  \nRest after.")).toEqual([
+    expect(descriptionUnits("Warm up well.\nThen go.\n\n  \nRest after.")).toEqual([
       { kind: "paragraph", lines: [[text("Warm up well.")], [text("Then go.")]] },
       { kind: "paragraph", lines: [[text("Rest after.")]] },
     ]);
   });
 
-  it("reads dash lines as bullets and numbered lines as steps", () => {
+  it("reads dash lines as bullets and numbered lines as steps, each run of steps from one", () => {
     expect(
-      parseDescription("Cues:\n- Shoulders down\n- Hips in\n1. Hang\n2. Rest\r\nDone")
+      descriptionUnits("Cues:\n- Shoulders down\n- Hips in\n1. Hang\n2. Rest\r\nDone\n4. Again")
     ).toEqual([
       { kind: "paragraph", lines: [[text("Cues:")]] },
-      { kind: "bullets", items: [[text("Shoulders down")], [text("Hips in")]] },
-      { kind: "numbered", items: [[text("Hang")], [text("Rest")]] },
+      { kind: "bullet", line: [text("Shoulders down")] },
+      { kind: "bullet", line: [text("Hips in")] },
+      { kind: "step", n: 1, line: [text("Hang")] },
+      { kind: "step", n: 2, line: [text("Rest")] },
       { kind: "paragraph", lines: [[text("Done")]] },
+      { kind: "step", n: 1, line: [text("Again")] },
+    ]);
+  });
+
+  it("starts a new paragraph after a list", () => {
+    expect(descriptionUnits("- a\nAfter\nmore")).toEqual([
+      { kind: "bullet", line: [text("a")] },
+      { kind: "paragraph", lines: [[text("After")], [text("more")]] },
     ]);
   });
 
   it("interprets nothing else", () => {
-    expect(parseDescription("# Title\n* star\n-nospace\n1.5 kg\n<b>bold</b>")).toEqual([
+    expect(descriptionUnits("# Title\n* star\n-nospace\n1.5 kg\n<b>bold</b>")).toEqual([
       {
         kind: "paragraph",
         lines: [
@@ -61,6 +65,14 @@ describe("descriptionRuns", () => {
     ]);
   });
 
+  it("keeps parentheses that come in pairs inside an address", () => {
+    expect(descriptionRuns("See https://en.wikipedia.org/wiki/Crimp_(climbing).")).toEqual([
+      text("See "),
+      link("https://en.wikipedia.org/wiki/Crimp_(climbing)"),
+      text("."),
+    ]);
+  });
+
   it("reads no named links: the brackets stay text and only the address links", () => {
     expect(descriptionRuns("Watch [the demo](https://youtu.be/abc) first")).toEqual([
       text("Watch [the demo]("),
@@ -82,19 +94,6 @@ describe("linkText", () => {
     expect(linkText("https://sendtally.com/training/hangboard/repeaters")).toBe(
       "sendtally.com/training/…"
     );
-  });
-});
-
-describe("descriptionUnits", () => {
-  it("lays out paragraphs and list items in order, steps numbered from one per list", () => {
-    const units = descriptionUnits(parseDescription("Go.\n- a\n- b\n1. c\n2. d"));
-    expect(units.map((u) => (u.kind === "step" ? `${u.kind}${u.n}` : u.kind))).toEqual([
-      "paragraph",
-      "bullet",
-      "bullet",
-      "step1",
-      "step2",
-    ]);
   });
 });
 

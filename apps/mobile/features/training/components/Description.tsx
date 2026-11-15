@@ -2,9 +2,9 @@ import React from "react";
 import { Linking, Pressable, Text, View, type TextLayoutEvent } from "react-native";
 import {
   descriptionUnits,
+  FOLD_LINES,
   foldAt,
   linkText,
-  parseDescription,
   type DescriptionLine,
   type DescriptionUnit,
 } from "@sendtally/core/text";
@@ -94,7 +94,7 @@ function Unit({ unit, numberOfLines, onTextLayout }: UnitProps): React.ReactElem
  * with More to open it in place; it measures from a hidden copy laid out at the same width.
  */
 export function Description({ text, fold = false }: DescriptionProps): React.ReactElement | null {
-  const units = React.useMemo(() => descriptionUnits(parseDescription(text)), [text]);
+  const units = React.useMemo(() => descriptionUnits(text), [text]);
   const [lines, setLines] = React.useState<readonly (number | undefined)[]>([]);
   const [open, setOpen] = React.useState(false);
   if (units.length === 0) return null;
@@ -103,7 +103,7 @@ export function Description({ text, fold = false }: DescriptionProps): React.Rea
   const cut = fold && measured ? foldAt(counts.map((n) => n ?? 0)) : null;
   const shut = fold && !open && (cut !== null || !measured);
   const shown = !shut ? units.length : (cut?.units ?? 1);
-  const lastLines = !shut ? undefined : measured ? (cut?.lastLines ?? undefined) : 5;
+  const lastLines = !shut ? undefined : measured ? (cut?.lastLines ?? undefined) : FOLD_LINES;
   const measure = (i: number) => (e: TextLayoutEvent) => {
     const n = e.nativeEvent.lines.length;
     setLines((was) => (was[i] === n ? was : Object.assign([...was], { [i]: n })));

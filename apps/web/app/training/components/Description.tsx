@@ -3,7 +3,6 @@ import {
   descriptionUnits,
   foldAt,
   linkText,
-  parseDescription,
   type DescriptionLine,
   type DescriptionUnit,
 } from "@sendtally/core/text";
@@ -76,7 +75,7 @@ function Unit({ unit, clamp, textRef }: UnitProps): React.ReactElement {
  * with More to open it in place. Lines are counted once, as first laid out.
  */
 export function Description({ text, fold = false }: DescriptionProps): React.ReactElement | null {
-  const units = React.useMemo(() => descriptionUnits(parseDescription(text)), [text]);
+  const units = React.useMemo(() => descriptionUnits(text), [text]);
   const texts = React.useRef<(HTMLElement | null)[]>([]);
   const [lines, setLines] = React.useState<{ of: typeof units; counts: number[] } | null>(null);
   const [open, setOpen] = React.useState(false);
