@@ -1,29 +1,11 @@
 import type { Exercise } from "@sendtally/api-client";
-import type {
-  CalendarDate,
-  Grip,
-  HangSession,
-  WeightUnit,
-  Workout,
-  WorkoutKind,
-} from "@sendtally/core/hang";
-import { setText } from "../activities/done";
-import { gripMeta } from "../hang/progress";
-import { t } from "../i18n";
-import {
-  exerciseKey,
-  exerciseSummary,
-  isGradeMetric,
-  workoutsUsing,
-  type ExerciseSeries,
-} from "../statistics/exercises";
-import { doseSummary } from "../workouts/library";
+import type { Grip, Workout, WorkoutKind } from "@sendtally/core/hang";
 import { exerciseLabel, unclaimedBuiltIns } from "./builtIns";
-import { metricText } from "./exerciseText";
 import { categoryShelves } from "./shelves";
-import type { CategoryShelf } from "./types";
+import type { CategoryShelf, PickerSource } from "./types";
+import { usedInText, workoutsWith } from "./wrapper";
 
-/** One exercise on its category's shelf; `meta` is null until it is done. */
+/** One exercise on its category's shelf; `meta` is null while no workout uses it. */
 export type ShelfCard = {
   key: string;
   kind: WorkoutKind;
@@ -37,72 +19,46 @@ export type ShelfCard = {
 export type ShelfWorld = {
   exercises: readonly Exercise[];
   grips: readonly Grip[];
-  sessions: readonly HangSession[];
-  series: readonly ExerciseSeries[];
   workouts: readonly Workout[];
-  today: CalendarDate;
-  unit: WeightUnit;
 };
 
-function exerciseMeta(name: string, kind: WorkoutKind, w: ShelfWorld): string | null {
-  const s = w.series.find((x) => x.key === exerciseKey(name));
-  const best = s === undefined ? null : exerciseSummary(s, w.today)?.best;
-  if (kind === "climbing") {
-    if (s === undefined || best === undefined || best === null) return null;
-    const reads = isGradeMetric(s.metric)
-      ? t("workouts.exerciseBest", { value: metricText(best.value, s.metric, w.unit, s.grades) })
-      : t("common.climbs");
-    return `${reads} · ${t("statistics.timesCount", { count: s.sessions.length })}`;
-  }
-  if (best !== undefined && best !== null)
-    return t("workouts.exerciseBest", { value: setText(best.best, w.unit) });
-  const using = workoutsUsing(w.workouts, name)[0];
-  const dose = using?.items.find((i) => exerciseKey(i.exercise) === exerciseKey(name))?.doses[0];
-  return using === undefined || dose === undefined
-    ? null
-    : t("workouts.exerciseLast", { value: doseSummary(using.kind, dose, w.unit) });
-}
-
 /**
- * Train > Exercises: every category, each exercise with its best result or its last dose.
- * Fingers holds the user's own grips and the built-in ones they have hung on; every other
- * category also holds the built-ins the user has not made their own.
+ * Train > Exercises: every category, each exercise with how many workouts use it, so an
+ * exercise reads as a part and a workout as the whole. Fingers holds the user's own grips and
+ * the built-in ones; every other category also holds the built-ins the user has not made their own.
  */
 export function exerciseShelves(w: ShelfWorld): CategoryShelf<ShelfCard>[] {
-  const notDone = (meta: string): string | null =>
-    meta === t("workouts.notDoneYet") ? null : meta;
-  const grips = w.grips
-    .filter((g) => !g.hidden)
-    .map((g): ShelfCard => ({
-      key: g.id,
-      kind: "hangboard",
-      name: g.name,
-      meta: notDone(gripMeta(w.sessions, g.id, w.today, w.unit)),
-      library: false,
-      opens: { grip: g.id },
-    }));
-  const mine = w.exercises
-    .filter((e) => !e.archived)
-    .map((e): ShelfCard => ({
-      key: e.id,
-      kind: e.kind,
-      name: exerciseLabel(e),
-      meta: exerciseMeta(e.name, e.kind, w),
-      library: false,
-      opens: { exercise: e.id },
-    }));
-  const library = unclaimedBuiltIns(w.exercises).map((b): ShelfCard => ({
-    key: `builtIn:${b.id}`,
-    kind: b.kind,
-    name: b.name,
-    meta: null,
-    library: true,
-    opens: { builtIn: b.id },
-  }));
-  return categoryShelves([...grips, ...mine, ...library]);
+  const card = (
+    key: string,
+    kind: WorkoutKind,
+    name: string,
+    source: PickerSource,
+    opens: ShelfCard["opens"]
+  ): ShelfCard => {
+    const uses = workoutsWith(w.workouts, { kind, name, source }).length;
+    return {
+      key,
+      kind,
+      name,
+      meta: uses === 0 ? null : usedInText(uses),
+      library: "builtIn" in source,
+      opens,
+    };
+  };
+  return categoryShelves([
+    ...w.grips
+      .filter((g) => !g.hidden)
+      .map((g) => card(g.id, "hangboard", g.name, { grip: g }, { grip: g.id })),
+    ...w.exercises
+      .filter((e) => !e.archived)
+      .map((e) => card(e.id, e.kind, exerciseLabel(e), { exercise: e }, { exercise: e.id })),
+    ...unclaimedBuiltIns(w.exercises).map((b) =>
+      card(`builtIn:${b.id}`, b.kind, b.name, { builtIn: b }, { builtIn: b.id })
+    ),
+  ]);
 }
 
-/** A shelf's first rows: done ones first, the user's own before the library. */
+/** A shelf's first rows: the user's own before the library, ones in a workout first. */
 export const shelfRows = <C extends Pick<ShelfCard, "meta" | "library">>(
   cards: readonly C[],
   rows: number
@@ -110,6 +66,6 @@ export const shelfRows = <C extends Pick<ShelfCard, "meta" | "library">>(
   [...cards]
     .sort(
       (a, b) =>
-        Number(a.meta === null) - Number(b.meta === null) || Number(a.library) - Number(b.library)
+        Number(a.library) - Number(b.library) || Number(a.meta === null) - Number(b.meta === null)
     )
     .slice(0, rows);

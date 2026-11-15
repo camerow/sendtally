@@ -31,11 +31,7 @@ const world = (over: Partial<ShelfWorld> = {}): ShelfWorld => ({
     { id: "g1", name: "Half crimp", custom: false, hidden: false },
     { id: "g2", name: "Gone", custom: true, hidden: true },
   ],
-  sessions: [],
-  series: [],
   workouts: [legs],
-  today: "2026-11-12",
-  unit: "kg",
   ...over,
 });
 
@@ -69,15 +65,15 @@ describe("exerciseShelves", () => {
     expect(shelfRows(strength, 2).map((c) => c.name)).toEqual(["Back squat", "Bench press"]);
   });
 
-  it("reads an exercise not yet done by the dose a workout gives it, else nothing", () => {
-    const strength = exerciseShelves(world())
-      .find((s) => s.kind === "strength")!
-      .entries.filter((e) => !e.library);
-    expect(strength[0]?.meta).toContain("5 × 5");
-    expect(strength[1]?.meta).toBeNull();
+  it("reads how many workouts use an exercise or grip, else nothing", () => {
+    const hang = { kind: "hangboard", items: [{ exercise: "g1", doses: [{ sets: 1 }] }] };
+    const shelves = exerciseShelves(world({ workouts: [legs, legs, hang as unknown as Workout] }));
+    const strength = shelves.find((s) => s.kind === "strength")!.entries.filter((e) => !e.library);
+    expect(strength.map((e) => e.meta)).toEqual(["In 2 workouts", null]);
+    expect(shelves.find((s) => s.kind === "hangboard")?.entries[0]?.meta).toBe("In 1 workout");
   });
 
-  it("puts done ones first on a shelf", () => {
+  it("puts ones in a workout first on a shelf", () => {
     const strength = exerciseShelves(world()).find((s) => s.kind === "strength")!.entries;
     expect(shelfRows([...strength].reverse(), 1).map((c) => c.name)).toEqual(["Back squat"]);
   });

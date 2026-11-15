@@ -5,7 +5,7 @@ import type { Block, CalendarDate, WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { focusLabel, usePlan, workoutLines, blockName } from "@sendtally/features/training";
+import { focusLabel, usePlan, blockName } from "@sendtally/features/training";
 import {
   entryOf,
   entryShelves,
@@ -18,11 +18,7 @@ import {
   type PickerEntry,
 } from "@sendtally/features/exercises";
 import { kindLabel } from "@sendtally/features/activities";
-import {
-  libraryShelves,
-  useWorkoutActions,
-  type LibraryWorkout,
-} from "@sendtally/features/workouts";
+import { libraryLine, libraryShelves, useWorkoutActions } from "@sendtally/features/workouts";
 import { Alert, View } from "react-native";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -147,7 +143,6 @@ export function AddWorkoutsSheet({
       : flow.blockId === null
         ? t("plan.ongoing")
         : t("plan.inBlock");
-  const doseOf = (w: LibraryWorkout): string | null => workoutLines(w, model)[0] ?? null;
   const pick = (b: Block): void => {
     setPicked(b);
     const day = flow.date ?? today;
@@ -290,7 +285,7 @@ export function AddWorkoutsSheet({
                         key={w.id}
                         kind={w.kind}
                         name={w.name}
-                        meta={doseOf(w)}
+                        meta={libraryLine(w, model.settings.units)}
                         state={now}
                         thereLabel={thereLabel}
                         onOpen={() => leave("/workout/[id]", { id: w.id })}

@@ -39,7 +39,7 @@ vi.mock("./useLibrary", async (actual) => ({
 }));
 vi.mock("../data/HangDataContext", () => ({
   useHangData: () => ({
-    model: { gripName: (id: string) => id, defaultGrip: () => "", workout: () => undefined },
+    model: { settings: { units: "kg" } },
   }),
 }));
 

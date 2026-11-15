@@ -26,6 +26,7 @@ import { ACTIVITY_KINDS, kindLabel } from "../activities/format";
 import { countText, humanDuration, protocolSummary } from "../hang/format";
 import { builtInGripName } from "../hang/names";
 import { formatNumber, t } from "../i18n";
+import { durationLabel } from "../sessions/years";
 import { builtInWorkouts } from "./builtIns";
 import type { LibraryShelf, LibraryWorkout, WorkoutDraft, WorkoutUse } from "./types";
 
@@ -188,6 +189,26 @@ export function bodySummary(w: Pick<Workout, "kind" | "items">): string | null {
   if (w.kind === "climbing" && items.length === 1)
     return climbingDoseLine(only.dose, only.dose.onS === undefined ? "climbs" : "wallTime");
   return t("activities.exerciseCount", { count: items.length });
+}
+
+/**
+ * A workout's line in a list: how many exercises, then the one exercise's dose, or how long
+ * it takes; a hang dose is too long for a row, so hangboard always reads its length.
+ * "1 exercise · 3 × 8", "4 exercises · 30m".
+ */
+export function libraryLine(w: Workout, unit: WeightUnit): string {
+  const items = sessionItems(w.items, 0);
+  const [only] = items;
+  const minutes = workoutMinutes(w);
+  const dose =
+    only === undefined || items.length > 1 || w.kind === "hangboard"
+      ? null
+      : w.kind === "climbing"
+        ? bodySummary(w)
+        : doseSummary(w.kind, only.dose, unit);
+  const tail = dose ?? (minutes === null ? null : durationLabel(minutes));
+  const count = t("activities.exerciseCount", { count: items.length });
+  return tail === null ? count : `${count} · ${tail}`;
 }
 
 type Logged = { workoutId?: string | null; membershipId?: string | null; date: CalendarDate };

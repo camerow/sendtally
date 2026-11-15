@@ -8,7 +8,6 @@ import {
   focusLabel,
   useAddTo,
   useTrainingLog,
-  workoutLines,
   type AddFlow,
   blockName,
 } from "@sendtally/features/training";
@@ -24,7 +23,7 @@ import {
   type ExerciseEntry,
   type PickerEntry,
 } from "@sendtally/features/exercises";
-import { libraryShelves, useWorkoutActions } from "@sendtally/features/workouts";
+import { libraryLine, libraryShelves, useWorkoutActions } from "@sendtally/features/workouts";
 import { Segmented } from "../../components/Segmented";
 import { Sheet, type SheetAction } from "../../components/Sheet";
 import { useAppApi } from "../../lib/useAppApi";
@@ -239,7 +238,7 @@ export function AddWorkoutsSheet({
                         key={w.id}
                         kind={w.kind}
                         name={w.name}
-                        meta={workoutLines(w, model)[0] ?? null}
+                        meta={libraryLine(w, model.settings.units)}
                         to={workoutPath(w.id)}
                         state={stateOf(w.id, [w.id])}
                         thereLabel={thereLabel}
