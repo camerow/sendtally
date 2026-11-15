@@ -135,6 +135,15 @@ describe("activities", () => {
     expect(await json(res)).toMatchObject({ activity: { id: "a1", ...body } });
   });
 
+  it("logs no target or range on a set an older app copied them into", async () => {
+    const userId = "user_activity_prescribed_set";
+    const set = { reps: 8, weightKg: 60, targetRpe: 8, setsMax: 5, repsMax: 12 };
+    const done = [{ item: 0, exercise: "Bench press", sets: [set] }];
+    const res = await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, done });
+    const { activity } = await json<{ activity: { done: { sets: object[] }[] } }>(res);
+    expect(activity.done[0]?.sets).toEqual([{ reps: 8, weightKg: 60 }]);
+  });
+
   it("records a focus, and keeps it when an older app edits without one", async () => {
     const userId = "user_activity_focus";
     await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, focus: "power" });
@@ -285,6 +294,40 @@ describe("workouts", () => {
     expect(await json(res)).toMatchObject({
       workout: { items: [{ doses: [{ sets: 5, name: "Heavy" }, { sets: 3 }] }] },
     });
+  });
+
+  it("keeps an exercise's target, its set and rep ranges, and its own rest before the next", async () => {
+    const userId = "user_workouts_targets";
+    const bench = { sets: 3, setsMax: 5, reps: 8, repsMax: 12, weightKg: 60, targetRpe: 8 };
+    const items = [
+      { exercise: "Bench press", doses: [bench], restAfterS: 150 },
+      { exercise: "Face pull", doses: [{ sets: 3, reps: 15 }] },
+    ];
+    const res = await call(userId, "PUT", "/v1/workouts/w1", { ...squatWorkout, items });
+    expect(await json(res)).toMatchObject({ workout: { items } });
+  });
+
+  it("drops a range's top an older app left at or under its minimum", async () => {
+    const userId = "user_workouts_stale_range";
+    const items = [
+      { exercise: "Bench press", doses: [{ sets: 6, setsMax: 5, reps: 8, repsMax: 8 }] },
+      { exercise: "Plank", doses: [{ sets: 3, onS: 30, repsMax: 12 }] },
+    ];
+    const res = await call(userId, "PUT", "/v1/workouts/w1", { ...squatWorkout, items });
+    const { workout } = await json<{ workout: WorkoutRecord }>(res);
+    expect(workout.items.map((i) => i.doses)).toEqual([
+      [{ sets: 6, reps: 8 }],
+      [{ sets: 3, onS: 30 }],
+    ]);
+  });
+
+  it("rejects a target outside 1 to 10", async () => {
+    const items = [{ exercise: "Bench press", doses: [{ sets: 3, targetRpe: 11 }] }];
+    const res = await call("user_workouts_bad_target", "PUT", "/v1/workouts/w1", {
+      ...squatWorkout,
+      items,
+    });
+    expect(res.status).toBe(400);
   });
 
   it("rests between exercises on the hangboard only when an older app sends no rest", async () => {

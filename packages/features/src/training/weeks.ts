@@ -13,7 +13,8 @@ import { humanDuration } from "../hang/format";
 import { formatNumber, t } from "../i18n";
 import type { DoneCount } from "./recap";
 
-export type WeekField = (typeof DOSE_FIELDS)[number];
+/** A number a block week sets in a column of its own; a range's top shares its minimum's cell. */
+export type WeekField = Exclude<(typeof DOSE_FIELDS)[number], "targetRpe" | "setsMax" | "repsMax">;
 
 /** Timed work outside hangboarding: rounds of work and rest. */
 const timed = (kind: WorkoutKind, dose: Dose): boolean =>

@@ -36,6 +36,12 @@ export type Dose = {
   offS?: number;
   edgeMm?: number;
   setRestS?: number;
+  /** The effort this exercise aims for, 1 to 10. Only a target: nothing logs against it. */
+  targetRpe?: number;
+  /** The most sets, above `sets`, which stays the minimum that counts; the rest are optional. */
+  setsMax?: number;
+  /** The most reps per set, above `reps`, which stays the minimum. */
+  repsMax?: number;
   /** What an alternating dose is called next to its letter, such as Heavy. */
   name?: string;
 };
@@ -48,7 +54,13 @@ export const DOSE_FIELDS = [
   "offS",
   "edgeMm",
   "setRestS",
+  "targetRpe",
+  "setsMax",
+  "repsMax",
 ] as const satisfies readonly (keyof Dose)[];
+
+/** What a dose prescribes but a set never logs. */
+type PrescriptionOnly = "sets" | "name" | "targetRpe" | "setsMax" | "repsMax";
 
 /**
  * A climb logged on the session tally inside a set: its grade or circuit, how many goes
@@ -65,13 +77,19 @@ export type SetClimb = {
 };
 
 /** One set as it was done. A climbing exercise's set holds the climbs logged in it. */
-export type SetDone = Omit<Dose, "sets" | "name"> & { climbs?: SetClimb[] };
+export type SetDone = Omit<Dose, PrescriptionOnly> & { climbs?: SetClimb[] };
 
 /**
  * One exercise of a workout. One dose is the same every session; with more, sessions
  * take them in turn. A hangboard item's exercise is its grip id.
  */
-export type Item = { id?: string; exercise: string; doses: Dose[] };
+export type Item = {
+  id?: string;
+  exercise: string;
+  doses: Dose[];
+  /** The rest after this exercise, before the next; none is the workout's rest between exercises. */
+  restAfterS?: number;
+};
 
 /** An item's id, which week changes follow when items move. One saved before ids is its place. */
 export const itemIdOf = (item: Pick<Item, "id">, index: number): string => item.id ?? String(index);
@@ -94,7 +112,7 @@ export function withItemIds<T extends Pick<Item, "id">>(
 }
 
 /** One exercise as one session runs it: the dose that session takes, and its turn when it alternates. */
-export type SessionItem = { exercise: string; dose: Dose; turn?: number };
+export type SessionItem = { exercise: string; dose: Dose; turn?: number; restAfterS?: number };
 
 /** A library workout of any kind. */
 export type Workout = {
@@ -206,7 +224,11 @@ export const turnsOf = (items: readonly Pick<Item, "doses">[]): number =>
 /** An item as session `n` of the workout runs it. */
 function sessionItem(item: Item, n: number): SessionItem {
   const turn = doseIndex(item, n);
-  const run = { exercise: item.exercise, dose: item.doses[turn] ?? { sets: 1 } };
+  const run: SessionItem = {
+    exercise: item.exercise,
+    dose: item.doses[turn] ?? { sets: 1 },
+    ...(item.restAfterS === undefined ? {} : { restAfterS: item.restAfterS }),
+  };
   return item.doses.length > 1 ? { ...run, turn } : run;
 }
 
@@ -395,9 +417,21 @@ export const hangboardSeconds = (items: readonly SessionItem[], exerciseRestS: n
 
 /** Every set of every item done as prescribed. */
 export function doneAsPrescribed(items: readonly SessionItem[]): ItemDone[] {
-  return items.map(({ exercise, dose: { sets, name: _, ...set } }, item) => ({
+  return items.map(({ exercise, dose }, item) => ({
     item,
     exercise,
-    sets: Array.from({ length: sets }, () => ({ ...set })),
+    sets: Array.from({ length: dose.sets }, () => setOf(dose)),
   }));
+}
+
+/** What one set of a dose logs: its numbers, without what only the prescription holds. */
+export function setOf({
+  sets: _,
+  name: _n,
+  targetRpe: _t,
+  setsMax: _s,
+  repsMax: _r,
+  ...set
+}: Dose): SetDone {
+  return set;
 }

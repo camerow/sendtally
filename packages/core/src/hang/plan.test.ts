@@ -163,6 +163,13 @@ describe("changeFrom", () => {
     expect(changeFrom(written, written)).toEqual({});
     expect(changeFrom(written, { sets: 5, onS: 8 })).toEqual({ onS: 8 });
   });
+
+  it("keeps a week's change to the target and the range", () => {
+    const written: Dose = { sets: 3, setsMax: 5, reps: 5, targetRpe: 8 };
+    expect(changeFrom(written, { sets: 2, setsMax: 3, reps: 5, repsMax: 8, targetRpe: 6 })).toEqual(
+      { sets: 2, setsMax: 3, repsMax: 8, targetRpe: 6 }
+    );
+  });
 });
 
 describe("doses by session", () => {
@@ -187,6 +194,11 @@ describe("doses by session", () => {
     expect(squatRun?.turn).toBe(0);
     expect(benchRun).toEqual({ exercise: "Bench press", dose: { sets: 4, reps: 8 } });
     expect(rowRun?.turn).toBe(1);
+  });
+
+  it("carries an item's own rest before the next into the session", () => {
+    const [run] = sessionItems([{ ...bench, restAfterS: 90 }], 0);
+    expect(run).toEqual({ exercise: "Bench press", dose: { sets: 4, reps: 8 }, restAfterS: 90 });
   });
 
   it("counts the turns of the item with the most doses", () => {
@@ -337,6 +349,12 @@ describe("doneAsPrescribed", () => {
   it("leaves a dose's name out of the sets it logs", () => {
     const named = { exercise: "Squat", doses: [{ sets: 1, reps: 5, name: "Heavy" }, { sets: 2 }] };
     expect(doneAsPrescribed(sessionItems([named], 0))[0]?.sets).toEqual([{ reps: 5 }]);
+  });
+
+  it("leaves the target and the range's tops out of the sets it logs", () => {
+    const bench = { sets: 2, setsMax: 4, reps: 8, repsMax: 12, targetRpe: 8 };
+    const items = sessionItems([{ exercise: "Bench", doses: [bench] }], 0);
+    expect(doneAsPrescribed(items)[0]?.sets).toEqual([{ reps: 8 }, { reps: 8 }]);
   });
 
   it("logs every set of every item", () => {

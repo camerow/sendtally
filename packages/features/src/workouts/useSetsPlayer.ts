@@ -1,5 +1,5 @@
 import React from "react";
-import { doneAsPrescribed, type ItemDone, type SetDone } from "@sendtally/core/hang";
+import { doneAsPrescribed, setOf, type ItemDone, type SetDone } from "@sendtally/core/hang";
 import type { Activity, Exercise } from "@sendtally/api-client";
 import {
   climbingLastTime,
@@ -208,7 +208,7 @@ export function useSetsPlayer({
     tallyOf,
     climbing,
     target: ({ item, set }) => {
-      const { sets: _, name: __, ...target } = run.items[item]?.dose ?? { sets: 0 };
+      const target = setOf(run.items[item]?.dose ?? { sets: 0 });
       const last = previous(run.items[item]?.exercise ?? "")[set];
       return lifting(item) ? { ...target, weightKg: target.weightKg ?? last?.weightKg } : target;
     },

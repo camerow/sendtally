@@ -28,7 +28,7 @@ export const trainingLibrary: ConnectorTool<typeof inputSchema> = {
   name: "get_training_library",
   title: "Get training library",
   description:
-    "The user's own exercises (id, name, kind, how each is measured) and workouts (id, name, kind, target effort, minutes, and each item's exercise with its sets, reps, hang and rest times), then the built-in ones every user has, marked builtIn: true and identified by their built-in id, plus the hangboard grips the app knows (a hangboard item names its grip by id). Call this before suggesting or building workouts so you reuse these names instead of creating duplicates, and for the ids save_workout, save_exercise and the delete tools take.",
+    "The user's own exercises (id, name, kind, how each is measured) and workouts (id, name, kind, target effort, minutes, and each item's exercise with its sets, reps, hang and rest times, its own target effort and set and rep ranges, and restAfterS, its rest before the next item), then the built-in ones every user has, marked builtIn: true and identified by their built-in id, plus the hangboard grips the app knows (a hangboard item names its grip by id). Call this before suggesting or building workouts so you reuse these names instead of creating duplicates, and for the ids save_workout, save_exercise and the delete tools take.",
   inputSchema,
   annotations: { readOnlyHint: true, destructiveHint: false },
   run: async (_args, { env, userId }) => {
@@ -67,7 +67,11 @@ export const trainingLibrary: ConnectorTool<typeof inputSchema> = {
           description: w.description || undefined,
           minutes: w.minutes,
           targetRpe: w.targetRpe,
-          items: w.items.map(({ exercise, doses }) => ({ exercise, doses })),
+          items: w.items.map(({ exercise, doses, restAfterS }) => ({
+            exercise,
+            doses,
+            restAfterS,
+          })),
         })),
         ...BUILT_IN_WORKOUTS.map((w) => ({
           id: w.id,

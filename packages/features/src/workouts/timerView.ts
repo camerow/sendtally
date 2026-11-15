@@ -2,6 +2,7 @@ import {
   currentPhase,
   isWork,
   protocolDose,
+  setOf,
   setsHeld,
   type HangKind,
   type HangPhase,
@@ -87,8 +88,7 @@ export function hangRunDone(
   const doses = planned.items.map((i) => protocolDose(i.workout));
   const held = setsHeld(run, doses);
   const dose = (item: number): SetDone => {
-    const { sets: _, ...d } = doses[item] ?? { sets: 0 };
-    return d;
+    return setOf(doses[item] ?? { sets: 0 });
   };
   return {
     done: held.map((sets, item) => ({

@@ -1,5 +1,5 @@
 import { GET_READY_S, phasesFor, plannedWork, type Phase } from "./protocol";
-import type { Dose, SetDone } from "./plan";
+import { setOf, type Dose, type SetDone } from "./plan";
 import { startPhases, type Run } from "./timer";
 import type { Protocol } from "./types";
 
@@ -47,12 +47,13 @@ export function setsHeld(run: Run<HangPhase>, doses: readonly Dose[]): (SetDone 
     if (heldSeconds === undefined) set.full += phase.taps > 0 ? phase.taps : 1;
     else set.cutS = Math.max(set.cutS, heldSeconds);
   }
-  return doses.map(({ sets: _, name: __, ...dose }, item) =>
-    (held[item] ?? []).map(({ full, cutS }) => {
+  return doses.map((d, item) => {
+    const dose = setOf(d);
+    return (held[item] ?? []).map(({ full, cutS }) => {
       const reps = dose.reps ?? 1;
       if (full >= reps) return dose;
       if (full > 0) return { ...dose, reps: full };
       return reps === 1 && cutS > 0 ? { ...dose, onS: cutS } : null;
-    })
-  );
+    });
+  });
 }

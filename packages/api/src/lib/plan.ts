@@ -55,13 +55,29 @@ export const dose = z.object({
   offS: seconds.optional(),
   edgeMm: z.number().int().min(0).max(60).optional(),
   setRestS: seconds.optional(),
+  targetRpe: rpe.optional(),
+  setsMax: z.number().int().min(1).max(100).optional(),
+  repsMax: z.number().int().min(0).max(1000).optional(),
 });
+
+/**
+ * A range's top only above its minimum, which an older build raising the minimum past a top it
+ * cannot see leaves behind, and a rep range only with reps.
+ */
+const withRanges = <T extends Partial<Dose>>({ setsMax, repsMax, ...d }: T): T =>
+  ({
+    ...d,
+    ...(setsMax !== undefined && setsMax > (d.sets ?? 1) ? { setsMax } : {}),
+    ...(repsMax !== undefined && d.reps !== undefined && repsMax > d.reps ? { repsMax } : {}),
+  }) as T;
 
 const exercise = z.string().trim().min(1).max(80);
 
 const MAX_DOSE_NAME = 24;
 
-const namedDose = dose.extend({ name: z.string().trim().min(1).max(MAX_DOSE_NAME).optional() });
+const namedDose = dose
+  .extend({ name: z.string().trim().min(1).max(MAX_DOSE_NAME).optional() })
+  .transform(withRanges);
 
 const itemId = z.string().trim().min(1).max(64);
 
@@ -70,6 +86,7 @@ const item = z.object({
   id: itemId.optional(),
   exercise,
   doses: z.array(namedDose).min(1).max(MAX_DOSES),
+  restAfterS: seconds.optional(),
 });
 
 const doseIndex = z
@@ -110,7 +127,7 @@ export const workoutFields = {
 const legacyItems = z
   .array(
     z.object({
-      items: z.array(z.object({ exercise, dose })).max(MAX_ITEMS),
+      items: z.array(z.object({ exercise, dose: dose.transform(withRanges) })).max(MAX_ITEMS),
     })
   )
   .min(1)
@@ -211,7 +228,9 @@ const setClimb = z.object({
   name: z.string().trim().max(200).optional(),
 });
 
-const setDone = dose.omit({ sets: true }).extend({ climbs: z.array(setClimb).max(100).optional() });
+const setDone = dose
+  .omit({ sets: true, targetRpe: true, setsMax: true, repsMax: true })
+  .extend({ climbs: z.array(setClimb).max(100).optional() });
 
 /** What a session did, per item of what it ran. */
 export const doneBody = z
