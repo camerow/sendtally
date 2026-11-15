@@ -238,7 +238,7 @@ Images transformations stay unused, because a canvas makes the two picture sizes
 
 One store build carries every native addition in the plan: `react-native-webview` and `expo-image`.
 `expo-video` drops out.
-Nothing else needs native code: moderation is web only, so no image picker, and `expo-network` is already installed for the offline check.
+Nothing else needs native code: moderation is web only, so no image picker.
 
 ## Hero image on workout detail (decision 5)
 
@@ -253,8 +253,8 @@ Built with what is installed, no new native module, over the air with pictures.
 - Several pictures swipe inside the hero with a horizontal paging `ScrollView` and page dots; the vertical scroll still covers the whole frame.
 - Pull to stretch is Deferred on the board.
   Without it, iOS overscroll would show white between picture and content, so hero screens set `bounces={false}` on the scroll view; the stretch, when it comes, is a Reanimated scroll handler (Reanimated 4.5 is installed), off under reduced motion (`useReducedMotion`).
-- A video tapped offline shows a Toast, "Can't play this offline" (`workouts.videoOffline`), checked with the installed `expo-network`; the play button's label is `workouts.playVideo`.
-  Both keys go into all four catalogs.
+- Videos are never saved for offline use (Will: "no need to cache videos offline"); with no connection, YouTube's player shows its own message.
+  The play button's label is `workouts.playVideo`, in all four catalogs.
 - Content shorter than the screen does not scroll; the screen reads as picture then content, which is the same design.
 - Web: the same layering in CSS alone.
   The picture is `position: sticky; top: 0` inside `DetailFrame`, capped at `max-height: 420px` with `object-fit: cover`, and the content follows with `position: relative`, a higher `z-index` and the page background.
@@ -307,7 +307,8 @@ Only videos attached in moderation get the poster and the player.
 
 ### Offline
 
-The poster shows from cache when it is our picture; a tap offline shows the "Can't play this offline" Toast.
+The poster is our picture, so it shows from the image cache.
+Videos are never saved for offline use, and a tap with no connection leaves YouTube's player to show its own message.
 
 ## Thumbnails, caching and list performance
 
@@ -336,7 +337,7 @@ The poster shows from cache when it is our picture; a tap offline shows the "Can
 
 ## New interface strings
 
-`common.more`, `common.less`, `workouts.playVideo`, `workouts.videoOffline`, plus the exercise and block Description field labels (the workout ones, `workouts.description` and `workouts.descriptionPlaceholder`, are reused), in all four catalogs.
+`common.more`, `common.less`, `workouts.playVideo`, plus the exercise and block Description field labels (the workout ones, `workouts.description` and `workouts.descriptionPlaceholder`, are reused), in all four catalogs.
 Moderation strings are plain English literals.
 
 ## Privacy and analytics
