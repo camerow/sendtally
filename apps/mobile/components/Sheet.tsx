@@ -9,7 +9,9 @@ import {
 import React from "react";
 import { Keyboard, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { LibraryPicture } from "@sendtally/core/hang";
 import { colors, radius } from "@sendtally/design/tokens";
+import { DetailHero } from "./DetailHero";
 
 export type SheetProps = {
   visible: boolean;
@@ -20,7 +22,12 @@ export type SheetProps = {
   footer?: React.ReactNode;
   /** False leaves the screen behind undimmed, for a sheet that edits something on it. */
   dim?: boolean;
+  /** Pictures across the sheet's top, under its handle, with the content on white over their edge. */
+  hero?: readonly LibraryPicture[];
 };
+
+/** How far a sheet's content overlaps its pictures, and that card's corner radius. */
+const HERO_OVERLAP = 30;
 
 type FooterStore = { footer: React.ReactNode; listeners: Set<() => void> };
 
@@ -94,10 +101,12 @@ export function Sheet({
   children,
   footer,
   dim = true,
+  hero = [],
 }: SheetProps): React.ReactElement | null {
   const ref = React.useRef<BottomSheetModal>(null);
   const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
+  const { height: windowHeight, width } = useWindowDimensions();
+  const pictured = hero.length > 0;
   const [generation, setGeneration] = React.useState(0);
   const [wasVisible, setWasVisible] = React.useState(false);
   const FooterComponent = useFooterComponent(footer);
@@ -144,13 +153,56 @@ export function Sheet({
       keyboardBlurBehavior="restore"
       backgroundStyle={{ borderRadius: radius.panel, backgroundColor: colors.white }}
       handleIndicatorStyle={{ width: 36, height: 4, backgroundColor: "rgba(64,63,76,0.2)" }}
+      handleComponent={pictured ? null : undefined}
     >
       <BottomSheetScrollView
         keyboardShouldPersistTaps="handled"
         enableFooterMarginAdjustment={footer !== undefined}
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) }}
       >
-        {children}
+        {pictured ? (
+          <>
+            <View
+              style={{
+                borderTopLeftRadius: radius.panel,
+                borderTopRightRadius: radius.panel,
+                overflow: "hidden",
+              }}
+            >
+              <DetailHero
+                pictures={hero}
+                width={width}
+                height={Math.round((width * 3) / 4)}
+                overlap={HERO_OVERLAP}
+              />
+              <View
+                pointerEvents="none"
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  alignSelf: "center",
+                  width: 38,
+                  height: 5,
+                  borderRadius: 3,
+                  backgroundColor: "rgba(255,255,255,0.85)",
+                }}
+              />
+            </View>
+            <View
+              style={{
+                marginTop: -HERO_OVERLAP,
+                paddingTop: 18,
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+                backgroundColor: colors.white,
+              }}
+            >
+              {children}
+            </View>
+          </>
+        ) : (
+          children
+        )}
       </BottomSheetScrollView>
     </BottomSheetModal>
   );

@@ -10,9 +10,11 @@ import {
   LIBRARY_FILTERS,
   libraryFilterLabel,
   libraryGroups,
+  pictureSummary,
   type LibraryFilter,
 } from "@sendtally/features/library";
 import { FilterChip } from "../../components/FilterChip";
+import { KindTile } from "../../training/components/KindTile";
 import { LibraryItemEditor } from "./LibraryItemEditor";
 
 export type LibraryPanelProps = {
@@ -30,6 +32,7 @@ function Row({ entry, onOpen }: { entry: LibraryEntry; onOpen: () => void }): Re
   const summary = descriptionSummary(entry.description);
   return (
     <button type="button" className="mod-lib-row" onClick={onOpen}>
+      <KindTile kind={kind} picture={entry.media[0]} />
       <span className="mod-lib-name">{entry.name}</span>
       <span className="mod-lib-mono" style={{ color: KIND_LOOK[kind].ink }}>
         {categoryLabel(kind)}
@@ -38,6 +41,11 @@ function Row({ entry, onOpen }: { entry: LibraryEntry; onOpen: () => void }): Re
         <span className="mod-lib-missing">No description</span>
       ) : (
         <span className="mod-lib-ok">✓ {summary}</span>
+      )}
+      {entry.media.length === 0 ? (
+        <span className="mod-lib-missing">No picture</span>
+      ) : (
+        <span className="mod-lib-ok">{pictureSummary(entry)}</span>
       )}
       <span className="mod-lib-faint">
         {entry.updatedAt === null
@@ -61,7 +69,7 @@ export function LibraryPanel({
   if (open !== undefined)
     return (
       <LibraryItemEditor
-        key={`${keyOf(open)}:${open.updatedAt ?? ""}`}
+        key={JSON.stringify([keyOf(open), open.name, open.description, open.translations])}
         api={api}
         entry={open}
         onBack={() => onOpen(null)}
@@ -81,9 +89,11 @@ export function LibraryPanel({
         ))}
       </div>
       <div className="mod-lib-row mod-lib-head" aria-hidden="true">
+        <span />
         <span>Name</span>
         <span>Category</span>
         <span>Description</span>
+        <span>Media</span>
         <span>Changed</span>
       </div>
       {libraryGroups(library, filter).map((group) => (

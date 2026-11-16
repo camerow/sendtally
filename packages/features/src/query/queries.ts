@@ -86,10 +86,10 @@ export const queries = {
       queryFn: async () => (await api.library()).library,
       staleTime: 5 * 60 * 1000,
     }),
-  libraryChanges: (api: SendtallyApi, type: LibraryType, id: string) =>
+  libraryItem: (api: SendtallyApi, type: LibraryType, id: string) =>
     queryOptions({
-      queryKey: ["libraryChanges", type, id],
-      queryFn: async () => (await api.libraryChanges(type, id)).changes,
+      queryKey: ["libraryItem", type, id],
+      queryFn: () => api.libraryItem(type, id),
     }),
   hang: (api: SendtallyApi) =>
     queryOptions({

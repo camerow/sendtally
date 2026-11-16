@@ -1931,6 +1931,19 @@
   overflow-y: auto;
 }
 
+.picker-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--line-on-light-soft);
+}
+
+.picker-item .picker-row {
+  flex: 1;
+  min-width: 0;
+  border-bottom: none;
+}
+
 .picker-row {
   min-height: 56px;
   display: flex;

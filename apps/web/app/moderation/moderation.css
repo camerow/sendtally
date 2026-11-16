@@ -800,7 +800,7 @@ a.mod-title:hover {
 
 .mod-lib-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) 110px 170px 110px;
+  grid-template-columns: 44px minmax(0, 1.4fr) 110px 170px 130px 90px;
   gap: 14px;
   align-items: center;
   width: 100%;
@@ -979,9 +979,77 @@ button.mod-lib-row:hover {
   font-size: 13.5px;
 }
 
+.mod-lib-by {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mod-lib-media {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-on-light-soft);
+}
+
+.mod-lib-media-thumb {
+  flex: none;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--surface-soft);
+}
+
+.mod-lib-upload {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-height: 44px;
+  border-top: 1px solid var(--line-on-light-soft);
+}
+
+.mod-lib-progress {
+  flex: 1;
+  min-width: 80px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--bs-azure) 40%, var(--surface-soft) 40%);
+  background-size: 250% 100%;
+  animation: mod-lib-progress 1.2s linear infinite;
+}
+
+@keyframes mod-lib-progress {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mod-lib-progress {
+    animation: none;
+  }
+}
+
+.mod-lib-preview-picture {
+  width: calc(100% + 32px);
+  margin: -20px -16px 8px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 24px 24px 0 0;
+  background: var(--surface-soft);
+}
+
 @media (max-width: 720px) {
+  .mod-lib-media {
+    flex-wrap: wrap;
+  }
+
   .mod-lib-row {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
     row-gap: 4px;
     padding: 10px 0;
   }

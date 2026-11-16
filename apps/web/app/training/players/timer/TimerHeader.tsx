@@ -1,4 +1,5 @@
 import React from "react";
+import { workoutAbout } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../../components/Icon";
 import { useGoBack } from "../../../lib/useGoBack";
@@ -26,6 +27,7 @@ export function TimerHeader({
 }: TimerHeaderProps): React.ReactElement {
   const minimise = useGoBack("/app/plan");
   const library = useLibrary();
+  const workout = workoutIn(library)(workoutId);
   return (
     <div className="timer-head">
       <button
@@ -39,7 +41,7 @@ export function TimerHeader({
       <div className="timer-head-title">
         <span className="timer-head-name-row">
           <span className="timer-head-name">{name}</span>
-          <AboutButton about={workoutIn(library)(workoutId)} label={t("workouts.about")} dark />
+          <AboutButton about={workout && workoutAbout(workout)} label={t("workouts.about")} dark />
         </span>
         <span className="timer-label timer-head-meta">{meta}</span>
       </div>

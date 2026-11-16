@@ -4,13 +4,19 @@ import { EXERCISE_KINDS, type WorkoutKind } from "@sendtally/core/hang";
 
 // Moderation is internal tooling: English only, no i18n.
 
-export type LibraryFilter = "all" | "noDescription" | "retired";
+export type LibraryFilter = "all" | "noDescription" | "noPicture" | "retired";
 
-export const LIBRARY_FILTERS: readonly LibraryFilter[] = ["all", "noDescription", "retired"];
+export const LIBRARY_FILTERS: readonly LibraryFilter[] = [
+  "all",
+  "noDescription",
+  "noPicture",
+  "retired",
+];
 
 const FILTER_LABELS: Record<LibraryFilter, string> = {
   all: "All",
   noDescription: "No description",
+  noPicture: "No picture",
   retired: "Retired",
 };
 
@@ -35,12 +41,30 @@ export const categoryLabel = (kind: WorkoutKind): string => CATEGORY[kind];
 export const entryKicker = (entry: LibraryEntry): string =>
   `${CATEGORY[entryKind(entry)]} ${entry.type === "workout" ? "workout" : "exercise"} · built-in`;
 
+const LACKS: Record<Exclude<LibraryFilter, "retired">, (entry: LibraryEntry) => boolean> = {
+  all: () => true,
+  noDescription: (e) => e.description === "",
+  noPicture: (e) => e.media.length === 0,
+};
+
 const matches = (entry: LibraryEntry, filter: LibraryFilter): boolean =>
   filter === "retired"
     ? entry.status === "retired"
-    : entry.status === "active" && (filter === "all" || entry.description === "");
+    : entry.status === "active" && LACKS[filter](entry);
 
-/** How many built-ins each filter shows; the tab counts the offered ones missing a description. */
+/** The tab's count: offered built-ins missing a description or a picture. */
+export const libraryTabCount = (library: BuiltInLibrary): number =>
+  [...library.workouts, ...library.grips, ...library.exercises].filter(
+    (e) => matches(e, "noDescription") || matches(e, "noPicture")
+  ).length;
+
+/** "No picture", "1 picture" or "3 pictures": the pictures the apps show. */
+export const pictureSummary = (entry: LibraryEntry): string =>
+  entry.media.length === 0
+    ? "No picture"
+    : `${entry.media.length} picture${entry.media.length === 1 ? "" : "s"}`;
+
+/** How many built-ins each filter shows. */
 export function filterCounts(library: BuiltInLibrary): Record<LibraryFilter, number> {
   const all = [...library.workouts, ...library.grips, ...library.exercises];
   return Object.fromEntries(
@@ -76,8 +100,43 @@ export function descriptionSummary(text: string): string | null {
 export const otherNameCount = (entry: Pick<LibraryEntry, "translations">): number =>
   Object.values(entry.translations).filter((t) => (t?.name ?? "") !== "").length;
 
-/** One line for a logged change: "Description edited", "Retired", "Name and other names edited". */
-export function changeSummary({ before, after }: Pick<LibraryChange, "before" | "after">): string {
+type Change = Pick<LibraryChange, "before" | "after">;
+
+const pictureIds = (s: Change["before"]): string[] => (s.media ?? []).map((m) => m.id);
+
+/** One line for a change to a built-in's pictures, or null when it changed none. */
+function pictureChange({ before, after }: Change): string | null {
+  if (before.media === undefined || after.media === undefined) return null;
+  const was = pictureIds(before);
+  const now = pictureIds(after);
+  if (now.length > was.length) return "Picture added";
+  if (now.length < was.length) return "Picture deleted";
+  // The first place the order differs holds a picture from further down, which moved up.
+  const moved = now.findIndex((id, i) => id !== was[i]);
+  if (moved !== -1) return `Picture ${was.indexOf(now[moved]!) + 1} moved up`;
+  const at = after.media.findIndex(
+    (m, i) => JSON.stringify(m) !== JSON.stringify(before.media![i])
+  );
+  if (at === -1) return "Saved unchanged";
+  const field = after.media[at]!.alt !== before.media[at]!.alt ? "alt text" : "credit";
+  return `Picture ${at + 1} ${field} edited`;
+}
+
+/**
+ * What a change offers: Restore puts it back; a deleted picture's file is gone, so it is
+ * permanent, and an added one is undone by deleting it.
+ */
+export function changeRestore(change: Change): "restore" | "permanent" | null {
+  const summary = pictureChange(change);
+  if (summary === "Picture deleted") return "permanent";
+  return summary === "Picture added" ? null : "restore";
+}
+
+/** One line for a logged change: "Description edited", "Retired", "Picture 2 moved up". */
+export function changeSummary(change: Change): string {
+  const pictures = pictureChange(change);
+  if (pictures !== null) return pictures;
+  const { before, after } = change;
   if (before.status !== after.status) return after.status === "retired" ? "Retired" : "Unretired";
   const names = (s: typeof before): string =>
     JSON.stringify(Object.values(s.translations).map((t) => t?.name ?? ""));

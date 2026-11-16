@@ -10,6 +10,8 @@ import {
   usePickerWorld,
   type ExerciseForm,
   type PickerEntry,
+  sourceAbout,
+  sourcePictures,
 } from "@sendtally/features/exercises";
 import { gripMeta } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -19,6 +21,8 @@ import { chipStyle } from "../../components/chip";
 import { Sheet } from "../../components/Sheet";
 import { useAppApi } from "../../lib/useAppApi";
 import { useHangData } from "../data/HangDataContext";
+import { KindTile } from "../components/KindTile";
+import { AboutButton } from "../players/AboutButton";
 import { CategorySheet } from "./CategorySheet";
 import { NewExerciseSheet } from "./NewExerciseSheet";
 import { useMake, usePick } from "./useMake";
@@ -185,23 +189,28 @@ export function ExercisePicker({
               const on = ticked.some((e) => e.key === entry.key);
               const meta = metaOf(entry);
               return (
-                <button
-                  key={entry.key}
-                  type="button"
-                  className="picker-row"
-                  role={multi ? "checkbox" : undefined}
-                  aria-checked={multi ? on : undefined}
-                  onClick={() => press(entry)}
-                >
-                  {multi && <span className={on ? "picker-tick picker-tick--on" : "picker-tick"} />}
-                  <span className="picker-row-text">
-                    <span className="picker-row-name">{entry.name}</span>
-                    {meta !== "" && <span className="picker-row-meta">{meta}</span>}
-                  </span>
-                  {entry.inWorkout && (
-                    <span className="train-label">{t("workouts.inWorkout")}</span>
-                  )}
-                </button>
+                <div key={entry.key} className="picker-item">
+                  <button
+                    type="button"
+                    className="picker-row"
+                    role={multi ? "checkbox" : undefined}
+                    aria-checked={multi ? on : undefined}
+                    onClick={() => press(entry)}
+                  >
+                    {multi && (
+                      <span className={on ? "picker-tick picker-tick--on" : "picker-tick"} />
+                    )}
+                    <KindTile kind={entry.kind} picture={sourcePictures(entry.source)[0]} />
+                    <span className="picker-row-text">
+                      <span className="picker-row-name">{entry.name}</span>
+                      {meta !== "" && <span className="picker-row-meta">{meta}</span>}
+                    </span>
+                    {entry.inWorkout && (
+                      <span className="train-label">{t("workouts.inWorkout")}</span>
+                    )}
+                  </button>
+                  <AboutButton about={sourceAbout(entry)} label={t("workouts.aboutExercise")} />
+                </div>
               );
             })}
           </div>

@@ -1,5 +1,6 @@
 import React from "react";
 import type { CalendarDate } from "@sendtally/core/hang";
+import { libraryPictures } from "@sendtally/features/library";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { CategoryRow } from "../components/CategoryRow";
 import { logLibraryWorkout } from "./startLibraryWorkout";
@@ -26,6 +27,7 @@ export function LogWorkoutRow({
       kind={workout.kind}
       name={workout.name}
       meta={dose}
+      picture={libraryPictures("workout", workout.id)[0]}
       onPress={() => {
         onLogged();
         logLibraryWorkout(workout, date, run);

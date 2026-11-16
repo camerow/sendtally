@@ -11,12 +11,14 @@ import {
   entryShelves,
   pickWith,
   useExerciseWorkout,
+  sourcePictures,
   usedInText,
   workoutsWith,
   wrapperOf,
   type ExerciseEntry,
   type PickerEntry,
 } from "@sendtally/features/exercises";
+import { libraryPictures } from "@sendtally/features/library";
 import { kindLabel } from "@sendtally/features/activities";
 import { libraryLine, libraryShelves, useWorkoutActions } from "@sendtally/features/workouts";
 import { Alert, View } from "react-native";
@@ -259,6 +261,7 @@ export function AddWorkoutsSheet({
                         kind={e.kind}
                         name={e.name}
                         meta={usedInText(using.length)}
+                        picture={sourcePictures(e.source)[0]}
                         state={now}
                         thereLabel={thereLabel}
                         onOpen={() => openEntry(e)}
@@ -286,6 +289,7 @@ export function AddWorkoutsSheet({
                         kind={w.kind}
                         name={w.name}
                         meta={libraryLine(w, model.settings.units)}
+                        picture={libraryPictures("workout", w.id)[0]}
                         state={now}
                         thereLabel={thereLabel}
                         onOpen={() => leave("/workout/[id]", { id: w.id })}

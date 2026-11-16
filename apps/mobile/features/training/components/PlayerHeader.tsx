@@ -1,4 +1,5 @@
 import React from "react";
+import { workoutAbout } from "@sendtally/features/exercises";
 import { View } from "react-native";
 import type { ActivityKind } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
@@ -51,7 +52,11 @@ export function PlayerHeader({
           <Title size={32} style={{ flexShrink: 1 }}>
             {title}
           </Title>
-          <AboutButton about={workout} label={t("workouts.about")} color={colors.textMuted} />
+          <AboutButton
+            about={workout && workoutAbout(workout)}
+            label={t("workouts.about")}
+            color={colors.textMuted}
+          />
         </View>
         <WorkoutNotes workoutId={workoutId} />
       </View>

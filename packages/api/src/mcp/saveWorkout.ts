@@ -32,7 +32,7 @@ export const saveWorkout: ConnectorTool<typeof inputSchema> = {
   inputSchema,
   annotations: { readOnlyHint: false, destructiveHint: false },
   run: async ({ key, id: editing, ...input }, { env, userId }) => {
-    const library = await repo.library(env.DB);
+    const library = await repo.library(env.DB, env.MEDIA_URL);
     const old =
       editing === undefined
         ? undefined

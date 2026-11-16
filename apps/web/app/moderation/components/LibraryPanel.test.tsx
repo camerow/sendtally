@@ -28,7 +28,8 @@ const library: BuiltInLibrary = {
 
 const api = {
   saveLibraryEntry: vi.fn(async () => ({})),
-  libraryChanges: vi.fn(async () => ({
+  libraryItem: vi.fn(async () => ({
+    media: [],
     changes: [
       {
         id: "c1",
@@ -96,9 +97,10 @@ describe("LibraryPanel", () => {
     const half = button("Half crimp");
     expect(half.textContent).toContain("✓ 1 paragraph");
     expect(half.textContent).toContain("Seeded");
+    expect(half.textContent).toContain("No picture");
     act(() => button("Retired").click());
     expect(
-      [...container.querySelectorAll("button.mod-lib-row")].map((r) => r.firstChild?.textContent)
+      [...container.querySelectorAll("button.mod-lib-row .mod-lib-name")].map((r) => r.textContent)
     ).toEqual(["Mono"]);
     act(() => button("Mono").click());
     expect(opened.item).toBe("grip:mono");

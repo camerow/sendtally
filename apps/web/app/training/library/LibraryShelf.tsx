@@ -1,5 +1,6 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
+import { libraryPictures } from "@sendtally/features/library";
 import { focusLabel, focusMeaning, focusParam } from "@sendtally/features/training";
 import { libraryLine, type LibraryShelf as Shelf } from "@sendtally/features/workouts";
 import { CategoryRow } from "../components/CategoryRow";
@@ -39,6 +40,7 @@ export function LibraryShelf({
           kind={w.kind}
           name={w.name}
           meta={libraryLine(w, model.settings.units)}
+          picture={libraryPictures("workout", w.id)[0]}
           to={workoutPath(w.id)}
         />
       ))}

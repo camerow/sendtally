@@ -1,5 +1,6 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
+import { libraryPictures } from "@sendtally/features/library";
 import { focusLabel } from "@sendtally/features/training";
 import { libraryLine, libraryShelves } from "@sendtally/features/workouts";
 import { Sheet } from "../../components/Sheet";
@@ -44,6 +45,7 @@ function Picker(): React.ReactElement {
                   kind={w.kind}
                   name={w.name}
                   meta={libraryLine(w, model.settings.units)}
+                  picture={libraryPictures("workout", w.id)[0]}
                   to={to}
                 />
               );

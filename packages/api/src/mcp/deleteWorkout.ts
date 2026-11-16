@@ -13,7 +13,7 @@ export const deleteWorkout: ConnectorTool<typeof inputSchema> = {
   inputSchema,
   annotations: { readOnlyHint: false, destructiveHint: true },
   run: async ({ id: workoutId }, { env, userId }) => {
-    owned(true, "workout", workoutId, (await repo.library(env.DB)).workouts);
+    owned(true, "workout", workoutId, (await repo.library(env.DB, env.MEDIA_URL)).workouts);
     const deleted = await repo.deleteWorkout(env.DB, userId, workoutId);
     return { deleted: owned(deleted, "workout", workoutId) };
   },

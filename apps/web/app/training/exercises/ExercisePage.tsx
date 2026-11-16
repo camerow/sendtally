@@ -1,4 +1,5 @@
 import React from "react";
+import { libraryPictures } from "@sendtally/features/library";
 import { Link } from "react-router";
 import type { Exercise } from "@sendtally/api-client";
 import {
@@ -81,6 +82,7 @@ function Detail({
   return (
     <DetailFrame
       backTo={EXERCISES_VIEW}
+      hero={libraryPictures("exercise", exercise.builtIn)}
       action={
         <span className="detail-actions">
           <Link to={editExercisePath(exercise.id)} className="edit-button">

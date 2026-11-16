@@ -17,6 +17,9 @@
       "migrations_dir": "migrations",
     },
   ],
+  // Library pictures, created in infra/terraform/r2.tf and served from MEDIA_URL. Locally
+  // wrangler keeps the bucket on disk and the Worker serves it under /media.
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "sendtally-media-dev" }],
   // Per user, on connector tool calls. Each environment counts in its own namespace.
   "ratelimits": [
     {
@@ -27,6 +30,7 @@
   ],
   "vars": {
     "WEB_APP_URL": "http://localhost:5173",
+    "MEDIA_URL": "http://localhost:8787/media",
     "CLERK_PUBLISHABLE_KEY": "pk_test_bGlnaHQtbGlnZXItOTkuY2xlcmsuYWNjb3VudHMuZGV2JA",
   },
   "env": {
@@ -40,6 +44,7 @@
           "migrations_dir": "migrations",
         },
       ],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "sendtally-media-staging" }],
       "ratelimits": [
         {
           "name": "CONNECTOR_RATE_LIMITER",
@@ -49,6 +54,7 @@
       ],
       "vars": {
         "WEB_APP_URL": "https://staging.sendtally.com",
+        "MEDIA_URL": "https://media-staging.sendtally.com",
         "CLERK_PUBLISHABLE_KEY": "pk_test_bGlnaHQtbGlnZXItOTkuY2xlcmsuYWNjb3VudHMuZGV2JA",
         "PREVIEW_ORIGIN_SUFFIX": "-sendtally-web-staging.chalk-and-circuits.workers.dev",
         // No PostHog token: staging is the pull request sandbox and the e2e flows, so its
@@ -69,6 +75,7 @@
           "migrations_dir": "migrations",
         },
       ],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "sendtally-media-production" }],
       "ratelimits": [
         {
           "name": "CONNECTOR_RATE_LIMITER",
@@ -78,6 +85,7 @@
       ],
       "vars": {
         "WEB_APP_URL": "https://sendtally.com",
+        "MEDIA_URL": "https://media.sendtally.com",
         "CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuc2VuZHRhbGx5LmNvbSQ",
         "POSTHOG_PROJECT_TOKEN": "phc_mK5KViTzigeXd5KwHRkP2pK2WNCSUdeTcvmTEudpatRH",
         "POSTHOG_HOST": "https://us.i.posthog.com",

@@ -1,9 +1,9 @@
 import React from "react";
 import { Link } from "react-router";
-import type { WorkoutKind } from "@sendtally/core/hang";
+import type { LibraryPicture, WorkoutKind } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import { KIND_LOOK } from "@sendtally/features/training";
-import { CategoryMark } from "./CategoryMark";
+import { KindTile } from "./KindTile";
 
 export type CategoryRowProps = {
   kind: WorkoutKind;
@@ -15,11 +15,11 @@ export type CategoryRowProps = {
   faded?: boolean;
   /** Off where the list already names the category. */
   showKind?: boolean;
-  /** Off under a heading that already carries the category's mark. */
-  showMark?: boolean;
+  /** The built-in's first picture, as its tile; the kind's tile without one. */
+  picture?: LibraryPicture;
 };
 
-/** A workout or exercise in a list: its category's mark, its name, and CATEGORY · meta below. */
+/** A workout or exercise in a list: its tile, its name, and CATEGORY · meta below. */
 export function CategoryRow({
   kind,
   name,
@@ -27,12 +27,12 @@ export function CategoryRow({
   to,
   faded = false,
   showKind = true,
-  showMark = true,
+  picture,
 }: CategoryRowProps): React.ReactElement {
   const rest = meta === null || meta === "" ? null : meta;
   const body = (
     <>
-      {showMark && <CategoryMark kind={kind} />}
+      <KindTile kind={kind} picture={picture} />
       <span className="category-row-text">
         <span className="category-row-name">{name}</span>
         <span

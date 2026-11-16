@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { libraryPictures } from "@sendtally/features/library";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { useActivities } from "@sendtally/features/activities";
@@ -135,6 +136,7 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
   return (
     <ScreenFrame
       overlay={addToBlock.toast && <Toast {...addToBlock.toast} />}
+      hero={libraryPictures("workout", workout.id)}
       action={adding === null && <DetailActions {...bar} />}
       footer={
         adding === null ? (

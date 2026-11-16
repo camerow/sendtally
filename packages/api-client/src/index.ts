@@ -48,7 +48,10 @@ import type {
   LibraryChange,
   LibraryEdit,
   LibraryEntry,
+  LibraryMediaRow,
   LibraryType,
+  MediaEdit,
+  PictureUpload,
   ModerationCreations,
   ModerationQueue,
   PostOutcome,
@@ -109,7 +112,7 @@ export class SendtallyApi {
       headers: async () => {
         const token = await getToken();
         if (token === null) throw new ApiError(401, "not signed in");
-        return { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+        return { Authorization: `Bearer ${token}` };
       },
     });
   }
@@ -459,10 +462,35 @@ export class SendtallyApi {
     );
   }
 
-  libraryChanges(type: LibraryType, id: string): Promise<{ changes: LibraryChange[] }> {
+  libraryItem(
+    type: LibraryType,
+    id: string
+  ): Promise<{ media: LibraryMediaRow[]; changes: LibraryChange[] }> {
+    return body(this.client.v1.moderation.library[":type"][":id"].$get({ param: { type, id } }));
+  }
+
+  addLibraryPicture(
+    type: LibraryType,
+    id: string,
+    form: PictureUpload,
+    signal?: AbortSignal
+  ): Promise<{ id: string }> {
     return body(
-      this.client.v1.moderation.library[":type"][":id"].changes.$get({ param: { type, id } })
+      this.client.v1.moderation.library[":type"][":id"].media.$post(
+        { param: { type, id }, form },
+        { init: { signal } }
+      )
     );
+  }
+
+  editLibraryMedia(id: string, edit: MediaEdit): Promise<{ id: string }> {
+    return body(
+      this.client.v1.moderation.library.media[":id"].$patch({ param: { id }, json: edit })
+    );
+  }
+
+  deleteLibraryMedia(id: string): Promise<{ id: string }> {
+    return body(this.client.v1.moderation.library.media[":id"].$delete({ param: { id } }));
   }
 
   restoreLibraryChange(id: string): Promise<{ entry: LibraryEntry }> {

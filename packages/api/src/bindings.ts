@@ -5,6 +5,7 @@
 
 export type Env = {
   DB: D1Database;
+  MEDIA: R2Bucket;
   CONNECTOR_RATE_LIMITER: RateLimit;
   TOKEN_KEY: string;
   CLERK_SECRET_KEY: string;
@@ -16,6 +17,7 @@ export type Env = {
   REVENUECAT_SECRET_API_KEY: string;
   REVENUECAT_WEBHOOK_AUTH: string;
   WEB_APP_URL: string;
+  MEDIA_URL: string;
   PREVIEW_ORIGIN_SUFFIX?: string;
   POSTHOG_PROJECT_TOKEN?: string;
   POSTHOG_HOST?: string;

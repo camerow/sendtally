@@ -328,6 +328,43 @@
   gap: 6px;
 }
 
+.sheet--hero {
+  --sheet-pad-top: 24px;
+  --sheet-pad-x: 24px;
+  overflow-y: auto;
+}
+
+.sheet-hero {
+  position: relative;
+  flex-shrink: 0;
+  margin: calc(-1 * var(--sheet-pad-top)) calc(-1 * var(--sheet-pad-x)) 0;
+}
+
+.sheet-hero img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--surface-soft);
+  color: var(--text-on-white-secondary);
+}
+
+.sheet--hero .sheet-handle {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.sheet--hero .sheet-head {
+  position: relative;
+  margin: -44px calc(-1 * var(--sheet-pad-x)) 0;
+  padding: 20px var(--sheet-pad-x) 0;
+  border-radius: 24px 24px 0 0;
+  background: var(--surface-card);
+}
+
 .sheet-back {
   align-self: flex-start;
   width: 36px;
@@ -674,6 +711,11 @@
 
   .sheet .sheet-handle {
     display: block;
+  }
+
+  .sheet--hero {
+    --sheet-pad-top: 10px;
+    --sheet-pad-x: 18px;
   }
 
   .sheet-cancel {

@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { libraryPictures } from "@sendtally/features/library";
 import { Text, View } from "react-native";
 import { gripSeries, setupsOf, summarise, type GripSetup } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
@@ -99,6 +100,7 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
   return (
     <ScreenFrame
       overlay={addTo.toast && <Toast {...addTo.toast} />}
+      hero={libraryPictures("grip", id)}
       action={
         <DetailActions
           onEdit={grip === undefined ? undefined : () => openGripEditor(id)}

@@ -17,12 +17,14 @@ import {
   pickWith,
   useExerciseWorkout,
   usePickerWorld,
+  sourcePictures,
   usedInText,
   workoutsWith,
   wrapperOf,
   type ExerciseEntry,
   type PickerEntry,
 } from "@sendtally/features/exercises";
+import { libraryPictures } from "@sendtally/features/library";
 import { libraryLine, libraryShelves, useWorkoutActions } from "@sendtally/features/workouts";
 import { Segmented } from "../../components/Segmented";
 import { Sheet, type SheetAction } from "../../components/Sheet";
@@ -209,6 +211,7 @@ export function AddWorkoutsSheet({
                         kind={e.kind}
                         name={e.name}
                         meta={usedInText(using.length)}
+                        picture={sourcePictures(e.source)[0]}
                         to={entryPath(e)}
                         state={stateOf(
                           mine,
@@ -239,6 +242,7 @@ export function AddWorkoutsSheet({
                         kind={w.kind}
                         name={w.name}
                         meta={libraryLine(w, model.settings.units)}
+                        picture={libraryPictures("workout", w.id)[0]}
                         to={workoutPath(w.id)}
                         state={stateOf(w.id, [w.id])}
                         thereLabel={thereLabel}

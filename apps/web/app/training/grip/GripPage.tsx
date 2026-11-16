@@ -1,4 +1,5 @@
 import React from "react";
+import { libraryPictures } from "@sendtally/features/library";
 import { Link, useNavigate } from "react-router";
 import { gripSeries, setupsOf, summarise, type GripSetup } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
@@ -88,6 +89,7 @@ export function GripPage({ id }: { id: string }): React.ReactElement {
   return (
     <DetailFrame
       backTo={EXERCISES_VIEW}
+      hero={libraryPictures("grip", id)}
       action={
         <span className="detail-actions">
           {grip !== undefined && (
