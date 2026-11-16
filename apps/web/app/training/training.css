@@ -1545,6 +1545,13 @@
   color: var(--bs-gunmetal);
 }
 
+.hang-grid-rpe {
+  width: 58px;
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .hang-count {
   font-family: var(--font-mono);
   font-weight: 600;

@@ -2,7 +2,7 @@ import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
 import type { CalendarDate, WeightUnit } from "@sendtally/core/hang";
 import { climbsLine, isClimbingSets, wallLine } from "./climbing";
 import { setText } from "./done";
-import { bestSet, hangTotals } from "./summary";
+import { bestSet, hangGrids, hangTotals } from "./summary";
 import { dayMonth, loadLabel } from "../hang/format";
 import type { HangModel } from "../hang/model";
 import { t } from "../i18n";
@@ -37,18 +37,24 @@ export function activityItem(a: ActivityRecord, unit: WeightUnit, currentId?: st
   };
 }
 
-/** A hangboard session: the grip, the load on it and how many hangs held. */
-export function hangItem(s: HangSessionRecord, model: HangModel, currentId?: string): HistoryItem {
+/**
+ * A hangboard session: the grip, the load on it and how many hangs held. One that ran several
+ * grips names them all and leaves the load off, each grip having its own.
+ */
+export function hangItem(
+  s: HangSessionRecord,
+  model: Pick<HangModel, "gripName" | "settings">,
+  currentId?: string
+): HistoryItem {
+  const grips = hangGrids(s).map((g) => model.gripName(g.gripId));
   const totals = hangTotals(s);
   const current = s.id === currentId;
+  const load = grips.length > 1 ? [] : [loadLabel(s.protocol.kind, s.loadKg, model.settings.units)];
   return {
     id: s.id,
     date: dayMonth(s.date),
-    name: named(model.gripName(s.gripId), current),
-    meta: [
-      loadLabel(s.protocol.kind, s.loadKg, model.settings.units),
-      t("summary.hangsOf", { held: totals.held, total: totals.total }),
-    ].join(" · "),
+    name: named(grips.join(", "), current),
+    meta: [...load, t("summary.hangsOf", { held: totals.held, total: totals.total })].join(" · "),
     rpe: s.rpe,
     current,
   };

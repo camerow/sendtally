@@ -1,7 +1,9 @@
 import type { Activity } from "@sendtally/api-client";
 import {
+  hangKindOf,
   hangSessionItems,
   type CalendarDate,
+  type HangKind,
   type HangSession,
   type SetDone,
 } from "@sendtally/core/hang";
@@ -173,43 +175,85 @@ export function hangSets({ protocol, pct, loadKg, done = [] }: HangLog): SetDone
 /** Each hang of each set, held or let go, with each set's load: hangs fill from the left. */
 export type HangGrid = { rows: boolean[][]; loads: number[]; held: number; total: number };
 
-export function hangGrid(session: HangLog): HangGrid {
-  const { reps } = session.protocol;
-  const sets = hangSets(session);
+const gridOf = (sets: readonly SetDone[], reps: number, loadKg: number): HangGrid => {
   const rows = sets.map((s) => Array.from({ length: reps }, (_, r) => r < (s.reps ?? reps)));
   return {
     rows,
-    loads: sets.map((s) => s.weightKg ?? session.loadKg),
+    loads: sets.map((s) => s.weightKg ?? loadKg),
     held: rows.flat().filter(Boolean).length,
     total: rows.flat().length,
   };
+};
+
+/** One grip a session ran, as its card draws it: its edge, each set's hangs and load, and each set's RPE where rated. */
+export type HangGripGrid = HangGrid & {
+  gripId: string;
+  kind: HangKind;
+  edgeMm: number;
+  rpes: (number | undefined)[];
+};
+
+type HangRun = HangLog & Pick<HangSession, "gripId" | "edgeMm">;
+
+/** Every grip a session ran that kept a set, in the order it ran; the first always. */
+export function hangGrids(session: HangRun): HangGripGrid[] {
+  const done = session.done ?? [];
+  return hangSessionItems({ ...session, done }).flatMap(({ exercise, dose }, item) => {
+    const first = item === 0;
+    const sets = first ? hangSets(session) : (done.find((d) => d.item === item)?.sets ?? []);
+    if (sets.length === 0) return [];
+    return [
+      {
+        ...gridOf(sets, dose.reps ?? 1, session.loadKg),
+        gripId: exercise,
+        kind: first ? session.protocol.kind : hangKindOf(dose),
+        edgeMm: first ? session.edgeMm : (sets[0]?.edgeMm ?? dose.edgeMm ?? 0),
+        rpes: sets.map((s) => s.rpe),
+      },
+    ];
+  });
 }
 
 /** Hangs held of hangs asked, and each set's load, over every grip a session ran. */
 export type HangTotals = Pick<HangGrid, "held" | "total" | "loads">;
 
-export function hangTotals(session: HangLog & Pick<HangSession, "gripId">): HangTotals {
-  const items = hangSessionItems({ ...session, done: session.done ?? [] });
-  const grips = [
-    { sets: hangSets(session), reps: session.protocol.reps },
-    ...(session.done ?? [])
-      .filter((d) => d.item !== 0)
-      .map((d) => ({ sets: d.sets, reps: items[d.item]?.dose.reps ?? 1 })),
-  ];
-  return grips.reduce<HangTotals>(
-    (sum, { sets, reps }) => ({
-      held: sum.held + sets.reduce((n, s) => n + Math.min(reps, s.reps ?? reps), 0),
-      total: sum.total + sets.length * reps,
-      loads: [...sum.loads, ...sets.map((s) => s.weightKg ?? session.loadKg)],
+export const hangTotals = (session: HangRun): HangTotals =>
+  hangGrids(session).reduce<HangTotals>(
+    (sum, g) => ({
+      held: sum.held + g.held,
+      total: sum.total + g.total,
+      loads: [...sum.loads, ...g.loads],
     }),
     { held: 0, total: 0, loads: [] }
   );
+
+type Hang = Dated & HangRun;
+
+/** A session's top load on one grip. */
+export type GripLoad = { id: string; loadKg: number };
+
+/**
+ * Every session that ran this grip with the same kind, oldest first, at its top load there: the
+ * added weight over time. None when every one hung at bodyweight, which has no weight to chart.
+ */
+export function gripLoads(
+  grip: Pick<HangGripGrid, "gripId" | "kind">,
+  all: readonly Hang[]
+): GripLoad[] {
+  const on = [...all].sort(chronological).flatMap((s) =>
+    hangGrids(s)
+      .filter((g) => g.gripId === grip.gripId && g.kind === grip.kind)
+      .slice(0, 1)
+      .map((g) => ({ id: s.id, loadKg: Math.max(0, ...g.loads) }))
+  );
+  return on.every((s) => s.loadKg === 0) ? [] : on;
 }
 
-type Hang = Dated & Pick<HangSession, "workoutId" | "gripId" | "loadKg" | "protocol">;
-
-/** Every session on this grip of the same kind, oldest first: the added weight over time. */
-export const gripSessions = <T extends Hang>(session: T, all: readonly T[]): T[] =>
-  all
-    .filter((s) => s.gripId === session.gripId && s.protocol.kind === session.protocol.kind)
-    .sort(chronological);
+/**
+ * Each load's bar as a share of the chart's height, from zero: equal loads draw equal full bars and
+ * the rest in proportion. Assisted loads run from the most assisted up to zero.
+ */
+export function loadShares(loads: readonly number[]): number[] {
+  const [lo, hi] = [Math.min(0, ...loads), Math.max(0, ...loads)];
+  return loads.map((kg) => (kg - lo) / (hi - lo || 1));
+}

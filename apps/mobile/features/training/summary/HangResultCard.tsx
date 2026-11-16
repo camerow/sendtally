@@ -1,33 +1,24 @@
 import React from "react";
 import { Text, View } from "react-native";
-import type { HangSession, WeightUnit } from "@sendtally/core/hang";
+import type { WeightUnit } from "@sendtally/core/hang";
 import { colors, radius } from "@sendtally/design/tokens";
-import { hangGrid } from "@sendtally/features/activities";
+import type { HangGripGrid } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { type } from "../type";
 import { HangGrid } from "./HangGrid";
 import { Label } from "../components/Label";
 import { hangCount } from "@sendtally/features/activities";
 
-type Hang = Pick<HangSession, "protocol" | "pct" | "loadKg" | "edgeMm" | "done">;
-
 export type HangResultCardProps = {
-  session: Hang;
+  grid: HangGripGrid;
   gripName: string;
   unit: WeightUnit;
 };
 
-/** A hangboard session's hangs and load, set by set, and how many hangs it held. */
-export function HangResultCard({
-  session,
-  gripName,
-  unit,
-}: HangResultCardProps): React.ReactElement {
-  const grid = hangGrid(session);
+/** One grip of a hangboard session: its hangs, load and RPE set by set, and how many hangs it held. */
+export function HangResultCard({ grid, gripName, unit }: HangResultCardProps): React.ReactElement {
   const name =
-    session.protocol.kind === "hang"
-      ? `${gripName} · ${t("hang.edgeMm", { n: session.edgeMm })}`
-      : gripName;
+    grid.kind === "hang" ? `${gripName} · ${t("hang.edgeMm", { n: grid.edgeMm })}` : gripName;
   return (
     <View
       style={{
@@ -47,7 +38,7 @@ export function HangResultCard({
           {t("summary.load")}
         </Label>
       </View>
-      <HangGrid rows={grid.rows} loads={grid.loads} unit={unit} />
+      <HangGrid rows={grid.rows} loads={grid.loads} rpes={grid.rpes} unit={unit} />
       <Text style={[type.monoBold, { fontSize: 13, color: colors.gunmetal }]}>
         {hangCount(grid, unit)}
       </Text>

@@ -1,14 +1,16 @@
 import React from "react";
-import type { HangSession, WeightUnit } from "@sendtally/core/hang";
+import type { HangKind, WeightUnit } from "@sendtally/core/hang";
+import { loadShares, type GripLoad } from "@sendtally/features/activities";
 import { loadLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 
-const LOW = 10;
+const MIN = 4;
 const HIGH = 70;
 
 export type GripTrendProps = {
   /** Every session on the grip, oldest first. */
-  sessions: readonly Pick<HangSession, "id" | "loadKg" | "protocol">[];
+  sessions: readonly GripLoad[];
+  kind: HangKind;
   currentId: string;
   unit: WeightUnit;
 };
@@ -16,15 +18,14 @@ export type GripTrendProps = {
 /** The added weight on this grip, session by session, this one in gold. */
 export function GripTrend({
   sessions,
+  kind,
   currentId,
   unit,
 }: GripTrendProps): React.ReactElement | null {
-  const [first] = sessions;
-  if (first === undefined || sessions.length < 2) return null;
+  if (sessions.length < 2) return null;
   const loads = sessions.map((s) => s.loadKg);
-  const [lo, hi] = [Math.min(...loads), Math.max(...loads)];
-  const height = (kg: number): number => LOW + ((kg - lo) / (hi - lo || 1)) * (HIGH - LOW);
-  const label = (kg: number): string => loadLabel(first.protocol.kind, kg, unit);
+  const shares = loadShares(loads);
+  const label = (kg: number): string => loadLabel(kind, kg, unit);
   return (
     <div className="trend-card">
       <div className="trend-card-head">
@@ -39,16 +40,16 @@ export function GripTrend({
         role="img"
         aria-label={t("statistics.exerciseChart", {
           exercise: t("summary.addedWeight"),
-          from: label(first.loadKg),
-          to: label(loads.at(-1) ?? first.loadKg),
+          from: label(loads[0] ?? 0),
+          to: label(loads.at(-1) ?? 0),
         })}
         className="grip-bars"
       >
-        {sessions.map((s) => (
+        {sessions.map((s, i) => (
           <span
             key={s.id}
             style={{
-              height: height(s.loadKg),
+              height: Math.max(MIN, (shares[i] ?? 0) * HIGH),
               background: s.id === currentId ? "var(--bs-gold)" : "rgba(64,63,76,0.3)",
             }}
           />
