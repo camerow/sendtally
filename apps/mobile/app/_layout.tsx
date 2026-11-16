@@ -59,6 +59,7 @@ const SIGNED_IN_SCREENS = [
   "profile",
   "membership",
   "import",
+  "first-run",
   "workout/[id]",
   "workout/edit",
   "workout/category",

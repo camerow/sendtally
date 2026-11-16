@@ -21,6 +21,7 @@ export default [
     route("app", "routes/app.tsx", [
       index("routes/app._index.tsx"),
       route("setup", "routes/app.setup.tsx"),
+      route("start", "routes/app.start.tsx"),
       route("sessions/new", "routes/app.sessions.new.tsx"),
       route("sessions/live", "routes/app.sessions.live.tsx"),
       route("sessions/:fingerprint", "routes/app.sessions.$fingerprint.tsx"),

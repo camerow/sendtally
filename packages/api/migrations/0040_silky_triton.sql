@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `first_run_step` integer DEFAULT 0 NOT NULL;

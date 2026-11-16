@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
-import { importResultText } from "./importResultText";
+import { describe, expect, it } from "vitest";
+import { importResultText, readImportResult } from "./importResultText";
 
 describe("importResultText", () => {
   it("words the result for a new, partly seen and fully seen file", () => {
@@ -17,5 +17,13 @@ describe("importResultText", () => {
     expect(importResultText({ imported: 7, skipped: 2, likely: 1 })).toBe(
       "Added 7 · 2 already there · 1 likely duplicate skipped"
     );
+  });
+});
+
+describe("readImportResult", () => {
+  it("reads a result from params, and none when the screen did not come back from an import", () => {
+    const params = new URLSearchParams("imported=5&likely=1");
+    expect(readImportResult((k) => params.get(k))).toEqual({ imported: 5, skipped: 0, likely: 1 });
+    expect(readImportResult(() => null)).toBeNull();
   });
 });

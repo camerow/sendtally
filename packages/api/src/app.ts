@@ -193,6 +193,17 @@ const saveEntry = async (
   return { entry: await entryResponse(c.env, userId, id) };
 };
 
+/** Step 1 answered, by any way out of it; its event and the person property are set once. */
+const answerFirstRunLog = async (
+  c: Context<AppEnv>,
+  existingLog: z.output<typeof firstRunLog>
+): Promise<void> => {
+  const userId = c.get("userId");
+  if (!(await repo.reachFirstRunStep(c.env.DB, userId, 2))) return;
+  await identifyUser(c.env, userId, { existing_log: existingLog });
+  await captureEvent(c, "first_run_log_answered", { existing_log: existingLog });
+};
+
 const saveGym = async (c: Context<AppEnv>, id: string, form: z.output<typeof gymBody>) => {
   const userId = c.get("userId");
   const gym = {
@@ -581,6 +592,27 @@ const trainingRemindersBody = z.object({
     .optional(),
   promptSeen: z.boolean().optional(),
 });
+
+const firstRunLog = z.enum([
+  "kaya",
+  "8a",
+  "mountainProject",
+  "sendage",
+  "theCrag",
+  "spreadsheet",
+  "none",
+  "skipped",
+]);
+
+const firstRunBody = z.discriminatedUnion("step", [
+  z.object({ step: z.literal("started") }),
+  z.object({ step: z.literal("log_answered"), existingLog: firstRunLog }),
+  z.object({
+    step: z.literal("finished"),
+    climbingDays: z.number().int().min(0).max(7),
+    endedAt: z.enum(["plan", "skip_log", "skip_days"]),
+  }),
+]);
 
 const stravaPostingBody = z.object({
   enabled: z.boolean(),
@@ -1920,6 +1952,7 @@ const app = new Hono<AppEnv>()
       gradeScales: { boulder: scales.boulder, route: scales.route },
       role: user?.role ?? "user",
       trainingReminders: repo.trainingRemindersOf(user),
+      firstRun: await repo.showsFirstRun(c.env.DB, userId, user),
       strava:
         strava === null
           ? null
@@ -1975,6 +2008,26 @@ const app = new Hono<AppEnv>()
       return c.json({ trainingReminders: reminders });
     }
   )
+
+  .put("/v1/preferences/first-run", zValidator("json", firstRunBody, invalidBody), async (c) => {
+    const userId = c.get("userId");
+    const form = c.req.valid("json");
+    await repo.ensureUser(c.env.DB, userId);
+    if (form.step === "started") {
+      if (await repo.reachFirstRunStep(c.env.DB, userId, 1))
+        await captureEvent(c, "first_run_started");
+    } else if (form.step === "log_answered") {
+      await answerFirstRunLog(c, form.existingLog);
+    } else {
+      await answerFirstRunLog(c, "skipped");
+      if (await repo.reachFirstRunStep(c.env.DB, userId, 3))
+        await captureEvent(c, "first_run_finished", {
+          climbing_days: form.climbingDays,
+          ended_at: form.endedAt,
+        });
+    }
+    return c.json({ ok: true });
+  })
 
   .put(
     "/v1/connections/strava/posting",

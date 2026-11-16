@@ -30,6 +30,7 @@ import { CALENDAR_PATH } from "../plan-calendar/paths";
 import { AddWorkoutsSheet } from "./AddWorkoutsSheet";
 import { DaySection } from "./DaySection";
 import { WeekStrip } from "./WeekStrip";
+import { useImportResultToast } from "../../import/useImportResultToast";
 
 const weekOffset = (today: CalendarDate, date: CalendarDate): number =>
   daysBetween(weekStart(today), weekStart(date)) / 7;
@@ -51,6 +52,7 @@ export function PlanPage(): React.ReactElement {
   const [selected, setSelected] = React.useState<CalendarDate>(start);
   const [adding, setAdding] = React.useState(false);
   const scheduled = useScheduledToast();
+  useImportResultToast();
   const strip = React.useRef<HTMLDivElement>(null);
   const days = React.useRef(new Map<CalendarDate, HTMLElement>());
   const target = React.useRef<CalendarDate | null>(start);

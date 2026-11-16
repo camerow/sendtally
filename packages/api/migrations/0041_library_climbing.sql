@@ -1,0 +1,5 @@
+-- Data-only: Climbing, the plain climbing day first run plans. It has no items, so its Start
+-- opens the live session; minutes and target RPE stay unset, as the session records both.
+INSERT INTO library_items (type, id, position, name, description, translations, spec) VALUES
+('workout', 'climb-session', (SELECT coalesce(max(position), -1) + 1 FROM library_items WHERE type = 'workout'), 'Climbing', 'Your usual climbing day. Start opens the live session to log what you climb.', '{"de":{"name":"Klettern","description":"Dein üblicher Klettertag. Start öffnet die Live-Session, in der du festhältst, was du kletterst."},"fr":{"name":"Escalade","description":"Ta journée d''escalade habituelle. Démarrer ouvre la séance en direct pour noter ce que tu grimpes."},"es":{"name":"Escalada","description":"Tu día habitual de escalada. Empezar abre la sesión en directo para anotar lo que escalas."}}', '{"kind":"climbing","focus":null,"minutes":null,"targetRpe":null,"items":[]}')
+ON CONFLICT (type, id) DO NOTHING;

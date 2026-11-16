@@ -448,5 +448,12 @@ export const TEST_LIBRARY: BuiltInLibrary = {
         ],
       }
     ),
+    workout(
+      "climb-session",
+      "Climbing",
+      ["Klettern", "Escalade", "Escalada"],
+      "Your usual climbing day. Start opens the live session to log what you climb.",
+      { kind: "climbing", focus: null, minutes: null, targetRpe: null, items: [] }
+    ),
   ],
 };

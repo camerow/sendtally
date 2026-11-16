@@ -25,6 +25,7 @@
   --surface-panel: var(--bs-gunmetal);
   --surface-accent-pink: var(--bs-petal-ink); /* purple panels carry text-on-dark tokens */
   --surface-accent-gold: var(--bs-gold);
+  --surface-selected: rgba(249, 220, 92, 0.35); /* a picked option row */
 
   /* Text on dark (gunmetal) */
   --text-on-dark: var(--bs-white);
@@ -36,6 +37,7 @@
   --text-on-light: var(--bs-gunmetal); /* 7.5:1 on gold, 8.9:1 on petal-tint */
   --text-on-light-secondary: rgba(64, 63, 76, 0.88); /* 6.5:1 on gold */
   --text-on-white-secondary: rgba(64, 63, 76, 0.72); /* 5.5:1 on white */
+  --text-muted: rgba(64, 63, 76, 0.55);
   --text-label-accent: var(--bs-watermelon-ink);
   --text-link: var(--bs-azure-ink);
 

@@ -38,7 +38,12 @@ function split(review: Review): { unflagged: ImportSession[]; importing: ImportS
 }
 
 /** Import a climbing history: which apps' exports it reads, the file picked, then a review to confirm. */
-export function ImportScreen(): React.ReactElement {
+export function ImportScreen({
+  then,
+}: {
+  /** Where the result goes once imported. */
+  then: "/profile" | "/first-run";
+}): React.ReactElement {
   const api = useApi();
   const [review, setReview] = React.useState<Review | null>(null);
 
@@ -66,7 +71,7 @@ export function ImportScreen(): React.ReactElement {
     try {
       const { imported, skipped } = await importAll(api, split(current).importing);
       const likely = current.importAnyway ? 0 : current.duplicates.length;
-      router.dismissTo({ pathname: "/profile", params: { imported, skipped, likely } });
+      router.dismissTo({ pathname: then, params: { imported, skipped, likely } });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       setReview({ ...current, busy: false, error: t("import.failed", { message }) });

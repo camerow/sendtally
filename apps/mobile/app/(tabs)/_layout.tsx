@@ -5,10 +5,12 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BottomTabBar } from "expo-router/tabs";
 import { t } from "@sendtally/features/i18n";
+import { useFirstRun } from "@sendtally/features/settings";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon, type IconName } from "../../components/Icon";
 import { LiveBar } from "../../features/live-session/LiveBar";
 import { RestStrip } from "../../features/live-session/RestStrip";
+import { useApi } from "../../lib/api";
 
 const SELECTED_RULE_HEIGHT = 3;
 
@@ -46,8 +48,11 @@ export default function TabsLayout(): React.ReactElement | null {
   return <SignedInTabs />;
 }
 
-function SignedInTabs(): React.ReactElement {
+function SignedInTabs(): React.ReactElement | null {
   const insets = useSafeAreaInsets();
+  const show = useFirstRun(useApi());
+  if (show === null) return null;
+  if (show) return <Redirect href="/first-run" />;
 
   return (
     <Tabs

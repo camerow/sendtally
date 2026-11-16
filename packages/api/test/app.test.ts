@@ -1,6 +1,7 @@
 import { env } from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { encryptSecret } from "../src/lib/crypto";
+import * as posthog from "../src/lib/posthog";
 import { jsonResponse, makeFakeFetch } from "./fakes";
 import { testApp } from "./harness";
 
@@ -693,6 +694,115 @@ describe("app", () => {
 
     expect((await put({ time: "24:00" })).status).toBe(400);
     expect((await put({ enabled: "yes" })).status).toBe(400);
+  });
+
+  it("shows first run once, to an account with nothing logged or planned", async () => {
+    const headers = { "x-test-user": "user_firstrun", "Content-Type": "application/json" };
+    const firstRun = async (h: Record<string, string>): Promise<unknown> =>
+      (
+        (await (await testApp().request("/v1/status", { headers: h }, env)).json()) as {
+          firstRun: unknown;
+        }
+      ).firstRun;
+    const step = async (json: unknown, user = "user_firstrun"): Promise<number> =>
+      (
+        await testApp().request(
+          "/v1/preferences/first-run",
+          {
+            method: "PUT",
+            headers: { ...headers, "x-test-user": user },
+            body: JSON.stringify(json),
+          },
+          env
+        )
+      ).status;
+    const finished = { step: "finished", climbingDays: 2, endedAt: "plan" };
+
+    expect(await firstRun(headers)).toBe(true);
+    expect(await step({ step: "log_answered", existingLog: "strava" })).toBe(400);
+    expect(await step({ step: "finished", climbingDays: 8, endedAt: "plan" })).toBe(400);
+    const capture = vi.spyOn(posthog, "captureUserEvent").mockResolvedValue();
+    const identify = vi.spyOn(posthog, "identifyUser").mockResolvedValue();
+    const events = () =>
+      capture.mock.calls
+        .filter(([, , event]) => event.startsWith("first_run_"))
+        .map(([, id, event, properties]) => [id, event, properties] as const);
+    try {
+      for (const again of [
+        { step: "started" },
+        { step: "started" },
+        { step: "log_answered", existingLog: "kaya" },
+        { step: "started" },
+        { step: "log_answered", existingLog: "none" },
+      ])
+        expect(await step(again)).toBe(200);
+      expect(await Promise.all([step(finished), step(finished)])).toEqual([200, 200]);
+      expect(await firstRun(headers)).toBe(false);
+      expect(await step({ step: "finished", climbingDays: 0, endedAt: "skip_log" })).toBe(200);
+      expect(events()).toEqual([
+        ["user_firstrun", "first_run_started", {}],
+        ["user_firstrun", "first_run_log_answered", { existing_log: "kaya" }],
+        ["user_firstrun", "first_run_finished", { climbing_days: 2, ended_at: "plan" }],
+      ]);
+      expect(identify.mock.calls.map(([, id, properties]) => [id, properties])).toEqual([
+        ["user_firstrun", { existing_log: "kaya" }],
+      ]);
+
+      capture.mockClear();
+      expect(await step({ step: "started" }, "user_firstrun_skip")).toBe(200);
+      expect(
+        await step({ step: "finished", climbingDays: 0, endedAt: "skip_log" }, "user_firstrun_skip")
+      ).toBe(200);
+      expect(events().map(([, event, properties]) => [event, properties])).toEqual([
+        ["first_run_started", {}],
+        ["first_run_log_answered", { existing_log: "skipped" }],
+        ["first_run_finished", { climbing_days: 0, ended_at: "skip_log" }],
+      ]);
+    } finally {
+      capture.mockRestore();
+      identify.mockRestore();
+    }
+
+    const planned = { "x-test-user": "user_firstrun_planned", "Content-Type": "application/json" };
+    const saved = await testApp().request(
+      "/v1/memberships/m-1",
+      {
+        method: "PUT",
+        headers: planned,
+        body: JSON.stringify({
+          workoutId: "climb-session",
+          blockId: null,
+          weekdays: [1, 3],
+          start: "2026-11-16",
+          position: 0,
+        }),
+      },
+      env
+    );
+    expect(saved.status).toBe(200);
+    expect(await firstRun(planned)).toBe(false);
+
+    expect(await step({ step: "log_answered", existingLog: "kaya" }, "user_firstrun_import")).toBe(
+      200
+    );
+    const imported = { ...headers, "x-test-user": "user_firstrun_import" };
+    const membership = await testApp().request(
+      "/v1/memberships/m-2",
+      {
+        method: "PUT",
+        headers: imported,
+        body: JSON.stringify({
+          workoutId: "climb-session",
+          blockId: null,
+          weekdays: [2],
+          start: "2026-11-16",
+          position: 0,
+        }),
+      },
+      env
+    );
+    expect(membership.status).toBe(200);
+    expect(await firstRun(imported)).toBe(true);
   });
 
   it("keeps the grade a project was added with", async () => {

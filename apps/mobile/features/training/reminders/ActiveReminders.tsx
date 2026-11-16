@@ -14,10 +14,16 @@ export type ActiveRemindersProps = {
   /** Something was just added to the plan, so the first-time prompt may show. */
   asked: boolean;
   onAnswered: () => void;
+  /** Whether the prompt is up, so what it covers can wait for it. */
+  onOpenChange: (open: boolean) => void;
 };
 
 /** Keeps training reminders scheduled and asks once for permission. */
-export function ActiveReminders({ asked, onAnswered }: ActiveRemindersProps): React.ReactElement {
+export function ActiveReminders({
+  asked,
+  onAnswered,
+  onOpenChange,
+}: ActiveRemindersProps): React.ReactElement {
   const api = useApi();
   const { settings, save } = useTrainingReminders(api);
   const { log, ready } = useTrainingLog(api);
@@ -29,6 +35,7 @@ export function ActiveReminders({ asked, onAnswered }: ActiveRemindersProps): Re
   });
 
   const open = asked && settings !== null && !settings.promptSeen;
+  React.useEffect(() => onOpenChange(open), [open, onOpenChange]);
   const answer = async (remind: boolean): Promise<void> => {
     if (!open) return;
     onAnswered();

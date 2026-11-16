@@ -92,8 +92,9 @@ describe("libraryOf", () => {
     expect(builtInWorkouts().find((w) => w.id === "strength-5x5")?.name).toBe("5x5 Kraft");
   });
 
-  it("gives every built-in something to play", () => {
-    expect(builtInWorkouts().filter((w) => w.items.length === 0)).toEqual([]);
+  it("gives every built-in something to play, or a climbing day the live session", () => {
+    const empty = builtInWorkouts().filter((w) => w.items.length === 0);
+    expect(empty.map((w) => w.kind)).toEqual(["climbing"]);
   });
 
   it("shows alternation with built-ins whose exercises take turns by session", () => {

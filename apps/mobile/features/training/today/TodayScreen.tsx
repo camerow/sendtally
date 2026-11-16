@@ -20,6 +20,7 @@ import {
 } from "@sendtally/features/training";
 import { Fab } from "../../../components/Fab";
 import { Toast } from "../../../components/Toast";
+import { ImportResultToast } from "../../import/ImportResultToast";
 import { useApi } from "../../../lib/api";
 import { openBlock } from "../blocks/openBlock";
 import { Label } from "../components/Label";
@@ -45,7 +46,7 @@ const BOTTOM = 96;
  */
 export function TodayScreen(): React.ReactElement {
   const navigation = useNavigation();
-  const asked = useLocalSearchParams<{ date?: string; at?: string }>();
+  const asked = useLocalSearchParams<{ date?: string; at?: string; imported?: string }>();
   const { today } = useHangData();
   const { log } = useTrainingLog(useApi());
   const [offset, setOffset] = React.useState(0);
@@ -173,7 +174,9 @@ export function TodayScreen(): React.ReactElement {
           </View>
         ))}
       </ScrollView>
-      {scheduled === null && <Fab label={t("plan.schedule")} onPress={() => setAdding(true)} />}
+      {scheduled === null && asked.imported === undefined && (
+        <Fab label={t("plan.schedule")} onPress={() => setAdding(true)} />
+      )}
       <AddWorkoutsSheet
         flow={{ date: selected, blockId: null }}
         visible={adding}
@@ -193,6 +196,7 @@ export function TodayScreen(): React.ReactElement {
           onHide={() => setScheduled(null)}
         />
       )}
+      {scheduled === null && <ImportResultToast />}
     </View>
   );
 }
