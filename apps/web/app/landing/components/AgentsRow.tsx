@@ -11,7 +11,7 @@ export function AgentsRow({ url }: { url: string }): React.ReactElement {
   return (
     <section id="agents" className="l-feature l-feature--white l-agents">
       <Reveal className="l-feature-copy">
-        <Label on="accent">{agents.eyebrow}</Label>
+        <Label on="light">{agents.eyebrow}</Label>
         <h2 className="l-feature-title">{agents.title}</h2>
         <p className="l-feature-body">{agents.body}</p>
         <ul className="l-points">

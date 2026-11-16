@@ -66,13 +66,13 @@ const stepLabel: React.CSSProperties = {
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.08em",
-  color: "var(--text-label-accent)",
+  color: "var(--text-on-white-secondary)",
 };
 
 const errorText: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
   fontSize: 12,
-  color: "var(--text-label-accent)",
+  color: "var(--bs-watermelon-ink)",
 };
 
 const footnote: React.CSSProperties = {

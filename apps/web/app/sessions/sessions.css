@@ -687,7 +687,7 @@
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-label-accent);
+  color: var(--text-on-white-secondary);
 }
 
 .session-climb-row {
@@ -757,7 +757,7 @@
 }
 
 .session-climb-grade--top {
-  color: var(--text-label-accent);
+  color: var(--bs-gunmetal);
 }
 
 .session-climb-row .climb-pill {

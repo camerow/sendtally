@@ -653,7 +653,7 @@ export function LogSessionForm({
           )}
           {error !== null && (
             <span
-              style={{ ...monoLabel, textTransform: "none", color: "var(--text-label-accent)" }}
+              style={{ ...monoLabel, textTransform: "none", color: "var(--bs-watermelon-ink)" }}
             >
               {error}
             </span>

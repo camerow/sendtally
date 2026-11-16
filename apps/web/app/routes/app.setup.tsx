@@ -32,7 +32,7 @@ const detailLabel: React.CSSProperties = {
   fontWeight: 500,
   fontSize: 11,
   letterSpacing: "0.08em",
-  color: "var(--text-label-accent)",
+  color: "var(--text-on-white-secondary)",
   paddingTop: 2,
 };
 

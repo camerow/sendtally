@@ -23,7 +23,7 @@ const labelStyle: React.CSSProperties = {
   fontSize: 11,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "var(--text-label-accent)",
+  color: "var(--text-on-white-secondary)",
 };
 
 const titleStyle: React.CSSProperties = {

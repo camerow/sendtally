@@ -38,7 +38,7 @@
   font-size: 14px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-label-accent);
+  color: var(--text-on-white-secondary);
 }
 
 .trend-headline-row {
@@ -96,7 +96,7 @@
 }
 
 .trend-tile[data-hover="true"] .trend-caption {
-  color: var(--text-label-accent);
+  color: var(--bs-gunmetal);
 }
 
 .trend-sub {

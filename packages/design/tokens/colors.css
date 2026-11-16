@@ -39,7 +39,6 @@
   --text-on-white-secondary: rgba(64, 63, 76, 0.72); /* 5.5:1 on white */
   --text-muted: rgba(64, 63, 76, 0.55);
   --text-faint: rgba(64, 63, 76, 0.45);
-  --text-label-accent: var(--bs-watermelon-ink);
   --text-link: var(--bs-azure-ink);
 
   /* Lines */
