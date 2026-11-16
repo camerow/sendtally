@@ -113,7 +113,9 @@ Minutes and the training mix split the run (decision 1): one shared `runMinutes`
 
 The fix on `bug/multi-grip-hang-sessions` makes `hangSessionItems` and `hangSessionSeconds` (`packages/core/src/hang/session.ts`) the one way to read every grip of a hang session, and adds an optional per-grip dose as run to `done_json` items.
 This plan uses them and adds no second reader: a part is a hang session, so its rows' targets, its minutes and its summary read through `hangSessionItems` and `hangSessionSeconds` like a standalone session's.
-A part's `done` writes the per-grip dose as run in the shape that fix lands with, so a later grip's target never has to be guessed from its kept sets.
+Its shape (commit 3c537a57): each later grip's `done_json` item carries an optional `dose: Dose`, the prescription that grip ran, for example `{ item: 1, exercise: "pinch", sets: [...], dose: { sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 60 } }`; item 0 has none, its dose is the row's `protocol_json`; `doneBody` accepts it as `dose.optional()`, and `hangSessionItems` reads it, falling back to the kept-set shape for older rows.
+A part is saved through `hangResult`, which writes `dose` from the prescribed items, so a part carries every grip's target with no extra code, and the `fingerboard` body's `done` accepts it through the same `doneBody`.
+Rest between grips (`exerciseRestS`, `restAfterS`) is stored on no hang session row, so a part's Fingers minutes (`hangSessionSeconds`) leave it out and it stays in the rest of the run's minutes, under the run's kind; the split never counts a minute twice.
 Kind and colour are the non-grip majority's.
 
 ### 3. The workout view
