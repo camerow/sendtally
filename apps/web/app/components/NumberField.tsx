@@ -34,6 +34,8 @@ export type NumberFieldProps = {
   range?: { max?: number };
   mode: NumberFieldMode;
   unit?: string;
+  /** What the box shows in place of the value until it is typed in, such as "BW" for no added load. */
+  display?: string;
   /** A small box sized to its value with no label shown, for a value in a table row. */
   compact?: boolean;
   /** Amber: a value short of what was asked. */
@@ -86,12 +88,15 @@ export function NumberField({
   range,
   clearable = false,
   autoFocus = false,
+  display,
 }: NumberFieldProps): React.ReactElement {
   const id = React.useId();
   const [draft, setDraft] = React.useState<string | null>(null);
   const limits = mode.kind === "number" ? mode : { step: 1 };
   const text =
-    value === null ? "" : range === undefined ? shown(mode, value) : countText(value, range.max);
+    value === null
+      ? ""
+      : (display ?? (range === undefined ? shown(mode, value) : countText(value, range.max)));
   const time = mode.kind === "time";
 
   const commitRange = (next: Range | null): void => {

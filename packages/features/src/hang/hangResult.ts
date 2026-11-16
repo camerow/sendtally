@@ -14,7 +14,9 @@ const workOf = (sets: readonly SetDone[], dose: SetDone | undefined): number =>
 /**
  * A hangboard session as it saves: each kept set on its item's grip, on the edge when it hangs and
  * at the load unless one was set by hand. Held is seconds against what `prescribed` plans; a miss is
- * a hang short of its set's prescribed reps, and a set left out is not missed, just not held.
+ * a hang short of its set's prescribed reps, and a set left out is not missed, just not held. A later
+ * grip keeps the dose it ran, which its session has no other place for, and every grip the rest
+ * the timer ran after it.
  */
 export function hangResult(
   kept: readonly ItemDone[],
@@ -39,9 +41,14 @@ export function hangResult(
   const held = kept.reduce((n, d) => n + workOf(d.sets, dose(d.item)), 0);
   const done = kept.map((d) => {
     const { exercise, setup, hang } = itemOf(d);
+    const ran = d.item === 0 ? undefined : dose(d.item);
+    const stored = ran !== undefined && ran.sets > 0;
+    const rest = prescribed[d.item]?.restAfterS ?? 0;
     return {
       item: d.item,
       exercise,
+      ...(stored && { dose: ran }),
+      ...(rest > 0 && { restAfterS: rest }),
       sets: d.sets.map((s) => ({
         ...s,
         ...(hang ? { edgeMm: setup.edgeMm } : {}),

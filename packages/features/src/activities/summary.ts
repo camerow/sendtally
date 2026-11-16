@@ -1,5 +1,10 @@
 import type { Activity } from "@sendtally/api-client";
-import type { CalendarDate, HangSession, SetDone } from "@sendtally/core/hang";
+import {
+  hangSessionItems,
+  type CalendarDate,
+  type HangSession,
+  type SetDone,
+} from "@sendtally/core/hang";
 import {
   bestOf,
   exerciseKey,
@@ -178,6 +183,27 @@ export function hangGrid(session: HangLog): HangGrid {
     held: rows.flat().filter(Boolean).length,
     total: rows.flat().length,
   };
+}
+
+/** Hangs held of hangs asked, and each set's load, over every grip a session ran. */
+export type HangTotals = Pick<HangGrid, "held" | "total" | "loads">;
+
+export function hangTotals(session: HangLog & Pick<HangSession, "gripId">): HangTotals {
+  const items = hangSessionItems({ ...session, done: session.done ?? [] });
+  const grips = [
+    { sets: hangSets(session), reps: session.protocol.reps },
+    ...(session.done ?? [])
+      .filter((d) => d.item !== 0)
+      .map((d) => ({ sets: d.sets, reps: items[d.item]?.dose.reps ?? 1 })),
+  ];
+  return grips.reduce<HangTotals>(
+    (sum, { sets, reps }) => ({
+      held: sum.held + sets.reduce((n, s) => n + Math.min(reps, s.reps ?? reps), 0),
+      total: sum.total + sets.length * reps,
+      loads: [...sum.loads, ...sets.map((s) => s.weightKg ?? session.loadKg)],
+    }),
+    { held: 0, total: 0, loads: [] }
+  );
 }
 
 type Hang = Dated & Pick<HangSession, "workoutId" | "gripId" | "loadKg" | "protocol">;

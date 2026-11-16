@@ -76,6 +76,36 @@ describe("Editing a hangboard session", () => {
     expect(router.back).toHaveBeenCalled();
   });
 
+  it("shows and saves every grip of a session that ran several", async () => {
+    const sets = (edgeMm: number, weightKg: number): object[] =>
+      Array.from({ length: 3 }, () => ({ reps: 6, onS: 7, offS: 3, edgeMm, weightKg }));
+    const three: HangSessionRecord = {
+      ...session,
+      done: [
+        { item: 0, exercise: "half-crimp", sets: sets(20, 10) },
+        { item: 1, exercise: "open-hand", sets: sets(18, 5) },
+        { item: 2, exercise: "pinch", sets: sets(0, 0) },
+      ] as HangSessionRecord["done"],
+    };
+    const { actions } = await renderWithHang(
+      <HangSessionForm session={three} />,
+      hangData({ sessions: [three] })
+    );
+    await fireEvent.press(screen.getByLabelText("open-hand, set 2 · Hangs"));
+    await fireEvent.press(screen.getByLabelText("4"));
+    await fireEvent.press(screen.getByLabelText("Done"));
+    expect(screen.getByText("52 of 54 hangs · top load +10 kg")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Save"));
+    const saved = jest.mocked(actions.saveSession).mock.calls[0]?.[0];
+    expect(saved?.done.map((d) => [d.exercise, d.sets.map((s) => s.reps)])).toEqual([
+      ["half-crimp", [6, 6, 6]],
+      ["open-hand", [6, 4, 6]],
+      ["pinch", [6, 6, 6]],
+    ]);
+    expect(saved?.done[1]?.sets[1]).toMatchObject({ edgeMm: 18, weightKg: 5 });
+    expect(saved?.misses).toBe(2);
+  });
+
   it("edits without a Delete: that lives in the summary's menu", async () => {
     await renderWithHang(<HangSessionForm session={session} />, hangData({ sessions: [session] }));
     expect(screen.queryByText("Delete workout")).toBeNull();
