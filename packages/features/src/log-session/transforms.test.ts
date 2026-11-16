@@ -21,8 +21,14 @@ import {
   withTries,
   withKnownArea,
   withLocation,
+  withLength,
   withStartTime,
+  lengthOf,
+  draftLength,
+  unbrokenParts,
 } from "./transforms";
+import { buildManualSession } from "@sendtally/core";
+import { formOf } from "./localSession";
 import { DEFAULT_GRADE_PREFS, sendStyleLabel, sendStylesFor } from "./types";
 import type { ClimbDraft, GradeScale, LogSessionDraft } from "./types";
 
@@ -435,6 +441,7 @@ describe("toLogSessionInput", () => {
       date: "2026-08-26",
       startTime: "18:30",
       endTime: "20:00",
+      minutes: null,
       location: "indoor",
       climbs: [
         {
@@ -531,6 +538,7 @@ describe("draftFromSession", () => {
       date: "2026-08-26",
       startTime: "18:30",
       endTime: "20:00",
+      minutes: null,
       location: "indoor",
       tags: ["Endurance"],
       notes: "",
@@ -567,6 +575,7 @@ describe("draftFromSession", () => {
       date: "2026-08-26",
       startTime: "18:30",
       endTime: "20:00",
+      minutes: null,
       rpe: 7,
       location: "indoor",
       tags: ["Endurance"],
@@ -853,5 +862,79 @@ describe("each climb's area", () => {
       climbs: base.climbs.map((c) => ({ ...c, name: "" })),
     });
     expect(gradeOnly.climbs.map((c) => c.area)).toEqual([plantation, plantation]);
+  });
+});
+
+describe("the Duration field", () => {
+  const rows = {
+    both: { start_at: "2026-08-26T18:30:00.000Z", end_at: "2026-08-26T20:00:00.000Z" },
+    start: { start_at: "2026-08-26T18:30:00.000Z", end_at: "2026-08-26T20:00:00.000Z" },
+    end: { start_at: "2026-08-26T18:30:00.000Z", end_at: "2026-08-26T20:00:00.000Z" },
+    duration: { start_at: "2026-08-26T12:00:00.000Z", end_at: "2026-08-26T12:45:00.000Z" },
+    none: { start_at: "2026-08-26T12:00:00.000Z", end_at: "2026-08-26T13:30:00.000Z" },
+  } as const;
+  const saved = (times: keyof typeof rows, minutes: number | null | "untouched") => {
+    const draft = draftFromSession(session({ ...rows[times], times }));
+    const edited = minutes === "untouched" ? draft : withLength(draft, minutes);
+    const row = buildManualSession("manual-1", formOf(toLogSessionInput(edited)), []);
+    return [row.times, row.start_at.slice(11, 16), row.end_at.slice(11, 16)];
+  };
+
+  it.each([
+    ["both", "untouched", ["both", "18:30", "20:00"]],
+    ["both", 60, ["both", "18:30", "19:30"]],
+    ["both", null, ["start", "18:30", "20:00"]],
+    ["start", "untouched", ["start", "18:30", "20:00"]],
+    ["start", 60, ["both", "18:30", "19:30"]],
+    ["start", null, ["start", "18:30", "20:00"]],
+    ["end", "untouched", ["end", "18:30", "20:00"]],
+    ["end", 60, ["both", "19:00", "20:00"]],
+    ["end", null, ["end", "18:30", "20:00"]],
+    ["duration", "untouched", ["duration", "12:00", "12:45"]],
+    ["duration", 60, ["duration", "12:00", "13:00"]],
+    ["duration", null, ["none", "12:00", "13:30"]],
+    ["none", "untouched", ["none", "12:00", "13:30"]],
+    ["none", 60, ["duration", "12:00", "13:00"]],
+    ["none", null, ["none", "12:00", "13:30"]],
+  ] as const)("a %s session given %s saves as %j", (times, minutes, expected) => {
+    expect(saved(times, minutes)).toEqual(expected);
+  });
+
+  it("shows the span of real times, else the length on its own", () => {
+    expect(draftLength(draftFromSession(session({ ...rows.both, times: "both" })))).toBe(90);
+    expect(draftLength(draftFromSession(session({ ...rows.duration, times: "duration" })))).toBe(
+      45
+    );
+    expect(draftLength(draftFromSession(session({ ...rows.none, times: "none" })))).toBeNull();
+  });
+
+  it("rounds seconds as the activity form does, with zero as none", () => {
+    expect([0, 20, 29, 30, 5400, 90 * 60 + 29, 13 * 3600].map(lengthOf)).toEqual([
+      null,
+      1,
+      1,
+      1,
+      90,
+      90,
+      720,
+    ]);
+  });
+
+  it("sends an unscored session's length as it is, so clearing it clears", () => {
+    const stored = draftFromSession(
+      session({ ...rows.duration, times: "duration", rpe_source: "none" })
+    );
+    expect(toLiveSessionInput(stored)).toMatchObject({ minutes: 45, unscored: true });
+    const cleared = toLiveSessionInput(withLength(stored, null));
+    expect(cleared).toHaveProperty("minutes", null);
+    expect(buildManualSession("manual-1", formOf(cleared), []).times).toBe("none");
+  });
+});
+
+describe("unbrokenParts", () => {
+  it("lets a summary wrap only between its parts", () => {
+    expect(unbrokenParts("7 climbs · top V4 · 1h 30m")).toBe(
+      "7\u00a0climbs · top\u00a0V4 · 1h\u00a030m"
+    );
   });
 });

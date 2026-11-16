@@ -18,9 +18,14 @@ export function isUnscored(session: Pick<SessionRow, "rpe_source">): boolean {
   return session.rpe_source === "none";
 }
 
+function lengthLabel(session: SessionRow): string[] {
+  const minutes = sessionMinutes(session);
+  return minutes > 0 ? [durationLabel(minutes)] : [];
+}
+
 export function sessionMetaLabel(session: SessionRow): string {
   return [
-    ...(session.times === "both" ? [durationLabel(sessionMinutes(session))] : []),
+    ...lengthLabel(session),
     climbCountLabel(session.climb_count),
     ...(isUnscored(session) ? [t("sessions.unscored")] : []),
   ].join(" · ");
@@ -41,7 +46,7 @@ export function sessionTallyLabel(
           }),
         ];
   return [
-    ...(session.times === "both" ? [durationLabel(sessionMinutes(session))] : []),
+    ...lengthLabel(session),
     t("tally.sentCount", { count: session.send_count }),
     ...top,
     ...(isUnscored(session) ? [t("sessions.unscored")] : []),

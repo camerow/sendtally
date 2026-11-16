@@ -9,7 +9,7 @@ import {
 } from "@sendtally/core/hang";
 import { gripSetupLabel } from "../hang/format";
 import { formatNumber, t } from "../i18n";
-import { durationLabel } from "../sessions/years";
+import { durationLabel, sessionMinutes } from "../sessions/years";
 import { focusLabel } from "../training/focus";
 import { isUnscored } from "../sessions/meta";
 import { DAY_MS, bucketsFor, priorWindow, windowOf } from "../trends/buckets";
@@ -71,9 +71,6 @@ export type TrainingInsightsVM = {
   workouts: WorkoutsDoneVM;
 };
 
-const minutesBetween = (start: string, end: string): number =>
-  Math.max(0, Math.round((Date.parse(end) - Date.parse(start)) / 60_000));
-
 function doneOf(log: SessionLogWithClimbs): Done[] {
   return [
     ...log.sessions.map((s): Done => ({
@@ -81,7 +78,7 @@ function doneOf(log: SessionLogWithClimbs): Done[] {
       focus: s.focus ?? null,
       at: Date.parse(s.start_at),
       rpe: isUnscored(s) ? null : s.rpe,
-      minutes: s.times === "both" ? minutesBetween(s.start_at, s.end_at) : 0,
+      minutes: sessionMinutes(s),
     })),
     ...log.hangSessions.map((h): Done => ({
       kind: "hangboard",

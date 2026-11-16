@@ -1,4 +1,5 @@
 import type { SessionRow } from "@sendtally/api-client";
+import { rowMinutes } from "@sendtally/core";
 import { t } from "../i18n";
 import { sessionGradeLabel, type GradeScales } from "./grades";
 import { flatLog } from "../journal/transforms";
@@ -30,10 +31,9 @@ export function hasEnd(session: Timed): boolean {
   return session.times === "both" || session.times === "end";
 }
 
-export function sessionMinutes(session: SessionRow): number {
-  if (session.times !== "both") return 0;
-  const ms = Date.parse(session.end_at) - Date.parse(session.start_at);
-  return Number.isFinite(ms) ? Math.max(0, Math.round(ms / 60_000)) : 0;
+/** A real length in minutes, or 0 when the session has none. */
+export function sessionMinutes(session: Pick<SessionRow, "times" | "start_at" | "end_at">): number {
+  return session.times === "both" || session.times === "duration" ? rowMinutes(session) : 0;
 }
 
 function sessionTop(session: SessionRow): { grade: number; label: string | null } {
