@@ -113,6 +113,9 @@ describe("done", () => {
       { reps: 5, weightKg: 100 },
     ]);
     expect(removeSet(done, 1, 0)[1]?.sets).toEqual([{ reps: 6 }]);
+    expect(
+      addSet([{ item: 0, exercise: "Squat", sets: [{ reps: 5, rpe: 8 }] }], 0)[0]?.sets
+    ).toEqual([{ reps: 5, rpe: 8 }, { reps: 5 }]);
     expect(removeSet(done, 0, 0).map((d) => d.exercise)).toEqual(["Dips"]);
   });
 });

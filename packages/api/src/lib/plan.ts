@@ -238,7 +238,7 @@ const setClimb = z.object({
 // A set logs none of what only the prescription holds, which older builds copy into it.
 const setDone = dose
   .partial()
-  .extend({ climbs: z.array(setClimb).max(100).optional() })
+  .extend({ climbs: z.array(setClimb).max(100).optional(), rpe: rpe.optional() })
   .transform(setOf);
 
 /** What a session did, per item of what it ran. */
@@ -248,6 +248,7 @@ export const doneBody = z
       item: itemIndex,
       exercise: z.string().trim().min(1).max(80),
       sets: z.array(setDone).max(100),
+      targetRpe: rpe.optional(),
     })
   )
   .max(MAX_ITEMS);

@@ -180,9 +180,30 @@ describe("activities", () => {
       { ...activityBody, done: [{ item: 0, exercise: " ", sets: [] }] },
       { ...activityBody, done: [{ item: -1, exercise: "Squat", sets: [] }] },
       { ...activityBody, done: [{ item: 0, exercise: "Squat", sets: [{ reps: -1 }] }] },
+      { ...activityBody, done: [{ item: 0, exercise: "Squat", sets: [{ rpe: 11 }] }] },
+      { ...activityBody, done: [{ item: 0, exercise: "Squat", sets: [], targetRpe: 0 }] },
     ]) {
       expect((await call(userId, "PUT", "/v1/activities/a1", body)).status).toBe(400);
     }
+  });
+
+  it("keeps each set's RPE and the target it read against", async () => {
+    const done = [
+      {
+        item: 0,
+        exercise: "Back squat",
+        targetRpe: 8,
+        sets: [
+          { reps: 5, weightKg: 100, rpe: 8 },
+          { reps: 5, weightKg: 100 },
+        ],
+      },
+    ];
+    const res = await call("user_activity_rpe", "PUT", "/v1/activities/a1", {
+      ...activityBody,
+      done,
+    });
+    expect((await json<{ activity: Activity }>(res)).activity.done).toEqual(done);
   });
 
   it("keeps a climbing workout's climbs in its sets", async () => {

@@ -101,7 +101,11 @@ export type SetClimb = {
 };
 
 /** One set as it was done. A climbing exercise's set holds the climbs logged in it. */
-export type SetDone = Omit<Dose, PrescriptionOnly> & { climbs?: SetClimb[] };
+export type SetDone = Omit<Dose, PrescriptionOnly> & {
+  climbs?: SetClimb[];
+  /** How hard the set felt, 1 to 10, when the climber rated it. */
+  rpe?: number;
+};
 
 /**
  * One exercise of a workout. One dose is the same every session; with more, sessions
@@ -223,7 +227,13 @@ export type PlanChange = {
 };
 
 /** One item of a logged session: the sets done, named so history never needs the workout. */
-export type ItemDone = { item: number; exercise: string; sets: SetDone[] };
+export type ItemDone = {
+  item: number;
+  exercise: string;
+  sets: SetDone[];
+  /** The RPE target of the dose the session ran, which its sets' RPE reads against. */
+  targetRpe?: number;
+};
 
 /**
  * The plan a logged session ran, all null when it was logged on its own, and the focus
@@ -466,6 +476,7 @@ export function doneAsPrescribed(items: readonly SessionItem[]): ItemDone[] {
     item,
     exercise,
     sets: Array.from({ length: dose.sets }, () => setOf(dose)),
+    ...(dose.targetRpe !== undefined && { targetRpe: dose.targetRpe }),
   }));
 }
 
