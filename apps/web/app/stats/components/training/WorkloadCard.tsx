@@ -42,7 +42,7 @@ function Weeks({ days }: { days: number }): React.ReactElement {
 /** This week's load against the last four: the ratio and its zone in words, the line, and the loads behind it. */
 export function WorkloadCard({ workload: w }: { workload: WorkloadVM }): React.ReactElement {
   const [open, setOpen] = React.useState(false);
-  const average = w.chronic ?? (w.state === "early" ? t("statistics.workloadAfter4") : null);
+  const average = w.chronic;
 
   return (
     <section className="stats-card stats-wide workload-card">

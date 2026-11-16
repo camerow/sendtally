@@ -121,8 +121,8 @@ export function WorkloadChart({
           paddingLeft: WORKLOAD_GUTTER,
         }}
       >
-        <Text style={[type.labelSmall, { color: colors.textSecondary }]}>{from}</Text>
-        <Text style={[type.labelSmall, { color: colors.textSecondary }]}>
+        <Text style={[type.mono, { fontSize: 10, color: colors.textSecondary }]}>{from}</Text>
+        <Text style={[type.mono, { fontSize: 10, color: colors.textSecondary }]}>
           {t("statistics.workloadToday")}
         </Text>
       </View>

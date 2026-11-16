@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import Svg, { Line } from "react-native-svg";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import type { DoneRef, WorkloadVM } from "@sendtally/features/statistics";
@@ -87,11 +88,46 @@ export function WorkloadSheet({
           {s.division ?? (partial ? t("statistics.workloadNoZone") : w.sentence)}
         </Text>
         <View style={{ flexDirection: "row", gap: 10, alignItems: "flex-end", height: BAR + 48 }}>
+          {s.average > 0 && (
+            <View
+              pointerEvents="none"
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 21 + (s.average / top) * BAR,
+                height: 2,
+              }}
+            >
+              <Svg width="100%" height={2}>
+                <Line
+                  x1="0"
+                  x2="100%"
+                  y1={1}
+                  y2={1}
+                  stroke={colors.gunmetal}
+                  strokeWidth={1.5}
+                  strokeDasharray="4 3"
+                />
+              </Svg>
+            </View>
+          )}
           {s.weeks.map((week, i) => {
             const last = i === s.weeks.length - 1;
             return (
               <View key={week.label} style={{ flex: 1, alignItems: "center", gap: 6 }}>
-                <Text style={[type.mono, { fontSize: 11, color: colors.gunmetal }]}>
+                <Text
+                  style={[
+                    type.mono,
+                    {
+                      zIndex: 1,
+                      paddingHorizontal: 4,
+                      fontSize: 11,
+                      color: colors.gunmetal,
+                      backgroundColor: colors.white,
+                    },
+                  ]}
+                >
                   {week.value}
                 </Text>
                 <View
@@ -113,20 +149,6 @@ export function WorkloadSheet({
               </View>
             );
           })}
-          {s.average > 0 && (
-            <View
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 21 + (s.average / top) * BAR,
-                borderTopWidth: 1.5,
-                borderStyle: "dashed",
-                borderColor: colors.gunmetal,
-              }}
-            />
-          )}
         </View>
         <Text style={[type.mono, { fontSize: 11.5, color: colors.textSecondary }]}>
           {t("statistics.workloadBarsNote")}

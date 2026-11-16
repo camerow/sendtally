@@ -55,10 +55,10 @@ function Weeks({ days }: { days: number }): React.ReactElement {
         ))}
       </View>
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        <Text style={[type.labelSmall, { color: colors.textSecondary }]}>
+        <Text style={[type.mono, { fontSize: 10, color: colors.textSecondary }]}>
           {t("statistics.workloadWeek1")}
         </Text>
-        <Text style={[type.labelSmall, { color: colors.textSecondary }]}>
+        <Text style={[type.mono, { fontSize: 10, color: colors.textSecondary }]}>
           {t("statistics.workloadWeek4")}
         </Text>
       </View>
@@ -69,87 +69,89 @@ function Weeks({ days }: { days: number }): React.ReactElement {
 /** This week's load against the last four: the ratio and its zone in words, the line, and the loads behind it. */
 export function WorkloadCard({ workload: w }: { workload: WorkloadVM }): React.ReactElement {
   const [open, setOpen] = React.useState(false);
-  const average = w.chronic ?? (w.state === "early" ? t("statistics.workloadAfter4") : null);
+  const average = w.chronic;
 
   return (
-    <View
-      style={{
-        gap: 10,
-        padding: 14,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: colors.lineOnLight,
-      }}
-    >
+    <>
       <View
         style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 8,
+          gap: 10,
+          padding: 14,
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: colors.lineOnLight,
         }}
       >
-        <Label color={colors.gunmetal}>{t("statistics.workloadTitle")}</Label>
-        <Text
-          style={[type.mono, { fontSize: 12, color: colors.textSecondary, flexShrink: 1 }]}
-          numberOfLines={1}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 8,
+          }}
         >
-          {t("statistics.workloadCaption")}
-        </Text>
-      </View>
-      {w.zone !== null && w.ratio !== null ? (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Text style={[type.display, { fontSize: 40, lineHeight: 44, color: colors.gunmetal }]}>
-            {w.ratio}
-          </Text>
-          <Label
-            color={colors.gunmetal}
-            style={{
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderRadius: 6,
-              overflow: "hidden",
-              backgroundColor: WORKLOAD_TINTS[w.zone],
-            }}
+          <Label color={colors.gunmetal}>{t("statistics.workloadTitle")}</Label>
+          <Text
+            style={[type.mono, { fontSize: 12, color: colors.textSecondary, flexShrink: 1 }]}
+            numberOfLines={1}
           >
-            {workloadZoneLabel(w.zone)}
-          </Label>
+            {t("statistics.workloadCaption")}
+          </Text>
         </View>
-      ) : (
-        <Text
-          style={[
-            type.display,
-            {
-              fontSize: 32,
-              lineHeight: 36,
-              color: w.state === "early" ? colors.textFaint : colors.gunmetal,
-            },
-          ]}
-        >
-          {w.headline}
+        {w.zone !== null && w.ratio !== null ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Text style={[type.display, { fontSize: 40, lineHeight: 44, color: colors.gunmetal }]}>
+              {w.ratio}
+            </Text>
+            <Label
+              color={colors.gunmetal}
+              style={{
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 6,
+                overflow: "hidden",
+                backgroundColor: WORKLOAD_TINTS[w.zone],
+              }}
+            >
+              {workloadZoneLabel(w.zone)}
+            </Label>
+          </View>
+        ) : (
+          <Text
+            style={[
+              type.display,
+              {
+                fontSize: 32,
+                lineHeight: 36,
+                color: w.state === "early" ? colors.textFaint : colors.gunmetal,
+              },
+            ]}
+          >
+            {w.headline}
+          </Text>
+        )}
+        <Text style={[type.body, { fontSize: 14, lineHeight: 20, color: colors.gunmetal }]}>
+          {w.sentence}
         </Text>
-      )}
-      <Text style={[type.body, { fontSize: 14, lineHeight: 20, color: colors.gunmetal }]}>
-        {w.sentence}
-      </Text>
-      {w.state === "early" ? (
-        <Weeks days={w.daysLogged} />
-      ) : (
-        <WorkloadChart points={w.points} from={w.from} />
-      )}
-      <View>
-        <Row onPress={() => setOpen(true)}>
-          {t("statistics.workloadLast7")} <Text style={type.monoBold}>{w.acute}</Text>
-          {average === null ? null : (
-            <>
-              {` · ${t("statistics.workloadAverage")} `}
-              <Text style={type.monoBold}>{average}</Text>
-            </>
-          )}
-        </Row>
-        {w.leftOutLine !== null && <Row onPress={() => setOpen(true)}>{w.leftOutLine}</Row>}
+        {w.state === "early" ? (
+          <Weeks days={w.daysLogged} />
+        ) : (
+          <WorkloadChart points={w.points} from={w.from} />
+        )}
+        <View>
+          <Row onPress={() => setOpen(true)}>
+            {t("statistics.workloadLast7")} <Text style={type.monoBold}>{w.acute}</Text>
+            {average === null ? null : (
+              <>
+                {` · ${t("statistics.workloadAverage")} `}
+                <Text style={type.monoBold}>{average}</Text>
+              </>
+            )}
+          </Row>
+          {w.leftOutLine !== null && <Row onPress={() => setOpen(true)}>{w.leftOutLine}</Row>}
+        </View>
       </View>
       <WorkloadSheet workload={w} visible={open} onClose={() => setOpen(false)} />
-    </View>
+    </>
   );
 }
