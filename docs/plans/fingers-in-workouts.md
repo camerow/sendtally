@@ -88,7 +88,8 @@ Kind and colour are the non-grip majority's.
 - Running: Start opens the hang timer on the part's grips only; the timer's minimise returns to the workout view with the part shown as running, and its live bar entry reopens the timer.
 - Finished: the timer's finish returns to the workout view instead of the hang review; the card shows each grip's sets held, edge and load, editable in place; the next item is live.
 - Skipped: the card collapses like any skipped exercise; no part is written.
-- Half done: the timer's own held sets (`setsHeld`); unheld sets show as not done, as in the timer's review today.
+- Half done, minimised: the timer's run is still live, so the card offers Resume (`resumedTimer`, as today).
+- Half done, ended with End: the timer's own held sets (`setsHeld`); unheld sets and grips not reached show as not done, with Edit as when finished; an ended run is never resumed.
 - It can sit anywhere in the order, and a workout holds one part.
 
 ### 4. Editing the finished part
