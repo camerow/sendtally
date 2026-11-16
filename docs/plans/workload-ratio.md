@@ -1,0 +1,105 @@
+# Workload ratio
+
+How this week's training load compares with the person's own last four weeks, plotted over time on the training statistics page.
+Will asked for it on 2026-11-16 as the acute to chronic workload ratio.
+
+## Formula
+
+Load of one logged thing is its RPE (rate of perceived exertion, 1 to 10) times its minutes.
+Days are the climber's wall-clock days, read the way the statistics page already reads them (`dayStart(wallClock(now))` in `trends/buckets.ts`).
+Acute load is the summed load of the 7 days ending today, today included.
+Chronic load is the summed load of the 28 days ending today, divided by 4.
+Ratio is acute divided by chronic.
+
+Worked example: three 60 minute sessions a week at RPE 6 is 1080 a week.
+A steady month gives acute 1080, chronic 4 x 1080 / 4 = 1080, ratio 1.0.
+Double this week to 2160 and chronic becomes (3 x 1080 + 2160) / 4 = 1350, so the ratio is 2160 / 1350 = 1.6.
+Because the acute week sits inside the chronic window, the ratio can never pass 4.0, and a doubled week reads 1.6, not 2.0.
+
+## Zones
+
+Under 0.8: lighter than usual or resting.
+0.8 to 1.3 inclusive: the sweet spot.
+Above 1.3 up to 1.5 inclusive: caution.
+Above 1.5: a much bigger week than your last four, consider more rest.
+
+## 1. What counts
+
+Every record comes from the one list the statistics page already builds, `doneOf` in `packages/features/src/statistics/insights.ts`, which gets exported for this.
+That keeps a single minutes rule: when `bug/multi-grip-hang-sessions` lands, `doneOf` reads `hangSessionSeconds` and the ratio counts every grip with no change here; when the fingers-in-workouts `runMinutes` lands, it replaces the readers inside `doneOf` and again the ratio follows.
+
+- Climbing session: RPE is stored on every row, but an unscored session (`rpe_source = "none"`) has no RPE. Minutes are end minus start only when both times were logged (`times = "both"`), otherwise none.
+- Activity (strength, mobility, other): minutes are required, RPE is optional.
+- Hang session: minutes from the protocol, always present; RPE is optional.
+
+A record with no RPE or no minutes is left out of the load, never counted as zero and never given a default RPE.
+A silent zero would understate the week and make the following weeks look bigger than they were; a default RPE would invent effort the person did not report.
+The card says how many records in the last 7 days were left out ("2 sessions not counted: no RPE or no time"), so the person can fix them from the session.
+Asking for the missing value inline is deferred: the session screens already let a person add RPE and times.
+
+## 2. The start and a return
+
+No ratio until the first counted record is at least 28 days old; before then the card shows this week's load and how many days are left until the first ratio.
+No ratio when the three weeks before this one hold no counted load (back after a break); the card says so and shows this week's load.
+Without that rule a first week back reads 4.0, which only says the person was away.
+After one week back the ratio returns, and a high value then is accurate: this week is much bigger than the last four.
+
+## 3. The window
+
+Built as Will gave it: chronic is the plain average of the last four weeks, acute week included.
+Variant one, chronic from the three weeks before the acute week ("uncoupled"), lets a doubled week read 2.0 and has no 4.0 ceiling; not built because Will defined the coupled one and the zone numbers he gave come from it.
+Variant two, exponentially weighted moving averages for both loads, weights recent days more and smooths week edges; not built because it is harder to explain on a card and needs a decay constant Will has not chosen.
+
+## 4. Where it is computed
+
+One pure function, `workloadRatio(done, today)`, in `packages/features/src/statistics/workload.ts`, taking the `doneOf` records so it needs no new minutes code, plus `workloadVM(log, range, now)` that builds the card's points and words.
+It lives in `features`, not `core`, because its input is the API log type.
+Both apps call it through `useTrainingInsights`, which already loads the whole log (`GET /v1/sessions?include=climbs`, no cap), so there is no new request, no new table and no new endpoint.
+The work is a filter and sum over the log per plotted point; at a few thousand records and at most ~60 points it stays well under a frame.
+
+## 5. The plot
+
+One point per bucket of the page's existing range control (`bucketsFor`), each the ratio as of the bucket's last day: days on 7D, weeks on 1M to 6M, months on 1Y and All.
+Buckets with no ratio (too early, or after a break) are gaps in the line.
+The four zones are horizontal bands behind the line, drawn with the page's chart geometry (`plot`, `polyline` in `chartGeometry.ts`); no new chart primitive unless the designer's board needs one.
+Today's ratio and zone are stated in words above the chart, and tapping the card opens the acute and chronic loads behind it and the records left out.
+
+## 6. Colour
+
+Chosen on the board from the design tokens; red (watermelon) is not used, since it is reserved for destructive actions.
+Each zone is also named in words and on the band, so colour never carries the meaning alone.
+
+## 7. Words
+
+The card describes how this week compares with the person's own recent weeks.
+It never mentions injury or risk and never predicts anything; the top zone reads "A much bigger week than your last four. Consider more rest."
+All strings in `en`, `de`, `fr`, `es` under the `statistics` namespace.
+
+## 8. Who sees it
+
+The statistics page has no per-card gate: every insight shows for everyone, and membership gates the range control (`shownRange` / `isLockedRange` in `trends/types.ts`; non-members get 7D only, the rest locked behind the existing upsell).
+The card follows that: everyone sees today's ratio and its 7D line; members can widen the range.
+The ratio itself always reads the whole history, so a non-member's number is the same as a member's.
+No new gate and no membership wording on the card.
+
+## 9. Analytics
+
+No event.
+The statistics page sends none today and nothing here needs a question answered; add one with counts and the zone name only, if Will asks.
+
+## Slices
+
+1. `workload.ts` with tests: steady month gives 1.0, a doubled week, a first month, a gap, records without RPE or minutes, and day boundaries at both window edges.
+2. Strings in four locales.
+3. Mobile card and detail on the training statistics page.
+4. Web card and detail, same behaviour.
+5. Seeded local data for every zone and the too-little-history state; iOS simulator and web at 375 and desktop.
+
+## Over the air
+
+JavaScript and strings only, no native module and no new dependency, so it ships as an EAS Update; the fingerprint is checked before the report.
+
+## Open questions for Will
+
+- Coupled window as asked, or the uncoupled variant where a doubled week reads 2.0?
+- Should a record missing RPE be counted at a stated default instead of left out?
