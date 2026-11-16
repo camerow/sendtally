@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import { colors } from "@sendtally/design/tokens";
 import { press } from "../../../lib/press";
 import { type } from "../type";
