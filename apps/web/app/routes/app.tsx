@@ -7,7 +7,7 @@ import { t } from "@sendtally/features/i18n";
 import { ErrorPage } from "../components/ErrorPage";
 import { Icon, type IconName } from "../components/Icon";
 import { requireApi } from "../lib/api.server";
-import { firstRunGate, fromFirstRun } from "../first-run/firstRunGate";
+import { firstRunDue, firstRunGate, fromFirstRun } from "../first-run/firstRunGate";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { AccountButton } from "../components/AccountButton";
 import { LiveBar } from "../components/LiveBar";
@@ -41,8 +41,8 @@ export const links: LinksFunction = () => [{ rel: "stylesheet", href: appShellSt
  */
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   const api = await requireApi(args);
-  const { firstRun } = await api.status();
-  const to = firstRunGate(new URL(args.request.url).pathname, firstRun);
+  const due = await firstRunDue(() => api.status());
+  const to = firstRunGate(new URL(args.request.url).pathname, due);
   if (to !== null) throw redirect(to);
   return { apiUrl: args.context.get(cloudflareContext).env.API_URL };
 }

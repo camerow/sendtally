@@ -19,7 +19,7 @@ import trainingStyles from "../training/training.css?url";
 import blockStyles from "../training/blocks/blocks.css?url";
 
 type LoaderData = {
-  status: ConnectionStatus;
+  status: ConnectionStatus | null;
   sessions: SessionRow[];
   hangSessions: HangHistoryRow[];
   activities: Activity[];
@@ -39,7 +39,7 @@ export const links: LinksFunction = () => [
 export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
   const api = await requireApi(args);
   const [status, sessions, entries] = await Promise.all([
-    api.status(),
+    api.status().catch(() => null),
     api.sessions(),
     api.entries(),
   ]);
