@@ -5,7 +5,7 @@ import { editManualSession, gymIdsByName, sessionResponse } from "../sessions";
 import { dayAreaId, editableSession } from "./sessionForm";
 import type { ConnectorTool } from "./types";
 
-const { name, date, startTime, endTime, rpe, location, tags, notes, climbs } =
+const { name, date, startTime, endTime, minutes, rpe, location, tags, notes, climbs } =
   manualSessionShape.shape;
 
 export const sessionId = z.string().min(1).max(100);
@@ -16,6 +16,9 @@ const inputSchema = {
   date: date.optional(),
   startTime: startTime.describe("HH:MM, 24 hour."),
   endTime: endTime.describe("HH:MM, 24 hour."),
+  minutes: minutes.describe(
+    "How long the session lasted, 1 to 720, when its start and end times are not both known. With one of them it sets the other; null clears it."
+  ),
   rpe,
   location,
   gym: z

@@ -46,6 +46,8 @@ export type ManualSessionForm = {
   date: string;
   startTime?: string | undefined;
   endTime?: string | undefined;
+  /** How long it lasted, when the clock times are not both known. */
+  minutes?: number | null | undefined;
   rpe?: number | undefined;
   location?: "indoor" | "outdoor" | undefined;
   unscored?: boolean | undefined;
@@ -69,7 +71,8 @@ export type ManualSessionRow = {
   name: string | null;
   start_at: string;
   end_at: string;
-  times: "both" | "start" | "end" | "none";
+  /** Which of start_at and end_at are real; "duration" is a real length with a placeholder start. */
+  times: "both" | "start" | "end" | "duration" | "none";
   climb_count: number;
   send_count: number;
   top_grade: number;
@@ -83,6 +86,12 @@ export type ManualSessionRow = {
   climbs_json: string;
 };
 
+/** A stored session's span in whole minutes, never negative. */
+export function rowMinutes(row: { start_at: string; end_at: string }): number {
+  const ms = Date.parse(row.end_at) - Date.parse(row.start_at);
+  return Number.isFinite(ms) ? Math.max(0, Math.round(ms / 60_000)) : 0;
+}
+
 const DEFAULT_START = "12:00";
 const DEFAULT_DURATION_MINUTES = 90;
 
@@ -93,8 +102,11 @@ function minutesOf(hhmm: string): number {
 export function sessionMinutes(body: {
   startTime?: string | undefined;
   endTime?: string | undefined;
+  minutes?: number | null | undefined;
 }): number {
-  if (body.startTime === undefined || body.endTime === undefined) return DEFAULT_DURATION_MINUTES;
+  if (body.startTime === undefined || body.endTime === undefined) {
+    return body.minutes ?? DEFAULT_DURATION_MINUTES;
+  }
   const diff = minutesOf(body.endTime) - minutesOf(body.startTime);
   return diff < 0 ? diff + 24 * 60 : Math.max(diff, 1);
 }
@@ -105,8 +117,11 @@ function normalisedGrade(grade: Grade): Grade {
 }
 
 function timesOf(body: ManualSessionForm): ManualSessionRow["times"] {
-  if (body.startTime !== undefined) return body.endTime === undefined ? "start" : "both";
-  return body.endTime === undefined ? "none" : "end";
+  const start = body.startTime !== undefined;
+  const end = body.endTime !== undefined;
+  if (body.minutes != null) return start || end ? "both" : "duration";
+  if (start) return end ? "both" : "start";
+  return end ? "end" : "none";
 }
 
 function locationOf(body: ManualSessionForm): ManualSessionRow["location"] {

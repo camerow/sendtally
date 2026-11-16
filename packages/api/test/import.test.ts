@@ -98,16 +98,16 @@ describe("import", () => {
     expect(exported.headers.get("content-type")).toContain("text/csv");
     const lines = (await exported.text()).trimEnd().split("\r\n");
     expect(lines[0]).toBe(
-      "date,session,location,gym,start_time,end_time,rpe,tags,session_notes,climb,grade,kind,style,tries,wall,climb_notes,circuit,title,source,session_id"
+      "date,session,location,gym,start_time,end_time,minutes,rpe,tags,session_notes,climb,grade,kind,style,tries,wall,climb_notes,circuit,title,source,session_id"
     );
     expect(lines).toHaveLength(5);
     expect(lines[1]).toMatch(
-      /^2022-11-20,Moe's Valley,outdoor,,,,\d+,,,Linders Roof,V9,attempt,,10,,,,/
+      /^2022-11-20,Moe's Valley,outdoor,,,,,\d+,,,Linders Roof,V9,attempt,,10,,,,/
     );
     expect(lines[2]).toBe(
-      `2022-11-22,Moe's Valley,outdoor,,,,8,trip,Last day of the trip,Lindners Roof,V9,send,redpoint,30,,Foot swap,,Moe's Valley,manual,${rows[1]!.fingerprint}`
+      `2022-11-22,Moe's Valley,outdoor,,,,,8,trip,Last day of the trip,Lindners Roof,V9,send,redpoint,30,,Foot swap,,Moe's Valley,manual,${rows[1]!.fingerprint}`
     );
-    expect(lines[4]).toMatch(/^2023-01-05,,indoor,Boulder Barn,,,\d+,,,,6A\+,send,flash,1,,,,/);
+    expect(lines[4]).toMatch(/^2023-01-05,,indoor,Boulder Barn,,,,\d+,,,,6A\+,send,flash,1,,,,/);
   });
 
   it("fingerprints a planned session as the Worker does, so an imported one is not a likely duplicate", async () => {

@@ -5,6 +5,7 @@ export const SENDTALLY_COLUMNS = [
   "gym",
   "start_time",
   "end_time",
+  "minutes",
   "rpe",
   "tags",
   "session_notes",

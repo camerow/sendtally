@@ -1,4 +1,4 @@
-import type { StoredClimb } from "@sendtally/core";
+import { rowMinutes, type StoredClimb } from "@sendtally/core";
 import type { z } from "zod";
 import type { manualSessionBody } from "../lib/manual";
 import type { SessionResponse } from "../sessions";
@@ -26,9 +26,10 @@ export const sessionTimes = (row: {
   start_at: string;
   end_at: string;
   times: string;
-}): { startTime?: string; endTime?: string } => ({
+}): { startTime?: string; endTime?: string; minutes?: number } => ({
   ...(row.times === "both" || row.times === "start" ? { startTime: time(row.start_at) } : {}),
   ...(row.times === "both" || row.times === "end" ? { endTime: time(row.end_at) } : {}),
+  ...(row.times === "duration" ? { minutes: rowMinutes(row) } : {}),
 });
 
 // A grade-only climb outdoors sits at the day's area, unless a named climb places the day.

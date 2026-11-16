@@ -104,7 +104,10 @@ export const sessions = sqliteTable(
     name: text("name"),
     start_at: text("start_at").notNull(),
     end_at: text("end_at").notNull(),
-    times: text("times").$type<"both" | "start" | "end" | "none">().notNull().default("both"),
+    times: text("times")
+      .$type<"both" | "start" | "end" | "duration" | "none">()
+      .notNull()
+      .default("both"),
     climb_count: integer("climb_count").notNull(),
     send_count: integer("send_count").notNull().default(0),
     top_grade: integer("top_grade").notNull(),

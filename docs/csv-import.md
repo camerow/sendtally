@@ -23,6 +23,7 @@ Columns can be in any order, and unknown columns are ignored.
 | `gym`           | no       | A gym name. Matched case-insensitively against the user's gyms; an unmatched name becomes the session name instead. |
 | `start_time`    | no       | `HH:MM`, 24 hour. Defaults to 12:00.                                                                                |
 | `end_time`      | no       | `HH:MM`. Defaults to 90 minutes after the start. A session is at most 12 hours.                                     |
+| `minutes`       | no       | How long the session lasted, 1 to 720. Ignored when both times are given; with one, it sets the other.              |
 | `rpe`           | no       | 1 to 10. Leave blank and Sendtally scores the session from its climbs and the user's history.                       |
 | `tags`          | no       | Tag names separated by `;`.                                                                                         |
 | `session_notes` | no       | Free text about the day, up to 2000 characters.                                                                     |
@@ -196,7 +197,7 @@ The same prompt is offered on the import page with a copy button.
 Convert the attached climbing log into a CSV that Sendtally can import. Output only the CSV.
 
 Format: one row per climb, header row exactly:
-date,session,location,gym,start_time,end_time,rpe,tags,session_notes,climb,grade,kind,style,tries,climb_notes
+date,session,location,gym,start_time,end_time,minutes,rpe,tags,session_notes,climb,grade,kind,style,tries,climb_notes
 
 Rules:
 - date is YYYY-MM-DD. Every row carries its date; if the source only writes the date on the first climb of a day, fill it down.
@@ -205,6 +206,7 @@ Rules:
 - kind is "send" when the climb was topped and "attempt" when it was not (a "y/n" sent column, "project", "fell", "no send"). Default to send.
 - style is "flash" when sent first try with prior knowledge, "onsight" (routes only) when sent first try with none, "redpoint" for any other send. Leave it blank if the source does not say. A repeat is a send with tries 1.
 - tries is the number of attempts that day, a whole number. Blank means 1.
+- start_time and end_time are HH:MM, 24 hour; minutes is how long the session lasted, a whole number from 1 to 720, when the source gives a length but not both times. Leave any of them blank if unknown.
 - rpe is only filled when the source records effort on a 1-10 scale. Otherwise leave it blank.
 - session_notes holds anything written about the day; climb_notes anything written about that climb. Quote fields that contain commas or line breaks.
 - Skip rows with no grade and no climb name. Do not invent values.

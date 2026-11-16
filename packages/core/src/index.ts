@@ -59,6 +59,7 @@ export {
   historySession,
   parseClimbs,
   rescoredSession,
+  rowMinutes,
   sessionMinutes,
   withGrade,
   type CircuitColour,

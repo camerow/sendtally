@@ -16,6 +16,7 @@ export type ImportIssueCode =
   | "badRpe"
   | "badLocation"
   | "badTime"
+  | "badMinutes"
   | "unreadColumn";
 
 export type ImportIssue = {
@@ -44,6 +45,7 @@ export type ImportSession = {
   gym?: string;
   startTime?: string;
   endTime?: string;
+  minutes?: number;
   rpe?: number;
   tags?: string[];
   notes?: string;

@@ -17,6 +17,7 @@ const ISSUE_KEYS = {
   badRpe: "import.issueBadRpe",
   badLocation: "import.issueBadLocation",
   badTime: "import.issueBadTime",
+  badMinutes: "import.issueBadMinutes",
   unreadColumn: "import.issueUnreadColumn",
 } as const;
 
