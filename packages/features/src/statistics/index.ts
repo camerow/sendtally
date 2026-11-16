@@ -58,6 +58,12 @@ export {
 } from "./workload";
 export {
   WORKLOAD_EDGES,
+  WORKLOAD_GUTTER,
+  WORKLOAD_TINTS,
+  workloadBands,
+  workloadPlot,
+  type WorkloadBandVM,
+  type WorkloadPlot,
   WORKLOAD_MAX,
   workloadVM,
   workloadZoneLabel,

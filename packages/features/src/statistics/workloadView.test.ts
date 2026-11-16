@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DAY_MS } from "../trends/buckets";
 import type { Done } from "./insights";
-import { workloadVM } from "./workloadView";
+import { workloadPlot, workloadVM } from "./workloadView";
 
 const now = new Date(Date.UTC(2026, 10, 16, 20) + new Date().getTimezoneOffset() * 60_000);
 const today = Date.UTC(2026, 10, 16);
@@ -61,5 +61,15 @@ describe("workloadVM", () => {
       chronic: null,
       daysLogged: 12,
     });
+  });
+});
+
+describe("workloadPlot", () => {
+  it("breaks runs at gaps, clamps above 2.0 and marks today", () => {
+    const plot = workloadPlot([1, null, 0.5, 3], 336, 132);
+    expect(plot.runs.map((r) => r.length)).toEqual([1, 2]);
+    expect(plot.y(3)).toBe(plot.y(2));
+    expect(plot.over).toHaveLength(1);
+    expect(plot.today).toEqual(plot.over[0]);
   });
 });

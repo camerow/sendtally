@@ -558,3 +558,229 @@
   font-weight: 600;
   font-size: 12px;
 }
+
+.workload-card {
+  gap: 10px;
+}
+
+.workload-mono {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--bs-gunmetal);
+}
+
+.workload-muted {
+  color: var(--text-on-white-secondary);
+}
+
+.workload-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.workload-ratio,
+.workload-headline,
+.workload-tile-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--bs-gunmetal);
+  line-height: 1.1;
+}
+
+.workload-ratio {
+  font-size: 40px;
+}
+
+.workload-headline {
+  font-size: 32px;
+}
+
+.workload-faint {
+  color: rgba(64, 63, 76, 0.45);
+}
+
+.workload-pill {
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.workload-sentence {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--bs-gunmetal);
+}
+
+.workload-axis {
+  margin-top: -4px;
+}
+
+.workload-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.workload-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-on-white-secondary);
+}
+
+.workload-legend-item .workload-mono {
+  font-size: 11px;
+  color: inherit;
+}
+
+.workload-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(64, 63, 76, 0.22);
+}
+
+.workload-row {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  border-top: 1px solid var(--line-on-light);
+  background: none;
+  color: var(--text-on-white-secondary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.workload-row:hover {
+  background: rgba(64, 63, 76, 0.04);
+}
+
+.workload-weeks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.workload-weeks-bar {
+  display: flex;
+  gap: 4px;
+  height: 10px;
+}
+
+.workload-week {
+  flex: 1;
+  border-radius: 3px;
+  background: rgba(64, 63, 76, 0.14);
+}
+
+.workload-week-done {
+  background: var(--bs-gunmetal);
+}
+
+.workload-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.workload-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.workload-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #f7f6f3;
+}
+
+.workload-tile-value {
+  font-size: 26px;
+}
+
+.workload-tile .workload-mono {
+  font-size: 11px;
+}
+
+.workload-bars {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.workload-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.workload-bar .workload-mono {
+  font-size: 11px;
+}
+
+.workload-bar-fill {
+  width: 100%;
+  border-radius: 6px 6px 2px 2px;
+  background: rgba(64, 63, 76, 0.22);
+}
+
+.workload-bar-now {
+  background: var(--bs-gold);
+  box-shadow: inset 0 0 0 1.5px var(--bs-gunmetal);
+}
+
+.workload-bar-label {
+  font-size: 9.5px;
+}
+
+.workload-average {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1.5px dashed var(--bs-gunmetal);
+  pointer-events: none;
+}
+
+.workload-left-out {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-on-light);
+}
+
+.workload-left-row {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--bs-gunmetal);
+  text-decoration: none;
+}
+
+.workload-left-row:hover {
+  background: rgba(64, 63, 76, 0.04);
+}
+
+.workload-left-name {
+  overflow: hidden;
+  font-size: 14.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

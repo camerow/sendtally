@@ -1,6 +1,8 @@
+import { colors, effortScale } from "@sendtally/design/tokens";
 import { formatDate, formatNumber, t, type MessageKey } from "../i18n";
 import { DAY_MS, bucketsFor, dayStart, wallClock, windowOf } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
+import type { Point } from "./chartGeometry";
 import type { Done, DoneRef } from "./insights";
 import {
   loadOf,
@@ -16,6 +18,91 @@ export const WORKLOAD_MAX = 2;
 
 /** The zone edges on the plot, bottom up. */
 export const WORKLOAD_EDGES = [0.8, 1.3, 1.5] as const;
+
+/** Each zone's tint behind gunmetal text; the much bigger week is orange, never the destructive red. */
+export const WORKLOAD_TINTS: Record<WorkloadZone, string> = {
+  light: colors.climbingTint,
+  sweet: colors.strengthTint,
+  caution: colors.surfaceSelected,
+  high: `${effortScale[7]}40`,
+};
+
+/** The zones bottom up, each with its tint, its range on the plot and its legend range. */
+export type WorkloadBandVM = {
+  zone: WorkloadZone;
+  label: string;
+  range: string;
+  lo: number;
+  hi: number;
+};
+
+/** The zones bottom up, each with its range on the plot and in the legend. */
+export function workloadBands(): WorkloadBandVM[] {
+  const [a, b, c] = WORKLOAD_EDGES;
+  const n = (x: number): string => formatNumber(x, { minimumFractionDigits: 1 });
+  const band = (zone: WorkloadZone, lo: number, hi: number, range: string): WorkloadBandVM => ({
+    zone,
+    label: workloadZoneLabel(zone),
+    range,
+    lo,
+    hi,
+  });
+  return [
+    band("light", 0, a, t("statistics.workloadUnder", { n: n(a) })),
+    band("sweet", a, b, t("statistics.workloadBetween", { from: n(a), to: n(b) })),
+    band("caution", b, c, t("statistics.workloadBetween", { from: n(b), to: n(c) })),
+    band("high", c, WORKLOAD_MAX, t("statistics.workloadOver", { n: n(c) })),
+  ];
+}
+
+export const WORKLOAD_GUTTER = 36;
+const PLOT_PAD = 10;
+
+export type WorkloadPlot = {
+  y: (ratio: number) => number;
+  left: number;
+  right: number;
+  /** Runs of consecutive ratios, each its own polyline. */
+  runs: Point[][];
+  dots: Point[];
+  /** Today's point, drawn in gold. */
+  today: Point | null;
+  /** Points above the plot's top, drawn on the edge with a marker. */
+  over: Point[];
+};
+
+/** Where the ratio line sits in a `width` by `height` box with the value axis on the left. */
+export function workloadPlot(
+  points: readonly (number | null)[],
+  width: number,
+  height: number
+): WorkloadPlot {
+  const left = WORKLOAD_GUTTER;
+  const right = width - 6;
+  const y = (r: number): number =>
+    PLOT_PAD + (height - PLOT_PAD * 2) * (1 - Math.min(r, WORKLOAD_MAX) / WORKLOAD_MAX);
+  const x = (i: number): number =>
+    left + 6 + (right - left - 12) * (points.length > 1 ? i / (points.length - 1) : 0.5);
+  const runs: Point[][] = [];
+  let run: Point[] = [];
+  points.forEach((r, i) => {
+    if (r === null) {
+      if (run.length > 0) runs.push(run);
+      run = [];
+    } else run.push([x(i), y(r)]);
+  });
+  if (run.length > 0) runs.push(run);
+  const last = points.at(-1);
+  return {
+    y,
+    left,
+    right,
+    runs,
+    dots: runs.flat(),
+    today: last === null || last === undefined ? null : [x(points.length - 1), y(last)],
+    over: points.flatMap((r, i): Point[] => (r !== null && r > WORKLOAD_MAX ? [[x(i), y(r)]] : [])),
+  };
+}
 
 export type WorkloadLeftOutVM = { ref: DoneRef; detail: string };
 
