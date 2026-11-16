@@ -146,6 +146,7 @@ Hang set rows in every place they appear drop the tick and take the shipped Set 
 - Done signal: a hang set is kept when it held anything (hangs above 0, or a lone hang's cut seconds), which is the rule `setsHeld` already applies to the timer's sets; clearing a set's hangs drops it, and a dropped set is not missed, as today. The part's live state has no ticked list.
 - Target: none, by Will's decision 4. A grip dose can hold `targetRpe` (the type and `doseBody` allow it) but the editor keeps offering none (`FINGERS_FIELDS` in `doseFields.ts` has no RPE field), so hang rows show the RPE box without a target.
 - Showing it: Set RPE deferred hang sets because `HangSummary` and `HangResultCard` would show a rating nowhere; they now show each set's RPE beside its hangs and load, for parts and standalone sessions alike, so no rating is entered and then hidden.
+  That is built on `bug/hang-summary-every-grip` (commit 53d8bf21): `hangGrids(session)` in `activities/summary.ts` gives one `HangGripGrid` per grip in item order, read through `hangSessionItems`, and `HangResultCard` takes a grid and shows its RPE column only when a set has one.
 After Finish, the review and later edits are the activity's `ActivityForm`, which shows the part's grips inline with the other exercises in that same hang mode and saves both rows in one request.
 There is one editor for grip sets, `ActivityForm`'s hang mode; `HangSessionForm` should move onto it too, which also fixes its first-grip-only defect.
 
@@ -187,7 +188,8 @@ The two paths share the timer, the grip set rows and the editor, so there is sti
 ## Slices, in shipping order
 
 1. API: `activity_id` column, `fingerboard` on `activityBody` in one batch, `parts` on `GET /v1/hang`, parts out of history, delete cascade, Strava description with the part, the mix refusal dropped from `workoutBody` and `save_workout`, `workoutKindOf` ignoring grips. Worker deploy and D1 migration; safe with every build.
-2. Shared and apps: `hangsWithParts` for grip readers; `runMinutes` for the minutes readers and the training mix; `ActivityForm` hang mode for grip items in an activity; `HangSessionForm` onto it; the hang summary's grid and `HangResultCard` drawing every grip (through `hangSessionItems`) with each set's RPE, where today they draw the first grip only, a layout change drawn on the board. Mobile over the air, web on merge.
+2. Shared and apps: `hangsWithParts` for grip readers, including the session list `gripLoads(grip, all)` reads for grip trends; `runMinutes` for the minutes readers and the training mix; `ActivityForm` hang mode for grip items in an activity; `HangSessionForm` onto it; the part card in a workout summary (frame 11) mapping `hangGrids(part)` to `HangResultCard`s. Mobile over the air, web on merge.
+   The hang summary drawing every grip with each set's RPE (frames 21 and 22a) ships separately on `bug/hang-summary-every-grip`, and slice 2 builds on it.
 3. Apps: the picker and editor allow a mix; the run: a mix opens the workout view with the part card, the timer runs the part and returns, the live run holds the part, Finish saves both. Mobile over the air, web on merge.
 
 Slices 2 and 3 can ship as one pull request after slice 1; slice 3 must not ship before 2, or a mix's part would be invisible to grip trends.
