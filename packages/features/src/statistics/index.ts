@@ -49,3 +49,20 @@ export {
   trendChange,
   type MixRowVM,
 } from "./insightsView";
+export {
+  LEFT_OUT_LIMIT,
+  workloadOn,
+  workloadZone,
+  type WorkloadState,
+  type WorkloadZone,
+} from "./workload";
+export {
+  WORKLOAD_EDGES,
+  WORKLOAD_MAX,
+  workloadVM,
+  workloadZoneLabel,
+  type WorkloadLeftOutVM,
+  type WorkloadVM,
+  type WorkloadWeekVM,
+} from "./workloadView";
+export type { DoneRef } from "./insights";

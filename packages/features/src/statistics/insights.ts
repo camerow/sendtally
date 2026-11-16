@@ -12,14 +12,20 @@ import { formatNumber, t } from "../i18n";
 import { durationLabel, sessionMinutes } from "../sessions/years";
 import { focusLabel } from "../training/focus";
 import { isUnscored } from "../sessions/meta";
+import { hangTitle } from "../sessions/hang";
 import { DAY_MS, bucketsFor, priorWindow, windowOf } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
 import { exerciseSeries, type ExerciseMetric } from "./exercises";
 import { kindLabel } from "../activities/format";
 import { TRAINED_KINDS, oneDecimal } from "./overview";
 import { workoutsDone, type WorkoutsDoneVM } from "./workouts";
+import { workloadVM, type WorkloadVM } from "./workloadView";
+
+/** Where a record opens: a climbing session by fingerprint, anything trained by id. */
+export type DoneRef = { type: "session" | "activity"; id: string; name: string };
 
 export type Done = {
+  ref: DoneRef;
   kind: WorkoutKind;
   focus: Focus | null;
   at: number;
@@ -69,11 +75,13 @@ export type TrainingInsightsVM = {
   total: string;
   exercises: ExerciseGroupVM[];
   workouts: WorkoutsDoneVM;
+  workload: WorkloadVM;
 };
 
 export function doneOf(log: SessionLogWithClimbs): Done[] {
   return [
     ...log.sessions.map((s): Done => ({
+      ref: { type: "session", id: s.fingerprint, name: s.name ?? s.title },
       kind: "climbing",
       focus: s.focus ?? null,
       at: Date.parse(s.start_at),
@@ -81,6 +89,7 @@ export function doneOf(log: SessionLogWithClimbs): Done[] {
       minutes: sessionMinutes(s),
     })),
     ...log.hangSessions.map((h): Done => ({
+      ref: { type: "activity", id: h.id, name: hangTitle(h) },
       kind: "hangboard",
       focus: h.focus ?? null,
       at: Date.parse(h.date),
@@ -88,6 +97,7 @@ export function doneOf(log: SessionLogWithClimbs): Done[] {
       minutes: Math.round(hangSessionSeconds(h) / 60),
     })),
     ...log.activities.map((a): Done => ({
+      ref: { type: "activity", id: a.id, name: a.title },
       kind: a.kind,
       focus: a.focus ?? null,
       at: Date.parse(a.date),
@@ -249,5 +259,6 @@ export function trainingInsightsVM(
     ].join(" · "),
     exercises: groups.filter((g) => g.rows.length > 0),
     workouts: workoutsDone(log, within, kinds),
+    workload: workloadVM(all, range, now),
   };
 }
