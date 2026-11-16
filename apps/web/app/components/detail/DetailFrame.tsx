@@ -2,6 +2,7 @@ import React from "react";
 import type { LibraryPicture } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { useGoBack } from "../../lib/useGoBack";
+import { BackLink } from "../BackLink";
 import { Icon } from "../Icon";
 
 export type DetailFrameProps = {
@@ -10,6 +11,8 @@ export type DetailFrameProps = {
   backLabel?: string;
   /** A Cancel or Discard that throws away a draft: danger red, with no Back chevron. */
   danger?: boolean;
+  /** A live page's Minimise, a chevron pointing down, in place of Back. */
+  minimise?: boolean;
   /** Replaces going back, as an editor asking to discard its changes first. */
   onBack?: () => void;
   /** Right of Back, as the ··· menu. */
@@ -28,6 +31,7 @@ export function DetailFrame({
   backTo,
   backLabel,
   danger = false,
+  minimise = false,
   onBack,
   action,
   footer,
@@ -42,18 +46,22 @@ export function DetailFrame({
   return (
     <div className={wide ? "detail detail--wide" : "detail"}>
       <div className="detail-bar">
-        <button
-          type="button"
-          className={danger ? "detail-back detail-back--danger" : "detail-back"}
-          onClick={onBack ?? back}
-        >
-          {!danger && (
-            <span className="detail-back-chevron">
-              <Icon name="chevron" size={14} strokeWidth={2.2} />
+        {minimise ? (
+          <button
+            type="button"
+            className="detail-minimise"
+            aria-label={t("tally.minimise")}
+            onClick={onBack ?? back}
+          >
+            <span>
+              <Icon name="chevron" size={22} strokeWidth={2.2} />
             </span>
-          )}
-          {backLabel ?? t("common.back")}
-        </button>
+          </button>
+        ) : (
+          <BackLink onClick={onBack ?? back} danger={danger}>
+            {backLabel ?? t("common.back")}
+          </BackLink>
+        )}
         {action}
       </div>
       {picture !== undefined && (
