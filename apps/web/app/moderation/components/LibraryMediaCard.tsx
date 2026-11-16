@@ -179,8 +179,11 @@ export function LibraryMediaCard({ editing }: { editing: LibraryEditing }): Reac
           multiple
           hidden
           onChange={(e) => {
-            for (const file of e.target.files ?? []) void add(file);
+            const files = [...(e.target.files ?? [])];
             e.target.value = "";
+            void (async () => {
+              for (const file of files) await add(file);
+            })();
           }}
         />
       </div>
