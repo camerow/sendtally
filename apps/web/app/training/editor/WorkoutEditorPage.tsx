@@ -131,6 +131,7 @@ function Editor({
     <DetailFrame
       backTo={WORKOUTS_VIEW}
       backLabel={t("common.cancel")}
+      danger
       footer={
         <button type="button" className="detail-primary" onClick={save}>
           {t("common.save")}

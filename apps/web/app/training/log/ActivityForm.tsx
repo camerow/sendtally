@@ -138,6 +138,7 @@ export function ActivityForm({
     <DetailFrame
       backTo="/app"
       backLabel={live ? t("hang.discard") : t("common.cancel")}
+      danger
       {...(live && { onBack: () => setDiscarding(true) })}
       footer={
         <button type="button" className="detail-primary" onClick={save}>

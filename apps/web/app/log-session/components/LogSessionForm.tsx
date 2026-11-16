@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { useNavigate } from "react-router";
 import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
+import { Button } from "@sendtally/design";
 import { effortColor } from "@sendtally/design/tokens";
 import { climbFormFromDraft, withAreaClimb, type AreaClimb } from "@sendtally/features/areas";
 import { useClimbVocabulary } from "@sendtally/features/climbs";
@@ -585,23 +586,9 @@ export function LogSessionForm({
 
       <div className="log-session-actions">
         <div className="log-session-buttons">
-          <button
-            type="button"
-            onClick={cancel}
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontWeight: 600,
-              fontSize: 15,
-              padding: "14px 22px",
-              borderRadius: "var(--radius-control)",
-              color: "rgba(64,63,76,0.65)",
-              border: "1px solid rgba(64,63,76,0.18)",
-              background: "none",
-              cursor: "pointer",
-            }}
-          >
+          <Button variant="danger" onClick={cancel}>
             {t("common.discard")}
-          </button>
+          </Button>
           <button
             type="button"
             onClick={() => void save()}

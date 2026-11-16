@@ -8,6 +8,8 @@ export type DetailFrameProps = {
   /** Where Back goes when the page was opened directly, with no history to go back through. */
   backTo: string;
   backLabel?: string;
+  /** Back in danger red, for a Cancel or Discard that throws away a draft. */
+  danger?: boolean;
   /** Replaces going back, as an editor asking to discard its changes first. */
   onBack?: () => void;
   /** Right of Back, as the ··· menu. */
@@ -25,6 +27,7 @@ export type DetailFrameProps = {
 export function DetailFrame({
   backTo,
   backLabel,
+  danger = false,
   onBack,
   action,
   footer,
@@ -39,7 +42,11 @@ export function DetailFrame({
   return (
     <div className={wide ? "detail detail--wide" : "detail"}>
       <div className="detail-bar">
-        <button type="button" className="detail-back" onClick={onBack ?? back}>
+        <button
+          type="button"
+          className={danger ? "detail-back detail-back--danger" : "detail-back"}
+          onClick={onBack ?? back}
+        >
           <span className="detail-back-chevron">
             <Icon name="chevron" size={14} strokeWidth={2.2} />
           </span>

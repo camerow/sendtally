@@ -67,6 +67,7 @@ export function HangSessionForm({ session }: { session: HangSessionRecord }): Re
     <DetailFrame
       backTo="/app"
       backLabel={t("common.cancel")}
+      danger
       footer={
         <button type="button" className="detail-primary" onClick={save}>
           {t("common.save")}

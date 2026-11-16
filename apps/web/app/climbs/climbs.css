@@ -172,7 +172,7 @@
   cursor: pointer;
   font-family: var(--font-sans);
   font-size: 15px;
-  color: var(--text-on-white-secondary);
+  color: var(--bs-watermelon-ink);
 }
 
 .editor-title {
