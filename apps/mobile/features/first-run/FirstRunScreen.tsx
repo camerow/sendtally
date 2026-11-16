@@ -71,7 +71,7 @@ export function FirstRunScreen(): React.ReactElement {
         header={header}
         footer={
           <Button
-            variant="azure"
+            variant="primary"
             label={t("onboarding.firstRun.continue")}
             onPress={flow.saveDays}
           />
@@ -89,7 +89,7 @@ export function FirstRunScreen(): React.ReactElement {
       footer={
         <View style={{ gap: 6 }}>
           <Button
-            variant="azure"
+            variant="primary"
             label={firstRunNextLabel(flow.source)}
             onPress={flow.next}
             disabled={flow.source === null}

@@ -83,7 +83,7 @@ export function UpdateReadyCard({
           alignItems: "center",
           justifyContent: "center",
           borderRadius: radius.control,
-          backgroundColor: colors.gunmetal,
+          backgroundColor: colors.azureInk,
           opacity: restarting ? 0.55 : 1,
         })}
       >
