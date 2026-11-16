@@ -78,13 +78,15 @@ export default function Privacy(): React.ReactElement {
         such as whether it was an area or a climb, never what you wrote. When you first sign in, we
         record once that the two questions were shown, which app you kept a log in, if any, how many
         days a week you climb, and whether you skipped a question. The app you kept a log in also
-        stays on your PostHog profile, so we can compare people by where they came from. When an AI
-        assistant you connect to your account uses it, its connection and each action it takes are
-        recorded as events too, carrying only which action it was, which assistant and model took
-        it, how long it took, whether it failed, the names of the options it set, and a random
-        identifier we give the assistant so the actions of one conversation can be grouped, never
-        what it read or wrote. When the assistant cannot do something you asked, it may send us a
-        short description of what was missing.
+        stays on your PostHog profile, so we can compare people by where they came from. Logging a
+        workout is recorded as whether it was on your plan and whether it is one of
+        sendtally&rsquo;s built-in workouts, never what you logged. When an AI assistant you connect
+        to your account uses it, its connection and each action it takes are recorded as events too,
+        carrying only which action it was, which assistant and model took it, how long it took,
+        whether it failed, the names of the options it set, and a random identifier we give the
+        assistant so the actions of one conversation can be grouped, never what it read or wrote.
+        When the assistant cannot do something you asked, it may send us a short description of what
+        was missing.
       </p>
       <p>
         <strong>App installs.</strong> The mobile apps also run Google Analytics for Firebase, which
