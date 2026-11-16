@@ -3,7 +3,7 @@ import React from "react";
 import { kindLabel } from "@sendtally/features/activities";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { clock, hangSessionSeconds } from "@sendtally/core/hang";
-import { gripSessions, hangTotals, pastSessions } from "@sendtally/features/activities";
+import { gripLoads, hangGrids, hangTotals, pastSessions } from "@sendtally/features/activities";
 import { newBestOf, type HangActions, type HangModel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
@@ -23,7 +23,7 @@ export type HangSummaryProps = {
   actions: HangActions;
 };
 
-/** A finished hangboard session: a new best when it set one, its hangs set by set, the weight on the grip, its past sessions. */
+/** A finished hangboard session: a new best when it set one, each grip it ran with its hangs set by set and its added weight over time, its past sessions. */
 export function HangSummary({
   session,
   model,
@@ -48,8 +48,17 @@ export function HangSummary({
       onDelete={() => void actions.deleteSession(session.id)}
     >
       {best !== null && <NewBestCard best={best} />}
-      <HangResultCard session={session} gripName={model.gripName(session.gripId)} unit={unit} />
-      <GripTrend sessions={gripSessions(session, all)} currentId={session.id} unit={unit} />
+      {hangGrids(session).map((grid, i) => (
+        <React.Fragment key={i}>
+          <HangResultCard grid={grid} gripName={model.gripName(grid.gripId)} unit={unit} />
+          <GripTrend
+            sessions={gripLoads(grid, all)}
+            kind={grid.kind}
+            currentId={session.id}
+            unit={unit}
+          />
+        </React.Fragment>
+      ))}
       <HistoryList
         items={pastSessions(session, all).map((s) => hangItem(s, model, session.id))}
         onOpen={(id) => router.push({ pathname: "/activity/[id]", params: { id } })}

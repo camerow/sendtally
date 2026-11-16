@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
-import type { HangSession, WeightUnit } from "@sendtally/core/hang";
+import type { HangKind, WeightUnit } from "@sendtally/core/hang";
+import type { GripLoad } from "@sendtally/features/activities";
 import { colors } from "@sendtally/design/tokens";
 import { loadLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -12,7 +13,8 @@ const HIGH = 70;
 
 export type GripTrendProps = {
   /** Every session on the grip, oldest first. */
-  sessions: readonly Pick<HangSession, "id" | "loadKg" | "protocol">[];
+  sessions: readonly GripLoad[];
+  kind: HangKind;
   currentId: string;
   unit: WeightUnit;
 };
@@ -20,6 +22,7 @@ export type GripTrendProps = {
 /** The added weight on this grip, session by session, this one in gold. */
 export function GripTrend({
   sessions,
+  kind,
   currentId,
   unit,
 }: GripTrendProps): React.ReactElement | null {
@@ -28,7 +31,7 @@ export function GripTrend({
   const loads = sessions.map((s) => s.loadKg);
   const [lo, hi] = [Math.min(...loads), Math.max(...loads)];
   const height = (kg: number): number => LOW + ((kg - lo) / (hi - lo || 1)) * (HIGH - LOW);
-  const label = (kg: number): string => loadLabel(first.protocol.kind, kg, unit);
+  const label = (kg: number): string => loadLabel(kind, kg, unit);
   return (
     <View
       style={{
