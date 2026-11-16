@@ -21,7 +21,7 @@ import { SkippedRow } from "./SkippedRow";
 /**
  * A day in plan order, as the week list shows it: each plan as it stands, a done one as what
  * did it, then what else was logged. Today is a title; any other day a quiet date line, and
- * an empty one nothing more.
+ * an empty day, Today too, nothing more.
  */
 export function DaySection({
   day,
@@ -40,7 +40,7 @@ export function DaySection({
   ) : (
     <h2 className="plan-label plan-label--muted plan-day-line">{dayTitle(day.date)}</h2>
   );
-  if (heading && empty && !day.isToday) return head;
+  if (heading && empty) return head;
   return (
     <div className="plan-day">
       {heading && head}
