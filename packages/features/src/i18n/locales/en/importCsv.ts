@@ -35,8 +35,6 @@ export const importCsv = {
   "import.formatExport": "{service} export",
   "import.formatSendtally": "Sendtally format",
   "import.statSessions": "sessions",
-  "import.statClimbs": "climbs",
-  "import.statTopGrade": "top grade",
   "import.statSkipped": "rows skipped",
   "import.skippedTitle_one": "{count} row will be skipped",
   "import.skippedTitle_other": "{count} rows will be skipped",
@@ -98,8 +96,6 @@ export const importCsv = {
   "import.selectNone": "Clear",
   "import.selectNamed": "Select sessions named…",
   "import.selectSession": "Select {name}, {date}",
-  "import.connectorLine":
-    "Or connect Claude or ChatGPT to sendtally and let it import the file for you.",
   "import.supportedApps": "Supported apps",
   "import.chooseFile": "Choose a CSV file",
   "import.notRecognized": "Not recognized",
@@ -113,4 +109,38 @@ export const importCsv = {
   "import.added_other": "Added {count} sessions",
   "import.addedSome": "Added {added} · {skipped} already there",
   "import.allThere": "All {total} already in your log",
+  "import.statSends": "sends",
+  "import.statAttempts": "attempts",
+  "import.howToTitle": "Get your log out",
+  "import.howToComputer":
+    "A website download, easiest on a computer. Send the file to your phone, or import it at sendtally.com.",
+  "import.howToOpen": "Open {site}",
+  "import.howToSearch": "Search for the {service} export",
+  "import.howToChoose": "Choose the file here.",
+  "import.howTo8a1": "On a computer, sign in at 8a.nu and open “{logbook}”.",
+  "import.howTo8a2": "Select the pencil next to “{about}”.",
+  "import.howTo8a3": "At the bottom, under “{export}”, download the file.",
+  "import.howTo8aTries": "8a.nu does not count tries, so each climb imports as one try.",
+  "import.howToMountainProject1": "Sign in at mountainproject.com.",
+  "import.howToMountainProject2": "Open your profile, then “{ticks}”.",
+  "import.howToMountainProject3": "Select “{export}” to download the file.",
+  "import.howToSendage1": "Sign in at sendage.com.",
+  "import.howToSendage2": "Export your sends from your account as a CSV file.",
+  "import.howToTheCrag1": "Sign in at thecrag.com and open your dashboard.",
+  "import.howToTheCrag2": "From the “{menu}” menu, choose “{export}”.",
+  "import.howToTheCrag3": "The file opens in the browser: save it as a .csv file.",
+  "import.howToSpreadsheetTitle": "Bring in your spreadsheet",
+  "import.howToSpreadsheet1":
+    "Only sheets in the sendtally columns import as they are. The column guide and a template are on sendtally.com, under Import.",
+  "import.howToSpreadsheet2":
+    "Anything else: share the prompt below with Claude or ChatGPT along with your sheet, then choose the CSV it gives back.",
+  "import.skipForNow": "Skip for now",
+  "import.assistantTitle": "Use your own AI app",
+  "import.assistantBody":
+    "Connect Claude or ChatGPT to sendtally and ask it to import the file for you.",
+  "import.backToFirstRun": "Your old log",
+  "import.howToSpreadsheetWeb1":
+    "Only sheets in the sendtally columns import as they are. The column guide and a template are below.",
+  "import.howToSpreadsheetWeb2":
+    "Anything else: copy the prompt below into Claude or ChatGPT along with your sheet, then choose the CSV it gives back.",
 } as const;

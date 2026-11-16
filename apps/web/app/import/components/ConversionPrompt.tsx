@@ -1,10 +1,9 @@
 import React from "react";
-import { Link } from "react-router";
 import { CONVERSION_PROMPT } from "@sendtally/features/import";
 import { t } from "@sendtally/features/i18n";
 import { useCopy } from "../../lib/useCopy";
 import { Section } from "../../settings/components/Section";
-import { bodyText, linkAction, secondaryButton } from "../../settings/components/styles";
+import { bodyText, secondaryButton } from "../../settings/components/styles";
 import { code } from "../styles";
 import { ServiceLinks } from "./ServiceLinks";
 import { sectionLabel } from "../../components/styles";
@@ -35,9 +34,6 @@ export function ConversionPrompt({ showApps = false }: { showApps?: boolean }): 
           <ServiceLinks />
         </>
       )}
-      <Link to="/agents" style={linkAction}>
-        {t("import.connectorLine")}
-      </Link>
     </Section>
   );
 }

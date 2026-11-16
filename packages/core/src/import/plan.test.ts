@@ -184,6 +184,9 @@ describe("csv", () => {
 describe("exportPageUrl", () => {
   it("links a confirmed page or falls back to a search", () => {
     expect(exportPageUrl("theCrag")).toBe("https://www.thecrag.com/en/article/exportlogbook");
+    expect(exportPageUrl("mountainProject")).toBe("https://www.mountainproject.com");
+    expect(exportPageUrl("8a")).toBe("https://www.8a.nu");
+    expect(exportPageUrl("sendage")).toBe("https://sendage.com");
     expect(exportPageUrl("kaya")).toBe("https://www.google.com/search?q=Kaya%20data%20export");
   });
 });

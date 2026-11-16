@@ -68,7 +68,7 @@ describe("first run on the web", () => {
     render("/app/start");
     click("Mountain Project");
     click("Import from Mountain Project");
-    expect(path()).toBe("/app/import?then=/app/start");
+    expect(path()).toBe("/app/import?then=/app/start&from=mountainProject");
     expect(step.mock.calls).toEqual([
       [{ step: "started" }],
       [{ step: "log_answered", existingLog: "mountainProject" }],
@@ -95,6 +95,12 @@ describe("first run on the web", () => {
     });
     expect(path()).toBe("/app/plan?imported=5&skipped=0&likely=0");
     expect(step).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens on the days step after Skip for now on the import page", () => {
+    render("/app/start?later=1");
+    expect(host.querySelector("h1")?.textContent).toBe("Which days do you usually climb?");
+    expect(step).not.toHaveBeenCalled();
   });
 
   it("skips to Log from the first question, saving nothing", () => {

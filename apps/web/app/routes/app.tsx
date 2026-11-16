@@ -7,6 +7,7 @@ import { t } from "@sendtally/features/i18n";
 import { ErrorPage } from "../components/ErrorPage";
 import { Icon, type IconName } from "../components/Icon";
 import { requireApi } from "../lib/api.server";
+import { firstRunGate, fromFirstRun } from "../first-run/firstRunGate";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { AccountButton } from "../components/AccountButton";
 import { LiveBar } from "../components/LiveBar";
@@ -34,16 +35,15 @@ export function meta(): Array<Record<string, string>> {
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: appShellStyles }];
 
 /**
- * First run shows once, before anything else under /app, and only to an account the server says
- * has not had it; /app/start sends anyone else on. Checked on a full load only, so moving around
- * the app, or between first run and its import, never asks again.
+ * First run shows once, before anything else under /app but its import, and only to an account
+ * the server says has not had it; /app/start sends anyone else on. Checked on a full load only,
+ * so moving around the app, or between first run and its import, never asks again.
  */
 export async function loader(args: LoaderFunctionArgs): Promise<{ apiUrl: string }> {
   const api = await requireApi(args);
-  const starting = new URL(args.request.url).pathname === "/app/start";
   const { firstRun } = await api.status();
-  if (firstRun === true && !starting) throw redirect("/app/start");
-  if (firstRun !== true && starting) throw redirect("/app");
+  const to = firstRunGate(new URL(args.request.url).pathname, firstRun);
+  if (to !== null) throw redirect(to);
   return { apiUrl: args.context.get(cloudflareContext).env.API_URL };
 }
 
@@ -175,7 +175,9 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
 export default function AppLayout(): React.ReactElement {
   const api = useAppApi();
   const { userId } = useAuth();
-  const bare = useLocation().pathname === "/app/start";
+  const { pathname, search } = useLocation();
+  // First run and the import it opens draw their own frame, as the phone's are full screens.
+  const bare = pathname === "/app/start" || (pathname === "/app/import" && fromFirstRun(search));
   return (
     <GradeScalesProvider api={api}>
       <LibraryProvider api={api}>

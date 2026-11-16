@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { Button, Label, Logo } from "@sendtally/design";
+import { Button, Label } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
 import { readImportResult } from "@sendtally/features/import";
 import {
@@ -14,19 +14,24 @@ import { useAppApi } from "../lib/useAppApi";
 import { usePlanActions } from "../training/data/usePlanActions";
 import { useToday } from "../training/data/useToday";
 import { WeekdayChips } from "../training/schedule/WeekdayChips";
+import { FirstRunTop } from "./FirstRunTop";
 
 /** Once per account: the log they keep already, then the days they climb, ending on Plan. */
 export function FirstRunPage(): React.ReactElement {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const imported = readImportResult((k) => params.get(k)) !== null;
+  const later = params.get("later") === "1";
   const flow = useFirstRunFlow(useAppApi(), {
-    imported,
+    imported: imported || later,
     today: useToday(),
     newId: () => crypto.randomUUID(),
     actions: usePlanActions(),
     go: (to) => {
-      if (to === "import") void navigate("/app/import?then=/app/start");
+      if (to === "import")
+        void navigate(
+          `/app/import?then=/app/start${flow.source === null ? "" : `&from=${flow.source}`}`
+        );
       else if (to === "log") void navigate("/app", { replace: true });
       else void navigate(imported ? `/app/plan?${params}` : "/app/plan", { replace: true });
     },
@@ -34,17 +39,12 @@ export function FirstRunPage(): React.ReactElement {
 
   return (
     <div className="first-run">
-      <header className="first-run-top">
-        <a href="/" className="first-run-logo">
-          <Logo tone="on-light" size={24} />
-        </a>
-        <span className="first-run-top-side">
-          <Label on="light">{t("onboarding.firstRun.step", { n: flow.step, total: 2 })}</Label>
-          <button type="button" className="first-run-link" onClick={flow.skip}>
-            {t("onboarding.firstRun.skip")}
-          </button>
-        </span>
-      </header>
+      <FirstRunTop>
+        <Label on="light">{t("onboarding.firstRun.step", { n: flow.step, total: 2 })}</Label>
+        <button type="button" className="first-run-link" onClick={flow.skip}>
+          {t("onboarding.firstRun.skip")}
+        </button>
+      </FirstRunTop>
       {flow.step === 1 ? (
         <main className="first-run-body">
           <h1 className="first-run-title">{t("onboarding.firstRun.logQuestion")}</h1>

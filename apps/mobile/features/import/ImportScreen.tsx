@@ -3,7 +3,7 @@ import { File } from "expo-file-system";
 import { getCalendars } from "expo-localization";
 import { router } from "expo-router";
 import React from "react";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import {
   likelyDuplicates,
   planImport,
@@ -11,13 +11,14 @@ import {
   type ImportSession,
   type LikelyDuplicate,
 } from "@sendtally/core/import";
-import { importAll } from "@sendtally/features/import";
+import { CSV_TYPES, importAll, type ImportSource } from "@sendtally/features/import";
 import { t } from "@sendtally/features/i18n";
 import { ScreenFrame } from "../../components/ScreenFrame";
 import { useApi } from "../../lib/api";
 import { messageText } from "../../lib/styles";
 import { Button } from "../training/components/Button";
 import { Title } from "../training/components/Title";
+import { ExportHowTo } from "./ExportHowTo";
 import { ImportReview } from "./ImportReview";
 import { NotRecognized } from "./NotRecognized";
 import { SupportedApps } from "./SupportedApps";
@@ -40,15 +41,18 @@ function split(review: Review): { unflagged: ImportSession[]; importing: ImportS
 /** Import a climbing history: which apps' exports it reads, the file picked, then a review to confirm. */
 export function ImportScreen({
   then,
+  from,
 }: {
   /** Where the result goes once imported. */
   then: "/profile" | "/first-run";
+  /** The source first run picked: its steps stand in for every app's link. */
+  from?: ImportSource | undefined;
 }): React.ReactElement {
   const api = useApi();
   const [review, setReview] = React.useState<Review | null>(null);
 
   const pick = async (): Promise<void> => {
-    const picked = await File.pickFileAsync({ mimeTypes: "text/csv" });
+    const picked = await File.pickFileAsync({ mimeTypes: CSV_TYPES });
     if (picked.canceled) return;
     const timeZone = getCalendars()[0]?.timeZone ?? "UTC";
     const plan = planImport(await picked.result.text(), timeZone);
@@ -78,15 +82,35 @@ export function ImportScreen({
     }
   };
 
+  // From first run, a way on to its next step at every point, so a file never blocks it.
+  const later =
+    then === "/first-run" ? (
+      <Button
+        variant="link"
+        label={t("import.skipForNow")}
+        onPress={() => router.dismissTo({ pathname: then, params: { later: "1" } })}
+      />
+    ) : null;
+
   if (review === null) {
     return (
       <ScreenFrame
+        backLabel={then === "/first-run" ? t("import.backToFirstRun") : undefined}
         footer={
-          <Button variant="azure" label={t("import.chooseFile")} onPress={() => void pick()} />
+          <View style={{ gap: 6 }}>
+            <Button variant="azure" label={t("import.chooseFile")} onPress={() => void pick()} />
+            {later}
+          </View>
         }
       >
-        <Title size={34}>{t("import.title")}</Title>
-        <SupportedApps />
+        {from === undefined ? (
+          <>
+            <Title size={34}>{t("import.title")}</Title>
+            <SupportedApps />
+          </>
+        ) : (
+          <ExportHowTo source={from} />
+        )}
       </ScreenFrame>
     );
   }
@@ -110,7 +134,10 @@ export function ImportScreen({
             />
           </>
         ) : (
-          <Button variant="azure" label={t("import.chooseAnother")} onPress={() => void pick()} />
+          <View style={{ gap: 6 }}>
+            <Button variant="azure" label={t("import.chooseAnother")} onPress={() => void pick()} />
+            {later}
+          </View>
         )
       }
     >

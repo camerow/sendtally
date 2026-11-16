@@ -18,6 +18,7 @@ import {
 } from "../../settings/components/styles";
 import { checkbox, goldButton, pillMuted, pillOk, td, tdMono, th } from "../styles";
 import { useIsNarrow } from "../../lib/useIsNarrow";
+import { AssistantCard } from "./AssistantCard";
 import { ConversionPrompt } from "./ConversionPrompt";
 import { SessionTagBar } from "./SessionTagBar";
 import { Stat } from "./Stat";
@@ -145,8 +146,8 @@ export function ImportReview({
             }}
           >
             <Stat value={stats.sessions} label={t("import.statSessions")} />
-            <Stat value={stats.climbs} label={t("import.statClimbs")} />
-            <Stat value={stats.topGrade ?? "–"} label={t("import.statTopGrade")} />
+            <Stat value={stats.sends} label={t("import.statSends")} />
+            <Stat value={stats.attempts} label={t("import.statAttempts")} />
             <Stat
               value={plan.issues.length}
               label={t("import.statSkipped")}
@@ -202,6 +203,7 @@ export function ImportReview({
         <>
           <p style={bodyText}>{t("import.nothingFound")}</p>
           <ConversionPrompt showApps />
+          <AssistantCard />
         </>
       ) : (
         <div

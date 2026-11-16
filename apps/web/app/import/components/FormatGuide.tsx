@@ -4,6 +4,7 @@ import { t } from "@sendtally/features/i18n";
 import { Section } from "../../settings/components/Section";
 import { bodyText, linkAction } from "../../settings/components/styles";
 import { code, td, tdMono, th } from "../styles";
+import { AssistantCard } from "./AssistantCard";
 import { ConversionPrompt } from "./ConversionPrompt";
 import { sectionLabel } from "../../components/styles";
 
@@ -71,6 +72,7 @@ export function FormatGuide(): React.ReactElement {
         </table>
       </Section>
       <ConversionPrompt />
+      <AssistantCard />
     </>
   );
 }

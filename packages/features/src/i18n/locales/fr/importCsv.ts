@@ -38,8 +38,6 @@ export const importCsv = {
   "import.formatExport": "Export {service}",
   "import.formatSendtally": "Format Sendtally",
   "import.statSessions": "séances",
-  "import.statClimbs": "voies",
-  "import.statTopGrade": "cotation max",
   "import.statSkipped": "lignes ignorées",
   "import.skippedTitle_one": "{count} ligne sera ignorée",
   "import.skippedTitle_other": "{count} lignes seront ignorées",
@@ -101,8 +99,6 @@ export const importCsv = {
   "import.selectNone": "Effacer",
   "import.selectNamed": "Choisir les séances nommées…",
   "import.selectSession": "Choisir {name}, {date}",
-  "import.connectorLine":
-    "Ou connecte Claude ou ChatGPT à sendtally et laisse-le importer le fichier pour toi.",
   "import.supportedApps": "Applications prises en charge",
   "import.chooseFile": "Choisir un fichier CSV",
   "import.notRecognized": "Non reconnu",
@@ -116,4 +112,39 @@ export const importCsv = {
   "import.added_other": "{count} séances ajoutées",
   "import.addedSome": "{added} ajoutées · {skipped} déjà présentes",
   "import.allThere": "Les {total} sont déjà dans ton journal",
+  "import.statSends": "croix",
+  "import.statAttempts": "essais",
+  "import.howToTitle": "Récupère ton carnet",
+  "import.howToComputer":
+    "Un téléchargement depuis le site, plus simple sur un ordinateur. Envoie le fichier sur ton téléphone, ou importe-le sur sendtally.com.",
+  "import.howToOpen": "Ouvrir {site}",
+  "import.howToSearch": "Chercher l'export {service}",
+  "import.howToChoose": "Choisis le fichier ici.",
+  "import.howTo8a1": "Sur un ordinateur, connecte-toi à 8a.nu et ouvre « {logbook} ».",
+  "import.howTo8a2": "Sélectionne le crayon à côté de « {about} ».",
+  "import.howTo8a3": "Tout en bas, sous « {export} », télécharge le fichier.",
+  "import.howTo8aTries":
+    "8a.nu ne compte pas les essais, chaque voie est donc importée avec un essai.",
+  "import.howToMountainProject1": "Connecte-toi à mountainproject.com.",
+  "import.howToMountainProject2": "Ouvre ton profil, puis « {ticks} ».",
+  "import.howToMountainProject3": "Sélectionne « {export} » pour télécharger le fichier.",
+  "import.howToSendage1": "Connecte-toi à sendage.com.",
+  "import.howToSendage2": "Exporte tes croix depuis ton compte en fichier CSV.",
+  "import.howToTheCrag1": "Connecte-toi à thecrag.com et ouvre ton tableau de bord.",
+  "import.howToTheCrag2": "Dans le menu « {menu} », choisis « {export} ».",
+  "import.howToTheCrag3": "Le fichier s'ouvre dans le navigateur : enregistre-le en fichier .csv.",
+  "import.howToSpreadsheetTitle": "Importe ton tableur",
+  "import.howToSpreadsheet1":
+    "Seuls les tableaux aux colonnes sendtally s'importent tels quels. Le guide des colonnes et un modèle sont sur sendtally.com, dans Import.",
+  "import.howToSpreadsheet2":
+    "Pour le reste : partage le prompt ci-dessous avec Claude ou ChatGPT avec ton tableau, puis choisis le CSV qu'il te renvoie.",
+  "import.skipForNow": "Passer pour l'instant",
+  "import.assistantTitle": "Utilise ta propre app d'IA",
+  "import.assistantBody":
+    "Connecte Claude ou ChatGPT à sendtally et demande-lui d'importer le fichier pour toi.",
+  "import.backToFirstRun": "Ton ancien carnet",
+  "import.howToSpreadsheetWeb1":
+    "Seuls les tableaux aux colonnes sendtally s'importent tels quels. Le guide des colonnes et un modèle sont ci-dessous.",
+  "import.howToSpreadsheetWeb2":
+    "Pour le reste : copie le prompt ci-dessous dans Claude ou ChatGPT avec ton tableau, puis choisis le CSV qu'il te renvoie.",
 } as const;
