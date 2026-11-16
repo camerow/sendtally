@@ -19,7 +19,7 @@ const mockPlan = {
   saveSchedule: jest.fn(),
 };
 
-const mockWorkouts = { saveWorkout: jest.fn(), deleteWorkout: jest.fn() };
+const mockWorkouts = { saveWorkout: jest.fn(async () => undefined), deleteWorkout: jest.fn() };
 const mockPrompt = jest.fn();
 
 jest.mock("../plan/usePlanActions", () => ({ usePlanActions: () => mockPlan }));

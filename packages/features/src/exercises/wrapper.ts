@@ -1,7 +1,6 @@
 import React from "react";
-import type { Workout } from "@sendtally/core/hang";
+import { exerciseNameKey, type Workout } from "@sendtally/core/hang";
 import { t } from "../i18n";
-import { exerciseKey, workoutsUsing } from "../statistics/exercises";
 import { withItemsAdded } from "../workouts/editorState";
 import { newWorkoutDraft } from "../workouts/library";
 import type { LibraryWorkout, Picked, WorkoutDraft } from "../workouts/types";
@@ -40,14 +39,17 @@ const itemName = (e: ExerciseEntry): string =>
       ? e.source.exercise.name
       : e.source.builtIn.name;
 
-/** The workouts with an item of the entry; a grip only counts on the hangboard. */
+/** The workouts with an item of the entry, matched as the Worker matches names; a grip only counts on the hangboard. */
 export function workoutsWith<W extends Pick<Workout, "kind" | "items">>(
   workouts: readonly W[],
   e: ExerciseEntry
 ): W[] {
-  if (!("grip" in e.source)) return workoutsUsing(workouts, itemName(e));
-  const id = e.source.grip.id;
-  return workouts.filter((w) => w.kind === "hangboard" && w.items.some((i) => i.exercise === id));
+  const grip = "grip" in e.source;
+  const key = exerciseNameKey(itemName(e));
+  return workouts.filter(
+    (w) =>
+      (w.kind === "hangboard") === grip && w.items.some((i) => exerciseNameKey(i.exercise) === key)
+  );
 }
 
 /** "In 2 workouts", or that none uses it yet. */
@@ -64,7 +66,7 @@ export function wrapperOf(
 ): LibraryWorkout | undefined {
   const name = "grip" in e.source ? e.name : itemName(e);
   const ones = workoutsWith(workouts, e).filter((w) => w.source === "mine" && w.items.length === 1);
-  return ones.find((w) => exerciseKey(w.name) === exerciseKey(name)) ?? ones[0];
+  return ones.find((w) => exerciseNameKey(w.name) === exerciseNameKey(name)) ?? ones[0];
 }
 
 /** A new workout of the one exercise picked, named after it, at its starting dose. */
@@ -85,8 +87,8 @@ type ExerciseWorkoutArgs = {
 
 /**
  * The workout an exercise goes in a block or on a day as: its wrapper, made the first time.
- * Null when making its exercise failed, or while the same exercise is still being made, so
- * a second quick tap cannot make a second wrapper.
+ * Null when making its exercise failed, or while the same exercise's workout is still being
+ * made and saved, so a second quick tap cannot make a second wrapper.
  */
 export const exerciseWorkout =
   ({ workouts, pick, save, newId, making }: ExerciseWorkoutArgs) =>
@@ -96,15 +98,19 @@ export const exerciseWorkout =
     const key = `${e.kind}:${itemName(e)}`;
     if (making.has(key)) return null;
     making.add(key);
-    try {
-      const picked = await pick(e.source);
-      if (picked === null) return null;
-      const id = newId();
-      void save(id, wrapperDraft(e, picked, newId));
-      return id;
-    } finally {
-      making.delete(key);
+    const release = (): void => void making.delete(key);
+    const picked = await pick(e.source).catch((error: unknown) => {
+      release();
+      throw error;
+    });
+    if (picked === null) {
+      release();
+      return null;
     }
+    const id = newId();
+    // The library holds the new workout once the save settles, or the save failed.
+    void save(id, wrapperDraft(e, picked, newId)).then(release, release);
+    return id;
   };
 
 /** `exerciseWorkout` for a screen, remembering what it is making across renders. */

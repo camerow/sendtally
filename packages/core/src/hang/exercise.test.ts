@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultMeasure, measureOf, measuresFor } from "./exercise";
+import { defaultMeasure, exerciseNameKey, measureOf, measuresFor } from "./exercise";
 
 describe("measureOf", () => {
   it.each([
@@ -26,5 +26,12 @@ describe("measureOf", () => {
     expect(measuresFor("strength")).toHaveLength(5);
     expect(measuresFor("strength")).not.toContain("laps");
     expect(measuresFor("hangboard")).toEqual(["hang", "repsWeight", "secondsWeight"]);
+  });
+});
+
+describe("exerciseNameKey", () => {
+  it("trims and folds ASCII letters only, as SQLite lower() does", () => {
+    expect(exerciseNameKey("  Élan PRESS ")).toBe("Élan press");
+    expect(exerciseNameKey("élan press")).not.toBe(exerciseNameKey("Élan press"));
   });
 });

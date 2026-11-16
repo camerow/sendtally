@@ -44,9 +44,7 @@ export type Exercise = {
   archived: boolean;
 };
 
-/** SQLite's lower(trim(name)): it folds ASCII only, as the backfill migration did. */
-export const exerciseNameKey = (name: string): string =>
-  name.trim().replace(/[A-Z]/g, (c) => c.toLowerCase());
+export { exerciseNameKey } from "@sendtally/core/hang";
 
 /** The kind an exercise of this workout kind is, or null where items name grips. */
 export const exerciseKindOf = (kind: WorkoutKind): ExerciseKind | null =>

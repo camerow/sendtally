@@ -77,3 +77,10 @@ export function measureOf(kind: ExerciseKind, sets: readonly SetDone[]): Exercis
   if (has("onS")) return kind === "other" ? "rounds" : "seconds";
   return has("reps") ? "reps" : DEFAULT_MEASURE[kind];
 }
+
+/**
+ * The key two exercise names match on: trimmed, ASCII letters folded, as SQLite's lower()
+ * folds them, so the Worker's stored name_key and the apps agree on every name.
+ */
+export const exerciseNameKey = (name: string): string =>
+  name.trim().replace(/[A-Z]/g, (c) => c.toLowerCase());

@@ -57,6 +57,18 @@ describe("wrapperOf", () => {
     expect(wrapperOf([both, builtIn], entry)).toBeUndefined();
   });
 
+  it("matches names as the Worker does, so a non-ASCII wrapper it renames is the one found", () => {
+    const elan: ExerciseEntry = {
+      kind: "strength",
+      name: "Élan press",
+      source: { exercise: { ...pullUps, name: "Élan press" } },
+    };
+    const lower = workout("w1", "Élan press", ["élan press"]);
+    const named = workout("w2", "ÉLAN press", ["Élan PRESS"]);
+    expect(workoutsWith([lower, named], elan).map((w) => w.id)).toEqual(["w2"]);
+    expect(wrapperOf([lower, named], elan)?.id).toBe("w2");
+  });
+
   it("finds a grip's on the hangboard only, by its id", () => {
     const hang = workout("w1", "Half crimp", ["half"], { kind: "hangboard" });
     const named = workout("w2", "Half crimp", ["half"]);
@@ -114,5 +126,34 @@ describe("exerciseWorkout", () => {
     waiting.forEach((go) => go());
     expect(await Promise.all([first, second])).toEqual(["new", null]);
     expect(save).toHaveBeenCalledTimes(1);
+  });
+
+  it("makes no second wrapper while the first is saving, and frees the exercise once it settles", async () => {
+    let saved = (): void => undefined;
+    const save = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          saved = resolve;
+        })
+    );
+    const pick = vi.fn(async () => ({ exercise: "Pull-ups" }));
+    const ensure = exerciseWorkout({ workouts: [], pick, save, newId, making: new Set() });
+    expect(await ensure(entry)).toBe("new");
+    expect(await ensure(entry)).toBeNull();
+    expect(save).toHaveBeenCalledTimes(1);
+    saved();
+    await Promise.resolve();
+    expect(await ensure(entry)).toBe("new");
+    expect(save).toHaveBeenCalledTimes(2);
+  });
+
+  it("frees the exercise when the save fails, so the add can be tried again", async () => {
+    const save = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValue(undefined);
+    const pick = vi.fn(async () => ({ exercise: "Pull-ups" }));
+    const ensure = exerciseWorkout({ workouts: [], pick, save, newId, making: new Set() });
+    expect(await ensure(entry)).toBe("new");
+    await new Promise((r) => setTimeout(r, 0));
+    expect(await ensure(entry)).toBe("new");
+    expect(save).toHaveBeenCalledTimes(2);
   });
 });
