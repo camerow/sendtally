@@ -485,15 +485,6 @@ body:has(.climb-sheet[open]) {
   gap: 3px;
 }
 
-.climb-sheet-title {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 18px;
-  line-height: 1.25;
-  color: var(--bs-gunmetal);
-}
-
 .climb-sheet-count {
   font-family: var(--font-mono);
   font-size: 11px;

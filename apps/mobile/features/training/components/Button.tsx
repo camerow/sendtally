@@ -7,15 +7,7 @@ import { HangIcon, type HangIconName } from "./HangIcon";
 import { ON_DARK, ON_DARK_LINE } from "@sendtally/features/workouts";
 
 export type ButtonVariant =
-  | "primary"
-  | "gold"
-  | "goldText"
-  | "outline"
-  | "danger"
-  | "link"
-  | "plain"
-  | "muted"
-  | "outlineDark";
+  "primary" | "goldText" | "outline" | "danger" | "link" | "plain" | "muted" | "outlineDark";
 
 export type ButtonProps = {
   label: string;
@@ -30,7 +22,6 @@ export type ButtonProps = {
 
 const LOOKS: Record<ButtonVariant, { box: ViewStyle; ink: string }> = {
   primary: { box: { backgroundColor: colors.azureInk }, ink: colors.white },
-  gold: { box: { backgroundColor: colors.gold }, ink: colors.gunmetal },
   goldText: { box: { paddingHorizontal: 8 }, ink: colors.gold },
   outline: { box: { borderWidth: 1, borderColor: colors.lineOnLightStrong }, ink: colors.gunmetal },
   danger: { box: {}, ink: colors.watermelonInk },

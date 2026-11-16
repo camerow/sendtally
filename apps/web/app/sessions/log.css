@@ -481,8 +481,8 @@
   gap: 8px;
   border: none;
   border-radius: var(--radius-control);
-  background: var(--bs-gold);
-  color: var(--bs-gunmetal);
+  background: var(--bs-azure-ink);
+  color: var(--bs-white);
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 15px;
@@ -491,7 +491,7 @@
 }
 
 .log-empty-primary:hover {
-  background: var(--bs-gold-hover);
+  background: var(--bs-azure-ink-press);
 }
 
 .log-empty-actions {

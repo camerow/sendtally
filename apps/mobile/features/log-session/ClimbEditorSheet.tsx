@@ -20,7 +20,9 @@ import {
   type GradePrefs,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
-import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius, sheetTitleSize } from "@sendtally/design/tokens";
+import { Button } from "../training/components/Button";
+import { Title } from "../training/components/Title";
 import { Icon } from "../../components/Icon";
 import { DateTimeField } from "../../components/DateTimeField";
 import { Sheet } from "../../components/Sheet";
@@ -30,7 +32,6 @@ import { EnduranceFields } from "./EnduranceFields";
 import { ResultFields } from "./ResultFields";
 import { useApi } from "../../lib/api";
 import { press, pressRow, tap } from "../../lib/press";
-import { primaryButton, primaryButtonLabel } from "../../lib/styles";
 
 /** The climb's area, which scopes its Areas name search, and what picking or adding does. */
 export type ClimbAreas = {
@@ -398,22 +399,13 @@ export function ClimbEditorSheet({
                 <Icon name="trash" color={colors.watermelonInk} size={18} strokeWidth={1.8} />
               </Pressable>
             )}
-            <Pressable
+            <Button
+              label={saving ? t("common.saving") : t("common.save")}
               onPress={onClose}
+              variant="primary"
               disabled={saving}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: saving }}
-              style={press({
-                ...primaryButton,
-                flex: 1,
-                backgroundColor: colors.gold,
-                opacity: saving ? disabledOpacity : 1,
-              })}
-            >
-              <Text style={{ ...primaryButtonLabel, color: colors.gunmetal }}>
-                {saving ? t("common.saving") : t("common.save")}
-              </Text>
-            </Pressable>
+              style={{ flex: 1 }}
+            />
           </View>
         )
       }
@@ -421,12 +413,7 @@ export function ClimbEditorSheet({
       {climb !== null && (
         <View style={{ gap: 14, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 4 }}>
           <View style={{ gap: 3 }}>
-            <Text
-              accessibilityRole="header"
-              style={{ fontFamily: fonts.sansSemiBold, fontSize: 18, color: colors.gunmetal }}
-            >
-              {t("logSession.addClimb")}
-            </Text>
+            <Title size={sheetTitleSize}>{t("logSession.addClimb")}</Title>
             <Text style={{ ...label, color: colors.textMuted }}>
               {count > 0
                 ? t("logSession.climbOf", { n: index + 1, total: count })

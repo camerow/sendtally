@@ -406,6 +406,7 @@
 
 .sheet-title {
   margin: 0;
+  color: var(--bs-gunmetal);
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--type-sheet-title-size);
