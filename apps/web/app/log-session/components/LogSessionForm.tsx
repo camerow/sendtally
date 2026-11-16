@@ -474,7 +474,7 @@ export function LogSessionForm({
               gap: 14,
             }}
           >
-            <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
+            <span style={{ ...monoLabel, color: "var(--bs-gunmetal)" }}>
               {t("logSession.climbsCount", { n: draft.climbs.length })}
             </span>
             <span style={columnHead}>{t("logSession.scalesInSettings")}</span>
