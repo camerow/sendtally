@@ -1,5 +1,6 @@
 import React from "react";
 import { fromUnit, toUnit, type SetDone, type WeightUnit } from "@sendtally/core/hang";
+import { hangLoadValue } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { NumberField } from "../../components/NumberField";
 
@@ -82,7 +83,8 @@ export function SetDoneFields({
           value={kg === undefined ? null : toUnit(kg, unit)}
           onChange={(n) => onChange({ ...set, weightKg: fromUnit(n, unit) })}
           mode={weightLimits}
-          {...(!unitless && { unit })}
+          {...(hangs && kg !== undefined && { display: hangLoadValue(kg, unit) })}
+          {...(!unitless && !(hangs && toUnit(kg ?? 0, unit) === 0) && { unit })}
         />
       )}
       {(reps || weight) && hold && <Joiner mark="·" />}
