@@ -1,9 +1,11 @@
 import { env } from "cloudflare:test";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import * as posthog from "../src/lib/posthog";
+import * as repo from "../src/lib/repo";
 import { testApp } from "./harness";
 
 const FINGERPRINT = "manual-0a1b2c3d-0000-4000-8000-000000000001";
+const OTHER_FINGERPRINT = "manual-0a1b2c3d-0000-4000-8000-000000000002";
 
 const call = async (
   user: string,
@@ -147,5 +149,30 @@ describe("workout_logged", () => {
     );
     expect((await call(user, "PUT", "/v1/activities/free", activity())).status).toBe(200);
     expect(logged()).toEqual([[user, { built_in: true, planned: false }]]);
+  });
+});
+
+describe("workout_logged never fails a write", () => {
+  it("saves a planned climbing session even when the plan lookup fails", async () => {
+    const user = "user_wl_lookup_fails";
+    expect((await plan(user, "m1", "climb-4x4")).status).toBe(200);
+    const lookup = vi.spyOn(repo, "getMembership").mockRejectedValue(new Error("D1 down"));
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const res = await call(
+        user,
+        "POST",
+        "/v1/sessions",
+        climbingSession({ fingerprint: OTHER_FINGERPRINT, membershipId: "m1" })
+      );
+      expect(res.status).toBe(201);
+      expect(lookup).toHaveBeenCalled();
+      expect(logged()).toEqual([]);
+      const saved = await call(user, "GET", `/v1/sessions/${OTHER_FINGERPRINT}`);
+      expect(saved.status).toBe(200);
+    } finally {
+      lookup.mockRestore();
+      quiet.mockRestore();
+    }
   });
 });
