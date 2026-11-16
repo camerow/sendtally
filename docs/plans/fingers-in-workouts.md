@@ -29,8 +29,12 @@ This plan reverses the "grips and other exercises do not mix" rule from `workout
 
 Grips are ordinary items in the workout's one list.
 A workout's fingerboard part is all of its grip items, in order; there is one part per workout by construction, shown where its first grip sits.
-The editor keeps grips together: a grip added to a workout that has grips lands after the last one, and dragging moves the grips as one block.
-The API does not enforce adjacency; the apps group grips wherever they sit, so an older save or a connector save with scattered grips still runs as one part.
+The stored list is the run order.
+One pure function in `packages/core/src/hang/`, `gripsTogether(items, isGrip)`, moves every grip to the first grip's place, keeping their order and the order of everything else.
+Both editors call it on every change, and `workoutBody` and `save_workout` call it on every save (the API already has `isGrip` from `kindLookup` in `lib/workoutKind.ts`), so a connector or older build save with scattered grips is stored together.
+Moving items is safe for week changes, which follow item ids, not places.
+Reading groups grips the same way, only so a mix saved before this lands still runs as one part.
+In the editor a grip added to a workout that has grips lands after the last one, and dragging moves the grips as one block.
 
 Nothing about the workout's storage changes: no column, no new item type, the same `workoutBody`, the same `save_workout` items.
 Week changes, alternating doses and item ids keep working per grip, because every grip is still an item.
@@ -42,11 +46,35 @@ A mix is therefore never `hangboard`, so it logs as an activity, wears that kind
 ### What one run of a mix writes
 
 - One `activities` row: the run, of the workout's kind, with the non-grip items' sets in `done_json` (item indexes are the workout's), and `minutes` the whole run from Start to Finish.
-- When the fingerboard part kept at least one set, one `hang_sessions` row for the part, written exactly as a fingers-only run writes it (first grip's `grip_id` and protocol, every grip's sets in `done_json`, indexes counted within the part), with the run's date, `workout_id`, `membership_id`, `week` and `focus`.
+- When the fingerboard part kept at least one set, one `hang_sessions` row for the part, written exactly as a fingers-only run writes it (first grip's `grip_id` and protocol, every grip's sets in `done_json`, indexes counted within the part).
 - The part carries a new nullable `hang_sessions.activity_id` naming its run; a standalone hang session has none.
-- Both rows are written in one request and one D1 batch: `PUT /v1/activities/:id` takes an optional `fingerboard` hang session body.
-  Absent leaves any saved part untouched (so an older build editing the run never deletes it), `null` removes it, a body replaces it.
+- A unique index on `(user_id, activity_id)` makes one part per run a database rule; SQLite leaves nulls distinct, so standalone sessions are unaffected.
+- Both rows are written in one request and one D1 batch: `PUT /v1/activities/:id` takes an optional `fingerboard` body.
+  Absent leaves the part's own fields untouched (so an older build editing the run never deletes it), `null` removes it, a body replaces them.
+- The API owns everything the part shares with its run: `date`, `workout_id`, `membership_id`, `week`, `focus` and `rpe` are copied from the activity on every activity write, with or without a `fingerboard` field, so an older build moving the run's date moves the part with it.
+  The `fingerboard` body therefore carries only the part's own fields: `gripId`, `edgeMm`, `loadKg`, `pct`, `misses`, `protocol`, `done`.
 - Deleting the activity deletes its part in the same batch.
+
+### The part's id and retries
+
+The API owns the part's id.
+It finds the part by `activity_id`; the first write inserts it with a new id, every later write updates that row in place and keeps its id (one `INSERT ... ON CONFLICT (user_id, activity_id) DO UPDATE`).
+Replaying the same queued `PUT /v1/activities/:id` therefore writes the same two rows again, and two racing first writes still leave one part.
+Clients never address a part by its own id: a part carries `activityId`, and the apps find a run's part by that, offline included.
+
+### The other doors
+
+- `PUT /v1/hang/sessions/:id` and `DELETE /v1/hang/sessions/:id` on a part answer 409 ("part of a workout; change it through the workout"), and `POST /v1/hang/sessions/:id/strava` likewise; the only way to change or remove a part is through its activity.
+  No build can reach a part's id by these routes today, since parts are never listed in `sessions` or history; the refusal keeps it that way.
+- Deleting a membership unlinks both rows (`removeMemberships` already sets `UNLINKED` on `activities` and `hang_sessions`), so they stay in step.
+- The connector reads no hang sessions or activities today: `list_sessions`, `get_climbing_summary` and `update_session` read climbing sessions only, `get_plan` reads the plan tables only, and there is no log tool for training. Nothing double counts there; a future training log tool must read activities with their parts nested, as the apps do.
+- `showsFirstRun` only asks whether any row exists, which a part does not change.
+
+### Grip ids in a mix's items
+
+Two API paths assume a non-fingers workout names only exercises, and a mix breaks that:
+- `workoutExercises` (`lib/exercises.ts`) creates an exercise for every item of a non-hangboard workout, so it would create exercises named by grip ids; it skips items where `isGrip`.
+- `renameEverywhere` (`lib/repo.ts`) rewrites matching item names in every non-hangboard workout; it skips grip items, so an exercise renamed to a grip id's text can never capture a grip.
 
 ### How the run counts once
 
@@ -58,10 +86,10 @@ A part never posts to Strava on its own; the activity's post adds the part's pro
 
 ### Tables and API shapes touched
 
-- `hang_sessions.activity_id text` nullable, added through Drizzle (`db:generate`); additive, no backfill.
-- `activityBody` gains `fingerboard: hangSessionBody.nullable().optional()` (without its own plan link, which it takes from the activity).
-- `ActivityRecord` gains `fingerboardId: string | null` so a client can find the part in `parts`.
-- `HangData` gains `parts: HangSessionRecord[]`.
+- `hang_sessions.activity_id text` nullable with a unique index on `(user_id, activity_id)`, added through Drizzle (`db:generate`); additive, no backfill.
+- `activityBody` gains `fingerboard: fingerboardBody.nullable().optional()`, the part's own fields only.
+- `HangData` gains `parts: (HangSessionRecord & { activityId: string })[]`.
+- `workoutBody` and `save_workout` store items through `gripsTogether`.
 - `workoutBody` and `save_workout` drop the mix refusal; `save_workout`'s description drops "A workout holds only grips or no grips" and says grips sit beside other exercises as the workout's fingerboard part.
 - `repo.deleteUserData` is unchanged: it already deletes every `hang_sessions` row of the user.
 
@@ -89,19 +117,24 @@ Kind and colour are the non-grip majority's.
 - Finished: the timer's finish returns to the workout view instead of the hang review; the card shows each grip's sets held, edge and load, editable in place; the next item is live.
 - Skipped: the card collapses like any skipped exercise; no part is written.
 - Half done, minimised: the timer's run is still live, so the card offers Resume (`resumedTimer`, as today).
-- Half done, ended with End: the timer's own held sets (`setsHeld`); unheld sets and grips not reached show as not done, with Edit as when finished; an ended run is never resumed.
+- Half done, minimised, shows its rows read-only: the timer still owns them until it ends, so two writers never race over one set.
+- Half done, ended with End: the same editable rows as finished, filled from the timer's held sets (`setsHeld`); unreached sets and grips are empty and unticked; an ended run is never resumed.
 - It can sit anywhere in the order, and a workout holds one part.
 
 ### 4. Editing the finished part
 
-Before Finish, the part's sets edit on the workout view with the same set rows the activity review uses for grips (`ActivityForm` in hang mode: hangs per set, load per set, the setup pill for edge and load).
+Before Finish, the part's sets edit in place on the workout view, with no Edit step, in the same set rows the activity review uses for grips (`ActivityForm` in hang mode: hangs per set, load per set, the setup pill for edge and load).
+When the timer ends, the live run turns its held sets into the part's `done` (`ItemDone[]` with `reps`, `weightKg` and `edgeMm` per set) and ticked list, the same shape the sets player keeps for its own items; edits write there, and Finish saves it through `hangResult`, which already keeps a set's own `weightKg` over the setup's load.
+No model change: per-set load and hangs are `SetDone` fields today.
 After Finish, the review and later edits are the activity's `ActivityForm`, which shows the part's grips inline with the other exercises in that same hang mode and saves both rows in one request.
 There is one editor for grip sets, `ActivityForm`'s hang mode; `HangSessionForm` should move onto it too, which also fixes its first-grip-only defect.
 
 ### 5. Leaving and coming back
 
-- One live run per user: the sets player's `RunState` gains `fingers?: { run: Run; setups: HangSetup[] }`, and the timer opened from the workout view reads and writes that, so closing the app mid-timer resumes the timer, and between parts resumes the workout view.
+- One live run per user: the sets player's `RunState` gains `fingers?: { run: Run; setups: HangSetup[] } | { done: ItemDone[]; ticked: string[]; setups: HangSetup[] }` (the timer's run while it is live, the editable sets once it has ended), and the timer opened from the workout view reads and writes that, so closing the app mid-timer resumes the timer, and between parts resumes the workout view.
 - Stopping after the part: Finish logs the activity with the part and every other item not done; the run still counts once.
+- Discarding the live run is the one place a finished part can be lost: nothing is saved until Finish, so Discard throws away the held hangs with everything else.
+  Its confirmation says so when the part has held sets: "Discard this workout? Its fingerboard part (21 hangs held) goes too."
 - Offline: writes go through the existing offline queue as one `PUT /v1/activities/:id`, so the run and its part land together or not at all.
 
 ### 6. Building one
@@ -141,6 +174,9 @@ Slices 2 and 3 can ship as one pull request after slice 1; slice 3 must not ship
 
 ## Open questions for Will
 
-1. Training mix and minutes: count the whole run under the activity's kind (recommended, simplest, matches how a run is filed), or split the part's time out as Fingers.
+1. Training mix and minutes: split the part's time out as Fingers (recommended), or count the whole run under the activity's kind.
+   The whole-run option's cost: a workout of five grips and one warm-up files wholly under the warm-up's kind, and its fingerboard minutes vanish from Fingers in the training mix.
+   The split's cost: the minutes readers (`statistics/workouts.ts`, `overview.ts`, `insights.ts` and the training mix) take the parts list and learn one rule, an activity with a part gives the part's protocol minutes to Fingers and the rest to its kind; session counts and done days still read the run once.
+   I changed my pick to the split on that example: a training mix that hides most of a fingers session is wrong, and the rule lives in one shared function.
 2. Strava gate for a mix: the activity's `post_training` (recommended, one gate per record), or post when either it or the fingerboard setting is on.
 3. Fingers-only workouts keep going straight to the timer (recommended), or run through the workout view like a mix.
