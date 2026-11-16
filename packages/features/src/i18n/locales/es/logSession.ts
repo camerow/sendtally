@@ -28,6 +28,7 @@ export const logSession = {
   "logSession.auto": "Auto",
   "logSession.resetToAuto": "Volver a auto",
   "logSession.notesOptional": "Notas · opcional",
+  "logSession.durationOptional": "Duración · opcional",
   "logSession.climbsCount": "Escaladas · {n}",
   "logSession.addClimb": "Añadir",
   "logSession.tapToEdit": "Toca una para editarla",

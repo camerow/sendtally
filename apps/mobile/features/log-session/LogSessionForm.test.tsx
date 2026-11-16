@@ -90,6 +90,7 @@ const saveButton = () => screen.getAllByText("Done").at(-1)!;
 describe("saving a new session", () => {
   it("saves with a date and no start or end time", async () => {
     await renderForm();
+    expect(screen.getByLabelText("Duration")).toBeTruthy();
     expect(screen.queryByLabelText("Start")).toBeNull();
     expect(screen.queryByText("+ Add start and end time")).toBeNull();
 
@@ -98,6 +99,7 @@ describe("saving a new session", () => {
     expect(mockLogSession).toHaveBeenCalledTimes(1);
     expect(mockLogSession.mock.calls[0]![0]).not.toHaveProperty("startTime");
     expect(mockLogSession.mock.calls[0]![0]).not.toHaveProperty("endTime");
+    expect(mockLogSession.mock.calls[0]![0]).toHaveProperty("minutes", null);
     expect(mockReplace).toHaveBeenCalledWith("/session/manual-1");
   });
 });

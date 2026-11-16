@@ -189,6 +189,8 @@ function minutesOf(time: string): number {
 
 const MAX_SESSION_MINUTES = 720;
 
+export const MAX_LENGTH_SECONDS = MAX_SESSION_MINUTES * 60;
+
 export function durationMinutes(startTime: string, endTime: string): number | undefined {
   if (!TIME.test(startTime) || !TIME.test(endTime)) return undefined;
   const diff = minutesOf(endTime) - minutesOf(startTime);
