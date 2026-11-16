@@ -69,7 +69,9 @@ export function WorkloadSheet({
             {s.weeks.map((week) => (
               <div key={week.label} className="workload-bar">
                 <span className="workload-mono">{week.value}</span>
-                <span className="stats-label workload-muted workload-bar-label">{week.label}</span>
+                <span className="workload-mono workload-muted workload-bar-label">
+                  {week.label}
+                </span>
               </div>
             ))}
           </div>

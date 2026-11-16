@@ -777,8 +777,9 @@
   font-size: 11px;
 }
 
-.workload-bar-label {
-  font-size: 9.5px;
+.workload-bar .workload-bar-label {
+  font-size: 10px;
+  white-space: nowrap;
 }
 
 .workload-left-out {

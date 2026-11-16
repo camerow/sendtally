@@ -241,10 +241,6 @@ export function workloadVM(done: readonly Done[], range: TrendRange, now: Date):
   const days = plotDays(range, now, first);
   const lastWeek = done.filter((d) => d.at >= today - 6 * DAY_MS && d.at < today + DAY_MS);
   const left = lastWeek.filter((d) => loadOf(d) === null).sort((a, b) => b.at - a.at);
-  const span = t("statistics.workloadSpan", {
-    from: shortDay(today - 6 * DAY_MS),
-    to: shortDay(today),
-  });
   const said = sentence(w, zone);
   return {
     state: w.state,

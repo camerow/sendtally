@@ -140,9 +140,12 @@ export function WorkloadSheet({
                   <Text style={[type.mono, { fontSize: 11, color: colors.gunmetal }]}>
                     {week.value}
                   </Text>
-                  <Label color={colors.textSecondary} small style={{ fontSize: 9.5 }}>
+                  <Text
+                    numberOfLines={1}
+                    style={[type.mono, { fontSize: 10, color: colors.textSecondary }]}
+                  >
                     {week.label}
-                  </Label>
+                  </Text>
                 </View>
               ))}
             </View>
