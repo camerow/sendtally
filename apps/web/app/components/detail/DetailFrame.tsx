@@ -16,7 +16,7 @@ export type DetailFrameProps = {
   footer?: React.ReactNode;
   /** The full content width, for a page whose grids would scroll in the 720 column. */
   wide?: boolean;
-  /** A built-in's pictures; the first stays still at the top while the page scrolls over it. */
+  /** A built-in's pictures, paged sideways with dots; they stay still at the top while the page scrolls over them. */
   hero?: readonly LibraryPicture[];
   children?: React.ReactNode;
 };
@@ -33,7 +33,9 @@ export function DetailFrame({
   children,
 }: DetailFrameProps): React.ReactElement {
   const back = useGoBack(backTo);
+  const [page, setPage] = React.useState(0);
   const picture = hero[0];
+  const credit = hero[page]?.credit ?? "";
   return (
     <div className={wide ? "detail detail--wide" : "detail"}>
       <div className="detail-bar">
@@ -46,9 +48,26 @@ export function DetailFrame({
         {action}
       </div>
       {picture !== undefined && (
-        <div className="detail-hero">
-          <img src={picture.url} alt={picture.alt} />
-          {picture.credit !== "" && <span className="detail-hero-credit">{picture.credit}</span>}
+        <div className={hero.length > 1 ? "detail-hero detail-hero--several" : "detail-hero"}>
+          <div
+            className="detail-hero-pager"
+            tabIndex={hero.length > 1 ? 0 : undefined}
+            onScroll={(e) =>
+              setPage(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))
+            }
+          >
+            {hero.map((p) => (
+              <img key={p.url} src={p.url} alt={p.alt} />
+            ))}
+          </div>
+          {credit !== "" && <span className="detail-hero-credit">{credit}</span>}
+          {hero.length > 1 && (
+            <span className="detail-hero-dots" aria-hidden>
+              {hero.map((p, i) => (
+                <span key={p.url} className={i === page ? "detail-hero-dot--on" : undefined} />
+              ))}
+            </span>
+          )}
         </div>
       )}
       <div className={picture === undefined ? "detail-body" : "detail-body detail-body--hero"}>

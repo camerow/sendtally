@@ -55,15 +55,48 @@
   margin-top: 8px;
 }
 
-.detail-hero img {
-  display: block;
+.detail-hero-pager {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  border-radius: var(--radius-card-lg);
+  background: var(--surface-soft);
+}
+
+.detail-hero-pager img {
+  flex: 0 0 100%;
   width: 100%;
   aspect-ratio: 4 / 3;
   max-height: 420px;
   object-fit: cover;
-  border-radius: var(--radius-card-lg);
-  background: var(--surface-soft);
+  scroll-snap-align: start;
   color: var(--text-on-white-secondary);
+}
+
+.detail-hero-dots {
+  position: absolute;
+  bottom: 46px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.detail-hero-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.detail-hero-dots .detail-hero-dot--on {
+  background: var(--bs-white);
+}
+
+.detail-hero--several .detail-hero-credit {
+  bottom: 60px;
 }
 
 .detail-hero-credit {
