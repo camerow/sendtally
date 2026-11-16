@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SetDone, WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { setSeconds, setText } from "@sendtally/features/activities";
+import { setChip, setSeconds, setText } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import type { FieldSlot } from "../../../components/useFieldOrder";
 import { press } from "../../../lib/press";
@@ -40,11 +40,13 @@ export type ReviewSetRowProps = {
   onRemove: () => void;
 };
 
-/** A hang target reads "6 × 7s"; anything else as its set reads. */
+/** A hang target reads "6 × 7s"; anything else as its chip, the unit being in the header. */
 const targetText = (target: SetDone, hangs: boolean, unit: WeightUnit): string =>
   hangs && target.reps !== undefined && target.onS !== undefined
     ? `${formatNumber(target.reps)} × ${setSeconds(target.onS)}`
-    : setText(target, unit);
+    : hangs
+      ? setText(target, unit)
+      : setChip(target, unit);
 
 /** One set to review: what it asked, what was done, and its tick. Swipe it away to remove it. */
 export function ReviewSetRow({

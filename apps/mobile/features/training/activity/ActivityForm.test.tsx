@@ -124,7 +124,7 @@ describe("Log activity", () => {
     expect(screen.queryByTestId("activity-title")).toBeNull();
     expect(screen.getByText("Back squat")).toBeTruthy();
     expect(screen.getByText("2 sets")).toBeTruthy();
-    expect(screen.getAllByText("5 × 100 kg")).toHaveLength(2);
+    expect(screen.getAllByText("5 × 100")).toHaveLength(2);
     await fireEvent.press(screen.getByText("Save"));
     expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -164,7 +164,7 @@ describe("Log activity", () => {
       />
     );
     mockPrevious = [];
-    expect(screen.getByText("5 × 80 kg")).toBeTruthy();
+    expect(screen.getByText("5 × 80")).toBeTruthy();
   });
 
   it("edits the sets of one exercise at a time in place, and saves them", async () => {

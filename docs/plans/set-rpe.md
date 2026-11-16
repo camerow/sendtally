@@ -18,12 +18,12 @@ Four things it did not say:
   Reading the workout's current dose at summary time is wrong after an edit, an alternating dose, or a block week that changes the target.
 - The checklist player has no per-set entry: it ticks whole lines and its sets come from `doneAsPrescribed`.
   It reaches set entry only through the review (`DoneDetails`) it ends in.
-- The hang timer and intervals players also end in `DoneDetails`, and `hang_sessions.done_json` holds the same set shape as `training_activities.done_json`.
+- The hang timer and intervals players also end in `DoneDetails`, and `hang_sessions.done_json` holds the same set shape as `activities.done_json`.
 - The connector (the MCP tools in `packages/api/src/mcp/`) never reads or writes logged training sets; it only saves workouts, whose doses already carry `targetRpe`.
 
 ## Data model
 
-Logged sets live in `done_json` on `training_activities` and `hang_sessions`, so there is no D1 migration.
+Logged sets live in `done_json` on `activities` and `hang_sessions`, so there is no D1 migration.
 There is no native code either, so every app slice ships over the air.
 
 - `SetDone` in `packages/core/src/hang/plan.ts` gains `rpe?: number`, whole numbers 1 to 10, the same range as the workout's own `rpe`.
