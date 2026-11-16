@@ -1,6 +1,6 @@
 # Set RPE
 
-Status: plan, waiting on Will's approval of the designer board (canvas page "Set RPE", board `SetRpe.dc.html`).
+Status: approved 2026-11-15 (board v397 on canvas page "Set RPE", board `SetRpe.dc.html`); built on `feat/set-rpe`.
 Written 2026-11-15 on branch `feat/set-rpe`, stacked on `feat/exercise-targets-and-rests` (#426, not merged yet).
 RPE means rate of perceived exertion, the 1 to 10 effort scale the app already uses.
 
@@ -75,6 +75,13 @@ Entry timing, which the board draws side by side:
 Will picked 1 (the board's option A) in a board comment on 2026-11-15, on ticked rows only, which also covers 3 for free because the review uses the same row; 2 (option B) is drawn as the alternative and adds a second entry point for a subset of sets.
 Per Will's two board comments (side by side, then one header instead of "RPE" on every line), cards with a target, and every card in the review, use a fifth column: `SET_COLUMNS` becomes Set 24, Target flex, Done sized to its content, RPE 36, tick 44, with 8 px gaps; cards without a target keep today's four columns.
 At 375 the row is 309 px and a compact reps × weight Done field is about 95 px without its unit, about 113 with it, so the even split v388 drew does not fit: Done keeps its content width, its weight field drops the unit on cards with the column, which state it once in the header as "Done · kg" (a new key, `activities.colDoneUnit`: "Done · {unit}", only on cards whose sets carry a weight, "lb" for pound users), and Target wraps to two lines rather than shrink below `minimumFontScale` 0.75.
+
+## Will's last comment (board v397)
+
+- On each sets card the exercise's target reads "Target RPE 8" (`activities.targetRpe`) on its own line under the exercise name, on phones and the web; the set rest stays on the right of the name.
+  `exerciseTarget` ("RPE 8") stays as it is for the workout detail and checklist lines.
+- Check marks sit at the right edge of the tick column, in the player and the review, on both platforms.
+- Will's four defaults stand: no set RPE in the Strava description, rated sets never suggest the Finish RPE, whole numbers, and no RPE box without a target in the player.
 
 ## Old builds
 
