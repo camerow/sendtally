@@ -1,5 +1,11 @@
 import type { Exercise } from "@sendtally/api-client";
-import { exerciseNameKey, isBuiltInGrip, type Grip, type WorkoutKind } from "@sendtally/core/hang";
+import {
+  WORKOUT_KINDS,
+  exerciseKinds,
+  isBuiltInGrip,
+  type Grip,
+  type WorkoutKind,
+} from "@sendtally/core/hang";
 import { currentLibrary } from "../library/current";
 import { exerciseLabel, unclaimedBuiltIns } from "./builtIns";
 import { categoryShelves } from "./shelves";
@@ -48,12 +54,28 @@ export function pickerOffer(
 export function exerciseKindIn(
   world: Pick<PickerWorld, "grips" | "mine">
 ): (exercise: string) => WorkoutKind | undefined {
-  const isGrip = isGripOf(world);
-  const kinds = new Map<string, WorkoutKind>([
-    ...currentLibrary().exercises.map((b) => [exerciseNameKey(b.name), b.spec.kind] as const),
-    ...world.mine.map((e) => [exerciseNameKey(e.name), e.kind] as const),
+  const builtIns = currentLibrary().exercises.map((b) => ({ name: b.name, kind: b.spec.kind }));
+  return exerciseKinds([...builtIns, ...world.mine], isGripOf(world));
+}
+
+/**
+ * What a picker shows for the workout's items and what is ticked: what it offers, the
+ * categories it can show and make in, and the category New makes in from the one in view,
+ * "choose" when it has to ask.
+ */
+export function pickerState(
+  world: Pick<PickerWorld, "grips">,
+  items: readonly string[],
+  ticked: readonly PickerEntry[],
+  category: WorkoutKind | "all"
+): { offer: PickerOffer; kinds: readonly WorkoutKind[]; newKind: WorkoutKind | "choose" } {
+  const offer = pickerOffer(world, [
+    ...items,
+    ...ticked.map((e) => ("grip" in e.source ? e.source.grip.id : e.name)),
   ]);
-  return (exercise) => (isGrip(exercise) ? "hangboard" : kinds.get(exerciseNameKey(exercise)));
+  const kinds = offer === "all" ? WORKOUT_KINDS : WORKOUT_KINDS.filter((k) => k !== "hangboard");
+  const newKind = category !== "all" ? category : offer === "grips" ? "hangboard" : "choose";
+  return { offer, kinds, newKind };
 }
 
 /** Everything the workout can add, built-ins the user has not made their own included. */

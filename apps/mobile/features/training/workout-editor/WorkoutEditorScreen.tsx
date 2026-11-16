@@ -43,7 +43,7 @@ import {
   withExerciseSwapped,
   withItem,
   withItemsAdded,
-  withDerivedKind,
+  useDerivedKindDraft,
   withEditorIds,
   withItemMoved,
   withRestAfter,
@@ -106,13 +106,10 @@ function Editor({
   const actions = useWorkoutActions(api, reportFailure);
   const exercises = useExercises(api).state;
   const { model } = useHangData();
-  const [state, setDraft] = React.useState(initial);
-  const known = exerciseKindIn(usePickerWorld([], "all"));
-  const picked = React.useRef(new Map<string, WorkoutKind>());
-  const kindIn = (exercise: string): WorkoutKind | undefined =>
-    picked.current.get(exercise) ?? known(exercise);
-  const setState = (next: (s: WorkoutDraft) => WorkoutDraft): void =>
-    setDraft((s) => withDerivedKind(next(s), kindIn));
+  const { state, setState, remember } = useDerivedKindDraft(
+    initial,
+    exerciseKindIn(usePickerWorld([], "all"))
+  );
   const estimate = estimatedMinutes(state);
   const [untouched] = React.useState(initial);
   const release = useDiscardGuard(state !== untouched);
@@ -230,7 +227,7 @@ function Editor({
           items={state.items}
           multi={picking === "add"}
           onPick={(list) => {
-            for (const p of list) picked.current.set(p.exercise, p.kind);
+            remember(list);
             setState((s) =>
               picking === "add"
                 ? withItemsAdded(s, list, randomUUID)

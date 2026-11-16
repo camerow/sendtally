@@ -1,12 +1,12 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { WORKOUT_KINDS, type Item, type WorkoutKind } from "@sendtally/core/hang";
+import type { Item, WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import {
   entryNamed,
   pickerEntries,
-  pickerOffer,
+  pickerState,
   type PickerEntry,
 } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
@@ -38,8 +38,6 @@ export type ExercisePickerSheetProps = {
 
 type Category = WorkoutKind | "all";
 
-const NOT_FINGERS = WORKOUT_KINDS.filter((k) => k !== "hangboard");
-
 /**
  * The exercise library, to build a workout from: search, a category or all, the most used
  * first. Ticked exercises are added in the order they were ticked; New adds them, then opens
@@ -64,11 +62,12 @@ export function ExercisePickerSheet({
     items.map((i) => i.exercise),
     "all"
   );
-  const offer = pickerOffer(world, [
-    ...items.map((i) => i.exercise),
-    ...ticked.map((e) => ("grip" in e.source ? e.source.grip.id : e.name)),
-  ]);
-  const kinds = offer === "all" ? WORKOUT_KINDS : NOT_FINGERS;
+  const { offer, kinds, newKind } = pickerState(
+    world,
+    items.map((i) => i.exercise),
+    ticked,
+    category
+  );
   const entries = pickerEntries({ ...world, offer }, { category, text });
   const typed = text.trim();
 
@@ -114,13 +113,7 @@ export function ExercisePickerSheet({
   const newButton = (
     <Button
       label={t("workouts.newShort")}
-      onPress={() =>
-        category !== "all"
-          ? startNew(category)
-          : offer === "grips"
-            ? startNew("hangboard")
-            : setChoosing(true)
-      }
+      onPress={() => (newKind === "choose" ? setChoosing(true) : startNew(newKind))}
       variant="outline"
       icon="plus"
       height={44}

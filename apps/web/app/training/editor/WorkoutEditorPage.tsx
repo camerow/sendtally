@@ -20,7 +20,7 @@ import {
   estimatedMinutes,
   newWorkoutDraft,
   useWorkoutActions,
-  withDerivedKind,
+  useDerivedKindDraft,
   withEditorIds,
   withExerciseSwapped,
   withItem,
@@ -98,13 +98,10 @@ function Editor({
   const exercises = useExercises(api).state;
   const { model } = useHangData();
   const [untouched] = React.useState(initial);
-  const [state, setDraft] = React.useState(untouched);
-  const known = exerciseKindIn(usePickerWorld(api, model, [], "all"));
-  const picked = React.useRef(new Map<string, WorkoutKind>());
-  const kindIn = (exercise: string): WorkoutKind | undefined =>
-    picked.current.get(exercise) ?? known(exercise);
-  const setState = (next: (s: WorkoutDraft) => WorkoutDraft): void =>
-    setDraft((s) => withDerivedKind(next(s), kindIn));
+  const { state, setState, remember } = useDerivedKindDraft(
+    untouched,
+    exerciseKindIn(usePickerWorld(api, model, [], "all"))
+  );
   const guard = useDiscardGuard(state !== untouched);
   const [picking, setPicking] = React.useState<{ swap: number } | "add" | null>(null);
   const descriptionId = React.useId();
@@ -224,7 +221,7 @@ function Editor({
           items={state.items}
           multi={picking === "add"}
           onPick={(list) => {
-            for (const p of list) picked.current.set(p.exercise, p.kind);
+            remember(list);
             setState((s) =>
               picking === "add"
                 ? withItemsAdded(s, list, newId)

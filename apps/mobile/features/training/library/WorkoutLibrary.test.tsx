@@ -97,7 +97,6 @@ describe("Workout library", () => {
       pathname: "/workout/edit",
       params: { focus: "power" },
     });
-    expect(screen.queryByText("What kind of workout?")).toBeNull();
   });
 
   it("lists the matches in place of the shelves while a search is typed", async () => {

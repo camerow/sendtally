@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { Exercise } from "@sendtally/api-client";
 import { exerciseLabel } from "./builtIns";
-import { entryNamed, exerciseKindIn, pickerEntries, pickerOffer, type PickerWorld } from "./picker";
+import {
+  entryNamed,
+  exerciseKindIn,
+  pickerEntries,
+  pickerOffer,
+  pickerState,
+  type PickerWorld,
+} from "./picker";
 
 const mine = (id: string, name: string, more: Partial<Exercise> = {}): Exercise => ({
   id,
@@ -125,5 +132,17 @@ describe("exerciseLabel", () => {
 
   it("keeps the name the user renamed a built-in to", () => {
     expect(exerciseLabel({ name: "High bar squat", builtIn: "backSquat" })).toBe("High bar squat");
+  });
+});
+
+describe("pickerState", () => {
+  it("offers every category and asks what New makes until something is in, then keeps to one side", () => {
+    expect(pickerState(world, [], [], "all")).toMatchObject({ offer: "all", newKind: "choose" });
+    expect(pickerState(world, [], [], "all").kinds).toContain("hangboard");
+    const grips = pickerState(world, ["half"], [], "all");
+    expect(grips).toMatchObject({ offer: "grips", newKind: "hangboard" });
+    const lifts = pickerState(world, ["Back squat"], [], "all");
+    expect(lifts.kinds).not.toContain("hangboard");
+    expect(pickerState(world, ["Back squat"], [], "mobility").newKind).toBe("mobility");
   });
 });

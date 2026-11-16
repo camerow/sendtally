@@ -1,12 +1,12 @@
 import React from "react";
-import { WORKOUT_KINDS, type Item, type WorkoutKind } from "@sendtally/core/hang";
+import type { Item, WorkoutKind } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import {
   entryNamed,
   measureLabel,
   pickedOf,
   pickerEntries,
-  pickerOffer,
+  pickerState,
   usePickerWorld,
   type ExerciseForm,
   type PickerEntry,
@@ -34,8 +34,6 @@ export type ExercisePickerProps = {
 
 type Category = WorkoutKind | "all";
 
-const NOT_FINGERS = WORKOUT_KINDS.filter((k) => k !== "hangboard");
-
 /**
  * The exercise library, to build a workout from: search, a category or all, the most used
  * first. Ticked exercises are added in the order they were ticked; New makes one in the
@@ -61,11 +59,12 @@ export function ExercisePicker({
     items.map((i) => i.exercise),
     "all"
   );
-  const offer = pickerOffer(world, [
-    ...items.map((i) => i.exercise),
-    ...ticked.map((e) => ("grip" in e.source ? e.source.grip.id : e.name)),
-  ]);
-  const kinds = offer === "all" ? WORKOUT_KINDS : NOT_FINGERS;
+  const { offer, kinds, newKind } = pickerState(
+    world,
+    items.map((i) => i.exercise),
+    ticked,
+    category
+  );
   const entries = pickerEntries({ ...world, offer }, { category, text });
   const typed = text.trim();
 
@@ -104,13 +103,7 @@ export function ExercisePicker({
     return measureLabel(entry.source.exercise.measure, entry.source.exercise.kind);
   };
   const newButton = (
-    <button
-      type="button"
-      className="outline-button"
-      onClick={() =>
-        setMaking(category !== "all" ? category : offer === "grips" ? "hangboard" : "choose")
-      }
-    >
+    <button type="button" className="outline-button" onClick={() => setMaking(newKind)}>
       + {t("workouts.newShort")}
     </button>
   );
