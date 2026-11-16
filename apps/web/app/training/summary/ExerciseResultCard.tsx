@@ -5,10 +5,12 @@ import {
   climbsLine,
   isClimbingSets,
   setChip,
+  setEffortText,
   setText,
   wallLine,
   type ExerciseResult,
 } from "@sendtally/features/activities";
+import { effortColor } from "@sendtally/design/tokens";
 import { CIRCUIT_COLOURS, CIRCUIT_HEX } from "@sendtally/features/gyms";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -45,7 +47,7 @@ export function ExerciseResultCard({
   result: ExerciseResult;
   unit: WeightUnit;
 }): React.ReactElement {
-  const { change, last } = result;
+  const { change, last, effort } = result;
   const climbing = isClimbingSets(result.sets);
   const wall = climbing && result.sets.some((s) => s.onS !== undefined);
   const chips = result.sets
@@ -93,6 +95,15 @@ export function ExerciseResultCard({
               ))}
             </div>
           )}
+      {effort !== null && (
+        <span className="result-card-effort">
+          <span
+            className="effort-mark-dot"
+            style={{ background: effortColor(Math.round(effort.actual)) }}
+          />
+          {setEffortText(effort)}
+        </span>
+      )}
       {footer !== null && <span className="result-card-foot">{footer}</span>}
     </div>
   );

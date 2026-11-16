@@ -141,6 +141,11 @@
   color: var(--text-on-white-secondary);
 }
 
+.player-card-aim {
+  margin-top: -6px;
+  padding-bottom: 4px;
+}
+
 .player-add-set {
   align-self: flex-start;
   margin-top: 6px;

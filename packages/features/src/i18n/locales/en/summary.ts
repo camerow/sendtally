@@ -4,6 +4,7 @@ export const summary = {
   "summary.sent": "sent",
   "summary.effort": "effort",
   "summary.effortAimed": "effort · aimed {n}",
+  "summary.setEffort": "RPE {actual} · aimed {target}",
   "summary.sets": "sets",
   "summary.hangsHeld": "hangs held",
   "summary.whatYouDid": "What you did",

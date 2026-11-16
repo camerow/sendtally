@@ -88,8 +88,13 @@ export function DoneDetails({
               <span className="set-col-n">{t("activities.colSet")}</span>
               <span className="set-col-target">{t("activities.colTarget")}</span>
               <span className="set-col-done">
-                {hangs ? t("activities.colHangsLoad") : t("activities.colDone")}
+                {hangs
+                  ? t("activities.colHangsLoad")
+                  : lifting
+                    ? t("activities.colDoneUnit", { unit })
+                    : t("activities.colDone")}
               </span>
+              {!hangs && <span className="set-col-rpe">RPE</span>}
               <span className="set-tick" />
               <span className="set-remove" />
             </div>
@@ -110,6 +115,7 @@ export function DoneDetails({
                 short={shortOf(set, target, hangs)}
                 label={t("activities.setOf", { exercise: d.exercise, n: i + 1 })}
                 defaultLoadKg={hangLoadKg}
+                {...(!hangs && { rpe: { target: d.targetRpe } })}
                 onChange={(value) =>
                   onChange(changeSet(done, d.item, i, value), offWithoutKey(off, d.item, i))
                 }

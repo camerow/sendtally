@@ -32,6 +32,7 @@ export {
   setSeconds,
   setText,
   weightValue,
+  withRpe,
 } from "./done";
 export { doneOfRun, intervalsSummary, stepDose } from "./intervals";
 export {
@@ -59,6 +60,7 @@ export {
   pastSessions,
   seriesPoint,
   setChange,
+  setEffortText,
   type ExerciseResult,
   type HangGrid,
   type SeriesPoint,

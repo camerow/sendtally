@@ -9,6 +9,8 @@ import { press } from "../../../lib/press";
 import { CheckBox } from "../components/CheckBox";
 import { type } from "../type";
 import { SET_COLUMNS } from "./setColumns";
+import type { FieldSlot } from "../../../components/useFieldOrder";
+import { RpeField } from "./RpeField";
 import { SetDoneFields } from "./SetDoneFields";
 
 export type SetRowProps = {
@@ -25,6 +27,8 @@ export type SetRowProps = {
   label: string;
   /** ▶ in the Done cell, for the current set when it is timed. */
   go?: React.ReactNode;
+  /** Where the exercise asks for a set RPE: the RPE cell's place in the card's order, and its target. */
+  rpe?: { slot: FieldSlot; target: number | undefined };
   onChange: (set: SetDone) => void;
   onToggle: () => void;
 };
@@ -42,6 +46,7 @@ export function SetRow({
   unit,
   label,
   go,
+  rpe,
   onChange,
   onToggle,
 }: SetRowProps): React.ReactElement {
@@ -61,7 +66,7 @@ export function SetRow({
       </Text>
       <View style={[SET_COLUMNS.target, { gap: 2 }]}>
         <Text
-          numberOfLines={1}
+          numberOfLines={rpe === undefined ? 1 : 2}
           adjustsFontSizeToFit
           minimumFontScale={0.75}
           style={[type.mono, { fontSize: 14, color: colors.textSecondary }]}
@@ -80,6 +85,7 @@ export function SetRow({
             set={done}
             lifting={lifting}
             unit={unit}
+            unitless={rpe !== undefined}
             label={label}
             {...(!ticked && go !== undefined && { go })}
             holdShort={holdShort(target, done, ticked)}
@@ -91,12 +97,25 @@ export function SetRow({
           </Text>
         )}
       </View>
+      {rpe !== undefined && (
+        <View style={SET_COLUMNS.rpe}>
+          {ticked && (
+            <RpeField
+              set={done}
+              target={rpe.target}
+              slot={rpe.slot}
+              label={label}
+              onChange={onChange}
+            />
+          )}
+        </View>
+      )}
       <Pressable
         onPress={onToggle}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: ticked }}
         accessibilityLabel={label}
-        style={press({ width: 44, height: 44, alignItems: "center", justifyContent: "center" })}
+        style={press({ width: 44, height: 44, alignItems: "flex-end", justifyContent: "center" })}
       >
         <CheckBox checked={ticked} color={colors.fern} />
       </Pressable>

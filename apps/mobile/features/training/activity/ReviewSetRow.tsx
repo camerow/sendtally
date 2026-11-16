@@ -9,6 +9,7 @@ import type { FieldSlot } from "../../../components/useFieldOrder";
 import { press } from "../../../lib/press";
 import { CheckBox } from "../components/CheckBox";
 import { SET_COLUMNS } from "../sets/setColumns";
+import { RpeField } from "../sets/RpeField";
 import { SetDoneFields } from "../sets/SetDoneFields";
 import { type } from "../type";
 
@@ -33,6 +34,8 @@ export type ReviewSetRowProps = {
   /** The load a hang set shows while it has none of its own. */
   defaultLoadKg?: number;
   onChange: (set: SetDone) => void;
+  /** The set's RPE cell: its place in the review's order, and the target it shows dim. */
+  rpe?: { slot: FieldSlot; target: number | undefined };
   onToggle: () => void;
   onRemove: () => void;
 };
@@ -57,6 +60,7 @@ export function ReviewSetRow({
   slot,
   loadSlot,
   defaultLoadKg,
+  rpe,
   onChange,
   onToggle,
   onRemove,
@@ -123,6 +127,7 @@ export function ReviewSetRow({
               hangs={hangs}
               short={on && short !== null}
               unit={unit}
+              unitless={rpe !== undefined}
               label={label}
               slot={slot}
               loadSlot={loadSlot}
@@ -137,12 +142,25 @@ export function ReviewSetRow({
             </Text>
           )}
         </View>
+        {rpe !== undefined && (
+          <View style={SET_COLUMNS.rpe}>
+            {on && (
+              <RpeField
+                set={done}
+                target={rpe.target}
+                slot={rpe.slot}
+                label={label}
+                onChange={onChange}
+              />
+            )}
+          </View>
+        )}
         <Pressable
           onPress={onToggle}
           accessibilityRole="checkbox"
           accessibilityState={{ checked: on }}
           accessibilityLabel={label}
-          style={press({ width: 44, height: 44, alignItems: "center", justifyContent: "center" })}
+          style={press({ width: 44, height: 44, alignItems: "flex-end", justifyContent: "center" })}
         >
           <CheckBox checked={on} color={colors.fern} />
         </Pressable>

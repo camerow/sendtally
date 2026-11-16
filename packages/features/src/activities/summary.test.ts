@@ -8,6 +8,8 @@ import {
   pastSessions,
   seriesPoint,
   setChange,
+  setEffort,
+  setEffortText,
 } from "./summary";
 
 type Log = { id: string; date: string; startTime: string | null; workoutId: string | null };
@@ -40,6 +42,19 @@ describe("setChange", () => {
   });
 });
 
+describe("setEffort", () => {
+  it("averages the rated sets to one decimal against the target, none when none was rated", () => {
+    expect(setEffort([{ rpe: 8 }, { rpe: 9 }, { rpe: 9 }, {}], 8)).toEqual({
+      actual: 8.7,
+      target: 8,
+    });
+    expect(setEffort([{ rpe: 7 }])).toEqual({ actual: 7, target: null });
+    expect(setEffort([{ reps: 5 }], 8)).toBeNull();
+    expect(setEffortText({ actual: 8.8, target: 8 })).toBe("RPE 8.8 · aimed 8");
+    expect(setEffortText({ actual: 7, target: null })).toBe("RPE 7");
+  });
+});
+
 describe("exerciseResults", () => {
   const before = log("a1", "2026-10-23", [squat([5, 80], [5, 80])]);
   const other = log("x", "2026-10-25", [squat([5, 120])], "w2");
@@ -57,6 +72,7 @@ describe("exerciseResults", () => {
       best: 0,
       last: { set: { reps: 5, weightKg: 80 }, date: "2026-10-23" },
       change: { metric: "load", by: 2.5 },
+      effort: null,
     });
     expect(bench).toMatchObject({ best: 0, last: null, change: null });
   });

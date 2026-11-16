@@ -8,8 +8,9 @@ import {
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { t } from "@sendtally/features/i18n";
-import { exerciseName, exerciseTarget } from "@sendtally/features/workouts";
+import { formatNumber, t } from "@sendtally/features/i18n";
+import { exerciseName } from "@sendtally/features/workouts";
+import { useFieldOrder } from "../../../components/useFieldOrder";
 import { AboutButton, type About } from "../components/AboutButton";
 import { Label } from "../components/Label";
 import { LetterBadge } from "../components/LetterBadge";
@@ -63,8 +64,12 @@ export function SetsCard({
   about,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
-  const { name: doseName, setRestS } = item.dose;
-  const aim = exerciseTarget(item.dose);
+  const { name: doseName, setRestS, targetRpe } = item.dose;
+  const rated = targetRpe !== undefined;
+  const tickedSets = done.sets.flatMap((_, i) =>
+    ticked.has(setKey({ item: done.item, set: i })) ? [String(i)] : []
+  );
+  const rpeOrder = useFieldOrder(tickedSets);
   return (
     <View
       style={{
@@ -75,29 +80,39 @@ export function SetsCard({
         borderColor: colors.lineOnLightStrong,
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8, paddingBottom: 4 }}>
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <Text style={[type.bodyBold, { flexShrink: 1, fontSize: 17, color: colors.gunmetal }]}>
-            {name}
-          </Text>
-          <AboutButton about={about} label={t("workouts.aboutExercise")} color={colors.textMuted} />
-        </View>
-        {item.turn !== undefined && (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "center" }}>
-            <LetterBadge dose={item.turn} size={22} />
-            {doseName !== undefined && (
-              <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
-                {doseName}
-              </Text>
-            )}
+      <View style={{ gap: 2, paddingBottom: 4 }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+          <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Text style={[type.bodyBold, { flexShrink: 1, fontSize: 17, color: colors.gunmetal }]}>
+              {name}
+            </Text>
+            <AboutButton
+              about={about}
+              label={t("workouts.aboutExercise")}
+              color={colors.textMuted}
+            />
           </View>
-        )}
-        {aim !== undefined && (
-          <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>{aim}</Text>
-        )}
-        {setRestS !== undefined && setRestS > 0 && (
+          {item.turn !== undefined && (
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "center" }}
+            >
+              <LetterBadge dose={item.turn} size={22} />
+              {doseName !== undefined && (
+                <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
+                  {doseName}
+                </Text>
+              )}
+            </View>
+          )}
+          {setRestS !== undefined && setRestS > 0 && (
+            <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
+              {t("plan.chipRest", { value: clock(setRestS) })}
+            </Text>
+          )}
+        </View>
+        {rated && (
           <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
-            {t("plan.chipRest", { value: clock(setRestS) })}
+            {t("activities.targetRpe", { value: formatNumber(targetRpe) })}
           </Text>
         )}
       </View>
@@ -109,8 +124,13 @@ export function SetsCard({
           {t("activities.colTarget")}
         </Label>
         <Label small color={colors.textSecondary} style={SET_COLUMNS.done}>
-          {t("activities.colDone")}
+          {rated && lifting ? t("activities.colDoneUnit", { unit }) : t("activities.colDone")}
         </Label>
+        {rated && (
+          <Label small color={colors.textSecondary} style={SET_COLUMNS.rpe}>
+            RPE
+          </Label>
+        )}
         <View style={SET_COLUMNS.tick} />
       </View>
       {done.sets.map((set, i) => (
@@ -130,6 +150,7 @@ export function SetsCard({
               onChange={(value) => onChange(i, value)}
               onToggle={() => onToggle(i)}
               go={go(i) || undefined}
+              {...(rated && { rpe: { slot: rpeOrder.slot(String(i)), target: targetRpe } })}
             />
           )}
           {restUnder(i) ||

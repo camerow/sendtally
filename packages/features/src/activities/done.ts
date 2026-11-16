@@ -85,6 +85,12 @@ export const changeSet = (
   value: SetDone
 ): ItemDone[] => withSets(done, item, (sets) => sets.map((s, i) => (i === set ? value : s)));
 
+/** A set rated 1 to 10; zero clears its rating. */
+export function withRpe(set: SetDone, rpe: number): SetDone {
+  const { rpe: _, ...rest } = set;
+  return rpe < 1 ? rest : { ...rest, rpe: Math.min(10, Math.round(rpe)) };
+}
+
 /** Another set like the last one, not yet rated. */
 export const addSet = (done: readonly ItemDone[], item: number): ItemDone[] =>
   withSets(done, item, (sets) => {

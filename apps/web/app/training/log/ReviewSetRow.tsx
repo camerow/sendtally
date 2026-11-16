@@ -3,6 +3,7 @@ import type { SetDone, WeightUnit } from "@sendtally/core/hang";
 import { setSeconds, setText } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
+import { RpeField } from "./RpeField";
 import { SetDoneFields } from "./SetDoneFields";
 
 export type ReviewSetRowProps = {
@@ -19,6 +20,8 @@ export type ReviewSetRowProps = {
   short: string | null;
   label: string;
   defaultLoadKg?: number;
+  /** The set's RPE cell, with the target it shows dim. */
+  rpe?: { target: number | undefined };
   onChange: (set: SetDone) => void;
   onToggle: () => void;
   onRemove: () => void;
@@ -42,6 +45,7 @@ export function ReviewSetRow({
   short,
   label,
   defaultLoadKg,
+  rpe,
   onChange,
   onToggle,
   onRemove,
@@ -61,6 +65,7 @@ export function ReviewSetRow({
             hangs={hangs}
             short={on && short !== null}
             unit={unit}
+            unitless={rpe !== undefined}
             label={label}
             defaultLoadKg={defaultLoadKg}
             onChange={onChange}
@@ -69,6 +74,11 @@ export function ReviewSetRow({
           <span className="set-climbs">{setText(done, unit)}</span>
         )}
       </span>
+      {rpe !== undefined && (
+        <span className="set-col-rpe">
+          {on && <RpeField set={done} target={rpe.target} label={label} onChange={onChange} />}
+        </span>
+      )}
       <label className="set-tick">
         <input type="checkbox" checked={on} onChange={onToggle} aria-label={label} />
       </label>

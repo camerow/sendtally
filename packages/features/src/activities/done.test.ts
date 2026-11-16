@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addSet,
+  withRpe,
   changeSet,
   cleanDone,
   doneSummary,
@@ -100,6 +101,12 @@ describe("done", () => {
     expect(shortOf({ onS: 30 }, { onS: 45 })).toBe("0:30 of 0:45");
     expect(shortOf({ reps: 8 }, { reps: 8 })).toBeNull();
     expect(shortOf({ reps: 4 }, undefined)).toBeNull();
+  });
+
+  it("rates a set 1 to 10 and clears it at zero", () => {
+    expect(withRpe({ reps: 5 }, 8)).toEqual({ reps: 5, rpe: 8 });
+    expect(withRpe({ reps: 5, rpe: 8 }, 12)).toEqual({ reps: 5, rpe: 10 });
+    expect(withRpe({ reps: 5, rpe: 8 }, 0)).toEqual({ reps: 5 });
   });
 
   it("changes, copies and removes sets, and drops an exercise with its last set", () => {

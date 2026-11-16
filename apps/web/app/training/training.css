@@ -1263,6 +1263,17 @@
   flex: none;
 }
 
+.set-col-rpe {
+  width: 64px;
+  flex: none;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.set-row--head .set-col-rpe {
+  font-size: 10px;
+}
+
 .set-fields {
   display: inline-flex;
   align-items: center;
@@ -1287,7 +1298,7 @@
   flex: none;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   cursor: pointer;
 }
 
@@ -1429,6 +1440,22 @@
 
 .result-change--up {
   color: var(--bs-fern);
+}
+
+.result-card-effort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--bs-gunmetal);
+}
+
+.result-card-effort .effort-mark-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
 }
 
 .result-card-foot {
@@ -1986,6 +2013,10 @@
 
   .set-tick {
     width: 32px;
+  }
+
+  .set-col-rpe {
+    width: 40px;
   }
 
   .set-remove {

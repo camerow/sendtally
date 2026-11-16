@@ -1,11 +1,12 @@
 import React from "react";
 import { Text, View } from "react-native";
 import type { WeightUnit } from "@sendtally/core/hang";
-import { colors, radius } from "@sendtally/design/tokens";
+import { colors, effortColor, radius } from "@sendtally/design/tokens";
 import {
   climbsLine,
   isClimbingSets,
   setChip,
+  setEffortText,
   setText,
   wallLine,
   type ExerciseResult,
@@ -24,7 +25,7 @@ export type ExerciseResultCardProps = { result: ExerciseResult; unit: WeightUnit
  * Climbs read as a row of grades per set; time on the wall as time and laps per set.
  */
 export function ExerciseResultCard({ result, unit }: ExerciseResultCardProps): React.ReactElement {
-  const { change, last } = result;
+  const { change, last, effort } = result;
   const climbing = isClimbingSets(result.sets);
   const wall = climbing && result.sets.some((s) => s.onS !== undefined);
   const chips = result.sets
@@ -102,6 +103,21 @@ export function ExerciseResultCard({ result, unit }: ExerciseResultCardProps): R
               })}
             </View>
           )}
+      {effort !== null && (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <View
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: effortColor(Math.round(effort.actual)),
+            }}
+          />
+          <Text style={[type.monoBold, { fontSize: 12, color: colors.gunmetal }]}>
+            {setEffortText(effort)}
+          </Text>
+        </View>
+      )}
       {footer !== null && (
         <Text style={[type.mono, { fontSize: 11.5, color: colors.textSecondary }]}>{footer}</Text>
       )}
