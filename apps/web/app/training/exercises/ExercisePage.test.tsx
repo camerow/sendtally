@@ -17,6 +17,7 @@ import type * as T_exercises from "@sendtally/features/exercises";
 import type * as T_statistics from "@sendtally/features/statistics";
 
 import type * as T_workouts from "@sendtally/features/workouts";
+import type * as T_training from "@sendtally/features/training";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -45,6 +46,16 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
+vi.mock("../data/usePlanActions", () => ({ usePlanActions: () => ({}) }));
+vi.mock("@sendtally/features/training", async (actual) => ({
+  ...(await actual<typeof T_training>()),
+  useTrainingLog: () => ({
+    log: {
+      plan: { blocks: [], memberships: [], weekChanges: [], planChanges: [], membershipDays: [] },
+    },
+  }),
+}));
+vi.mock("../editor/useMake", () => ({ useMake: () => vi.fn(), usePick: () => vi.fn() }));
 vi.mock("../library/useLibrary", async (actual) => ({
   ...(await actual<typeof T_useLibrary>()),
   useLibrary: () => ({
@@ -174,16 +185,23 @@ describe("ExercisePage", () => {
     expect(container.querySelector(".link-row")?.getAttribute("href")).toBe(
       "/app/train/workouts/legs"
     );
-    expect(menu()).toEqual(["Add to workout", "Merge into…", "Archive"]);
+    expect(menu()).toEqual(["Add to workout", "Schedule", "Merge into…", "Archive"]);
   });
 
   it("deletes one nothing uses, after asking, and goes back", () => {
     mount("/app/train/exercise/bench");
-    expect(menu()).toEqual(["Merge into…", "Delete"]);
+    expect(menu()).toEqual(["Schedule", "Merge into…", "Delete"]);
     click(button("Delete"));
     click(document.querySelector(".sheet-action--danger"));
     expect(state.remove).toHaveBeenCalledWith("bench");
     expect(at.path).toBe("/app/train");
+  });
+
+  it("schedules an exercise with no workout of its own yet by the exercise", () => {
+    mount("/app/train/exercise/bench");
+    menu();
+    click(button("Schedule"));
+    expect(at.path).toBe("/app/plan/schedule");
   });
 
   it("merges into the picked exercise once confirmed, then opens it", async () => {

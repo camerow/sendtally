@@ -6,6 +6,7 @@ import { builtInWorkouts } from "./builtIns";
 
 const BUILT_IN_WORKOUT_IDS = builtInWorkouts().map((w) => w.id);
 import {
+  libraryLine,
   bodySummary,
   browseLibrary,
   copyName,
@@ -356,5 +357,35 @@ describe("exercise targets", () => {
     expect(withTarget({ targetRpe: 7 })).toBe("RPE 7");
     expect(withTarget({}, "Same every session")).toBe("Same every session");
     expect(withTarget({})).toBeUndefined();
+  });
+});
+
+describe("libraryLine", () => {
+  const base = {
+    id: "w",
+    description: "",
+    targetRpe: null,
+    exerciseRestS: 0,
+    focus: null,
+  };
+  it("counts the exercises, then the one exercise's dose or how long it takes", () => {
+    const one = { ...base, kind: "strength" as const, name: "Pull-ups", minutes: null };
+    const pullUps = { exercise: "Pull-ups", doses: [{ sets: 3, reps: 8 }] };
+    expect(libraryLine({ ...one, items: [pullUps] }, "kg")).toBe("1 exercise · 3 × 8");
+    expect(
+      libraryLine({ ...one, minutes: 30, items: [pullUps, { ...pullUps, exercise: "Dips" }] }, "kg")
+    ).toBe("2 exercises · 30m");
+    const hang = {
+      exercise: "half",
+      doses: [{ sets: 5, reps: 1, onS: 10, offS: 0, setRestS: 180 }],
+    };
+    expect(libraryLine({ ...one, kind: "hangboard", items: [hang] }, "kg")).toMatch(
+      /^1 exercise · \d+m$/
+    );
+  });
+  it("gives a workout with no exercises only how long it takes, if anything", () => {
+    const climbing = { ...base, kind: "climbing" as const, name: "Climbing", items: [] };
+    expect(libraryLine({ ...climbing, minutes: 90 }, "kg")).toBe("1h 30m");
+    expect(libraryLine({ ...climbing, minutes: null }, "kg")).toBeNull();
   });
 });

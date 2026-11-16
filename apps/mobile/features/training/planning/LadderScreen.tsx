@@ -12,6 +12,7 @@ import {
   ladderView,
   loadSummary,
   toggleIn,
+  removeText,
 } from "@sendtally/features/training";
 import { exerciseName } from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
@@ -92,7 +93,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
 
   const remove = (): void =>
     confirmDestructive({
-      title: t("plan.removeTitle", { title: w.name }),
+      title: removeText(w.name, block).title,
       body: t("plan.removeBody"),
       action: t("plan.removeAction"),
       onConfirm: () => {

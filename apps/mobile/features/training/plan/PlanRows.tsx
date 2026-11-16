@@ -13,7 +13,7 @@ import {
 } from "@sendtally/features/training";
 import { PlanRow } from "../components/PlanRow";
 import { useHangData } from "../data/HangDataContext";
-import { membershipTag, oneOffDate } from "@sendtally/features/training";
+import { membershipTag, oneOffDate, removeText } from "@sendtally/features/training";
 import { DayMark } from "../today/DayMark";
 import { MiniWeek } from "./MiniWeek";
 import { openMembership } from "./openMembership";
@@ -56,13 +56,13 @@ export function PlanRows({ plan, members, workout, highlight }: PlanRowsProps): 
             lit={m.id === highlight}
             onRemove={() =>
               confirmDestructive({
-                title: t("plan.removeTitle", { title: w.name }),
+                title: removeText(w.name, block).title,
                 body: t("plan.removeBody"),
                 action: t("plan.removeAction"),
                 onConfirm: () => void actions.deleteMembership(m.id),
               })
             }
-            removeLabel={t("plan.remove", { title: w.name })}
+            removeLabel={removeText(w.name, block).label}
           />
         );
       })}

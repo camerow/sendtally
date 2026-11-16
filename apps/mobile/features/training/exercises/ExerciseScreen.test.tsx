@@ -15,6 +15,7 @@ const mockApi = {
   mergeExercise: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
   removeExercise: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
   saveWorkout: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
+  saveMembership: jest.fn<(...args: unknown[]) => Promise<unknown>>(),
 };
 
 jest.mock("../../../lib/api", () => ({ useApi: () => mockApi }));
@@ -26,6 +27,7 @@ jest.mock("../../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
     visible ? children : null,
 }));
+jest.mock("expo-crypto", () => ({ randomUUID: () => "new" }));
 jest.mock("expo-router", () => ({
   router: { push: jest.fn(), replace: jest.fn(), back: jest.fn() },
 }));
@@ -69,6 +71,14 @@ const squatted: ActivityRecord = {
 };
 
 const world = { exercises, workouts: [legs], activities: [squatted] };
+
+const plan = {
+  blocks: [{ id: "b1", name: "Winter base", start: null, weeks: 4, focus: null, description: "" }],
+  memberships: [],
+  weekChanges: [],
+  planChanges: [],
+  membershipDays: [],
+};
 
 const press = async (title: string): Promise<void> => {
   const calls = jest.mocked(Alert.alert).mock.calls;
@@ -251,5 +261,38 @@ describe("exercise screen", () => {
     expect(row.props.accessibilityState).toEqual({ checked: true });
     await fireEvent.press(row);
     expect(mockApi.saveWorkout).not.toHaveBeenCalled();
+  });
+
+  it("offers Add to block and Schedule after Add to workout", async () => {
+    await renderWithHang(<ExerciseScreen id="e2" />, hangData(), { ...world, plan });
+    await fireEvent.press(screen.getByLabelText("More"));
+    for (const title of ["Add to workout", "Add to block", "Schedule", "Merge into…"])
+      expect(screen.getByText(title)).toBeTruthy();
+    await fireEvent.press(screen.getByText("Schedule"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/plan/schedule",
+      params: { exerciseId: "e2" },
+    });
+  });
+
+  it("adds itself to a block as a workout of it alone, saying where it went", async () => {
+    mockApi.saveWorkout.mockResolvedValue({});
+    mockApi.saveMembership.mockResolvedValue({});
+    await renderWithHang(<ExerciseScreen id="e2" />, hangData(), { ...world, plan });
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByText("Add to block"));
+    await fireEvent.press(screen.getByRole("radio", { name: /^Winter base/ }));
+    await act(async () => undefined);
+    expect(mockApi.saveWorkout).toHaveBeenCalledWith(
+      "new",
+      expect.objectContaining({
+        name: "Squat",
+        items: [expect.objectContaining({ exercise: "Squat" })],
+      })
+    );
+    expect(mockApi.saveMembership).toHaveBeenCalledWith(
+      expect.objectContaining({ workoutId: "new", blockId: "b1" })
+    );
+    expect(screen.getByText("Added to Winter base")).toBeTruthy();
   });
 });

@@ -113,7 +113,7 @@ export function BlockWeek({
   const [added, setAdded] = useLit();
   const add = (
     <Button
-      label={t("plan.addWorkout")}
+      label={t("plan.addToBlockMenu")}
       accessibilityLabel={t("plan.addToBlock", { name: block.name })}
       onPress={() => setAdding(true)}
       variant="primary"
@@ -199,7 +199,7 @@ export function BlockWeek({
       )}
       {dayless.length > 0 &&
         (editing || onEditDays === undefined) &&
-        hint(t("plan.tapDays", { workout: daylessNames }), AMBER)}
+        hint(t("plan.tapDays", { workout: daylessNames, count: dayless.length }), AMBER)}
       {canAdd && !(template && rows.length === 0) && (editing || rows.length === 0) && action}
       {editing && onMove !== undefined && members.length > 1 && (
         <BlockOrder

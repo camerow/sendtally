@@ -13,7 +13,7 @@ export {
   tallyMeasureOf,
   tallyMeasuresOf,
 } from "./measure";
-export { entryNamed, pickerEntries, type PickerWorld } from "./picker";
+export { entryNamed, entryShelves, pickerEntries, type PickerWorld } from "./picker";
 export { categoryShelves } from "./shelves";
 export { eachSideOf } from "./sides";
 export type {
@@ -32,3 +32,12 @@ export { exerciseShelves, shelfRows, type ShelfCard, type ShelfWorld } from "./s
 export { pickedOf, pickWith, takenBy } from "./makeExercise";
 export { useMakeExercise, type MakeExercise } from "./useMakeExercise";
 export type { ExerciseForm, MadeExercise } from "./types";
+export {
+  entryOf,
+  exerciseEntry,
+  usedInText,
+  useExerciseWorkout,
+  workoutsWith,
+  wrapperOf,
+  type ExerciseEntry,
+} from "./wrapper";

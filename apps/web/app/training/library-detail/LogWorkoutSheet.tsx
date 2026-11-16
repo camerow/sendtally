@@ -1,7 +1,7 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
-import { focusLabel, workoutLines } from "@sendtally/features/training";
-import { libraryShelves } from "@sendtally/features/workouts";
+import { focusLabel } from "@sendtally/features/training";
+import { libraryLine, libraryShelves } from "@sendtally/features/workouts";
 import { Sheet } from "../../components/Sheet";
 import { CategoryRow } from "../components/CategoryRow";
 import { DashedPanel } from "../components/DashedPanel";
@@ -43,7 +43,7 @@ function Picker(): React.ReactElement {
                   key={w.id}
                   kind={w.kind}
                   name={w.name}
-                  meta={workoutLines(w, model)[0] ?? null}
+                  meta={libraryLine(w, model.settings.units)}
                   to={to}
                 />
               );

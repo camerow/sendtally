@@ -28,7 +28,7 @@ export default [
       route("train", "routes/app.train.tsx"),
       layout("routes/app.training.tsx", [
         route("plan", "routes/app.plan.tsx"),
-        route("plan/schedule/:workoutId", "routes/app.plan.schedule.$workoutId.tsx"),
+        route("plan/schedule/:workoutId?", "routes/app.plan.schedule.$workoutId.tsx"),
         route("plan/block/:id", "routes/app.plan.block.$id.tsx"),
         route("plan/membership/:id", "routes/app.plan.membership.$id.tsx"),
         route("plan/calendar", "routes/app.plan.calendar.tsx"),

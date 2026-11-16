@@ -1,7 +1,7 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
-import { focusLabel, focusMeaning, focusParam, workoutLines } from "@sendtally/features/training";
-import type { LibraryShelf as Shelf } from "@sendtally/features/workouts";
+import { focusLabel, focusMeaning, focusParam } from "@sendtally/features/training";
+import { libraryLine, type LibraryShelf as Shelf } from "@sendtally/features/workouts";
 import { CategoryRow } from "../components/CategoryRow";
 import { DashedPanel } from "../components/DashedPanel";
 import { ShelfHeader } from "../components/ShelfHeader";
@@ -38,7 +38,7 @@ export function LibraryShelf({
           key={w.id}
           kind={w.kind}
           name={w.name}
-          meta={workoutLines(w, model)[0] ?? null}
+          meta={libraryLine(w, model.settings.units)}
           to={workoutPath(w.id)}
         />
       ))}

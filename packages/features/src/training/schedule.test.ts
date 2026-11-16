@@ -51,42 +51,32 @@ describe("toggled", () => {
 describe("scheduledMemberships", () => {
   const draft = newSchedule(null, TODAY);
 
-  it("saves one weekly plan, from the block's start inside a block", () => {
+  it("saves one weekly plan from its start", () => {
     const weekly = { ...draft, weekdays: [3, 0] as (0 | 3)[] };
-    expect(scheduledMemberships(weekly, "w1", null, ids(), 0)).toEqual([
+    expect(scheduledMemberships(weekly, "w1", ids(), 0)).toEqual([
       { id: "m1", workoutId: "w1", blockId: null, weekdays: [0, 3], start: TODAY, position: 0 },
-    ]);
-    expect(scheduledMemberships(weekly, "w1", block, ids(), 0)).toEqual([
-      {
-        id: "m1",
-        workoutId: "w1",
-        blockId: "b1",
-        weekdays: [0, 3],
-        start: "2026-11-02",
-        position: 0,
-      },
     ]);
   });
 
-  it("saves a one-off per date, leaving out dates the block does not hold", () => {
+  it("saves a one-off per date, in order", () => {
     const dates = { ...draft, mode: "dates" as const, dates: ["2026-11-10", "2026-10-28"] };
-    expect(scheduledMemberships(dates, "w1", null, ids(), 0)).toEqual([
+    expect(scheduledMemberships(dates, "w1", ids(), 0)).toEqual([
       { id: "m1", workoutId: "w1", blockId: null, weekdays: [], start: "2026-10-28", position: 0 },
       { id: "m2", workoutId: "w1", blockId: null, weekdays: [], start: "2026-11-10", position: 0 },
     ]);
-    expect(scheduledMemberships(dates, "w1", block, ids(), 0)).toEqual([
-      { id: "m1", workoutId: "w1", blockId: "b1", weekdays: [], start: "2026-11-02", position: 0 },
-    ]);
-    const days = blockDates("m1", block, ["2026-11-10", "2026-10-28", "2026-11-12"]);
-    expect([1, 2, 3].map((w) => daysInWeek(days, w))).toEqual([[], [1, 3], []]);
   });
 
   it("is ready once it says when", () => {
-    expect(scheduleReady(draft, null)).toBe(false);
-    expect(scheduleReady({ ...draft, weekdays: [1] }, null)).toBe(true);
-    const outside = { ...draft, mode: "dates" as const, dates: ["2026-10-28"] };
-    expect(scheduleReady(outside, null)).toBe(true);
-    expect(scheduleReady(outside, block)).toBe(false);
+    expect(scheduleReady(draft)).toBe(false);
+    expect(scheduleReady({ ...draft, weekdays: [1] })).toBe(true);
+    expect(scheduleReady({ ...draft, mode: "dates", dates: ["2026-10-28"] })).toBe(true);
+  });
+});
+
+describe("blockDates", () => {
+  it("puts each date's weekday in its block week", () => {
+    const days = blockDates("m1", block, ["2026-11-10", "2026-10-28", "2026-11-12"]);
+    expect([1, 2, 3].map((w) => daysInWeek(days, w))).toEqual([[], [1, 3], []]);
   });
 });
 

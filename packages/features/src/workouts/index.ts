@@ -2,6 +2,7 @@ export { builtInWorkout, builtInWorkouts } from "./builtIns";
 export {
   activityKindOf,
   bodySummary,
+  libraryLine,
   browseLibrary,
   copyName,
   doseSummary,

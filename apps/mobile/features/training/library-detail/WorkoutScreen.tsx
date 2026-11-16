@@ -33,7 +33,7 @@ import { PlanList } from "../plans/PlanList";
 import { startWorkout } from "../timer/startWorkout";
 import { ProtocolPanel } from "../workout-detail/ProtocolPanel";
 import { PreviewRow } from "./PreviewRow";
-import { AddToPlanFooter } from "./AddToPlanFooter";
+import { ScheduleFooter } from "./ScheduleFooter";
 import { BodyPreview } from "./BodyPreview";
 import { DayLine } from "./DayLine";
 import { LibraryIntro } from "./LibraryIntro";
@@ -116,7 +116,7 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
   );
   const secondary =
     run === undefined ? (
-      <AddToPlanFooter workoutId={workout.id}>{logIt}</AddToPlanFooter>
+      <ScheduleFooter workoutId={workout.id}>{logIt}</ScheduleFooter>
     ) : missed ? (
       <View style={{ flexDirection: "row", gap: 10 }}>
         {logIt}

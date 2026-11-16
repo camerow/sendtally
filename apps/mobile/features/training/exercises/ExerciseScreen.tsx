@@ -32,6 +32,7 @@ import { ExerciseTrendCard } from "./ExerciseTrendCard";
 import { MergeExerciseSheet } from "./MergeExerciseSheet";
 import { ExerciseHistory } from "./ExerciseHistory";
 import { useAddToWorkout } from "./useAddToWorkout";
+import { useExerciseInPlan } from "./useExerciseInPlan";
 import { useMergeExercise } from "./useMergeExercise";
 
 const failed = (): void => Alert.alert(t("workouts.saveFailed"));
@@ -61,6 +62,8 @@ function Detail({ exercise, all }: DetailProps): React.ReactElement {
     usedIn,
   });
 
+  const inPlan = useExerciseInPlan({ kind: exercise.kind, name, source: { exercise } });
+  const toast = addTo.toast ?? inPlan.block.toast;
   const inUse = usedIn.length > 0 || logged !== undefined;
   const mergeRow = {
     icon: "merge",
@@ -80,11 +83,16 @@ function Detail({ exercise, all }: DetailProps): React.ReactElement {
   });
   const menu = exercise.archived
     ? [mergeRow]
-    : [...(addTo.row === null ? [] : [addTo.row]), mergeRow, remove];
+    : [
+        ...[addTo.row, inPlan.block.row].filter((r) => r !== null),
+        inPlan.schedule,
+        mergeRow,
+        remove,
+      ];
 
   return (
     <ScreenFrame
-      overlay={addTo.toast && <Toast {...addTo.toast} />}
+      overlay={toast && <Toast {...toast} />}
       action={
         <DetailActions
           onEdit={() =>
@@ -128,6 +136,7 @@ function Detail({ exercise, all }: DetailProps): React.ReactElement {
         </View>
       )}
       {addTo.sheet && <AddToSheet {...addTo.sheet} />}
+      {inPlan.block.sheet && <AddToSheet {...inPlan.block.sheet} />}
       {merging && (
         <MergeExerciseSheet
           exercise={exercise}

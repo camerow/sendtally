@@ -4,19 +4,29 @@ import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   addKicker,
+  addTitle,
   focusLabel,
   useAddTo,
   useTrainingLog,
-  workoutLines,
   type AddFlow,
   blockName,
 } from "@sendtally/features/training";
-import { libraryShelves, type LibraryWorkout } from "@sendtally/features/workouts";
-import { Icon } from "../../components/Icon";
+import { kindLabel } from "@sendtally/features/activities";
+import {
+  entryShelves,
+  pickWith,
+  useExerciseWorkout,
+  usePickerWorld,
+  usedInText,
+  workoutsWith,
+  wrapperOf,
+  type ExerciseEntry,
+  type PickerEntry,
+} from "@sendtally/features/exercises";
+import { libraryLine, libraryShelves, useWorkoutActions } from "@sendtally/features/workouts";
 import { Segmented } from "../../components/Segmented";
 import { Sheet, type SheetAction } from "../../components/Sheet";
 import { useAppApi } from "../../lib/useAppApi";
-import { CategoryRow } from "../components/CategoryRow";
 import { DashedPanel } from "../components/DashedPanel";
 import { useHangData } from "../data/HangDataContext";
 import { usePlanActions } from "../data/usePlanActions";
@@ -24,9 +34,10 @@ import { useLibrary, workoutPath } from "../library/useLibrary";
 import { PlanAgainStart } from "../blocks/PlanAgainStart";
 import { ScheduleBlocks } from "../blocks/ScheduleBlocks";
 import { useNewBlock } from "../blocks/useNewBlock";
-
-/** Where the workout stands: addable, just added here, or already on the day. */
-type AddState = "none" | "added" | "there";
+import { AddWorkoutRow, type AddState } from "./AddWorkoutRow";
+import { useMake } from "../editor/useMake";
+import { exercisePath, gripPath } from "../exercises/paths";
+import { useToast } from "../../components/Toast";
 
 export type Scheduled = { id: string; name: string; start: CalendarDate };
 
@@ -55,7 +66,7 @@ export function AddWorkoutsSheet({
   const { plan } = useTrainingLog(api).log;
   const newBlock = useNewBlock();
   const addTo = useAddTo(api, flow, today, { newId: () => crypto.randomUUID(), actions });
-  const [mode, setMode] = React.useState<"workout" | "block">("workout");
+  const [mode, setMode] = React.useState<"workout" | "exercise" | "block">("workout");
   const [picked, setPicked] = React.useState<Block | null>(null);
   const [start, setStart] = React.useState<CalendarDate>(today);
   const [busy, setBusy] = React.useState(false);
@@ -63,17 +74,38 @@ export function AddWorkoutsSheet({
   const [text, setText] = React.useState("");
   // Plans there before it opened; anything since was added here.
   const [before] = React.useState<ReadonlySet<string>>(() => new Set(addTo.plans.map((m) => m.id)));
+  const toast = useToast();
+  const failed = React.useCallback(
+    () => toast.show({ message: t("workouts.saveFailed") }),
+    [toast]
+  );
+  const save = useWorkoutActions(api, failed).saveWorkout;
+  const pick = pickWith(useMake());
+  const world = usePickerWorld(api, model, [], false);
   const library = state.status === "ready" ? state.data : null;
+  const workouts = library?.workouts ?? [];
+  const ensure = useExerciseWorkout({ workouts, pick, save, newId: () => crypto.randomUUID() });
   const shelves = library === null ? [] : libraryShelves(library.workouts, library.usage, { text });
   const added = addTo.plans.filter((m) => !before.has(m.id));
-  const stateOf = (w: LibraryWorkout): AddState =>
-    added.some((m) => m.workoutId === w.id)
+  const stateOf = (mine: string | undefined, there: readonly string[]): AddState =>
+    added.some((m) => m.workoutId === mine)
       ? "added"
-      : addTo.plans.some((m) => m.workoutId === w.id)
+      : addTo.plans.some((m) => there.includes(m.workoutId))
         ? "there"
         : "none";
+  const undo = (workoutId: string | undefined): void =>
+    added.filter((m) => m.workoutId === workoutId).forEach((m) => addTo.undo(m.id));
+  const addEntry = async (e: ExerciseEntry): Promise<void> => {
+    const id = await ensure(e);
+    if (id !== null) addTo.add(id);
+  };
+  const search = mode === "exercise" ? t("workouts.searchExercises") : t("workouts.search");
+  const entryPath = ({ source }: PickerEntry): string =>
+    "grip" in source
+      ? gripPath(source.grip.id)
+      : exercisePath("exercise" in source ? source.exercise.id : source.builtIn.id);
   const close = (): void => onClose(added.map((m) => m.id));
-  const pick = (b: Block): void => {
+  const pickBlock = (b: Block): void => {
     setPicked(b);
     const day = flow.date ?? today;
     setStart(day < today ? today : day);
@@ -128,24 +160,29 @@ export function AddWorkoutsSheet({
     <Sheet
       open
       kicker={addKicker(flow, plan.blocks)}
-      title={onScheduled === undefined ? t("plan.addWorkouts") : t("plan.schedule")}
+      title={onScheduled === undefined ? addTitle(flow) : t("plan.schedule")}
       onClose={close}
       cancel={mode === "block"}
       action={action}
     >
-      {onScheduled !== undefined && (
-        <Segmented
-          label={t("plan.schedule")}
-          value={mode}
-          onChange={setMode}
-          options={[
-            { value: "workout", label: t("plan.workout") },
-            { value: "block", label: t("plan.block") },
-          ]}
-        />
-      )}
+      <Segmented
+        label={onScheduled === undefined ? addTitle(flow) : t("plan.schedule")}
+        value={mode}
+        onChange={setMode}
+        options={
+          onScheduled === undefined
+            ? [
+                { value: "workout", label: t("plan.tabWorkouts") },
+                { value: "exercise", label: t("plan.tabExercises") },
+              ]
+            : [
+                { value: "workout", label: t("plan.workout") },
+                { value: "block", label: t("plan.block") },
+              ]
+        }
+      />
       {mode === "block" ? (
-        <ScheduleBlocks onPick={pick} />
+        <ScheduleBlocks onPick={pickBlock} />
       ) : (
         <>
           <input
@@ -153,61 +190,66 @@ export function AddWorkoutsSheet({
             className="library-search"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={t("workouts.search")}
-            aria-label={t("workouts.search")}
+            placeholder={search}
+            aria-label={search}
             autoComplete="off"
             maxLength={80}
           />
           <div className="add-shelves">
-            {library !== null && shelves.length === 0 && (
-              <DashedPanel title={t("workouts.noResultsTitle")} body={t("workouts.noResults")} />
+            {mode === "exercise" ? (
+              entryShelves(world, text).map((shelf) => (
+                <section key={shelf.kind} className="add-shelf">
+                  <h3 className="plan-label plan-label--muted">{kindLabel(shelf.kind)}</h3>
+                  {shelf.entries.map((e) => {
+                    const mine = wrapperOf(workouts, e)?.id;
+                    const using = workoutsWith(workouts, e);
+                    return (
+                      <AddWorkoutRow
+                        key={e.key}
+                        kind={e.kind}
+                        name={e.name}
+                        meta={usedInText(using.length)}
+                        to={entryPath(e)}
+                        state={stateOf(
+                          mine,
+                          using.map((w) => w.id)
+                        )}
+                        thereLabel={thereLabel}
+                        onAdd={() => void addEntry(e)}
+                        onUndo={() => undo(mine)}
+                      />
+                    );
+                  })}
+                </section>
+              ))
+            ) : (
+              <>
+                {library !== null && shelves.length === 0 && (
+                  <DashedPanel
+                    title={t("workouts.noResultsTitle")}
+                    body={t("workouts.noResults")}
+                  />
+                )}
+                {shelves.map((shelf) => (
+                  <section key={shelf.focus ?? "general"} className="add-shelf">
+                    <h3 className="plan-label plan-label--muted">{focusLabel(shelf.focus)}</h3>
+                    {shelf.workouts.map((w) => (
+                      <AddWorkoutRow
+                        key={w.id}
+                        kind={w.kind}
+                        name={w.name}
+                        meta={libraryLine(w, model.settings.units)}
+                        to={workoutPath(w.id)}
+                        state={stateOf(w.id, [w.id])}
+                        thereLabel={thereLabel}
+                        onAdd={() => void addTo.add(w.id)}
+                        onUndo={() => undo(w.id)}
+                      />
+                    ))}
+                  </section>
+                ))}
+              </>
             )}
-            {shelves.map((shelf) => (
-              <section key={shelf.focus ?? "general"} className="add-shelf">
-                <h3 className="plan-label plan-label--muted">{focusLabel(shelf.focus)}</h3>
-                {shelf.workouts.map((w) => {
-                  const now = stateOf(w);
-                  return (
-                    <div key={w.id} className="add-row">
-                      <div className="add-row-main">
-                        <CategoryRow
-                          kind={w.kind}
-                          name={w.name}
-                          meta={workoutLines(w, model)[0] ?? null}
-                          to={workoutPath(w.id)}
-                        />
-                      </div>
-                      {now === "there" ? (
-                        <span className="add-row-there">{thereLabel}</span>
-                      ) : now === "added" ? (
-                        <button
-                          type="button"
-                          className="add-row-added"
-                          aria-label={t("plan.undoAdd", { name: w.name })}
-                          onClick={() =>
-                            added
-                              .filter((m) => m.workoutId === w.id)
-                              .forEach((m) => addTo.undo(m.id))
-                          }
-                        >
-                          <Icon name="check" size={16} strokeWidth={2.5} />
-                          {t("plan.added")}
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="add-row-add"
-                          aria-label={t("plan.addNamed", { name: w.name })}
-                          onClick={() => void addTo.add(w.id)}
-                        >
-                          <Icon name="plus" size={18} strokeWidth={2.4} />
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </section>
-            ))}
           </div>
         </>
       )}

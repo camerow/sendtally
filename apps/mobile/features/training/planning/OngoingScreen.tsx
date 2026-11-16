@@ -100,13 +100,14 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
         <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
           {t("plan.tapDays", {
             workout: dayless.map((m) => log.workout(m.workoutId)?.name ?? "").join(", "),
+            count: dayless.length,
           })}
         </Text>
       )}
       {draft.editing && (
         <>
           <Button
-            label={t("plan.addWorkout")}
+            label={t("plan.addToPlan")}
             onPress={() => setAdding(true)}
             variant="primary"
             icon="plus"

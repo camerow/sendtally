@@ -1,11 +1,11 @@
 import { describe, expect, it, jest, beforeEach } from "@jest/globals";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { Alert, type AlertButton } from "react-native";
 import type { Plan, WorkoutRecord } from "@sendtally/api-client";
 import type * as Workouts from "@sendtally/features/workouts";
-import { hangData, renderWithHang } from "../data/renderWithHang";
+import { anExercise, hangData, renderWithHang } from "../data/renderWithHang";
 import { AddWorkoutsSheet } from "./AddWorkoutsSheet";
 import { ScheduleScreen } from "./ScheduleScreen";
 import { WorkoutScreen } from "../library-detail/WorkoutScreen";
@@ -19,7 +19,7 @@ const mockPlan = {
   saveSchedule: jest.fn(),
 };
 
-const mockWorkouts = { saveWorkout: jest.fn(), deleteWorkout: jest.fn() };
+const mockWorkouts = { saveWorkout: jest.fn(async () => undefined), deleteWorkout: jest.fn() };
 const mockPrompt = jest.fn();
 
 jest.mock("../plan/usePlanActions", () => ({ usePlanActions: () => mockPlan }));
@@ -120,11 +120,51 @@ describe("adding to the plan", () => {
       hangData(),
       { workouts: [legs], plan: { ...winter, memberships: [there] } }
     );
-    expect(screen.getByText("Add workouts")).toBeTruthy();
+    expect(screen.getByText("Add to block")).toBeTruthy();
     expect(screen.getByText("In block")).toBeTruthy();
     expect(screen.queryByLabelText("Add 5x5 strength")).toBeNull();
     await fireEvent.press(screen.getByText("Done"));
     expect(onClose).toHaveBeenCalledWith([]);
+  });
+
+  it("adds an exercise to a block as a workout of it alone", async () => {
+    const there = {
+      id: "m-old",
+      workoutId: "legs",
+      blockId: "b1",
+      weekdays: [],
+      start: "2026-10-05",
+      position: 0,
+    };
+    await renderWithHang(
+      <AddWorkoutsSheet flow={{ date: null, blockId: "b1" }} visible onClose={jest.fn()} />,
+      hangData(),
+      {
+        workouts: [legs],
+        plan: { ...winter, memberships: [there] },
+        exercises: [
+          anExercise("e1", "Pull-ups", "strength"),
+          anExercise("e2", "Back squat", "strength"),
+        ],
+      }
+    );
+    await fireEvent.press(screen.getByText("Exercises"));
+    expect(screen.getAllByText(/Not in a workout yet/).length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText("Add Back squat")).toBeNull();
+    expect(screen.getByText("In block")).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText("Search exercises"), "pull");
+    await fireEvent.press(screen.getByLabelText("Add Pull-ups"));
+    expect(mockWorkouts.saveWorkout).toHaveBeenCalledWith(
+      "m-new",
+      expect.objectContaining({
+        kind: "strength",
+        name: "Pull-ups",
+        items: [expect.objectContaining({ exercise: "Pull-ups" })],
+      })
+    );
+    expect(mockPlan.saveMembership).toHaveBeenCalledWith(
+      expect.objectContaining({ workoutId: "m-new", blockId: "b1", weekdays: [] })
+    );
   });
 
   it("adds a workout to a block from its ···, a block it is in checked, an ended one left out", async () => {
@@ -233,47 +273,27 @@ describe("adding to the plan", () => {
     expect(router.back).toHaveBeenCalled();
   });
 
-  it("saves a weekly plan from the day's weekday and returns to Today on its start", async () => {
-    await renderWithHang(<ScheduleScreen workoutId="legs" flow={flow} />, hangData(), {
+  it("saves a weekly plan from today and returns to Today on its start", async () => {
+    await renderWithHang(<ScheduleScreen workoutId="legs" />, hangData(), {
       workouts: [legs],
+      plan: winter,
     });
+    expect(screen.queryByText("Block")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Monday"));
+    await fireEvent.press(screen.getByLabelText("Thursday"));
     await fireEvent.press(screen.getByText("Add every Mon, Thu"));
     expect(mockPlan.saveMembership).toHaveBeenCalledWith({
       id: "m-new",
       workoutId: "legs",
       blockId: null,
       weekdays: [0, 3],
-      start: "2026-10-01",
+      start: "2026-09-29",
       position: 0,
     });
     expect(mockPrompt).toHaveBeenCalledTimes(1);
     expect(router.dismissTo).toHaveBeenCalledWith({
       pathname: "/(tabs)/today",
-      params: expect.objectContaining({ date: "2026-10-01" }),
-    });
-  });
-
-  it("puts a weekly plan in a block from the block's start", async () => {
-    await renderWithHang(
-      <ScheduleScreen workoutId="legs" flow={{ date: null, blockId: "b1" }} />,
-      hangData(),
-      { workouts: [legs], plan: winter }
-    );
-    expect(screen.queryByText("Starts")).toBeNull();
-    await fireEvent.press(screen.getByLabelText("Tuesday"));
-    await fireEvent.press(screen.getByText("Add every Tue"));
-    expect(mockPlan.saveMembership).toHaveBeenCalledWith({
-      id: "m-new",
-      workoutId: "legs",
-      blockId: "b1",
-      weekdays: [1],
-      start: "2026-10-05",
-      position: 0,
-    });
-    expect(router.dismissTo).toHaveBeenCalledWith({
-      pathname: "/plan/block/[id]",
-      params: { id: "b1", highlight: "m-new" },
+      params: expect.objectContaining({ date: "2026-09-29" }),
     });
   });
 
@@ -301,14 +321,34 @@ describe("adding to the plan", () => {
     expect(router.back).toHaveBeenCalled();
   });
 
+  it("schedules an exercise, making its one-exercise workout only on Add", async () => {
+    await renderWithHang(<ScheduleScreen exerciseId="e1" />, hangData(), {
+      workouts: [legs],
+      exercises: [anExercise("e1", "Pull-ups", "strength")],
+    });
+    expect(screen.getByText("Pull-ups")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Wednesday"));
+    expect(mockWorkouts.saveWorkout).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText("Add every Wed"));
+    await act(async () => undefined);
+    expect(mockWorkouts.saveWorkout).toHaveBeenCalledWith(
+      "m-new",
+      expect.objectContaining({ name: "Pull-ups", kind: "strength" })
+    );
+    expect(mockPlan.saveMembership).toHaveBeenCalledWith(
+      expect.objectContaining({ workoutId: "m-new", blockId: null, weekdays: [2] })
+    );
+  });
+
   it("saves a one-off per picked date", async () => {
-    await renderWithHang(<ScheduleScreen workoutId="legs" flow={flow} />, hangData(), {
+    await renderWithHang(<ScheduleScreen workoutId="legs" />, hangData(), {
       workouts: [legs],
       plan: winter,
     });
     await fireEvent.press(screen.getByText("On specific days"));
+    await fireEvent.press(screen.getByLabelText("Next month"));
+    await fireEvent.press(screen.getByLabelText("Thursday, Oct 1"));
     expect(screen.getByText("Add on Thu, Oct 1")).toBeTruthy();
-    expect(screen.getByText("Winter base · 1/6")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Saturday, Oct 3"));
     await fireEvent.press(screen.getByText("Add on 2 days"));
     expect(mockPlan.saveMembership.mock.calls.map(([m]) => m)).toEqual([

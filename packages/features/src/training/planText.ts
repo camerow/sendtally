@@ -22,6 +22,18 @@ export function oneOffDate(m: Pick<Membership, "weekdays" | "start" | "blockId">
   return m.weekdays.length === 0 && m.blockId === null ? [shortDate(m.start)] : [];
 }
 
+/** Taking a workout out of its block, or out of the plan when it has none. */
+export const removeText = (
+  title: string,
+  block: Pick<Block, "name"> | null
+): { title: string; label: string } =>
+  block === null
+    ? { title: t("plan.removeTitle", { title }), label: t("plan.remove", { title }) }
+    : {
+        title: t("plan.removeFromTitle", { title, block: blockName(block) }),
+        label: t("plan.removeFrom", { title, block: blockName(block) }),
+      };
+
 const startsOn = (start: CalendarDate): string => t("hang.statusStarts", { date: dayMonth(start) });
 
 /** Where a workout is planned: the block, Ongoing or the day, and what is worth saying of it. */

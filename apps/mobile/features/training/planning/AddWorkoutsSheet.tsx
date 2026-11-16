@@ -1,13 +1,25 @@
 import { randomUUID } from "expo-crypto";
 import { router, useFocusEffect } from "expo-router";
 import React from "react";
-import { View } from "react-native";
-import type { Block, CalendarDate } from "@sendtally/core/hang";
+import type { Block, CalendarDate, WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { focusLabel, usePlan, workoutLines, blockName } from "@sendtally/features/training";
-import { libraryShelves, type LibraryWorkout } from "@sendtally/features/workouts";
+import { focusLabel, usePlan, blockName } from "@sendtally/features/training";
+import {
+  entryOf,
+  entryShelves,
+  pickWith,
+  useExerciseWorkout,
+  usedInText,
+  workoutsWith,
+  wrapperOf,
+  type ExerciseEntry,
+  type PickerEntry,
+} from "@sendtally/features/exercises";
+import { kindLabel } from "@sendtally/features/activities";
+import { libraryLine, libraryShelves, useWorkoutActions } from "@sendtally/features/workouts";
+import { Alert, View } from "react-native";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { DashedPanel } from "../components/DashedPanel";
@@ -15,6 +27,9 @@ import { Label } from "../components/Label";
 import { Segmented } from "../components/Segmented";
 import { SheetHeader } from "../components/SheetHeader";
 import { useHangData } from "../data/HangDataContext";
+import { usePickerWorld } from "../exercise-picker/usePickerWorld";
+import { openExerciseEditor } from "../exercises/openExerciseEditor";
+import { useMakeExercise } from "../exercises/useMakeExercise";
 import { HangSheet } from "../data/HangSheet";
 import { LibrarySearch } from "../library/LibrarySearch";
 import { NewWorkoutSheet } from "../library/NewWorkoutSheet";
@@ -22,11 +37,13 @@ import { useLibrary } from "../library/useLibrary";
 import { usePlanActions } from "../plan/usePlanActions";
 import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
 import { AddWorkoutRow, type AddState } from "./AddWorkoutRow";
-import { addFlowParams, addKicker, type AddFlow } from "@sendtally/features/training";
+import { addFlowParams, addKicker, addTitle, type AddFlow } from "@sendtally/features/training";
 import { PlanAgainStart } from "./PlanAgainStart";
 import { ScheduleBlocks } from "./ScheduleBlocks";
 import { useAddTo } from "./useAddTo";
 import { useNewBlock } from "./useNewBlock";
+
+const failed = (): void => Alert.alert(t("workouts.saveFailed"));
 
 export type AddWorkoutsSheetProps = {
   flow: AddFlow;
@@ -54,7 +71,7 @@ export function AddWorkoutsSheet({
   const actions = usePlanActions();
   const prompt = useReminderPrompt();
   const newBlock = useNewBlock(t("plan.tab"));
-  const [mode, setMode] = React.useState<"workout" | "block">("workout");
+  const [mode, setMode] = React.useState<"workout" | "exercise" | "block">("workout");
   const [picked, setPicked] = React.useState<Block | null>(null);
   const [start, setStart] = React.useState<CalendarDate>(today);
   const [busy, setBusy] = React.useState(false);
@@ -77,15 +94,26 @@ export function AddWorkoutsSheet({
   }
   useFocusEffect(React.useCallback(() => setAway(false), []));
 
+  const make = useMakeExercise();
+  const world = usePickerWorld([], false);
+  const save = useWorkoutActions(useApi(), failed).saveWorkout;
   const library = state.status === "ready" ? state.data : null;
+  const workouts = library?.workouts ?? [];
+  const ensure = useExerciseWorkout({ workouts, pick: pickWith(make), save, newId: randomUUID });
   const shelves = library === null ? [] : libraryShelves(library.workouts, library.usage, { text });
   const added = addTo.plans.filter((m) => !before.has(m.id));
-  const stateOf = (w: LibraryWorkout): AddState =>
-    added.some((m) => m.workoutId === w.id)
+  const stateOf = (mine: string | undefined, there: readonly string[]): AddState =>
+    added.some((m) => m.workoutId === mine)
       ? "added"
-      : addTo.plans.some((m) => m.workoutId === w.id)
+      : addTo.plans.some((m) => there.includes(m.workoutId))
         ? "there"
         : "none";
+  const undo = (workoutId: string | undefined): void =>
+    added.filter((m) => m.workoutId === workoutId).forEach((m) => addTo.undo(m.id));
+  const addEntry = async (e: ExerciseEntry): Promise<void> => {
+    const id = await ensure(e);
+    if (id !== null) addTo.add(id);
+  };
   const close = (): void => {
     setText("");
     onClose(added.map((m) => m.id));
@@ -94,7 +122,27 @@ export function AddWorkoutsSheet({
     setAway(true);
     router.push({ pathname, params: { ...params, ...addFlowParams(flow), add: "1" } });
   };
-  const doseOf = (w: LibraryWorkout): string | null => workoutLines(w, model)[0] ?? null;
+  const openEntry = ({ source }: PickerEntry): void => {
+    setAway(true);
+    if ("grip" in source) router.push({ pathname: "/grip/[id]", params: { id: source.grip.id } });
+    else
+      router.push({
+        pathname: "/exercise/[id]",
+        params: { id: "exercise" in source ? source.exercise.id : source.builtIn.id },
+      });
+  };
+  const newExercise = (kind: WorkoutKind): void => {
+    setAway(true);
+    openExerciseEditor(kind, "", (form) => {
+      void make(form).then((made) => (made === null ? undefined : addEntry(entryOf(made))));
+    });
+  };
+  const thereLabel =
+    flow.date !== null
+      ? t("plan.onDay")
+      : flow.blockId === null
+        ? t("plan.ongoing")
+        : t("plan.inBlock");
   const pick = (b: Block): void => {
     setPicked(b);
     const day = flow.date ?? today;
@@ -132,7 +180,7 @@ export function AddWorkoutsSheet({
       />
     ) : (
       <Button
-        label={t("workouts.newWorkout")}
+        label={mode === "exercise" ? t("workouts.newExercise") : t("workouts.newWorkout")}
         onPress={() => setMaking(true)}
         variant="primary"
         icon="plus"
@@ -161,26 +209,66 @@ export function AddWorkoutsSheet({
           ) : (
             <SheetHeader
               kicker={kicker}
-              title={onScheduled === undefined ? t("plan.addWorkouts") : t("plan.schedule")}
+              title={onScheduled === undefined ? addTitle(flow) : t("plan.schedule")}
               action={t("common.done")}
               onAction={close}
             />
           )}
-          {onScheduled !== undefined && picked === null && (
+          {picked === null && (
             <Segmented
               value={mode}
               onChange={setMode}
               height={36}
-              options={[
-                { value: "workout", label: t("plan.workout") },
-                { value: "block", label: t("plan.block") },
-              ]}
+              options={
+                onScheduled === undefined
+                  ? [
+                      { value: "workout", label: t("plan.tabWorkouts") },
+                      { value: "exercise", label: t("plan.tabExercises") },
+                    ]
+                  : [
+                      { value: "workout", label: t("plan.workout") },
+                      { value: "block", label: t("plan.block") },
+                    ]
+              }
             />
           )}
           {picked !== null ? (
             <PlanAgainStart block={picked} start={start} onPick={setStart} />
           ) : mode === "block" ? (
             <ScheduleBlocks onPick={pick} />
+          ) : mode === "exercise" ? (
+            <>
+              <LibrarySearch
+                value={text}
+                onChange={setText}
+                placeholder={t("workouts.searchExercises")}
+              />
+              {entryShelves(world, text).map((shelf) => (
+                <View key={shelf.kind} style={{ gap: 2 }}>
+                  <Label color={colors.textSecondary}>{kindLabel(shelf.kind)}</Label>
+                  {shelf.entries.map((e) => {
+                    const mine = wrapperOf(workouts, e)?.id;
+                    const using = workoutsWith(workouts, e);
+                    const now = stateOf(
+                      mine,
+                      using.map((w) => w.id)
+                    );
+                    return (
+                      <AddWorkoutRow
+                        key={e.key}
+                        kind={e.kind}
+                        name={e.name}
+                        meta={usedInText(using.length)}
+                        state={now}
+                        thereLabel={thereLabel}
+                        onOpen={() => openEntry(e)}
+                        onToggle={() => (now === "added" ? undo(mine) : void addEntry(e))}
+                      />
+                    );
+                  })}
+                </View>
+              ))}
+            </>
           ) : (
             <>
               <LibrarySearch value={text} onChange={setText} />
@@ -191,28 +279,17 @@ export function AddWorkoutsSheet({
                 <View key={shelf.focus ?? "general"} style={{ gap: 2 }}>
                   <Label color={colors.textSecondary}>{focusLabel(shelf.focus)}</Label>
                   {shelf.workouts.map((w) => {
-                    const now = stateOf(w);
+                    const now = stateOf(w.id, [w.id]);
                     return (
                       <AddWorkoutRow
                         key={w.id}
-                        workout={w}
-                        dose={doseOf(w)}
+                        kind={w.kind}
+                        name={w.name}
+                        meta={libraryLine(w, model.settings.units)}
                         state={now}
-                        thereLabel={
-                          flow.date !== null
-                            ? t("plan.onDay")
-                            : flow.blockId === null
-                              ? t("plan.ongoing")
-                              : t("plan.inBlock")
-                        }
+                        thereLabel={thereLabel}
                         onOpen={() => leave("/workout/[id]", { id: w.id })}
-                        onToggle={() =>
-                          now === "added"
-                            ? added
-                                .filter((m) => m.workoutId === w.id)
-                                .forEach((m) => addTo.undo(m.id))
-                            : void addTo.add(w.id)
-                        }
+                        onToggle={() => (now === "added" ? undo(w.id) : void addTo.add(w.id))}
                       />
                     );
                   })}
@@ -224,8 +301,10 @@ export function AddWorkoutsSheet({
       </HangSheet>
       {making && (
         <NewWorkoutSheet
-          making="workout"
-          onPick={(kind) => leave("/workout/edit", { kind })}
+          making={mode === "exercise" ? "exercise" : "workout"}
+          onPick={(kind) =>
+            mode === "exercise" ? newExercise(kind) : leave("/workout/edit", { kind })
+          }
           onClose={() => setMaking(false)}
         />
       )}

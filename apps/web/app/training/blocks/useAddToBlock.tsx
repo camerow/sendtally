@@ -10,7 +10,6 @@ import {
   blockName,
   addToBlockOptions,
 } from "@sendtally/features/training";
-import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
 import type { MoreMenuItem } from "../../components/MoreMenu";
 import { Sheet } from "../../components/Sheet";
@@ -23,25 +22,31 @@ import { blockPath } from "./paths";
 export type AddToBlock = { item: MoreMenuItem | null; sheet: React.ReactNode };
 
 /**
- * A workout's Add to block: any template or block not over yet, with no days to start. One
+ * Add to block for a workout, or for what becomes one once picked: any template or block not
+ * over yet, with no days to start. `workoutId` is the workout when there is one already;
+ * without, `resolve` makes it on a pick. One
  * press adds it and closes; a toast says where it went, with View.
  */
-export function useAddToBlock(workout: LibraryWorkout): AddToBlock {
+export function useAddToBlock(
+  name: string,
+  workoutId: string | undefined,
+  resolve?: () => Promise<string | null>
+): AddToBlock {
   const { today } = useHangData();
   const { plan } = useTrainingLog(useAppApi()).log;
   const actions = usePlanActions();
   const toast = useToast();
   const navigate = useNavigate();
   const [open, setOpen] = React.useState(false);
-  const options = addToBlockOptions(plan, workout.id, today);
+  const options = addToBlockOptions(plan, workoutId ?? "", today);
   const title = t("plan.addToBlockMenu");
   return {
     item: options.length === 0 ? null : { label: title, onSelect: () => setOpen(true) },
     sheet: (
-      <Sheet open={open} kicker={workout.name} title={title} onClose={() => setOpen(false)}>
+      <Sheet open={open} kicker={name} title={title} onClose={() => setOpen(false)}>
         <div className="option-list">
           {options.map(({ block: b, there }) => {
-            const name = blockName(b);
+            const where = blockName(b);
             return (
               <button
                 key={b.id}
@@ -51,17 +56,16 @@ export function useAddToBlock(workout: LibraryWorkout): AddToBlock {
                 disabled={there}
                 onClick={() => {
                   setOpen(false);
-                  void actions.saveMembership(
-                    blockMembership(
-                      crypto.randomUUID(),
-                      workout.id,
-                      b,
-                      today,
-                      nextPosition(plan, b.id)
-                    )
-                  );
+                  const save = (id: string | null): void => {
+                    if (id === null) return;
+                    void actions.saveMembership(
+                      blockMembership(crypto.randomUUID(), id, b, today, nextPosition(plan, b.id))
+                    );
+                  };
+                  if (workoutId !== undefined) save(workoutId);
+                  else void resolve?.().then(save);
                   toast.show({
-                    message: t("common.addedTo", { name }),
+                    message: t("common.addedTo", { name: where }),
                     action: {
                       label: t("common.view"),
                       onPress: () => void navigate(blockPath(b.id)),
@@ -70,7 +74,7 @@ export function useAddToBlock(workout: LibraryWorkout): AddToBlock {
                 }}
               >
                 <span className="option-row-text">
-                  <span>{name}</span>
+                  <span>{where}</span>
                   <span className="option-row-detail">
                     {isDated(b) ? blockDateRange(b) : t("plan.template")}
                   </span>

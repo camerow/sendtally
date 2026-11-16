@@ -19,7 +19,7 @@ export type ExerciseShelfProps = {
   onSeeAll: () => void;
 };
 
-/** One category: its heading and plus, then its first exercises, done ones first, or a hint when it has none. */
+/** One category: its heading and plus, then its first exercises, ones in a workout first, or a hint when it has none. */
 export function ExerciseShelf({
   kind,
   cards,
@@ -58,7 +58,7 @@ export function ExerciseShelf({
             key={c.key}
             kind={kind}
             name={c.name}
-            meta={c.meta ?? t(c.library ? "workouts.fromLibrary" : "workouts.notDoneYet")}
+            meta={c.meta ?? t("workouts.notInWorkout")}
             faded={c.meta === null}
             showKind={false}
             showMark={false}

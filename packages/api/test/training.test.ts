@@ -923,6 +923,34 @@ describe("exercises", () => {
     expect(await json(taken)).toMatchObject({ exercise: { id: plank?.id } });
   });
 
+  it("renames a one-exercise workout named after the exercise, not one the user renamed", async () => {
+    const userId = "user_exercises_wrapper";
+    await call(userId, "PUT", "/v1/workouts/w1", squatWorkout);
+    await call(userId, "PUT", "/v1/workouts/w2", { ...squatWorkout, name: "Leg day" });
+    await call(userId, "PUT", "/v1/workouts/w4", { ...squatWorkout, name: "back SQUAT" });
+    await call(userId, "PUT", "/v1/workouts/w3", {
+      ...squatWorkout,
+      items: [...squatWorkout.items, { exercise: "Plank", doses: [{ sets: 3 }] }],
+    });
+    const { exercises } = await json<ExerciseList>(await call(userId, "GET", "/v1/exercises"));
+    const squat = exercises.find((e) => e.name === "Back squat");
+    await call(userId, "PUT", `/v1/exercises/${squat?.id}`, {
+      name: "Front squat",
+      kind: "strength",
+    });
+    await call(userId, "PUT", "/v1/exercises/e1", { name: "Squat", kind: "strength" });
+    await call(userId, "POST", `/v1/exercises/${squat?.id}/merge`, { into: "e1" });
+    const { workouts } = await json<{ workouts: WorkoutRecord[] }>(
+      await call(userId, "GET", "/v1/workouts")
+    );
+    expect(Object.fromEntries(workouts.map((w) => [w.id, w.name]))).toEqual({
+      w1: "Squat",
+      w2: "Leg day",
+      w3: "Back squat",
+      w4: "Squat",
+    });
+  });
+
   it("merges one exercise into another everywhere and drops it", async () => {
     const userId = "user_exercises_merge";
     await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, done: squatDone });

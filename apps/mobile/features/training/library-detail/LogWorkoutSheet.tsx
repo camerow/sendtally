@@ -2,8 +2,8 @@ import React from "react";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { focusLabel, workoutLines } from "@sendtally/features/training";
-import { libraryShelves } from "@sendtally/features/workouts";
+import { focusLabel } from "@sendtally/features/training";
+import { libraryLine, libraryShelves } from "@sendtally/features/workouts";
 import { DashedPanel } from "../components/DashedPanel";
 import { Label } from "../components/Label";
 import { SheetHeader } from "../components/SheetHeader";
@@ -46,7 +46,7 @@ function Picker({ visible, onClose }: LogWorkoutSheetProps): React.ReactElement 
               <LogWorkoutRow
                 key={w.id}
                 workout={w}
-                dose={workoutLines(w, model)[0] ?? null}
+                dose={libraryLine(w, model.settings.units)}
                 date={today}
                 onLogged={close}
               />
