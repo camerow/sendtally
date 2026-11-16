@@ -164,6 +164,8 @@ export const defaultExerciseRestS = (kind: WorkoutKind): number =>
 export type Block = {
   id: string;
   name: string;
+  /** Empty when it has none. */
+  description: string;
   start: CalendarDate | null;
   weeks: number;
   /** Kept by the API for older app builds; the apps neither read nor write it. */

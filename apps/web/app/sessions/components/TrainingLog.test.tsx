@@ -132,7 +132,14 @@ describe("TrainingLog", () => {
   });
 
   it("marks a finished block on its last day, opening the block", () => {
-    const block = { id: "b1", name: "Winter base", start: "2026-10-05", weeks: 2, focus: null };
+    const block = {
+      id: "b1",
+      name: "Winter base",
+      description: "",
+      start: "2026-10-05",
+      weeks: 2,
+      focus: null,
+    };
     const recap = {
       block,
       done: 3,

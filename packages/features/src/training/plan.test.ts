@@ -41,7 +41,9 @@ const climbing: Workout = {
 };
 
 const plan: Plan = {
-  blocks: [{ id: "b1", name: "Winter base", start: "2026-11-02", weeks: 6, focus: null }],
+  blocks: [
+    { id: "b1", name: "Winter base", description: "", start: "2026-11-02", weeks: 6, focus: null },
+  ],
   memberships: [
     // Tuesdays and Fridays.
     {

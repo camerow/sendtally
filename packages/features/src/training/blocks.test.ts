@@ -6,6 +6,7 @@ import { blockGroups, blockMembers } from "./blocks";
 const block: DatedBlock = {
   id: "b1",
   name: "Autumn finger block",
+  description: "",
   start: "2026-09-28",
   weeks: 3,
   focus: null,
@@ -52,6 +53,7 @@ describe("blockMembers", () => {
 describe("blockGroups", () => {
   it("splits blocks into running, upcoming soonest first, templates, and past latest first", () => {
     const at = (id: string, start: string | null): Block => ({
+      description: "",
       id,
       name: id,
       start,

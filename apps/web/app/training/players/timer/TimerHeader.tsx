@@ -2,7 +2,8 @@ import React from "react";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../../components/Icon";
 import { useGoBack } from "../../../lib/useGoBack";
-import { WorkoutInfo } from "../WorkoutInfo";
+import { useLibrary, workoutIn } from "../../library/useLibrary";
+import { AboutButton } from "../AboutButton";
 
 export type TimerHeaderProps = {
   name: string;
@@ -24,6 +25,7 @@ export function TimerHeader({
   onToggleMute,
 }: TimerHeaderProps): React.ReactElement {
   const minimise = useGoBack("/app/plan");
+  const library = useLibrary();
   return (
     <div className="timer-head">
       <button
@@ -37,7 +39,7 @@ export function TimerHeader({
       <div className="timer-head-title">
         <span className="timer-head-name-row">
           <span className="timer-head-name">{name}</span>
-          {workoutId !== null && <WorkoutInfo workoutId={workoutId} dark />}
+          <AboutButton about={workoutIn(library)(workoutId)} label={t("workouts.about")} dark />
         </span>
         <span className="timer-label timer-head-meta">{meta}</span>
       </div>

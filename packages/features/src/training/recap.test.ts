@@ -9,6 +9,7 @@ import { blockDone, blockRecap, blockTagOf } from "./recap";
 const block: DatedBlock = {
   id: "b1",
   name: "Winter base",
+  description: "",
   start: "2026-09-28",
   weeks: 2,
   focus: null,

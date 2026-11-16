@@ -19,6 +19,7 @@ export const workouts = {
   "workouts.namePlaceholder": "Tuesday gym",
   "workouts.description": "Description",
   "workouts.descriptionPlaceholder": "What it is for, and how to do it",
+  "workouts.aboutExercise": "About this exercise",
   "workouts.noBody": "No exercises or steps. Edit it to add some.",
   "workouts.duplicate": "Duplicate",
   "workouts.delete": "Delete workout",

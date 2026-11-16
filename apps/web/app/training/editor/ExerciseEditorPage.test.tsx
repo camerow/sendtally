@@ -24,6 +24,7 @@ const squat: Exercise = {
   eachSide: false,
   progress: null,
   builtIn: null,
+  description: "",
   archived: false,
 };
 
@@ -82,12 +83,8 @@ function mount(page: React.ReactNode): void {
 
 const type = (el: HTMLInputElement | HTMLTextAreaElement, value: string): void =>
   act(() => {
-    Object.getOwnPropertyDescriptor(
-      el instanceof HTMLTextAreaElement
-        ? HTMLTextAreaElement.prototype
-        : HTMLInputElement.prototype,
-      "value"
-    )!.set!.call(el, value);
+    const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement : HTMLInputElement;
+    Object.getOwnPropertyDescriptor(proto.prototype, "value")!.set!.call(el, value);
     el.dispatchEvent(new Event("input", { bubbles: true }));
   });
 const click = (el: Element | null | undefined): void => act(() => (el as HTMLElement).click());
@@ -121,6 +118,21 @@ describe("ExerciseEditorPage", () => {
       "s",
       expect.objectContaining({ measure: "reps" })
     );
+  });
+
+  it("writes the exercise's description, trimmed, but none for a grip", async () => {
+    mount(<ExerciseEditorPage exercise="s" />);
+    const field = container.querySelector<HTMLTextAreaElement>("textarea.form-notes")!;
+    expect(field.maxLength).toBe(2000);
+    type(field, " Sit back.\n\n- Brace ");
+    await act(async () => container.querySelector<HTMLElement>(".detail-primary")?.click());
+    expect(state.saveExercise).toHaveBeenCalledWith(
+      "s",
+      expect.objectContaining({ description: "Sit back.\n\n- Brace" })
+    );
+    act(() => root.render(<></>));
+    mount(<ExerciseEditorPage grip="half" />);
+    expect(container.querySelector("textarea.form-notes")).toBeNull();
   });
 
   it("locks a built-in grip's name", () => {

@@ -9,7 +9,9 @@ import type * as T_training from "@sendtally/features/training";
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const plan: Plan = {
-  blocks: [{ id: "b1", name: "Winter base", start: "2026-11-02", weeks: 4, focus: null }],
+  blocks: [
+    { id: "b1", name: "Winter base", description: "", start: "2026-11-02", weeks: 4, focus: null },
+  ],
   memberships: [],
   weekChanges: [],
   planChanges: [],

@@ -1,7 +1,7 @@
 import React from "react";
 import { TextInput } from "../../../components/TextInput";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { SheetSection } from "../components/SheetSection";
+import { SheetSection } from "./SheetSection";
 
 export type EditorTextFieldProps = {
   label: string;

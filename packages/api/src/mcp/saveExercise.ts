@@ -45,14 +45,15 @@ export function owned<T>(
 const inputSchema = {
   key: retryKey,
   id: editId("exercise"),
-  ...exerciseBody.pick({ name: true, kind: true, measure: true, eachSide: true }).shape,
+  ...exerciseBody.pick({ name: true, kind: true, measure: true, eachSide: true, description: true })
+    .shape,
 };
 
 export const saveExercise: ConnectorTool<typeof inputSchema> = {
   name: "save_exercise",
   title: "Save exercise",
   description:
-    "Adds an exercise to the user's library, or with id changes that one, renaming it in every workout and log that names it. kind is climbing, strength, mobility or other (hangboard grips are not exercises). measure is how a set is logged: reps, repsWeight (reps with added kg), seconds, secondsWeight (a timed hold with added kg), rounds, or laps (climbing only); left out it follows the kind. eachSide marks an exercise done per side. A new exercise named like a built-in (see get_training_library) saves that built-in as it is; a built-in itself cannot be changed. If the user already has another exercise by this name, nothing is saved and that exercise comes back with existing: true. save_workout creates exercises its items name, so call this only for an exercise on its own.",
+    'Adds an exercise to the user\'s library, or with id changes that one, renaming it in every workout and log that names it. kind is climbing, strength, mobility or other (hangboard grips are not exercises). measure is how a set is logged: reps, repsWeight (reps with added kg), seconds, secondsWeight (a timed hold with added kg), rounds, or laps (climbing only); left out it follows the kind. eachSide marks an exercise done per side. description is optional plain text up to 2000 characters: a blank line starts a paragraph, a line starting "- " is a bullet and "1. " a numbered step, and https links are shown as links; left out on a change it keeps the one saved. A new exercise named like a built-in (see get_training_library) saves that built-in as it is; a built-in itself cannot be changed. If the user already has another exercise by this name, nothing is saved and that exercise comes back with existing: true. save_workout creates exercises its items name, so call this only for an exercise on its own.',
   inputSchema,
   annotations: { readOnlyHint: false, destructiveHint: false },
   run: async ({ key, id: editing, ...body }, { env, userId }) => {
@@ -70,7 +71,7 @@ export const saveExercise: ConnectorTool<typeof inputSchema> = {
       editing ?? key ?? crypto.randomUUID(),
       (editing === undefined && builtInExercise(body.name)) || body
     );
-    const { name, kind, measure, eachSide } = exercise;
+    const { name, kind, measure, eachSide, description } = exercise;
     return {
       exercise: {
         id: exercise.id,
@@ -78,6 +79,7 @@ export const saveExercise: ConnectorTool<typeof inputSchema> = {
         kind,
         measure,
         eachSide,
+        description: description || undefined,
         builtIn: exercise.builtIn !== null,
       },
       existing: taken,

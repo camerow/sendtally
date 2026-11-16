@@ -129,7 +129,9 @@ describe("Timer", () => {
 
   it("runs the week's prescription, and carries the setup and plan to the done screen", async () => {
     const plan = {
-      blocks: [{ id: "b1", name: "Winter base", start: TODAY, weeks: 4, focus: null }],
+      blocks: [
+        { id: "b1", name: "Winter base", description: "", start: TODAY, weeks: 4, focus: null },
+      ],
       memberships: [
         {
           id: "m1",

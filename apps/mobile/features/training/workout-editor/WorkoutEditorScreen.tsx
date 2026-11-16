@@ -35,7 +35,7 @@ import { LoadState } from "../data/LoadState";
 import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
 import { useLibrary } from "../library/useLibrary";
 import { TargetEffort } from "../plan/TargetEffort";
-import { EditorTextField } from "./EditorTextField";
+import { EditorTextField } from "../components/EditorTextField";
 import { HangboardTiming } from "./HangboardTiming";
 import {
   draftOfEditor,

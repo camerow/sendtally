@@ -5,7 +5,7 @@ import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import { useActivities, useWeightUnit } from "@sendtally/features/activities";
-import type { TallyMeasure } from "@sendtally/features/exercises";
+import { exerciseAbout, type TallyMeasure } from "@sendtally/features/exercises";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { useLiveSession } from "@sendtally/features/log-session";
 import { useExercises } from "@sendtally/features/statistics";
@@ -52,6 +52,7 @@ export function SetsScreen({
   const unit = useWeightUnit(api);
   const { state: activities } = useActivities(api);
   const exercises = useExercises(api).state;
+  const mine = exercises.status === "ready" ? exercises.data : null;
   const tally = useLiveSession(exerciseTallyStorage);
   const [keypad, setKeypad] = React.useState(false);
   const player = useSetsPlayer({
@@ -59,7 +60,7 @@ export function SetsScreen({
     store: liveRun,
     tally,
     activities: activities.status === "ready" ? activities.data : null,
-    exercises: exercises.status === "ready" ? exercises.data : null,
+    exercises: mine,
   });
   const { shown, ticked, current, rest, hold, previous, nameOf } = player;
 
@@ -171,6 +172,7 @@ export function SetsScreen({
                         <ExtraSets {...range} exercise={nameOf(i)} onAdd={() => player.addSet(i)} />
                       )
                     }
+                    about={exerciseAbout(mine, item.exercise, nameOf(i))}
                   />
                 )}
                 {restBetween(i)}

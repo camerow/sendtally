@@ -33,6 +33,7 @@ import {
 const block: DatedBlock = {
   id: "b",
   name: "Winter base",
+  description: "",
   start: "2026-11-02",
   weeks: 6,
   focus: null,

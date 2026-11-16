@@ -3,7 +3,7 @@ import { act, fireEvent, renderHook, screen } from "@testing-library/react-nativ
 import { router } from "expo-router";
 import React from "react";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
-import { hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
+import { anExercise, hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
 import type { WorkoutRun } from "@sendtally/features/workouts";
 import { liveRun } from "../../live-session/liveRun";
 import { useLiveHold } from "../hold/useLiveHold";
@@ -159,6 +159,20 @@ describe("Sets player", () => {
         off: JSON.stringify(["2:0"]),
       },
     });
+  });
+
+  it("opens an exercise's description from the info button beside its name", async () => {
+    await renderWithHang(<SetsScreen run={run} />, hangData(), {
+      exercises: [
+        anExercise("e1", "row", "strength", { description: "Pull to the hip." }),
+        anExercise("e2", "Back squat", "strength"),
+      ],
+    });
+    expect(screen.getAllByLabelText("About this exercise")).toHaveLength(1);
+    expect(screen.queryByText("Pull to the hip.")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("About this exercise"));
+    expect(screen.getByText("Pull to the hip.")).toBeTruthy();
+    expect(screen.getAllByText("Row").length).toBeGreaterThan(1);
   });
 
   it("keeps a running rest when the player is minimised and opened again", async () => {

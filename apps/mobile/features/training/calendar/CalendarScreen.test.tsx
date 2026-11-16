@@ -10,7 +10,9 @@ jest.mock("expo-router", () => ({ router: { push: jest.fn(), back: jest.fn() } }
 
 // Fingers on Mondays and Tuesdays in a four week block; today is Tuesday Sep 29tember.
 const plan: Plan = {
-  blocks: [{ id: "b1", name: "Autumn power", start: "2026-09-28", weeks: 4, focus: null }],
+  blocks: [
+    { id: "b1", name: "Autumn power", description: "", start: "2026-09-28", weeks: 4, focus: null },
+  ],
   memberships: [
     {
       id: "m1",

@@ -55,6 +55,7 @@ export const anExercise = (
   eachSide: false,
   progress: null,
   builtIn: null,
+  description: "",
   archived: false,
   ...more,
 });

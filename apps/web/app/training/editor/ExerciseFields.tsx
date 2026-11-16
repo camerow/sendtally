@@ -1,6 +1,7 @@
 import React from "react";
 import { NameField } from "../components/NameField";
 import { EXERCISE_PROGRESS, measuresFor } from "@sendtally/core/hang";
+import { MAX_DESCRIPTION } from "@sendtally/core/text";
 import { measureLabel, tallyMeasureOf, type ExerciseForm } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { newDoseFor } from "@sendtally/features/workouts";
@@ -18,6 +19,8 @@ export type ExerciseFieldsProps = {
   /** What is wrong with the name, if anything. */
   error?: string;
   autoFocus?: boolean;
+  /** Whether it takes a description of its own; a grip or one picked from the library does not. */
+  describable?: boolean;
   onSubmit: () => void;
 };
 
@@ -33,9 +36,11 @@ export function ExerciseFields({
   locked,
   error,
   autoFocus = false,
+  describable = true,
   onSubmit,
 }: ExerciseFieldsProps): React.ReactElement {
   const { model } = useHangData();
+  const descriptionId = React.useId();
   const [advanced, setAdvanced] = React.useState(false);
   const { kind } = form;
   const fingers = kind === "hangboard";
@@ -70,6 +75,21 @@ export function ExerciseFields({
         )}
         {error !== undefined && <span className="name-error">{error}</span>}
       </div>
+      {describable && !fingers && (
+        <div className="form-section">
+          <label htmlFor={descriptionId} className="train-label">
+            {t("workouts.description")}
+          </label>
+          <textarea
+            id={descriptionId}
+            className="form-input form-notes"
+            value={form.description ?? ""}
+            maxLength={MAX_DESCRIPTION}
+            placeholder={t("workouts.descriptionPlaceholder")}
+            onChange={(e) => set({ description: e.target.value })}
+          />
+        </div>
+      )}
       <div className="form-section">
         <span className="train-label">{t("workouts.measuredIn")}</span>
         <div className="setup-chips" role="radiogroup" aria-label={t("workouts.measuredIn")}>

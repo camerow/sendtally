@@ -6,6 +6,7 @@ import { t } from "@sendtally/features/i18n";
 import { focusBeside, KIND_LOOK } from "@sendtally/features/training";
 import { durationLabel } from "@sendtally/features/sessions";
 import { workoutMinutes, type LibraryWorkout, type WorkoutUse } from "@sendtally/features/workouts";
+import { Description } from "../components/Description";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { CategoryMark } from "../library/CategoryMark";
@@ -47,11 +48,7 @@ export function LibraryIntro({
       </View>
       <Title size={38}>{workout.name}</Title>
       {day}
-      {workout.description !== "" && (
-        <Text style={[type.body, { fontSize: 15, lineHeight: 22, color: colors.textSecondary }]}>
-          {workout.description}
-        </Text>
-      )}
+      <Description text={workout.description} fold />
       <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
     </View>
   );

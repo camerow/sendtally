@@ -30,6 +30,7 @@ const ex = (id: string, name: string, extra: Partial<Exercise> = {}): Exercise =
   eachSide: false,
   progress: null,
   builtIn: null,
+  description: "",
   archived: false,
   ...extra,
 });

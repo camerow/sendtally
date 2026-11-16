@@ -19,6 +19,7 @@ export const workouts = {
   "workouts.namePlaceholder": "Gimnasio del martes",
   "workouts.description": "Descripción",
   "workouts.descriptionPlaceholder": "Para qué sirve y cómo se hace",
+  "workouts.aboutExercise": "Sobre este ejercicio",
   "workouts.noBody": "Sin ejercicios ni pasos. Edítalo para añadir algunos.",
   "workouts.duplicate": "Duplicar",
   "workouts.delete": "Borrar entreno",

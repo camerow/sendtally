@@ -117,9 +117,30 @@ describe("Today", () => {
     const inBlocks: Plan = {
       ...plan("max10"),
       blocks: [
-        { id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null },
-        { id: "b2", name: "Power phase", start: "2026-09-28", weeks: 2, focus: null },
-        { id: "b0", name: "Summer base", start: "2026-08-03", weeks: 4, focus: null },
+        {
+          id: "b1",
+          name: "Winter base",
+          description: "",
+          start: "2026-09-21",
+          weeks: 4,
+          focus: null,
+        },
+        {
+          id: "b2",
+          name: "Power phase",
+          description: "",
+          start: "2026-09-28",
+          weeks: 2,
+          focus: null,
+        },
+        {
+          id: "b0",
+          name: "Summer base",
+          description: "",
+          start: "2026-08-03",
+          weeks: 4,
+          focus: null,
+        },
       ],
       memberships: [
         {
@@ -147,7 +168,16 @@ describe("Today", () => {
   it("names a single running block in the singular", async () => {
     const inBlock: Plan = {
       ...plan("max10"),
-      blocks: [{ id: "b1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null }],
+      blocks: [
+        {
+          id: "b1",
+          name: "Winter base",
+          description: "",
+          start: "2026-09-21",
+          weeks: 4,
+          focus: null,
+        },
+      ],
     };
     await renderWithHang(<TodayScreen />, hangData(), { plan: inBlock });
     expect(screen.getByText("Block in progress")).toBeTruthy();
@@ -166,10 +196,31 @@ describe("Today", () => {
     const blocks: Plan = {
       ...plan("max10"),
       blocks: [
-        { id: "t1", name: "Peak weekend", start: null, weeks: 1, focus: null },
-        { id: "p1", name: "Summer base", start: "2026-08-03", weeks: 4, focus: null },
-        { id: "r1", name: "Winter base", start: "2026-09-21", weeks: 4, focus: null },
-        { id: "u1", name: "Spring power", start: "2026-11-02", weeks: 2, focus: null },
+        { id: "t1", name: "Peak weekend", description: "", start: null, weeks: 1, focus: null },
+        {
+          id: "p1",
+          name: "Summer base",
+          description: "",
+          start: "2026-08-03",
+          weeks: 4,
+          focus: null,
+        },
+        {
+          id: "r1",
+          name: "Winter base",
+          description: "",
+          start: "2026-09-21",
+          weeks: 4,
+          focus: null,
+        },
+        {
+          id: "u1",
+          name: "Spring power",
+          description: "",
+          start: "2026-11-02",
+          weeks: 2,
+          focus: null,
+        },
       ],
     };
     await renderWithHang(<TodayScreen />, hangData(), { plan: blocks });
@@ -195,7 +246,9 @@ describe("Today", () => {
   it("starts a block no earlier than today when a past day is picked", async () => {
     const blocks: Plan = {
       ...plan("max10"),
-      blocks: [{ id: "t1", name: "Peak weekend", start: null, weeks: 1, focus: null }],
+      blocks: [
+        { id: "t1", name: "Peak weekend", description: "", start: null, weeks: 1, focus: null },
+      ],
     };
     await renderWithHang(<TodayScreen />, hangData(), { plan: blocks });
     await fireEvent.press(screen.getByLabelText(/^Monday/));

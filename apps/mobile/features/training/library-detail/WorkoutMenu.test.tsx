@@ -40,9 +40,9 @@ const legs: WorkoutRecord = {
 
 const plan = (over: Partial<Plan> = {}): Plan => ({
   blocks: [
-    { id: "b1", name: "Winter base", start: "2026-10-05", weeks: 6, focus: null },
-    { id: "t1", name: "Power phase", start: null, weeks: 4, focus: null },
-    { id: "old", name: "Summer", start: "2026-06-01", weeks: 4, focus: null },
+    { id: "b1", name: "Winter base", description: "", start: "2026-10-05", weeks: 6, focus: null },
+    { id: "t1", name: "Power phase", description: "", start: null, weeks: 4, focus: null },
+    { id: "old", name: "Summer", description: "", start: "2026-06-01", weeks: 4, focus: null },
   ],
   memberships: [],
   weekChanges: [],

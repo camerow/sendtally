@@ -30,6 +30,8 @@ export const common = {
   "common.membership": "Suscripción",
   "common.member": "Suscriptor",
   "common.cancel": "Cancelar",
+  "common.less": "Menos",
+  "common.more": "Más",
   "common.delete": "Eliminar",
   "common.edit": "Editar",
   "common.save": "Guardar",

@@ -18,6 +18,8 @@ export type SheetProps = {
   kicker?: string;
   /** Amber for a warning, such as "Already running"; grey by default. */
   kickerTone?: "amber";
+  /** A kicker in a kind's own ink, such as a workout's or exercise's. */
+  kickerColor?: string;
   /** Makes the title a link, a chevron after it, such as a day's workout. */
   titleTo?: string;
   /** Under the title, such as the day a planned run falls on. */
@@ -45,6 +47,7 @@ function OpenSheet({
   title,
   kicker,
   kickerTone,
+  kickerColor,
   titleTo,
   under,
   onBack,
@@ -97,6 +100,7 @@ function OpenSheet({
         {kicker !== undefined && (
           <span
             className={kickerTone === "amber" ? "sheet-kicker sheet-kicker--amber" : "sheet-kicker"}
+            style={kickerColor === undefined ? undefined : { color: kickerColor }}
           >
             {kicker}
           </span>
