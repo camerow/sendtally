@@ -46,6 +46,7 @@ import {
   journalEntries,
   libraryChanges,
   libraryItems,
+  libraryMedia,
   memberships,
   sessionClimbLinks,
   sessions,
@@ -92,7 +93,15 @@ import type { RegradedSession } from "./climbs";
 import type { ClimbLink } from "./manual";
 import type { BlockInput, FocusOptional } from "./plan";
 import type { EntryWrite } from "./entries";
-import { entryOf, libraryOf, libraryState, stateOf, type LibraryState } from "./library";
+import {
+  entryOf,
+  libraryOf,
+  libraryState,
+  stateOf,
+  type LibraryState,
+  type MediaRow,
+  type MediaState,
+} from "./library";
 import type { StoreEntitlement } from "./revenuecat";
 import type { NormalizedTag } from "./tags";
 
@@ -3744,9 +3753,56 @@ export async function mergeExercise(
   );
 }
 
-export async function library(db: D1Database): Promise<BuiltInLibrary> {
-  return libraryOf(await drizzle(db).select().from(libraryItems));
+/** The library; with the media host, each item carries its published pictures. */
+export async function library(db: D1Database, mediaUrl: string): Promise<BuiltInLibrary> {
+  const d = drizzle(db);
+  const [rows, media] = await d.batch([
+    d.select().from(libraryItems),
+    d.select().from(libraryMedia),
+  ]);
+  return libraryOf(rows, media, mediaUrl);
 }
+
+/** Every picture on a built-in, published or not, in order. */
+export async function libraryMediaOf(
+  db: D1Database,
+  type: LibraryType,
+  id: string
+): Promise<MediaRow[]> {
+  return drizzle(db)
+    .select()
+    .from(libraryMedia)
+    .where(and(eq(libraryMedia.item_type, type), eq(libraryMedia.item_id, id)))
+    .orderBy(asc(libraryMedia.position));
+}
+
+export async function libraryMediaRow(db: D1Database, id: string): Promise<MediaRow | null> {
+  return (
+    (await drizzle(db).select().from(libraryMedia).where(eq(libraryMedia.id, id)).get()) ?? null
+  );
+}
+
+/** The writes that put a built-in's pictures in a new order with new text. */
+export const mediaWrites = (
+  db: D1Database,
+  after: readonly MediaState[]
+): BatchItem<"sqlite">[] => {
+  const d = drizzle(db);
+  return after.map((m, position) =>
+    d
+      .update(libraryMedia)
+      .set({ alt: m.alt, credit: m.credit, position })
+      .where(eq(libraryMedia.id, m.id))
+  );
+};
+
+export const insertMedia = (
+  db: D1Database,
+  row: typeof libraryMedia.$inferInsert
+): BatchItem<"sqlite"> => drizzle(db).insert(libraryMedia).values(row);
+
+export const deleteMedia = (db: D1Database, id: string): BatchItem<"sqlite"> =>
+  drizzle(db).delete(libraryMedia).where(eq(libraryMedia.id, id));
 
 export async function libraryEntry(
   db: D1Database,
@@ -3761,12 +3817,16 @@ export async function libraryEntry(
   return row === undefined ? null : entryOf(row);
 }
 
-/** Writes a built-in's new text and status, logging the change. */
+/**
+ * Writes a built-in's new text and status, logging the change. A change to its pictures passes
+ * them before and after, with any row it adds or removes in `writes`, so one change records it.
+ */
 export async function saveLibraryEntry(
   db: D1Database,
   userId: string,
   before: LibraryEntry,
-  after: LibraryState
+  after: LibraryState,
+  media?: { before: MediaState[]; writes: BatchItem<"sqlite">[] }
 ): Promise<LibraryEntry> {
   const { type, id } = before;
   const now = new Date().toISOString();
@@ -3783,17 +3843,22 @@ export async function saveLibraryEntry(
         updated_by: userId,
       })
       .where(and(eq(libraryItems.type, type), eq(libraryItems.id, id))),
+    ...(media?.writes ?? []),
+    ...mediaWrites(db, after.media ?? []),
     d.insert(libraryChanges).values({
       id: crypto.randomUUID(),
       item_type: type,
       item_id: id,
       changed_by: userId,
       changed_at: now,
-      before_json: JSON.stringify(stateOf(before)),
+      before_json: JSON.stringify(
+        media === undefined ? stateOf(before) : { ...stateOf(before), media: media.before }
+      ),
       after_json: JSON.stringify(after),
     }),
   ]);
-  return { ...before, ...after, updatedAt: now };
+  const { media: _, ...text } = after;
+  return { ...before, ...text, updatedAt: now };
 }
 
 export type LibraryChange = {

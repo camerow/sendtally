@@ -38,6 +38,17 @@ export type BuiltInWorkoutSpec = {
   items: readonly BuiltInItemSpec[];
 };
 
+/** A picture on a built-in, at 1600 px on its long side and as a 144 px square thumbnail. */
+export type LibraryPicture = {
+  kind: "picture";
+  url: string;
+  thumbUrl: string;
+  width: number;
+  height: number;
+  alt: string;
+  credit: string;
+};
+
 /**
  * One item of the built-in library, in English with its translations. Its id is never changed
  * or reused, since logs, plans and the user's own exercises name it; a retired one only leaves
@@ -50,6 +61,8 @@ type Entry<T extends LibraryType> = {
   name: string;
   description: string;
   translations: LibraryTranslations;
+  /** Its pictures in order; only those with alt text reach the apps. */
+  media: LibraryPicture[];
   updatedAt: string | null;
 };
 

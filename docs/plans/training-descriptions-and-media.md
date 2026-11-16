@@ -1,6 +1,6 @@
 # Training descriptions and media
 
-Status: approved by Will on 2026-11-14; being built in slice order (slice 1 shipped in #427, slice 2 on `feat/training-library-d1`).
+Status: approved by Will on 2026-11-14; being built in slice order (slice 1 shipped in #427, slice 2 in #431, slice 3 on `feat/training-pictures`).
 Brief: Will, 2026-11-14, with his decisions of the same day (custom workout descriptions first, the built-in library moves to D1, thumbnails in lists, English only for new text, a hero image on workout detail, media in the info sheet).
 Designs: a new page "Training descriptions and media" (page id `training-media`) on the canvas https://claude.ai/artifact/CNPnNQwgvzgvxk4ZAYTyto.
 The v3 page is untouched; it was read for reference only.
@@ -79,14 +79,15 @@ The brief's facts, checked against `main` at `fdae200c`.
    The table carries an owner column so user media on custom items is a later addition, not a rewrite.
 3. **Changed (decision 7):** a video is a YouTube video, attached by pasting its link in the moderation Library and played inside the app; we host no video at all.
    See "YouTube videos" below.
-4. Storage: pictures on R2 alone (below), one bucket created in Terraform, served from `media.sendtally.com`.
+4. Storage: pictures on R2 alone (below), a bucket per environment created in Terraform (`sendtally-media-staging`, `sendtally-media-production`), served from `media-staging.sendtally.com` and `media.sendtally.com`.
+   The staging one is there because pull request CI deploys the API to staging, and a Worker bound to a missing bucket does not deploy; so Terraform is applied before the pull request opens.
 5. Upload: pictures through the Worker, which validates and writes to R2 (below).
 6. Every picture is resized in the browser before upload to two files: 1600 px on the long side for detail and a 144 px square crop for thumbnails (44 pt at 3x).
 7. Each item has alt text (English only), an order and an optional credit line.
    Media saves as it uploads; an item without alt text stays hidden in the apps until it has some, so alt is required to publish rather than to upload.
 8. Delivery: immutable keys (`library/<itemType>/<itemId>/<uuid>-<size>.jpg`), `Cache-Control: public, max-age=31536000, immutable`, cached by Cloudflare on the media host.
 9. Where it shows (`TdmHero`): on workout, exercise and grip detail screens, media is a full-bleed 4:3 hero behind the top of the screen, and the content scrolls up and over it.
-   Several items swipe sideways inside that one frame with page dots, and the credit sits in small muted mono under the title area; there is no second media frame, so everything below the hero stays exactly today's anatomy.
+   Several items swipe sideways inside that one frame with page dots, and the credit sits bottom left on the picture in a small dark mono label (as on `TdmHero`), one line above the dots when there are several, because a credit is attribution and is never truncated (lead, 2026-11-16); there is no second media frame, so everything below the hero stays exactly today's anatomy.
    Blocks keep their header until ready-made blocks have media.
    An item without media keeps today's screen exactly (decision 5, extended to exercises and grips on the board).
    A workout without a picture keeps today's screen exactly.
@@ -180,10 +181,11 @@ ON CONFLICT (type, id) DO NOTHING`.
 
 ### Moderation writes
 
-- `PUT /v1/moderation/library/:type/:id` (name, translations, description, status), `POST .../media`, `PATCH /v1/moderation/library/media/:id` (alt, credit, position), `DELETE /v1/moderation/library/media/:id`.
+- `GET /v1/moderation/library/:type/:id` (the item's pictures, published or not, and its changes), `PUT /v1/moderation/library/:type/:id` (name, translations, description, status), `POST .../media`, `PATCH /v1/moderation/library/media/:id` (alt, credit, position), `DELETE /v1/moderation/library/media/:id`.
 - Each write appends to `library_changes` (type, id, changed_by, changed_at, before JSON, after JSON).
   Restore writes `before` back as a new change, so history is never rewritten.
-- A media delete is logged without a Restore, because the file is gone.
+- A picture write records the item's pictures (id, alt, credit, in order) before and after, so Restore puts back their text and order.
+  A deleted picture's change says Permanent instead of Restore, because the file is gone, and an added one offers no Restore, since undoing it is a delete.
 
 ### The `library-add` skill and its editor artifact
 
@@ -194,7 +196,7 @@ ON CONFLICT (type, id) DO NOTHING`.
 ## Data model for descriptions and media
 
 - `exercises.description` and `training_blocks.description`: nullable text, like `workouts.description`.
-- `library_media`: id, `item_type`, `item_id`, `owner_id` (null for the library; a user id later), `kind` (`picture | youtube`), `key` and `thumb_key` (pictures), `video_id` (YouTube), width, height, bytes, alt (a picture's alt text or a video's title), credit, position, `created_by`, `created_at`.
+- `library_media`: id, `item_type`, `item_id`, `key` and `thumb_key`, width, height, bytes, alt, credit, position, `created_by`, `created_at`; slice 4 adds `kind` and `video_id`, and user media adds `owner_id`, each in its own migration.
 - Account deletion: no change in version one, since media has no user owner.
   When user media arrives, `repo.deleteUserData` deletes rows and objects.
 
@@ -228,7 +230,7 @@ Images transformations stay unused, because a canvas makes the two picture sizes
 - A video is attached with `POST /v1/moderation/library/:type/:id/videos` and a pasted link; the Worker reduces it to an 11-character video id (watch, `youtu.be`, shorts, embed and `youtube-nocookie.com` forms) or rejects it with "Not a YouTube video link".
   Nothing is fetched from YouTube on attach.
   Deleting a video removes only the row, so Restore works for videos.
-- The upload row shows the browser resize to 1600 px, then a progress bar with Cancel.
+- The upload row shows the browser resize to 1600 px, then a moving bar with Cancel (a 1600 px JPEG uploads in well under a second, so the bar does not count bytes).
 
 ## Native cost
 
@@ -249,9 +251,10 @@ Built with what is installed, no new native module, over the air with pictures.
 
 - `ScreenFrame` gains an optional `hero` (a picture).
   Without it, nothing about the frame changes.
-- With it, the picture is absolutely positioned at the top of the screen, full width at 4:3, under the status bar (the top safe-area edge moves to the bar), and the `KeypadScrollView` content starts with a transparent spacer of the picture's height.
-- The content below the spacer has an opaque white background, so scrolling slides it up and over the still picture.
-  The picture never moves, so there is no scroll-driven animation to run or to switch off.
+- With it, the scroll view's content starts with the picture, full width at 4:3 plus the status bar, and the page follows on a white card that overlaps it by 30 with radius 24.
+  The picture is translated by the scroll offset on the native driver, so it holds still while the card slides up over it, and the horizontal pager inside it still takes swipes; a picture behind a transparent spacer would get none.
+  This is a translation only: no parallax and no fade, so reduced motion needs nothing different.
+- Once the card reaches the bar, the bar turns back into today's white bar (one state flip on scroll, no animation).
 - The bar (Back, Edit, ···) floats over the picture; its buttons sit on white circles, and a top gradient drawn with `react-native-svg` (installed) keeps the status bar legible, with `expo-status-bar` set to light while the picture is under it.
 - Several pictures swipe inside the hero with a horizontal paging `ScrollView` and page dots; the vertical scroll still covers the whole frame.
 - Pull to stretch is Deferred on the board.
@@ -265,8 +268,10 @@ Built with what is installed, no new native module, over the air with pictures.
 
 ## Media in the info sheet (decision 6)
 
-- `Sheet` (`@gorhom/bottom-sheet`, installed) gains an optional `hero`, rendered behind its `BottomSheetScrollView` the same way: absolute at the top, a transparent spacer, the description on white scrolling over it, clipped to the sheet's top radius.
+- `Sheet` (`@gorhom/bottom-sheet`, installed) gains an optional `hero`: the pictures across the sheet's top under a white handle, clipped to its radius, with the header and description on a white card over their bottom edge.
+  In the sheet the picture scrolls with the text, since the sheet's scroll view does not take a native-driver scroll listener; descriptions there are short, so it rarely scrolls at all.
 - A picture works over the air with React Native `Image`.
+- Web: `Sheet` takes the same `hero`, the picture bled to the dialog's edges above a white header card, at desktop and at 375.
 - A video shows as its poster with a play button; how it plays is in "YouTube videos" below, the same in the sheet as in the hero.
 
 ## YouTube videos (decisions 7 and 8)

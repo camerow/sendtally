@@ -58,7 +58,7 @@ export const hang = new Hono<AppEnv>()
       const { id } = c.req.valid("param");
       const { name, measure } = c.req.valid("json");
       const userId = c.get("userId");
-      const library = await repo.library(c.env.DB);
+      const library = await repo.library(c.env.DB, c.env.MEDIA_URL);
       if (isBuiltInGrip(id)) {
         const existing = await repo.getHangGrip(c.env.DB, userId, id);
         await repo.ensureUser(c.env.DB, userId);
@@ -109,7 +109,11 @@ export const hang = new Hono<AppEnv>()
     if (existing === null) {
       if (!isBuiltInGrip(id)) return c.json({ deleted: false });
       await repo.ensureUser(c.env.DB, userId);
-      await repo.saveHangGrip(c.env.DB, userId, builtInGripRow(await repo.library(c.env.DB), id));
+      await repo.saveHangGrip(
+        c.env.DB,
+        userId,
+        builtInGripRow(await repo.library(c.env.DB, c.env.MEDIA_URL), id)
+      );
     }
     await repo.hideHangGrip(c.env.DB, userId, id);
     return c.json({ deleted: true });

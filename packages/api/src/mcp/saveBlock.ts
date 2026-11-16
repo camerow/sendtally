@@ -31,7 +31,7 @@ export const saveBlock: ConnectorTool<typeof inputSchema> = {
       owned(await repo.getBlock(env.DB, userId, editing), "block", editing);
     const [mine, library] = await Promise.all([
       repo.listWorkouts(env.DB, userId),
-      repo.library(env.DB),
+      repo.library(env.DB, env.MEDIA_URL),
     ]);
     const named = [...mine, ...library.workouts.filter((w) => w.status === "active")];
     const planned = workouts.map((w) => {

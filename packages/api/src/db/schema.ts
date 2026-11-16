@@ -809,6 +809,29 @@ export const libraryItems = sqliteTable(
   (t) => [primaryKey({ columns: [t.type, t.id] })]
 );
 
+// Pictures on library items, in `position` order. A picture is two immutable R2 objects, `key`
+// (1600 px) and `thumb_key` (144 px square), under MEDIA. A row without alt text stays out of the
+// apps.
+export const libraryMedia = sqliteTable(
+  "library_media",
+  {
+    id: text("id").primaryKey(),
+    item_type: text("item_type", { enum: ["exercise", "grip", "workout"] }).notNull(),
+    item_id: text("item_id").notNull(),
+    key: text("key").notNull(),
+    thumb_key: text("thumb_key").notNull(),
+    width: integer("width").notNull(),
+    height: integer("height").notNull(),
+    bytes: integer("bytes").notNull(),
+    alt: text("alt").notNull().default(""),
+    credit: text("credit").notNull().default(""),
+    position: integer("position").notNull(),
+    created_by: text("created_by").notNull(),
+    created_at: text("created_at").notNull(),
+  },
+  (t) => [index("idx_library_media_item").on(t.item_type, t.item_id, t.position)]
+);
+
 // Every moderation edit to a library item, as the row before and after, so any one can be
 // restored by writing its `before` back as a new change.
 export const libraryChanges = sqliteTable(

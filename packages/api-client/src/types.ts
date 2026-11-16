@@ -40,6 +40,7 @@ export type {
   Item,
   ItemDone,
   LibraryEntry,
+  LibraryPicture,
   LibraryType,
   Loads,
   LogClimbInput,
@@ -86,10 +87,20 @@ type LibraryItemRoutes = Client["v1"]["moderation"]["library"][":type"][":id"];
 export type LibraryEdit = InferRequestType<LibraryItemRoutes["$put"]>["json"];
 
 /** One logged edit to a built-in, by whom, with the state before and after it. */
-export type LibraryChange = Extract<
-  Ok<LibraryItemRoutes["changes"]["$get"]>,
-  { changes: unknown }
->["changes"][number];
+type LibraryItemView = Extract<Ok<LibraryItemRoutes["$get"]>, { changes: unknown }>;
+
+export type LibraryChange = LibraryItemView["changes"][number];
+
+/** A picture on a built-in as moderation sees it, published or not. */
+export type LibraryMediaRow = LibraryItemView["media"][number];
+
+/** A picture ready to upload: its 1600 px file, its 144 px square, and the large one's size. */
+export type PictureUpload = InferRequestType<LibraryItemRoutes["media"]["$post"]>["form"];
+
+/** A moderator's edit to one picture. */
+export type MediaEdit = InferRequestType<
+  Client["v1"]["moderation"]["library"]["media"][":id"]["$patch"]
+>["json"];
 export type TrainingReminderSettings = ConnectionStatus["trainingReminders"];
 export type FirstRunStep = InferRequestType<
   Client["v1"]["preferences"]["first-run"]["$put"]

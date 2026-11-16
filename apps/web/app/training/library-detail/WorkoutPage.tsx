@@ -1,4 +1,5 @@
 import React from "react";
+import { libraryPictures } from "@sendtally/features/library";
 import { Link } from "react-router";
 import { activityItem, hangItem, ofWorkout, useActivities } from "@sendtally/features/activities";
 import { tallyMeasuresOf } from "@sendtally/features/exercises";
@@ -66,6 +67,7 @@ function Detail({
   return (
     <DetailFrame
       backTo={WORKOUTS_VIEW}
+      hero={libraryPictures("workout", workout.id)}
       action={
         <span className="detail-actions">
           {workout.source === "mine" && (

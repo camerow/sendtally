@@ -145,9 +145,10 @@ export async function syncSessionToStrava(
   });
 }
 
-async function gripName(db: D1Database, userId: string, gripId: string): Promise<string> {
-  if (isBuiltInGrip(gripId)) return builtInGripName(await repo.library(db), gripId);
-  return (await repo.getHangGrip(db, userId, gripId))?.name ?? "Custom grip";
+async function gripName(env: Env, userId: string, gripId: string): Promise<string> {
+  if (isBuiltInGrip(gripId))
+    return builtInGripName(await repo.library(env.DB, env.MEDIA_URL), gripId);
+  return (await repo.getHangGrip(env.DB, userId, gripId))?.name ?? "Custom grip";
 }
 
 // The hangboard postToStrava setting only decides whether a new session posts on
@@ -172,7 +173,7 @@ export async function syncHangSessionToStrava(
     activityId: row.strava_activity_id,
     activity: hangActivity(
       hangSessionOf(row),
-      await gripName(env.DB, userId, row.grip_id),
+      await gripName(env, userId, row.grip_id),
       settings.units
     ),
     markPending: () => repo.markHangPostPending(env.DB, userId, id),

@@ -14,7 +14,7 @@ export const deleteExercise: ConnectorTool<typeof inputSchema> = {
   inputSchema,
   annotations: { readOnlyHint: false, destructiveHint: true },
   run: async ({ id: exerciseId }, { env, userId }) => {
-    owned(true, "exercise", exerciseId, (await repo.library(env.DB)).exercises);
+    owned(true, "exercise", exerciseId, (await repo.library(env.DB, env.MEDIA_URL)).exercises);
     return { removed: owned(await remove(env.DB, userId, exerciseId), "exercise", exerciseId) };
   },
 };

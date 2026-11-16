@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { type Context, Hono, type MiddlewareHandler } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
@@ -15,6 +16,7 @@ import {
   saveManualSession,
   sessionResponse,
 } from "./sessions";
+import { MAX_PICTURE_BYTES, pictureProblem, type PictureType } from "@sendtally/core/hang";
 import { z } from "zod";
 import { auth } from "./auth";
 import type { Env } from "./bindings";
@@ -104,7 +106,17 @@ import { getPostHog, identifyUser } from "./lib/posthog";
 import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 import { RevenueCatClient, webhookBody, webhookUserIds } from "./lib/revenuecat";
-import { editedState, libraryEditBody, libraryParam } from "./lib/library";
+import {
+  editedMedia,
+  editedState,
+  libraryEditBody,
+  libraryParam,
+  mediaEditBody,
+  mediaStateOf,
+  pictureOf,
+  restoredMedia,
+  stateOf,
+} from "./lib/library";
 import { authorizeUrl, exchangeAuthCode, StravaUnauthorizedError } from "./lib/strava";
 import { sessionTagsBody, tagSlug } from "./lib/tags";
 
@@ -327,6 +339,50 @@ const requireRole =
   };
 
 const QUEUE_PAGE = 10;
+
+const PICTURE_CACHE = "public, max-age=31536000, immutable";
+
+// A picture at its limit, its thumbnail and the form around them; anything larger is refused
+// before the Worker buffers it.
+const MAX_UPLOAD_BYTES = MAX_PICTURE_BYTES + 1024 * 1024;
+
+const EXTENSIONS: Record<PictureType, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+
+const pictureForm = z.object({
+  picture: z.instanceof(File),
+  thumb: z.instanceof(File),
+  width: z.coerce.number().int().min(1).max(10000),
+  height: z.coerce.number().int().min(1).max(10000),
+});
+
+type Upload = { type: string; bytes: Uint8Array };
+
+const uploadOf = async (file: File): Promise<Upload> => ({
+  type: file.type,
+  bytes: new Uint8Array(await file.arrayBuffer()),
+});
+
+const putPicture = (env: Env, key: string, f: Upload): Promise<R2Object> =>
+  env.MEDIA.put(key, f.bytes, {
+    httpMetadata: { contentType: f.type, cacheControl: PICTURE_CACHE },
+  });
+
+/** A picture with its built-in and that built-in's pictures, for an edit to one of them. */
+const libraryMediaItem = async (db: D1Database, mediaId: string) => {
+  const row = await repo.libraryMediaRow(db, mediaId);
+  if (row === null) return null;
+  const entry = await repo.libraryEntry(db, row.item_type, row.item_id);
+  if (entry === null) return null;
+  return {
+    row,
+    entry,
+    before: mediaStateOf(await repo.libraryMediaOf(db, row.item_type, row.item_id)),
+  };
+};
 // ponytail: one page per queue, add a cursor when a queue outgrows it.
 const MODERATION_LIST_LIMIT = 100;
 
@@ -760,7 +816,21 @@ const app = new Hono<AppEnv>()
   // revalidated by its ETag on every read so a moderation edit shows on the next fetch.
   .get("/v1/library", etag(), async (c) => {
     c.header("Cache-Control", "public, no-cache");
-    return c.json({ library: await repo.library(c.env.DB) });
+    return c.json({ library: await repo.library(c.env.DB, c.env.MEDIA_URL) });
+  })
+
+  // Library pictures where nothing else serves the bucket: local development, whose MEDIA_URL
+  // points here. Deployed environments read them from the media host, so this answers 404 there.
+  .get("/media/*", async (c) => {
+    if (!c.env.MEDIA_URL.startsWith(`${new URL(c.req.url).origin}/media`)) return c.notFound();
+    const object = await c.env.MEDIA.get(c.req.path.slice("/media/".length));
+    if (object === null) return c.json({ error: "not found" }, 404);
+    return new Response(object.body, {
+      headers: {
+        "Content-Type": object.httpMetadata?.contentType ?? "application/octet-stream",
+        "Cache-Control": PICTURE_CACHE,
+      },
+    });
   })
 
   .use("/v1/*", async (c, next) => {
@@ -1475,18 +1545,130 @@ const app = new Hono<AppEnv>()
   )
 
   .get(
-    "/v1/moderation/library/:type/:id/changes",
+    "/v1/moderation/library/:type/:id",
     zValidator("param", libraryParam, invalidBody),
     async (c) => {
       const { type, id } = c.req.valid("param");
-      const changes = await repo.libraryChangesOf(c.env.DB, type, id);
-      const names = await auth.userNames([...new Set(changes.map((ch) => ch.changedBy))], c.env);
+      const [changes, media] = await Promise.all([
+        repo.libraryChangesOf(c.env.DB, type, id),
+        repo.libraryMediaOf(c.env.DB, type, id),
+      ]);
+      const ids = [...changes.map((ch) => ch.changedBy), ...media.map((m) => m.created_by)];
+      const names = await auth.userNames([...new Set(ids)], c.env);
+      const nameOf = (user: string): string => names.get(user) ?? "A moderator";
       return c.json({
+        media: media.map((m) => ({
+          ...pictureOf(m, c.env.MEDIA_URL),
+          id: m.id,
+          bytes: m.bytes,
+          createdBy: nameOf(m.created_by),
+          createdAt: m.created_at,
+        })),
         changes: changes.map(({ changedBy, ...change }) => ({
           ...change,
-          changedBy: names.get(changedBy) ?? "A moderator",
+          changedBy: nameOf(changedBy),
         })),
       });
+    }
+  )
+
+  .post(
+    "/v1/moderation/library/:type/:id/media",
+    bodyLimit({ maxSize: MAX_UPLOAD_BYTES, onError: (c) => c.json({ error: "Too large" }, 413) }),
+    zValidator("param", libraryParam, invalidBody),
+    zValidator("form", pictureForm, invalidBody),
+    async (c) => {
+      const { type, id } = c.req.valid("param");
+      const entry = await repo.libraryEntry(c.env.DB, type, id);
+      if (entry === null) return c.json({ error: "not found" }, 404);
+      const { picture, thumb, width, height } = c.req.valid("form");
+      const [full, small] = await Promise.all([picture, thumb].map(uploadOf));
+      for (const f of [full!, small!]) {
+        const problem = pictureProblem(f.type, f.bytes.length, f.bytes);
+        if (problem !== null) return c.json({ error: problem }, 400);
+      }
+      const mediaId = crypto.randomUUID();
+      const keyOf = (f: Upload, px: number): string =>
+        `library/${type}/${id}/${mediaId}-${px}.${EXTENSIONS[f.type as PictureType]}`;
+      const key = keyOf(full!, 1600);
+      const thumbKey = keyOf(small!, 144);
+      await Promise.all([putPicture(c.env, key, full!), putPicture(c.env, thumbKey, small!)]);
+      const before = mediaStateOf(await repo.libraryMediaOf(c.env.DB, type, id));
+      const row = {
+        id: mediaId,
+        item_type: type,
+        item_id: id,
+        key,
+        thumb_key: thumbKey,
+        width,
+        height,
+        bytes: full!.bytes.length,
+        position: before.length,
+        created_by: c.get("userId"),
+        created_at: new Date().toISOString(),
+      };
+      // A row that never lands must not leave its files behind with nothing naming them.
+      await repo
+        .saveLibraryEntry(
+          c.env.DB,
+          c.get("userId"),
+          entry,
+          { ...stateOf(entry), media: [...before, { id: mediaId, alt: "", credit: "" }] },
+          { before, writes: [repo.insertMedia(c.env.DB, row)] }
+        )
+        .catch(async (e: unknown) => {
+          await c.env.MEDIA.delete([key, thumbKey]);
+          throw e;
+        });
+      return c.json({ id: mediaId }, 201);
+    }
+  )
+
+  .patch(
+    "/v1/moderation/library/media/:id",
+    zValidator("param", z.object({ id: z.string().min(1).max(64) }), invalidBody),
+    zValidator("json", mediaEditBody, invalidBody),
+    async (c) => {
+      const found = await libraryMediaItem(c.env.DB, c.req.valid("param").id);
+      if (found === null) return c.json({ error: "not found" }, 404);
+      const { row, entry, before } = found;
+      const after = editedMedia(before, row.id, c.req.valid("json"));
+      await repo.saveLibraryEntry(
+        c.env.DB,
+        c.get("userId"),
+        entry,
+        { ...stateOf(entry), media: after },
+        {
+          before,
+          writes: [],
+        }
+      );
+      return c.json({ id: row.id });
+    }
+  )
+
+  // The files go first, so a row never names a file that is gone; a failed row delete after
+  // them leaves a picture that no longer loads, which the moderator can delete again.
+  .delete(
+    "/v1/moderation/library/media/:id",
+    zValidator("param", z.object({ id: z.string().min(1).max(64) }), invalidBody),
+    async (c) => {
+      const found = await libraryMediaItem(c.env.DB, c.req.valid("param").id);
+      if (found === null) return c.json({ error: "not found" }, 404);
+      const { row, entry, before } = found;
+      await c.env.MEDIA.delete([row.key, row.thumb_key]);
+      const after = before.filter((m) => m.id !== row.id);
+      await repo.saveLibraryEntry(
+        c.env.DB,
+        c.get("userId"),
+        entry,
+        { ...stateOf(entry), media: after },
+        {
+          before,
+          writes: [repo.deleteMedia(c.env.DB, row.id)],
+        }
+      );
+      return c.json({ id: row.id });
     }
   )
 
@@ -1498,8 +1680,20 @@ const app = new Hono<AppEnv>()
       if (change === null) return c.json({ error: "not found" }, 404);
       const before = await repo.libraryEntry(c.env.DB, change.type, change.itemId);
       if (before === null) return c.json({ error: "not found" }, 404);
+      const { media: restored, ...text } = change.before;
+      if (restored === undefined)
+        return c.json({
+          entry: await repo.saveLibraryEntry(c.env.DB, c.get("userId"), before, text),
+        });
+      const media = mediaStateOf(await repo.libraryMediaOf(c.env.DB, change.type, change.itemId));
       return c.json({
-        entry: await repo.saveLibraryEntry(c.env.DB, c.get("userId"), before, change.before),
+        entry: await repo.saveLibraryEntry(
+          c.env.DB,
+          c.get("userId"),
+          before,
+          { ...text, media: restoredMedia(media, restored) },
+          { before: media, writes: [] }
+        ),
       });
     }
   )
@@ -2121,6 +2315,7 @@ export type {
   BuiltInLibrary,
   BuiltInWorkoutEntry,
   LibraryEntry,
+  LibraryPicture,
   LibraryType,
 } from "@sendtally/core/hang";
 export type {

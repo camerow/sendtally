@@ -1,4 +1,5 @@
 import React from "react";
+import { workoutAbout } from "@sendtally/features/exercises";
 import { Text, View } from "react-native";
 import { t } from "@sendtally/features/i18n";
 import { LIVE_HEADER, MinimiseButton } from "../../../components/MinimiseButton";
@@ -41,7 +42,11 @@ export function TimerHeader({
           >
             {name}
           </Text>
-          <AboutButton about={workout} label={t("workouts.about")} color={ON_DARK_SOFT} />
+          <AboutButton
+            about={workout && workoutAbout(workout)}
+            label={t("workouts.about")}
+            color={ON_DARK_SOFT}
+          />
         </View>
         <Label small color={ON_DARK_SOFT}>
           {meta}

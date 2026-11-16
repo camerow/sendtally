@@ -1,5 +1,5 @@
 import React from "react";
-import type { WorkoutKind } from "@sendtally/core/hang";
+import type { LibraryPicture, WorkoutKind } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { CategoryRow } from "../components/CategoryRow";
@@ -11,6 +11,8 @@ export type AddWorkoutRowProps = {
   kind: WorkoutKind;
   name: string;
   meta: string | null;
+  /** The built-in's first picture, as its tile. */
+  picture?: LibraryPicture;
   to: string;
   state: AddState;
   thereLabel: string;
@@ -23,6 +25,7 @@ export function AddWorkoutRow({
   kind,
   name,
   meta,
+  picture,
   to,
   state,
   thereLabel,
@@ -32,7 +35,7 @@ export function AddWorkoutRow({
   return (
     <div className="add-row">
       <div className="add-row-main">
-        <CategoryRow kind={kind} name={name} meta={meta} to={to} />
+        <CategoryRow kind={kind} name={name} meta={meta} picture={picture} to={to} />
       </div>
       {state === "there" ? (
         <span className="add-row-there">{thereLabel}</span>
