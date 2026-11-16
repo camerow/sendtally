@@ -21,9 +21,13 @@ const clerkIssuer = (publishableKey: string): string =>
   `https://${atob(publishableKey.split("_")[2] ?? "").slice(0, -1)}`;
 
 // Arguments, results, error text and the assistant's stated intent can all carry
-// the user's logbook, which never goes to PostHog. A missing-capability report
-// is the exception: its intent is the assistant's description of what it lacked.
+// the user's logbook, which never goes to PostHog. The intent kept is the tool's
+// own title, or on a missing-capability report the assistant's description of what it lacked.
 const LOGBOOK_PROPERTIES = ["$mcp_parameters", "$mcp_response", "$mcp_error_message"];
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const TITLES = new Map(tools.map((t) => [t.name, t.title]));
 
 const RATE_LIMITED = "Too many requests from this connector. Wait a minute, then try again.";
 
@@ -37,12 +41,17 @@ function serverFor(c: Context<AppEnv>, user: ConnectorUser, posthog: PostHog | n
     instrument(server, posthog, {
       identify: { distinctId: user.userId },
       context: false,
-      enableConversationId: false,
       enableExceptionAutocapture: false,
       reportMissing: true,
+      intentFallback: ({ params }) => TITLES.get(params?.name ?? "") ?? `Invoking ${params?.name}`,
       beforeSend: (event) => {
         for (const key of LOGBOOK_PROPERTIES) delete event.properties[key];
-        if (event.event !== "$mcp_missing_capability") delete event.properties.$mcp_intent;
+        const keepIntent =
+          event.event === "$mcp_missing_capability" ||
+          event.properties.$mcp_intent_source === "inferred";
+        if (!keepIntent) delete event.properties.$mcp_intent;
+        if (!UUID.test(String(event.properties.$mcp_conversation_id ?? "")))
+          delete event.properties.$mcp_conversation_id;
         return event;
       },
     });
