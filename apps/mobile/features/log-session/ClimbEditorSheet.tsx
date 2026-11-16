@@ -20,7 +20,7 @@ import {
   type GradePrefs,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { DateTimeField } from "../../components/DateTimeField";
 import { Sheet } from "../../components/Sheet";
@@ -196,7 +196,7 @@ function ProjectRow({
         borderWidth: 1,
         borderColor: on ? colors.gold : colors.lineOnLightStrong,
         backgroundColor: on ? "rgba(249,220,92,0.22)" : "transparent",
-        opacity: enabled ? 1 : 0.4,
+        opacity: enabled ? 1 : disabledOpacity,
       })}
     >
       <Icon
@@ -407,7 +407,7 @@ export function ClimbEditorSheet({
                 ...primaryButton,
                 flex: 1,
                 backgroundColor: colors.gold,
-                opacity: saving ? 0.6 : 1,
+                opacity: saving ? disabledOpacity : 1,
               })}
             >
               <Text style={{ ...primaryButtonLabel, color: colors.gunmetal }}>
@@ -707,7 +707,7 @@ export function ClimbEditorSheet({
                 paddingVertical: 11,
                 minHeight: 72,
                 textAlignVertical: "top",
-                opacity: named ? 1 : 0.45,
+                opacity: named ? 1 : disabledOpacity,
               }}
             />
             {named && (

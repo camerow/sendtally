@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { colors, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, radius } from "@sendtally/design/tokens";
 
 /**
  * The look of a switch, drawn by hand: the native one changed size in iOS 26 and no longer fits
@@ -22,7 +22,7 @@ export function SwitchTrack({
         padding: 3,
         justifyContent: "center",
         backgroundColor: checked ? colors.azureInk : "rgba(64,63,76,0.22)",
-        opacity: disabled ? 0.55 : 1,
+        opacity: disabled ? disabledOpacity : 1,
       }}
     >
       <View

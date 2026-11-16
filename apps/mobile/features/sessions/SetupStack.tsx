@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
 import { bodyText, monoMuted, sectionLabel } from "../../lib/styles";
 
@@ -72,7 +72,7 @@ export function SetupStack({
                   borderRadius: radius.control,
                   borderWidth: 1,
                   borderColor: colors.lineOnLightStrong,
-                  opacity: card.busy === true ? 0.55 : 1,
+                  opacity: card.busy === true ? disabledOpacity : 1,
                 })}
               >
                 <Text

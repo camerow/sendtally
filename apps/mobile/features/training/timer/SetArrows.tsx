@@ -7,6 +7,7 @@ import { HangIcon } from "../components/HangIcon";
 import { ON_DARK } from "@sendtally/features/workouts";
 import { type } from "../type";
 import type { Timer } from "./useTimer";
+import { disabledOpacity } from "@sendtally/design/tokens";
 
 export type SetArrowsProps<P extends Phase> = { timer: Timer<P>; label: string };
 
@@ -36,7 +37,7 @@ function Arrow({
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "rgba(255,255,255,0.08)",
-        opacity: enabled ? 1 : 0.35,
+        opacity: enabled ? 1 : disabledOpacity,
       })}
     >
       <HangIcon name={icon} color={ON_DARK} size={20} strokeWidth={2.4} />

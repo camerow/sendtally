@@ -1,7 +1,7 @@
 import React from "react";
 import { Keyboard, Linking, Pressable, Text, View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts } from "@sendtally/design/tokens";
 import { WEB_URL } from "../../lib/config";
 import { press } from "../../lib/press";
 import { primaryButton, primaryButtonLabel } from "../../lib/styles";
@@ -53,7 +53,7 @@ export function AreaSubmit({
           Keyboard.dismiss();
           onPress();
         }}
-        style={press({ ...primaryButton, opacity: busy ? 0.45 : 1 })}
+        style={press({ ...primaryButton, opacity: busy ? disabledOpacity : 1 })}
       >
         <Text style={primaryButtonLabel}>{busy ? t("common.saving") : label}</Text>
       </Pressable>

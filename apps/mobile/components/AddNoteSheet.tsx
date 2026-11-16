@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { TextInput } from "./TextInput";
 import { t } from "@sendtally/features/i18n";
 import { localDate } from "@sendtally/features/log-session";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { DateTimeField } from "./DateTimeField";
 import { Sheet } from "./Sheet";
 import { confirmDestructive } from "../lib/confirmDestructive";
@@ -119,7 +119,7 @@ export function AddNoteSheet({
           onPress={save}
           disabled={draft.trim() === ""}
           accessibilityRole="button"
-          style={{ ...primaryButton, opacity: draft.trim() === "" ? 0.45 : 1 }}
+          style={{ ...primaryButton, opacity: draft.trim() === "" ? disabledOpacity : 1 }}
         >
           <Text style={primaryButtonLabel}>{t("common.save")}</Text>
         </Pressable>

@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { DELETE_CONFIRMATION_WORD, type DeleteAccountFeature } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../../lib/press";
 import {
   bodyText,
@@ -73,7 +73,10 @@ export function DeleteAccountSection({ deletion }: DeleteAccountSectionProps): R
         onPress={deletion.confirm}
         disabled={!deletion.canConfirm || busy}
         accessibilityRole="button"
-        style={press({ ...dangerButton, opacity: !deletion.canConfirm || busy ? 0.5 : 1 })}
+        style={press({
+          ...dangerButton,
+          opacity: !deletion.canConfirm || busy ? disabledOpacity : 1,
+        })}
       >
         <Text style={dangerButtonLabel}>
           {busy ? t("common.deleting") : t("account.deleteMyAccount")}

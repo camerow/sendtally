@@ -6,6 +6,7 @@ import { TagPicker } from "../../components/TagPicker";
 import { bodyText, monoMuted, underlineButton } from "../../settings/components/styles";
 import { select } from "../styles";
 import { sectionLabel } from "../../components/styles";
+import { disabledOpacity } from "@sendtally/design/tokens";
 
 const linkButton: React.CSSProperties = { ...underlineButton, alignSelf: "center" };
 
@@ -82,7 +83,7 @@ export function SessionTagBar({
           {t("import.selectedCount", { count: selectedCount })}
         </span>
       </div>
-      <div style={{ opacity: selectedCount === 0 ? 0.5 : 1 }}>
+      <div style={{ opacity: selectedCount === 0 ? disabledOpacity : 1 }}>
         <TagPicker
           tags={tags}
           suggestions={suggestions}

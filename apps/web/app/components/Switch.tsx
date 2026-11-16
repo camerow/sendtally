@@ -1,4 +1,5 @@
 import React from "react";
+import { disabledOpacity } from "@sendtally/design/tokens";
 
 export type SwitchProps = {
   checked: boolean;
@@ -33,7 +34,7 @@ export function Switch({
         borderRadius: "var(--radius-pill)",
         background: checked ? "var(--bs-azure-ink)" : "rgba(64,63,76,0.22)",
         cursor: disabled ? "default" : "pointer",
-        opacity: disabled ? 0.55 : 1,
+        opacity: disabled ? disabledOpacity : 1,
         transition: "background var(--motion-fast)",
       }}
     >

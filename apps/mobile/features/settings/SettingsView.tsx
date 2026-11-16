@@ -5,7 +5,7 @@ import type { SettingsVM, StravaPostingFeature } from "@sendtally/features/setti
 import type { StravaConnectFeature } from "./useStravaConnect";
 import type { Discipline, GradePrefs, GradeScale } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { pressRow } from "../../lib/press";
@@ -125,7 +125,7 @@ export function SettingsView({
                   borderWidth: 1,
                   borderColor: colors.lineOnLightStrong,
                   backgroundColor: colors.white,
-                  opacity: connect.busy ? 0.55 : 1,
+                  opacity: connect.busy ? disabledOpacity : 1,
                 })}
               >
                 <Text

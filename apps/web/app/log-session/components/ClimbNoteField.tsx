@@ -1,6 +1,7 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
 import { inputStyle } from "../../components/styles";
+import { disabledOpacity } from "@sendtally/design/tokens";
 
 export type ClimbNoteFieldProps = {
   id?: string;
@@ -35,7 +36,7 @@ export function ClimbNoteField({
           fontFamily: "var(--font-sans)",
           lineHeight: 1.5,
           resize: "vertical",
-          ...(disabled ? { opacity: 0.45, cursor: "not-allowed", resize: "none" } : {}),
+          ...(disabled ? { opacity: disabledOpacity, cursor: "not-allowed", resize: "none" } : {}),
         }}
       />
       {!disabled && (

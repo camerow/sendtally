@@ -19,7 +19,7 @@ import {
   useEntryComposer,
   type EntryDraft,
 } from "@sendtally/features/journal";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { BackButton } from "../../components/BackButton";
 import { DateTimeField } from "../../components/DateTimeField";
 import { press } from "../../lib/press";
@@ -246,7 +246,10 @@ export function EntryComposer({
         <Pressable
           onPress={save}
           disabled={saving || overlap !== null}
-          style={press({ ...primaryButton, opacity: saving || overlap !== null ? 0.6 : 1 })}
+          style={press({
+            ...primaryButton,
+            opacity: saving || overlap !== null ? disabledOpacity : 1,
+          })}
         >
           <Text style={primaryButtonLabel}>{saving ? t("common.saving") : saveLabel}</Text>
         </Pressable>

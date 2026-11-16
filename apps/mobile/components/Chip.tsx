@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { press, tap } from "../lib/press";
 import { Icon, type IconName } from "./Icon";
@@ -75,7 +75,7 @@ export function Chip({
           : dashedBorder
             ? "rgba(64,63,76,0.3)"
             : "rgba(64,63,76,0.18)",
-        opacity: disabled ? 0.5 : 1,
+        opacity: disabled ? disabledOpacity : 1,
       })}
     >
       {locked && <Lock color={textColor} />}
