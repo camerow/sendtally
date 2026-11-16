@@ -108,7 +108,6 @@ export const exerciseWorkout =
       return null;
     }
     const id = newId();
-    // The library holds the new workout once the save settles, or the save failed.
     void save(id, wrapperDraft(e, picked, newId)).then(release, release);
     return id;
   };
