@@ -32,8 +32,7 @@ export function WorkloadSheet({
   onClose: () => void;
 }): React.ReactElement | null {
   const s = w.sheet;
-  const top = Math.max(s.average, ...s.weeks.map((x) => x.load), 1);
-  const averageAt = (s.average / top) * BAR;
+  const averageAt = s.averageAt * BAR;
   return (
     <Sheet open={open} title={t("statistics.workloadTitle")} onClose={onClose} cancel={false}>
       <div className="workload-sheet">
@@ -53,13 +52,13 @@ export function WorkloadSheet({
                     ? "workload-bar-fill workload-bar-now"
                     : "workload-bar-fill"
                 }
-                style={{ height: Math.max(2, (week.load / top) * BAR) }}
+                style={{ height: Math.max(2, week.height * BAR) }}
               />
             ))}
-            {s.average > 0 && <div className="workload-average" style={{ bottom: averageAt }} />}
+            {s.averageAt > 0 && <div className="workload-average" style={{ bottom: averageAt }} />}
           </div>
           <div className="workload-gutter" style={{ height: BAR }}>
-            {s.average > 0 && (
+            {s.averageAt > 0 && (
               <span className="workload-average-label" style={{ bottom: averageAt - 7 }}>
                 {s.averageLabel}
               </span>

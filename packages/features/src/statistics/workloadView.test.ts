@@ -25,6 +25,15 @@ describe("workloadVM", () => {
     expect(vm.sheet.footer).toBe("1,080 ÷ 1,080 = 1.00 · Sweet spot");
     expect(vm.sheet.tiles.map((x) => x.note)).toEqual(["Nov 10 to Nov 16", "Oct 20 to Nov 16 ÷ 4"]);
     expect(vm.sheet.weeks.map((w) => w.load)).toEqual([1080, 1080, 1080, 1080]);
+    expect(vm.sheet.weeks.map((w) => w.height)).toEqual([1, 1, 1, 1]);
+    expect(vm.sheet.averageAt).toBe(1);
+  });
+
+  it("scales the bars and the average line against the tallest of them", () => {
+    const vm = workloadVM([...steady, rec(0), rec(1), rec(2)], "7d", now);
+    expect(vm.sheet.weeks.map((w) => w.height)).toEqual([0.5, 0.5, 0.5, 1]);
+    expect(vm.sheet.averageAt).toBeCloseTo(1350 / 2160);
+    expect(workloadVM([], "7d", now).sheet).toMatchObject({ averageAt: 0 });
   });
 
   it("plots a point a day on 7D and 1M and a week beyond", () => {

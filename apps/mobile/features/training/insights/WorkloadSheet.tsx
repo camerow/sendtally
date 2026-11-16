@@ -53,8 +53,7 @@ export function WorkloadSheet({
   onClose: () => void;
 }): React.ReactElement {
   const s = w.sheet;
-  const top = Math.max(s.average, ...s.weeks.map((x) => x.load), 1);
-  const averageAt = (s.average / top) * BAR;
+  const averageAt = s.averageAt * BAR;
   return (
     <Sheet visible={visible} onClose={onClose} closeLabel={t("common.close")}>
       <View style={{ paddingHorizontal: 18, gap: 14 }}>
@@ -77,7 +76,7 @@ export function WorkloadSheet({
                     key={week.label}
                     style={{
                       flex: 1,
-                      height: Math.max(2, (week.load / top) * BAR),
+                      height: Math.max(2, week.height * BAR),
                       borderTopLeftRadius: 6,
                       borderTopRightRadius: 6,
                       borderBottomLeftRadius: 2,
@@ -89,7 +88,7 @@ export function WorkloadSheet({
                   />
                 );
               })}
-              {s.average > 0 && (
+              {s.averageAt > 0 && (
                 <View
                   pointerEvents="none"
                   style={{
@@ -115,7 +114,7 @@ export function WorkloadSheet({
               )}
             </View>
             <View style={{ width: GUTTER }}>
-              {s.average > 0 && (
+              {s.averageAt > 0 && (
                 <Text
                   style={[
                     type.monoBold,

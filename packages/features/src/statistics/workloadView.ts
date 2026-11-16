@@ -109,7 +109,8 @@ export type WorkloadLeftOutVM = { ref: DoneRef; detail: string };
 /** A load with the days it covers and, when too much was left out, how much was counted. */
 export type WorkloadTileVM = { label: string; value: string; note: string; counted: string | null };
 
-export type WorkloadWeekVM = { label: string; load: number; value: string };
+/** One week's bar: its load, and its height from 0 to 1 against the tallest bar or the average. */
+export type WorkloadWeekVM = { label: string; load: number; value: string; height: number };
 
 export type WorkloadVM = {
   state: WorkloadState;
@@ -135,7 +136,8 @@ export type WorkloadVM = {
     /** The division and zone, why there is no zone, or why there is no ratio yet. */
     footer: string;
     weeks: WorkloadWeekVM[];
-    average: number;
+    /** Where the dashed average sits, 0 to 1 on the same scale as the bars' heights. */
+    averageAt: number;
     /** The dashed average line's own label, "1,480". */
     averageLabel: string;
     leftOut: WorkloadLeftOutVM[];
@@ -242,6 +244,7 @@ export function workloadVM(done: readonly Done[], range: TrendRange, now: Date):
   const lastWeek = done.filter((d) => d.at >= today - 6 * DAY_MS && d.at < today + DAY_MS);
   const left = lastWeek.filter((d) => loadOf(d) === null).sort((a, b) => b.at - a.at);
   const said = sentence(w, zone);
+  const top = Math.max(w.chronic, ...w.weeks, 1);
   return {
     state: w.state,
     ratio: zone === null || w.ratio === null ? null : ratioText(w.ratio),
@@ -264,8 +267,9 @@ export function workloadVM(done: readonly Done[], range: TrendRange, now: Date):
         label: i === 3 ? t("statistics.workloadLast7") : shortDay(today - (27 - i * 7) * DAY_MS),
         load: n,
         value: load(n),
+        height: n / top,
       })),
-      average: w.chronic,
+      averageAt: w.chronic / top,
       averageLabel: load(w.chronic),
       leftOut: left.map((d) => ({
         ref: d.ref,
