@@ -119,12 +119,12 @@ describe("Sets player", () => {
     await fireEvent.press(screen.getByLabelText("Back squat, set 2"));
     expect(screen.queryByLabelText("Rest, 1:00 left")).toBeNull();
     expect(screen.getByLabelText("Back squat, 2 of 2 sets")).toBeTruthy();
-    expect(screen.getByText("Next: Row")).toBeTruthy();
+    expect(screen.queryByTestId("rest-next")?.props.children).toBe("Row");
     expect(
       readingOrder("Back squat, 2 of 2 sets", "Rest, 2:00 left", "Row, set 1", "Rest 2:00")
     ).toEqual(["Back squat, 2 of 2 sets", "Rest, 2:00 left", "Row, set 1", "Rest 2:00"]);
     await advance(120_000);
-    expect(screen.queryByText("Next: Row")).toBeNull();
+    expect(screen.queryByTestId("rest-next")).toBeNull();
     expect(screen.getAllByText("Rest 2:00")).toHaveLength(2);
     expect(screen.getByLabelText("Row, set 1 · Weight").props.accessibilityValue).toEqual({
       text: "60 kg",

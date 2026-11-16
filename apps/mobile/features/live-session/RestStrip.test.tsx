@@ -36,12 +36,12 @@ describe("Rest strip", () => {
     expect(screen.queryByText("Rest 1:30")).toBeNull();
     await act(async () => liveRun.writeRest(restAfter("0:0", 90, null, Date.now())));
     expect(screen.getByText("Rest 1:30")).toBeTruthy();
-    expect(screen.getByText("· then set 2")).toBeTruthy();
+    expect(screen.getByText("· Set 2")).toBeTruthy();
     await advance(48_000);
     expect(screen.getByLabelText("Rest, 0:42 left")).toBeTruthy();
     await advance(42_000);
     expect(screen.queryByText("Rest 0:00")).toBeNull();
-    expect(screen.queryByText("· then set 2")).toBeNull();
+    expect(screen.queryByText("· Set 2")).toBeNull();
   });
 
   it("names the exercise a rest between exercises comes before", async () => {
@@ -50,6 +50,6 @@ describe("Rest strip", () => {
     );
     await render(<RestStrip />);
     expect(screen.getByText("Rest 2:30")).toBeTruthy();
-    expect(screen.getByText("· then Romanian deadlift")).toBeTruthy();
+    expect(screen.getByText("· Romanian deadlift")).toBeTruthy();
   });
 });

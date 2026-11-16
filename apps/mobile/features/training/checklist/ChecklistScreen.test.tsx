@@ -41,21 +41,22 @@ describe("Checklist player", () => {
     await fireEvent.press(screen.getByLabelText("Minimize"));
     expect(router.back).toHaveBeenCalled();
     const order = (): string[] =>
-      readingOrder("Cat-cow, 2 sets", "Rest 1:00", "Next: Wrist circles", "Wrist circles, 1 set");
+      readingOrder("Cat-cow, 2 sets", "Rest 1:00", "Rest, 1:00 left", "Wrist circles, 1 set");
     expect(order()).toEqual(["Cat-cow, 2 sets", "Rest 1:00", "Wrist circles, 1 set", "Rest 1:00"]);
     const catCow = screen.getByLabelText("Cat-cow, 2 sets");
     await fireEvent.press(catCow);
     expect(catCow.props.accessibilityState).toEqual({ checked: true });
     expect(order()).toEqual([
       "Cat-cow, 2 sets",
-      "Next: Wrist circles",
+      "Rest, 1:00 left",
       "Wrist circles, 1 set",
       "Rest 1:00",
     ]);
+    expect(screen.queryByTestId("rest-next")?.props.children).toBe("Wrist circles");
     await act(async () => {
       jest.advanceTimersByTime(4 * 60_000);
     });
-    expect(screen.queryByText("Next: Wrist circles")).toBeNull();
+    expect(screen.queryByTestId("rest-next")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Wrist circles, 1 set"));
     await fireEvent.press(screen.getByLabelText("Wrist circles, 1 set"));
 
@@ -109,7 +110,7 @@ describe("Checklist player", () => {
       jest.advanceTimersByTime(60_000);
     });
     expect(screen.getByLabelText(/^Pigeon, /).props.accessibilityState).toEqual({ checked: true });
-    expect(screen.getByText("Next: Cat-cow")).toBeTruthy();
+    expect(screen.queryByTestId("rest-next")?.props.children).toBe("Cat-cow");
     jest.useRealTimers();
   });
 });

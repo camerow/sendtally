@@ -39,7 +39,7 @@ describe("a rest's row", () => {
     expect(restRowVM(rest, 45)).toEqual({
       clock: "0:45",
       share: 0.5,
-      next: "Next: Ring row",
+      next: "Ring row",
       label: "Rest, 0:45 left",
     });
   });
@@ -51,10 +51,10 @@ describe("the live bar's strip", () => {
     expect(stripVM(rest, 90, null, 0)).toMatchObject({
       kind: "rest",
       text: "Rest 1:30",
-      then: "· then set 2",
+      then: "· Set 2",
       share: 1,
     });
-    expect(stripVM({ ...rest, at: "after:0", next: "Row" }, 45, null, 0)?.then).toBe("· then Row");
+    expect(stripVM({ ...rest, at: "after:0", next: "Row" }, 45, null, 0)?.then).toBe("· Row");
     expect(stripVM(rest, 0, null, 0)).toBeNull();
   });
 });

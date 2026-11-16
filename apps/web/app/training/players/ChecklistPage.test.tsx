@@ -94,7 +94,7 @@ describe("Checklist player", () => {
       "Cat cow"
     );
     expect(byLabel("Rest, 0:30 left")).not.toBeNull();
-    expect(container.querySelector(".player-row-next")?.textContent).toBe("Next: Deep squat hold");
+    expect(container.querySelector(".player-row-next")?.textContent).toBe("Deep squat hold");
     expect(byLabel("Start Deep squat hold, 0:20")).not.toBeNull();
     act(() =>
       Array.from(container.querySelectorAll("button"))
