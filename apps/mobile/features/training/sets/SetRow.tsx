@@ -68,15 +68,20 @@ export function SetRow({
       </Text>
       <View style={[SET_COLUMNS.target, { gap: 2 }]}>
         <Text
-          numberOfLines={rpe === undefined ? 1 : 2}
+          numberOfLines={1}
           adjustsFontSizeToFit
-          minimumFontScale={0.75}
+          minimumFontScale={0.7}
           style={[type.mono, { fontSize: 14, color: colors.textSecondary }]}
         >
           {setChip(target, unit, repsMax) || "-"}
         </Text>
         {last !== "" && (
-          <Text style={[type.mono, { fontSize: 11, color: colors.textMuted }]}>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+            style={[type.mono, { fontSize: 11, color: colors.textMuted }]}
+          >
             {t("activities.previousSet", { set: last })}
           </Text>
         )}

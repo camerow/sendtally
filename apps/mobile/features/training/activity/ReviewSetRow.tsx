@@ -110,6 +110,9 @@ export function ReviewSetRow({
         </Text>
         <View style={[SET_COLUMNS.target, { gap: 2 }]}>
           <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
             style={[
               type.mono,
               { fontSize: 14, color: on ? colors.textSecondary : colors.textMuted },
