@@ -32,14 +32,18 @@ export function EditorBar({
           {cancelLabel}
         </button>
         <span className="editor-bar-title">{title}</span>
-        <button
-          type="button"
-          className={solid ? "editor-bar-save editor-bar-save--solid" : "editor-bar-save"}
-          disabled={saveDisabled}
-          onClick={onSave}
-        >
-          {t("common.save")}
-        </button>
+        {onSave === undefined ? (
+          <span />
+        ) : (
+          <button
+            type="button"
+            className={solid ? "editor-bar-save editor-bar-save--solid" : "editor-bar-save"}
+            disabled={saveDisabled}
+            onClick={onSave}
+          >
+            {t("common.save")}
+          </button>
+        )}
       </div>
     </>
   );

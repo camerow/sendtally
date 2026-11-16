@@ -1272,10 +1272,6 @@
   color: var(--bs-gunmetal);
 }
 
-.detail-back--danger {
-  color: var(--bs-watermelon-ink);
-}
-
 .detail-back-chevron {
   display: inline-flex;
   transform: rotate(180deg);
