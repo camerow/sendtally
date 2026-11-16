@@ -55,8 +55,6 @@ export const activities = {
   "activities.holdLeft": "Gauche",
   "activities.holdRight": "Droite",
   "activities.holdSwitch": "Changez",
-  "activities.restThen": "puis {name}",
-  "activities.restThenSet": "puis série {set}",
   "activities.setsDoneOf_one": "{done} série sur {count}",
   "activities.setsDoneOf_other": "{done} séries sur {count}",
   "activities.doneForToday": "Fini pour aujourd’hui",

@@ -45,7 +45,7 @@ function Strip({
 }): React.ReactElement {
   return (
     <View
-      {...(label !== undefined && { accessibilityLabel: label })}
+      {...(label !== undefined && { accessible: true, accessibilityLabel: label })}
       style={{
         height: 24,
         flexDirection: "row",

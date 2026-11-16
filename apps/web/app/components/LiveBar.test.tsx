@@ -61,6 +61,6 @@ describe("LiveBar", () => {
     expect(container.querySelector(".rest-strip")).toBeNull();
     act(() => store.writeRest(restAfter("0:0", 90, null, Date.now())));
     expect(container.querySelector(".rest-strip-text")?.textContent).toBe("Rest 1:30");
-    expect(container.querySelector(".rest-strip-then")?.textContent).toBe("· then set 2");
+    expect(container.querySelector(".rest-strip-then")?.textContent).toBe("· Set 2");
   });
 });

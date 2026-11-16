@@ -45,7 +45,14 @@ export function holdRowVM(hold: Hold, now: number): HoldRowVM {
   };
 }
 
-export type RestRowVM = { clock: string; share: number; next: string | null; label: string };
+export type RestRowVM = {
+  clock: string;
+  share: number;
+  next: string | null;
+  /** What comes next as a screen reader says it, since the name alone sounds like its row. */
+  nextLabel: string | null;
+  label: string;
+};
 
 /** A running rest's row: what is left, how full its fill still is, and what comes next. */
 export function restRowVM(rest: Rest, left: number): RestRowVM {
@@ -53,7 +60,8 @@ export function restRowVM(rest: Rest, left: number): RestRowVM {
   return {
     clock,
     share: Math.min(1, left / rest.seconds),
-    next: rest.next === null ? null : t("activities.restNext", { name: rest.next }),
+    next: rest.next,
+    nextLabel: rest.next === null ? null : t("activities.restNext", { name: rest.next }),
     label: t("activities.restLeft", { time: clock }),
   };
 }
@@ -62,17 +70,17 @@ export type StripVM = {
   kind: "rest" | "hold";
   /** "Rest 1:30", or the hold's name and its clock. */
   text: string;
-  /** "· then set 2", "· of 0:30". */
+  /** "· Set 2", "· of 0:30". */
   then: string | null;
   share: number;
   label: string | null;
 };
 
 /** What a rest is before: the exercise it names, else the set after the one it sits under. */
-const restThen = (rest: Rest): string | null => {
-  if (rest.next !== null) return t("activities.restThen", { name: rest.next });
+const restBefore = (rest: Rest): string | null => {
+  if (rest.next !== null) return rest.next;
   const set = /^\d+:(\d+)$/.exec(rest.at)?.[1];
-  return set === undefined ? null : t("activities.restThenSet", { set: Number(set) + 2 });
+  return set === undefined ? null : t("summary.setN", { n: Number(set) + 2 });
 };
 
 /**
@@ -98,12 +106,15 @@ export function stripVM(
     };
   }
   if (rest === null || left === 0) return null;
-  const then = restThen(rest);
+  const then = restBefore(rest);
   return {
     kind: "rest",
     text: t("activities.restPreview", { time: elapsedClock(left) }),
     then: then === null ? null : `· ${then}`,
     share: left / rest.seconds,
-    label: t("activities.restLeft", { time: elapsedClock(left) }),
+    label: [
+      t("activities.restLeft", { time: elapsedClock(left) }),
+      ...(then === null ? [] : [t("activities.restNext", { name: then })]),
+    ].join(", "),
   };
 }

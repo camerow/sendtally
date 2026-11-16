@@ -52,10 +52,11 @@ describe("Checklist player", () => {
       "Wrist circles, 1 set",
       "Rest 1:00",
     ]);
+    expect(screen.queryByTestId("rest-next")?.props.children).toBe("Wrist circles");
     await act(async () => {
       jest.advanceTimersByTime(4 * 60_000);
     });
-    expect(screen.queryByText("Next: Wrist circles")).toBeNull();
+    expect(screen.queryByTestId("rest-next")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Wrist circles, 1 set"));
     await fireEvent.press(screen.getByLabelText("Wrist circles, 1 set"));
 
@@ -109,7 +110,7 @@ describe("Checklist player", () => {
       jest.advanceTimersByTime(60_000);
     });
     expect(screen.getByLabelText(/^Pigeon, /).props.accessibilityState).toEqual({ checked: true });
-    expect(screen.getByText("Next: Cat-cow")).toBeTruthy();
+    expect(screen.queryByTestId("rest-next")?.props.children).toBe("Cat-cow");
     jest.useRealTimers();
   });
 });

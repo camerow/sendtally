@@ -192,7 +192,10 @@ describe("Sets player", () => {
     expect(byLabel("Rest, 1:00 left")).toBeNull();
     act(() => (byLabel("Back squat, set 2") as HTMLInputElement).click());
     expect(byLabel("Back squat, 2 of 2 sets")).not.toBeNull();
-    expect(container.querySelector(".player-row-next")?.textContent).toBe("Next: Row");
+    expect(container.querySelector(".player-row-next [aria-hidden]")?.textContent).toBe("Row");
+    expect(container.querySelector(".player-row-next .visually-hidden")?.textContent).toBe(
+      "Next: Row"
+    );
     act(() => (byLabel("Back squat, 2 of 2 sets") as HTMLButtonElement).click());
     expect(byLabel("Back squat, set 1")).not.toBeNull();
 
