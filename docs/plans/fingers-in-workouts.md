@@ -106,7 +106,8 @@ A part never posts to Strava on its own; the activity's post adds the part's pro
 As above: one activity, one part tied by `activity_id`, one request.
 The planned day is done once, through the activity's `membership_id` or kind.
 `sessionsOf` counts the run once, so alternating doses advance by one.
-Statistics, the training mix, minutes and Strava count the activity only; the part's sets add to grip trends and max hang history.
+Session counts, done days and Strava count the activity only; the part's sets add to grip trends and max hang history.
+Minutes and the training mix split the run (decision 1): one shared `runMinutes` in `packages/features/src/statistics/` gives a part's protocol minutes to Fingers and the rest of the activity's minutes to its kind, and every minutes reader goes through it.
 Kind and colour are the non-grip majority's.
 
 ### 3. The workout view
@@ -176,16 +177,20 @@ The two paths share the timer, the grip set rows and the editor, so there is sti
 ## Slices, in shipping order
 
 1. API: `activity_id` column, `fingerboard` on `activityBody` in one batch, `parts` on `GET /v1/hang`, parts out of history, delete cascade, Strava description with the part, the mix refusal dropped from `workoutBody` and `save_workout`, `workoutKindOf` ignoring grips. Worker deploy and D1 migration; safe with every build.
-2. Shared and apps: `hangsWithParts` for grip readers; `ActivityForm` hang mode for grip items in an activity; `HangSessionForm` onto it. Mobile over the air, web on merge.
+2. Shared and apps: `hangsWithParts` for grip readers; `runMinutes` for the minutes readers and the training mix; `ActivityForm` hang mode for grip items in an activity; `HangSessionForm` onto it. Mobile over the air, web on merge.
 3. Apps: the picker and editor allow a mix; the run: a mix opens the workout view with the part card, the timer runs the part and returns, the live run holds the part, Finish saves both. Mobile over the air, web on merge.
 
 Slices 2 and 3 can ship as one pull request after slice 1; slice 3 must not ship before 2, or a mix's part would be invisible to grip trends.
 
+## Decisions (Will, 2026-11-16)
+
+1. Training mix and minutes split the run: the part's protocol minutes count as Fingers, the rest under the run's kind, through one shared rule for the minutes readers (`statistics/workouts.ts`, `overview.ts`, `insights.ts` and the training mix).
+   Not chosen: counting the whole run under the activity's kind, which would file a workout of five grips and one warm-up wholly under the warm-up's kind.
+2. A mix posts to Strava on the training setting (`post_training`) only, one gate per record.
+   Not chosen: posting when either the training or the fingerboard setting is on.
+3. Fingers-only workouts keep going straight to the timer and log a standalone hang session.
+   Not chosen: running them through the workout view.
+
 ## Open questions for Will
 
-1. Training mix and minutes: split the part's time out as Fingers (recommended), or count the whole run under the activity's kind.
-   The whole-run option's cost: a workout of five grips and one warm-up files wholly under the warm-up's kind, and its fingerboard minutes vanish from Fingers in the training mix.
-   The split's cost: the minutes readers (`statistics/workouts.ts`, `overview.ts`, `insights.ts` and the training mix) take the parts list and learn one rule, an activity with a part gives the part's protocol minutes to Fingers and the rest to its kind; session counts and done days still read the run once.
-   I changed my pick to the split on that example: a training mix that hides most of a fingers session is wrong, and the rule lives in one shared function.
-2. Strava gate for a mix: the activity's `post_training` (recommended, one gate per record), or post when either it or the fingerboard setting is on.
-3. Fingers-only workouts keep going straight to the timer (recommended), or run through the workout view like a mix.
+1. A target RPE on grip doses: the type and API allow one, the editor offers none, so hang rows show the RPE box with no target until Will chooses.
