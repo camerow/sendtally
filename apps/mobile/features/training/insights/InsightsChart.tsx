@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import Svg, { Path, Polyline } from "react-native-svg";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { insightsLine, polyline, type InsightsPointVM } from "@sendtally/features/statistics";
+import { dots, insightsLine, polyline, type InsightsPointVM } from "@sendtally/features/statistics";
 import { type } from "../type";
 
 const HEIGHT = 96;
@@ -54,17 +54,28 @@ export function InsightsChart({ points }: { points: InsightsPointVM[] }): React.
               stroke={colors.lineOnLightSoft}
               strokeWidth={1}
             />
-            {LINES.map((l) => (
-              <Polyline
-                key={l.key}
-                points={polyline(insightsLine(points, l.key, width, HEIGHT, PAD))}
-                fill="none"
-                stroke={l.color}
-                strokeWidth={2}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-            ))}
+            {LINES.map((l) => {
+              const line = insightsLine(points, l.key, width, HEIGHT, PAD);
+              return line.length === 1 ? (
+                <Path
+                  key={l.key}
+                  d={dots(line)}
+                  stroke={l.color}
+                  strokeWidth={6}
+                  strokeLinecap="round"
+                />
+              ) : (
+                <Polyline
+                  key={l.key}
+                  points={polyline(line)}
+                  fill="none"
+                  stroke={l.color}
+                  strokeWidth={2}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+              );
+            })}
           </Svg>
         )}
       </View>

@@ -1,6 +1,6 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
-import { insightsLine, polyline, type InsightsPointVM } from "@sendtally/features/statistics";
+import { dots, insightsLine, polyline, type InsightsPointVM } from "@sendtally/features/statistics";
 import { useWidth } from "../../../training/components/useWidth";
 
 const HEIGHT = 96;
@@ -36,17 +36,28 @@ export function InsightsChart({ points }: { points: InsightsPointVM[] }): React.
               stroke="var(--line-on-light-soft)"
               strokeWidth={1}
             />
-            {LINES.map((l) => (
-              <polyline
-                key={l.key}
-                points={polyline(insightsLine(points, l.key, width, HEIGHT, PAD))}
-                fill="none"
-                stroke={l.color}
-                strokeWidth={2}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-            ))}
+            {LINES.map((l) => {
+              const line = insightsLine(points, l.key, width, HEIGHT, PAD);
+              return line.length === 1 ? (
+                <path
+                  key={l.key}
+                  d={dots(line)}
+                  stroke={l.color}
+                  strokeWidth={6}
+                  strokeLinecap="round"
+                />
+              ) : (
+                <polyline
+                  key={l.key}
+                  points={polyline(line)}
+                  fill="none"
+                  stroke={l.color}
+                  strokeWidth={2}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+              );
+            })}
           </svg>
         )}
       </div>
