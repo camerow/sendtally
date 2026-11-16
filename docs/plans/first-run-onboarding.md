@@ -245,12 +245,12 @@ Three new PostHog events, captured on the Worker so the Clerk user id and the in
 They make the funnel `account_created` -> `first_run_started` -> `first_run_log_answered` -> `first_run_finished` -> `manual_session_created`.
 Each fires once per account: every move of `users.first_run_step` is a conditional update that only goes forward, so a repeat or concurrent call captures nothing.
 
-| Event                    | Where                                                                                                                                                                | Properties                                                                                              |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `first_run_started`      | Worker, `PUT /v1/preferences/first-run` with `step: "started"`, sent when step 1 shows                                                                               | none                                                                                                    |
-| `first_run_log_answered` | Worker, the same route with `step: "log_answered"`, sent on leaving step 1 to the import or the days; Skip on step 1 records it as `skipped` from `step: "finished"` | `existing_log`: `kaya`, `8a`, `mountainProject`, `sendage`, `theCrag`, `spreadsheet`, `none`, `skipped` |
-| `first_run_finished`     | Worker, the same route with `step: "finished"`                                                                                                                       | `climbing_days` (count); `ended_at`: `plan`, `skip_log`, `skip_days`                                    |
-| `workout_logged`         | Worker (slice 4)                                                                                                                                                     | `built_in`, `planned`: true or false                                                                    |
+| Event                    | Where                                                                                                                                                                                                                                                                                                                                                                         | Properties                                                                                              |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `first_run_started`      | Worker, `PUT /v1/preferences/first-run` with `step: "started"`, sent when step 1 shows                                                                                                                                                                                                                                                                                        | none                                                                                                    |
+| `first_run_log_answered` | Worker, the same route with `step: "log_answered"`, sent on leaving step 1 to the import or the days; Skip on step 1 records it as `skipped` from `step: "finished"`                                                                                                                                                                                                          | `existing_log`: `kaya`, `8a`, `mountainProject`, `sendage`, `theCrag`, `spreadsheet`, `none`, `skipped` |
+| `first_run_finished`     | Worker, the same route with `step: "finished"`                                                                                                                                                                                                                                                                                                                                | `climbing_days` (count); `ended_at`: `plan`, `skip_log`, `skip_days`                                    |
+| `workout_logged`         | Worker (slice 4, `feat/workout-logged-event`), when a workout log is first saved: `PUT /v1/activities/:id` for an activity of a library workout or a planned one, `PUT /v1/hang/sessions/:id`, and `POST /v1/sessions` for a climbing session that completes a planned day; never on an edit or a delete, a free-form activity, a climbing session with no plan, or an import | `built_in`, `planned`: true or false                                                                    |
 
 `existing_log` lives on `first_run_log_answered` and on the person, so `first_run_finished` never needs the pick that a web import, which reloads the page, forgets.
 A relaunch mid-flow shows step 1 again and records nothing new until Skip or the days are saved: `first_run_started` and `first_run_log_answered` keep their first values.
@@ -263,7 +263,7 @@ What will show it worked, against section 2:
 
 - Share of new accounts finishing the flow, and where the rest skip.
 - Share with climbing days saved and with reminders on.
-- Share starting or logging a planned climbing day within 14 days (unmeasurable today).
+- Share logging a planned climbing day within 14 days (`workout_logged` with `planned`, from slice 4).
 - Share with `manual_session_created` within 7 days (43% today).
 - Import rate among those who named a source (1 of 23 imported today).
 - Share active on days 8 to 14 (20% today).
@@ -272,14 +272,14 @@ What will show it worked, against section 2:
 
 > Your answers to the two questions when you first sign in are recorded once: which app you kept a log in, if any, how many days a week you climb, and whether you skipped a question.
 
-Slice 4 adds a line for `workout_logged`.
+Slice 4 adds: "Logging a workout is recorded as whether it was on your plan and whether it is one of sendtally’s built-in workouts, never what you logged."
 
 ## 6. Delivery slices
 
 1. **The two steps, on mobile and web (built).** The "Climbing" built-in with no items, `users.first_run_step`, both steps with the import exit, the reminder sheet as is on the phone, the end on Plan with the import toast, the three first-run events, the privacy line, and Start on a web Climbing day opening the live session.
 2. **Per-source import steps, both apps**: the steps view, direct links, sends and attempts on the review, the wider mobile picker, and on the web `/app/import?from=<source>` (Import board, frame 10).
 3. **The carousel, mobile only**: four new slides replacing the current four, with play-once art and Reduce Motion; the web marketing landing stays as is.
-4. **Measuring the planned week**: `workout_logged` with `built_in` and `planned`, on the Worker.
+4. **Measuring the planned week (built, `feat/workout-logged-event`)**: `workout_logged` with `built_in` and `planned`, on the Worker.
 
 ## 7. Left out on purpose
 
