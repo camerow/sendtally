@@ -19,6 +19,7 @@ import { ExerciseGroups } from "./ExerciseGroups";
 import { InsightsChart } from "./InsightsChart";
 import { TrainedMix } from "./TrainedMix";
 import { WorkoutsDone } from "./WorkoutsDone";
+import { WorkloadCard } from "./WorkloadCard";
 
 /** How hard and how often, what was trained, the block running, and every exercise's trend. */
 export function TrainingInsights({ range }: { range: TrendRange }): React.ReactElement {
@@ -44,6 +45,7 @@ export function TrainingInsights({ range }: { range: TrendRange }): React.ReactE
         {state.data.line}
       </Text>
       <InsightsChart points={state.data.points} />
+      <WorkloadCard workload={state.data.workload} />
       <TrainedMix
         trained={state.data.trained}
         byFocus={state.data.byFocus}

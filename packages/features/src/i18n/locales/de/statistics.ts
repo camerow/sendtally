@@ -34,4 +34,48 @@ export const statistics = {
   "statistics.workoutsOf": "Workouts · {name}",
   "statistics.allInLog": "Alle {n} im Logbuch",
   "statistics.noWorkoutsPicked": "Keine {name}-Workouts in diesem Zeitraum",
+  "statistics.workloadTitle": "Belastung",
+  "statistics.workloadCaption": "Letzte 7 Tage vs. deine letzten 4 Wochen",
+  "statistics.workloadChartLabel": "Belastungsverhältnis im Zeitraum",
+  "statistics.workloadLight": "Leicht",
+  "statistics.workloadSweet": "Idealbereich",
+  "statistics.workloadCaution": "Größere Woche",
+  "statistics.workloadHigh": "Viel größere Woche",
+  "statistics.workloadLightLine": "Eine leichtere Woche als deine letzten vier.",
+  "statistics.workloadSweetLine": "Im Rahmen deiner letzten vier Wochen.",
+  "statistics.workloadCautionLine":
+    "Eine größere Woche als deine letzten vier. Steigere dich schrittweise.",
+  "statistics.workloadHighLine":
+    "Eine viel größere Woche als deine letzten vier. Gönn dir mehr Pause.",
+  "statistics.workloadRestLine":
+    "In den letzten 7 Tagen nichts eingetragen. Eine Ruhewoche zählt als 0.",
+  "statistics.workloadDay": "Tag {day} von 28",
+  "statistics.workloadEarlyLine":
+    "Dein Verhältnis startet, sobald du vier Wochen zum Vergleichen hast.",
+  "statistics.workloadBreak": "Zurück nach einer Pause",
+  "statistics.workloadBreakLine":
+    "In den drei Wochen davor ist nichts eingetragen, also gibt es noch nichts zum Vergleichen. Steig langsam wieder ein.",
+  "statistics.workloadCounted": "{counted} von {total} gezählt",
+  "statistics.workloadPartialLine":
+    "Zu wenige deiner letzten Sessions haben Anstrengung und Dauer, um Wochen zu vergleichen, daher noch kein Bereich.",
+  "statistics.workloadLeftOut_one": "{count} in den letzten 7 Tagen nicht gezählt: {why}",
+  "statistics.workloadLeftOut_other": "{count} in den letzten 7 Tagen nicht gezählt: {why}",
+  "statistics.workloadNoEffort": "keine Anstrengung",
+  "statistics.workloadNoTime": "keine Dauer",
+  "statistics.workloadNoEither": "keine Anstrengung oder Dauer",
+  "statistics.workloadLast7": "Letzte 7 Tage",
+  "statistics.workloadAverage": "Durchschnittswoche",
+  "statistics.workloadAfter4": "nach 4 Wochen",
+  "statistics.workloadSpan": "{from} bis {to}",
+  "statistics.workloadBarsNote":
+    "Gestrichelt: deine Durchschnittswoche. Belastung ist Anstrengung (RPE) × Minuten.",
+  "statistics.workloadNotCounted": "Nicht gezählt · letzte 7 Tage",
+  "statistics.workloadOpensRecord": "Jede Zeile öffnet ihren Eintrag.",
+  "statistics.workloadWeek1": "Woche 1",
+  "statistics.workloadWeek4": "Woche 4",
+  "statistics.workloadToday": "Heute",
+  "statistics.workloadUnder": "unter {n}",
+  "statistics.workloadBetween": "{from} bis {to}",
+  "statistics.workloadOver": "über {n}",
+  "statistics.workloadNoZone": "Kein Bereich: mehr als ein Viertel nicht gezählt",
 } as const;

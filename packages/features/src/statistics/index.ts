@@ -49,3 +49,20 @@ export {
   trendChange,
   type MixRowVM,
 } from "./insightsView";
+export { workloadOn, workloadZone, type WorkloadState, type WorkloadZone } from "./workload";
+export {
+  WORKLOAD_EDGES,
+  WORKLOAD_GUTTER,
+  WORKLOAD_TINTS,
+  workloadBands,
+  workloadPlot,
+  type WorkloadBandVM,
+  type WorkloadPlot,
+  type WorkloadTileVM,
+  WORKLOAD_MAX,
+  workloadVM,
+  workloadZoneLabel,
+  type WorkloadLeftOutVM,
+  type WorkloadVM,
+  type WorkloadWeekVM,
+} from "./workloadView";
