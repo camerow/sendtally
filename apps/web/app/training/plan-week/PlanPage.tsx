@@ -73,6 +73,9 @@ export function PlanPage(): React.ReactElement {
     const el = page.current;
     if (el === null) return;
     const hold = (): void => {
+      // Room under Sunday, so any day of the week can scroll up under the strip.
+      const stuck = strip.current?.getBoundingClientRect().height ?? 0;
+      el.style.setProperty("--plan-under-strip", `${stuck + UNDER_STRIP}px`);
       if (target.current !== null) scrollTo(target.current, false);
     };
     const release = (): void => {
