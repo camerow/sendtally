@@ -55,6 +55,7 @@ export function RestRow(props: RestRowProps): React.ReactElement {
         {vm.next !== null && (
           <Text
             testID="rest-next"
+            accessibilityLabel={vm.nextLabel ?? undefined}
             style={[type.body, { fontSize: 12.5, color: colors.textSecondary }]}
           >
             {vm.next}

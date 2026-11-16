@@ -45,6 +45,7 @@ export const activities = {
   "activities.finish": "Terminer",
   "activities.setOf": "{exercise}, série {n}",
   "activities.restLeft": "Repos, encore {time}",
+  "activities.restNext": "Ensuite : {name}",
   "activities.restMore": "+30 s",
   "activities.restSkip": "Passer",
   "activities.restPreview": "Repos {time}",

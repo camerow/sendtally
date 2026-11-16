@@ -45,7 +45,14 @@ export function holdRowVM(hold: Hold, now: number): HoldRowVM {
   };
 }
 
-export type RestRowVM = { clock: string; share: number; next: string | null; label: string };
+export type RestRowVM = {
+  clock: string;
+  share: number;
+  next: string | null;
+  /** What comes next as a screen reader says it, since the name alone sounds like its row. */
+  nextLabel: string | null;
+  label: string;
+};
 
 /** A running rest's row: what is left, how full its fill still is, and what comes next. */
 export function restRowVM(rest: Rest, left: number): RestRowVM {
@@ -54,6 +61,7 @@ export function restRowVM(rest: Rest, left: number): RestRowVM {
     clock,
     share: Math.min(1, left / rest.seconds),
     next: rest.next,
+    nextLabel: rest.next === null ? null : t("activities.restNext", { name: rest.next }),
     label: t("activities.restLeft", { time: clock }),
   };
 }
@@ -104,6 +112,9 @@ export function stripVM(
     text: t("activities.restPreview", { time: elapsedClock(left) }),
     then: then === null ? null : `· ${then}`,
     share: left / rest.seconds,
-    label: t("activities.restLeft", { time: elapsedClock(left) }),
+    label: [
+      t("activities.restLeft", { time: elapsedClock(left) }),
+      ...(then === null ? [] : [t("activities.restNext", { name: then })]),
+    ].join(", "),
   };
 }

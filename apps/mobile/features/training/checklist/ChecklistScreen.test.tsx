@@ -41,14 +41,14 @@ describe("Checklist player", () => {
     await fireEvent.press(screen.getByLabelText("Minimize"));
     expect(router.back).toHaveBeenCalled();
     const order = (): string[] =>
-      readingOrder("Cat-cow, 2 sets", "Rest 1:00", "Rest, 1:00 left", "Wrist circles, 1 set");
+      readingOrder("Cat-cow, 2 sets", "Rest 1:00", "Next: Wrist circles", "Wrist circles, 1 set");
     expect(order()).toEqual(["Cat-cow, 2 sets", "Rest 1:00", "Wrist circles, 1 set", "Rest 1:00"]);
     const catCow = screen.getByLabelText("Cat-cow, 2 sets");
     await fireEvent.press(catCow);
     expect(catCow.props.accessibilityState).toEqual({ checked: true });
     expect(order()).toEqual([
       "Cat-cow, 2 sets",
-      "Rest, 1:00 left",
+      "Next: Wrist circles",
       "Wrist circles, 1 set",
       "Rest 1:00",
     ]);

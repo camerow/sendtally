@@ -38,7 +38,7 @@ describe("Rest strip", () => {
     expect(screen.getByText("Rest 1:30")).toBeTruthy();
     expect(screen.getByText("· Set 2")).toBeTruthy();
     await advance(48_000);
-    expect(screen.getByLabelText("Rest, 0:42 left")).toBeTruthy();
+    expect(screen.getByLabelText("Rest, 0:42 left, Next: Set 2")).toBeTruthy();
     await advance(42_000);
     expect(screen.queryByText("Rest 0:00")).toBeNull();
     expect(screen.queryByText("· Set 2")).toBeNull();
@@ -51,5 +51,6 @@ describe("Rest strip", () => {
     await render(<RestStrip />);
     expect(screen.getByText("Rest 2:30")).toBeTruthy();
     expect(screen.getByText("· Romanian deadlift")).toBeTruthy();
+    expect(screen.getByLabelText("Rest, 2:30 left, Next: Romanian deadlift")).toBeTruthy();
   });
 });

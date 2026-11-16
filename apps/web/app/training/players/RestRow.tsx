@@ -21,7 +21,12 @@ export function RestRow({ rest, left, onMore, onSkip }: RestRowProps): React.Rea
           <span className="player-row-word">{t("hang.rest")}</span>
           <span className="player-row-clock">{vm.clock}</span>
         </span>
-        {vm.next !== null && <span className="player-row-next">{vm.next}</span>}
+        {vm.next !== null && (
+          <span className="player-row-next">
+            <span aria-hidden="true">{vm.next}</span>
+            <span className="visually-hidden">{vm.nextLabel}</span>
+          </span>
+        )}
       </span>
       <button type="button" className="player-row-action" onClick={onMore}>
         {t("activities.restMore")}
