@@ -407,9 +407,10 @@
 .sheet-title {
   margin: 0;
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 21px;
-  letter-spacing: -0.02em;
+  font-weight: 800;
+  font-size: var(--type-sheet-title-size);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
 }
 
 .sheet-footer {
@@ -450,6 +451,35 @@
 .sheet-action:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+.sheet-outline {
+  border: 1px solid var(--line-on-light-strong);
+  border-radius: var(--radius-control);
+  background: var(--bs-white);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--bs-gunmetal);
+  cursor: pointer;
+}
+
+.sheet-secondary {
+  align-self: flex-end;
+  min-height: 44px;
+  margin-right: -12px;
+  padding: 0 12px;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--bs-watermelon-ink);
+  cursor: pointer;
+}
+
+.sheet-secondary--muted {
+  color: var(--text-on-white-secondary);
 }
 
 .more-wrap {
@@ -726,6 +756,11 @@
     flex: 1;
     height: 48px;
     font-size: 15px;
+  }
+
+  .sheet-secondary {
+    align-self: center;
+    margin-right: 0;
   }
 }
 
@@ -1196,6 +1231,12 @@
 
 .already-running-actions button {
   min-height: 50px;
+}
+
+.already-running-actions .sheet-secondary {
+  align-self: stretch;
+  min-height: 44px;
+  margin-right: 0;
 }
 
 /* Back, as every page draws it (components/BackLink.tsx), and a live page's Minimise */

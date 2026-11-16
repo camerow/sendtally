@@ -382,19 +382,6 @@
   color: var(--bs-gunmetal);
 }
 
-.finish-discard {
-  align-self: center;
-  height: 44px;
-  padding: 0 12px;
-  border: none;
-  background: none;
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--bs-watermelon-ink);
-  cursor: pointer;
-}
-
 @media (max-width: 767px) {
   .tally {
     left: 0;

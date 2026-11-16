@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import type { Item, WorkoutKind } from "@sendtally/core/hang";
-import { colors } from "@sendtally/design/tokens";
+import { colors, sheetTitleSize } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import {
   entryNamed,
@@ -147,7 +147,7 @@ export function ExercisePickerSheet({
               paddingTop: 6,
             }}
           >
-            <Title size={26}>
+            <Title size={sheetTitleSize}>
               {multi ? t("workouts.addExercises") : t("workouts.swapExercise")}
             </Title>
             {newButton}

@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, View } from "react-native";
-import { colors } from "@sendtally/design/tokens";
+import { colors, sheetTitleSize } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { press } from "../../../lib/press";
 import { Button } from "./Button";
@@ -56,14 +56,14 @@ export function SheetHeader({
       <View style={{ flex: 1, gap: 4 }}>
         <Label color={kickerColor}>{kicker}</Label>
         {onTitle === undefined ? (
-          <Title size={26}>{title}</Title>
+          <Title size={sheetTitleSize}>{title}</Title>
         ) : (
           <Pressable
             onPress={onTitle}
             accessibilityRole="link"
             style={press({ flexDirection: "row", alignItems: "center", gap: 6 })}
           >
-            <Title size={26} style={{ flexShrink: 1 }}>
+            <Title size={sheetTitleSize} style={{ flexShrink: 1 }}>
               {title}
             </Title>
             <HangIcon name="forward" color={colors.textMuted} size={18} strokeWidth={2.2} />

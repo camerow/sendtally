@@ -63,11 +63,18 @@ export function AlreadyRunningSheet(): React.ReactElement | null {
         >
           {t("hang.resume")}
         </button>
-        <button type="button" className="sheet-cancel" onClick={() => askingStore.record(asking)}>
+        <button type="button" className="sheet-outline" onClick={() => askingStore.record(asking)}>
           {t("tally.record")}
         </button>
         <button type="button" className="danger-outline" onClick={() => setConfirming(asking)}>
           {t("hang.discard")}
+        </button>
+        <button
+          type="button"
+          className="sheet-secondary sheet-secondary--muted"
+          onClick={askingStore.close}
+        >
+          {t("common.cancel")}
         </button>
       </div>
     </Sheet>

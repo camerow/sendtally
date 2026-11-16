@@ -28,6 +28,7 @@ export function FinishSheet({
       title={t("tally.howHard")}
       onClose={onClose}
       action={{ label: t("common.save"), onPress: () => onSave(rpe) }}
+      secondary={{ label: t("tally.discardSession"), onPress: onDiscard }}
     >
       <span className="finish-summary">{summary}</span>
       <div className="finish-levels" role="radiogroup" aria-label={t("common.effort")}>
@@ -50,9 +51,6 @@ export function FinishSheet({
         ))}
       </div>
       <p className="sheet-body">{hint}</p>
-      <button type="button" className="finish-discard" onClick={onDiscard}>
-        {t("tally.discardSession")}
-      </button>
     </Sheet>
   );
 }

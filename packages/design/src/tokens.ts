@@ -49,6 +49,9 @@ export const radius = {
   pill: 20,
 } as const;
 
+/** A sheet's or dialog's title, the display head at phone width. */
+export const sheetTitleSize = 28;
+
 export const fonts = {
   display: "BricolageGrotesque_700Bold",
   displayHeavy: "BricolageGrotesque_800ExtraBold",
