@@ -109,7 +109,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
       backTo={BACK_TO}
       {...(editing && {
         onBack: cancel,
-        editor: { title: t("plan.editBlock"), onSave: draft.save, solid: true },
+        editor: { title: t("plan.editBlock"), onSave: draft.save, solid: true, heading: true },
       })}
       {...(footer !== undefined && { footer })}
       action={

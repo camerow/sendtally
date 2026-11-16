@@ -156,7 +156,7 @@ describe("editing a climb", () => {
 describe("logging a session on a climb", () => {
   it("heads the page with the climb and asks only for the date, result and notes", async () => {
     await mount("?climbId=c1");
-    expect(container.querySelector(".editor-bar-title")?.textContent).toBe("The Arete, V5");
+    expect(container.querySelector("h1")?.textContent).toBe("The Arete, V5");
     for (const asked of ["Date", "Notes", "Tries"]) expect(text()).toContain(asked);
     expect(inputs()).not.toContain("The Arete");
     expect(inputs()).not.toContain("The Depot");
@@ -167,7 +167,7 @@ describe("logging a session on a climb", () => {
 describe("adding a climb", () => {
   it("asks for everything, Project on, and saves only once named and graded", async () => {
     await mount("");
-    expect(container.querySelector(".editor-bar-title")?.textContent).toBe("Add climb");
+    expect(container.querySelector("h1")?.textContent).toBe("Add climb");
     expect(projectSwitch().checked).toBe(true);
     expect(button("Save").disabled).toBe(true);
     type(container.querySelector<HTMLInputElement>('input[aria-label="Climb"]')!, "Slab");

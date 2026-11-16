@@ -231,6 +231,9 @@ describe("WorkoutEditorPage", () => {
 
   it("makes a new workout without asking its category, in its focus, then opens it", () => {
     mount(<WorkoutEditorPage focus="power" />);
+    expect([...container.querySelectorAll("h1")].map((h) => h.textContent)).toEqual([
+      "New workout",
+    ]);
     type(container.querySelector<HTMLInputElement>(".name-field")!, "Fast pulls");
     click(container.querySelector(".editor-bar-save"));
     const [id] = writes.saveWorkout.mock.calls[0] as unknown as [string];

@@ -133,6 +133,7 @@ function Editor({
       editor={{
         title: id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout"),
         onSave: save,
+        heading: true,
       }}
     >
       <NameField

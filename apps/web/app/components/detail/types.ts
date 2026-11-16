@@ -6,4 +6,6 @@ export type EditorBarProps = {
   saveDisabled?: boolean;
   /** Save as a solid azure button, for an Edit mode on a detail page; an azure link otherwise. */
   solid?: boolean;
+  /** The title is the page's h1, on an editor whose body has no heading of its own. */
+  heading?: boolean;
 };

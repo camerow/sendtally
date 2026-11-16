@@ -147,6 +147,7 @@ export function ActivityForm({
               ? t("activities.logWorkout")
               : t("activities.logActivity"),
         onSave: save,
+        heading: draft.workoutId === null,
       }}
     >
       {logged === null && !kindSet && (

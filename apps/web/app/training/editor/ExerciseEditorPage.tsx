@@ -71,6 +71,7 @@ function Form({
         title: editing ? t("workouts.editExercise") : t("workouts.newExercise"),
         onSave: save,
         saveDisabled: blocked,
+        heading: true,
       }}
     >
       <ExerciseFields

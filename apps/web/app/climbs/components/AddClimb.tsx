@@ -172,7 +172,7 @@ export function AddClimb(): React.ReactElement {
 
   return (
     <div className="detail">
-      <EditorBar title={title} cancelLabel={t("common.cancel")} onCancel={goBack} />
+      <EditorBar title={title} heading cancelLabel={t("common.cancel")} onCancel={goBack} />
       <div className="detail-body add-climb-body">
         {failed && <span className="add-climb-error">{t("climbs.saveFailed")}</span>}
         {!logging && (
