@@ -52,7 +52,7 @@ async function kindLookup(
   const [mine, grips, library] = await Promise.all([
     repo.listExercises(db, userId),
     repo.listHangGrips(db, userId),
-    repo.library(db),
+    repo.library(db, ""),
   ]);
   const gripIds = new Set([...grips.map((g) => g.id), ...library.grips.map((g) => g.id)]);
   const isGrip = (exercise: string): boolean => isBuiltInGrip(exercise) || gripIds.has(exercise);
