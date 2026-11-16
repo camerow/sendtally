@@ -193,10 +193,11 @@ export function bodySummary(w: Pick<Workout, "kind" | "items">): string | null {
 
 /**
  * A workout's line in a list: how many exercises, then the one exercise's dose, or how long
- * it takes; a hang dose is too long for a row, so hangboard always reads its length.
+ * it takes; a hang dose is too long for a row, so hangboard always reads its length, and a
+ * workout with no exercises reads only its length, or nothing.
  * "1 exercise · 3 × 8", "4 exercises · 30m".
  */
-export function libraryLine(w: Workout, unit: WeightUnit): string {
+export function libraryLine(w: Workout, unit: WeightUnit): string | null {
   const items = sessionItems(w.items, 0);
   const [only] = items;
   const minutes = workoutMinutes(w);
@@ -207,6 +208,7 @@ export function libraryLine(w: Workout, unit: WeightUnit): string {
         ? bodySummary(w)
         : doseSummary(w.kind, only.dose, unit);
   const tail = dose ?? (minutes === null ? null : durationLabel(minutes));
+  if (only === undefined) return tail;
   const count = t("activities.exerciseCount", { count: items.length });
   return tail === null ? count : `${count} · ${tail}`;
 }

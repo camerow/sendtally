@@ -383,4 +383,9 @@ describe("libraryLine", () => {
       /^1 exercise · \d+m$/
     );
   });
+  it("gives a workout with no exercises only how long it takes, if anything", () => {
+    const climbing = { ...base, kind: "climbing" as const, name: "Climbing", items: [] };
+    expect(libraryLine({ ...climbing, minutes: 90 }, "kg")).toBe("1h 30m");
+    expect(libraryLine({ ...climbing, minutes: null }, "kg")).toBeNull();
+  });
 });
