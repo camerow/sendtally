@@ -24,12 +24,12 @@ created on `wrangler deploy` and need the script to exist first, so they stay in
 ```sh
 brew install hashicorp/tap/terraform     # >= 1.9
 cd infra/terraform
-export TF_VAR_CLOUDFLARE_API_TOKEN=...
-export AWS_ACCESS_KEY_ID=...             # R2 API token
-export AWS_SECRET_ACCESS_KEY=...
-terraform init
-terraform plan
+doppler run --project sendtally --config terraform -- terraform init
+doppler run --project sendtally --config terraform -- terraform plan
 ```
+
+The three values live in the Doppler project `sendtally`, config `terraform`: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `TF_VAR_CLOUDFLARE_API_TOKEN`.
+The API token needs Account > Workers R2 Storage > Edit, or the media buckets in `r2.tf` fail to plan.
 
 State lives in the R2 bucket `sendtally-tfstate` (`versions.tf`), reached
 through R2's S3-compatible API, so it survives the loss of any one machine and
@@ -48,7 +48,7 @@ backend reads those names; nothing here talks to AWS.
 There is no `terraform.tfvars` to copy. DNS records live in the committed
 `dns_records.auto.tfvars`, which Terraform loads automatically - every value in
 it is public, since a DNS lookup returns all of it. The API token is the one
-secret and stays in the environment.
+secret and stays in Doppler.
 
 ### API token
 
