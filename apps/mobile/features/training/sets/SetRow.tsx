@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import type { SetDone, WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { setChip, setText } from "@sendtally/features/activities";
@@ -50,6 +50,7 @@ export function SetRow({
   onChange,
   onToggle,
 }: SetRowProps): React.ReactElement {
+  const narrow = useWindowDimensions().width < 390;
   const last =
     previous === undefined ? "" : rpe ? setChip(previous, unit) : setText(previous, unit);
   return (
@@ -75,7 +76,7 @@ export function SetRow({
         >
           {setChip(target, unit, repsMax) || "-"}
         </Text>
-        {last !== "" && (
+        {last !== "" && !((ticked || current) && narrow) && (
           <Text
             numberOfLines={1}
             adjustsFontSizeToFit
