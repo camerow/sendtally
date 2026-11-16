@@ -4,41 +4,79 @@ export type Loadable = { at: number; rpe: number | null; minutes: number };
 
 export type WorkloadZone = "light" | "sweet" | "caution" | "high";
 
+/**
+ * What the day can say: a ratio; too much left out to trust one; under 28 days of history;
+ * or nothing counted in the three weeks before this one, where the ratio would always be 4.0.
+ */
+export type WorkloadState = "ratio" | "partial" | "early" | "break";
+
 export type Workload = {
+  state: WorkloadState;
   /** Load of the 7 days ending on the day. */
   acute: number;
   /** The 28 days ending on the day, as an average week. */
   chronic: number;
-  /** `null` until 28 days of history, or when the 3 weeks before this one hold no load. */
+  /** Acute over chronic whenever chronic has load, whatever the state. */
   ratio: number | null;
-  /** Records in the acute week with no RPE or no minutes, left out of the load. */
-  leftOut: number;
+  /** The four 7-day loads ending on the day, oldest first. */
+  weeks: [number, number, number, number];
+  /** Records in the last 7 days, and how many were left out for no RPE or no minutes. */
+  week: { total: number; leftOut: number };
+  month: { total: number; leftOut: number };
   /** Days until the first ratio; 0 once there is enough history. */
   daysToGo: number;
 };
 
-const loadOf = (d: Loadable): number | null =>
+/** Past this share of records left out, either window can be off by a whole zone. */
+export const LEFT_OUT_LIMIT = 0.25;
+
+export const loadOf = (d: Loadable): number | null =>
   d.rpe === null || d.minutes <= 0 ? null : d.rpe * d.minutes;
 
-const sum = (done: readonly Loadable[], from: number, to: number): number =>
-  done.reduce((n, d) => (d.at >= from && d.at < to ? n + (loadOf(d) ?? 0) : n), 0);
+function tally(done: readonly Loadable[], from: number, to: number) {
+  const inside = done.filter((d) => d.at >= from && d.at < to);
+  const loads = inside.map(loadOf);
+  return {
+    load: loads.reduce<number>((n, l) => n + (l ?? 0), 0),
+    total: inside.length,
+    leftOut: loads.filter((l) => l === null).length,
+  };
+}
+
+const tooMuchLeftOut = ({ total, leftOut }: { total: number; leftOut: number }): boolean =>
+  total > 0 && leftOut / total > LEFT_OUT_LIMIT;
 
 /** Acute and chronic load and their ratio as of the end of `day`, a UTC day start. */
 export function workloadOn(done: readonly Loadable[], day: number): Workload {
   const end = day + DAY_MS;
-  const weekStart = end - 7 * DAY_MS;
-  const monthStart = end - 28 * DAY_MS;
+  const weekBack = (i: number): ReturnType<typeof tally> =>
+    tally(done, end - (i + 1) * 7 * DAY_MS, end - i * 7 * DAY_MS);
+  const now = weekBack(0);
+  const all = tally(done, end - 28 * DAY_MS, end);
+  const weeks: Workload["weeks"] = [weekBack(3).load, weekBack(2).load, weekBack(1).load, now.load];
+  const acute = now.load;
+  const chronic = all.load / 4;
   const counted = done.filter((d) => loadOf(d) !== null && d.at < end);
   const first = counted.length === 0 ? null : Math.min(...counted.map((d) => d.at));
-  const acute = sum(counted, weekStart, end);
-  const before = sum(counted, monthStart, weekStart);
-  const chronic = (acute + before) / 4;
   const daysToGo = first === null ? 28 : Math.max(0, 27 - (day - dayStart(first)) / DAY_MS);
+  const week = { total: now.total, leftOut: now.leftOut };
+  const month = { total: all.total, leftOut: all.leftOut };
+  const state: WorkloadState =
+    tooMuchLeftOut(week) || tooMuchLeftOut(month)
+      ? "partial"
+      : daysToGo > 0
+        ? "early"
+        : all.load === acute
+          ? "break"
+          : "ratio";
   return {
+    state,
     acute,
     chronic,
-    ratio: daysToGo > 0 || before === 0 ? null : acute / chronic,
-    leftOut: done.filter((d) => d.at >= weekStart && d.at < end && loadOf(d) === null).length,
+    ratio: chronic === 0 ? null : acute / chronic,
+    weeks,
+    week,
+    month,
     daysToGo,
   };
 }

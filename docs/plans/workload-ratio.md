@@ -35,7 +35,21 @@ That keeps a single minutes rule: when `bug/multi-grip-hang-sessions` lands, `do
 A record with no RPE or no minutes is left out of the load, never counted as zero and never given a default RPE.
 A silent zero would understate the week and make the following weeks look bigger than they were; a default RPE would invent effort the person did not report.
 The card says how many records in the last 7 days were left out ("2 sessions not counted: no RPE or no time"), so the person can fix them from the session.
-Asking for the missing value inline is deferred: the session screens already let a person add RPE and times.
+Each left-out row opens its record, so the person can fix it there.
+
+### A partly counted week
+
+The zone is withheld when more than a quarter of the records in the last 7 days, or in the last 28 days, were left out; the card then says how many of them were counted instead of naming a zone.
+One session in four missing moves acute or chronic by about 25%, about the width of the sweet spot (0.8 to 1.3), so past that the zone can be wrong.
+Both windows count because records missing in earlier weeks shrink chronic and inflate the ratio, just as records missing this week deflate it.
+This check comes before the start and break rules: a week that is mostly left out says so first.
+
+### Climbing sessions without times
+
+Since 7784726f (2026-11-03) neither log-session form, mobile or web, has start or end time fields, so a climbing session logged through the form is saved with `times = "none"` and has no duration.
+Climbing gets a duration from the live session tally (mobile and web), from sessions logged before that change, from legacy board rows, and when a CSV import or the assistant connector supplies both times.
+`DEFAULT_DURATION_MINUTES` (90) in `core/manual.ts` builds a placeholder `start_at` and `end_at` for scoring; it never feeds load.
+For someone who logs climbing through the form, most weeks will be partly counted until there is a way to give a session its length; whether the form gets a duration field back is Will's call.
 
 ## 2. The start and a return
 

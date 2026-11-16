@@ -31,23 +31,40 @@ describe("workloadOn", () => {
   });
 
   it("shows no ratio in the first 28 days and counts down to it", () => {
-    expect(workloadOn([hour(20)], today)).toMatchObject({ ratio: null, daysToGo: 7 });
-    expect(workloadOn([hour(27)], today)).toMatchObject({ ratio: 0, daysToGo: 0 });
-    expect(workloadOn([], today)).toMatchObject({ ratio: null, daysToGo: 28, acute: 0 });
+    expect(workloadOn([hour(20)], today)).toMatchObject({ state: "early", daysToGo: 7 });
+    expect(workloadOn([hour(27)], today)).toMatchObject({ state: "ratio", ratio: 0, daysToGo: 0 });
+    expect(workloadOn([], today)).toMatchObject({ state: "early", daysToGo: 28, acute: 0 });
   });
 
   it("shows no ratio on the first week back after three weeks off", () => {
     const back = [...steady(12).filter((d) => d.at < ago(28)), hour(0), hour(2)];
     const w = workloadOn(back, today);
-    expect(w).toMatchObject({ ratio: null, daysToGo: 0, acute: 720 });
-    expect(workloadOn([...back, hour(8)], today).ratio).toBeCloseTo(720 / (1080 / 4));
+    expect(w).toMatchObject({ state: "break", ratio: 4, daysToGo: 0, acute: 720 });
+    const next = workloadOn([...back, hour(8)], today);
+    expect(next.state).toBe("ratio");
+    expect(next.ratio).toBeCloseTo(720 / (1080 / 4));
   });
 
   it("leaves out records with no RPE or no minutes and counts them", () => {
-    const w = workloadOn([...steady(6), hour(1, null), hour(2, 7, 0)], today);
-    expect(w.acute).toBe(1080);
-    expect(w.leftOut).toBe(2);
+    const w = workloadOn([...steady(6), hour(1, null)], today);
+    expect(w).toMatchObject({ acute: 1080, week: { total: 4, leftOut: 1 } });
+    expect(workloadOn([hour(30), hour(0, 7, 0)], today)).toMatchObject({
+      acute: 0,
+      week: { total: 1, leftOut: 1 },
+    });
     expect(workloadOn([hour(40, null), hour(0)], today).daysToGo).toBe(27);
+  });
+
+  it("withholds the zone past a quarter left out of the last 7 days", () => {
+    expect(workloadOn([...steady(6), hour(1, null)], today).state).toBe("ratio");
+    expect(workloadOn([...steady(6), hour(1, null), hour(2, 7, 0)], today).state).toBe("partial");
+  });
+
+  it("withholds the zone past a quarter left out of the last 28 days", () => {
+    const missing = (n: number): Loadable[] =>
+      [10, 12, 15, 18, 20].slice(0, n).map((d) => hour(d, null));
+    expect(workloadOn([...steady(6), ...missing(4)], today).state).toBe("ratio");
+    expect(workloadOn([...steady(6), ...missing(5)], today).state).toBe("partial");
   });
 
   it("puts the window edges on day boundaries", () => {
