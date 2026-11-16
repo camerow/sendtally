@@ -84,3 +84,24 @@ export function measureOf(kind: ExerciseKind, sets: readonly SetDone[]): Exercis
  */
 export const exerciseNameKey = (name: string): string =>
   name.trim().replace(/[A-Z]/g, (c) => c.toLowerCase());
+
+/**
+ * The kind of a workout item's exercise: Fingers for a grip, else the kind of the exercise of
+ * that name among `exercises` (later ones win), else undefined.
+ */
+export function exerciseKinds(
+  exercises: readonly { name: string; kind: WorkoutKind }[],
+  isGrip: (exercise: string) => boolean
+): (exercise: string) => WorkoutKind | undefined {
+  const kinds = new Map(exercises.map((e) => [exerciseNameKey(e.name), e.kind] as const));
+  return (exercise) => (isGrip(exercise) ? "hangboard" : kinds.get(exerciseNameKey(exercise)));
+}
+
+/** Whether a workout's items mix grips with other exercises, which no player can run. */
+export function mixesGrips(
+  exercises: readonly string[],
+  isGrip: (exercise: string) => boolean
+): boolean {
+  const grips = exercises.filter(isGrip).length;
+  return grips > 0 && grips < exercises.length;
+}

@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { Exercise } from "@sendtally/api-client";
 import { exerciseLabel } from "./builtIns";
-import { entryNamed, pickerEntries, type PickerWorld } from "./picker";
+import {
+  entryNamed,
+  exerciseKindIn,
+  pickerEntries,
+  pickerOffer,
+  pickerState,
+  type PickerWorld,
+} from "./picker";
 
 const mine = (id: string, name: string, more: Partial<Exercise> = {}): Exercise => ({
   id,
@@ -30,14 +37,14 @@ const world: PickerWorld = {
     ["half", 3],
   ]),
   inWorkout: ["Back squat"],
-  fingers: false,
+  offer: "exercises",
 };
 
 const names = (filter: Parameters<typeof pickerEntries>[1], w = world): string[] =>
   pickerEntries(w, filter).map((e) => e.name);
 
 describe("pickerEntries", () => {
-  it("lists a category most used first, then the user's own, then the library, without archived ones", () => {
+  it("lists a category most used first, then by name, without archived ones", () => {
     const strength = pickerEntries(world, { category: "strength", text: "" });
     expect(strength.slice(0, 2).map((e) => [e.name, e.uses, e.inWorkout])).toEqual([
       ["Back squat", 12, true],
@@ -50,9 +57,9 @@ describe("pickerEntries", () => {
 
   it("searches every category with All, ignoring case and accents", () => {
     expect(names({ category: "all", text: "CURL" })).toEqual([
-      "Jefferson curl",
       "Biceps curl",
       "Hammer curl",
+      "Jefferson curl",
       "Nordic hamstring curl",
       "Reverse wrist curls",
       "Wrist curls",
@@ -61,11 +68,51 @@ describe("pickerEntries", () => {
   });
 
   it("offers grips only to a Fingers workout, and nothing else", () => {
-    const fingers = { ...world, fingers: true, inWorkout: ["half"] };
+    const fingers = { ...world, offer: "grips" as const, inWorkout: ["half"] };
     expect(pickerEntries(fingers, { category: "all", text: "" })).toMatchObject([
       { name: "Half crimp", uses: 3, inWorkout: true },
     ]);
     expect(names({ category: "all", text: "crimp" })).toEqual([]);
+  });
+
+  it("offers grips beside everything else to a workout with nothing in it", () => {
+    const empty = { ...world, offer: "all" as const, inWorkout: [] };
+    expect(names({ category: "all", text: "crimp" }, empty)).toEqual(["Half crimp"]);
+    expect(names({ category: "hangboard", text: "" }, empty)).toEqual(["Half crimp"]);
+    expect(names({ category: "all", text: "pull-up" }, empty)).toContain("Weighted pull-up");
+  });
+
+  it("orders grips and exercises as one list under All, most used first, then by name", () => {
+    const fresh = {
+      ...world,
+      offer: "all" as const,
+      inWorkout: [],
+      uses: new Map([["deadlift", 2]]),
+    };
+    const all = names({ category: "all", text: "" }, fresh);
+    expect(all[0]).toBe("Deadlift");
+    const rest = all.slice(1);
+    expect(rest).toEqual([...rest].sort((a, b) => a.localeCompare(b)));
+    expect(rest.indexOf("Half crimp")).toBeGreaterThan(rest.indexOf("Back squat"));
+  });
+});
+
+describe("pickerOffer", () => {
+  it("follows what the workout holds, so taking out the last grip offers everything again", () => {
+    expect(pickerOffer(world, [])).toBe("all");
+    expect(pickerOffer(world, ["half", "open"])).toBe("grips");
+    expect(pickerOffer(world, ["Back squat"])).toBe("exercises");
+    expect(pickerOffer(world, ["half"].slice(1))).toBe("all");
+  });
+});
+
+describe("exerciseKindIn", () => {
+  it("knows grips, the user's own and the built-ins, and nothing else", () => {
+    const kindIn = exerciseKindIn(world);
+    expect(kindIn("half")).toBe("hangboard");
+    expect(kindIn("jefferson CURL")).toBe("mobility");
+    expect(kindIn("Bench press")).toBe("strength");
+    expect(kindIn("Made just now")).toBeUndefined();
   });
 });
 
@@ -85,5 +132,17 @@ describe("exerciseLabel", () => {
 
   it("keeps the name the user renamed a built-in to", () => {
     expect(exerciseLabel({ name: "High bar squat", builtIn: "backSquat" })).toBe("High bar squat");
+  });
+});
+
+describe("pickerState", () => {
+  it("offers every category and asks what New makes until something is in, then keeps to one side", () => {
+    expect(pickerState(world, [], [], "all")).toMatchObject({ offer: "all", newKind: "choose" });
+    expect(pickerState(world, [], [], "all").kinds).toContain("hangboard");
+    const grips = pickerState(world, ["half"], [], "all");
+    expect(grips).toMatchObject({ offer: "grips", newKind: "hangboard" });
+    const lifts = pickerState(world, ["Back squat"], [], "all");
+    expect(lifts.kinds).not.toContain("hangboard");
+    expect(pickerState(world, ["Back squat"], [], "mobility").newKind).toBe("mobility");
   });
 });

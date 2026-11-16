@@ -86,7 +86,7 @@ vi.mock("@sendtally/features/exercises", async (actual) => ({
     grips: [],
     uses: new Map(),
     inWorkout: [],
-    fingers: false,
+    offer: "exercises",
   }),
 }));
 vi.mock("@sendtally/features/training", async (actual) => ({

@@ -9,9 +9,6 @@ name: back-asks-before-discarding
 - tapOn:
     id: "fab"
 - tapOn: "Create workout"
-- assertVisible: "What kind of workout\\?"
-- waitForAnimationToEnd
-- tapOn: "Strength"
 - extendedWaitUntil:
     visible: "New workout"
     timeout: 10000

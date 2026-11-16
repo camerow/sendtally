@@ -1,9 +1,14 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { WORKOUT_KINDS, type Item, type WorkoutKind } from "@sendtally/core/hang";
+import type { Item, WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
-import { entryNamed, pickerEntries, type PickerEntry } from "@sendtally/features/exercises";
+import {
+  entryNamed,
+  pickerEntries,
+  pickerState,
+  type PickerEntry,
+} from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { TextInput } from "../../../components/TextInput";
 import { Button } from "../components/Button";
@@ -15,7 +20,7 @@ import { openExerciseEditor, openGripEditor } from "../exercises/openExerciseEdi
 import type { ExerciseForm } from "../exercises/types";
 import { useMakeExercise } from "../exercises/useMakeExercise";
 import { KIND_COLORS } from "@sendtally/features/training";
-import { NewWorkoutSheet } from "../library/NewWorkoutSheet";
+import { ExerciseCategorySheet } from "../exercises/ExerciseCategorySheet";
 import { type } from "../type";
 import { PickerRow } from "./PickerRow";
 import type { Picked } from "@sendtally/features/workouts";
@@ -23,9 +28,7 @@ import { pickedOf, usePick } from "./usePick";
 import { usePickerWorld } from "./usePickerWorld";
 
 export type ExercisePickerSheetProps = {
-  /** The workout's kind: the category the picker starts on. */
-  kind: WorkoutKind;
-  /** The workout's items, tagged in the list. */
+  /** The workout's items, tagged in the list; grips in it offer grips only, anything else no grips. */
   items: readonly Item[];
   /** Tick several and add them; otherwise a tap picks one, to swap. */
   multi: boolean;
@@ -35,17 +38,15 @@ export type ExercisePickerSheetProps = {
 
 type Category = WorkoutKind | "all";
 
-const NOT_FINGERS = WORKOUT_KINDS.filter((k) => k !== "hangboard");
-
 /**
  * The exercise library, to build a workout from: search, a category or all, the most used
  * first. Ticked exercises are added in the order they were ticked; New adds them, then opens
  * the exercise editor on what was typed in the category in view, asking which one under All,
- * and adds the exercise once saved. A Fingers workout picks grips, any other the rest; a
- * grip's pencil opens it in the exercise editor.
+ * and adds the exercise once saved. It starts on All; once a grip is in the workout or ticked
+ * it offers only grips, and once anything else is, no grips. A grip's pencil opens it in the
+ * exercise editor.
  */
 export function ExercisePickerSheet({
-  kind,
   items,
   multi,
   onPick,
@@ -53,16 +54,21 @@ export function ExercisePickerSheet({
 }: ExercisePickerSheetProps): React.ReactElement {
   const pick = usePick();
   const make = useMakeExercise();
-  const fingers = kind === "hangboard";
   const [text, setText] = React.useState("");
-  const [category, setCategory] = React.useState<Category>(kind);
+  const [category, setCategory] = React.useState<Category>("all");
   const [ticked, setTicked] = React.useState<PickerEntry[]>([]);
   const [choosing, setChoosing] = React.useState(false);
   const world = usePickerWorld(
     items.map((i) => i.exercise),
-    fingers
+    "all"
   );
-  const entries = pickerEntries(world, { category, text });
+  const { offer, kinds, newKind } = pickerState(
+    world,
+    items.map((i) => i.exercise),
+    ticked,
+    category
+  );
+  const entries = pickerEntries({ ...world, offer }, { category, text });
   const typed = text.trim();
 
   const finish = async (): Promise<void> => {
@@ -107,7 +113,7 @@ export function ExercisePickerSheet({
   const newButton = (
     <Button
       label={t("workouts.newShort")}
-      onPress={() => (category === "all" ? setChoosing(true) : startNew(category))}
+      onPress={() => (newKind === "choose" ? setChoosing(true) : startNew(newKind))}
       variant="outline"
       icon="plus"
       height={44}
@@ -166,18 +172,14 @@ export function ExercisePickerSheet({
               },
             ]}
           />
-          {!fingers && (
+          {offer !== "grips" && (
             <ChipRow<Category>
               scroll
               value={category}
               onChange={setCategory}
               options={[
-                ...NOT_FINGERS.map((k) => ({
-                  value: k,
-                  label: kindLabel(k),
-                  mark: KIND_COLORS[k],
-                })),
                 { value: "all" as const, label: t("workouts.allCategories") },
+                ...kinds.map((k) => ({ value: k, label: kindLabel(k), mark: KIND_COLORS[k] })),
               ]}
             />
           )}
@@ -208,12 +210,7 @@ export function ExercisePickerSheet({
         </View>
       </HangSheet>
       {choosing && (
-        <NewWorkoutSheet
-          making="exercise"
-          kinds={NOT_FINGERS}
-          onPick={startNew}
-          onClose={() => setChoosing(false)}
-        />
+        <ExerciseCategorySheet kinds={kinds} onPick={startNew} onClose={() => setChoosing(false)} />
       )}
     </>
   );

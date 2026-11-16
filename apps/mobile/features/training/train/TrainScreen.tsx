@@ -11,7 +11,7 @@ import { Segmented } from "../components/Segmented";
 import { SegmentPager } from "../../../components/SegmentPager";
 import { HangDataProvider } from "../data/HangDataProvider";
 import { openExerciseEditor } from "../exercises/openExerciseEditor";
-import { NewWorkoutSheet } from "../library/NewWorkoutSheet";
+import { ExerciseCategorySheet } from "../exercises/ExerciseCategorySheet";
 import { WorkoutLibrary } from "../library/WorkoutLibrary";
 import { useNewBlock } from "../planning/useNewBlock";
 import { BlocksList } from "./BlocksList";
@@ -36,7 +36,7 @@ const label = (v: TrainView): string =>
 
 /**
  * The Train tab: blocks, the workout library, and exercises. Create opens a sheet to make any
- * of them; a workout or an exercise asks its category first.
+ * of them; an exercise asks its category first.
  */
 export function TrainScreen({
   requested = null,
@@ -50,13 +50,14 @@ export function TrainScreen({
   React.useEffect(() => {
     if (asked !== undefined) router.setParams({ view: undefined });
   }, [asked]);
-  const [adding, setAdding] = React.useState<"workout" | "exercise" | null>(null);
+  const [adding, setAdding] = React.useState(false);
   const [menuOpen, setMenuOpen] = React.useState(false);
   const picked = React.useRef<TrainView | null>(null);
   const newBlock = useNewBlock(t("training.train"));
   const create = (v: TrainView): void => {
     if (v === "blocks") newBlock();
-    else setAdding(v === "workouts" ? "workout" : "exercise");
+    else if (v === "workouts") router.push("/workout/edit");
+    else setAdding(true);
   };
   const views = [
     { value: "blocks" as const, label: t("plan.tabBlocks") },
@@ -110,16 +111,8 @@ export function TrainScreen({
           ))}
         </View>
       </Sheet>
-      {adding !== null && (
-        <NewWorkoutSheet
-          making={adding}
-          onPick={(kind) =>
-            adding === "workout"
-              ? router.push({ pathname: "/workout/edit", params: { kind } })
-              : openExerciseEditor(kind)
-          }
-          onClose={() => setAdding(null)}
-        />
+      {adding && (
+        <ExerciseCategorySheet onPick={openExerciseEditor} onClose={() => setAdding(false)} />
       )}
     </View>
   );

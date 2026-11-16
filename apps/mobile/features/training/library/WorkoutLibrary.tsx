@@ -1,14 +1,12 @@
 import { router } from "expo-router";
 import React from "react";
 import { View } from "react-native";
-import type { Focus } from "@sendtally/core/hang";
 import { focusParam } from "@sendtally/features/training";
 import { libraryShelves, type LibraryWorkout } from "@sendtally/features/workouts";
 import { HangDataProvider } from "../data/HangDataProvider";
 import { LoadState } from "../data/LoadState";
 import { LibraryBrowser } from "./LibraryBrowser";
 import { LibraryShelf } from "./LibraryShelf";
-import { NewWorkoutSheet } from "./NewWorkoutSheet";
 import { useLibrary } from "./useLibrary";
 
 const open = (w: LibraryWorkout): void =>
@@ -16,7 +14,6 @@ const open = (w: LibraryWorkout): void =>
 
 function Library(): React.ReactElement {
   const { state, reload } = useLibrary();
-  const [adding, setAdding] = React.useState<{ focus: Focus | null } | null>(null);
   return (
     <View style={{ gap: 14 }}>
       {state.status === "ready" ? (
@@ -32,24 +29,17 @@ function Library(): React.ReactElement {
                   params: { focus: focusParam(shelf.focus) },
                 })
               }
-              onAdd={() => setAdding({ focus: shelf.focus })}
+              onAdd={() =>
+                router.push({
+                  pathname: "/workout/edit",
+                  params: { focus: focusParam(shelf.focus) },
+                })
+              }
             />
           ))}
         </LibraryBrowser>
       ) : (
         <LoadState state={state} onRetry={() => void reload()} />
-      )}
-      {adding !== null && (
-        <NewWorkoutSheet
-          making="workout"
-          onPick={(kind) =>
-            router.push({
-              pathname: "/workout/edit",
-              params: { kind, focus: focusParam(adding.focus) },
-            })
-          }
-          onClose={() => setAdding(null)}
-        />
       )}
     </View>
   );

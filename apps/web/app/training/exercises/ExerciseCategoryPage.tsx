@@ -60,7 +60,12 @@ function EntryRow({ entry }: { entry: PickerEntry }): React.ReactElement {
 /** All of one category's exercises, the user's own badged among the starter ones, the most used first, to search. */
 export function ExerciseCategoryPage({ kind }: { kind: WorkoutKind }): React.ReactElement {
   const { model } = useHangData();
-  const world = usePickerWorld(useAppApi(), model, [], kind === "hangboard");
+  const world = usePickerWorld(
+    useAppApi(),
+    model,
+    [],
+    kind === "hangboard" ? "grips" : "exercises"
+  );
   const [text, setText] = React.useState("");
   const label = kindLabel(kind);
   const placeholder = t("focus.search", { focus: label });

@@ -6,30 +6,21 @@ import { Sheet } from "../../components/Sheet";
 import { CategoryMark } from "../components/CategoryMark";
 
 export type CategorySheetProps = {
-  /** What is being made, a workout or an exercise. */
-  making: "workout" | "exercise";
   /** The categories offered; all five by default. */
   kinds?: readonly WorkoutKind[];
   onPick: (kind: WorkoutKind) => void;
   onClose: () => void;
 };
 
-/** Making something new where its category is not known yet: the category first, then its editor. */
+/** Making a new exercise where its category is not known yet: the category first, then its editor. */
 export function CategorySheet({
-  making,
   kinds = WORKOUT_KINDS,
   onPick,
   onClose,
 }: CategorySheetProps): React.ReactElement {
   return (
-    <Sheet
-      open
-      title={making === "workout" ? t("workouts.pickCategory") : t("workouts.pickExerciseCategory")}
-      onClose={onClose}
-    >
-      <span className="train-label">
-        {making === "workout" ? t("workouts.createWorkout") : t("workouts.createExercise")}
-      </span>
+    <Sheet open title={t("workouts.pickExerciseCategory")} onClose={onClose}>
+      <span className="train-label">{t("workouts.createExercise")}</span>
       <div className="option-list">
         {kinds.map((k) => (
           <button

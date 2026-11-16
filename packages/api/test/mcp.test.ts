@@ -3,6 +3,7 @@ import { PostHog } from "posthog-node";
 import { describe, expect, it, vi } from "vitest";
 import type { Env } from "../src/bindings";
 import * as posthog from "../src/lib/posthog";
+import { MIXED_GRIPS } from "../src/lib/workoutKind";
 import { testApp } from "./harness";
 
 type ToolResult = { isError?: boolean; content: Array<{ text: string }> };
@@ -679,6 +680,35 @@ describe("connector", () => {
       );
       expect(await mine(user)).toHaveLength(3);
       expect(await mine(user + "_other")).toEqual([]);
+    });
+
+    it("works out a workout's kind from its items when none is given", async () => {
+      const user = "user_save_workout_no_kind";
+      await toolJson(user, "save_exercise", { name: "Hip openers", kind: "mobility" });
+      const base = { name: "Loosen up", description: "", minutes: null, targetRpe: null };
+      const kindOf = async (body: Record<string, unknown>): Promise<string> =>
+        (await toolJson<{ workout: { kind: string } }>(user, "save_workout", body)).workout.kind;
+      const items = [{ exercise: "Hip openers", doses: [{ sets: 2, onS: 60 }] }];
+      expect(await kindOf({ ...base, items })).toBe("mobility");
+      expect(await kindOf({ ...base, name: "Board", kind: "climbing", items: [] })).toBe(
+        "climbing"
+      );
+      expect(await kindOf({ ...base, name: "Later", items: [] })).toBe("other");
+    });
+
+    it("refuses a workout that mixes grip ids with other exercises", async () => {
+      const result = await callTool("user_save_mixed", env, "save_workout", {
+        name: "Mixed",
+        description: "",
+        minutes: null,
+        targetRpe: null,
+        items: [
+          { exercise: "half", doses: [{ sets: 3, onS: 10 }] },
+          { exercise: "Back squat", doses: [{ sets: 5, reps: 5 }] },
+        ],
+      });
+      expect(result.isError).toBe(true);
+      expect(result.content[0]?.text).toContain(MIXED_GRIPS);
     });
 
     it("explains which field is out of range", async () => {

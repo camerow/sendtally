@@ -133,6 +133,24 @@ describe("Workout editor", () => {
     expect(router.back).toHaveBeenCalled();
   });
 
+  it("offers grips only once a grip is in, and everything again once it goes", async () => {
+    await renderWithHang(<WorkoutEditorScreen />, hangData(), world);
+    await fireEvent.press(screen.getByText("Add exercises"));
+    expect(screen.getByRole("radio", { name: "Fingers" })).toBeTruthy();
+    await fireEvent.press(screen.getByRole("checkbox", { name: "Half crimp" }));
+    expect(screen.queryByRole("radio", { name: "All" })).toBeNull();
+    expect(screen.queryByRole("checkbox", { name: "Back squat" })).toBeNull();
+    await fireEvent.press(screen.getByText("Add 1 exercise"));
+    await act(async () => undefined);
+    expect(screen.queryByLabelText("Duration")).toBeNull();
+
+    await fireEvent.press(screen.getByLabelText("Remove Half crimp"));
+    await pick("Back squat");
+    await fireEvent.press(screen.getByText("Save"));
+    const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
+    expect(saved).toMatchObject({ kind: "strength", exerciseRestS: 0 });
+  });
+
   it("adds and removes a third alternate from the exercise's menu sheet", async () => {
     await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
     await pick("Back squat");
@@ -298,7 +316,6 @@ describe("Workout editor", () => {
     jest.mocked(randomUUID).mockImplementation(() => (uuids++ === 0 ? "w-new" : `item-${uuids}`));
     await renderWithHang(<WorkoutEditorScreen kind="mobility" />, hangData(), world);
     await fireEvent.press(screen.getByText("Add exercises"));
-    expect(screen.queryByRole("checkbox", { name: "Back squat" })).toBeNull();
     const strength = screen.getAllByRole("radio", { name: "Strength" }).at(-1);
     if (strength === undefined) throw new Error("no Strength filter");
     await fireEvent.press(strength);
@@ -331,6 +348,7 @@ describe("Workout editor", () => {
     });
     const editor = await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
     await fireEvent.press(screen.getByText("Add exercises"));
+    await fireEvent.press(screen.getAllByRole("radio", { name: "Strength" }).at(-1)!);
     await fireEvent.changeText(screen.getByLabelText("Search exercises"), "Sissy squat");
     expect(screen.getByText("No exercise called Sissy squat")).toBeTruthy();
     await fireEvent.press(screen.getAllByText("New")[1]!);
@@ -360,13 +378,12 @@ describe("Workout editor", () => {
     expect(editor.queryByLabelText("Weight (kg)")).toBeNull();
   });
 
-  it("asks which category a new exercise is in when the picker shows all of them", async () => {
-    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
+  it("asks which category a new exercise is in, a grip too, while the workout is empty", async () => {
+    await renderWithHang(<WorkoutEditorScreen />, hangData(), world);
     await fireEvent.press(screen.getByText("Add exercises"));
-    await fireEvent.press(screen.getByRole("radio", { name: "All" }));
     await fireEvent.press(screen.getByText("New"));
     expect(screen.getByText("What kind of exercise?")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Fingers" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Fingers" })).toBeTruthy();
     await fireEvent.press(screen.getByRole("button", { name: "Mobility" }));
     await act(async () => undefined);
     expect(router.push).toHaveBeenCalledWith({

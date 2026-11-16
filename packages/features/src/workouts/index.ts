@@ -28,6 +28,7 @@ export type {
   WorkoutDraft,
   WorkoutUse,
 } from "./types";
+export { useDerivedKindDraft } from "./useDerivedKindDraft";
 export { useWorkoutActions, type WorkoutActions } from "./useWorkoutActions";
 export {
   useWorkoutLibrary,

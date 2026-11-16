@@ -13,7 +13,6 @@ export const workouts = {
   "workouts.notDoneYet": "Aún no hecho",
   "workouts.newWorkout": "Nuevo entreno",
   "workouts.createWorkout": "Crear entreno",
-  "workouts.pickCategory": "¿Qué tipo de entreno?",
   "workouts.pickExerciseCategory": "¿Qué tipo de ejercicio?",
   "workouts.category": "Categoría",
   "workouts.namePlaceholder": "Gimnasio del martes",

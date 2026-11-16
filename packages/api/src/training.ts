@@ -32,6 +32,7 @@ import {
 } from "./lib/plan";
 import { syncActivityToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
+import { MIXED_GRIPS, MixedGripsError, withDerivedKind } from "./lib/workoutKind";
 import { captureWorkoutLogged } from "./workoutLogged";
 
 // Training other than climbing and hangboarding. The app generates every id,
@@ -262,7 +263,15 @@ export const workouts = new Hono<AppEnv>()
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
       await repo.ensureUser(c.env.DB, userId);
-      const row = await repo.saveWorkout(c.env.DB, userId, { id, ...c.req.valid("json") });
+      const body = c.req.valid("json");
+      const saved =
+        body.kind === undefined ? (await repo.getWorkout(c.env.DB, userId, id))?.kind : undefined;
+      const workout = await withDerivedKind(c.env.DB, userId, body, saved).catch((e: unknown) => {
+        if (e instanceof MixedGripsError) return null;
+        throw e;
+      });
+      if (workout === null) return c.json({ error: MIXED_GRIPS }, 400);
+      const row = await repo.saveWorkout(c.env.DB, userId, { id, ...workout });
       return c.json({ workout: workoutOf(row) });
     }
   )

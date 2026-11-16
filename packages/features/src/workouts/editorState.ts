@@ -1,4 +1,12 @@
-import { gripMeasureOf, withItemIds, type Dose, type Item } from "@sendtally/core/hang";
+import {
+  defaultExerciseRestS,
+  gripMeasureOf,
+  withItemIds,
+  workoutKindOf,
+  type Dose,
+  type Item,
+  type WorkoutKind,
+} from "@sendtally/core/hang";
 import { t } from "../i18n";
 import type { EnduranceUnit } from "../log-session";
 import type { Picked, WorkoutDraft } from "./types";
@@ -21,15 +29,34 @@ export function withItemsAdded(
   newId: () => string
 ): WorkoutDraft {
   const last = s.items[s.items.length - 1];
-  const items = picked.map(({ exercise, measure, dose }): Item => ({
+  const items = picked.map(({ exercise, kind, measure, dose }): Item => ({
     id: newId(),
     exercise,
     doses:
-      s.kind === "hangboard" && last !== undefined && fitsGrip(last, measure)
+      kind === "hangboard" && last !== undefined && fitsGrip(last, measure)
         ? last.doses.map((d) => ({ ...d }))
-        : [dose === undefined ? newDoseFor(s.kind, measure) : { ...dose }],
+        : [dose === undefined ? newDoseFor(kind, measure) : { ...dose }],
   }));
   return { ...s, items: [...s.items, ...items] };
+}
+
+/**
+ * The draft with its kind read off its exercises (see `workoutKindOf`), an exercise the
+ * library does not know yet counting as the kind it had. A rest between exercises left at the
+ * old kind's default moves to the new one's.
+ */
+export function withDerivedKind(
+  s: WorkoutDraft,
+  kindIn: (exercise: string) => WorkoutKind | undefined
+): WorkoutDraft {
+  const kind = workoutKindOf(
+    s.items.map((i) => i.exercise),
+    (e) => kindIn(e) ?? s.kind,
+    s.kind
+  );
+  if (kind === s.kind) return s;
+  const rest = s.exerciseRestS === defaultExerciseRestS(s.kind);
+  return { ...s, kind, exerciseRestS: rest ? defaultExerciseRestS(kind) : s.exerciseRestS };
 }
 
 /** Another exercise in the item's place, keeping its doses unless a grip is measured another way. */

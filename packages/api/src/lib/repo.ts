@@ -3389,6 +3389,18 @@ export async function listWorkouts(db: D1Database, userId: string): Promise<Work
     .all();
 }
 
+export async function getWorkout(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<WorkoutRow | undefined> {
+  return drizzle(db)
+    .select()
+    .from(workouts)
+    .where(and(eq(workouts.user_id, userId), eq(workouts.id, id)))
+    .get();
+}
+
 export async function saveWorkout(
   db: D1Database,
   userId: string,

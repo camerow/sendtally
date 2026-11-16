@@ -13,7 +13,6 @@ export const workouts = {
   "workouts.notDoneYet": "Pas encore fait",
   "workouts.newWorkout": "Nouvelle séance",
   "workouts.createWorkout": "Créer une séance",
-  "workouts.pickCategory": "Quel type de séance ?",
   "workouts.pickExerciseCategory": "Quel type d'exercice ?",
   "workouts.category": "Catégorie",
   "workouts.namePlaceholder": "Salle du mardi",

@@ -1,11 +1,12 @@
 import React from "react";
-import { WORKOUT_KINDS, type Item, type WorkoutKind } from "@sendtally/core/hang";
+import type { Item, WorkoutKind } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import {
   entryNamed,
   measureLabel,
   pickedOf,
   pickerEntries,
+  pickerState,
   usePickerWorld,
   type ExerciseForm,
   type PickerEntry,
@@ -27,9 +28,7 @@ import { NewExerciseSheet } from "./NewExerciseSheet";
 import { useMake, usePick } from "./useMake";
 
 export type ExercisePickerProps = {
-  /** The workout's kind: the category the picker starts on. */
-  kind: WorkoutKind;
-  /** The workout's items, tagged in the list. */
+  /** The workout's items, tagged in the list; grips in it offer grips only, anything else no grips. */
   items: readonly Item[];
   /** Tick several and add them; otherwise a press picks one, to swap. */
   multi: boolean;
@@ -39,15 +38,13 @@ export type ExercisePickerProps = {
 
 type Category = WorkoutKind | "all";
 
-const NOT_FINGERS = WORKOUT_KINDS.filter((k) => k !== "hangboard");
-
 /**
  * The exercise library, to build a workout from: search, a category or all, the most used
  * first. Ticked exercises are added in the order they were ticked; New makes one in the
- * category in view, asking which one under All, and adds it once saved.
+ * category in view, asking which one under All, and adds it once saved. It starts on All; once
+ * a grip is in the workout or ticked it offers only grips, and once anything else is, no grips.
  */
 export function ExercisePicker({
-  kind,
   items,
   multi,
   onPick,
@@ -56,18 +53,23 @@ export function ExercisePicker({
   const { model, today } = useHangData();
   const pick = usePick();
   const make = useMake();
-  const fingers = kind === "hangboard";
   const [text, setText] = React.useState("");
-  const [category, setCategory] = React.useState<Category>(kind);
+  const [category, setCategory] = React.useState<Category>("all");
   const [ticked, setTicked] = React.useState<PickerEntry[]>([]);
   const [making, setMaking] = React.useState<WorkoutKind | "choose" | null>(null);
   const world = usePickerWorld(
     useAppApi(),
     model,
     items.map((i) => i.exercise),
-    fingers
+    "all"
   );
-  const entries = pickerEntries(world, { category, text });
+  const { offer, kinds, newKind } = pickerState(
+    world,
+    items.map((i) => i.exercise),
+    ticked,
+    category
+  );
+  const entries = pickerEntries({ ...world, offer }, { category, text });
   const typed = text.trim();
 
   const finish = async (): Promise<void> => {
@@ -105,11 +107,7 @@ export function ExercisePicker({
     return measureLabel(entry.source.exercise.measure, entry.source.exercise.kind);
   };
   const newButton = (
-    <button
-      type="button"
-      className="outline-button"
-      onClick={() => setMaking(category === "all" ? "choose" : category)}
-    >
+    <button type="button" className="outline-button" onClick={() => setMaking(newKind)}>
       + {t("workouts.newShort")}
     </button>
   );
@@ -117,8 +115,7 @@ export function ExercisePicker({
   if (making === "choose")
     return (
       <CategorySheet
-        making="exercise"
-        kinds={NOT_FINGERS}
+        kinds={kinds}
         onPick={setMaking}
         onClose={() => setMaking((m) => (m === "choose" ? null : m))}
       />
@@ -163,9 +160,9 @@ export function ExercisePicker({
           />
           {newButton}
         </div>
-        {!fingers && (
+        {offer !== "grips" && (
           <div className="setup-chips">
-            {[...NOT_FINGERS, "all" as const].map((k) => (
+            {["all" as const, ...kinds].map((k) => (
               <button
                 key={k}
                 type="button"

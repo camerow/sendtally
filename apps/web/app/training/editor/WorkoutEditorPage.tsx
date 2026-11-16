@@ -8,7 +8,7 @@ import {
   type Item,
   type WorkoutKind,
 } from "@sendtally/core/hang";
-import { exerciseLabel } from "@sendtally/features/exercises";
+import { exerciseKindIn, exerciseLabel, usePickerWorld } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { durationLabel } from "@sendtally/features/sessions";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
@@ -20,6 +20,7 @@ import {
   estimatedMinutes,
   newWorkoutDraft,
   useWorkoutActions,
+  useDerivedKindDraft,
   withEditorIds,
   withExerciseSwapped,
   withItem,
@@ -59,7 +60,7 @@ export type WorkoutEditorProps = {
   id?: string;
   /** Start from a copy of this workout, built in or the user's own. */
   from?: string;
-  /** A new workout of this kind. */
+  /** A new workout of this kind; Other by default, until its exercises say otherwise. */
   kind?: WorkoutKind;
   /** A new workout's focus, from the shelf it was made on; General by default. */
   focus?: Focus | null;
@@ -74,7 +75,8 @@ function initialDraft(
     const draft = withEditorIds(draftOf(base), newId);
     return id === undefined ? { ...draft, name: copyName(draft.name) } : draft;
   }
-  return kind === undefined ? null : { ...newWorkoutDraft(kind), focus };
+  if (id !== undefined || from !== undefined) return null;
+  return { ...newWorkoutDraft(kind ?? "other"), focus };
 }
 
 function Editor({
@@ -96,7 +98,10 @@ function Editor({
   const exercises = useExercises(api).state;
   const { model } = useHangData();
   const [untouched] = React.useState(initial);
-  const [state, setState] = React.useState(untouched);
+  const { state, setState, remember } = useDerivedKindDraft(
+    untouched,
+    exerciseKindIn(usePickerWorld(api, model, [], "all"))
+  );
   const guard = useDiscardGuard(state !== untouched);
   const [picking, setPicking] = React.useState<{ swap: number } | "add" | null>(null);
   const descriptionId = React.useId();
@@ -213,16 +218,16 @@ function Editor({
       />
       {picking !== null && (
         <ExercisePicker
-          kind={state.kind}
           items={state.items}
           multi={picking === "add"}
-          onPick={(picked) =>
+          onPick={(list) => {
+            remember(list);
             setState((s) =>
               picking === "add"
-                ? withItemsAdded(s, picked, newId)
-                : withExerciseSwapped(s, picking.swap, picked[0] ?? { exercise: "" })
-            )
-          }
+                ? withItemsAdded(s, list, newId)
+                : withExerciseSwapped(s, picking.swap, list[0] ?? { exercise: "", kind: s.kind })
+            );
+          }}
           onClose={() => setPicking(null)}
         />
       )}

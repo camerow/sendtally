@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import type { WorkoutRecord } from "@sendtally/api-client";
@@ -90,18 +90,13 @@ describe("Workout library", () => {
     });
   });
 
-  it("makes a new workout in a shelf's focus, its category asked first", async () => {
+  it("makes a new workout in a shelf's focus without asking its category", async () => {
     await show(<WorkoutLibrary />);
     await fireEvent.press(screen.getByLabelText("New workout in Power"));
-    expect(screen.getByText("What kind of workout?")).toBeTruthy();
-    const kinds = screen.getAllByRole("button", { name: "Climbing" });
-    await fireEvent.press(kinds[kinds.length - 1]!);
-    await act(async () => undefined);
     expect(router.push).toHaveBeenLastCalledWith({
       pathname: "/workout/edit",
-      params: { kind: "climbing", focus: "power" },
+      params: { focus: "power" },
     });
-    expect(screen.queryByText("What kind of workout?")).toBeNull();
   });
 
   it("lists the matches in place of the shelves while a search is typed", async () => {

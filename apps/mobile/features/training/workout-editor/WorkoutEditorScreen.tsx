@@ -11,7 +11,7 @@ import {
   type WorkoutKind,
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { exerciseLabel } from "@sendtally/features/exercises";
+import { exerciseKindIn, exerciseLabel } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { durationLabel } from "@sendtally/features/sessions";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
@@ -33,6 +33,7 @@ import { NameField } from "../components/NameField";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
+import { usePickerWorld } from "../exercise-picker/usePickerWorld";
 import { useLibrary } from "../library/useLibrary";
 import { TargetEffort } from "../plan/TargetEffort";
 import { EditorTextField } from "../components/EditorTextField";
@@ -42,6 +43,7 @@ import {
   withExerciseSwapped,
   withItem,
   withItemsAdded,
+  useDerivedKindDraft,
   withEditorIds,
   withItemMoved,
   withRestAfter,
@@ -67,7 +69,7 @@ export type WorkoutEditorScreenProps = {
   id?: string;
   /** Start from a copy of this workout, built in or the user's own. */
   from?: string;
-  /** A new workout of this kind. */
+  /** A new workout of this kind; Other by default, until its exercises say otherwise. */
   kind?: WorkoutKind;
   /** A new workout's focus, from the shelf it was made on; General by default. */
   focus?: Focus | null;
@@ -86,7 +88,8 @@ function initialDraft(
     const draft = withEditorIds(draftOf(base), randomUUID);
     return id === undefined ? { ...draft, name: copyName(draft.name) } : draft;
   }
-  return kind === undefined ? null : { ...newWorkoutDraft(kind), focus };
+  if (id !== undefined || from !== undefined) return null;
+  return { ...newWorkoutDraft(kind ?? "other"), focus };
 }
 
 function Editor({
@@ -103,7 +106,10 @@ function Editor({
   const actions = useWorkoutActions(api, reportFailure);
   const exercises = useExercises(api).state;
   const { model } = useHangData();
-  const [state, setState] = React.useState(initial);
+  const { state, setState, remember } = useDerivedKindDraft(
+    initial,
+    exerciseKindIn(usePickerWorld([], "all"))
+  );
   const estimate = estimatedMinutes(state);
   const [untouched] = React.useState(initial);
   const release = useDiscardGuard(state !== untouched);
@@ -218,16 +224,16 @@ function Editor({
       </KeyboardAvoidingView>
       {picking !== null && (
         <ExercisePickerSheet
-          kind={state.kind}
           items={state.items}
           multi={picking === "add"}
-          onPick={(picked) =>
+          onPick={(list) => {
+            remember(list);
             setState((s) =>
               picking === "add"
-                ? withItemsAdded(s, picked, randomUUID)
-                : withExerciseSwapped(s, picking.swap, picked[0] ?? { exercise: "" })
-            )
-          }
+                ? withItemsAdded(s, list, randomUUID)
+                : withExerciseSwapped(s, picking.swap, list[0] ?? { exercise: "", kind: s.kind })
+            );
+          }}
           onClose={() => setPicking(null)}
         />
       )}

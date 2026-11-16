@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Exercise } from "@sendtally/api-client";
-import type { LibraryWorkout } from "../workouts/types";
+import type { LibraryWorkout, Picked } from "../workouts/types";
 import {
   exerciseWorkout,
   usedInText,
@@ -90,7 +90,11 @@ describe("exerciseWorkout", () => {
 
   it("reuses the wrapper, else saves one of its kind named after it at its starting dose", async () => {
     const save = vi.fn(async () => undefined);
-    const pick = vi.fn(async () => ({ exercise: "Pull-ups", dose: { sets: 3, reps: 8 } }));
+    const pick = vi.fn(async (): Promise<Picked> => ({
+      exercise: "Pull-ups",
+      kind: "strength",
+      dose: { sets: 3, reps: 8 },
+    }));
     const making = new Set<string>();
     const wrapper = workout("w1", "Pull-ups", ["Pull-ups"]);
     expect(await exerciseWorkout({ workouts: [wrapper], pick, save, newId, making })(entry)).toBe(
@@ -116,8 +120,8 @@ describe("exerciseWorkout", () => {
     const waiting: (() => void)[] = [];
     const pick = vi.fn(
       () =>
-        new Promise<{ exercise: string }>((resolve) => {
-          waiting.push(() => resolve({ exercise: "Pull-ups" }));
+        new Promise<Picked>((resolve) => {
+          waiting.push(() => resolve({ exercise: "Pull-ups", kind: "strength" }));
         })
     );
     const ensure = exerciseWorkout({ workouts: [], pick, save, newId, making: new Set() });
@@ -136,7 +140,7 @@ describe("exerciseWorkout", () => {
           saved = resolve;
         })
     );
-    const pick = vi.fn(async () => ({ exercise: "Pull-ups" }));
+    const pick = vi.fn(async (): Promise<Picked> => ({ exercise: "Pull-ups", kind: "strength" }));
     const ensure = exerciseWorkout({ workouts: [], pick, save, newId, making: new Set() });
     expect(await ensure(entry)).toBe("new");
     expect(await ensure(entry)).toBeNull();
@@ -149,7 +153,7 @@ describe("exerciseWorkout", () => {
 
   it("frees the exercise when the save fails, so the add can be tried again", async () => {
     const save = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValue(undefined);
-    const pick = vi.fn(async () => ({ exercise: "Pull-ups" }));
+    const pick = vi.fn(async (): Promise<Picked> => ({ exercise: "Pull-ups", kind: "strength" }));
     const ensure = exerciseWorkout({ workouts: [], pick, save, newId, making: new Set() });
     expect(await ensure(entry)).toBe("new");
     await new Promise((r) => setTimeout(r, 0));

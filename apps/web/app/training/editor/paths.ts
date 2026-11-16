@@ -1,8 +1,8 @@
 import type { Focus, WorkoutKind } from "@sendtally/core/hang";
 import { focusParam } from "@sendtally/features/training";
 
-export const newWorkoutPath = (kind: WorkoutKind, focus: Focus | null = null): string =>
-  `/app/train/workouts/new?${new URLSearchParams({ kind, focus: focusParam(focus) })}`;
+export const newWorkoutPath = (focus: Focus | null = null): string =>
+  `/app/train/workouts/new?${new URLSearchParams({ focus: focusParam(focus) })}`;
 
 /** The editor on a copy of a workout, built in or the user's own, saved as a new one. */
 export const copyWorkoutPath = (from: string): string =>

@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { restAfterItem } from "@sendtally/core/hang";
+import { restAfterItem, type WorkoutKind } from "@sendtally/core/hang";
 import type { WorkoutDraft } from "./types";
 import {
   draftOfEditor,
   withAlternates,
   withDoseAdded,
   withDoseName,
+  withDerivedKind,
   withExerciseSwapped,
   withItemsAdded,
   withoutItem,
@@ -48,7 +49,10 @@ describe("workout editor state", () => {
     };
     const added = withItemsAdded(
       fingers,
-      [{ exercise: "open" }, { exercise: "block", measure: "secondsWeight" }],
+      [
+        { exercise: "open", kind: "hangboard" },
+        { exercise: "block", kind: "hangboard", measure: "secondsWeight" },
+      ],
       () => "id"
     );
     expect(added.items.map((i) => i.doses)).toEqual([
@@ -57,11 +61,43 @@ describe("workout editor state", () => {
       [{ sets: 5, reps: 1, onS: 10, edgeMm: 0, setRestS: 120 }],
     ]);
     expect(
-      withExerciseSwapped(fingers, 0, { exercise: "block", measure: "repsWeight" }).items
+      withExerciseSwapped(fingers, 0, {
+        exercise: "block",
+        kind: "hangboard",
+        measure: "repsWeight",
+      }).items
     ).toEqual([{ exercise: "block", doses: [{ sets: 5, reps: 5, setRestS: 120 }] }]);
-    expect(withExerciseSwapped(fingers, 0, { exercise: "open" }).items).toEqual([
+    expect(withExerciseSwapped(fingers, 0, { exercise: "open", kind: "hangboard" }).items).toEqual([
       { exercise: "open", doses: [hang] },
     ]);
+  });
+
+  it("reads its kind off its exercises as they come and go", () => {
+    const kinds: Record<string, WorkoutKind> = {
+      half: "hangboard",
+      "Back squat": "strength",
+      "Hip openers": "mobility",
+      Pigeon: "mobility",
+    };
+    const kindIn = (e: string): WorkoutKind | undefined => kinds[e];
+    const blank: WorkoutDraft = { ...legs, kind: "other", items: [], exerciseRestS: 0 };
+    const hang = { exercise: "half", doses: [{ sets: 3, reps: 6, onS: 7, offS: 3 }] };
+    const fingers = withDerivedKind({ ...blank, items: [hang] }, kindIn);
+    expect(fingers).toMatchObject({ kind: "hangboard", exerciseRestS: 180 });
+    expect(withDerivedKind(withoutItem(fingers, 0), kindIn)).toMatchObject({
+      kind: "other",
+      exerciseRestS: 0,
+    });
+    const stretch = { exercise: "Hip openers", doses: [{ sets: 2, onS: 60 }] };
+    const pigeon = { ...stretch, exercise: "Pigeon" };
+    expect(withDerivedKind({ ...blank, items: [squat, stretch] }, kindIn).kind).toBe("strength");
+    expect(withDerivedKind({ ...blank, items: [squat, stretch, pigeon] }, kindIn).kind).toBe(
+      "mobility"
+    );
+    const unknown = { ...squat, exercise: "Made just now" };
+    expect(withDerivedKind({ ...legs, items: [unknown] }, kindIn).kind).toBe("strength");
+    const climbing: WorkoutDraft = { ...blank, kind: "climbing" };
+    expect(withDerivedKind(climbing, kindIn)).toBe(climbing);
   });
 
   it("round trips a workout unchanged", () => {

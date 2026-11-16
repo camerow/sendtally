@@ -164,6 +164,22 @@ export const DEFAULT_EXERCISE_REST_S = 180;
 export const defaultExerciseRestS = (kind: WorkoutKind): number =>
   kind === "hangboard" ? DEFAULT_EXERCISE_REST_S : 0;
 
+/**
+ * A workout's kind, read off its exercises: hangboard when all are grips, else the kind most
+ * of them share, a tie going to the first. With none it keeps the kind it had, unless that was
+ * hangboard, which needs a grip.
+ */
+export function workoutKindOf(
+  exercises: readonly string[],
+  kindOf: (exercise: string) => WorkoutKind,
+  kept: WorkoutKind
+): WorkoutKind {
+  const kinds = exercises.map(kindOf);
+  const count = (k: WorkoutKind): number => kinds.filter((x) => x === k).length;
+  const empty = kept === "hangboard" ? "other" : kept;
+  return kinds.reduce((best, k) => (count(k) > count(best) ? k : best), kinds[0] ?? empty);
+}
+
 /** A run of weeks from a start date, or with none a template to schedule. */
 export type Block = {
   id: string;
