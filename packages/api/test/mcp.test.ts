@@ -149,6 +149,80 @@ describe("connector", () => {
     expect(toolCall?.properties).not.toHaveProperty("$mcp_response");
   });
 
+  it("records each call's intent as its tool title, never the assistant's own words", async () => {
+    const client = new PostHog("phc_test", {
+      host: "https://us.i.posthog.com",
+      fetch: async () => new Response("{}"),
+    });
+    const capture = vi.spyOn(client, "capture");
+    const getPostHog = vi.spyOn(posthog, "getPostHog").mockReturnValue(client);
+    try {
+      await callTool("user_mcp", env, "list_sessions", { context: "Find my Crimp line send" });
+    } finally {
+      getPostHog.mockRestore();
+    }
+
+    expect(capture.mock.calls.find(([e]) => e.event === "$mcp_tool_call")?.[0]).toMatchObject({
+      properties: { $mcp_intent: "List climbing sessions", $mcp_intent_source: "inferred" },
+    });
+    expect(JSON.stringify(capture.mock.calls)).not.toContain("Crimp line");
+  });
+
+  it("groups a conversation's calls by the handle the assistant echoes", async () => {
+    const client = new PostHog("phc_test", {
+      host: "https://us.i.posthog.com",
+      fetch: async () => new Response("{}"),
+    });
+    const capture = vi.spyOn(client, "capture");
+    const getPostHog = vi.spyOn(posthog, "getPostHog").mockReturnValue(client);
+    let listed: { result: { tools: { name: string; inputSchema: { properties: object } }[] } };
+    try {
+      listed = (await (await rpc("tools/list", {}, "user_mcp")).json()) as typeof listed;
+      const first = await callTool("user_mcp");
+      const handle = first.content.map((c) => c.text).find((t) => t.includes("conversation_id"));
+      const { conversation_id } = JSON.parse(handle ?? "{}") as { conversation_id: string };
+      await callTool("user_mcp", env, "get_plan", { conversation_id });
+      await callTool("user_mcp", env, "get_more_tools", {
+        context: "Rename a block",
+        conversation_id,
+      });
+    } finally {
+      getPostHog.mockRestore();
+    }
+
+    for (const tool of listed.result.tools) {
+      expect(tool.inputSchema.properties, tool.name).toHaveProperty("conversation_id");
+    }
+    const sessions = capture.mock.calls
+      .filter(([e]) => e.event === "$mcp_tool_call" || e.event === "$mcp_missing_capability")
+      .map(([e]) => e.properties?.$session_id);
+    expect(sessions).toHaveLength(3);
+    expect(sessions[0]).toBeTruthy();
+    expect(new Set(sessions).size).toBe(1);
+  });
+
+  it("never records a conversation handle the assistant made up", async () => {
+    const client = new PostHog("phc_test", {
+      host: "https://us.i.posthog.com",
+      fetch: async () => new Response("{}"),
+    });
+    const capture = vi.spyOn(client, "capture");
+    const getPostHog = vi.spyOn(posthog, "getPostHog").mockReturnValue(client);
+    const madeUp = "Crimp line project with Sam";
+    try {
+      await callTool("user_mcp", env, "list_sessions", { conversation_id: madeUp });
+      await callTool("user_mcp", env, "get_more_tools", {
+        context: "Rename",
+        conversation_id: madeUp,
+      });
+    } finally {
+      getPostHog.mockRestore();
+    }
+
+    expect(capture.mock.calls).toHaveLength(2);
+    expect(JSON.stringify(capture.mock.calls)).not.toContain("Crimp line");
+  });
+
   it("records a missing capability report with its text, and nothing else", async () => {
     const client = new PostHog("phc_test", {
       host: "https://us.i.posthog.com",

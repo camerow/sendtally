@@ -78,7 +78,8 @@ export default function Privacy(): React.ReactElement {
         such as whether it was an area or a climb, never what you wrote. When an AI assistant you
         connect to your account uses it, its connection and each action it takes are recorded as
         events too, carrying only which action it was, which assistant and model took it, how long
-        it took, whether it failed, and the names of the options it set, never what it read or
+        it took, whether it failed, the names of the options it set, and a random identifier we give
+        the assistant so the actions of one conversation can be grouped, never what it read or
         wrote. When the assistant cannot do something you asked, it may send us a short description
         of what was missing.
       </p>
