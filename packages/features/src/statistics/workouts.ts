@@ -1,7 +1,7 @@
 import type { SessionLogWithClimbs } from "@sendtally/api-client";
 import {
   FOCI,
-  totalSeconds,
+  hangSessionSeconds,
   type CalendarDate,
   type Focus,
   type WorkoutKind,
@@ -71,7 +71,7 @@ function workoutsOf(log: Pick<SessionLogWithClimbs, "hangSessions" | "activities
         kind: "hangboard",
         focus: h.focus ?? null,
         date: h.date,
-        minutes: Math.round(totalSeconds(h.protocol) / 60),
+        minutes: Math.round(hangSessionSeconds(h) / 60),
         rpe: h.rpe,
       };
     }),

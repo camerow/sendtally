@@ -2,7 +2,7 @@ import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
 import type { CalendarDate, WeightUnit } from "@sendtally/core/hang";
 import { climbsLine, isClimbingSets, wallLine } from "./climbing";
 import { setText } from "./done";
-import { bestSet, hangGrid } from "./summary";
+import { bestSet, hangTotals } from "./summary";
 import { dayMonth, loadLabel } from "../hang/format";
 import type { HangModel } from "../hang/model";
 import { t } from "../i18n";
@@ -39,7 +39,7 @@ export function activityItem(a: ActivityRecord, unit: WeightUnit, currentId?: st
 
 /** A hangboard session: the grip, the load on it and how many hangs held. */
 export function hangItem(s: HangSessionRecord, model: HangModel, currentId?: string): HistoryItem {
-  const grid = hangGrid(s);
+  const totals = hangTotals(s);
   const current = s.id === currentId;
   return {
     id: s.id,
@@ -47,7 +47,7 @@ export function hangItem(s: HangSessionRecord, model: HangModel, currentId?: str
     name: named(model.gripName(s.gripId), current),
     meta: [
       loadLabel(s.protocol.kind, s.loadKg, model.settings.units),
-      t("summary.hangsOf", { held: grid.held, total: grid.total }),
+      t("summary.hangsOf", { held: totals.held, total: totals.total }),
     ].join(" · "),
     rpe: s.rpe,
     current,

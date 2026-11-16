@@ -123,6 +123,20 @@ describe("workoutsDone", () => {
     expect(vm.category[0]?.rows[0]?.sessions[0]).toMatchObject({ duration: "1h 30m", rpe: null });
   });
 
+  it("counts the minutes of every grip a session ran, not only the first", () => {
+    const grip = (item: number, exercise: string) => ({
+      item,
+      exercise,
+      sets: Array.from({ length: 6 }, () => ({ reps: 1, onS: 10, edgeMm: 20, weightKg: 4 })),
+    });
+    const three = hang("2026-10-26", {
+      done: [grip(0, "half"), grip(1, "open"), grip(2, "pinch")],
+    });
+    const row = workoutsDone({ hangSessions: [three], activities: [] }, october, TRAINED_KINDS)
+      .category[0]?.rows[0];
+    expect(row?.sessions[0]?.duration).toBe("3m");
+  });
+
   it("knows a workout logged without one from the library by its title", () => {
     expect(vm.category[2]?.rows[0]?.key).toBe("title:pull and core");
   });

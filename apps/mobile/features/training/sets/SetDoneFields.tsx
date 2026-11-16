@@ -2,7 +2,8 @@ import React from "react";
 import { Text, View } from "react-native";
 import { fromUnit, toUnit, type SetDone, type WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { formatNumber, t } from "@sendtally/features/i18n";
+import { hangLoadValue } from "@sendtally/features/activities";
+import { t } from "@sendtally/features/i18n";
 import { KeypadField } from "../../../components/KeypadField";
 import { TimeField } from "../../../components/TimeField";
 import { useFieldOrder, type FieldSlot } from "../../../components/useFieldOrder";
@@ -149,8 +150,7 @@ function LoadValue({
   onChange: (kg: number) => void;
 }): React.ReactElement {
   const value = toUnit(kg, unit);
-  const text =
-    value === 0 ? t("hang.bw") : `${value > 0 ? "+" : "−"}${formatNumber(Math.abs(value))}`;
+  const text = hangLoadValue(kg, unit);
   return (
     <KeypadField
       {...slot}

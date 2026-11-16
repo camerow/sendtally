@@ -1,7 +1,7 @@
 import {
   isTimed,
   toUnit,
-  totalSeconds,
+  hangSessionSeconds,
   type HangSession,
   type Protocol,
   type WeightUnit,
@@ -69,6 +69,6 @@ export function hangActivity(s: HangSession, gripName: string, unit: WeightUnit)
     description: hangDescription(s, unit),
     sportType: "Workout",
     startDateLocal: new Date(`${s.date}T12:00:00Z`),
-    elapsedSeconds: totalSeconds(s.protocol),
+    elapsedSeconds: hangSessionSeconds(s),
   };
 }

@@ -249,6 +249,10 @@ export type ItemDone = {
   sets: SetDone[];
   /** The RPE target of the dose the session ran, which its sets' RPE reads against. */
   targetRpe?: number;
+  /** A hang session's later grip: the dose it ran, its first grip's being the session's protocol. */
+  dose?: Dose;
+  /** A hang session's grip: the rest the timer ran after it, before the next grip; none after the last. */
+  restAfterS?: number;
 };
 
 /**

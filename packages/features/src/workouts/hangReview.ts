@@ -2,6 +2,7 @@ import {
   doneAsPrescribed,
   protocolDose,
   protocolOf,
+  restAfterItem,
   type CalendarDate,
   type HangSession,
   type HangSetup,
@@ -40,6 +41,7 @@ export function hangReview(
     prescribed: items.map((i, k) => ({
       exercise: grips[k] ?? i.workout.grip,
       dose: protocolDose(i.workout),
+      restAfterS: restAfterItem(items, k, planned.exerciseRestS),
     })),
     setups:
       params.run?.setups ?? items.map((i, k) => model.setup(i.workout, grips[k] ?? "", i.dose)),

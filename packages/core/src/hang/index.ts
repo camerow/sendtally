@@ -8,6 +8,7 @@ export * from "./media";
 export * from "./parse";
 export * from "./plan";
 export * from "./protocol";
+export * from "./session";
 export * from "./setup";
 export * from "./timer";
 export * from "./trends";

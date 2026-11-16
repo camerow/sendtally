@@ -3,9 +3,9 @@ import React from "react";
 import { KeyboardAvoidingView, Platform, Text } from "react-native";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
-import { hangResult, shortDate } from "@sendtally/features/hang";
-import { protocolDose, type ItemDone } from "@sendtally/core/hang";
-import { hangGrid, hangSets, keptSets } from "@sendtally/features/activities";
+import { hangEditResult, hangEditSets, shortDate } from "@sendtally/features/hang";
+import { hangSessionItems } from "@sendtally/core/hang";
+import { hangTotals } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
 import { DateField } from "../components/DateField";
@@ -49,29 +49,12 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
   const kind = session.protocol.kind;
   const name = hangTitle(session);
   const unit = model.settings.units;
-  // A set at the session's load follows the pill; one changed by hand keeps its own.
-  const [sets, setSets] = React.useState<{ done: ItemDone[]; off: string[] }>(() => ({
-    done: [
-      {
-        item: 0,
-        exercise: session.gripId,
-        sets: hangSets(session).map(({ weightKg, ...set }) =>
-          weightKg === undefined || weightKg === session.loadKg ? set : { ...set, weightKg }
-        ),
-      },
-    ],
-    off: [],
-  }));
-  const result = hangResult(
-    keptSets(sets.done, sets.off),
-    [{ exercise: session.gripId, dose: protocolDose(session.protocol) }],
-    () => ({
-      exercise: draft.gripId,
-      setup: { edgeMm: draft.edgeMm, loadKg: draft.loadKg },
-      hang: kind === "hang",
-    })
-  );
-  const grid = hangGrid({ ...draft, done: result.done });
+  const [sets, setSets] = React.useState(() => hangEditSets(session));
+  const result = hangEditResult(session, sets, draft.gripId, {
+    edgeMm: draft.edgeMm,
+    loadKg: draft.loadKg,
+  });
+  const totals = hangTotals({ ...draft, done: result.done });
 
   const save = (): void => {
     const { stravaActivityId: _s, postState: _p, postError: _e, updatedAt: _u, ...fields } = draft;
@@ -124,9 +107,12 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
           />
         </SheetSection>
         <DoneDetails
-          done={sets.done.map((d) => ({ ...d, exercise: model.gripName(draft.gripId) }))}
+          done={sets.done.map((d) => ({
+            ...d,
+            exercise: model.gripName(d.item === 0 ? draft.gripId : d.exercise),
+          }))}
           off={sets.off}
-          planned={[protocolDose(session.protocol)]}
+          planned={hangSessionItems(session).map((i) => i.dose)}
           unit={unit}
           color={KIND_LOOK.hangboard.ink}
           hangs
@@ -143,7 +129,7 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
           onChange={(done, off) => setSets({ done, off })}
         />
         <Text style={[type.monoBold, { fontSize: 13, color: colors.gunmetal }]}>
-          {hangCount(grid, unit)}
+          {hangCount(totals, unit)}
         </Text>
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
         <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />

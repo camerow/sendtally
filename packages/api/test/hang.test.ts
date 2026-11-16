@@ -310,6 +310,22 @@ describe("hangboard", () => {
     });
   });
 
+  it("keeps the dose each later grip ran and the rest after each grip", async () => {
+    const userId = "user_hang_dose";
+    const sets = [{ reps: 6, onS: 7, offS: 3, edgeMm: 20 }];
+    const done = [
+      { item: 0, exercise: "half", sets, restAfterS: 120 },
+      {
+        item: 1,
+        exercise: "pinch",
+        sets,
+        dose: { sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 60 },
+      },
+    ];
+    await call(userId, "PUT", "/sessions/h1", { ...sessionBody, done });
+    expect((await read(userId)).sessions[0]?.done).toEqual(done);
+  });
+
   it("reads the edge of a session from an app build that kept it in the protocol", async () => {
     const userId = "user_hang_old_build";
     const { edgeMm: _edge, ...old } = sessionBody;
