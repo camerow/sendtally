@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DAY_MS } from "../trends/buckets";
-import type { Done } from "./insights";
+import type { SessionWithClimbs } from "@sendtally/api-client";
+import { doneOf, type Done } from "./insights";
 import { workloadPlot, workloadVM } from "./workloadView";
 
 const now = new Date(Date.UTC(2026, 10, 16, 20) + new Date().getTimezoneOffset() * 60_000);
@@ -59,9 +60,9 @@ describe("workloadVM", () => {
     expect(vm.leftOutLine).toBe("2 not counted in the last 7 days: no effort or time");
     expect(vm.sheet.footer).toBe("No zone: more than a quarter left out");
     expect(vm.sheet.tiles.map((x) => x.counted)).toEqual(["3 of 5 counted", "12 of 14 counted"]);
-    expect(vm.sheet.leftOut.map((l) => [l.ref.id, l.detail])).toEqual([
-      ["r1", "Nov 15 · no effort"],
-      ["climb", "Nov 14 · no time"],
+    expect(vm.sheet.leftOut.map((l) => [l.ref.id, l.missing, l.detail])).toEqual([
+      ["r1", "effort", "Nov 15 · no effort"],
+      ["climb", "time", "Nov 14 · no time"],
     ]);
   });
 
@@ -83,5 +84,34 @@ describe("workloadPlot", () => {
     expect(plot.y(3)).toBe(plot.y(2));
     expect(plot.over).toHaveLength(1);
     expect(plot.today).toEqual(plot.over[0]);
+  });
+});
+
+describe("doneOf", () => {
+  const climb = (times: SessionWithClimbs["times"]): SessionWithClimbs =>
+    ({
+      fingerprint: `manual-${times}`,
+      name: "Tuesday night session",
+      title: "Tuesday night session",
+      start_at: "2026-11-15T18:00:00.000Z",
+      end_at: "2026-11-15T19:30:00.000Z",
+      times,
+      rpe: 6,
+      rpe_source: "user",
+      focus: null,
+    }) as SessionWithClimbs;
+  const load = (times: SessionWithClimbs["times"]): Done | undefined =>
+    doneOf({ sessions: [climb(times)], hangSessions: [], activities: [] })[0];
+
+  it("counts a form-logged climbing session by its duration", () => {
+    expect(load("duration")).toMatchObject({ rpe: 6, minutes: 90 });
+    const vm = workloadVM([...steady, load("duration")!], "7d", now);
+    expect(vm.sheet.leftOut).toEqual([]);
+  });
+
+  it("leaves out a climbing session with no times as missing its time", () => {
+    expect(load("none")).toMatchObject({ minutes: 0 });
+    const vm = workloadVM([...steady, load("none")!], "7d", now);
+    expect(vm.sheet.leftOut.map((l) => [l.ref.type, l.missing])).toEqual([["session", "time"]]);
   });
 });

@@ -4,7 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import Svg, { Line } from "react-native-svg";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import type { DoneRef, WorkloadTileVM, WorkloadVM } from "@sendtally/features/statistics";
+import type { WorkloadLeftOutVM, WorkloadTileVM, WorkloadVM } from "@sendtally/features/statistics";
 import { Sheet } from "../../../components/Sheet";
 import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
@@ -13,10 +13,15 @@ import { type } from "../type";
 const BAR = 82;
 const GUTTER = 44;
 
-function open(ref: DoneRef): void {
-  if (ref.type === "session")
+function open({ ref, missing }: WorkloadLeftOutVM): void {
+  if (ref.type === "activity") router.push({ pathname: "/activity/[id]", params: { id: ref.id } });
+  else if (missing === "effort")
     router.push({ pathname: "/session/[fingerprint]", params: { fingerprint: ref.id } });
-  else router.push({ pathname: "/activity/[id]", params: { id: ref.id } });
+  else
+    router.push({
+      pathname: "/session/[fingerprint]/edit",
+      params: { fingerprint: ref.id, field: "duration" },
+    });
 }
 
 function Tile({ label, value, note, counted }: WorkloadTileVM): React.ReactElement {
@@ -172,7 +177,7 @@ export function WorkloadSheet({
                 accessibilityRole="button"
                 onPress={() => {
                   onClose();
-                  open(l.ref);
+                  open(l);
                 }}
                 style={pressRow({
                   minHeight: 44,

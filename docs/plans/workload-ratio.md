@@ -49,7 +49,8 @@ This check comes before the start and break rules: a week that is mostly left ou
 Since 7784726f (2026-11-03) neither log-session form, mobile or web, has start or end time fields, so a climbing session logged through the form is saved with `times = "none"` and has no duration.
 Climbing gets a duration from the live session tally (mobile and web), from sessions logged before that change, from legacy board rows, and when a CSV import or the assistant connector supplies both times.
 `DEFAULT_DURATION_MINUTES` (90) in `core/manual.ts` builds a placeholder `start_at` and `end_at` for scoring; it never feeds load.
-For someone who logs climbing through the form, most weeks will be partly counted until there is a way to give a session its length; whether the form gets a duration field back is Will's call.
+Since #443 both forms have an optional "How long" field that saves `times = "duration"`, and `sessionMinutes` counts it, so a session logged with a length counts in the load.
+A not-counted row missing its time opens Edit session on the Duration field (`?field=duration`); one missing only its effort opens the session.
 
 ## 2. The start and a return
 

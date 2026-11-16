@@ -104,7 +104,10 @@ export function workloadPlot(
   };
 }
 
-export type WorkloadLeftOutVM = { ref: DoneRef; detail: string };
+/** What a left-out record lacks, so its row can open the field that fills it. */
+export type WorkloadMissing = "effort" | "time" | "both";
+
+export type WorkloadLeftOutVM = { ref: DoneRef; missing: WorkloadMissing; detail: string };
 
 /** A load with the days it covers and, when too much was left out, how much was counted. */
 export type WorkloadTileVM = { label: string; value: string; note: string; counted: string | null };
@@ -164,10 +167,16 @@ const shortDay = (ms: number): string =>
 const counted = ({ total, leftOut }: Workload["week"]): string =>
   t("statistics.workloadCounted", { counted: total - leftOut, total });
 
-function why(noEffort: boolean, noTime: boolean): string {
-  if (noEffort && noTime) return t("statistics.workloadNoEither");
-  return noEffort ? t("statistics.workloadNoEffort") : t("statistics.workloadNoTime");
-}
+const missingOf = (noEffort: boolean, noTime: boolean): WorkloadMissing =>
+  noEffort && noTime ? "both" : noEffort ? "effort" : "time";
+
+const WHY: Record<WorkloadMissing, MessageKey> = {
+  effort: "statistics.workloadNoEffort",
+  time: "statistics.workloadNoTime",
+  both: "statistics.workloadNoEither",
+};
+
+const why = (noEffort: boolean, noTime: boolean): string => t(WHY[missingOf(noEffort, noTime)]);
 
 const noEffort = (d: Done): boolean => d.rpe === null;
 const noTime = (d: Done): boolean => d.minutes <= 0;
@@ -273,6 +282,7 @@ export function workloadVM(done: readonly Done[], range: TrendRange, now: Date):
       averageLabel: load(w.chronic),
       leftOut: left.map((d) => ({
         ref: d.ref,
+        missing: missingOf(noEffort(d), noTime(d)),
         detail: `${shortDay(d.at)} · ${why(noEffort(d), noTime(d))}`,
       })),
     },

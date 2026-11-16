@@ -66,4 +66,3 @@ export {
   type WorkloadVM,
   type WorkloadWeekVM,
 } from "./workloadView";
-export type { DoneRef } from "./insights";
