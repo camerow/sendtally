@@ -108,7 +108,7 @@ describe("Workout editor", () => {
     await fireEvent.changeText(screen.getByLabelText("Name A"), "Heavy");
     await fireEvent.changeText(screen.getByLabelText("Name B"), " Light ");
     await type("Rest between sets", "200");
-    await type("Rest between exercises", "300");
+    expect(screen.queryByText("Rest")).toBeNull();
     await fireEvent.press(screen.getByText("Save"));
 
     expect(mockWorkouts.saveWorkout).toHaveBeenCalledWith("w-new", {
@@ -127,7 +127,7 @@ describe("Workout editor", () => {
           ],
         },
       ],
-      exerciseRestS: 180,
+      exerciseRestS: 0,
       focus: null,
     });
     expect(router.back).toHaveBeenCalled();
@@ -149,13 +149,15 @@ describe("Workout editor", () => {
     expect(screen.queryByLabelText("Name C")).toBeNull();
   });
 
-  it("fills a dose row on one keypad, Next walking Sets, Reps, Weight and the rest", async () => {
+  it("fills a dose row on one keypad, Next walking Sets, Reps, Weight, RPE and the rest", async () => {
     await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
     await pick("Back squat");
     await fireEvent.press(screen.getByLabelText("Sets"));
     await keys("4", "Next");
     expect(screen.getByLabelText("Reps").props.accessibilityState).toEqual({ expanded: true });
     await keys("5", "Next", "1", "0", "0", "Add 2.5", "Next");
+    expect(screen.getByLabelText("RPE").props.accessibilityState).toEqual({ expanded: true });
+    await keys("8", "Next");
     expect(screen.getByLabelText("Rest between sets").props.accessibilityState).toEqual({
       expanded: true,
     });
@@ -167,7 +169,20 @@ describe("Workout editor", () => {
     await fireEvent.press(screen.getByText("Save"));
 
     const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
-    expect(saved.items[0]?.doses).toEqual([{ sets: 4, reps: 5, weightKg: 102.5, setRestS: 90 }]);
+    expect(saved.items[0]?.doses).toEqual([
+      { sets: 4, reps: 5, weightKg: 102.5, targetRpe: 8, setRestS: 90 },
+    ]);
+  });
+
+  it("types a set and rep range with To on the keypad", async () => {
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
+    await pick("Back squat");
+    await fireEvent.press(screen.getByLabelText("Sets"));
+    await keys("3", "To", "5", "Next", "8", "To", "1", "2", "Done");
+    expect(screen.getByLabelText("Sets").props.accessibilityValue).toEqual({ text: "3-5" });
+    await fireEvent.press(screen.getByText("Save"));
+    const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
+    expect(saved.items[0]?.doses).toEqual([{ sets: 3, setsMax: 5, reps: 8, repsMax: 12 }]);
   });
 
   it("types a weight in pounds and keeps it in kg", async () => {
@@ -201,7 +216,10 @@ describe("Workout editor", () => {
     expect(screen.getByText("13m")).toBeTruthy();
     await pick("Open hand");
     expect(screen.getByText("29m")).toBeTruthy();
-    await type("Rest between exercises", "200");
+    expect(screen.getByLabelText("Rest after Open hand").props.accessibilityValue).toEqual({
+      text: "00:03:00",
+    });
+    await type("Rest after Open hand", "200");
     expect(screen.getByText("28m")).toBeTruthy();
     await fireEvent.press(screen.getByText("Save"));
 
@@ -211,9 +229,14 @@ describe("Workout editor", () => {
         kind: "hangboard",
         name: "Max hangs (copy)",
         minutes: null,
-        exerciseRestS: 120,
+        exerciseRestS: 180,
         items: [
-          { id: "0", exercise: "open", doses: [{ sets: 5, reps: 1, onS: 12, setRestS: 180 }] },
+          {
+            id: "0",
+            exercise: "open",
+            doses: [{ sets: 5, reps: 1, onS: 12, setRestS: 180 }],
+            restAfterS: 120,
+          },
           { id: "w-new", exercise: "open", doses: [{ sets: 5, reps: 1, onS: 12, setRestS: 180 }] },
         ],
       })

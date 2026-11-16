@@ -69,7 +69,10 @@ export {
   loadColumns,
   stepped,
   weekFields,
+  weekPlaceholder,
+  weekRangeOf,
   withWeekField,
+  withWeekRange,
   type WeekField,
 } from "./weeks";
 export { useTrainingLog, type TrainingLogQuery } from "./useTrainingLog";

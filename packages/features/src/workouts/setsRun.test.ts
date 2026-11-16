@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { afterKey, holdShort, itemDone, restAfterTick, setKey } from "./setsRun";
+import { afterKey, holdShort, itemDone, restAfterTick, setKey, withDoneSets } from "./setsRun";
 
 const items = [
   { exercise: "Back squat", dose: { sets: 2, reps: 5, setRestS: 120 } },
@@ -27,6 +27,15 @@ describe("rest after a tick", () => {
     });
   });
 
+  it("rests the finished exercise's own rest before the next, where it sets one", () => {
+    const own = [{ ...items[0]!, restAfterS: 90 }, items[1]!];
+    expect(restAfterTick(own, ticked("0:0", "0:1"), { item: 0, set: 1 }, 180)).toEqual({
+      at: afterKey(0),
+      seconds: 90,
+      next: 1,
+    });
+  });
+
   it("rests no more after the last exercise", () => {
     const all = ticked("0:0", "0:1", "1:0");
     expect(restAfterTick(items, all, { item: 1, set: 0 }, 180)).toBeNull();
@@ -39,5 +48,24 @@ describe("hold short", () => {
     expect(holdShort({ onS: 30 }, { onS: 20 }, false)).toBe(false);
     expect(holdShort({ onS: 30 }, { onS: 30 }, true)).toBe(false);
     expect(holdShort({ reps: 5 }, {}, true)).toBe(false);
+  });
+});
+
+describe("set ranges", () => {
+  const bench = { exercise: "Bench press", dose: { sets: 3, setsMax: 5, reps: 8 } };
+  const four = {
+    item: 0,
+    exercise: "Bench press",
+    sets: Array.from({ length: 4 }, () => ({ reps: 8 })),
+  };
+
+  it("counts the sets an item has added past its minimum", () => {
+    const [live] = withDoneSets([bench], [four]);
+    expect(live?.dose.sets).toBe(4);
+    expect(itemDone([live!], new Set(["0:0", "0:1", "0:2"]), 0)).toBe(false);
+  });
+
+  it("leaves an item with no sets added past its minimum as it is", () => {
+    expect(withDoneSets([bench], [])).toEqual([bench]);
   });
 });

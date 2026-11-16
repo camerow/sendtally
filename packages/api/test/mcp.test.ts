@@ -582,6 +582,31 @@ describe("connector", () => {
       expect(await mine(user + "_other")).toEqual([]);
     });
 
+    it("returns each item's own rest and range, so saving back what it read keeps them", async () => {
+      const user = "user_save_workout_rests";
+      const items = [
+        { exercise: "Bench press", doses: [{ sets: 3, setsMax: 5, targetRpe: 8 }], restAfterS: 90 },
+        { exercise: "Face pull", doses: [{ sets: 3, reps: 15 }] },
+      ];
+      const body = { kind: "strength", name: "Push", description: "", minutes: 40, targetRpe: 7 };
+      const saved = await toolJson<{ workout: { items: unknown[] } }>(user, "save_workout", {
+        ...body,
+        items,
+      });
+      expect(saved.workout.items).toEqual(items);
+      const read = async (): Promise<{ id: string; items: unknown[] } | undefined> =>
+        (
+          await toolJson<{ workouts: Array<{ id: string; name: string; items: unknown[] }> }>(
+            user,
+            "get_training_library"
+          )
+        ).workouts.find((w) => w.name === "Push");
+      const push = await read();
+      expect(push?.items).toEqual(items);
+      await toolJson(user, "save_workout", { ...body, id: push?.id, items: push?.items });
+      expect((await read())?.items).toEqual(items);
+    });
+
     it("writes and reads descriptions on exercises and blocks", async () => {
       const user = "user_connector_descriptions";
       const text = "Hold it still.\n- Shoulders down";

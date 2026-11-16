@@ -1,17 +1,23 @@
 import React from "react";
 import {
   entryNumber,
+  entryRange,
   entrySeconds,
   numberEntry,
   openNumber,
+  openRange,
   openTime,
+  rangeEntry,
   timeEntry,
   timeText,
   typedNumber,
+  typedRange,
   typedSeconds,
   type NumberLimits,
+  type Range,
   type TimeLimits,
 } from "@sendtally/core/hang";
+import { countText } from "@sendtally/features/hang";
 
 export type NumberFieldMode = ({ kind: "time" } & TimeLimits) | ({ kind: "number" } & NumberLimits);
 
@@ -22,8 +28,10 @@ export type NumberFieldProps = {
   value: number | null;
   /** What an empty box shows; a dash by default. */
   placeholder?: string;
-  /** Called on blur, Enter or an arrow step, only when the value changed. */
-  onChange: (value: number) => void;
+  /** Called on blur, Enter or an arrow step, only when the value changed. A range's top comes with it. */
+  onChange: (value: number, max?: number) => void;
+  /** A count that may run to a top, typed "8-12"; the top it has now. */
+  range?: { max?: number };
   mode: NumberFieldMode;
   unit?: string;
   /** A small box sized to its value with no label shown, for a value in a table row. */
@@ -72,15 +80,30 @@ export function NumberField({
   compact = false,
   short = false,
   placeholder = "–",
+  range,
 }: NumberFieldProps): React.ReactElement {
   const id = React.useId();
   const [draft, setDraft] = React.useState<string | null>(null);
-  const text = value === null ? "" : shown(mode, value);
+  const limits = mode.kind === "number" ? mode : { step: 1 };
+  const text =
+    value === null ? "" : range === undefined ? shown(mode, value) : countText(value, range.max);
   const time = mode.kind === "time";
 
+  const commitRange = (next: Range | null): void => {
+    setDraft(null);
+    if (next !== null && (next.min !== value || next.max !== range?.max))
+      onChange(next.min, next.max);
+  };
   const commit = (next: number | null): void => {
     setDraft(null);
     if (next !== null && next !== value) onChange(next);
+  };
+  const steppedRange = (key: "plus" | "minus"): Range => {
+    const from = (draft === null ? null : typedRange(draft, limits)) ?? {
+      min: value ?? 0,
+      max: range?.max,
+    };
+    return entryRange(rangeEntry(openRange(from, limits), { type: key }, limits), limits);
   };
 
   return (
@@ -92,7 +115,7 @@ export function NumberField({
         <input
           id={id}
           className="number-field-input"
-          inputMode={time ? "numeric" : "decimal"}
+          inputMode={time ? "numeric" : range === undefined ? "decimal" : "text"}
           autoComplete="off"
           placeholder={placeholder}
           size={compact ? Math.max(2, (text === "" ? placeholder : text).length) : undefined}
@@ -112,11 +135,18 @@ export function NumberField({
             const all = input.selectionStart === 0 && input.selectionEnd === end;
             if (time && !all && input.selectionStart !== end) input.setSelectionRange(end, end);
           }}
-          onBlur={() => commit(draft === null ? null : typed(mode, draft))}
+          onBlur={() =>
+            range === undefined
+              ? commit(draft === null ? null : typed(mode, draft))
+              : commitRange(draft === null ? null : typedRange(draft, limits))
+          }
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
               focusNext(e.currentTarget);
+            } else if ((e.key === "ArrowUp" || e.key === "ArrowDown") && range !== undefined) {
+              e.preventDefault();
+              commitRange(steppedRange(e.key === "ArrowUp" ? "plus" : "minus"));
             } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
               e.preventDefault();
               const from = (draft === null ? null : typed(mode, draft)) ?? value ?? 0;

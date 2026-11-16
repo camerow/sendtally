@@ -6,7 +6,9 @@ import {
   columnLabel,
   weekFieldLimits,
   weekFieldValue,
-  withWeekField,
+  weekPlaceholder,
+  weekRangeOf,
+  withWeekRange,
   type DoneCount,
   type WeekField,
   doneAll,
@@ -53,7 +55,8 @@ export function LoadTable({
   const headOf = (f: WeekField): string => {
     const name = columnLabel(kind, written, f);
     const shown = unitOf(f);
-    return shown === null ? name : `${name} · ${shown}`;
+    if (shown === null) return name;
+    return f === "weightKg" && kind !== "hangboard" ? shown : `${name} · ${shown}`;
   };
   return (
     <table className="load-table">
@@ -103,15 +106,21 @@ export function LoadTable({
                           n: week,
                           field: columnLabel(kind, written, f),
                         })}
-                        value={weekFieldValue(dose, f, unit)}
+                        value={
+                          weekPlaceholder(kind, dose, f) === undefined
+                            ? weekFieldValue(dose, f, unit)
+                            : null
+                        }
+                        placeholder={weekPlaceholder(kind, dose, f)}
                         mode={
                           isTimeField(f)
                             ? { kind: "time" }
                             : { kind: "number", ...weekFieldLimits(f, unit) }
                         }
                         {...(unitShown !== null && { unit: unitShown })}
-                        onChange={(typed) => {
-                          const next = withWeekField(dose, f, typed, unit);
+                        range={weekRangeOf(kind, dose, f)}
+                        onChange={(typed, max) => {
+                          const next = withWeekRange(written, dose, f, typed, max, unit);
                           if (next !== null) onChange(week, changeFrom(written, next));
                         }}
                       />

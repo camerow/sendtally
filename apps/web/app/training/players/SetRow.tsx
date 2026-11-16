@@ -1,6 +1,6 @@
 import React from "react";
 import type { SetDone, WeightUnit } from "@sendtally/core/hang";
-import { setText } from "@sendtally/features/activities";
+import { setChip, setText } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { holdShort } from "@sendtally/features/workouts";
 import { SetDoneFields } from "../log/SetDoneFields";
@@ -8,6 +8,8 @@ import { SetDoneFields } from "../log/SetDoneFields";
 export type SetRowProps = {
   n: number;
   target: SetDone;
+  /** The top of a rep range the target runs to. */
+  repsMax?: number;
   done: SetDone;
   previous: SetDone | undefined;
   lifting: boolean;
@@ -25,6 +27,7 @@ export type SetRowProps = {
 export function SetRow({
   n,
   target,
+  repsMax,
   done,
   previous,
   lifting,
@@ -41,7 +44,7 @@ export function SetRow({
     <div className={current ? "set-row set-row--current" : "set-row"}>
       <span className="set-col-n">{formatNumber(n)}</span>
       <span className="set-col-target">
-        <span>{setText(target, unit) || "-"}</span>
+        <span>{setChip(target, unit, repsMax) || "-"}</span>
         {last !== "" && (
           <span className="set-previous">{t("activities.previousSet", { set: last })}</span>
         )}

@@ -67,6 +67,12 @@ export function withItemMoved(s: WorkoutDraft, from: number, to: number): Workou
   return { ...s, items: s.items.map((x, i) => (i === from ? b : i === to ? a : x)) };
 }
 
+/** The rest after the item at `at`, before the next; it moves with that item. */
+export const withRestAfter = (s: WorkoutDraft, at: number, seconds: number): WorkoutDraft => ({
+  ...s,
+  items: s.items.map((x, i) => (i === at ? { ...x, restAfterS: seconds } : x)),
+});
+
 export const withoutItem = (s: WorkoutDraft, at: number): WorkoutDraft => ({
   ...s,
   items: s.items.filter((_, i) => i !== at),

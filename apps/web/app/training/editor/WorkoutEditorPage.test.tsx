@@ -35,6 +35,17 @@ const legs: WorkoutRecord = {
   updatedAt: "t",
 };
 
+const push: WorkoutRecord = {
+  ...legs,
+  id: "push",
+  name: "Push",
+  items: [
+    { id: "a", exercise: "Bench press", doses: [{ sets: 3, reps: 8 }], restAfterS: 90 },
+    { id: "b", exercise: "Dips", doses: [{ sets: 3, reps: 10 }] },
+    { id: "c", exercise: "Face pull", doses: [{ sets: 3, reps: 15 }] },
+  ],
+};
+
 const zercher: Exercise = {
   id: "z",
   name: "Zercher squat",
@@ -56,7 +67,7 @@ vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
 vi.mock("../library/useLibrary", async (actual) => ({
   ...(await actual<typeof T_useLibrary>()),
   useLibrary: () => {
-    const workouts = libraryOf([legs]);
+    const workouts = libraryOf([legs, push]);
     const data: WorkoutLibrary = {
       workouts,
       usage: new Map(),
@@ -157,6 +168,44 @@ describe("WorkoutEditorPage", () => {
     expect(saved().name).toBe("Leg day");
     expect(saved().items[0]?.doses).toHaveLength(2);
     expect(at.path).toBe("/app/train");
+  });
+
+  it("edits each rest between exercises on its own, the workout's rest where one sets none", () => {
+    mount(<WorkoutEditorPage id="push" />);
+    const labels = (): string[] =>
+      Array.from(container.querySelectorAll("label")).map((l) => l.textContent ?? "");
+    const rest = (after: string): HTMLInputElement => {
+      const label = Array.from(container.querySelectorAll("label")).find(
+        (l) => l.textContent === `Rest after ${after}`
+      )!;
+      return document.getElementById(label.htmlFor) as HTMLInputElement;
+    };
+    expect(rest("Bench press").value).toBe("00:01:30");
+    expect(rest("Dips").value).toBe("00:03:00");
+    expect(labels()).not.toContain("Rest after Face pull");
+    type(rest("Dips"), "000200");
+    act(() => rest("Dips").dispatchEvent(new FocusEvent("focusout", { bubbles: true })));
+    click(container.querySelector(".detail-primary"));
+    expect(saved().items.map((i) => i.restAfterS)).toEqual([90, 120, undefined]);
+  });
+
+  it("types a set range with a hyphen, and back to one number", () => {
+    mount(<WorkoutEditorPage id="legs" />);
+    const sets = (): HTMLInputElement => {
+      const label = Array.from(container.querySelectorAll("label")).find(
+        (l) => l.textContent === "Sets"
+      )!;
+      return document.getElementById(label.htmlFor) as HTMLInputElement;
+    };
+    const blur = (): void =>
+      act(() => {
+        sets().dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+      });
+    type(sets(), "5-3");
+    blur();
+    expect(sets().value).toBe("3-5");
+    click(container.querySelector(".detail-primary"));
+    expect(saved().items[0]?.doses).toEqual([{ sets: 3, setsMax: 5, reps: 5 }]);
   });
 
   it("asks before discarding changes, and leaves at once when nothing changed", () => {

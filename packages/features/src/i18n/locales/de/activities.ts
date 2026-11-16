@@ -63,6 +63,8 @@ export const activities = {
   "activities.partialCounts": "Hak ab, was du gemacht hast. Halbe Tage zählen auch.",
   "activities.addSet": "Satz hinzufügen",
   "activities.addSetTo": "Einen Satz zu {exercise} hinzufügen",
+  "activities.addSetUpTo": "Satz hinzufügen, bis {n}",
+  "activities.setsOfMax": "{n} von {max} Sätzen",
   "activities.started": "Gestartet",
   "activities.removeSet": "Satz {n} entfernen",
   "activities.removeLastSet": "Satz entfernen",

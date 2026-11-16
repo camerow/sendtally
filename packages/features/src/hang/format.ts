@@ -121,3 +121,7 @@ export function timeOfDay(hhmm: string): string {
   const [h, m] = hhmm.split(":").map(Number);
   return formatDate(new Date(2026, 0, 1, h ?? 8, m ?? 0), { hour: "numeric", minute: "2-digit" });
 }
+
+/** "3-5" for a count with a top above it, else the count alone. */
+export const countText = (min: number, max: number | undefined): string =>
+  max === undefined || max <= min ? formatNumber(min) : `${formatNumber(min)}-${formatNumber(max)}`;

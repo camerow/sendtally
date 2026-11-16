@@ -1,4 +1,5 @@
 import React from "react";
+import { restAfterItem } from "@sendtally/core/hang";
 import { useNavigate } from "react-router";
 import { useActivities, useWeightUnit } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
@@ -23,6 +24,7 @@ import { PlayerFrame } from "./PlayerFrame";
 import { RestPreview } from "./RestPreview";
 import { RestRow } from "./RestRow";
 import { SetsCard } from "./SetsCard";
+import { ExtraSets } from "./ExtraSets";
 import { useFinishRun } from "./useFinishRun";
 
 /**
@@ -94,11 +96,10 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
         const d = shown[i];
         if (d === undefined) return null;
         const climbing = player.climbing(i);
-        const between =
-          restAt(afterKey(i)) ||
-          (i < run.items.length - 1 && run.exerciseRestS > 0 && (
-            <RestPreview seconds={run.exerciseRestS} />
-          ));
+        const range = player.extra(i);
+        const between = restAt(afterKey(i)) || (
+          <RestPreview seconds={restAfterItem(run.items, i, run.exerciseRestS)} />
+        );
         return (
           <React.Fragment key={i}>
             {climbing !== null ? (
@@ -111,11 +112,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                 }}
               />
             ) : player.folded(i) ? (
-              <FoldedSetsCard
-                name={nameOf(i)}
-                sets={item.dose.sets}
-                onOpen={() => player.open(i)}
-              />
+              <FoldedSetsCard name={nameOf(i)} sets={d.sets.length} onOpen={() => player.open(i)} />
             ) : (
               <SetsCard
                 item={item}
@@ -131,6 +128,11 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                 holdRow={(set) => holdRow({ item: i, set })}
                 go={(set) => go({ item: i, set })}
                 restUnder={(set) => restAt(setKey({ item: i, set }))}
+                footer={
+                  range !== null && (
+                    <ExtraSets {...range} exercise={nameOf(i)} onAdd={() => player.addSet(i)} />
+                  )
+                }
                 about={exerciseAbout(mine, item.exercise, nameOf(i))}
               />
             )}

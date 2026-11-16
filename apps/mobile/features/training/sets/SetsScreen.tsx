@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { restAfterItem } from "@sendtally/core/hang";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
@@ -32,6 +33,7 @@ import { ClimbingCard } from "./ClimbingCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
 import { SET_COLUMNS } from "./setColumns";
 import { SetsCard } from "./SetsCard";
+import { ExtraSets } from "./ExtraSets";
 
 /**
  * A lifting workout as a set table on a clock from Start: tick each set as it is done, rest
@@ -92,10 +94,9 @@ export function SetsScreen({
       <RestRow rest={rest.rest} left={rest.left} onMore={rest.more} onSkip={rest.skip} />
     );
   const restBetween = (item: number): React.ReactNode =>
-    restAt(afterKey(item)) ||
-    (item < run.items.length - 1 && run.exerciseRestS > 0 && (
-      <RestPreview seconds={run.exerciseRestS} />
-    ));
+    restAt(afterKey(item)) || (
+      <RestPreview seconds={restAfterItem(run.items, item, run.exerciseRestS)} />
+    );
   const finish = (): void => {
     const { done, off } = player.finished();
     logRun(run, done, player.startedAt, off);
@@ -132,6 +133,7 @@ export function SetsScreen({
             const d = shown[i];
             if (d === undefined) return null;
             const climbing = player.climbing(i);
+            const range = player.extra(i);
             if (climbing !== null)
               return (
                 <ClimbingCard
@@ -147,7 +149,7 @@ export function SetsScreen({
                 {folded ? (
                   <FoldedSetsCard
                     name={nameOf(i)}
-                    sets={item.dose.sets}
+                    sets={d.sets.length}
                     onOpen={() => player.open(i)}
                   />
                 ) : (
@@ -165,6 +167,11 @@ export function SetsScreen({
                     holdRow={(set) => holdRow({ item: i, set })}
                     go={(set) => go({ item: i, set })}
                     restUnder={(set) => restAt(setKey({ item: i, set }))}
+                    footer={
+                      range !== null && (
+                        <ExtraSets {...range} exercise={nameOf(i)} onAdd={() => player.addSet(i)} />
+                      )
+                    }
                     about={exerciseAbout(mine, item.exercise, nameOf(i))}
                   />
                 )}

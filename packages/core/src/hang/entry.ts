@@ -8,7 +8,8 @@ export type EntryAction =
   | { type: "minus" }
   | { type: "done" }
   | { type: "decimal" }
-  | { type: "sign" };
+  | { type: "sign" }
+  | { type: "to" };
 
 /** Typed digits of a length of time, filling HH:MM:SS from the right. `fresh` until the first key after opening. */
 export type TimeEntry = { digits: string; fresh: boolean };
@@ -64,6 +65,7 @@ export function timeEntry(
       return openTime(entrySeconds(state), limits);
     case "decimal":
     case "sign":
+    case "to":
       return state;
   }
 }
@@ -135,9 +137,64 @@ export function numberEntry(
       const step = action.type === "plus" ? limits.step : -limits.step;
       return { text: String(boundedNumber(entryNumber(state) + step, limits)), fresh: false };
     }
+    case "to":
+      return state;
     case "done":
       return openNumber(entryNumber(state), limits);
   }
+}
+
+/** A count that may run to a top: 3 sets, or 3 to 5. No top, or one at or under the bottom, is one number. */
+export type Range = { min: number; max?: number };
+
+/** A typed range read with its ends in order, each clamped; equal ends are one number. */
+export function entryRange({ text }: NumberEntry, limits: NumberLimits): Range {
+  const [bottom = "", top = ""] = text.split("-");
+  const a = boundedNumber(Number(bottom || "0"), limits);
+  if (top === "") return { min: a };
+  const b = boundedNumber(Number(top), limits);
+  return a === b ? { min: a } : { min: Math.min(a, b), max: Math.max(a, b) };
+}
+
+/** A range entry opened on a value: the first digit typed replaces it. */
+export function openRange(range: Range, limits: NumberLimits): NumberEntry {
+  const { min, max } = entryRange({ text: `${range.min}-${range.max ?? ""}`, fresh: true }, limits);
+  return { text: max === undefined ? String(min) : `${min}-${max}`, fresh: true };
+}
+
+/**
+ * The next range entry after a key: To starts the top after what is there, digits and ± work
+ * on the end being typed, and deleting back past the hyphen leaves one number again.
+ */
+export function rangeEntry(
+  state: NumberEntry,
+  action: EntryAction,
+  limits: NumberLimits
+): NumberEntry {
+  const cut = state.text.indexOf("-");
+  if (action.type === "to")
+    return cut === -1 ? { text: `${state.text}-`, fresh: false } : { ...state, fresh: false };
+  if (action.type === "done") return openRange(entryRange(state, limits), limits);
+  if (
+    cut === -1 ||
+    (state.fresh && action.type === "digit") ||
+    action.type === "decimal" ||
+    action.type === "sign"
+  )
+    return numberEntry(state, action, limits);
+  const bottom = state.text.slice(0, cut);
+  const top = state.text.slice(cut + 1);
+  if (action.type === "back")
+    return { text: top === "" ? bottom : `${bottom}-${top.slice(0, -1)}`, fresh: false };
+  const end = numberEntry({ text: top === "" ? "0" : top, fresh: false }, action, limits);
+  return { text: `${bottom}-${end.text}`, fresh: false };
+}
+
+/** A range typed as text, "8-12" or "8", clamped as the keypad would; null when it is not one. */
+export function typedRange(text: string, limits: NumberLimits): Range | null {
+  const typed = text.replace(/\s/g, "").replace("–", "-");
+  const range = entryRange({ text: typed, fresh: false }, limits);
+  return typed === "" || Number.isNaN(range.min) || Number.isNaN(range.max ?? 0) ? null : range;
 }
 
 /** Seconds from a time typed as text, "1:30" or "130", read as the same digits on the keypad; null when nothing was typed. */

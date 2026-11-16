@@ -1,9 +1,9 @@
-import type { ItemDone } from "@sendtally/core/hang";
+import { restAfterItem, type ItemDone } from "@sendtally/core/hang";
 import type { Hold } from "./holdClock";
 import { exerciseName } from "./library";
 import { restAfter, type Rest } from "./restCountdown";
 import { readWorkoutRun } from "./runParams";
-import { afterKey, allSets, restAfterTick, setKey } from "./setsRun";
+import { afterKey, allSets, restAfterTick, setKey, withDoneSets } from "./setsRun";
 
 /** A player's live run as far as a hold needs it: its params, where it is, and its rest or hold. */
 export type HeldRun = {
@@ -35,7 +35,8 @@ function finished(live: HeldRun, held: number, now: number): HeldRun {
     return r === null ? next : { ...next, rest: r };
   };
   if (state.player === "sets") {
-    const at = allSets(run.items).find((x) => setKey(x) === hold.at);
+    const items = withDoneSets(run.items, state.done);
+    const at = allSets(items).find((x) => setKey(x) === hold.at);
     if (at === undefined) return rest;
     const ticked = new Set([...state.ticked, hold.at]);
     const done = state.done.map((d) =>
@@ -44,7 +45,7 @@ function finished(live: HeldRun, held: number, now: number): HeldRun {
         : d
     );
     const next = { ...rest, state: { ...state, done, ticked: [...ticked] } };
-    const after = restAfterTick(run.items, ticked, at, run.exerciseRestS);
+    const after = restAfterTick(items, ticked, at, run.exerciseRestS);
     return after === null ? next : withRest(next, after.at, after.seconds, after.next);
   }
   if (state.player === "checklist") {
@@ -52,7 +53,9 @@ function finished(live: HeldRun, held: number, now: number): HeldRun {
     const ticked = [...new Set([...state.ticked, i])];
     const next = { ...rest, state: { ...state, ticked } };
     const following = run.items.findIndex((_, j) => j > i && !ticked.includes(j));
-    return following === -1 ? next : withRest(next, afterKey(i), run.exerciseRestS, following);
+    return following === -1
+      ? next
+      : withRest(next, afterKey(i), restAfterItem(run.items, i, run.exerciseRestS), following);
   }
   return rest;
 }

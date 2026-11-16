@@ -5,6 +5,10 @@ import {
   blockLastDay,
   blockWeekOn,
   changeFrom,
+  gapRests,
+  PRESCRIPTION_ONLY,
+  setOf,
+  restAfterItem,
   doneAsPrescribed,
   doseProtocol,
   focusOf,
@@ -164,6 +168,13 @@ describe("changeFrom", () => {
     expect(changeFrom(written, written)).toEqual({});
     expect(changeFrom(written, { sets: 5, onS: 8 })).toEqual({ onS: 8 });
   });
+
+  it("keeps a week's change to the target and the range", () => {
+    const written: Dose = { sets: 3, setsMax: 5, reps: 5, targetRpe: 8 };
+    expect(changeFrom(written, { sets: 2, setsMax: 3, reps: 5, repsMax: 8, targetRpe: 6 })).toEqual(
+      { sets: 2, setsMax: 3, repsMax: 8, targetRpe: 6 }
+    );
+  });
 });
 
 describe("doses by session", () => {
@@ -188,6 +199,11 @@ describe("doses by session", () => {
     expect(squatRun?.turn).toBe(0);
     expect(benchRun).toEqual({ exercise: "Bench press", dose: { sets: 4, reps: 8 } });
     expect(rowRun?.turn).toBe(1);
+  });
+
+  it("carries an item's own rest before the next into the session", () => {
+    const [run] = sessionItems([{ ...bench, restAfterS: 90 }], 0);
+    expect(run).toEqual({ exercise: "Bench press", dose: { sets: 4, reps: 8 }, restAfterS: 90 });
   });
 
   it("counts the turns of the item with the most doses", () => {
@@ -299,6 +315,7 @@ describe("hangboard duration", () => {
     expect(hangboardSeconds([a], 180)).toBe(411);
     expect(hangboardSeconds([a, b], 180)).toBe(411 + 180 + 770);
     expect(hangboardSeconds([a, b, a], 90)).toBe(411 + 90 + 770 + 90 + 411);
+    expect(hangboardSeconds([{ ...a, restAfterS: 30 }, b, a], 90)).toBe(411 + 30 + 770 + 90 + 411);
   });
 });
 
@@ -340,6 +357,18 @@ describe("doneAsPrescribed", () => {
     expect(doneAsPrescribed(sessionItems([named], 0))[0]?.sets).toEqual([{ reps: 5 }]);
   });
 
+  it("logs none of what only the prescription holds", () => {
+    const dose = { sets: 3, setsMax: 5, reps: 8, repsMax: 12, targetRpe: 8, name: "Heavy" };
+    expect(setOf({ ...dose, weightKg: 60 })).toEqual({ reps: 8, weightKg: 60 });
+    expect(PRESCRIPTION_ONLY.filter((k) => k in setOf(dose))).toEqual([]);
+  });
+
+  it("leaves the target and the range's tops out of the sets it logs", () => {
+    const bench = { sets: 2, setsMax: 4, reps: 8, repsMax: 12, targetRpe: 8 };
+    const items = sessionItems([{ exercise: "Bench", doses: [bench] }], 0);
+    expect(doneAsPrescribed(items)[0]?.sets).toEqual([{ reps: 8 }, { reps: 8 }]);
+  });
+
   it("logs every set of every item", () => {
     expect(doneAsPrescribed(sessionItems(squat.items, 0))).toEqual([
       {
@@ -369,5 +398,19 @@ describe("focusOf", () => {
     expect(focusOf({ focus: "strength" })).toBe("strength");
     expect(focusOf({ focus: null })).toBeNull();
     expect(focusOf(undefined)).toBeNull();
+  });
+});
+
+describe("rests between exercises", () => {
+  const items = [
+    { exercise: "a", dose: { sets: 1 }, restAfterS: 60 },
+    { exercise: "b", dose: { sets: 1 } },
+    { exercise: "c", dose: { sets: 1 }, restAfterS: 30 },
+  ];
+
+  it("rests each gap its own rest, else the workout's, and none after the last", () => {
+    expect(gapRests(items, 180)).toEqual([60, 180]);
+    expect(restAfterItem(items, 2, 180)).toBe(0);
+    expect(gapRests([], 180)).toEqual([]);
   });
 });

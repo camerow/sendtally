@@ -5,6 +5,7 @@ import { t } from "@sendtally/features/i18n";
 import { elapsedClock } from "@sendtally/features/sessions";
 import { Button } from "../components/Button";
 import { IconButton } from "../components/IconButton";
+import { RowFill } from "../components/RowFill";
 import { type } from "../type";
 import { restRowVM, type Rest } from "@sendtally/features/workouts";
 
@@ -36,17 +37,7 @@ export function RestRow(props: RestRowProps): React.ReactElement {
         backgroundColor: colors.surfaceSoft,
       }}
     >
-      <View
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: `${vm.share * 100}%`,
-          backgroundColor: colors.gold,
-          opacity: 0.55,
-        }}
-      />
+      <RowFill share={vm.share} color={colors.gold} opacity={0.55} />
       <View style={{ flex: 1, gap: 2 }}>
         <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
           <Text style={[type.bodyBold, { fontSize: 13, color: colors.gunmetal }]}>

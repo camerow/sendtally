@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type { Dose } from "@sendtally/core/hang";
-import { cellText, loadColumns, stepped, weekFields, withWeekField } from "./weeks";
+import {
+  cellText,
+  loadColumns,
+  stepped,
+  weekFieldMarked,
+  weekFields,
+  weekPlaceholder,
+  weekRangeOf,
+  withWeekField,
+  withWeekRange,
+} from "./weeks";
 
 const squat: Dose = { sets: 5, reps: 5, weightKg: 100 };
 const repeaters: Dose = { sets: 3, reps: 6, onS: 7, offS: 3, edgeMm: 20 };
@@ -52,7 +62,13 @@ describe("week fields", () => {
       "weightKg",
       "setRestS",
     ]);
-    expect(weekFields("strength", squat)).toEqual(["sets", "reps", "weightKg", "setRestS"]);
+    expect(weekFields("strength", squat)).toEqual([
+      "sets",
+      "reps",
+      "weightKg",
+      "targetRpe",
+      "setRestS",
+    ]);
     expect(weekFields("other", { sets: 4, onS: 240 })).toEqual(["sets", "onS", "offS", "weightKg"]);
   });
 
@@ -66,5 +82,38 @@ describe("week fields", () => {
     expect(withWeekField(squat, "reps", 3, "kg")).toEqual({ ...squat, reps: 3 });
     expect(withWeekField(squat, "sets", 0, "kg")).toBeNull();
     expect(withWeekField(squat, "reps", Number.NaN, "kg")).toBeNull();
+    expect(withWeekField(squat, "targetRpe", 6, "kg")).toEqual({ ...squat, targetRpe: 6 });
+    expect(withWeekField(squat, "targetRpe", 11, "kg")).toBeNull();
+  });
+});
+
+describe("week ranges", () => {
+  const bench: Dose = { sets: 3, setsMax: 5, reps: 8, weightKg: 60 };
+
+  it("types a range in a strength or mobility week's sets and reps, never timed work or a grip", () => {
+    expect(weekRangeOf("strength", bench, "sets")).toEqual({ max: 5 });
+    expect(weekRangeOf("strength", bench, "reps")).toEqual({});
+    expect(weekRangeOf("strength", bench, "weightKg")).toBeUndefined();
+    expect(weekRangeOf("hangboard", repeaters, "sets")).toBeUndefined();
+    expect(weekRangeOf("other", { sets: 4, onS: 60 }, "sets")).toBeUndefined();
+  });
+
+  it("reads and marks a week's range, and keeps a dropped top at the bottom so it reads as one", () => {
+    const week = withWeekRange(bench, bench, "sets", 2, 3, "kg")!;
+    expect(week).toMatchObject({ sets: 2, setsMax: 3 });
+    expect(cellText("strength", week, "sets", "kg")).toBe("2-3");
+    expect(weekFieldMarked({ setsMax: 4 }, bench, "sets")).toBe(true);
+    const single = withWeekRange(bench, bench, "sets", 4, undefined, "kg")!;
+    expect(single).toMatchObject({ sets: 4, setsMax: 4 });
+    expect(cellText("strength", single, "sets", "kg")).toBe("4");
+    expect(withWeekRange(squat, squat, "reps", 6, undefined, "kg")).toEqual({ ...squat, reps: 6 });
+  });
+});
+
+describe("week placeholders", () => {
+  it("shows an example range in an empty strength reps cell, and none in a filled one or on a grip", () => {
+    expect(weekPlaceholder("strength", { sets: 3 }, "reps")).toBe("8, 8-12");
+    expect(weekPlaceholder("strength", { sets: 3, reps: 8 }, "reps")).toBeUndefined();
+    expect(weekPlaceholder("hangboard", { sets: 3 }, "reps")).toBeUndefined();
   });
 });

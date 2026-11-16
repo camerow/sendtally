@@ -1,4 +1,5 @@
 import React from "react";
+import { restAfterItem } from "@sendtally/core/hang";
 import { useWeightUnit } from "@sendtally/features/activities";
 import { eachSideOf } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
@@ -6,6 +7,7 @@ import { useExercises } from "@sendtally/features/statistics";
 import {
   afterKey,
   doseSummary,
+  exerciseTarget,
   exerciseName,
   heldSeconds,
   useChecklistPlayer,
@@ -70,7 +72,12 @@ export function ChecklistPage({ run, end }: { run: WorkoutRun; end: boolean }): 
               ) : (
                 <ChecklistRow
                   name={name}
-                  dose={doseSummary(run.kind, item.dose, unit, sided(item.exercise))}
+                  dose={[
+                    doseSummary(run.kind, item.dose, unit, sided(item.exercise)),
+                    exerciseTarget(item.dose),
+                  ]
+                    .filter((x) => x !== undefined)
+                    .join(" · ")}
                   ticked={ticked.has(i)}
                   onToggle={() => player.toggle(i)}
                   go={
@@ -87,8 +94,7 @@ export function ChecklistPage({ run, end }: { run: WorkoutRun; end: boolean }): 
               {rest.rest?.at === afterKey(i) ? (
                 <RestRow rest={rest.rest} left={rest.left} onMore={rest.more} onSkip={rest.skip} />
               ) : (
-                i < run.items.length - 1 &&
-                run.exerciseRestS > 0 && <RestPreview seconds={run.exerciseRestS} />
+                <RestPreview seconds={restAfterItem(run.items, i, run.exerciseRestS)} />
               )}
             </React.Fragment>
           );

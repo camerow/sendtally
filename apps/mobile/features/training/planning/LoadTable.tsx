@@ -8,7 +8,9 @@ import {
   columnLabel,
   weekFieldLimits,
   weekFieldValue,
-  withWeekField,
+  weekPlaceholder,
+  weekRangeOf,
+  withWeekRange,
   type DoneCount,
   type WeekField,
   doneAll,
@@ -67,7 +69,8 @@ export function LoadTable({
   const headOf = (f: WeekField): string => {
     const name = columnLabel(kind, written, f);
     const shown = weekFieldUnit(f, unit);
-    return shown === null ? name : `${name} · ${shown}`;
+    if (shown === null) return name;
+    return f === "weightKg" && kind !== "hangboard" ? shown : `${name} · ${shown}`;
   };
   const head = (text: string, width?: number): React.ReactElement => (
     <Label
@@ -110,6 +113,7 @@ export function LoadTable({
             {columns.map((f) => {
               const name = columnLabel(kind, written, f);
               const marked = weekFieldMarked(change, written, f);
+              const hint = weekPlaceholder(kind, dose, f);
               if (!editing)
                 return (
                   <View key={f} style={{ flex: 1, alignItems: "center" }}>
@@ -144,14 +148,15 @@ export function LoadTable({
                           kind: "number",
                           unit: weekFieldUnit(f, unit) ?? undefined,
                           ...weekFieldLimits(f, unit),
+                          range: weekRangeOf(kind, dose, f),
                         }
                   }
                   value={weekFieldValue(dose, f, unit)}
-                  text={["", cellText(kind, dose, f, unit)]}
+                  text={hint === undefined ? ["", cellText(kind, dose, f, unit)] : [hint, ""]}
                   note={`${t("plan.asWritten")} ${cellText(kind, written, f, unit)}`}
                   onReset={marked ? () => onChange(week, without(change, f)) : undefined}
-                  onChange={(typed) => {
-                    const next = withWeekField(dose, f, typed, unit);
+                  onChange={(typed, max) => {
+                    const next = withWeekRange(written, dose, f, typed, max, unit);
                     if (next !== null) onChange(week, changeFrom(written, next));
                   }}
                 />

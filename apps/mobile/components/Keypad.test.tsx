@@ -115,3 +115,20 @@ describe("Keypad", () => {
     expect(onCommit).toHaveBeenCalledWith(99);
   });
 });
+
+describe("Keypad ranges", () => {
+  const counts: KeypadMode = { kind: "number", step: 1, min: 1, max: 100, range: {} };
+
+  it("types a range with To in place of 00, and commits its top", async () => {
+    const { onCommit } = await renderPad(counts, 3);
+    expect(screen.queryByLabelText("00")).toBeNull();
+    await press("8", "To", "1", "2", "Done");
+    expect(onCommit).toHaveBeenCalledWith(8, 12);
+  });
+
+  it("deletes back past the hyphen to one number", async () => {
+    const { onCommit } = await renderPad({ ...counts, range: { max: 5 } }, 3);
+    await press("Delete last digit", "Delete last digit", "Done");
+    expect(onCommit).toHaveBeenCalledWith(3, undefined);
+  });
+});

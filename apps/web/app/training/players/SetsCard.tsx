@@ -7,7 +7,7 @@ import {
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { exerciseName, setKey, type SetAt } from "@sendtally/features/workouts";
+import { exerciseName, exerciseTarget, setKey, type SetAt } from "@sendtally/features/workouts";
 import { LetterBadge } from "../components/LetterBadge";
 import { AboutButton, type About } from "./AboutButton";
 import { RestPreview } from "./RestPreview";
@@ -32,6 +32,8 @@ export type SetsCardProps = {
   go: (set: number) => React.ReactNode;
   /** What shows under a set: the rest its tick started, if it is running. */
   restUnder: (set: number) => React.ReactNode;
+  /** Under the sets, such as one more to add. */
+  footer?: React.ReactNode;
   /** The exercise's description behind an info button beside its name; none without one. */
   about?: About | undefined;
 };
@@ -51,10 +53,12 @@ export function SetsCard({
   holdRow,
   go,
   restUnder,
+  footer,
   about,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
   const { name: doseName, setRestS = 0 } = item.dose;
+  const aim = exerciseTarget(item.dose);
   return (
     <section className="player-card">
       <div className="player-card-head">
@@ -68,6 +72,7 @@ export function SetsCard({
             {doseName !== undefined && <span className="player-card-meta">{doseName}</span>}
           </span>
         )}
+        {aim !== undefined && <span className="player-card-meta">{aim}</span>}
         {setRestS > 0 && (
           <span className="player-card-meta">{t("plan.chipRest", { value: clock(setRestS) })}</span>
         )}
@@ -83,6 +88,7 @@ export function SetsCard({
           {holdRow(i) || (
             <SetRow
               n={i + 1}
+              repsMax={item.dose.repsMax}
               target={target(i)}
               done={set}
               previous={previous[i]}
@@ -100,6 +106,7 @@ export function SetsCard({
             (i < done.sets.length - 1 && setRestS > 0 && <RestPreview seconds={setRestS} />)}
         </React.Fragment>
       ))}
+      {footer}
     </section>
   );
 }

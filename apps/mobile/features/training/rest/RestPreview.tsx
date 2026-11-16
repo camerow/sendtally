@@ -5,8 +5,9 @@ import { t } from "@sendtally/features/i18n";
 import { elapsedClock } from "@sendtally/features/sessions";
 import { type } from "../type";
 
-/** A rest still to come between sets or exercises: a slim line, until it runs as a RestRow. */
-export function RestPreview({ seconds }: { seconds: number }): React.ReactElement {
+/** A rest still to come between sets or exercises: a slim line, until it runs as a RestRow. None at zero. */
+export function RestPreview({ seconds }: { seconds: number }): React.ReactElement | null {
+  if (seconds <= 0) return null;
   const rule = { flex: 1, height: 1, backgroundColor: colors.lineOnLight };
   return (
     <View

@@ -1,4 +1,5 @@
 import React from "react";
+import { NameField } from "../components/NameField";
 import { EXERCISE_PROGRESS, measuresFor } from "@sendtally/core/hang";
 import { MAX_DESCRIPTION } from "@sendtally/core/text";
 import { measureLabel, tallyMeasureOf, type ExerciseForm } from "@sendtally/features/exercises";
@@ -56,18 +57,15 @@ export function ExerciseFields({
   return (
     <>
       <div className="form-section">
-        <input
-          className="name-field"
-          aria-label={t("hang.name")}
+        <NameField
+          label={t("hang.name")}
           value={form.name}
           maxLength={fingers ? 40 : 80}
           placeholder={t("workouts.exerciseNamePlaceholder")}
           readOnly={locked !== undefined}
           autoFocus={autoFocus}
-          onChange={(e) => set({ name: e.target.value })}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") onSubmit();
-          }}
+          onChange={(name) => set({ name })}
+          onEnter={onSubmit}
         />
         {locked !== undefined && (
           <span className="name-locked">

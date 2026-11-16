@@ -11,7 +11,7 @@ export type KeypadRequest = {
   box: React.RefObject<View | null>;
   hasNext: boolean;
   hasPrev: boolean;
-  commit: (value: number) => void;
+  commit: (value: number, max?: number) => void;
   close: () => void;
   next: () => void;
   prev: () => void;

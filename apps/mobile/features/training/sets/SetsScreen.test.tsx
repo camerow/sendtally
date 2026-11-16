@@ -86,11 +86,11 @@ describe("Sets player", () => {
     await fireEvent.press(screen.getByLabelText("About this workout"));
     expect(screen.getByText("Heavy squats, then rows.")).toBeTruthy();
     expect(screen.getByText("Target effort 8")).toBeTruthy();
-    expect(screen.getAllByText("5 × 100 kg")).toHaveLength(2);
+    expect(screen.getAllByText("5 × 100")).toHaveLength(2);
     expect(screen.getByText("30s")).toBeTruthy();
     expect(screen.getByText("Last 5 × 97.5 kg")).toBeTruthy();
     expect(screen.getByText("Last 8 × 60 kg")).toBeTruthy();
-    expect(screen.getByText("8 × 60 kg")).toBeTruthy();
+    expect(screen.getByText("8 × 60")).toBeTruthy();
     expect(screen.getByText("1:30 rest")).toBeTruthy();
     expect(screen.getAllByText("Rest 2:00")).toHaveLength(2);
     expect(readingOrder("Back squat, set 1", "Rest 1:30", "Back squat, set 2")).toEqual([
@@ -189,6 +189,41 @@ describe("Sets player", () => {
     await fireEvent.press(screen.getByText("Skip"));
     expect(screen.queryByLabelText("Rest, 1:00 left")).toBeNull();
     expect(liveRun.read()?.rest).toBeUndefined();
+  });
+
+  it("shows an exercise's own target beside its name, and none where it sets none", async () => {
+    const targeted: WorkoutRun = {
+      ...run,
+      items: [
+        { exercise: "Back squat", dose: { sets: 2, reps: 5, targetRpe: 8 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    };
+    await renderWithHang(<SetsScreen run={targeted} />, hangData());
+    expect(screen.getByText("RPE 8")).toBeTruthy();
+    expect(screen.getAllByText(/RPE/)).toHaveLength(1);
+  });
+
+  it("offers optional sets once the minimum is ticked, up to the top of the range", async () => {
+    const ranged: WorkoutRun = {
+      ...run,
+      items: [
+        { exercise: "Bench press", dose: { sets: 1, setsMax: 2, reps: 8, repsMax: 12 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    };
+    await renderWithHang(<SetsScreen run={ranged} />, hangData());
+    expect(screen.getAllByText("8-12")).toHaveLength(1);
+    expect(screen.queryByLabelText("Add a set to Bench press")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Bench press, set 1"));
+    expect(screen.getByText("Add set, up to 2")).toBeTruthy();
+    expect(liveRun.read()?.rest).toMatchObject({ at: "after:0" });
+    await fireEvent.press(screen.getByLabelText("Add a set to Bench press"));
+    expect(liveRun.read()?.rest).toBeUndefined();
+    expect(screen.getByLabelText("Bench press, set 2")).toBeTruthy();
+    expect(screen.queryByLabelText("Add a set to Bench press")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Bench press, set 2"));
+    expect(liveRun.read()?.state).toMatchObject({ ticked: ["0:0", "0:1"] });
   });
 
   it("shows which dose an alternating exercise runs, with its name when it has one", async () => {

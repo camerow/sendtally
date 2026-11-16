@@ -2,6 +2,7 @@ import type { ActivityKind, WorkoutRecord } from "@sendtally/api-client";
 import {
   defaultExerciseRestS,
   doseProtocol,
+  gapRestSeconds,
   hangboardSeconds,
   isBuiltInGrip,
   itemsSeconds,
@@ -22,7 +23,7 @@ import {
 import { climbingDoseLine } from "../activities/climbing";
 import { weightValue } from "../activities/done";
 import { ACTIVITY_KINDS, kindLabel } from "../activities/format";
-import { humanDuration, protocolSummary } from "../hang/format";
+import { countText, humanDuration, protocolSummary } from "../hang/format";
 import { builtInGripName } from "../hang/names";
 import { formatNumber, t } from "../i18n";
 import { builtInWorkouts } from "./builtIns";
@@ -106,7 +107,7 @@ export function estimatedMinutes(
           Math.max(0, i.dose.sets - 1) * (i.dose.setRestS ?? 0)),
     0
   );
-  return roundMinutes(seconds + Math.max(0, items.length - 1) * w.exerciseRestS);
+  return roundMinutes(seconds + gapRestSeconds(items, w.exerciseRestS));
 }
 
 /** An item's exercise as the user reads it: a built-in grip in their language. */
@@ -136,16 +137,24 @@ export function doseSummary(
     return [protocolSummary(p, timeUnitsOf(p)), edge, weight].filter((x) => x !== null).join(" · ");
   }
   const work = [
-    dose.reps === undefined ? null : formatNumber(dose.reps),
+    dose.reps === undefined ? null : countText(dose.reps, dose.repsMax),
     dose.onS === undefined ? null : humanDuration(dose.onS),
   ].filter((x) => x !== null);
   const done = work.join(" · ");
   const main =
     work.length === 0
       ? t("activities.setCount", { count: dose.sets })
-      : `${formatNumber(dose.sets)} × ${eachSide ? t("workouts.aSide", { value: done }) : done}`;
+      : `${countText(dose.sets, dose.setsMax)} × ${eachSide ? t("workouts.aSide", { value: done }) : done}`;
   return [main, weight, edge].filter((x) => x !== null).join(" · ");
 }
+
+/** "RPE 8": the effort an exercise aims for, when it sets one. */
+export const exerciseTarget = ({ targetRpe }: Pick<Dose, "targetRpe">): string | undefined =>
+  targetRpe === undefined ? undefined : t("hang.rpeValue", { value: formatNumber(targetRpe) });
+
+/** A line with the exercise's target first: "RPE 8 · Same every session". */
+export const withTarget = (dose: Pick<Dose, "targetRpe">, line?: string): string | undefined =>
+  [exerciseTarget(dose), line].filter((x) => x !== undefined && x !== "").join(" · ") || undefined;
 
 /** "B Light": a dose's letter, with its name when it has one. */
 export const letterName = (turn: number, name?: string): string =>

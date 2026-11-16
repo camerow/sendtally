@@ -4,6 +4,7 @@ import {
   clock,
   doseIndex,
   intervalsOf,
+  restAfterItem,
   sessionItems,
   turnsOf,
   type Dose,
@@ -19,6 +20,7 @@ import {
   exerciseName,
   letterName,
   turnName,
+  withTarget,
   type LibraryWorkout,
 } from "@sendtally/features/workouts";
 import { DashedPanel } from "../components/DashedPanel";
@@ -105,13 +107,13 @@ export function BodyPreview({
       )}
       {items.map((item, i) => (
         <React.Fragment key={i}>
-          {i > 0 && workout.exerciseRestS > 0 && (
-            <RestDivider label={restOf(workout.exerciseRestS) ?? ""} />
+          {i > 0 && restAfterItem(items, i - 1, workout.exerciseRestS) > 0 && (
+            <RestDivider label={restOf(restAfterItem(items, i - 1, workout.exerciseRestS)) ?? ""} />
           )}
           <PreviewRow
             title={exerciseName(item.exercise)}
             detail={doseText(item.exercise, item.dose)}
-            note={noteOf(i)}
+            note={withTarget(item.dose, noteOf(i))}
             rest={workout.kind === "hangboard" ? undefined : restOf(item.dose.setRestS)}
             onPress={openExercise?.(item.exercise)}
           />

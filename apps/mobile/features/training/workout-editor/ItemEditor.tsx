@@ -10,7 +10,7 @@ import type { DetailMenuRow } from "../components/types";
 import { type } from "../type";
 import { DoseNameTile } from "./DoseNameTile";
 import { DoseInput } from "./DoseInput";
-import { doseFieldsFor, type DoseMeasure } from "@sendtally/features/workouts";
+import { doseFieldsFor, fieldPlaceholder, type DoseMeasure } from "@sendtally/features/workouts";
 import {
   MAX_DOSES,
   withAlternates,
@@ -198,13 +198,7 @@ export function ItemEditor({
                   unit={unit}
                   label={label}
                   accessibilityLabel={alternating ? `${label} ${letterOf(d)}` : label}
-                  placeholder={
-                    field.measure === "weight"
-                      ? t("hang.bodyweight")
-                      : field.placeholder === undefined
-                        ? undefined
-                        : t(field.placeholder)
-                  }
+                  placeholder={fieldPlaceholder(field)}
                   onChange={(typed) => onChange(withDose(item, d, typed))}
                 />
               );
@@ -215,6 +209,9 @@ export function ItemEditor({
                 accessibilityLabel={`${t("workouts.doseName")} ${letterOf(d)}`}
                 onChange={(text) => onChange(withDoseName(item, d, text))}
               />
+            )}
+            {!alternating && fields.length % 2 === 1 && (
+              <View testID="dose-spacer" style={{ flexGrow: 1, flexBasis: "40%" }} />
             )}
           </View>
         </View>

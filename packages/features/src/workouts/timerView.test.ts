@@ -41,11 +41,11 @@ const items = {
   unit: "kg",
 } as const;
 const at0 = 1_000_000;
-const hanging = tick(startWorkoutRun([repeaters], 0, at0), at0 + 5_000);
+const hanging = tick(startWorkoutRun([repeaters], [], at0), at0 + 5_000);
 
 describe("timerView", () => {
   it("reads Get ready on a white fill, with nothing to fail before the first hang", () => {
-    const view = timerView(startWorkoutRun([repeaters], 0, at0), 5, items);
+    const view = timerView(startWorkoutRun([repeaters], [], at0), 5, items);
     expect(view.look.fill).toBe(colors.white);
     expect(view.primary).toBe(t("hang.pause"));
     expect(view.fail).toBeNull();
@@ -66,7 +66,7 @@ describe("timerView", () => {
   });
 
   it("logs a lift on a pull, and offers Missed lift", () => {
-    const pull = tick(startWorkoutRun([lifts], 0, at0), at0 + 5_000);
+    const pull = tick(startWorkoutRun([lifts], [], at0), at0 + 5_000);
     const view = timerView(pull, 0, {
       planned: { items: [{ workout: lifts, dose: undefined }], exerciseRestS: 0 },
       grips: ["bar"],
@@ -98,7 +98,7 @@ describe("progressMove", () => {
   });
 
   it("eases a lift from wherever it is to the share of taps", () => {
-    const pull = tick(startWorkoutRun([lifts], 0, at0), at0 + 5_000);
+    const pull = tick(startWorkoutRun([lifts], [], at0), at0 + 5_000);
     const one = logLift(pull, true, at0 + 6_000);
     expect(progressMove(one, at0 + 6_000)).toEqual({
       from: null,

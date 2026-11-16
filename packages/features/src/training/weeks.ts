@@ -1,5 +1,8 @@
 import {
   type DOSE_FIELDS,
+  isRanged,
+  RANGE_TOP,
+  withTop,
   gripMeasureOf,
   fromUnit,
   toUnit,
@@ -9,11 +12,13 @@ import {
   type WeightUnit,
   type WorkoutKind,
 } from "@sendtally/core/hang";
-import { humanDuration } from "../hang/format";
+import { countText, humanDuration } from "../hang/format";
+import { RANGE_PLACEHOLDER } from "../workouts/doseFields";
 import { formatNumber, t } from "../i18n";
 import type { DoneCount } from "./recap";
 
-export type WeekField = (typeof DOSE_FIELDS)[number];
+/** A number a block week sets in a column of its own; a range's top shares its minimum's cell. */
+export type WeekField = Exclude<(typeof DOSE_FIELDS)[number], "setsMax" | "repsMax">;
 
 /** Timed work outside hangboarding: rounds of work and rest. */
 const timed = (kind: WorkoutKind, dose: Dose): boolean =>
@@ -29,7 +34,7 @@ const HANGBOARD_FIELDS: Record<GripMeasure, WeekField[]> = {
 export function weekFields(kind: WorkoutKind, dose: Dose): WeekField[] {
   if (kind === "hangboard") return HANGBOARD_FIELDS[gripMeasureOf(dose)];
   if (timed(kind, dose)) return ["sets", "onS", "offS", "weightKg"];
-  return ["sets", "reps", "weightKg", "setRestS"];
+  return ["sets", "reps", "weightKg", "targetRpe", "setRestS"];
 }
 
 /** What a field is called on an item of the kind. */
@@ -50,6 +55,8 @@ export function fieldLabel(kind: WorkoutKind, dose: Dose, field: WeekField): str
       return t("hang.edgeDepth");
     case "setRestS":
       return t("hang.fieldSetRest");
+    case "targetRpe":
+      return t("workouts.dose.rpe");
   }
 }
 
@@ -61,6 +68,7 @@ const STEP: Record<WeekField, number> = {
   offS: 1,
   edgeMm: 1,
   setRestS: 15,
+  targetRpe: 1,
 };
 
 const MIN: Record<WeekField, number> = {
@@ -71,6 +79,7 @@ const MIN: Record<WeekField, number> = {
   offS: 0,
   edgeMm: 0,
   setRestS: 0,
+  targetRpe: 1,
 };
 
 const round = (n: number): number => Math.round(n * 100) / 100;
@@ -92,7 +101,7 @@ export function withWeekField(
 ): Dose | null {
   if (!Number.isFinite(typed)) return null;
   const value = field === "weightKg" ? round(fromUnit(typed, unit)) : Math.round(typed);
-  if (value < MIN[field]) return null;
+  if (value < MIN[field] || (field === "targetRpe" && value > 10)) return null;
   return { ...dose, [field]: value };
 }
 
@@ -104,7 +113,50 @@ export function weekFieldLimits(field: WeekField, unit: WeightUnit): NumberLimit
       decimals: true,
       min: toUnit(MIN.weightKg, unit),
     };
-  return { step: STEP[field], min: MIN[field] };
+  return { step: STEP[field], min: MIN[field], ...(field === "targetRpe" && { max: 10 }) };
+}
+
+/** Whether a week's cell types a range: sets and reps of strength and mobility, never timed work or a grip. */
+export function weekRangeOf(
+  kind: WorkoutKind,
+  dose: Dose,
+  field: WeekField
+): { max?: number } | undefined {
+  if (!isRanged(field) || (kind !== "strength" && kind !== "mobility") || timed(kind, dose))
+    return undefined;
+  const max = dose[RANGE_TOP[field]];
+  return max !== undefined && max > (dose[field] ?? 0) ? { max } : {};
+}
+
+/** An empty cell that takes a range shows the editor's example range. */
+export const weekPlaceholder = (
+  kind: WorkoutKind,
+  dose: Dose,
+  field: WeekField
+): string | undefined =>
+  isRanged(field) && dose[field] === undefined && weekRangeOf(kind, dose, field) !== undefined
+    ? RANGE_PLACEHOLDER[field]
+    : undefined;
+
+/**
+ * The dose with a range typed into a cell. Dropping a top the workout has keeps it at the bottom,
+ * which reads as one number, since a week only stores what it changes.
+ */
+export function withWeekRange(
+  written: Dose,
+  dose: Dose,
+  field: WeekField,
+  typed: number,
+  max: number | undefined,
+  unit: WeightUnit
+): Dose | null {
+  const next = withWeekField(dose, field, typed, unit);
+  if (next === null || !isRanged(field)) return next;
+  const ranged = withTop(next, field, max, 1000);
+  const top = RANGE_TOP[field];
+  return written[top] !== undefined && ranged[top] === undefined
+    ? { ...ranged, [top]: ranged[field] }
+    : ranged;
 }
 
 /** The dose one step up or down on a field: 2.5 kg or 5 lb of weight, 15 s of set rest, else 1. */
@@ -177,7 +229,7 @@ export function cellText(
   const value = weekFieldValue(dose, field, unit);
   if (field === "onS" || field === "offS" || field === "setRestS") return humanDuration(value);
   if (field === "weightKg" && kind === "hangboard") return value === 0 ? "0" : signed(value);
-  return formatNumber(value);
+  return countText(value, isRanged(field) ? dose[RANGE_TOP[field]] : undefined);
 }
 
 /** The fields a load table types as m:ss. */
@@ -189,8 +241,10 @@ export const weekFieldUnit = (field: WeekField, unit: WeightUnit): string | null
   field === "weightKg" ? unit : field === "edgeMm" ? "mm" : null;
 
 /** Whether a week's change differs from the workout as written in that field, drawn gold. */
-export const weekFieldMarked = (change: Partial<Dose>, written: Dose, field: WeekField): boolean =>
-  change[field] !== undefined && change[field] !== written[field];
+export function weekFieldMarked(change: Partial<Dose>, written: Dose, field: WeekField): boolean {
+  const differs = (f: keyof Dose): boolean => change[f] !== undefined && change[f] !== written[f];
+  return differs(field) || (isRanged(field) && differs(RANGE_TOP[field]));
+}
 
 /** A week's runs as "2/3"; blank before it runs or with none planned. */
 export const doneText = (ran: DoneCount | null): string =>

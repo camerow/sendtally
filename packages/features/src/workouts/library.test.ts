@@ -14,6 +14,7 @@ import {
   libraryShelves,
   newWorkoutDraft,
   turnName,
+  withTarget,
   estimatedMinutes,
   workoutMinutes,
   workoutUsage,
@@ -280,6 +281,10 @@ describe("summaries", () => {
       "5 × 5 · 100 kg"
     );
     expect(doseSummary("mobility", { sets: 3, onS: 45 }, "kg")).toBe("3 × 45s");
+    expect(
+      doseSummary("strength", { sets: 3, setsMax: 5, reps: 8, repsMax: 12, weightKg: 60 }, "kg")
+    ).toBe("3-5 × 8-12 · 60 kg");
+    expect(doseSummary("strength", { sets: 3, setsMax: 3, reps: 8 }, "kg")).toBe("3 × 8");
     expect(doseSummary("other", { sets: 2 }, "kg")).toBe("2 sets");
     expect(
       doseSummary(
@@ -340,5 +345,14 @@ describe("summaries", () => {
   it("times the session it is asked for when doses take turns", () => {
     expect(workoutMinutes(byId("fingers-ab"))).toBe(16);
     expect(workoutMinutes(byId("fingers-ab"), 1)).toBe(9);
+  });
+});
+
+describe("exercise targets", () => {
+  it("puts an exercise's target ahead of the line under it, and nothing when it has neither", () => {
+    expect(withTarget({ targetRpe: 8 }, "Same every session")).toBe("RPE 8 · Same every session");
+    expect(withTarget({ targetRpe: 7 })).toBe("RPE 7");
+    expect(withTarget({}, "Same every session")).toBe("Same every session");
+    expect(withTarget({})).toBeUndefined();
   });
 });

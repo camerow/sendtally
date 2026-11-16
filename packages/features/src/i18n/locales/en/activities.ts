@@ -63,6 +63,8 @@ export const activities = {
   "activities.partialCounts": "Tick what you did. Partial days still count.",
   "activities.addSet": "Add set",
   "activities.addSetTo": "Add a set to {exercise}",
+  "activities.addSetUpTo": "Add set, up to {n}",
+  "activities.setsOfMax": "{n} of {max} sets",
   "activities.started": "Started",
   "activities.removeSet": "Remove set {n}",
   "activities.removeLastSet": "Remove set",

@@ -9,7 +9,7 @@ import {
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { exerciseName } from "@sendtally/features/workouts";
+import { exerciseName, exerciseTarget } from "@sendtally/features/workouts";
 import { AboutButton, type About } from "../components/AboutButton";
 import { Label } from "../components/Label";
 import { LetterBadge } from "../components/LetterBadge";
@@ -38,6 +38,8 @@ export type SetsCardProps = {
   go: (set: number) => React.ReactNode;
   /** What shows under a set: the rest its tick started, if it is running, else its rest to come. */
   restUnder: (set: number) => React.ReactNode;
+  /** Under the sets, such as one more to add. */
+  footer?: React.ReactNode;
   /** The exercise's description behind an info button beside its name; none without one. */
   about?: About | undefined;
 };
@@ -57,10 +59,12 @@ export function SetsCard({
   holdRow,
   go,
   restUnder,
+  footer,
   about,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
   const { name: doseName, setRestS } = item.dose;
+  const aim = exerciseTarget(item.dose);
   return (
     <View
       style={{
@@ -88,6 +92,9 @@ export function SetsCard({
             )}
           </View>
         )}
+        {aim !== undefined && (
+          <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>{aim}</Text>
+        )}
         {setRestS !== undefined && setRestS > 0 && (
           <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
             {t("plan.chipRest", { value: clock(setRestS) })}
@@ -111,6 +118,7 @@ export function SetsCard({
           {holdRow(i) || (
             <SetRow
               n={i + 1}
+              repsMax={item.dose.repsMax}
               target={targetOf(i)}
               done={set}
               previous={previous[i]}
@@ -130,6 +138,7 @@ export function SetsCard({
             ))}
         </React.Fragment>
       ))}
+      {footer}
     </View>
   );
 }

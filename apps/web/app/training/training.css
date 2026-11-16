@@ -1646,8 +1646,11 @@
 }
 
 .name-field {
+  display: block;
   width: 100%;
   box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
   padding: 4px 0;
   border: none;
   border-bottom: 1px solid transparent;
@@ -1757,6 +1760,11 @@
 .dose-input {
   flex: 1 1 40%;
   min-width: 0;
+}
+
+/* A lone last field keeps the half width of the pairs above it. */
+.dose-input:last-child:nth-child(odd) {
+  flex: 0 1 calc(50% - 4px);
 }
 
 .dose-name {

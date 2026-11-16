@@ -83,12 +83,12 @@ function Where(): React.ReactElement {
   return <span data-testid="where">{`${pathname}${search}`}</span>;
 }
 
-function mount(): void {
+function mount(shown: WorkoutRun = run): void {
   act(() =>
     root.render(
       <MemoryRouter initialEntries={["/app/plan", "/app/workout/sets"]} initialIndex={1}>
         <Routes>
-          <Route path="/app/workout/sets" element={<SetsPage run={run} end={false} />} />
+          <Route path="/app/workout/sets" element={<SetsPage run={shown} end={false} />} />
           <Route path="*" element={<Where />} />
         </Routes>
       </MemoryRouter>
@@ -126,6 +126,35 @@ afterEach(() => {
 });
 
 describe("Sets player", () => {
+  it("offers optional sets once the minimum is ticked, up to the top of the range", () => {
+    mount({
+      ...run,
+      items: [
+        { exercise: "Bench press", dose: { sets: 1, setsMax: 2, reps: 8, repsMax: 12 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    });
+    expect(container.textContent).toContain("8-12");
+    expect(byLabel("Add a set to Bench press")).toBeNull();
+    act(() => (byLabel("Bench press, set 1") as HTMLInputElement).click());
+    expect(byLabel("Rest, 2:00 left")).not.toBeNull();
+    act(() => (byLabel("Add a set to Bench press") as HTMLButtonElement).click());
+    expect(byLabel("Bench press, set 2")).not.toBeNull();
+    expect(byLabel("Add a set to Bench press")).toBeNull();
+    expect(byLabel("Rest, 2:00 left")).toBeNull();
+  });
+
+  it("shows an exercise's own target beside its name, and none where it sets none", () => {
+    mount({
+      ...run,
+      items: [
+        { exercise: "Back squat", dose: { sets: 2, reps: 5, targetRpe: 8 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    });
+    expect(texts(".player-card-meta")).toEqual(["RPE 8"]);
+  });
+
   it("opens an exercise's description from the info button beside its name", () => {
     mine.exercises = [
       { id: "e1", name: "row", kind: "strength", description: "Pull to the hip." },

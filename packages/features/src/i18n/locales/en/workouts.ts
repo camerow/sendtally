@@ -198,6 +198,8 @@ export const workouts = {
   "workouts.step.easy": "Easy",
 
   "workouts.dose.sets": "Sets",
+  "workouts.dose.rpe": "RPE",
+  "workouts.rangeTo": "To",
   "workouts.dose.reps": "Reps",
   "workouts.dose.hangs": "Hangs",
   "workouts.dose.hangTime": "Hang time",
@@ -216,7 +218,7 @@ export const workouts = {
   "workouts.alternatesWith": "Alternates: {letter} is {dose}",
   "workouts.sameEverySession": "Same every session",
   "workouts.totalTime": "Total time",
-  "workouts.exerciseRest": "Rest between exercises",
+  "workouts.restAfter": "Rest after {name}",
   "workouts.removeExercise": "Remove {name}",
   "workouts.moveUp": "Move {name} up",
   "workouts.moveDown": "Move {name} down",

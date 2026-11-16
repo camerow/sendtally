@@ -1,5 +1,5 @@
 import type { ActivityKind } from "@sendtally/api-client";
-import type { SessionItem, ItemDone, SetDone } from "@sendtally/core/hang";
+import { restAfterItem, type SessionItem, type ItemDone, type SetDone } from "@sendtally/core/hang";
 import { setKeyOf } from "../activities/done";
 
 /** One set of one item, by position. */
@@ -10,6 +10,16 @@ export const setKey = ({ item, set }: SetAt): string => setKeyOf(item, set);
 /** Every set in order, item by item. */
 export const allSets = (items: readonly SessionItem[]): SetAt[] =>
   items.flatMap((it, item) => Array.from({ length: it.dose.sets }, (_, set) => ({ item, set })));
+
+/** The items with each one's sets as many as it has so far, extras added past its minimum too. */
+export const withDoneSets = (
+  items: readonly SessionItem[],
+  done: readonly Pick<ItemDone, "item" | "sets">[]
+): SessionItem[] =>
+  items.map((it, i) => {
+    const n = done.find((d) => d.item === i)?.sets.length ?? it.dose.sets;
+    return n > it.dose.sets ? { ...it, dose: { ...it.dose, sets: n } } : it;
+  });
 
 /** Whether every set of an item is ticked. */
 export const itemDone = (
@@ -29,7 +39,7 @@ type RestStart = { at: string; seconds: number; next: number | null };
 
 /**
  * The rest after a tick: the exercise's rest between sets under that set while it has sets
- * to go, else the workout's rest between exercises before the next one still to do. None
+ * to go, else its rest before the next exercise still to do. None
  * after the last.
  */
 export function restAfterTick(
@@ -41,7 +51,8 @@ export function restAfterTick(
   if (!itemDone(items, ticked, at.item))
     return { at: setKey(at), seconds: items[at.item]?.dose.setRestS ?? 0, next: null };
   const next = items.findIndex((_, i) => i > at.item && !itemDone(items, ticked, i));
-  return next === -1 ? null : { at: afterKey(at.item), seconds: exerciseRestS, next };
+  if (next === -1) return null;
+  return { at: afterKey(at.item), seconds: restAfterItem(items, at.item, exerciseRestS), next };
 }
 
 /** A lifting item: a strength exercise counted in reps, which takes a weight too. */

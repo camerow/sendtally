@@ -1,4 +1,5 @@
 import React from "react";
+import { restAfterItem } from "@sendtally/core/hang";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
@@ -9,6 +10,7 @@ import { useExercises } from "@sendtally/features/statistics";
 import {
   afterKey,
   doseSummary,
+  exerciseTarget,
   exerciseName,
   heldSeconds,
   useChecklistPlayer,
@@ -87,7 +89,12 @@ export function ChecklistScreen({
               ) : (
                 <ChecklistRow
                   name={exerciseName(item.exercise)}
-                  dose={doseSummary(run.kind, item.dose, unit, sided(item.exercise))}
+                  dose={[
+                    doseSummary(run.kind, item.dose, unit, sided(item.exercise)),
+                    exerciseTarget(item.dose),
+                  ]
+                    .filter((x) => x !== undefined)
+                    .join(" · ")}
                   ticked={ticked.has(i)}
                   onToggle={() => toggle(i)}
                   go={(() => {
@@ -114,8 +121,7 @@ export function ChecklistScreen({
                   />
                 </View>
               ) : (
-                i < run.items.length - 1 &&
-                run.exerciseRestS > 0 && <RestPreview seconds={run.exerciseRestS} />
+                <RestPreview seconds={restAfterItem(run.items, i, run.exerciseRestS)} />
               )}
             </React.Fragment>
           ))}
