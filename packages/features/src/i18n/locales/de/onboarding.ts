@@ -1,5 +1,4 @@
 export const onboarding = {
-  "onboarding.footer": "Eintragen kostenlos · keine Karte hinterlegt",
   "onboarding.featureOf": "Feature {n} von {total}",
   "onboarding.art.logHeader": "Do 3. Sep · Halle · 1h 52m",
   "onboarding.art.sendTries": "Begehung · 3 Versuche",

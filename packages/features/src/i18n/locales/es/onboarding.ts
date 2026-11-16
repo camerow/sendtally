@@ -1,5 +1,4 @@
 export const onboarding = {
-  "onboarding.footer": "Registro gratis · sin tarjeta",
   "onboarding.featureOf": "Función {n} de {total}",
   "onboarding.art.logHeader": "Jue 3 sep · Interior · 1h 52m",
   "onboarding.art.sendTries": "Encadenado · 3 pegues",
