@@ -14,6 +14,8 @@ export type SetDoneFieldsProps = {
   /** Always asks reps and weight, even before either is set. */
   lifting?: boolean;
   unit: WeightUnit;
+  /** Leaves the unit off the weight, which the table's heading states once. */
+  unitless?: boolean;
   /** Names the set for screen readers, ahead of each field's own name. */
   label: string;
   /** A hangboard set: its hangs typed, its hang time read, as the timer measured it. */
@@ -53,6 +55,7 @@ export function SetDoneFields({
   set,
   lifting = false,
   unit,
+  unitless = false,
   label,
   hangs = false,
   short = false,
@@ -96,7 +99,7 @@ export function SetDoneFields({
           {...named(t("hang.weight"))}
           value={set.weightKg === undefined ? null : toUnit(set.weightKg, unit)}
           onChange={(n) => onChange({ ...set, weightKg: fromUnit(n, unit) })}
-          unit={unit}
+          {...(!unitless && { unit })}
           step={unit === "lb" ? 5 : 2.5}
           min={toUnit(-200, unit)}
           max={toUnit(1000, unit)}

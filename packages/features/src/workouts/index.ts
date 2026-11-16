@@ -7,6 +7,7 @@ export {
   copyName,
   doseSummary,
   exerciseTarget,
+  exerciseTargetLine,
   withTarget,
   draftOf,
   exerciseName,

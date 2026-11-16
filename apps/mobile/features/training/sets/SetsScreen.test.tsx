@@ -191,7 +191,7 @@ describe("Sets player", () => {
     expect(liveRun.read()?.rest).toBeUndefined();
   });
 
-  it("shows an exercise's own target beside its name, and none where it sets none", async () => {
+  it("shows an exercise's own target under its name, and none where it sets none", async () => {
     const targeted: WorkoutRun = {
       ...run,
       items: [
@@ -200,8 +200,24 @@ describe("Sets player", () => {
       ],
     };
     await renderWithHang(<SetsScreen run={targeted} />, hangData());
-    expect(screen.getByText("RPE 8")).toBeTruthy();
-    expect(screen.getAllByText(/RPE/)).toHaveLength(1);
+    expect(screen.getByText("Target RPE 8")).toBeTruthy();
+    expect(screen.getAllByText(/RPE/)).toHaveLength(2);
+  });
+
+  it("asks a ticked set's RPE only where the exercise sets a target", async () => {
+    const targeted: WorkoutRun = {
+      ...run,
+      items: [
+        { exercise: "Back squat", dose: { sets: 2, reps: 5, targetRpe: 8 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    };
+    await renderWithHang(<SetsScreen run={targeted} />, hangData());
+    expect(screen.queryByLabelText("Back squat, set 1 · RPE")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Back squat, set 1"));
+    await fireEvent.press(screen.getByLabelText("Row, set 1"));
+    expect(screen.getByLabelText("Back squat, set 1 · RPE")).toBeTruthy();
+    expect(screen.queryByLabelText("Row, set 1 · RPE")).toBeNull();
   });
 
   it("offers optional sets once the minimum is ticked, up to the top of the range", async () => {

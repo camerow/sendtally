@@ -41,6 +41,8 @@ export const activities = {
   "activities.colTarget": "Objectif",
   "activities.previousSet": "Dernier {set}",
   "activities.colDone": "Fait",
+  "activities.colDoneUnit": "Fait · {unit}",
+  "activities.targetRpe": "RPE cible {value}",
   "activities.colHangsLoad": "Suspensions × charge",
   "activities.finish": "Terminer",
   "activities.setOf": "{exercise}, série {n}",

@@ -10,6 +10,7 @@ import {
   type ExerciseMetric,
   type ExerciseSeries,
 } from "../statistics/exercises";
+import { formatNumber, t } from "../i18n";
 
 /** How a best set moved: on its metric, or on reps when the metric held. Zero is the same. */
 export type SetChange = { metric: ExerciseMetric; by: number };
@@ -22,7 +23,25 @@ export type ExerciseResult = {
   /** The best set of the previous session that did it, and its day. */
   last: { set: SetDone; date: CalendarDate } | null;
   change: SetChange | null;
+  /** The mean RPE of the sets rated, against the target they were logged with; null when none was rated. */
+  effort: SetEffort | null;
 };
+
+export type SetEffort = { actual: number; target: number | null };
+
+/** The mean RPE of the rated sets, to one decimal, or null when none was rated. */
+export function setEffort(sets: readonly SetDone[], target?: number): SetEffort | null {
+  const rated = sets.flatMap((s) => (s.rpe === undefined ? [] : [s.rpe]));
+  if (rated.length === 0) return null;
+  const actual = Math.round((rated.reduce((a, b) => a + b, 0) / rated.length) * 10) / 10;
+  return { actual, target: target ?? null };
+}
+
+/** "RPE 8.8" and "· aimed 8", drawn in two weights; the second is empty with no target. */
+export const setEffortText = ({ actual, target }: SetEffort): [string, string] => [
+  t("hang.rpeValue", { value: formatNumber(actual) }),
+  target === null ? "" : t("summary.setAimed", { target: formatNumber(target) }),
+];
 
 type Dated = { id: string; date: CalendarDate; startTime?: string | null };
 
@@ -80,6 +99,7 @@ export function exerciseResults(activity: Logged, activities: readonly Logged[])
           lastBest === undefined || previous === undefined
             ? null
             : { set: lastBest, date: previous.date },
+        effort: setEffort(d.sets, d.targetRpe),
         change:
           counted ??
           (best === undefined || lastBest === undefined ? null : setChange(best, lastBest, metric)),

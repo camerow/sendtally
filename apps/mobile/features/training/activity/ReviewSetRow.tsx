@@ -3,12 +3,13 @@ import { Pressable, Text, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SetDone, WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { setSeconds, setText } from "@sendtally/features/activities";
+import { setChip, setSeconds, setText } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import type { FieldSlot } from "../../../components/useFieldOrder";
 import { press } from "../../../lib/press";
 import { CheckBox } from "../components/CheckBox";
 import { SET_COLUMNS } from "../sets/setColumns";
+import { RpeField } from "../sets/RpeField";
 import { SetDoneFields } from "../sets/SetDoneFields";
 import { type } from "../type";
 
@@ -33,15 +34,19 @@ export type ReviewSetRowProps = {
   /** The load a hang set shows while it has none of its own. */
   defaultLoadKg?: number;
   onChange: (set: SetDone) => void;
+  /** The set's RPE cell: its place in the review's order, and the target it shows dim. */
+  rpe?: { slot: FieldSlot; target: number | undefined };
   onToggle: () => void;
   onRemove: () => void;
 };
 
-/** A hang target reads "6 × 7s"; anything else as its set reads. */
+/** A hang target reads "6 × 7s"; anything else as its chip, the unit being in the header. */
 const targetText = (target: SetDone, hangs: boolean, unit: WeightUnit): string =>
   hangs && target.reps !== undefined && target.onS !== undefined
     ? `${formatNumber(target.reps)} × ${setSeconds(target.onS)}`
-    : setText(target, unit);
+    : hangs
+      ? setText(target, unit)
+      : setChip(target, unit);
 
 /** One set to review: what it asked, what was done, and its tick. Swipe it away to remove it. */
 export function ReviewSetRow({
@@ -57,6 +62,7 @@ export function ReviewSetRow({
   slot,
   loadSlot,
   defaultLoadKg,
+  rpe,
   onChange,
   onToggle,
   onRemove,
@@ -104,6 +110,9 @@ export function ReviewSetRow({
         </Text>
         <View style={[SET_COLUMNS.target, { gap: 2 }]}>
           <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
             style={[
               type.mono,
               { fontSize: 14, color: on ? colors.textSecondary : colors.textMuted },
@@ -123,6 +132,7 @@ export function ReviewSetRow({
               hangs={hangs}
               short={on && short !== null}
               unit={unit}
+              unitless={rpe !== undefined}
               label={label}
               slot={slot}
               loadSlot={loadSlot}
@@ -137,12 +147,25 @@ export function ReviewSetRow({
             </Text>
           )}
         </View>
+        {rpe !== undefined && (
+          <View style={SET_COLUMNS.rpe}>
+            {on && (
+              <RpeField
+                set={done}
+                target={rpe.target}
+                slot={rpe.slot}
+                label={label}
+                onChange={onChange}
+              />
+            )}
+          </View>
+        )}
         <Pressable
           onPress={onToggle}
           accessibilityRole="checkbox"
           accessibilityState={{ checked: on }}
           accessibilityLabel={label}
-          style={press({ width: 44, height: 44, alignItems: "center", justifyContent: "center" })}
+          style={press({ width: 44, height: 44, alignItems: "flex-end", justifyContent: "center" })}
         >
           <CheckBox checked={on} color={colors.fern} />
         </Pressable>

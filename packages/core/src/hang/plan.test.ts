@@ -369,6 +369,12 @@ describe("doneAsPrescribed", () => {
     expect(doneAsPrescribed(items)[0]?.sets).toEqual([{ reps: 8 }, { reps: 8 }]);
   });
 
+  it("records the dose's RPE target on the item, which its sets read against", () => {
+    const bench = { sets: 1, reps: 8, targetRpe: 8 };
+    const items = sessionItems([{ exercise: "Bench", doses: [bench] }, squat.items[0]!], 0);
+    expect(doneAsPrescribed(items).map((d) => d.targetRpe)).toEqual([8, undefined]);
+  });
+
   it("logs every set of every item", () => {
     expect(doneAsPrescribed(sessionItems(squat.items, 0))).toEqual([
       {

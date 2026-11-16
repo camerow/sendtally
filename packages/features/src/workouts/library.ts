@@ -153,6 +153,12 @@ export function doseSummary(
 export const exerciseTarget = ({ targetRpe }: Pick<Dose, "targetRpe">): string | undefined =>
   targetRpe === undefined ? undefined : t("hang.rpeValue", { value: formatNumber(targetRpe) });
 
+/** "Target RPE 8": the same, on its own line under the exercise name. */
+export const exerciseTargetLine = ({ targetRpe }: Pick<Dose, "targetRpe">): string | undefined =>
+  targetRpe === undefined
+    ? undefined
+    : t("activities.targetRpe", { value: formatNumber(targetRpe) });
+
 /** A line with the exercise's target first: "RPE 8 · Same every session". */
 export const withTarget = (dose: Pick<Dose, "targetRpe">, line?: string): string | undefined =>
   [exerciseTarget(dose), line].filter((x) => x !== undefined && x !== "").join(" · ") || undefined;

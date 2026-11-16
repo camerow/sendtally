@@ -72,6 +72,10 @@ export function DoneDetails({
         )
       : []
   );
+  // A set's RPE, then the next set's, through every exercise.
+  const rpes = useFieldOrder(
+    hangs ? [] : done.flatMap((d) => d.sets.map((_, i) => `${setKeyOf(d.item, i)}:rpe`))
+  );
   const remove = (d: ItemDone, set: number): void => {
     const removed = (): void => {
       onChange(removeSet(done, d.item, set), offWithout(off, d.item, set));
@@ -131,8 +135,17 @@ export function DoneDetails({
                 {t("activities.colTarget")}
               </Label>
               <Label small color={colors.textSecondary} style={SET_COLUMNS.done}>
-                {hangs ? t("activities.colHangsLoad") : t("activities.colDone")}
+                {hangs
+                  ? t("activities.colHangsLoad")
+                  : lifting
+                    ? t("activities.colDoneUnit", { unit })
+                    : t("activities.colDone")}
               </Label>
+              {!hangs && (
+                <Label small color={colors.textSecondary} style={SET_COLUMNS.rpe}>
+                  RPE
+                </Label>
+              )}
               <View style={SET_COLUMNS.tick} />
             </View>
             {d.sets.map((set, i) => {
@@ -159,6 +172,9 @@ export function DoneDetails({
                   slot={hangs ? counts.slot(setKeyOf(d.item, i)) : undefined}
                   loadSlot={hangs ? counts.slot(`${setKeyOf(d.item, i)}:load`) : undefined}
                   defaultLoadKg={hangLoadKg}
+                  {...(!hangs && {
+                    rpe: { slot: rpes.slot(`${setKeyOf(d.item, i)}:rpe`), target: d.targetRpe },
+                  })}
                   onChange={(value) =>
                     onChange(changeSet(done, d.item, i, value), offWithoutKey(off, d.item, i))
                   }

@@ -3,6 +3,7 @@ import type { SetDone, WeightUnit } from "@sendtally/core/hang";
 import { setChip, setText } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { holdShort } from "@sendtally/features/workouts";
+import { RpeField } from "../log/RpeField";
 import { SetDoneFields } from "../log/SetDoneFields";
 
 export type SetRowProps = {
@@ -19,6 +20,8 @@ export type SetRowProps = {
   label: string;
   /** ▶ in the Done cell, for the current set when it is timed. */
   go?: React.ReactNode;
+  /** Where the exercise asks for a set RPE: the target its cell shows dim. */
+  rpe?: { target: number | undefined };
   onChange: (set: SetDone) => void;
   onToggle: () => void;
 };
@@ -36,10 +39,12 @@ export function SetRow({
   unit,
   label,
   go,
+  rpe,
   onChange,
   onToggle,
 }: SetRowProps): React.ReactElement {
-  const last = previous === undefined ? "" : setText(previous, unit);
+  const last =
+    previous === undefined ? "" : rpe ? setChip(previous, unit) : setText(previous, unit);
   return (
     <div className={current ? "set-row set-row--current" : "set-row"}>
       <span className="set-col-n">{formatNumber(n)}</span>
@@ -55,6 +60,7 @@ export function SetRow({
             set={done}
             lifting={lifting}
             unit={unit}
+            unitless={rpe !== undefined}
             label={label}
             go={ticked ? undefined : go}
             holdShort={holdShort(target, done, ticked)}
@@ -64,6 +70,11 @@ export function SetRow({
           <span className="set-pending">-</span>
         )}
       </span>
+      {rpe !== undefined && (
+        <span className="set-col-rpe">
+          {ticked && <RpeField set={done} target={rpe.target} label={label} onChange={onChange} />}
+        </span>
+      )}
       <label className="set-tick">
         <input type="checkbox" checked={ticked} onChange={onToggle} aria-label={label} />
       </label>

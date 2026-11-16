@@ -7,7 +7,7 @@ import {
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { exerciseName, exerciseTarget, setKey, type SetAt } from "@sendtally/features/workouts";
+import { exerciseName, exerciseTargetLine, setKey, type SetAt } from "@sendtally/features/workouts";
 import { LetterBadge } from "../components/LetterBadge";
 import { AboutButton, type About } from "./AboutButton";
 import { RestPreview } from "./RestPreview";
@@ -57,8 +57,8 @@ export function SetsCard({
   about,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
-  const { name: doseName, setRestS = 0 } = item.dose;
-  const aim = exerciseTarget(item.dose);
+  const { name: doseName, setRestS = 0, targetRpe } = item.dose;
+  const rated = targetRpe !== undefined;
   return (
     <section className="player-card">
       <div className="player-card-head">
@@ -72,15 +72,20 @@ export function SetsCard({
             {doseName !== undefined && <span className="player-card-meta">{doseName}</span>}
           </span>
         )}
-        {aim !== undefined && <span className="player-card-meta">{aim}</span>}
         {setRestS > 0 && (
           <span className="player-card-meta">{t("plan.chipRest", { value: clock(setRestS) })}</span>
         )}
       </div>
+      {rated && (
+        <span className="player-card-meta player-card-aim">{exerciseTargetLine(item.dose)}</span>
+      )}
       <div className="set-row set-row--head" aria-hidden="true">
         <span className="set-col-n train-label">{t("activities.colSet")}</span>
         <span className="set-col-target train-label">{t("activities.colTarget")}</span>
-        <span className="set-col-done train-label">{t("activities.colDone")}</span>
+        <span className="set-col-done train-label">
+          {rated && lifting ? t("activities.colDoneUnit", { unit }) : t("activities.colDone")}
+        </span>
+        {rated && <span className="set-col-rpe train-label">RPE</span>}
         <span className="set-tick" />
       </div>
       {done.sets.map((set, i) => (
@@ -100,6 +105,7 @@ export function SetsCard({
               onChange={(value) => onChange(i, value)}
               onToggle={() => onToggle(i)}
               go={go(i) || undefined}
+              {...(rated && { rpe: { target: targetRpe } })}
             />
           )}
           {restUnder(i) ||
