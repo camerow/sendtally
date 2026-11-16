@@ -37,5 +37,4 @@ export const onboarding = {
   "onboarding.firstRun.later": "Später",
   "onboarding.firstRun.daysQuestion": "An welchen Tagen kletterst du meistens?",
   "onboarding.firstRun.continue": "Weiter",
-
 } as const;

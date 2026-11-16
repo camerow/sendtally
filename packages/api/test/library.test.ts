@@ -133,3 +133,23 @@ describe("built-in library", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("the Climbing day first run plans", () => {
+  it("is served as a built-in climbing workout with nothing to play, in every language", async () => {
+    const { status, body } = await call(null, "/v1/library");
+    expect(status).toBe(200);
+    const climbing = (body.library as BuiltInLibrary).workouts.find(
+      (w) => w.id === "climb-session"
+    );
+    expect(climbing).toMatchObject({
+      name: "Climbing",
+      status: "active",
+      spec: { kind: "climbing", focus: null, minutes: null, targetRpe: null, items: [] },
+      translations: {
+        de: { name: "Klettern" },
+        fr: { name: "Escalade" },
+        es: { name: "Escalada" },
+      },
+    });
+  });
+});

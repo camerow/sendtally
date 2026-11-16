@@ -37,5 +37,4 @@ export const onboarding = {
   "onboarding.firstRun.later": "Más tarde",
   "onboarding.firstRun.daysQuestion": "¿Qué días sueles escalar?",
   "onboarding.firstRun.continue": "Continuar",
-
 } as const;
