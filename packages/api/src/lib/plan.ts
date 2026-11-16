@@ -249,6 +249,7 @@ export const doneBody = z
       exercise: z.string().trim().min(1).max(80),
       sets: z.array(setDone).max(100),
       targetRpe: rpe.optional(),
+      dose: dose.optional(),
     })
   )
   .max(MAX_ITEMS);

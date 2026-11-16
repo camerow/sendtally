@@ -56,4 +56,16 @@ describe("hangEditResult", () => {
     );
     expect(result.done.map((d) => d.exercise)).toEqual(["half", "pinch"]);
   });
+
+  it("reads a later grip against the dose it ran, so a set left out of the run stays unheld", () => {
+    const ran = {
+      ...session,
+      done: session.done.map((d) =>
+        d.item === 1 ? { ...d, dose: { sets: 3, reps: 6, onS: 10 } } : d
+      ),
+    };
+    const result = hangEditResult(ran, hangEditSets(ran), "half", { edgeMm: 20, loadKg: 0 });
+    expect(result).toMatchObject({ pct: 79, misses: 2 });
+    expect(result.done[1]?.dose).toEqual({ sets: 3, reps: 6, onS: 10 });
+  });
 });

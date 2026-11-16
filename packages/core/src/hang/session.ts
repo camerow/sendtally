@@ -5,8 +5,8 @@ import type { HangSession } from "./types";
 type Logged = Pick<HangSession, "gripId" | "protocol" | "done">;
 
 /**
- * Each grip a hang session ran, indexed by item. The first reads against its saved protocol;
- * a later grip's prescription is not stored, so it reads against the shape of its own kept sets.
+ * Each grip a hang session ran, indexed by item. The first reads against its saved protocol and
+ * a later grip against its saved dose; a row saved without one reads the shape of its kept sets.
  */
 export function hangSessionItems({ gripId, protocol, done }: Logged): SessionItem[] {
   const last = Math.max(0, ...done.map((d) => d.item));
@@ -14,6 +14,7 @@ export function hangSessionItems({ gripId, protocol, done }: Logged): SessionIte
     if (item === 0) return { exercise: gripId, dose: protocolDose(protocol) };
     const d = done.find((x) => x.item === item);
     const [first] = d?.sets ?? [];
+    if (d?.dose !== undefined) return { exercise: d.exercise, dose: d.dose };
     if (d === undefined || first === undefined)
       return { exercise: d?.exercise ?? "", dose: { sets: 0 } };
     const { rpe: _r, climbs: _c, ...set } = first;

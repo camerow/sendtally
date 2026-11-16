@@ -77,6 +77,23 @@ describe("hangReview", () => {
     expect(draft.done[0]?.sets).toHaveLength(2);
   });
 
+  it("saves the dose each later grip ran, the first grip's being the protocol", () => {
+    const pinch = { ...repeaters, id: "w2", grip: "pinch", reps: 3, sets: 1, setRestS: 0 };
+    const two: PlannedRun = {
+      items: [
+        { workout: repeaters, dose: undefined },
+        { workout: pinch, dose: undefined },
+      ],
+      exerciseRestS: 120,
+    };
+    const review = hangReview({ ...timed, run: null }, two, model);
+    const setup = { edgeMm: 20, loadKg: 5 };
+    const draft = hangReviewDraft(review, setup, model, "2026-10-30", startedAt);
+    const session = hangSessionOf(review, setup, draft, "s1");
+    expect(session.done[0]?.dose).toBeUndefined();
+    expect(session.done[1]?.dose).toEqual({ sets: 1, reps: 3, onS: 7, offS: 3 });
+  });
+
   it("saves the kept sets on the pill's setup", () => {
     const review = hangReview(timed, planned, model);
     const setup = { edgeMm: 18, loadKg: 10 };
