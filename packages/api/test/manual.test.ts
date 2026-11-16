@@ -4,6 +4,7 @@ import {
   historySession,
   manualSessionBody,
   parseClimbs,
+  withKeptLength,
 } from "../src/lib/manual";
 
 const endurance = { unit: "moves", target: 32, laps: [32, 32, 24] } as const;
@@ -140,4 +141,48 @@ describe("unscored sessions", () => {
       expect(input.location).toBe(location);
     }
   );
+});
+
+describe("session length", () => {
+  const climbs = [{ grade: { scale: "v", value: 3 } }];
+  const built = (extra: Record<string, unknown>) =>
+    buildManualSession(
+      "manual-1",
+      manualSessionBody.parse({ date: "2026-09-16", climbs, ...extra }),
+      []
+    );
+  const span = (row: { start_at: string; end_at: string }) => [
+    row.start_at.slice(11, 16),
+    row.end_at.slice(11, 16),
+  ];
+
+  it.each([
+    [{}, "none", ["12:00", "13:30"]],
+    [{ minutes: 45 }, "duration", ["12:00", "12:45"]],
+    [{ minutes: null }, "none", ["12:00", "13:30"]],
+    [{ startTime: "18:00", minutes: 45 }, "both", ["18:00", "18:45"]],
+    [{ endTime: "20:00", minutes: 45 }, "both", ["19:15", "20:00"]],
+    [{ startTime: "18:00", endTime: "19:00", minutes: 45 }, "both", ["18:00", "19:00"]],
+  ] as const)("stores %j as %s", (extra, times, [start, end]) => {
+    const row = built(extra);
+    expect(row.times).toBe(times);
+    expect(span(row)).toEqual([start, end]);
+  });
+
+  it("rejects a length outside 1 to 720 minutes", () => {
+    for (const minutes of [0, 721, 1.5]) {
+      expect(manualSessionBody.safeParse({ date: "2026-09-16", climbs, minutes }).success).toBe(
+        false
+      );
+    }
+  });
+
+  it("keeps a stored length through an edit that says nothing about it", () => {
+    const stored = built({ minutes: 45 });
+    const silent = manualSessionBody.parse({ date: "2026-09-16", climbs });
+    expect(withKeptLength(silent, stored).minutes).toBe(45);
+    const cleared = manualSessionBody.parse({ date: "2026-09-16", climbs, minutes: null });
+    expect(withKeptLength(cleared, stored).minutes).toBeNull();
+    expect(withKeptLength(silent, built({})).minutes).toBeUndefined();
+  });
 });

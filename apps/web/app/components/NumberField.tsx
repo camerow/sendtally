@@ -23,7 +23,7 @@ export type NumberFieldMode = ({ kind: "time" } & TimeLimits) | ({ kind: "number
 
 export type NumberFieldProps = {
   /** Above the box, or only to a screen reader when `compact`. */
-  label: string;
+  label: React.ReactNode;
   /** Seconds in time mode; null for no value yet, which shows the placeholder. */
   value: number | null;
   /** What an empty box shows; a dash by default. */
@@ -40,6 +40,9 @@ export type NumberFieldProps = {
   compact?: boolean;
   /** Amber: a value short of what was asked. */
   short?: boolean;
+  /** An emptied box commits zero rather than keeping the value it had. */
+  clearable?: boolean;
+  autoFocus?: boolean;
 };
 
 const shown = (mode: NumberFieldMode, value: number): string =>
@@ -83,6 +86,8 @@ export function NumberField({
   short = false,
   placeholder = "–",
   range,
+  clearable = false,
+  autoFocus = false,
   display,
 }: NumberFieldProps): React.ReactElement {
   const id = React.useId();
@@ -122,6 +127,7 @@ export function NumberField({
           className="number-field-input"
           inputMode={time ? "numeric" : range === undefined ? "decimal" : "text"}
           autoComplete="off"
+          autoFocus={autoFocus}
           placeholder={placeholder}
           size={compact ? Math.max(2, (text === "" ? placeholder : text).length) : undefined}
           value={draft ?? text}
@@ -142,7 +148,7 @@ export function NumberField({
           }}
           onBlur={() =>
             range === undefined
-              ? commit(draft === null ? null : typed(mode, draft))
+              ? commit(draft === null ? null : clearable && draft === "" ? 0 : typed(mode, draft))
               : commitRange(draft === null ? null : typedRange(draft, limits))
           }
           onKeyDown={(e) => {

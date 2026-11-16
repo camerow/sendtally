@@ -30,7 +30,7 @@ const inputSchema = {
 const description = `Imports a climbing log into the user's Sendtally account from CSV text. Exports from Kaya, 8a.nu, Mountain Project, Sendage and theCrag are recognised by their header: pass them through unchanged. Convert anything else (a spreadsheet, a journal, notes) to the Sendtally format first.
 
 Sendtally format: one row per climb, header row exactly:
-date,session,location,gym,start_time,end_time,rpe,tags,session_notes,climb,grade,kind,style,tries,climb_notes
+date,session,location,gym,start_time,end_time,minutes,rpe,tags,session_notes,climb,grade,kind,style,tries,climb_notes
 
 Conversion rules:
 - date is YYYY-MM-DD. Every row carries its date; if the source only writes the date on the first climb of a day, fill it down.
@@ -40,6 +40,7 @@ Conversion rules:
 - style is "flash" when sent first try with prior knowledge, "onsight" (routes only) when sent first try with none, "redpoint" for any other send. Leave it blank if the source does not say. A repeat is a send with tries 1.
 - tries is the number of attempts that day, a whole number. Blank means 1.
 - start_time and end_time are HH:MM, 24 hour; leave them blank if unknown. A session is at most 12 hours.
+- minutes is how long the session lasted, a whole number from 1 to 720, when the source gives a length but not both times. Leave it blank otherwise.
 - rpe is only filled when the source records effort on a 1-10 scale. Otherwise leave it blank.
 - tags are separated by ";".
 - session_notes holds anything written about the day; climb_notes anything written about that climb. Quote fields that contain commas or line breaks.

@@ -91,6 +91,15 @@ describe("sessionTotals", () => {
     const backwards = session("f", "2026-01-01T11:00:00.000Z", "2026-01-01T10:00:00.000Z");
     expect(sessionMinutes(backwards)).toBe(0);
   });
+
+  it("counts a real length, with or without clock times, and nothing for a made-up one", () => {
+    const span = ["2026-01-01T12:00:00.000Z", "2026-01-01T12:45:00.000Z"] as const;
+    const minutes = (times: "both" | "start" | "end" | "duration" | "none") =>
+      sessionMinutes({ ...session("g", ...span), times });
+    expect(["both", "duration", "start", "end", "none"].map((t) => minutes(t as "both"))).toEqual([
+      45, 45, 0, 0, 0,
+    ]);
+  });
 });
 
 describe("labels", () => {

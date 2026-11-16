@@ -60,6 +60,7 @@ export const importCsv = {
   "import.issueBadRpe": "«{value}» no es un RPE de 1 a 10.",
   "import.issueBadLocation": "«{value}» no es indoor ni outdoor.",
   "import.issueBadTime": "«{value}» no es una hora en formato HH:MM.",
+  "import.issueBadMinutes": "«{value}» no es una duración en minutos de 1 a 720.",
   "import.issueUnreadColumn":
     "«{value}» es una columna de la exportación de otra app que Sendtally no puede leer aquí. Convierte primero el archivo al formato Sendtally.",
   "import.sessionsLabel": "Sesiones",

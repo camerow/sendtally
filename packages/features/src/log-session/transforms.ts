@@ -19,7 +19,8 @@ import type {
 import { t } from "../i18n";
 import { isUnscored } from "../sessions/meta";
 import { sameTagName } from "../sessions/tags";
-import { durationLabel, hasEnd, hasStart } from "../sessions/years";
+import { minutesOf as wholeMinutes } from "../activities/draft";
+import { durationLabel, hasEnd, hasStart, sessionMinutes } from "../sessions/years";
 import {
   DEFAULT_GRADE_PREFS,
   GRADE_SCALE_OPTIONS,
@@ -188,6 +189,8 @@ function minutesOf(time: string): number {
 
 const MAX_SESSION_MINUTES = 720;
 
+export const MAX_LENGTH_SECONDS = MAX_SESSION_MINUTES * 60;
+
 export function durationMinutes(startTime: string, endTime: string): number | undefined {
   if (!TIME.test(startTime) || !TIME.test(endTime)) return undefined;
   const diff = minutesOf(endTime) - minutesOf(startTime);
@@ -196,12 +199,32 @@ export function durationMinutes(startTime: string, endTime: string): number | un
   return overnight <= MAX_SESSION_MINUTES ? overnight : undefined;
 }
 
+/** The length the Duration field shows: the span of real start and end times, else the length on its own. */
+export function draftLength(draft: LogSessionDraft): number | null {
+  return durationMinutes(draft.startTime, draft.endTime) ?? draft.minutes ?? null;
+}
+
+/** The Duration field's seconds as a length: rounded to whole minutes like an activity's, and zero is none. */
+export function lengthOf(seconds: number): number | null {
+  return seconds <= 0 ? null : Math.min(MAX_SESSION_MINUTES, wholeMinutes(seconds));
+}
+
+/** A real start keeps and the end moves, or goes when cleared; with no start the length stands on its own. */
+export function withLength(draft: LogSessionDraft, minutes: number | null): LogSessionDraft {
+  if (!TIME.test(draft.startTime)) return { ...draft, minutes };
+  if (minutes === null) return { ...draft, endTime: "", minutes: null };
+  return { ...draft, endTime: clockAfter(draft.startTime, minutes), minutes: null };
+}
+
+function clockAfter(time: string, minutes: number): string {
+  const end = (minutesOf(time) + minutes) % (24 * 60);
+  return `${pad(Math.floor(end / 60))}:${pad(end % 60)}`;
+}
+
 export function withStartTime(draft: LogSessionDraft, startTime: string): LogSessionDraft {
   const held = durationMinutes(draft.startTime, draft.endTime);
   if (held === undefined || !TIME.test(startTime)) return { ...draft, startTime };
-  const endMinutes = (minutesOf(startTime) + held) % (24 * 60);
-  const endTime = `${pad(Math.floor(endMinutes / 60))}:${pad(endMinutes % 60)}`;
-  return { ...draft, startTime, endTime };
+  return { ...draft, startTime, endTime: clockAfter(startTime, held) };
 }
 
 function topDraftGrade(draft: LogSessionDraft): Grade | undefined {
@@ -225,6 +248,14 @@ export function draftTimesSuffix(draft: LogSessionDraft): string {
     : ` · ${draft.startTime}–${draft.endTime}`;
 }
 
+/** A " · " list that wraps only between its parts, so a length such as "1h 30m" stays on one line. */
+export function unbrokenParts(text: string): string {
+  return text
+    .split(" · ")
+    .map((part) => part.replace(/ /g, "\u00a0"))
+    .join(" · ");
+}
+
 export function draftSummary(draft: LogSessionDraft): string {
   const sends = draft.climbs.filter((c) => c.kind === "send").length;
   const attempts = draft.climbs.length - sends;
@@ -234,8 +265,8 @@ export function draftSummary(draft: LogSessionDraft): string {
     `${t("logSession.sendCount", { count: sends })}, ${t("logSession.attemptCount", { count: attempts })}`,
   ];
   if (top !== undefined) parts.push(t("sessions.topGrade", { grade: formatGrade(top) }));
-  const minutes = durationMinutes(draft.startTime, draft.endTime);
-  if (minutes !== undefined) parts.push(durationLabel(minutes));
+  const minutes = draftLength(draft);
+  if (minutes !== null) parts.push(durationLabel(minutes));
   return parts.join(" · ");
 }
 
@@ -308,6 +339,7 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
     date: draft.date,
     ...(TIME.test(draft.startTime) ? { startTime: draft.startTime } : {}),
     ...(TIME.test(draft.endTime) ? { endTime: draft.endTime } : {}),
+    minutes: draft.minutes ?? null,
     ...(draft.rpe === null ? {} : { rpe: draft.rpe }),
     location: draft.location,
     ...(draft.gymId === undefined ? {} : { gymId: draft.gymId }),
@@ -324,7 +356,7 @@ export function toLogSessionInput(draft: LogSessionDraft): LogSessionInput {
   };
 }
 
-/** A session logged as it happens has no times, effort or venue yet; the server keeps it unscored. */
+/** A session logged as it happens has no times, effort or venue yet; the server keeps it unscored. Its length goes as it is, so a cleared one stays cleared. */
 export function toLiveSessionInput(draft: LogSessionDraft): LogSessionInput {
   const { startTime: _s, endTime: _e, rpe: _r, location: _l, ...rest } = toLogSessionInput(draft);
   return { ...rest, unscored: true };
@@ -368,6 +400,7 @@ export function draftFromSession(session: SessionDetail): LogSessionDraft {
     date: utcDate(session.start_at),
     startTime: hasStart(session) ? utcTime(session.start_at) : "",
     endTime: hasEnd(session) ? utcTime(session.end_at) : "",
+    minutes: session.times === "duration" ? sessionMinutes(session) : null,
     location: session.location ?? "indoor",
     ...(session.gym_id === null ? {} : { gymId: session.gym_id }),
     tags: session.tags.map((t) => t.name),

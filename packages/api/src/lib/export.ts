@@ -1,4 +1,4 @@
-import { formatGrade } from "@sendtally/core";
+import { formatGrade, rowMinutes } from "@sendtally/core";
 import { parseClimbs } from "./manual";
 import type { ClimbNoteRow, GymRow, SessionRow, TagRow } from "./repo";
 import { climbSlug } from "./climbs";
@@ -12,6 +12,7 @@ export const EXPORT_COLUMNS = [
   "gym",
   "start_time",
   "end_time",
+  "minutes",
   "rpe",
   "tags",
   "session_notes",
@@ -60,6 +61,7 @@ export function exportCsv(input: ExportInput): string {
       s.gym_id === null ? "" : (gymName.get(s.gym_id) ?? ""),
       s.times === "both" || s.times === "start" ? hhmm(s.start_at) : "",
       s.times === "both" || s.times === "end" ? hhmm(s.end_at) : "",
+      s.times === "duration" ? rowMinutes(s) : "",
       s.rpe_source === "none" ? "" : s.rpe,
       (input.tagsBySession.get(s.fingerprint) ?? []).map((t) => t.name).join("; "),
       input.notesBySession.get(s.fingerprint) ?? "",

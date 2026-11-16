@@ -1,4 +1,10 @@
-import { climbDiscipline, climbRank, dominantDiscipline, isEndurance } from "@sendtally/core";
+import {
+  climbDiscipline,
+  climbRank,
+  dominantDiscipline,
+  isEndurance,
+  rowMinutes,
+} from "@sendtally/core";
 import type { ConnectionStatus, SessionClimb, SessionDetail } from "@sendtally/api-client";
 import { sessionPyramid } from "../climbs/pyramid";
 import type { ClimbPillKind } from "../climbs/log";
@@ -12,7 +18,7 @@ import {
   type GradeScales,
 } from "../sessions/grades";
 import { isUnscored } from "../sessions/meta";
-import { durationLabel, hasStart } from "../sessions/years";
+import { durationLabel, hasStart, sessionMinutes } from "../sessions/years";
 import type {
   ClimbFilter,
   ClimbResult,
@@ -28,7 +34,7 @@ import { namesClimbAreas } from "./rows";
 
 /** How long a session ran, from its start to its end: "1h 30m". */
 export function spanLabel(startAt: string, endAt: string): string {
-  return durationLabel(Math.max(0, Math.round((Date.parse(endAt) - Date.parse(startAt)) / 60_000)));
+  return durationLabel(rowMinutes({ start_at: startAt, end_at: endAt }));
 }
 
 function resultOf(c: SessionClimb, firstEncounter: boolean): ClimbResult {
@@ -186,7 +192,7 @@ export function sessionDetailVM(
   const weekday = formatDate(start, { weekday: "short", timeZone: "UTC" });
   const time = formatDate(start, { hour: "numeric", minute: "2-digit", timeZone: "UTC" });
 
-  const timed = session.times === "both";
+  const timed = sessionMinutes(session) > 0;
   const stats: StatVM[] = [
     ...(timed
       ? [

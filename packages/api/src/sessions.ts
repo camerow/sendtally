@@ -19,6 +19,7 @@ import {
   normalisedNote,
   parseClimbs,
   type ManualSessionBody,
+  withKeptLength,
 } from "./lib/manual";
 import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
@@ -167,7 +168,12 @@ export const editManualSession = async (
     return { error: "only manually logged sessions can be edited", status: 409 };
   }
   if ("error" in placed) return { error: placed.error, status: 400 };
-  const { session } = await saveManualSession(c, fingerprint, placed.form, false);
+  const { session } = await saveManualSession(
+    c,
+    fingerprint,
+    withKeptLength(placed.form, existing),
+    false
+  );
   return session === null ? { error: "not found", status: 404 } : { session };
 };
 

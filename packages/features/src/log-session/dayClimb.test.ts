@@ -97,6 +97,7 @@ describe("logClimbOnDay", () => {
     expect(method).toBe("POST");
     expect(input).toEqual({
       date: "2026-09-20",
+      minutes: null,
       unscored: true,
       climbs: [expect.objectContaining({ name: "Crimp Reaper", grade: { scale: "v", value: 5 } })],
     });

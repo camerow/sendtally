@@ -35,6 +35,11 @@ import {
   type ClimbArea,
   type ClimbDraft,
   type LogSessionDraft,
+  draftLength,
+  lengthOf,
+  MAX_LENGTH_SECONDS,
+  withLength,
+  unbrokenParts,
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX } from "@sendtally/features/sessions";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
@@ -58,23 +63,13 @@ import { NewGymSheet } from "../gyms/NewGymSheet";
 import { Icon } from "../../components/Icon";
 import { ClimbLedgerRow } from "./ClimbLedgerRow";
 import { DateTimeField } from "../../components/DateTimeField";
+import { TimeField } from "../../components/TimeField";
+import { keypadFieldLabel } from "../../components/KeypadField";
 import { press, tap } from "../../lib/press";
 import { BackButton } from "../../components/BackButton";
 
 function LabelText({ children }: { children: React.ReactNode }): React.ReactElement {
-  return (
-    <Text
-      style={{
-        fontFamily: fonts.monoMedium,
-        fontSize: 10,
-        letterSpacing: 0.8,
-        textTransform: "uppercase",
-        color: colors.textSecondary,
-      }}
-    >
-      {children}
-    </Text>
-  );
+  return <Text style={keypadFieldLabel}>{children}</Text>;
 }
 
 function Chip({
@@ -148,6 +143,7 @@ export function LogSessionForm({
       }
   );
   const [error, setError] = React.useState<string | null>(null);
+  const [durationOpen, setDurationOpen] = React.useState(params.field === "duration");
 
   const vocabulary = useClimbVocabulary(api);
   const gyms = useGyms(api);
@@ -296,7 +292,7 @@ export function LogSessionForm({
                 color: colors.textMuted,
               }}
             >
-              {draftSummary(draft)}
+              {unbrokenParts(draftSummary(draft))}
             </Text>
           )}
         </View>
@@ -324,13 +320,26 @@ export function LogSessionForm({
         </View>
 
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <View style={{ flex: 1, gap: 7 }}>
+          <View style={{ flex: 1, gap: 8 }}>
             <LabelText>{t("logSession.date")}</LabelText>
             <DateTimeField
               mode="date"
               value={draft.date}
               label={t("logSession.date")}
               onChange={(date) => setDraft({ ...draft, date })}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <TimeField
+              label={t("logSession.durationOptional")}
+              accessibilityLabel={t("common.duration")}
+              value={(draftLength(draft) ?? 0) * 60}
+              max={MAX_LENGTH_SECONDS}
+              placeholder="–"
+              open={durationOpen}
+              onOpen={() => setDurationOpen(true)}
+              onClose={() => setDurationOpen(false)}
+              onChange={(seconds) => setDraft(withLength(draft, lengthOf(seconds)))}
             />
           </View>
         </View>

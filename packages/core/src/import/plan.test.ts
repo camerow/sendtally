@@ -135,6 +135,15 @@ describe("planImport", () => {
     ]);
   });
 
+  it("reads a session's length in minutes and reports one out of range", () => {
+    const plan = planImport(
+      "date,session,minutes,grade\n2022-11-22,Barn,75,V3\n2022-11-23,Barn,721,V3\n",
+      "UTC"
+    );
+    expect(plan.sessions.map((s) => s.minutes)).toEqual([75]);
+    expect(plan.issues).toEqual([{ row: 3, code: "badMinutes", value: "721" }]);
+  });
+
   it("refuses a file in our format that carries another app's send result", () => {
     const issues = (csv: string): ImportPlan["issues"] => planImport(csv, "UTC").issues;
     expect(issues("Date,Send Type,Grade\n2022-11-22,project,V9\n")).toEqual([

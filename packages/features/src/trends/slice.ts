@@ -4,6 +4,7 @@ import { hangAt } from "../sessions/hang";
 import { climbKey } from "../climbs/transforms";
 import { circuitLabel } from "../gyms/transforms";
 import { isUnscored } from "../sessions/meta";
+import { sessionMinutes } from "../sessions/years";
 import { UNTAGGED_KEY } from "../sessions/tags";
 import { gradeFormatter, type GradeScales } from "../sessions/grades";
 import { isRefined } from "./filter";
@@ -62,8 +63,7 @@ export function rowsOf(sessions: SessionWithClimbs[]): Row[] {
         session,
         time,
         outdoor: session.location === "outdoor",
-        hours:
-          session.times === "both" ? Math.max(0, Date.parse(session.end_at) - time) / 3_600_000 : 0,
+        hours: sessionMinutes(session) / 60,
         graded: session.climbs.flatMap((c) => {
           const rec = firstTry.get(c);
           return rec === undefined ? [] : [rec];

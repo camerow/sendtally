@@ -433,7 +433,7 @@ describe("app", () => {
     expect((await list()).find((c) => c.id === pinchId)?.notes).toEqual(roofNotes);
 
     const csv = await (await testApp().request("/v1/export.csv", { headers }, env)).text();
-    expect(csv).toContain("2026-10-30,,,,,,,,,Pinch,,note,,,,Toe hook,,,,");
+    expect(csv).toContain("2026-10-30,,,,,,,,,,Pinch,,note,,,,Toe hook,,,,");
 
     const del = () =>
       testApp().request(`/v1/climbs/${pinchId}/notes/n1`, { method: "DELETE", headers }, env);
@@ -1933,5 +1933,43 @@ describe("app", () => {
       verifyWebhook: async () => ({ type: "user.deleted", userId, email: null }),
     }).request("/webhooks/clerk", { method: "POST", body: "{}" }, env);
     expect(second.status).toBe(200);
+  });
+});
+
+describe("a session's length over PUT /v1/sessions/:fingerprint", () => {
+  const headers = { "x-test-user": "user_length", "Content-Type": "application/json" };
+  const climbs = [{ name: "Cave problem", grade: { scale: "v", value: 4 } }];
+  type Row = { times: string; start_at: string; end_at: string };
+  const send = async (method: string, path: string, body: Record<string, unknown>) => {
+    const res = await testApp().request(
+      path,
+      { method, headers, body: JSON.stringify({ date: "2026-08-20", climbs, ...body }) },
+      env
+    );
+    expect(res.status).toBeLessThan(300);
+    const { session } = (await res.json()) as { session: Row & { fingerprint: string } };
+    return session;
+  };
+  const shape = (s: Row) => [s.times, s.start_at.slice(11, 16), s.end_at.slice(11, 16)];
+
+  it("sets, changes and clears a length, and keeps it through an edit that never mentions it", async () => {
+    const { fingerprint } = await send("POST", "/v1/sessions", {});
+    const put = (body: Record<string, unknown>) => send("PUT", `/v1/sessions/${fingerprint}`, body);
+    expect(shape(await put({ minutes: 45 }))).toEqual(["duration", "12:00", "12:45"]);
+    expect(shape(await put({ minutes: 60 }))).toEqual(["duration", "12:00", "13:00"]);
+    expect(shape(await put({}))).toEqual(["duration", "12:00", "13:00"]);
+    expect(shape(await put({ minutes: null }))).toEqual(["none", "12:00", "13:30"]);
+  });
+
+  it("clearing a length on real start and end times keeps the start", async () => {
+    const { fingerprint } = await send("POST", "/v1/sessions", {
+      startTime: "18:00",
+      endTime: "20:00",
+    });
+    const cleared = await send("PUT", `/v1/sessions/${fingerprint}`, {
+      startTime: "18:00",
+      minutes: null,
+    });
+    expect(shape(cleared)).toEqual(["start", "18:00", "19:30"]);
   });
 });

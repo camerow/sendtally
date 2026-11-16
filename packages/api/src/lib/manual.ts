@@ -1,4 +1,4 @@
-import { disciplineOf, parseGrade, sessionMinutes } from "@sendtally/core";
+import { disciplineOf, parseGrade, rowMinutes, sessionMinutes } from "@sendtally/core";
 import { z } from "zod";
 import { CIRCUIT_COLOURS } from "./gyms";
 import { calendarDate, focus, id, MAX_BLOCK_WEEKS } from "./plan";
@@ -130,6 +130,8 @@ export const manualSessionShape = z.object({
     .string()
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
     .optional(),
+  // Ignored when both times are given. Null clears it; absent on an edit keeps the length it had.
+  minutes: z.number().int().min(1).max(720).nullable().optional(),
   rpe: z.number().int().min(1).max(10).optional(),
   location: z.enum(["indoor", "outdoor"]).optional(),
   unscored: z.boolean().optional(),
@@ -206,6 +208,17 @@ export function climbLinksOf(climbs: ManualSessionBody["climbs"]): ClimbLink[] {
 }
 
 export type ManualSessionBody = z.infer<typeof manualSessionShape>;
+
+/** An edit that says nothing about the length, as from a build without the field, keeps a stored one. */
+export function withKeptLength(
+  form: ManualSessionBody,
+  row: { times: string; start_at: string; end_at: string }
+): ManualSessionBody {
+  const silent =
+    form.minutes === undefined && form.startTime === undefined && form.endTime === undefined;
+  if (!silent || row.times !== "duration") return form;
+  return { ...form, minutes: rowMinutes(row) };
+}
 
 export {
   buildManualSession,

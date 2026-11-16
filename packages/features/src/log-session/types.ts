@@ -108,6 +108,8 @@ export type LogSessionDraft = {
   date: string;
   startTime: string;
   endTime: string;
+  /** How long it lasted when there is no start time to measure from; the end then works back from it. */
+  minutes?: number | null;
   /** When a live session started, to the second, for its running clock. */
   startedAt?: string;
   location: "indoor" | "outdoor";

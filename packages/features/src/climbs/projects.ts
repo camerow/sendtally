@@ -124,7 +124,7 @@ export function projectSessions(
       title: sessionTitle(session),
       metaLabel: [
         ...(isUnscored(session) ? [] : [`${t("common.effort")} ${session.rpe}`]),
-        ...(session.times === "both" ? [durationLabel(sessionMinutes(session))] : []),
+        ...(sessionMinutes(session) > 0 ? [durationLabel(sessionMinutes(session))] : []),
       ].join(" · "),
       attempts: rows.reduce((n, c) => n + c.tries, 0),
       sent: rows.some((c) => c.kind === "send"),

@@ -204,6 +204,11 @@ function sessionHead(
       return undefined;
     }
   }
+  const minutes = r.minutes === undefined ? undefined : Number(r.minutes);
+  if (minutes !== undefined && !(Number.isInteger(minutes) && minutes >= 1 && minutes <= 720)) {
+    issues.push({ row: r.row, code: "badMinutes", value: r.minutes });
+    return undefined;
+  }
   const rpe = r.rpe === undefined ? undefined : Number(r.rpe);
   if (rpe !== undefined && !(Number.isInteger(rpe) && rpe >= 1 && rpe <= 10)) {
     issues.push({ row: r.row, code: "badRpe", value: r.rpe });
@@ -220,6 +225,7 @@ function sessionHead(
     ...(r.gym === undefined ? {} : { gym: r.gym }),
     ...(r.start_time === undefined ? {} : { startTime: r.start_time }),
     ...(r.end_time === undefined ? {} : { endTime: r.end_time }),
+    ...(minutes === undefined ? {} : { minutes }),
     ...(rpe === undefined ? {} : { rpe }),
     ...(tags === undefined || tags.length === 0 ? {} : { tags }),
     ...(r.session_notes === undefined ? {} : { notes: r.session_notes }),

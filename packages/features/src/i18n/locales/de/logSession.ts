@@ -28,6 +28,7 @@ export const logSession = {
   "logSession.auto": "Auto",
   "logSession.resetToAuto": "Auf Auto zurücksetzen",
   "logSession.notesOptional": "Notizen · optional",
+  "logSession.durationOptional": "Dauer · optional",
   "logSession.climbsCount": "Klettereien · {n}",
   "logSession.addClimb": "Kletterei hinzufügen",
   "logSession.tapToEdit": "Tipp auf eine Kletterei, um sie zu bearbeiten",
