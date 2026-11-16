@@ -11,6 +11,19 @@ describe("bucketsFor", () => {
     const days = bucketsFor("7d", evening, null);
     expect(new Date(days[6]!.start).toISOString().slice(0, 10)).toBe("2026-10-28");
   });
+
+  it("puts the year on the first tick only when the range crosses into another year", () => {
+    vi.spyOn(Date.prototype, "getTimezoneOffset").mockReturnValue(0);
+    const now = new Date("2026-11-16T12:00:00Z");
+    const axes = (range: Parameters<typeof bucketsFor>[0], first: number | null = null): string[] =>
+      bucketsFor(range, now, first).map((b) => b.axis);
+    expect(axes("1y").slice(0, 2)).toEqual(["Dec 2025", "Jan"]);
+    expect(axes("all", Date.UTC(2025, 0, 2))[0]).toBe("Jan 2025");
+    expect(axes("6m")[0]).toBe("Jun");
+    expect(axes("y2026")[0]).toBe("Jan");
+    expect(axes("3m", null)[0]).toBe("Aug 17");
+    expect(bucketsFor("3m", new Date("2026-02-01T12:00:00Z"), null)[0]!.axis).toBe("Nov 2, 2025");
+  });
 });
 
 const day = (ms: number): string => new Date(ms).toISOString().slice(0, 10);

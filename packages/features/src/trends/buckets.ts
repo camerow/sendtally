@@ -50,6 +50,18 @@ function trailingDays(now: Date, days: number): Bucket[] {
   return out;
 }
 
+const yearOfMs = (ms: number): number => new Date(ms).getUTCFullYear();
+
+/** The first tick carries its year when the range crosses into another one. */
+function yearOnFirst(out: Bucket[], options: Intl.DateTimeFormatOptions): Bucket[] {
+  const first = out[0];
+  const last = out.at(-1);
+  if (first === undefined || last === undefined) return out;
+  if (yearOfMs(first.start) === yearOfMs(last.end - 1)) return out;
+  first.axis = formatDate(new Date(first.start), utc({ ...options, year: "numeric" }));
+  return out;
+}
+
 function trailingWeeks(now: Date, weeks: number): Bucket[] {
   const out: Bucket[] = [];
   for (let i = weeks - 1; i >= 0; i--) {
@@ -57,7 +69,7 @@ function trailingWeeks(now: Date, weeks: number): Bucket[] {
     const date = formatDate(new Date(start), utc({ month: "short", day: "numeric" }));
     out.push({ start, end: start + WEEK_MS, axis: date, label: t("trends.weekOf", { date }) });
   }
-  return out;
+  return yearOnFirst(out, { month: "short", day: "numeric" });
 }
 
 function monthsFrom(firstMs: number, now: Date): Bucket[] {
@@ -80,7 +92,7 @@ function monthsFrom(firstMs: number, now: Date): Bucket[] {
       y += 1;
     }
   }
-  return out;
+  return yearOnFirst(out, { month: "short" });
 }
 
 function trailingMonths(now: Date, months: number): Bucket[] {
