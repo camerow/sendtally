@@ -107,7 +107,13 @@ As above: one activity, one part tied by `activity_id`, one request.
 The planned day is done once, through the activity's `membership_id` or kind.
 `sessionsOf` counts the run once, so alternating doses advance by one.
 Session counts, done days and Strava count the activity only; the part's sets add to grip trends and max hang history.
-Minutes and the training mix split the run (decision 1): one shared `runMinutes` in `packages/features/src/statistics/` gives a part's protocol minutes to Fingers and the rest of the activity's minutes to its kind, and every minutes reader goes through it.
+Minutes and the training mix split the run (decision 1): one shared `runMinutes` in `packages/features/src/statistics/` gives a part's minutes to Fingers (`hangSessionSeconds` of the part, every grip counted) and the rest of the activity's minutes to its kind, and every minutes reader goes through it.
+
+### Reading every grip of a hang session
+
+The fix on `bug/multi-grip-hang-sessions` makes `hangSessionItems` and `hangSessionSeconds` (`packages/core/src/hang/session.ts`) the one way to read every grip of a hang session, and adds an optional per-grip dose as run to `done_json` items.
+This plan uses them and adds no second reader: a part is a hang session, so its rows' targets, its minutes and its summary read through `hangSessionItems` and `hangSessionSeconds` like a standalone session's.
+A part's `done` writes the per-grip dose as run in the shape that fix lands with, so a later grip's target never has to be guessed from its kept sets.
 Kind and colour are the non-grip majority's.
 
 ### 3. The workout view
@@ -125,7 +131,7 @@ Kind and colour are the non-grip majority's.
 ### 4. Editing the finished part
 
 Before Finish, the part's sets edit in place on the workout view, with no Edit step, in the same set rows the activity review uses for grips (`ActivityForm` in hang mode: hangs per set, load per set, the setup pill for edge and load).
-When the timer ends, the live run turns its held sets into the part's `done` (`ItemDone[]` with `reps`, `weightKg` and `edgeMm` per set), the same shape the sets player keeps for its own items, without its ticked list; edits write there, and Finish saves it through `hangResult`, which already keeps a set's own `weightKg` over the setup's load.
+When the timer ends, the live run turns its held sets into the part's `done` (`ItemDone[]` with `reps`, `weightKg` and `edgeMm` per set), the same shape the sets player keeps for its own items, without its ticked list; edits write there, and Finish saves it through `hangResult`, which already keeps a set's own `weightKg` over the setup's load, with each grip's dose as run.
 No model change: per-set load and hangs are `SetDone` fields today.
 
 ### Set RPE and no tick on hang rows
@@ -177,14 +183,14 @@ The two paths share the timer, the grip set rows and the editor, so there is sti
 ## Slices, in shipping order
 
 1. API: `activity_id` column, `fingerboard` on `activityBody` in one batch, `parts` on `GET /v1/hang`, parts out of history, delete cascade, Strava description with the part, the mix refusal dropped from `workoutBody` and `save_workout`, `workoutKindOf` ignoring grips. Worker deploy and D1 migration; safe with every build.
-2. Shared and apps: `hangsWithParts` for grip readers; `runMinutes` for the minutes readers and the training mix; `ActivityForm` hang mode for grip items in an activity; `HangSessionForm` onto it. Mobile over the air, web on merge.
+2. Shared and apps: `hangsWithParts` for grip readers; `runMinutes` for the minutes readers and the training mix; `ActivityForm` hang mode for grip items in an activity; `HangSessionForm` onto it; the hang summary's grid and `HangResultCard` drawing every grip (through `hangSessionItems`) with each set's RPE, where today they draw the first grip only, a layout change drawn on the board. Mobile over the air, web on merge.
 3. Apps: the picker and editor allow a mix; the run: a mix opens the workout view with the part card, the timer runs the part and returns, the live run holds the part, Finish saves both. Mobile over the air, web on merge.
 
 Slices 2 and 3 can ship as one pull request after slice 1; slice 3 must not ship before 2, or a mix's part would be invisible to grip trends.
 
 ## Decisions (Will, 2026-11-16)
 
-1. Training mix and minutes split the run: the part's protocol minutes count as Fingers, the rest under the run's kind, through one shared rule for the minutes readers (`statistics/workouts.ts`, `overview.ts`, `insights.ts` and the training mix).
+1. Training mix and minutes split the run: the part's minutes (`hangSessionSeconds`) count as Fingers, the rest under the run's kind, through one shared rule for the minutes readers (`statistics/workouts.ts`, `overview.ts`, `insights.ts` and the training mix).
    Not chosen: counting the whole run under the activity's kind, which would file a workout of five grips and one warm-up wholly under the warm-up's kind.
 2. A mix posts to Strava on the training setting (`post_training`) only, one gate per record.
    Not chosen: posting when either the training or the fingerboard setting is on.
