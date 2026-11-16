@@ -985,10 +985,6 @@
 
 /* Logging and finished workouts */
 
-.form-mode {
-  color: var(--bs-gunmetal);
-}
-
 .form-title {
   font-size: 28px;
 }

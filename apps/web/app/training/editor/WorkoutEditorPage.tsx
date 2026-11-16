@@ -130,17 +130,11 @@ function Editor({
   return (
     <DetailFrame
       backTo={WORKOUTS_VIEW}
-      backLabel={t("common.cancel")}
-      danger
-      footer={
-        <button type="button" className="detail-primary" onClick={save}>
-          {t("common.save")}
-        </button>
-      }
+      editor={{
+        title: id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout"),
+        onSave: save,
+      }}
     >
-      <span className="train-label form-mode">
-        {id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout")}
-      </span>
       <NameField
         label={t("hang.name")}
         value={state.name}

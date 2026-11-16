@@ -67,17 +67,12 @@ function Form({
   return (
     <DetailFrame
       backTo={EXERCISES_VIEW}
-      backLabel={t("common.cancel")}
-      danger
-      footer={
-        <button type="button" className="detail-primary" disabled={blocked} onClick={save}>
-          {t("common.save")}
-        </button>
-      }
+      editor={{
+        title: editing ? t("workouts.editExercise") : t("workouts.newExercise"),
+        onSave: save,
+        saveDisabled: blocked,
+      }}
     >
-      <span className="train-label form-mode">
-        {editing ? t("workouts.editExercise") : t("workouts.newExercise")}
-      </span>
       <ExerciseFields
         form={form}
         onChange={setForm}

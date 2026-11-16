@@ -91,26 +91,26 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
     void actions.deleteBlock(id);
   };
 
-  const footer = editing ? (
-    <button type="button" className="detail-primary" onClick={draft.save}>
-      {t("common.save")}
-    </button>
-  ) : ended || dated === null ? (
-    <button
-      type="button"
-      className="detail-primary"
-      disabled={dated === null && !schedulable}
-      onClick={() => setAgain(true)}
-    >
-      {dated === null ? t("plan.schedule") : t("plan.planAgain")}
-    </button>
-  ) : undefined;
+  const footer =
+    !editing && (ended || dated === null) ? (
+      <button
+        type="button"
+        className="detail-primary"
+        disabled={dated === null && !schedulable}
+        onClick={() => setAgain(true)}
+      >
+        {dated === null ? t("plan.schedule") : t("plan.planAgain")}
+      </button>
+    ) : undefined;
 
   return (
     <DetailFrame
       wide
       backTo={BACK_TO}
-      {...(editing && { backLabel: t("common.cancel"), danger: true, onBack: cancel })}
+      {...(editing && {
+        onBack: cancel,
+        editor: { title: t("plan.editBlock"), onSave: draft.save, solid: true },
+      })}
       {...(footer !== undefined && { footer })}
       action={
         !editing && (

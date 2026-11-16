@@ -96,7 +96,7 @@ const radio = (label: string): HTMLElement | undefined =>
 describe("ExerciseEditorPage", () => {
   it("makes a new exercise from its form, which saves only once named", async () => {
     mount(<ExerciseEditorPage making="strength" name="" />);
-    const save = container.querySelector<HTMLButtonElement>(".detail-primary")!;
+    const save = container.querySelector<HTMLButtonElement>(".editor-bar-save")!;
     expect(save.disabled).toBe(true);
     type(container.querySelector<HTMLTextAreaElement>(".name-field")!, "  Sled push ");
     await act(async () => save.click());
@@ -111,7 +111,7 @@ describe("ExerciseEditorPage", () => {
       "Zercher squat"
     );
     click(radio("Reps"));
-    click(container.querySelector(".detail-primary"));
+    click(container.querySelector(".editor-bar-save"));
     expect(state.saveExercise).not.toHaveBeenCalled();
     await act(async () => document.querySelector<HTMLElement>(".sheet-action--danger")?.click());
     expect(state.saveExercise).toHaveBeenCalledWith(
@@ -125,7 +125,7 @@ describe("ExerciseEditorPage", () => {
     const field = container.querySelector<HTMLTextAreaElement>("textarea.form-notes")!;
     expect(field.maxLength).toBe(2000);
     type(field, " Sit back.\n\n- Brace ");
-    await act(async () => container.querySelector<HTMLElement>(".detail-primary")?.click());
+    await act(async () => container.querySelector<HTMLElement>(".editor-bar-save")?.click());
     expect(state.saveExercise).toHaveBeenCalledWith(
       "s",
       expect.objectContaining({ description: "Sit back.\n\n- Brace" })

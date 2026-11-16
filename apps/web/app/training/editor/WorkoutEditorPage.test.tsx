@@ -163,7 +163,7 @@ describe("WorkoutEditorPage", () => {
     type(name, "Leg day");
     click(container.querySelector('[role="switch"]'));
     expect(container.querySelectorAll(".letter-badge")).toHaveLength(2);
-    click(container.querySelector(".detail-primary"));
+    click(container.querySelector(".editor-bar-save"));
     expect(writes.saveWorkout).toHaveBeenCalledWith("legs", expect.anything());
     expect(saved().name).toBe("Leg day");
     expect(saved().items[0]?.doses).toHaveLength(2);
@@ -185,7 +185,7 @@ describe("WorkoutEditorPage", () => {
     expect(labels()).not.toContain("Rest after Face pull");
     type(rest("Dips"), "000200");
     act(() => rest("Dips").dispatchEvent(new FocusEvent("focusout", { bubbles: true })));
-    click(container.querySelector(".detail-primary"));
+    click(container.querySelector(".editor-bar-save"));
     expect(saved().items.map((i) => i.restAfterS)).toEqual([90, 120, undefined]);
   });
 
@@ -204,14 +204,14 @@ describe("WorkoutEditorPage", () => {
     type(sets(), "5-3");
     blur();
     expect(sets().value).toBe("3-5");
-    click(container.querySelector(".detail-primary"));
+    click(container.querySelector(".editor-bar-save"));
     expect(saved().items[0]?.doses).toEqual([{ sets: 3, setsMax: 5, reps: 5 }]);
   });
 
   it("asks before discarding changes, and leaves at once when nothing changed", () => {
     mount(<WorkoutEditorPage id="legs" />);
     type(container.querySelector<HTMLInputElement>(".name-field")!, "Leg day");
-    click(container.querySelector(".detail-back"));
+    click(container.querySelector(".editor-bar-cancel"));
     expect(container.querySelector("[data-left]")).toBeNull();
     click(document.querySelector(".sheet-action--danger"));
     expect(container.querySelector("[data-left]")).not.toBeNull();
@@ -223,7 +223,7 @@ describe("WorkoutEditorPage", () => {
     expect(container.querySelector<HTMLInputElement>(".name-field")?.value).toBe(
       "Gym, legs (copy)"
     );
-    click(container.querySelector(".detail-primary"));
+    click(container.querySelector(".editor-bar-save"));
     const [id] = writes.saveWorkout.mock.calls[0] as unknown as [string];
     expect(id).not.toBe("legs");
     expect(saved().items[0]?.exercise).toBe("Zercher squat");
@@ -232,7 +232,7 @@ describe("WorkoutEditorPage", () => {
   it("makes a new workout without asking its category, in its focus, then opens it", () => {
     mount(<WorkoutEditorPage focus="power" />);
     type(container.querySelector<HTMLInputElement>(".name-field")!, "Fast pulls");
-    click(container.querySelector(".detail-primary"));
+    click(container.querySelector(".editor-bar-save"));
     const [id] = writes.saveWorkout.mock.calls[0] as unknown as [string];
     expect(saved()).toMatchObject({ name: "Fast pulls", kind: "other", focus: "power" });
     expect(at.path).toBe(`/app/train/workouts/${id}`);

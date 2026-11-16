@@ -138,21 +138,17 @@ export function ActivityForm({
     <DetailFrame
       backTo="/app"
       backLabel={live ? t("hang.discard") : t("common.cancel")}
-      danger
       {...(live && { onBack: () => setDiscarding(true) })}
-      footer={
-        <button type="button" className="detail-primary" onClick={save}>
-          {t("common.save")}
-        </button>
-      }
+      editor={{
+        title:
+          logged !== null
+            ? t("summary.editWorkout")
+            : reviewing
+              ? t("activities.logWorkout")
+              : t("activities.logActivity"),
+        onSave: save,
+      }}
     >
-      <span className="train-label form-mode">
-        {logged !== null
-          ? t("summary.editWorkout")
-          : reviewing
-            ? t("activities.logWorkout")
-            : t("activities.logActivity")}
-      </span>
       {logged === null && !kindSet && (
         <KindChips value={draft.kind} onChange={(kind) => update({ kind })} />
       )}
