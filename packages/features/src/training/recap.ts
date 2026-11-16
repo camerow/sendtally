@@ -23,6 +23,7 @@ import {
 } from "./days";
 import { blockMembers } from "./blocks";
 import type { Occurrence } from "./plan";
+import { blockName } from "./blockText";
 
 export type DoneCount = { done: number; planned: number };
 
@@ -158,5 +159,7 @@ export function blockTagOf(
   const block = plan.blocks.find((b) => b.id === m?.blockId);
   if (block === undefined) return null;
   const week = blockWeekOn(block, date);
-  return week === null ? block.name : `${block.name} · ${t("plan.weekShort", { n: week })}`;
+  return week === null
+    ? blockName(block)
+    : `${blockName(block)} · ${t("plan.weekShort", { n: week })}`;
 }

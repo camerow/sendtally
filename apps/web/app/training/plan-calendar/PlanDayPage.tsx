@@ -2,7 +2,13 @@ import React from "react";
 import { weekday, type CalendarDate } from "@sendtally/core/hang";
 import { dayMonth, weekdayLong } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { blockOn, blockTag, trainingDay, useTrainingLog } from "@sendtally/features/training";
+import {
+  blockOn,
+  blockTag,
+  trainingDay,
+  useTrainingLog,
+  blockName,
+} from "@sendtally/features/training";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { useAppApi } from "../../lib/useAppApi";
 import { useScheduledToast } from "../blocks/useScheduledToast";
@@ -29,7 +35,9 @@ export function PlanDayPage({ date }: { date: CalendarDate }): React.ReactElemen
       }
     >
       <div className="schedule-head">
-        {block !== null && <span className="plan-label">{blockTag(block.name, block, date)}</span>}
+        {block !== null && (
+          <span className="plan-label">{blockTag(blockName(block), block, date)}</span>
+        )}
         <h1 className="schedule-title">{weekdayLong(weekday(date))}</h1>
         <span className="plan-row-meta">{dayMonth(date)}</span>
       </div>

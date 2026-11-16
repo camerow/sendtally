@@ -13,6 +13,7 @@ import {
   loadSummary,
   toggleIn,
   removeText,
+  blockName,
 } from "@sendtally/features/training";
 import { exerciseName } from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
@@ -108,7 +109,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
       {...(editing && {
         header: (
           <EditorHeader
-            title={t("plan.editInBlock", { block: block.name })}
+            title={t("plan.editInBlock", { block: blockName(block) })}
             onCancel={draft.dirty ? () => confirmDiscard(draft.cancel) : draft.cancel}
             onSave={draft.save}
             solid
@@ -139,7 +140,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
       }
     >
       <View style={{ gap: 6 }}>
-        <Label color={look.ink}>{`${block.name} · ${kindLabel(w.kind)}`}</Label>
+        <Label color={look.ink}>{`${blockName(block)} · ${kindLabel(w.kind)}`}</Label>
         <Title size={32}>{w.name}</Title>
         {lines.map((line) => (
           <Text key={line} style={[type.mono, { fontSize: 12, lineHeight: 17, color: look.ink }]}>

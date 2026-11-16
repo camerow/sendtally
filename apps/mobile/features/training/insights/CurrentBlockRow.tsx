@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text } from "react-native";
 import { colors, radius } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { currentBlockLine, useTrainingLog } from "@sendtally/features/training";
+import { currentBlockLine, useTrainingLog, blockName } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { pressRow } from "../../../lib/press";
 import { useHangData } from "../data/HangDataContext";
@@ -20,7 +20,7 @@ export function CurrentBlockRow(): React.ReactElement | null {
     <Pressable
       onPress={() => openBlock(block.id, t("statistics.tab"))}
       accessibilityRole="button"
-      accessibilityLabel={`${block.name}, ${meta}`}
+      accessibilityLabel={`${blockName(block)}, ${meta}`}
       style={pressRow({
         minHeight: 44,
         flexDirection: "row",
@@ -36,7 +36,7 @@ export function CurrentBlockRow(): React.ReactElement | null {
         numberOfLines={1}
         style={[type.bodyBold, { flexShrink: 1, fontSize: 14, color: colors.gunmetal }]}
       >
-        {block.name}
+        {blockName(block)}
       </Text>
       <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
     </Pressable>

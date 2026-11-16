@@ -12,6 +12,7 @@ import {
   type WorkoutLookup,
   useLit,
   useBlockWeekGrid,
+  blockName,
 } from "@sendtally/features/training";
 import { Switch } from "../../../components/Switch";
 import { useApi } from "../../../lib/api";
@@ -103,7 +104,7 @@ export function BlockWeek({
     editing,
     ...(onToggle !== undefined && { onToggle }),
     ...(onSchedules !== undefined && { onSchedules }),
-    open: (m) => openMembership(m, block.name),
+    open: (m) => openMembership(m, blockName(block)),
     openDay: (o, m) => {
       const w = library(m.workoutId);
       return w === undefined ? undefined : () => setOpen({ occurrence: o, workout: w });
@@ -114,7 +115,7 @@ export function BlockWeek({
   const add = (
     <Button
       label={t("plan.addToBlockMenu")}
-      accessibilityLabel={t("plan.addToBlock", { name: block.name })}
+      accessibilityLabel={t("plan.addToBlock", { name: blockName(block) })}
       onPress={() => setAdding(true)}
       variant="primary"
       icon="plus"

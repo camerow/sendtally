@@ -12,6 +12,7 @@ import {
   loadSummary,
   toggleIn,
   removeText,
+  blockName,
 } from "@sendtally/features/training";
 import { exerciseName } from "@sendtally/features/workouts";
 import { MoreMenu } from "../../components/MoreMenu";
@@ -105,7 +106,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
       {...(editing && {
         onBack: () => guard.ask(draft.cancel),
         editor: {
-          title: t("plan.editInBlock", { block: block.name }),
+          title: t("plan.editInBlock", { block: blockName(block) }),
           onSave: draft.save,
           solid: true,
         },
@@ -139,7 +140,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
     >
       <div className="block-head">
         <span className="train-label" style={{ color: look.ink }}>
-          {`${block.name} · ${kindLabel(w.kind)}`}
+          {`${blockName(block)} · ${kindLabel(w.kind)}`}
         </span>
         <h1 className="block-title">{w.name}</h1>
         {lines.map((line) => (
