@@ -80,7 +80,6 @@ function Detail({
       }
       footer={
         <div className="footer-stack">
-          {start !== null && <StartButton start={start} />}
           <div className="footer-row">
             <Link to={schedulePath(workout.id)} className="footer-outline">
               {t("plan.schedule")}
@@ -91,6 +90,7 @@ function Detail({
               </Link>
             )}
           </div>
+          {start !== null && <StartButton start={start} />}
         </div>
       }
     >
