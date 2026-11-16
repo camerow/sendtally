@@ -19,7 +19,7 @@ import { kindLabel } from "../activities/format";
 import { TRAINED_KINDS, oneDecimal } from "./overview";
 import { workoutsDone, type WorkoutsDoneVM } from "./workouts";
 
-type Done = {
+export type Done = {
   kind: WorkoutKind;
   focus: Focus | null;
   at: number;
@@ -71,7 +71,7 @@ export type TrainingInsightsVM = {
   workouts: WorkoutsDoneVM;
 };
 
-function doneOf(log: SessionLogWithClimbs): Done[] {
+export function doneOf(log: SessionLogWithClimbs): Done[] {
   return [
     ...log.sessions.map((s): Done => ({
       kind: "climbing",
