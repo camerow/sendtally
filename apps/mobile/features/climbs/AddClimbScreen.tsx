@@ -50,6 +50,7 @@ import { Switch } from "../../components/Switch";
 import { TextInput } from "../../components/TextInput";
 import { useApi } from "../../lib/api";
 import { press } from "../../lib/press";
+import { Button } from "../training/components/Button";
 import { ResultFields } from "../log-session/ResultFields";
 import { SuggestField } from "./SuggestField";
 
@@ -233,23 +234,15 @@ export function AddClimbScreen(): React.ReactElement {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingHorizontal: 10,
+          paddingHorizontal: 2,
         }}
       >
-        <Pressable
+        <Button
+          label={t("common.cancel")}
           onPress={() => router.back()}
-          accessibilityRole="button"
-          style={press({
-            minWidth: 72,
-            height: 44,
-            justifyContent: "center",
-            paddingHorizontal: 8,
-          })}
-        >
-          <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.watermelonInk }}>
-            {t("common.cancel")}
-          </Text>
-        </Pressable>
+          variant="danger"
+          height={44}
+        />
         <Text
           accessibilityRole="header"
           numberOfLines={1}
@@ -262,7 +255,7 @@ export function AddClimbScreen(): React.ReactElement {
         >
           {title}
         </Text>
-        <View style={{ minWidth: 72 }} />
+        <View style={{ minWidth: 80 }} />
       </View>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
