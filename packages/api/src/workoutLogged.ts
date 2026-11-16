@@ -1,9 +1,6 @@
 import type { Context } from "hono";
-import { BUILT_IN_WORKOUTS } from "@sendtally/core/hang";
 import { type AppEnv, captureEvent } from "./context";
 import * as repo from "./lib/repo";
-
-const BUILT_IN = new Set<string>(BUILT_IN_WORKOUTS.map((w) => w.id));
 
 type Log = { workoutId?: string | null; membershipId?: string | null | undefined };
 
@@ -16,7 +13,7 @@ async function capture(c: Context<AppEnv>, log: Log): Promise<void> {
       : ((await repo.getMembership(c.env.DB, c.get("userId"), membershipId))?.workout_id ?? null));
   if (workoutId === null) return;
   await captureEvent(c, "workout_logged", {
-    built_in: BUILT_IN.has(workoutId),
+    built_in: (await repo.libraryEntry(c.env.DB, "workout", workoutId)) !== null,
     planned: membershipId !== null,
   });
 }
