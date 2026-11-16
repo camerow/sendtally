@@ -4,7 +4,7 @@ export const summary = {
   "summary.sent": "encadenadas",
   "summary.effort": "esfuerzo",
   "summary.effortAimed": "esfuerzo · objetivo {n}",
-  "summary.setEffort": "RPE {actual} · objetivo {target}",
+  "summary.setAimed": "· objetivo {target}",
   "summary.sets": "series",
   "summary.hangsHeld": "suspensiones aguantadas",
   "summary.whatYouDid": "Lo que hiciste",

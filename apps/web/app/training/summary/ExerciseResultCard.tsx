@@ -48,6 +48,7 @@ export function ExerciseResultCard({
   unit: WeightUnit;
 }): React.ReactElement {
   const { change, last, effort } = result;
+  const [rpe, aimed] = effort === null ? ["", ""] : setEffortText(effort);
   const climbing = isClimbingSets(result.sets);
   const wall = climbing && result.sets.some((s) => s.onS !== undefined);
   const chips = result.sets
@@ -101,7 +102,8 @@ export function ExerciseResultCard({
             className="effort-mark-dot"
             style={{ background: effortColor(Math.round(effort.actual)) }}
           />
-          {setEffortText(effort)}
+          {rpe}
+          {aimed !== "" && <span className="result-card-aimed">{aimed}</span>}
         </span>
       )}
       {footer !== null && <span className="result-card-foot">{footer}</span>}

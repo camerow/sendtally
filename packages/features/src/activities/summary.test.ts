@@ -50,8 +50,8 @@ describe("setEffort", () => {
     });
     expect(setEffort([{ rpe: 7 }])).toEqual({ actual: 7, target: null });
     expect(setEffort([{ reps: 5 }], 8)).toBeNull();
-    expect(setEffortText({ actual: 8.8, target: 8 })).toBe("RPE 8.8 · aimed 8");
-    expect(setEffortText({ actual: 7, target: null })).toBe("RPE 7");
+    expect(setEffortText({ actual: 8.8, target: 8 })).toEqual(["RPE 8.8", "· aimed 8"]);
+    expect(setEffortText({ actual: 7, target: null })).toEqual(["RPE 7", ""]);
   });
 });
 

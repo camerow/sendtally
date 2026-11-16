@@ -6,8 +6,8 @@ import {
   type SetDone,
   type WeightUnit,
 } from "@sendtally/core/hang";
-import { formatNumber, t } from "@sendtally/features/i18n";
-import { exerciseName, setKey, type SetAt } from "@sendtally/features/workouts";
+import { t } from "@sendtally/features/i18n";
+import { exerciseName, exerciseTargetLine, setKey, type SetAt } from "@sendtally/features/workouts";
 import { LetterBadge } from "../components/LetterBadge";
 import { AboutButton, type About } from "./AboutButton";
 import { RestPreview } from "./RestPreview";
@@ -77,9 +77,7 @@ export function SetsCard({
         )}
       </div>
       {rated && (
-        <span className="player-card-meta player-card-aim">
-          {t("activities.targetRpe", { value: formatNumber(targetRpe) })}
-        </span>
+        <span className="player-card-meta player-card-aim">{exerciseTargetLine(item.dose)}</span>
       )}
       <div className="set-row set-row--head" aria-hidden="true">
         <span className="set-col-n train-label">{t("activities.colSet")}</span>

@@ -26,6 +26,7 @@ export type ExerciseResultCardProps = { result: ExerciseResult; unit: WeightUnit
  */
 export function ExerciseResultCard({ result, unit }: ExerciseResultCardProps): React.ReactElement {
   const { change, last, effort } = result;
+  const [rpe, aimed] = effort === null ? ["", ""] : setEffortText(effort);
   const climbing = isClimbingSets(result.sets);
   const wall = climbing && result.sets.some((s) => s.onS !== undefined);
   const chips = result.sets
@@ -113,9 +114,12 @@ export function ExerciseResultCard({ result, unit }: ExerciseResultCardProps): R
               backgroundColor: effortColor(Math.round(effort.actual)),
             }}
           />
-          <Text style={[type.monoBold, { fontSize: 12, color: colors.gunmetal }]}>
-            {setEffortText(effort)}
-          </Text>
+          <Text style={[type.monoBold, { fontSize: 12, color: colors.gunmetal }]}>{rpe}</Text>
+          {aimed !== "" && (
+            <Text style={[type.mono, { fontSize: 11.5, color: colors.textSecondary }]}>
+              {aimed}
+            </Text>
+          )}
         </View>
       )}
       {footer !== null && (

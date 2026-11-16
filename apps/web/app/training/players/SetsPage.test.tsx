@@ -97,11 +97,9 @@ function mount(shown: WorkoutRun = run): void {
 }
 
 const byLabel = (label: string): HTMLElement | null =>
-  document.querySelector<HTMLElement>(`[aria-label="${label}"]`);
-const rpeField = (label: string): HTMLInputElement | undefined =>
-  Array.from(document.querySelectorAll<HTMLLabelElement>("label")).find(
-    (l) => l.textContent === label
-  )?.control as HTMLInputElement | undefined;
+  document.querySelector<HTMLElement>(`[aria-label="${label}"]`) ??
+  Array.from(document.querySelectorAll("label")).find((l) => l.textContent === label)?.control ??
+  null;
 const button = (text: string): HTMLButtonElement =>
   Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find(
     (b) => b.textContent === text
@@ -168,11 +166,11 @@ describe("Sets player", () => {
       ],
     });
     expect(texts(".set-row--head .set-col-rpe")).toEqual(["RPE"]);
-    expect(rpeField("Back squat, set 1 · RPE")).toBeUndefined();
+    expect(byLabel("Back squat, set 1 · RPE")).toBeNull();
     act(() => (byLabel("Back squat, set 1") as HTMLInputElement).click());
     act(() => (byLabel("Row, set 1") as HTMLInputElement).click());
-    expect(rpeField("Back squat, set 1 · RPE")?.placeholder).toBe("8");
-    expect(rpeField("Row, set 1 · RPE")).toBeUndefined();
+    expect((byLabel("Back squat, set 1 · RPE") as HTMLInputElement).placeholder).toBe("8");
+    expect(byLabel("Row, set 1 · RPE")).toBeNull();
   });
 
   it("opens an exercise's description from the info button beside its name", () => {

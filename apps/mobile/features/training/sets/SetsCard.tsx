@@ -8,8 +8,8 @@ import {
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { formatNumber, t } from "@sendtally/features/i18n";
-import { exerciseName } from "@sendtally/features/workouts";
+import { t } from "@sendtally/features/i18n";
+import { exerciseName, exerciseTargetLine } from "@sendtally/features/workouts";
 import { useFieldOrder } from "../../../components/useFieldOrder";
 import { AboutButton, type About } from "../components/AboutButton";
 import { Label } from "../components/Label";
@@ -112,7 +112,7 @@ export function SetsCard({
         </View>
         {rated && (
           <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
-            {t("activities.targetRpe", { value: formatNumber(targetRpe) })}
+            {exerciseTargetLine(item.dose)}
           </Text>
         )}
       </View>

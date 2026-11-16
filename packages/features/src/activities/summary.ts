@@ -37,11 +37,11 @@ export function setEffort(sets: readonly SetDone[], target?: number): SetEffort 
   return { actual, target: target ?? null };
 }
 
-/** "RPE 8.8 · aimed 8", or "RPE 8.8" with no target. */
-export const setEffortText = ({ actual, target }: SetEffort): string =>
-  target === null
-    ? t("hang.rpeValue", { value: formatNumber(actual) })
-    : t("summary.setEffort", { actual: formatNumber(actual), target: formatNumber(target) });
+/** "RPE 8.8" and "· aimed 8", drawn in two weights; the second is empty with no target. */
+export const setEffortText = ({ actual, target }: SetEffort): [string, string] => [
+  t("hang.rpeValue", { value: formatNumber(actual) }),
+  target === null ? "" : t("summary.setAimed", { target: formatNumber(target) }),
+];
 
 type Dated = { id: string; date: CalendarDate; startTime?: string | null };
 
