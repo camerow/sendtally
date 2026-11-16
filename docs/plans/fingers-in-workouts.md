@@ -115,7 +115,9 @@ The fix on `bug/multi-grip-hang-sessions` makes `hangSessionItems` and `hangSess
 This plan uses them and adds no second reader: a part is a hang session, so its rows' targets, its minutes and its summary read through `hangSessionItems` and `hangSessionSeconds` like a standalone session's.
 Its shape (commit 3c537a57): each later grip's `done_json` item carries an optional `dose: Dose`, the prescription that grip ran, for example `{ item: 1, exercise: "pinch", sets: [...], dose: { sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 60 } }`; item 0 has none, its dose is the row's `protocol_json`; `doneBody` accepts it as `dose.optional()`, and `hangSessionItems` reads it, falling back to the kept-set shape for older rows.
 A part is saved through `hangResult`, which writes `dose` from the prescribed items, so a part carries every grip's target with no extra code, and the `fingerboard` body's `done` accepts it through the same `doneBody`.
-Rest between grips (`exerciseRestS`, `restAfterS`) is stored on no hang session row, so a part's Fingers minutes (`hangSessionSeconds`) leave it out and it stays in the rest of the run's minutes, under the run's kind; the split never counts a minute twice.
+Rest between grips is stored too (commit 7df7161f): `ItemDone.restAfterS`, the seconds the timer rested after that grip before the next, `restAfterItem(items, k, exerciseRestS)`, written on every grip but the last and omitted at 0; `doneBody` accepts it and `hangSessionSeconds` adds it.
+A part's prescribed items are its grips with their `restAfterS` as the workout's `restAfterItem` gives them, so `hangResult` writes the rests between the part's grips, and the rest after its last grip, before the next exercise, is never written.
+The split counts every second once by construction: Fingers gets the part's `hangSessionSeconds` (its grips and the rests between them), and the run's kind gets the activity's minutes less that, which keeps the rest after the part and everything else in the run.
 Kind and colour are the non-grip majority's.
 
 ### 3. The workout view
