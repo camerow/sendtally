@@ -59,7 +59,7 @@ export {
   type WorkloadBandVM,
   type WorkloadPlot,
   type WorkloadTileVM,
-  WORKLOAD_MAX,
+  WORKLOAD_TICKS,
   workloadVM,
   workloadZoneLabel,
   type WorkloadLeftOutVM,

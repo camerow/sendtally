@@ -38,9 +38,28 @@ describe("workloadVM", () => {
   });
 
   it("plots a point a day on 7D and 1M and a week beyond", () => {
-    expect(workloadVM(steady, "7d", now).points).toHaveLength(7);
-    expect(workloadVM(steady, "1m", now).points).toHaveLength(28);
-    expect(workloadVM(steady, "3m", now).points).toHaveLength(13);
+    const year = Array.from({ length: 700 }, (_, i) => i)
+      .filter((i) => i % 7 < 3)
+      .map((i) => rec(i));
+    expect(workloadVM(year, "7d", now).points).toHaveLength(7);
+    expect(workloadVM(year, "1m", now).points).toHaveLength(28);
+    expect(workloadVM(year, "3m", now).points).toHaveLength(13);
+    expect(workloadVM(year, "y2026", now)).toMatchObject({ from: "Jan 5" });
+    expect(workloadVM(year, "y2026", now).points).toHaveLength(46);
+    expect(workloadVM(year, "1y", now)).toMatchObject({ from: "Dec 1, 2025" });
+    expect(workloadVM(year, "1y", now).points).toHaveLength(51);
+  });
+
+  it("plots only ratios the card would state, and words alone under four of them", () => {
+    const sparse = [0, 10, 20, 30, 40, 50, 60, 70, 80].map((d) => rec(d));
+    const vm = workloadVM(sparse, "3m", now);
+    expect(vm).toMatchObject({ state: "few", headline: "3 counted" });
+    expect(vm.sentence).toBe("Too few sessions in the last four weeks to compare.");
+    expect(vm.points).toEqual([]);
+    const thinned = [...steady.filter((d) => d.at < today - 27 * DAY_MS), rec(0), rec(9)];
+    const thin = workloadVM(thinned, "3m", now);
+    expect(thin.state).toBe("few");
+    expect(thin.points).toEqual([]);
   });
 
   it("breaks the line where there is no ratio", () => {
@@ -78,12 +97,39 @@ describe("workloadVM", () => {
 });
 
 describe("workloadPlot", () => {
-  it("breaks runs at gaps, clamps above 2.0 and marks today", () => {
-    const plot = workloadPlot([1, null, 0.5, 3], 336, 132);
-    expect(plot.runs.map((r) => r.length)).toEqual([1, 2]);
-    expect(plot.y(3)).toBe(plot.y(2));
-    expect(plot.over).toHaveLength(1);
-    expect(plot.today).toEqual(plot.over[0]);
+  const plot = workloadPlot([1, null, 0.5, 2, 0, 4, null, 1.2, null, 0.1], 336, 132);
+
+  it("puts half and double the same distance from 1.0 on a log axis", () => {
+    expect(plot.y(1) - plot.y(2)).toBeCloseTo(plot.y(0.5) - plot.y(1));
+    expect(plot.y(2) - plot.y(4)).toBeCloseTo(plot.y(1) - plot.y(2));
+  });
+
+  it("spans 0.25 to 4.0 with nothing clipped and rest weeks in a lane below", () => {
+    expect(plot.y(4)).toBe(10);
+    expect(plot.y(0.1)).toBe(plot.y(0.25));
+    expect(plot.restY).toBeGreaterThan(plot.y(0.25));
+    expect(plot.rest).toEqual([[expect.any(Number), plot.restY]]);
+    for (const r of [0.3, 0.8, 1.3, 1.5, 3.9]) {
+      expect(plot.y(r)).toBeGreaterThan(plot.y(4));
+      expect(plot.y(r)).toBeLessThan(plot.y(0.25));
+    }
+  });
+
+  it("draws every point as a dot, joins runs, and breaks at gaps and rest weeks", () => {
+    expect(plot.dots).toHaveLength(6);
+    expect(plot.runs.map((r) => r.length)).toEqual([2]);
+    expect(plot.today).toEqual(plot.dots.at(-1));
+  });
+
+  it("shrinks the dots until neighbours on a crowded phone plot no longer touch", () => {
+    const year = Array.from({ length: 46 }, () => 1);
+    expect(workloadPlot(year, 900, 132).dotRadius).toBe(3.2);
+    const phone = workloadPlot(year, 300, 132);
+    expect(phone.dotRadius * 2).toBeLessThan((phone.dots[1]?.[0] ?? 0) - (phone.dots[0]?.[0] ?? 0));
+  });
+
+  it("puts today in the rest lane after a week with nothing logged", () => {
+    expect(workloadPlot([1, 0], 336, 132).today?.[1]).toBe(plot.restY);
   });
 });
 

@@ -6,9 +6,10 @@ export type WorkloadZone = "light" | "sweet" | "caution" | "high";
 
 /**
  * What the day can say: a ratio; too much left out to trust one; under 28 days of history;
- * or nothing counted in the three weeks before this one, where the ratio would always be 4.0.
+ * nothing counted in the three weeks before this one, where the ratio would always be 4.0;
+ * or too few counted in the 28 days for the ratio to be more than a few fixed steps.
  */
-export type WorkloadState = "ratio" | "partial" | "early" | "break";
+export type WorkloadState = "ratio" | "partial" | "early" | "break" | "few";
 
 export type Workload = {
   state: WorkloadState;
@@ -29,6 +30,9 @@ export type Workload = {
 
 /** Past this share of records left out, either window can be off by a whole zone. */
 const LEFT_OUT_LIMIT = 0.25;
+
+/** Under about one a week, the ratio only takes a few values and swings between them. */
+export const MIN_COUNTED = 4;
 
 export const loadOf = (d: Loadable): number | null =>
   d.rpe === null || d.minutes <= 0 ? null : d.rpe * d.minutes;
@@ -68,7 +72,9 @@ export function workloadOn(done: readonly Loadable[], day: number): Workload {
         ? "early"
         : all.load === acute
           ? "break"
-          : "ratio";
+          : all.total - all.leftOut < MIN_COUNTED
+            ? "few"
+            : "ratio";
   return {
     state,
     acute,

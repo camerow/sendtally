@@ -1,11 +1,12 @@
 import React from "react";
 import { Text, View } from "react-native";
-import Svg, { Circle, Line, Path, Polyline, Rect, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, Line, Polyline, Rect, Text as SvgText } from "react-native-svg";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
   WORKLOAD_EDGES,
   WORKLOAD_GUTTER,
+  WORKLOAD_TICKS,
   WORKLOAD_TINTS,
   polyline,
   workloadBands,
@@ -15,7 +16,7 @@ import { type } from "../type";
 
 const HEIGHT = 132;
 
-/** The ratio over the range against the four zones, today in gold, gaps where there is no ratio. */
+/** The ratio over the range on a log axis against the four zones, rest weeks in their own lane, today in gold. */
 export function WorkloadChart({
   points,
   from,
@@ -26,17 +27,17 @@ export function WorkloadChart({
   const [width, setWidth] = React.useState(0);
   const plot = workloadPlot(points, width, HEIGHT);
   const bands = workloadBands();
-  const tick = (value: number, strong = false): React.ReactElement => (
+  const label = (y: number, text: string, strong = false): React.ReactElement => (
     <SvgText
-      key={`t${value}`}
+      key={text}
       x={WORKLOAD_GUTTER - 6}
-      y={plot.y(value) + 3.5}
+      y={y + 3.5}
       textAnchor="end"
       fontFamily={strong ? fonts.monoSemiBold : fonts.mono}
       fontSize={10}
       fill={strong ? colors.gunmetal : colors.textSecondary}
     >
-      {value.toFixed(1)}
+      {text}
     </SvgText>
   );
 
@@ -71,8 +72,8 @@ export function WorkloadChart({
                 strokeDasharray="2 3"
               />
             ))}
-            {tick(WORKLOAD_EDGES[2])}
-            {tick(1, true)}
+            {WORKLOAD_TICKS.map((v) => label(plot.y(v), v.toFixed(1), v === 1))}
+            {label(plot.restY, t("statistics.workloadRest"))}
             <Line
               x1={plot.left}
               x2={plot.right}
@@ -85,20 +86,23 @@ export function WorkloadChart({
                 key={`${run[0]?.[0]}`}
                 points={polyline(run)}
                 fill="none"
-                stroke={colors.gunmetal}
-                strokeWidth={2}
+                stroke={colors.lineOnLightStrong}
+                strokeWidth={1.5}
                 strokeLinejoin="round"
               />
             ))}
-            {points.length <= 31 &&
-              plot.dots.map(([x, y]) => (
-                <Circle key={x} cx={x} cy={y} r={3.2} fill={colors.gunmetal} />
-              ))}
-            {plot.over.map(([x, y]) => (
-              <Path
-                key={`o${x}`}
-                d={`M${x - 4} ${y - 4}L${x} ${y - 9}L${x + 4} ${y - 4}`}
-                fill={colors.gunmetal}
+            {plot.dots.map(([x, y]) => (
+              <Circle key={x} cx={x} cy={y} r={plot.dotRadius} fill={colors.gunmetal} />
+            ))}
+            {plot.rest.map(([x, y]) => (
+              <Circle
+                key={`r${x}`}
+                cx={x}
+                cy={y}
+                r={plot.restRadius}
+                fill={colors.white}
+                stroke={colors.gunmetal}
+                strokeWidth={1.5}
               />
             ))}
             {plot.today !== null && (

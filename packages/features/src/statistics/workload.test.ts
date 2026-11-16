@@ -32,7 +32,8 @@ describe("workloadOn", () => {
 
   it("shows no ratio in the first 28 days and counts down to it", () => {
     expect(workloadOn([hour(20)], today)).toMatchObject({ state: "early", daysToGo: 7 });
-    expect(workloadOn([hour(27)], today)).toMatchObject({ state: "ratio", ratio: 0, daysToGo: 0 });
+    const month = [hour(27), hour(26), hour(25), hour(24)];
+    expect(workloadOn(month, today)).toMatchObject({ state: "ratio", ratio: 0, daysToGo: 0 });
     expect(workloadOn([], today)).toMatchObject({ state: "early", daysToGo: 28, acute: 0 });
   });
 
@@ -40,9 +41,9 @@ describe("workloadOn", () => {
     const back = [...steady(12).filter((d) => d.at < ago(28)), hour(0), hour(2)];
     const w = workloadOn(back, today);
     expect(w).toMatchObject({ state: "break", ratio: 4, daysToGo: 0, acute: 720 });
-    const next = workloadOn([...back, hour(8)], today);
+    const next = workloadOn([...back, hour(8), hour(9)], today);
     expect(next.state).toBe("ratio");
-    expect(next.ratio).toBeCloseTo(720 / (1080 / 4));
+    expect(next.ratio).toBeCloseTo(720 / (1440 / 4));
   });
 
   it("leaves out records with no RPE or no minutes and counts them", () => {
@@ -90,4 +91,12 @@ describe("workloadZone", () => {
     [1.5, "caution"],
     [1.51, "high"],
   ] as const)("%s is %s", (ratio, zone) => expect(workloadZone(ratio)).toBe(zone));
+  it("gives no ratio under four counted in the 28 days", () => {
+    const w = workloadOn([hour(0), hour(10), hour(20), hour(40)], today);
+    expect(w.state).toBe("few");
+    expect(w.ratio).toBeCloseTo(4 / 3);
+    expect(workloadOn([hour(0), hour(10), hour(20), hour(25), hour(40)], today).state).toBe(
+      "ratio"
+    );
+  });
 });
