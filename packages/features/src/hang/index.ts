@@ -14,3 +14,4 @@ export * from "./progress";
 export * from "./timerText";
 export * from "./trendText";
 export * from "./hangResult";
+export * from "./hangEdit";

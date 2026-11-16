@@ -1,8 +1,8 @@
 import React from "react";
 import type { HangSessionRecord } from "@sendtally/api-client";
-import { protocolDose, type ItemDone } from "@sendtally/core/hang";
-import { hangCount, hangGrid, hangSets, keptSets } from "@sendtally/features/activities";
-import { hangResult } from "@sendtally/features/hang";
+import { hangSessionItems } from "@sendtally/core/hang";
+import { hangCount, hangGrid } from "@sendtally/features/activities";
+import { hangEditResult, hangEditSets } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
 import { KIND_LOOK } from "@sendtally/features/training";
@@ -28,27 +28,11 @@ export function HangSessionForm({ session }: { session: HangSessionRecord }): Re
   const ids = { date: React.useId(), grip: React.useId() };
   const kind = session.protocol.kind;
   const unit = model.settings.units;
-  const [sets, setSets] = React.useState<{ done: ItemDone[]; off: string[] }>(() => ({
-    done: [
-      {
-        item: 0,
-        exercise: session.gripId,
-        sets: hangSets(session).map(({ weightKg, ...set }) =>
-          weightKg === undefined || weightKg === session.loadKg ? set : { ...set, weightKg }
-        ),
-      },
-    ],
-    off: [],
-  }));
-  const result = hangResult(
-    keptSets(sets.done, sets.off),
-    [{ exercise: session.gripId, dose: protocolDose(session.protocol) }],
-    () => ({
-      exercise: draft.gripId,
-      setup: { edgeMm: draft.edgeMm, loadKg: draft.loadKg },
-      hang: kind === "hang",
-    })
-  );
+  const [sets, setSets] = React.useState(() => hangEditSets(session));
+  const result = hangEditResult(session, sets, draft.gripId, {
+    edgeMm: draft.edgeMm,
+    loadKg: draft.loadKg,
+  });
   const grid = hangGrid({ ...draft, done: result.done });
   const grips = model.grips.filter((g) => !g.hidden || g.id === draft.gripId);
 
@@ -110,9 +94,12 @@ export function HangSessionForm({ session }: { session: HangSessionRecord }): Re
         </div>
       </div>
       <DoneDetails
-        done={sets.done.map((d) => ({ ...d, exercise: model.gripName(draft.gripId) }))}
+        done={sets.done.map((d) => ({
+          ...d,
+          exercise: model.gripName(d.item === 0 ? draft.gripId : d.exercise),
+        }))}
         off={sets.off}
-        planned={[protocolDose(session.protocol)]}
+        planned={hangSessionItems(session).map((i) => i.dose)}
         unit={unit}
         color={KIND_LOOK.hangboard.ink}
         hangs
