@@ -28,7 +28,7 @@ import { SetupStack, type SetupCard } from "./SetupStack";
 import { TrainingLog } from "./TrainingLog";
 
 export type LogPageProps = {
-  status: ConnectionStatus;
+  status: ConnectionStatus | null;
   sessions: SessionRow[];
   hangSessions: HangHistoryRow[];
   activities: Activity[];
@@ -47,8 +47,8 @@ export function LogPage({
   const gyms = useGyms(api);
   const gymPrompt = useDismissed("gym");
   const stravaPrompt = useDismissed("strava");
-  const stravaConnected = status.strava?.status === "active";
-  const stravaLapsed = status.strava !== null && !stravaConnected;
+  const stravaConnected = status?.strava?.status === "active";
+  const stravaLapsed = status?.strava != null && !stravaConnected;
   const setupCards: SetupCard[] = [];
   if (gyms.ready && gyms.gyms.length === 0 && gymPrompt.dismissed === false) {
     setupCards.push({
@@ -61,7 +61,7 @@ export function LogPage({
       onDismiss: gymPrompt.dismiss,
     });
   }
-  if (!stravaConnected && stravaPrompt.dismissed === false) {
+  if (status !== null && !stravaConnected && stravaPrompt.dismissed === false) {
     setupCards.push({
       key: "strava",
       eyebrow: stravaLapsed ? t("sessions.setupEyebrowLapsed") : t("sessions.setupEyebrow"),

@@ -8,6 +8,18 @@ export function firstRunGate(path: string, firstRun: boolean | undefined): strin
   return path === "/app/start" ? "/app" : null;
 }
 
+/**
+ * Whether the server says first run is due. A failed or slow answer is no, so the check never
+ * stands between a signed-in person and the app, as on the phone.
+ */
+export function firstRunDue(
+  status: () => Promise<{ firstRun?: boolean }>,
+  waitMs = 3000
+): Promise<boolean> {
+  const slow = new Promise<boolean>((resolve) => setTimeout(resolve, waitMs, false));
+  return Promise.race([status().then((s) => s.firstRun === true), slow]).catch(() => false);
+}
+
 /** Whether an import page was opened from first run, which takes it back there. */
 export const fromFirstRun = (search: string): boolean =>
   new URLSearchParams(search).get("then") === "/app/start";
