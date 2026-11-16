@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Activity, ActivityRecord } from "../src/lib/activities";
 import type { Plan, WorkoutRecord } from "../src/lib/plan";
 import { encryptSecret } from "../src/lib/crypto";
+import { MIXED_GRIPS } from "../src/lib/workoutKind";
 import { jsonResponse, makeFakeFetch } from "./fakes";
 import { testApp } from "./harness";
 
@@ -397,6 +398,16 @@ describe("workouts", () => {
     expect(await kindOf("w3", { ...squatWorkout, kind: "climbing", items: [] })).toBe("climbing");
     expect(await kindOf("w3", { ...noKind, items: [] })).toBe("climbing");
     expect(await kindOf("w4", { ...noKind, items: [] })).toBe("other");
+  });
+
+  it("refuses a workout that mixes grips with other exercises, saving nothing", async () => {
+    const userId = "user_workouts_mixed_grips";
+    const items = [...squatWorkout.items, { exercise: "half", doses: [{ sets: 3, onS: 10 }] }];
+    const res = await call(userId, "PUT", "/v1/workouts/w1", { ...squatWorkout, items });
+    expect(res.status).toBe(400);
+    expect(await json<{ error: string }>(res)).toEqual({ error: MIXED_GRIPS });
+    const list = await json<{ workouts: unknown[] }>(await call(userId, "GET", "/v1/workouts"));
+    expect(list.workouts).toEqual([]);
   });
 
   it("folds an older app's variations into items where their exercises line up", async () => {

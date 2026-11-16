@@ -3,6 +3,7 @@ import { PostHog } from "posthog-node";
 import { describe, expect, it, vi } from "vitest";
 import type { Env } from "../src/bindings";
 import * as posthog from "../src/lib/posthog";
+import { MIXED_GRIPS } from "../src/lib/workoutKind";
 import { testApp } from "./harness";
 
 type ToolResult = { isError?: boolean; content: Array<{ text: string }> };
@@ -693,6 +694,21 @@ describe("connector", () => {
         "climbing"
       );
       expect(await kindOf({ ...base, name: "Later", items: [] })).toBe("other");
+    });
+
+    it("refuses a workout that mixes grip ids with other exercises", async () => {
+      const result = await callTool("user_save_mixed", env, "save_workout", {
+        name: "Mixed",
+        description: "",
+        minutes: null,
+        targetRpe: null,
+        items: [
+          { exercise: "half", doses: [{ sets: 3, onS: 10 }] },
+          { exercise: "Back squat", doses: [{ sets: 5, reps: 5 }] },
+        ],
+      });
+      expect(result.isError).toBe(true);
+      expect(result.content[0]?.text).toContain(MIXED_GRIPS);
     });
 
     it("explains which field is out of range", async () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { exerciseKinds, mixesGrips } from "./exercise";
 import { workoutKindOf, type WorkoutKind } from "./plan";
 
 const KINDS: Record<string, WorkoutKind> = {
@@ -31,5 +32,33 @@ describe("workoutKindOf", () => {
 
   it("stops being Fingers once its last grip goes", () => {
     expect(workoutKindOf([], kindOf, "hangboard")).toBe("other");
+  });
+});
+
+describe("exerciseKinds", () => {
+  const isGrip = (e: string): boolean => e === "half";
+  const kindIn = exerciseKinds(
+    [
+      { name: "Back squat", kind: "strength" },
+      { name: "back squat", kind: "mobility" },
+    ],
+    isGrip
+  );
+
+  it("reads grips as Fingers and names in any case, the later exercise winning", () => {
+    expect(kindIn("half")).toBe("hangboard");
+    expect(kindIn("BACK SQUAT")).toBe("mobility");
+    expect(kindIn("Unknown")).toBeUndefined();
+  });
+});
+
+describe("mixesGrips", () => {
+  const isGrip = (e: string): boolean => e === "half" || e === "open";
+
+  it("is true only when grips and other exercises share a workout", () => {
+    expect(mixesGrips(["half", "Pull-ups"], isGrip)).toBe(true);
+    expect(mixesGrips(["half", "open"], isGrip)).toBe(false);
+    expect(mixesGrips(["Pull-ups"], isGrip)).toBe(false);
+    expect(mixesGrips([], isGrip)).toBe(false);
   });
 });
