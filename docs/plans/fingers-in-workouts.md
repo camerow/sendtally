@@ -144,7 +144,7 @@ Will, 2026-11-16: the hangs count already says whether a set was done, and a set
 Hang set rows in every place they appear drop the tick and take the shipped Set RPE column (header, box, keypad) in its place: the part on the workout view, the review after Finish, the standalone fingers timer's review, and the hang session edit, which all share `ActivityForm`'s hang mode, so there is one way for both.
 - Storage: `SetDone.rpe` (1 to 10) exists since Set RPE and `doneBody` accepts it, so a rated hang set is `done_json[i].sets[j].rpe` in `hang_sessions`, exactly as in `activities`; no migration. The session's own `rpe` column stays the run's effort.
 - Done signal: a hang set is kept when it held anything (hangs above 0, or a lone hang's cut seconds), which is the rule `setsHeld` already applies to the timer's sets; clearing a set's hangs drops it, and a dropped set is not missed, as today. The part's live state has no ticked list.
-- Target: a grip dose can hold `targetRpe` (the type and `doseBody` allow it) but the editor does not offer it (`FINGERS_FIELDS` in `doseFields.ts` has no RPE field), so hang rows show the RPE box without a target until a grip dose offers one.
+- Target: none, by Will's decision 4. A grip dose can hold `targetRpe` (the type and `doseBody` allow it) but the editor keeps offering none (`FINGERS_FIELDS` in `doseFields.ts` has no RPE field), so hang rows show the RPE box without a target.
 - Showing it: Set RPE deferred hang sets because `HangSummary` and `HangResultCard` would show a rating nowhere; they now show each set's RPE beside its hangs and load, for parts and standalone sessions alike, so no rating is entered and then hidden.
 After Finish, the review and later edits are the activity's `ActivityForm`, which shows the part's grips inline with the other exercises in that same hang mode and saves both rows in one request.
 There is one editor for grip sets, `ActivityForm`'s hang mode; `HangSessionForm` should move onto it too, which also fixes its first-grip-only defect.
@@ -200,7 +200,5 @@ Slices 2 and 3 can ship as one pull request after slice 1; slice 3 must not ship
    Not chosen: posting when either the training or the fingerboard setting is on.
 3. Fingers-only workouts keep going straight to the timer and log a standalone hang session.
    Not chosen: running them through the workout view.
-
-## Open questions for Will
-
-1. A target RPE on grip doses: the type and API allow one, the editor offers none, so hang rows show the RPE box with no target until Will chooses.
+4. Grip doses take no target RPE: the editor keeps offering none, and hang rows show the RPE box without a target.
+   Not chosen: adding a target RPE field to `FINGERS_FIELDS`.
