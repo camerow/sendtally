@@ -59,17 +59,6 @@ export default function Onboarding(): React.ReactElement | null {
                 {t("common.signIn")}
               </Text>
             </Pressable>
-            <Text
-              style={{
-                fontFamily: fonts.mono,
-                fontSize: 12,
-                lineHeight: 19,
-                textAlign: "center",
-                color: colors.textMuted,
-              }}
-            >
-              {t("onboarding.footer")}
-            </Text>
           </View>
         </View>
       </SafeAreaView>

@@ -5,8 +5,7 @@ export const auth = {
   "auth.signInHeading": "Content de te revoir.",
   "auth.signInBody": "Saisis l'e-mail avec lequel tu t'es inscrit.",
   "auth.signUpHeading": "Crée ton compte.",
-  "auth.signUpBody":
-    "Saisis ton e-mail pour commencer. Enregistrer tes séances et les publier sur Strava, c'est gratuit.",
+  "auth.signUpBody": "Saisis ton e-mail pour commencer.",
   "auth.secondFactorOnWeb":
     "Ce compte demande une autre étape de connexion que l'app ne gère pas encore. Connecte-toi sur sendtally.com pour terminer.",
   "auth.googleIncomplete": "La connexion Google n'a pas abouti. Réessaie.",
@@ -38,7 +37,7 @@ export const auth = {
   "auth.signInTitle": "connexion - sendtally",
   "auth.signUpTitle": "crée ton compte - sendtally",
   "auth.stravaConnectedTitle": "Strava connecté - sendtally",
-  "auth.footer": "gratuit · sans lien avec Strava",
+  "auth.footer": "sans lien avec Strava",
   "auth.stepSignIn": "Connexion",
   "auth.stepAccount": "Étape 1 sur 2 · compte",
   "auth.signInIncomplete": "Connexion incomplète (statut : {status}). Essaie de renvoyer le code.",

@@ -5,8 +5,7 @@ export const auth = {
   "auth.signInHeading": "Welcome back.",
   "auth.signInBody": "Enter the email you signed up with.",
   "auth.signUpHeading": "Create your account.",
-  "auth.signUpBody":
-    "Enter your email to get started. Logging sessions and posting them to Strava are free.",
+  "auth.signUpBody": "Enter your email to get started.",
   "auth.secondFactorOnWeb":
     "This account needs another sign-in step the app can't do yet. Sign in at sendtally.com to finish.",
   "auth.googleIncomplete": "Google sign-in didn't complete. Try again.",
@@ -36,7 +35,7 @@ export const auth = {
   "auth.signInTitle": "sign in - sendtally",
   "auth.signUpTitle": "create your account - sendtally",
   "auth.stravaConnectedTitle": "Strava connected - sendtally",
-  "auth.footer": "free · not affiliated with Strava",
+  "auth.footer": "not affiliated with Strava",
   "auth.stepSignIn": "Sign in",
   "auth.stepAccount": "Step 1 of 2 · account",
   "auth.signInIncomplete": "Sign-in incomplete (status: {status}). Try resending.",
