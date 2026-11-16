@@ -42,7 +42,7 @@ import {
   type ClimbDraft,
 } from "@sendtally/features/log-session";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { DateTimeField } from "../../components/DateTimeField";
 import { GradeChips } from "../../components/GradeChips";
 import { Segmented } from "../../components/Segmented";
@@ -397,7 +397,7 @@ export function AddClimbScreen(): React.ReactElement {
               justifyContent: "center",
               borderRadius: radius.control,
               backgroundColor: colors.azureInk,
-              opacity: !valid || saving ? 0.45 : 1,
+              opacity: !valid || saving ? disabledOpacity : 1,
             })}
           >
             <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>

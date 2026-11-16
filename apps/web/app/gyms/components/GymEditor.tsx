@@ -27,6 +27,7 @@ import {
 } from "../../settings/components/styles";
 import { CircuitRow } from "./CircuitRow";
 import { inputStyle, sectionLabel } from "../../components/styles";
+import { disabledOpacity } from "@sendtally/design/tokens";
 
 const control: React.CSSProperties = { ...inputStyle, height: 44, padding: "0 12px" };
 
@@ -218,7 +219,7 @@ export function GymEditor({
               height: 44,
               padding: 0,
               flex: "none",
-              opacity: wall.trim() === "" ? 0.4 : 1,
+              opacity: wall.trim() === "" ? disabledOpacity : 1,
             }}
           >
             <Icon name="plus" size={16} strokeWidth={2.2} />
@@ -246,7 +247,7 @@ export function GymEditor({
             color: "var(--bs-white)",
             border: "none",
             cursor: "pointer",
-            opacity: saving ? 0.45 : 1,
+            opacity: saving ? disabledOpacity : 1,
           }}
         >
           {saving ? t("gyms.saving") : t("gyms.save")}

@@ -9,6 +9,7 @@ import { BlockWeekBars } from "../training/blocks/BlockWeekBars";
 import { Label } from "../training/components/Label";
 import { ON_DARK, ON_DARK_MUTED } from "@sendtally/features/workouts";
 import { type } from "../training/type";
+import { blockName } from "@sendtally/features/training";
 
 const CARD_HEIGHT = 82;
 const MARGIN = 8;
@@ -29,7 +30,7 @@ export function BlockDoneRow({ recap, onPress }: BlockDoneRowProps): React.React
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={`${t("plan.blockFinished")}, ${block.name}, ${meta}`}
+        accessibilityLabel={`${t("plan.blockFinished")}, ${blockName(block)}, ${meta}`}
         style={pressRow({
           height: CARD_HEIGHT,
           flexDirection: "row",
@@ -73,7 +74,7 @@ export function BlockDoneRow({ recap, onPress }: BlockDoneRowProps): React.React
             numberOfLines={1}
             style={[type.display, { fontSize: 19, lineHeight: 22, color: ON_DARK }]}
           >
-            {block.name}
+            {blockName(block)}
           </Text>
           <Text numberOfLines={1} style={[type.mono, { fontSize: 11, color: ON_DARK_MUTED }]}>
             {meta}

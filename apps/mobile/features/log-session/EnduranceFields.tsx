@@ -17,7 +17,7 @@ import {
   type ClimbDraft,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { SelectRow } from "../../components/SelectRow";
 import { UnitToggle } from "./UnitToggle";
@@ -56,7 +56,7 @@ function Stepper({
         borderColor: colors.lineOnLightStrong,
         alignItems: "center",
         justifyContent: "center",
-        opacity: disabled ? 0.4 : 1,
+        opacity: disabled ? disabledOpacity : 1,
       })}
     >
       <Text style={{ fontFamily: fonts.monoMedium, fontSize: 17, color: colors.gunmetal }}>

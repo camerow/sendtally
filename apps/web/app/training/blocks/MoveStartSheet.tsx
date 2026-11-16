@@ -5,6 +5,7 @@ import { t } from "@sendtally/features/i18n";
 import { Sheet } from "../../components/Sheet";
 import { useHangData } from "../data/HangDataContext";
 import { StartPicker } from "./StartPicker";
+import { blockName } from "@sendtally/features/training";
 
 export type MoveStartSheetProps = {
   block: DatedBlock;
@@ -23,7 +24,7 @@ export function MoveStartSheet({
   return (
     <Sheet
       open
-      kicker={block.name}
+      kicker={blockName(block)}
       title={t("plan.planAgainStart")}
       onClose={onClose}
       action={{

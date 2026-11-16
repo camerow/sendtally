@@ -38,6 +38,7 @@ import { useAppApi } from "../../lib/useAppApi";
 import { useGoBack } from "../../lib/useGoBack";
 import { SentResultControl } from "../../log-session/components/SentResultControl";
 import { SuggestField } from "./SuggestField";
+import { EditorBar } from "../../components/detail/EditorBar";
 
 type Area = { id: string; name: string };
 
@@ -171,12 +172,7 @@ export function AddClimb(): React.ReactElement {
 
   return (
     <div className="detail">
-      <div className="editor-bar">
-        <button type="button" className="editor-cancel" onClick={goBack}>
-          {t("common.cancel")}
-        </button>
-        <h1 className="editor-title">{title}</h1>
-      </div>
+      <EditorBar title={title} heading cancelLabel={t("common.cancel")} onCancel={goBack} />
       <div className="detail-body add-climb-body">
         {failed && <span className="add-climb-error">{t("climbs.saveFailed")}</span>}
         {!logging && (

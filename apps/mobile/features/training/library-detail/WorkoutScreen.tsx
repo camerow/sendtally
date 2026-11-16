@@ -13,6 +13,7 @@ import {
   useTrainingLog,
   type Occurrence,
   plannedItems,
+  blockName,
 } from "@sendtally/features/training";
 import { workoutMinutes, type LibraryWorkout, type WorkoutUse } from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
@@ -152,7 +153,7 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
       <LibraryIntro
         workout={workout}
         use={use}
-        {...(run !== undefined && run.block !== null && { kicker: run.block.name })}
+        {...(run !== undefined && run.block !== null && { kicker: blockName(run.block) })}
         {...(run !== undefined && {
           day: <DayLine week={run.week} date={run.date} missed={missed} />,
         })}

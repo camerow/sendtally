@@ -5,7 +5,7 @@ import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GoogleMark, useSignInFlow } from "@sendtally/auth-native";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
 import { logConversion } from "../features/analytics/conversions";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
@@ -136,7 +136,7 @@ export default function SignIn(): React.ReactElement | null {
                     buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
                     cornerRadius={radius.control}
                     onPress={() => void (busy ? undefined : flow.continueWithApple())}
-                    style={{ height: 48, opacity: busy ? 0.45 : 1 }}
+                    style={{ height: 48, opacity: busy ? disabledOpacity : 1 }}
                   />
                 )}
                 <Pressable
@@ -153,7 +153,7 @@ export default function SignIn(): React.ReactElement | null {
                     borderRadius: radius.control,
                     paddingVertical: 13,
                     minHeight: 48,
-                    opacity: busy ? 0.45 : 1,
+                    opacity: busy ? disabledOpacity : 1,
                   }}
                 >
                   <GoogleMark />
@@ -207,7 +207,7 @@ export default function SignIn(): React.ReactElement | null {
                 minHeight: 48,
                 alignItems: "center",
                 justifyContent: "center",
-                opacity: busy ? 0.45 : 1,
+                opacity: busy ? disabledOpacity : 1,
               }}
             >
               <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.white }}>

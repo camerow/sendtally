@@ -59,33 +59,21 @@ export function OngoingPage(): React.ReactElement {
   return (
     <DetailFrame
       backTo="/app/train"
-      action={
-        draft.editing ? (
-          <button
-            type="button"
-            className="outline-action outline-action--danger"
-            onClick={() => guard.ask(draft.cancel)}
-          >
-            {t("common.cancel")}
-          </button>
-        ) : (
-          <button type="button" className="outline-action" onClick={draft.begin}>
-            {t("common.edit")}
-          </button>
-        )
-      }
-      footer={
-        draft.editing ? (
-          <button type="button" className="detail-primary" onClick={draft.save}>
-            {t("common.save")}
-          </button>
-        ) : undefined
-      }
+      {...(draft.editing
+        ? {
+            onBack: () => guard.ask(draft.cancel),
+            editor: { title: t("plan.editOngoing"), onSave: draft.save, solid: true },
+          }
+        : {
+            action: (
+              <button type="button" className="outline-action" onClick={draft.begin}>
+                {t("common.edit")}
+              </button>
+            ),
+          })}
     >
       <div className="schedule-head">
-        <h1 className="schedule-title">
-          {draft.editing ? t("plan.editOngoing") : t("plan.ongoing")}
-        </h1>
+        <h1 className="schedule-title">{t("plan.ongoing")}</h1>
         <span className="plan-row-meta">{t("plan.ongoingRepeats")}</span>
       </div>
       {rows.length > 0 && (

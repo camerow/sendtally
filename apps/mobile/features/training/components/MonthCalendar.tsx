@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { colors } from "@sendtally/design/tokens";
+import { colors, disabledOpacity } from "@sendtally/design/tokens";
 import {
   addDays,
   addMonths,
@@ -133,7 +133,7 @@ export function MonthCalendar({
                         {
                           fontSize: 14,
                           color: on ? colors.white : colors.gunmetal,
-                          opacity: off ? 0.3 : 1,
+                          opacity: off ? disabledOpacity : 1,
                         },
                       ]}
                     >

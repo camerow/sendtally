@@ -82,7 +82,7 @@ const mount = (live = false): void =>
 
 const click = (el: Element | null | undefined): void => act(() => (el as HTMLElement).click());
 const rows = (): NodeListOf<Element> => container.querySelectorAll("[data-testid=review-set]");
-const save = (): void => click(container.querySelector(".detail-primary"));
+const save = (): void => click(container.querySelector(".editor-bar-save"));
 const saved = (): ActivityDraft["done"] =>
   (writes.saveActivity.mock.calls[0] as unknown as [{ done: ActivityDraft["done"] }])[0].done;
 
@@ -110,7 +110,7 @@ describe("ActivityForm", () => {
       });
     running();
     mount(true);
-    click(container.querySelector(".detail-back"));
+    click(container.querySelector(".editor-bar-cancel"));
     expect(store.read()).not.toBeNull();
     click(document.querySelector(".sheet-action--danger"));
     expect(store.read()).toBeNull();

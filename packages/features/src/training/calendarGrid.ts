@@ -8,6 +8,7 @@ import {
   type CalendarDate,
 } from "@sendtally/core/hang";
 import { t } from "../i18n";
+import { blockName } from "./blockText";
 
 /** A block over one week row: which block, and which of its weeks the row is. */
 export type Band = { block: Block; week: number };
@@ -39,7 +40,7 @@ export function bandText(blocks: readonly Block[], monday: CalendarDate): string
   const band = bandOn(blocks, monday);
   return band === null
     ? null
-    : t("calendar.band", { name: band.block.name, at: band.week, of: band.block.weeks });
+    : t("calendar.band", { name: blockName(band.block), at: band.week, of: band.block.weeks });
 }
 
 /** A month grid day: off outside the bounds, on when picked (the selected day if none are listed). */

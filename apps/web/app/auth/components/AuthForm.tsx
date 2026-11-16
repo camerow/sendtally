@@ -9,6 +9,7 @@ import { PRIVACY_PATH, TERMS_PATH } from "../../legal/constants";
 import { SSO_RETURN_PARAM } from "../ssoReturn";
 import type { AuthIntent } from "../types";
 import { t } from "@sendtally/features/i18n";
+import { disabledOpacity } from "@sendtally/design/tokens";
 
 const inputStyle: React.CSSProperties = {
   fontFamily: "var(--font-sans)",
@@ -532,7 +533,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
             <button
               onClick={() => void signInWithPassword()}
               disabled={busy}
-              style={{ ...azureButton, opacity: busy ? 0.45 : 1 }}
+              style={{ ...azureButton, opacity: busy ? disabledOpacity : 1 }}
             >
               {t("common.signIn")}
             </button>
@@ -594,7 +595,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
             <button
               onClick={() => void verifyCode()}
               disabled={busy}
-              style={{ ...azureButton, opacity: busy ? 0.45 : 1 }}
+              style={{ ...azureButton, opacity: busy ? disabledOpacity : 1 }}
             >
               {phase.mode === "sign-up" ? t("common.createAccount") : t("common.signIn")}
             </button>
@@ -621,7 +622,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
         <button
           onClick={() => void continueWithGoogle()}
           disabled={busy}
-          style={{ ...oauthButton, opacity: busy ? 0.45 : 1 }}
+          style={{ ...oauthButton, opacity: busy ? disabledOpacity : 1 }}
         >
           <GoogleMark />
           {t("auth.continueWithGoogle")}
@@ -650,7 +651,7 @@ export function AuthForm({ intent }: { intent: AuthIntent }): React.ReactElement
           <button
             onClick={() => void sendCode()}
             disabled={busy}
-            style={{ ...azureButton, opacity: busy ? 0.45 : 1 }}
+            style={{ ...azureButton, opacity: busy ? disabledOpacity : 1 }}
           >
             {intent === "sign-in" ? t("auth.login") : t("auth.continue")}
           </button>

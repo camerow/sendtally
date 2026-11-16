@@ -1,7 +1,12 @@
 import React from "react";
 import type { DatedBlock, Membership } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { type WorkoutLookup, planGridRows, blockDateRange } from "@sendtally/features/training";
+import {
+  type WorkoutLookup,
+  planGridRows,
+  blockDateRange,
+  blockName,
+} from "@sendtally/features/training";
 import { DashedPanel } from "../components/DashedPanel";
 import { useHangData } from "../data/HangDataContext";
 import { PlanGrid } from "../plan/PlanGrid";
@@ -23,10 +28,10 @@ export function BlockCard({ block, members, workout }: BlockCardProps): React.Re
   });
   return (
     <PlanCard
-      title={block.name}
+      title={blockName(block)}
       subtitle={blockDateRange(block)}
       open={{
-        label: t("plan.openBlock", { name: block.name }),
+        label: t("plan.openBlock", { name: blockName(block) }),
         onPress: () => openBlock(block.id, t("training.train")),
       }}
     >

@@ -15,7 +15,8 @@ import {
 } from "@sendtally/features/areas";
 import { t } from "@sendtally/features/i18n";
 import { gradeOptions, scaleLabel, scaleOptionsFor } from "@sendtally/features/log-session";
-import { colors, fonts } from "@sendtally/design/tokens";
+import { colors, sheetTitleSize } from "@sendtally/design/tokens";
+import { Title } from "../training/components/Title";
 import { Chip } from "../../components/Chip";
 import { Sheet } from "../../components/Sheet";
 import { useApi } from "../../lib/api";
@@ -79,11 +80,11 @@ function ClimbForm({
 
   return (
     <View style={{ gap: 14, paddingHorizontal: 18, paddingTop: 2, paddingBottom: 4 }}>
-      <Text style={{ fontFamily: fonts.display, fontSize: 24, color: colors.gunmetal }}>
+      <Title size={sheetTitleSize}>
         {sessionArea === null
           ? t("areas.addAClimb")
           : t("areas.addClimbIn", { name: sessionArea.name })}
-      </Text>
+      </Title>
       <View style={{ gap: 7 }}>
         <Text style={fieldLabel}>{t("areas.name")}</Text>
         <TextInput

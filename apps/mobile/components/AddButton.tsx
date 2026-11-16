@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable } from "react-native";
-import { colors } from "@sendtally/design/tokens";
+import { colors, disabledOpacity } from "@sendtally/design/tokens";
 import { press } from "../lib/press";
 import { Icon } from "./Icon";
 
@@ -29,7 +29,7 @@ export function AddButton({
         justifyContent: "center",
         borderRadius: 18,
         backgroundColor: colors.gunmetal,
-        opacity: disabled ? 0.4 : 1,
+        opacity: disabled ? disabledOpacity : 1,
       })}
     >
       <Icon name="plus" color={colors.white} size={18} strokeWidth={2.5} />

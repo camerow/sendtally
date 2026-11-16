@@ -15,7 +15,7 @@ import {
   type NumberLimits,
   type TimeLimits,
 } from "@sendtally/core/hang";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { press } from "../lib/press";
 import { Sheet } from "./Sheet";
@@ -212,7 +212,7 @@ export function Keypad({
         height: 36,
         alignItems: "center",
         justifyContent: "center",
-        opacity: onPress === null ? 0.3 : 1,
+        opacity: onPress === null ? disabledOpacity : 1,
       })}
     >
       <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 22, color: colors.gunmetal }}>

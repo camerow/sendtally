@@ -12,6 +12,7 @@ import {
   loadSummary,
   toggleIn,
   removeText,
+  blockName,
 } from "@sendtally/features/training";
 import { exerciseName } from "@sendtally/features/workouts";
 import { MoreMenu } from "../../components/MoreMenu";
@@ -103,14 +104,12 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
       wide
       backTo={BACK_TO}
       {...(editing && {
-        backLabel: t("common.cancel"),
-        danger: true,
         onBack: () => guard.ask(draft.cancel),
-        footer: (
-          <button type="button" className="detail-primary" onClick={draft.save}>
-            {t("common.save")}
-          </button>
-        ),
+        editor: {
+          title: t("plan.editInBlock", { block: blockName(block) }),
+          onSave: draft.save,
+          solid: true,
+        },
       })}
       action={
         !editing && (
@@ -140,10 +139,8 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
       }
     >
       <div className="block-head">
-        <span className="train-label" style={{ color: editing ? undefined : look.ink }}>
-          {editing
-            ? t("plan.editInBlock", { block: block.name })
-            : `${block.name} · ${kindLabel(w.kind)}`}
+        <span className="train-label" style={{ color: look.ink }}>
+          {`${blockName(block)} · ${kindLabel(w.kind)}`}
         </span>
         <h1 className="block-title">{w.name}</h1>
         {lines.map((line) => (

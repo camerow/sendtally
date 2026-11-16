@@ -8,7 +8,7 @@ import {
   type ClimbDraft,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts } from "@sendtally/design/tokens";
 import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
 import { press, pressRow, tap } from "../../lib/press";
@@ -50,7 +50,7 @@ function Stepper({
         borderColor: "rgba(64,63,76,0.18)",
         alignItems: "center",
         justifyContent: "center",
-        opacity: disabled ? 0.35 : 1,
+        opacity: disabled ? disabledOpacity : 1,
       })}
     >
       <Text style={{ fontFamily: fonts.monoMedium, fontSize: 15, color: colors.gunmetal }}>

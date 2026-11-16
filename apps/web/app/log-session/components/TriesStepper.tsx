@@ -2,6 +2,7 @@ import React from "react";
 import { t } from "@sendtally/features/i18n";
 import { Glyph } from "./Glyph";
 import { MINUS, PLUS, stepperButton } from "./styles";
+import { disabledOpacity } from "@sendtally/design/tokens";
 
 export type TriesStepperProps = {
   tries: number;
@@ -22,7 +23,7 @@ export function TriesStepper({
         aria-label={t("logSession.fewerTries")}
         disabled={tries <= 1}
         onClick={() => onChange(tries - 1)}
-        style={{ ...button, opacity: tries <= 1 ? 0.4 : 1 }}
+        style={{ ...button, opacity: tries <= 1 ? disabledOpacity : 1 }}
       >
         <Glyph d={MINUS} />
       </button>
@@ -42,7 +43,7 @@ export function TriesStepper({
         aria-label={t("logSession.moreTries")}
         disabled={tries >= 99}
         onClick={() => onChange(tries + 1)}
-        style={{ ...button, opacity: tries >= 99 ? 0.4 : 1 }}
+        style={{ ...button, opacity: tries >= 99 ? disabledOpacity : 1 }}
       >
         <Glyph d={PLUS} />
       </button>

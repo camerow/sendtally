@@ -350,7 +350,7 @@
 }
 
 .climb-ledger-stepper button:disabled {
-  opacity: 0.35;
+  opacity: var(--opacity-disabled);
   cursor: default;
 }
 
@@ -485,15 +485,6 @@ body:has(.climb-sheet[open]) {
   gap: 3px;
 }
 
-.climb-sheet-title {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 18px;
-  line-height: 1.25;
-  color: var(--bs-gunmetal);
-}
-
 .climb-sheet-count {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -536,7 +527,7 @@ body:has(.climb-sheet[open]) {
 
 .climb-sheet-done:disabled {
   cursor: default;
-  opacity: 0.6;
+  opacity: var(--opacity-disabled);
 }
 
 .climb-sheet-actions {
