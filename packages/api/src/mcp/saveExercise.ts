@@ -59,7 +59,7 @@ export const saveExercise: ConnectorTool<typeof inputSchema> = {
   inputSchema,
   annotations: { readOnlyHint: false, destructiveHint: false },
   run: async ({ key, id: editing, ...body }, { env, userId }) => {
-    const library = await repo.library(env.DB);
+    const library = await repo.library(env.DB, env.MEDIA_URL);
     if (editing !== undefined) {
       owned(
         await repo.getExercise(env.DB, userId, editing),

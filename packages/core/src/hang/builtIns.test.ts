@@ -8,6 +8,7 @@ const half: BuiltInGripEntry = {
   name: "Half crimp",
   description: "Index to ring at ninety degrees.",
   translations: { de: { name: "Halbe Leiste" }, fr: { name: "", description: "" } },
+  media: [],
   updatedAt: null,
 };
 

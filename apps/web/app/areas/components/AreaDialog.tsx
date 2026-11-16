@@ -10,6 +10,8 @@ export type AreaDialogProps = {
   error: string | null;
   /** Contributions to Areas are CC0, so every form that adds to it says so beside the button. */
   licence?: boolean;
+  /** Deletes something, so the button is the red outline rather than azure. */
+  destructive?: boolean;
   onClose: () => void;
   onSubmit: () => void;
   children: React.ReactNode;
@@ -40,6 +42,7 @@ export function AreaDialog({
   busy,
   error,
   licence = false,
+  destructive = false,
   onClose,
   onSubmit,
   children,
@@ -91,7 +94,7 @@ export function AreaDialog({
             <Button variant="ghostOnLight" onClick={onClose}>
               {t("common.cancel")}
             </Button>
-            <Button variant="azure" disabled={busy} onClick={onSubmit}>
+            <Button variant={destructive ? "danger" : "azure"} disabled={busy} onClick={onSubmit}>
               {busy ? t("common.saving") : submitLabel}
             </Button>
           </div>

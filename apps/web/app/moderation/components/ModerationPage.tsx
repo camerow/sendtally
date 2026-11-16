@@ -9,7 +9,7 @@ import {
   type ModerationTab,
 } from "@sendtally/features/areas";
 import { formatNumber } from "@sendtally/features/i18n";
-import { filterCounts } from "@sendtally/features/library";
+import { libraryTabCount } from "@sendtally/features/library";
 import { queries, useQuery } from "@sendtally/features/query";
 import { useClientApi } from "../../lib/useClientApi";
 import { CreationsPanel } from "./CreationsPanel";
@@ -50,7 +50,7 @@ export function ModerationPage({ apiUrl }: { apiUrl: string }): React.ReactEleme
   const current = queue === null || tab === "library" ? null : queue[tab];
   const count = (value: ModerationTab): number | null => {
     if (value !== "library") return queue?.[value].count ?? null;
-    return library.status === "ready" ? filterCounts(library.data).noDescription : null;
+    return library.status === "ready" ? libraryTabCount(library.data) : null;
   };
 
   return (

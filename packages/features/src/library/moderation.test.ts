@@ -1,20 +1,35 @@
 import { describe, expect, it } from "vitest";
 import type { LibraryChange } from "@sendtally/api-client";
 import {
+  changeRestore,
   changeSummary,
   descriptionSummary,
   entryKicker,
   filterCounts,
   libraryGroups,
+  libraryTabCount,
+  pictureSummary,
 } from "./moderation";
 import { TEST_LIBRARY } from "./testLibrary";
+
+const picture = {
+  kind: "picture" as const,
+  url: "https://media.test/a-1600.jpg",
+  thumbUrl: "https://media.test/a-144.jpg",
+  width: 1600,
+  height: 1200,
+  alt: "Four fingers on an edge",
+  credit: "",
+};
 
 const library = {
   ...TEST_LIBRARY,
   grips: TEST_LIBRARY.grips.map((g) =>
     g.id === "mono"
       ? { ...g, status: "retired" as const }
-      : { ...g, description: g.id === "half" ? "Index to ring." : "" }
+      : g.id === "half"
+        ? { ...g, description: "Index to ring.", media: [picture, picture] }
+        : { ...g, description: "" }
   ),
 };
 
@@ -52,8 +67,13 @@ describe("moderation library", () => {
     expect(filterCounts(library)).toEqual({
       all: offered,
       noDescription: offered - TEST_LIBRARY.workouts.filter((w) => w.description !== "").length - 1,
+      noPicture: offered - 1,
       retired: 1,
     });
+    expect(libraryTabCount(library)).toBe(offered - 1);
+    const half = library.grips.find((g) => g.id === "half")!;
+    expect(pictureSummary(half)).toBe("2 pictures");
+    expect(pictureSummary(library.grips[1]!)).toBe("No picture");
   });
 
   it("says what a description holds", () => {
@@ -74,6 +94,28 @@ describe("moderation library", () => {
     expect(
       changeSummary({ before: state(), after: state({ name: "Half", translations: {} }) })
     ).toBe("Name and other names edited");
+  });
+
+  it("names a change to the pictures, and offers Restore unless a file came or went", () => {
+    const a = { id: "a", alt: "", credit: "" };
+    const b = { id: "b", alt: "Edge", credit: "" };
+    const pictures = (before: (typeof a)[], after: (typeof a)[]) => ({
+      before: state({ media: before }),
+      after: state({ media: after }),
+    });
+    expect(changeSummary(pictures([a], [a, b]))).toBe("Picture added");
+    expect(changeRestore(pictures([a], [a, b]))).toBeNull();
+    expect(changeSummary(pictures([a, b], [a]))).toBe("Picture deleted");
+    expect(changeRestore(pictures([a, b], [a]))).toBe("permanent");
+    expect(changeSummary(pictures([a, b], [b, a]))).toBe("Picture 2 moved up");
+    expect(changeSummary(pictures([a], [{ ...a, alt: "Wall" }]))).toBe("Picture 1 alt text edited");
+    expect(changeSummary(pictures([a], [{ ...a, credit: "Will" }]))).toBe(
+      "Picture 1 credit edited"
+    );
+    expect(changeRestore(pictures([a, b], [b, a]))).toBe("restore");
+    expect(changeRestore({ before: state(), after: state({ description: "New" }) })).toBe(
+      "restore"
+    );
   });
 
   it("titles an item by its category and type", () => {

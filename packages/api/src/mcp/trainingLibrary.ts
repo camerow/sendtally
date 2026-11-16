@@ -31,7 +31,7 @@ export const trainingLibrary: ConnectorTool<typeof inputSchema> = {
     const [exerciseRows, workoutRows, library] = await Promise.all([
       repo.listExercises(env.DB, userId),
       repo.listWorkouts(env.DB, userId),
-      repo.library(env.DB),
+      repo.library(env.DB, env.MEDIA_URL),
     ]);
     const active = <T extends { status: string }>(entries: T[]): T[] =>
       entries.filter((e) => e.status === "active");

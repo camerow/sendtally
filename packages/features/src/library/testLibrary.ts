@@ -14,6 +14,7 @@ const base = (id: string, name: string, [de, fr, es]: Names) => ({
   name,
   description: "",
   translations: { de: { name: de }, fr: { name: fr }, es: { name: es } },
+  media: [],
   updatedAt: null,
 });
 

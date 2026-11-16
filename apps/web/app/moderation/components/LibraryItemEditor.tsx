@@ -6,6 +6,7 @@ import { Button } from "@sendtally/design";
 import { formatDate, formatNumber } from "@sendtally/features/i18n";
 import {
   categoryLabel,
+  changeRestore,
   changeSummary,
   entryKicker,
   entryKind,
@@ -16,6 +17,7 @@ import { AreaDialog } from "../../areas/components/AreaDialog";
 import { Field } from "../../areas/components/Field";
 import { inputStyle } from "../../components/styles";
 import { Description } from "../../training/components/Description";
+import { LibraryMediaCard } from "./LibraryMediaCard";
 
 const LANGUAGES: Record<TranslatedLocale, string> = {
   de: "German",
@@ -162,6 +164,13 @@ export function LibraryItemEditor({
           </Field>
         </div>
         <div className="mod-lib-preview" aria-label="Preview">
+          {entry.media[0] !== undefined && (
+            <img
+              className="mod-lib-preview-picture"
+              src={entry.media[0].url}
+              alt={entry.media[0].alt}
+            />
+          )}
           <span className="mod-lib-mono" style={{ color: KIND_LOOK[kind].ink }}>
             {categoryLabel(kind)}
           </span>
@@ -170,13 +179,15 @@ export function LibraryItemEditor({
         </div>
       </div>
 
+      <LibraryMediaCard editing={editing} />
+
       <section className="mod-card" aria-label="Changes">
         <span className="mod-lib-mono mod-muted">Changes</span>
-        {editing.changes.status === "ready" && editing.changes.data.length === 0 && (
+        {editing.item.status === "ready" && editing.item.data.changes.length === 0 && (
           <span className="mod-muted">Seeded, not changed since.</span>
         )}
-        {editing.changes.status === "ready" &&
-          editing.changes.data.map((change) => (
+        {editing.item.status === "ready" &&
+          editing.item.data.changes.map((change) => (
             <div key={change.id} className="mod-lib-change">
               <span className="mod-lib-faint">
                 {formatDate(new Date(change.changedAt), {
@@ -189,14 +200,19 @@ export function LibraryItemEditor({
               </span>
               <span>{change.changedBy}</span>
               <span>{changeSummary(change)}</span>
-              <Button
-                variant="ghostOnLight"
-                size="sm"
-                onClick={() => void run(() => editing.restore(change.id))}
-                disabled={busy}
-              >
-                Restore
-              </Button>
+              {changeRestore(change) === "restore" && (
+                <Button
+                  variant="ghostOnLight"
+                  size="sm"
+                  onClick={() => void run(() => editing.restore(change.id))}
+                  disabled={busy}
+                >
+                  Restore
+                </Button>
+              )}
+              {changeRestore(change) === "permanent" && (
+                <span className="mod-lib-faint">Permanent</span>
+              )}
             </div>
           ))}
       </section>
