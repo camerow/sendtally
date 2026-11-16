@@ -43,7 +43,8 @@ export function SetRow({
   onChange,
   onToggle,
 }: SetRowProps): React.ReactElement {
-  const last = previous === undefined ? "" : setText(previous, unit);
+  const last =
+    previous === undefined ? "" : rpe ? setChip(previous, unit) : setText(previous, unit);
   return (
     <div className={current ? "set-row set-row--current" : "set-row"}>
       <span className="set-col-n">{formatNumber(n)}</span>

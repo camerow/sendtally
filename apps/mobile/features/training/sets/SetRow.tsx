@@ -50,6 +50,8 @@ export function SetRow({
   onChange,
   onToggle,
 }: SetRowProps): React.ReactElement {
+  const last =
+    previous === undefined ? "" : rpe ? setChip(previous, unit) : setText(previous, unit);
   return (
     <View
       style={[
@@ -73,9 +75,9 @@ export function SetRow({
         >
           {setChip(target, unit, repsMax) || "-"}
         </Text>
-        {previous !== undefined && setText(previous, unit) !== "" && (
+        {last !== "" && (
           <Text style={[type.mono, { fontSize: 11, color: colors.textMuted }]}>
-            {t("activities.previousSet", { set: setText(previous, unit) })}
+            {t("activities.previousSet", { set: last })}
           </Text>
         )}
       </View>
