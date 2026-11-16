@@ -453,17 +453,6 @@
   cursor: default;
 }
 
-.sheet-outline {
-  border: 1px solid var(--line-on-light-strong);
-  border-radius: var(--radius-control);
-  background: var(--bs-white);
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--bs-gunmetal);
-  cursor: pointer;
-}
-
 .sheet-secondary {
   align-self: flex-end;
   min-height: 44px;
@@ -476,10 +465,6 @@
   font-size: 15px;
   color: var(--bs-watermelon-ink);
   cursor: pointer;
-}
-
-.sheet-secondary--muted {
-  color: var(--text-on-white-secondary);
 }
 
 .more-wrap {
@@ -844,16 +829,38 @@
   resize: vertical;
 }
 
-.danger-outline {
-  min-height: 48px;
-  border: 1px solid var(--bs-watermelon-ink);
+.outline-button {
+  box-sizing: border-box;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  border: 1px solid var(--line-on-light-strong);
   border-radius: var(--radius-control);
   background: var(--bs-white);
-  color: var(--bs-watermelon-ink);
   font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
+  color: var(--bs-gunmetal);
+  text-decoration: none;
   cursor: pointer;
+}
+
+.outline-button:hover {
+  background: var(--surface-soft);
+}
+
+.outline-button--wide {
+  width: 100%;
+  height: 48px;
+  font-size: 15px;
+}
+
+.outline-button--danger {
+  border-color: var(--bs-watermelon-ink);
+  color: var(--bs-watermelon-ink);
 }
 
 .sheet-body {
@@ -1233,10 +1240,15 @@
   min-height: 50px;
 }
 
-.already-running-actions .sheet-secondary {
-  align-self: stretch;
+.already-running-actions .already-running-cancel {
   min-height: 44px;
-  margin-right: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-on-white-secondary);
+  cursor: pointer;
 }
 
 /* Back, as every page draws it (components/BackLink.tsx), and a live page's Minimise */
