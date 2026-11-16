@@ -4,7 +4,6 @@ import { effortWord } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Sheet } from "../../components/Sheet";
-import { press } from "../../lib/press";
 import { Button } from "../training/components/Button";
 
 export type FinishSheetProps = {
@@ -85,17 +84,12 @@ export function FinishSheet({
           variant="primary"
           height={54}
         />
-        <Pressable
+        <Button
+          label={t("tally.discardSession")}
           onPress={onDiscard}
-          accessibilityRole="button"
-          style={press({ height: 44, alignItems: "center", justifyContent: "center" })}
-        >
-          <Text
-            style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.watermelonInk }}
-          >
-            {t("tally.discardSession")}
-          </Text>
-        </Pressable>
+          variant="danger"
+          height={44}
+        />
       </View>
     </Sheet>
   );
