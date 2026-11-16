@@ -3,6 +3,7 @@ import { Image, ScrollView, Text, View } from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import type { LibraryPicture } from "@sendtally/core/hang";
 import { colors, fonts } from "@sendtally/design/tokens";
+import { t } from "@sendtally/features/i18n";
 
 export type DetailHeroProps = {
   pictures: readonly LibraryPicture[];
@@ -76,6 +77,7 @@ export function DetailHero({
   return (
     <View style={{ width, height, backgroundColor: colors.surfaceSoft }}>
       <ScrollView
+        accessibilityLabel={t("workouts.pictures")}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}

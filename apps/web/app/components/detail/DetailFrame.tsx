@@ -51,6 +51,8 @@ export function DetailFrame({
         <div className={hero.length > 1 ? "detail-hero detail-hero--several" : "detail-hero"}>
           <div
             className="detail-hero-pager"
+            role="region"
+            aria-label={t("workouts.pictures")}
             tabIndex={hero.length > 1 ? 0 : undefined}
             onScroll={(e) =>
               setPage(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))

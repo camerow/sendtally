@@ -20,6 +20,7 @@ export const workouts = {
   "workouts.description": "Description",
   "workouts.descriptionPlaceholder": "À quoi elle sert, et comment la faire",
   "workouts.aboutExercise": "À propos de cet exercice",
+  "workouts.pictures": "Photos",
   "workouts.noBody": "Aucun exercice ni étape. Modifie-la pour en ajouter.",
   "workouts.duplicate": "Dupliquer",
   "workouts.delete": "Supprimer la séance",
