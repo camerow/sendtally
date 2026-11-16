@@ -260,6 +260,13 @@
       "when": 1794792133299,
       "tag": "0041_library_climbing",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "6",
+      "when": 1794820042669,
+      "tag": "0042_library_media",
+      "breakpoints": true
     }
   ]
 }

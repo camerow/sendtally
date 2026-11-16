@@ -7,6 +7,7 @@ Terraform owns the account-level Cloudflare resources for sendtally in the
 - DNS records that are not Worker hostnames (Clerk, mail, verification)
 - the redirect rule that sends `www.sendtally.com` to the apex
 - D1 databases (`sendtally-staging`, `sendtally-production`)
+- R2 buckets for library pictures (`sendtally-media-staging`, `sendtally-media-production`) and their public hosts (`media-staging.sendtally.com`, `media.sendtally.com`)
 
 `www` is a proxied CNAME, so Cloudflare answers for it but has no origin behind
 it - the Worker custom domain covers the apex only. Without the redirect rule in
@@ -58,6 +59,7 @@ Create at dash.cloudflare.com/profile/api-tokens ("Create Custom Token"):
 | Account | Account Settings     | Read  |
 | Account | Workers Scripts      | Edit  |
 | Account | D1                   | Edit  |
+| Account | Workers R2 Storage   | Edit  |
 | Account | Queues               | Edit  |
 | Zone    | Zone                 | Edit  |
 | Zone    | Zone Settings        | Edit  |
@@ -78,6 +80,8 @@ plans the ruleset happily and then fails the apply with a bare
 - New DNS record: add to `dns_records.auto.tfvars`, open a pull request, `terraform apply` once it merges.
 - New D1 environment: extend `local.environments` in `d1.tf`, apply,
   then paste the id from `terraform output d1_database_ids` into `wrangler.jsonc`.
+- R2 buckets: the API Worker binds them in `wrangler.jsonc`, and a deploy fails while a bound bucket is missing, so apply a new bucket before the change that binds it merges (the one exception to apply-after-merge).
+  `prevent_destroy` is on for them too.
 - D1 schema changes stay in Drizzle + `wrangler d1 migrations apply`; Terraform
   never touches table contents.
 - `prevent_destroy` is on for D1. Removing an environment needs a deliberate
