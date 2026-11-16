@@ -114,7 +114,7 @@ Kind and colour are the non-grip majority's.
 - A mix opens the sets or checklist player even when every item is timed; the part is one card in item order where its first grip sits, with Start.
 - Not started: the grips, each with its dose and planned edge and load, and Start.
 - Running: Start opens the hang timer on the part's grips only; the timer's minimise returns to the workout view with the part shown as running, and its live bar entry reopens the timer.
-- Finished: the timer's finish returns to the workout view instead of the hang review; the card shows each grip's sets held, edge and load, editable in place; the next item is live.
+- Finished: the timer's finish returns to the workout view instead of the hang review; the card is always-editable set rows per grip, like any other exercise (Will, 2026-11-16: no Edit button): target hangs, hangs done, load per set and a tick, with the edge on each grip's setup pill; the next item is live.
 - Skipped: the card collapses like any skipped exercise; no part is written.
 - Half done, minimised: the timer's run is still live, so the card offers Resume (`resumedTimer`, as today).
 - Half done, minimised, shows its rows read-only: the timer still owns them until it ends, so two writers never race over one set.
