@@ -203,7 +203,7 @@ export function ClimbEditorSheet({
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <span style={monoLabel}>
             {t("logSession.name")}{" "}
-            <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
+            <span style={{ color: "var(--text-faint)" }}>{t("common.optional")}</span>
           </span>
           {areas === undefined ? (
             <ClimbNameField {...nameProps} />

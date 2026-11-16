@@ -181,3 +181,44 @@ describe("each climb's area", () => {
     expect(input.climbs[0]).not.toHaveProperty("areaId");
   });
 });
+
+describe("LogSessionForm duration", () => {
+  const field = (): HTMLInputElement =>
+    container.querySelector<HTMLInputElement>(".number-field-input")!;
+  const sent = (api: ReturnType<typeof fakeApi>) =>
+    (api.updateLoggedSession.mock.calls[0] as unknown[])[1];
+
+  it("shows the span of real times and moves the end when changed", async () => {
+    const api = fakeApi();
+    render(api);
+    expect(field().value).toBe("02:00:00");
+    act(() => field().focus());
+    type(field(), "13000");
+    act(() => field().blur());
+    await save();
+    expect(sent(api)).toMatchObject({ startTime: "10:00", endTime: "11:30", minutes: null });
+  });
+
+  it("keeps the start and drops the end when emptied", async () => {
+    const api = fakeApi();
+    render(api);
+    act(() => field().focus());
+    type(field(), "");
+    act(() => field().blur());
+    await save();
+    expect(sent(api)).toMatchObject({ startTime: "10:00", minutes: null });
+    expect(sent(api)).not.toHaveProperty("endTime");
+  });
+
+  it("holds a length on its own when there is no start", async () => {
+    const api = fakeApi();
+    render(api, { ...draft, startTime: "", endTime: "" });
+    expect(field().value).toBe("");
+    act(() => field().focus());
+    type(field(), "4500");
+    act(() => field().blur());
+    await save();
+    expect(sent(api)).toMatchObject({ minutes: 45 });
+    expect(sent(api)).not.toHaveProperty("startTime");
+  });
+});

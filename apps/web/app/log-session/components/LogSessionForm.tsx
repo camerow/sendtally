@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { Button } from "@sendtally/design";
 import { effortColor } from "@sendtally/design/tokens";
@@ -30,6 +30,11 @@ import {
   type ClimbArea,
   type ClimbDraft,
   type LogSessionDraft,
+  draftLength,
+  lengthOf,
+  MAX_LENGTH_SECONDS,
+  withLength,
+  unbrokenParts,
 } from "@sendtally/features/log-session";
 import { SESSION_NOTE_MAX } from "@sendtally/features/sessions";
 import { queries } from "@sendtally/features/query";
@@ -53,6 +58,7 @@ import { Glyph } from "./Glyph";
 import { CHECK, PLUS, columnHead } from "./styles";
 import { chipStyle } from "../../components/chip";
 import { inputStyle, monoLabel } from "../../components/styles";
+import { NumberField } from "../../components/NumberField";
 
 function hhmm(at: Date): string {
   return formatDate(at, { hour: "2-digit", minute: "2-digit" });
@@ -168,6 +174,8 @@ export function LogSessionForm({
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const length = draftLength(draft);
   const [confirmingCancel, setConfirmingCancel] = React.useState(false);
 
   const vocabulary = useClimbVocabulary(api);
@@ -320,7 +328,7 @@ export function LogSessionForm({
 
   return (
     <div className="log-session">
-      {header?.(draftSummary(draft))}
+      {header?.(unbrokenParts(draftSummary(draft)))}
       {autosave.offered !== null && (
         <DraftBanner
           stored={autosave.offered}
@@ -334,7 +342,7 @@ export function LogSessionForm({
             label={
               <>
                 {t("logSession.sessionName")}{" "}
-                <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
+                <span style={{ color: "var(--text-faint)" }}>{t("common.optional")}</span>
               </>
             }
           >
@@ -346,15 +354,30 @@ export function LogSessionForm({
               style={inputStyle}
             />
           </Field>
-          <Field label={t("logSession.date")}>
-            <input
-              type="date"
-              value={draft.date}
-              onChange={(e) => setDraft({ ...draft, date: e.target.value })}
-              className="log-session-control"
-              style={inputStyle}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <label className="number-field">
+              <span className="number-field-label">{t("logSession.date")}</span>
+              <input
+                type="date"
+                value={draft.date}
+                onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+                style={{ ...inputStyle, height: 46 }}
+              />
+            </label>
+            <NumberField
+              label={
+                <>
+                  {t("common.duration")}{" "}
+                  <span style={{ color: "var(--text-faint)" }}>{t("common.optional")}</span>
+                </>
+              }
+              value={length === null ? null : length * 60}
+              mode={{ kind: "time", max: MAX_LENGTH_SECONDS }}
+              clearable
+              autoFocus={searchParams.get("field") === "duration"}
+              onChange={(seconds) => setDraft(withLength(draft, lengthOf(seconds)))}
             />
-          </Field>
+          </div>
           <Field label={t("logSession.location")}>
             <div style={{ display: "flex", gap: 8 }}>
               {(["indoor", "outdoor"] as const).map((loc) => (
@@ -411,7 +434,7 @@ export function LogSessionForm({
             label={
               <>
                 {t("common.notes")}{" "}
-                <span style={{ color: "rgba(64,63,76,0.45)" }}>{t("common.optional")}</span>
+                <span style={{ color: "var(--text-faint)" }}>{t("common.optional")}</span>
               </>
             }
           >
