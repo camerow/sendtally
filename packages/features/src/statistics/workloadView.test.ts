@@ -76,7 +76,9 @@ describe("workloadVM", () => {
       zone: null,
       headline: "3 of 5 counted",
     });
-    expect(vm.leftOutLine).toBe("2 not counted in the last 7 days: no effort or time");
+    expect(vm.leftOutLine).toBe(
+      "2 not counted in the last 7 days: no\u00a0effort\u00a0or\u00a0time"
+    );
     expect(vm.sheet.footer).toBe("No zone: more than a quarter left out");
     expect(vm.sheet.tiles.map((x) => x.counted)).toEqual(["3 of 5 counted", "12 of 14 counted"]);
     expect(vm.sheet.leftOut.map((l) => [l.ref.id, l.missing, l.detail])).toEqual([

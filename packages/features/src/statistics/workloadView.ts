@@ -1,6 +1,6 @@
 import { colors, effortScale } from "@sendtally/design/tokens";
 import { formatDate, formatNumber, t, type MessageKey } from "../i18n";
-import { DAY_MS, bucketsFor, dayStart, wallClock, windowOf } from "../trends/buckets";
+import { DAY_MS, bucketsFor, dayStart, wallClock, windowOf, yearOfMs } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
 import type { Point } from "./chartGeometry";
 import type { Done, DoneRef } from "./insights";
@@ -14,8 +14,8 @@ import {
 } from "./workload";
 
 /** The plot's floor and top on a log scale centred on 1.0; 4.0 is the most a ratio can be. */
-export const WORKLOAD_FLOOR = 0.25;
-export const WORKLOAD_CEIL = 4;
+const WORKLOAD_FLOOR = 0.25;
+const WORKLOAD_CEIL = 4;
 
 /** Half and double sit the same distance from 1.0. */
 export const WORKLOAD_TICKS = [0.5, 1, 2, 4] as const;
@@ -196,8 +196,6 @@ const shortDay = (ms: number, year = false): string =>
     timeZone: "UTC",
   });
 
-const yearOf = (ms: number): number => new Date(ms).getUTCFullYear();
-
 const counted = ({ total, leftOut }: Workload["week"]): string =>
   t("statistics.workloadCounted", { counted: total - leftOut, total });
 
@@ -218,7 +216,10 @@ const noTime = (d: Done): boolean => d.minutes <= 0;
 function leftOutLine(left: readonly Done[]): string | null {
   if (left.length === 0) return null;
   const reason = why(left.some(noEffort), left.some(noTime));
-  return t("statistics.workloadLeftOut", { count: left.length, why: reason });
+  return t("statistics.workloadLeftOut", {
+    count: left.length,
+    why: reason.replace(/ /g, "\u00a0"),
+  });
 }
 
 function tiles(w: Workload, today: number): WorkloadTileVM[] {
@@ -305,7 +306,7 @@ export function workloadVM(done: readonly Done[], range: TrendRange, now: Date):
     headline: zone === null ? headline(w) : "",
     sentence: said,
     points: w.state !== "few" && enough(points) ? points : [],
-    from: days[0] === undefined ? "" : shortDay(days[0], yearOf(days[0]) !== yearOf(today)),
+    from: days[0] === undefined ? "" : shortDay(days[0], yearOfMs(days[0]) !== yearOfMs(today)),
     daysLogged: 28 - w.daysToGo,
     acute: load(w.acute),
     chronic: w.state === "early" || w.state === "break" ? null : load(w.chronic),

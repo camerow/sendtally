@@ -50,7 +50,7 @@ function trailingDays(now: Date, days: number): Bucket[] {
   return out;
 }
 
-const yearOfMs = (ms: number): number => new Date(ms).getUTCFullYear();
+export const yearOfMs = (ms: number): number => new Date(ms).getUTCFullYear();
 
 /** The first tick carries its year when the range crosses into another one. */
 function yearOnFirst(out: Bucket[], options: Intl.DateTimeFormatOptions): Bucket[] {
