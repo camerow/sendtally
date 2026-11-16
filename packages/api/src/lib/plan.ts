@@ -250,6 +250,7 @@ export const doneBody = z
       sets: z.array(setDone).max(100),
       targetRpe: rpe.optional(),
       dose: dose.optional(),
+      restAfterS: seconds.optional(),
     })
   )
   .max(MAX_ITEMS);

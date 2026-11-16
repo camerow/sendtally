@@ -77,7 +77,7 @@ describe("hangReview", () => {
     expect(draft.done[0]?.sets).toHaveLength(2);
   });
 
-  it("saves the dose each later grip ran, the first grip's being the protocol", () => {
+  it("saves the dose each later grip ran and the rest after every grip but the last", () => {
     const pinch = { ...repeaters, id: "w2", grip: "pinch", reps: 3, sets: 1, setRestS: 0 };
     const two: PlannedRun = {
       items: [
@@ -92,6 +92,7 @@ describe("hangReview", () => {
     const session = hangSessionOf(review, setup, draft, "s1");
     expect(session.done[0]?.dose).toBeUndefined();
     expect(session.done[1]?.dose).toEqual({ sets: 1, reps: 3, onS: 7, offS: 3 });
+    expect(session.done.map((d) => d.restAfterS)).toEqual([120, undefined]);
   });
 
   it("saves the kept sets on the pill's setup", () => {

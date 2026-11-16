@@ -310,11 +310,11 @@ describe("hangboard", () => {
     });
   });
 
-  it("keeps the dose each later grip ran", async () => {
+  it("keeps the dose each later grip ran and the rest after each grip", async () => {
     const userId = "user_hang_dose";
     const sets = [{ reps: 6, onS: 7, offS: 3, edgeMm: 20 }];
     const done = [
-      { item: 0, exercise: "half", sets },
+      { item: 0, exercise: "half", sets, restAfterS: 120 },
       {
         item: 1,
         exercise: "pinch",

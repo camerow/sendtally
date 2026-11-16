@@ -251,6 +251,8 @@ export type ItemDone = {
   targetRpe?: number;
   /** A hang session's later grip: the dose it ran, its first grip's being the session's protocol. */
   dose?: Dose;
+  /** A hang session's grip: the rest the timer ran after it, before the next grip; none after the last. */
+  restAfterS?: number;
 };
 
 /**
