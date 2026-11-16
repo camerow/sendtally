@@ -22,6 +22,7 @@ import {
 } from "./lib/hang";
 import { syncHangSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
+import { captureWorkoutLogged } from "./workoutLogged";
 
 // Hangboard and ground-pull training. The app generates every id,
 // so each write is an idempotent PUT it can retry or replay offline.
@@ -147,10 +148,12 @@ export const hang = new Hono<AppEnv>()
       const userId = c.get("userId");
       await repo.ensureUser(c.env.DB, userId);
       const existing = await repo.getHangSession(c.env.DB, userId, id);
-      const row = await repo.saveHangSession(c.env.DB, userId, { id, ...c.req.valid("json") });
+      const body = c.req.valid("json");
+      const row = await repo.saveHangSession(c.env.DB, userId, { id, ...body });
       if (existing === null || existing.strava_activity_id !== null) {
         postAfterResponse(c, id, () => syncHangSessionToStrava(c.env, userId, id));
       }
+      if (existing === null) await captureWorkoutLogged(c, body);
       return c.json({ session: hangSessionOf(row) });
     }
   )

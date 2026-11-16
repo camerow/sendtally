@@ -22,6 +22,7 @@ import {
 } from "./lib/manual";
 import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
+import { captureWorkoutLogged } from "./workoutLogged";
 
 export const areaIdsOnPath = (path: string): string[] => path.split("/").filter((id) => id !== "");
 
@@ -228,6 +229,8 @@ export const writeManualSession = async (
   await captureEvent(c, created ? "manual_session_created" : "manual_session_updated", {
     session_source: "manual",
   });
+  // A climbing session counts as a workout only when it completes a planned day.
+  if (created && form.membershipId != null) await captureWorkoutLogged(c, form);
 };
 
 // Scored oldest first so each one sees the ones before it as history, and
