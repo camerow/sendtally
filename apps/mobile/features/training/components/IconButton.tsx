@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable } from "react-native";
+import { disabledOpacity } from "@sendtally/design/tokens";
 import { press } from "../../../lib/press";
 import { HangIcon, type HangIconName } from "./HangIcon";
 
@@ -43,7 +44,7 @@ export function IconButton({
         borderWidth: border === undefined ? 0 : 1,
         borderColor: border,
         flexShrink: 0,
-        opacity: disabled ? 0.35 : 1,
+        opacity: disabled ? disabledOpacity : 1,
       })}
     >
       <HangIcon

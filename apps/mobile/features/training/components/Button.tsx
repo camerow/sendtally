@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, Text, View, type StyleProp, type ViewStyle } from "react-native";
-import { colors } from "@sendtally/design/tokens";
+import { colors, disabledOpacity } from "@sendtally/design/tokens";
 import { press } from "../../../lib/press";
 import { type } from "../type";
 import { HangIcon, type HangIconName } from "./HangIcon";
@@ -65,7 +65,7 @@ export function Button({
           paddingHorizontal: height > 40 ? 16 : 13,
           alignItems: "center",
           justifyContent: "center",
-          opacity: disabled ? 0.35 : 1,
+          opacity: disabled ? disabledOpacity : 1,
         },
         box,
         style,

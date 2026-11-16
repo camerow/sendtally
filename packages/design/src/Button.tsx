@@ -1,4 +1,5 @@
 import React from "react";
+import { disabledOpacity } from "./tokens";
 
 const base: React.CSSProperties = {
   fontFamily: "var(--font-sans)",
@@ -86,7 +87,7 @@ export function Button({
     background: hover && !disabled ? v.hover : v.background,
     color: v.color,
     border: v.border ?? base.border,
-    opacity: disabled ? 0.45 : 1,
+    opacity: disabled ? disabledOpacity : 1,
     pointerEvents: disabled ? "none" : undefined,
     ...style,
   };

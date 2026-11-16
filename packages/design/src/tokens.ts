@@ -52,6 +52,9 @@ export const radius = {
 /** A sheet's or dialog's title, the display head at phone width. */
 export const sheetTitleSize = 28;
 
+/** Any control that cannot be pressed yet. */
+export const disabledOpacity = 0.45;
+
 export const fonts = {
   display: "BricolageGrotesque_700Bold",
   displayHeavy: "BricolageGrotesque_800ExtraBold",
