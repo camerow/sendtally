@@ -979,6 +979,12 @@ button.mod-lib-row:hover {
   font-size: 13.5px;
 }
 
+.mod-lib-by {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .mod-lib-media {
   display: flex;
   align-items: flex-start;

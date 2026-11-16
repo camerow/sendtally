@@ -198,7 +198,9 @@ export function LibraryItemEditor({
                   hourCycle: "h23",
                 })}
               </span>
-              <span>{change.changedBy}</span>
+              <span className="mod-lib-by" title={change.changedBy}>
+                {change.changedBy}
+              </span>
               <span>{changeSummary(change)}</span>
               {changeRestore(change) === "restore" && (
                 <Button
