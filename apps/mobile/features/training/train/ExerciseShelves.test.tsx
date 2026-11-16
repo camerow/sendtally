@@ -3,7 +3,7 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import type { ActivityRecord } from "@sendtally/api-client";
-import { BUILT_IN_EXERCISES } from "@sendtally/core/hang";
+import { TEST_LIBRARY } from "@sendtally/features/library/testing";
 import { aHang, anExercise, renderWithHang, hangData } from "../data/renderWithHang";
 import { ExerciseShelves } from "./ExerciseShelves";
 
@@ -65,7 +65,7 @@ describe("exercise shelves", () => {
     });
     await fireEvent.press(
       screen.getByText(
-        `All ${BUILT_IN_EXERCISES.filter((b) => b.kind === "strength").length + 1} exercises`
+        `All ${TEST_LIBRARY.exercises.filter((b) => b.spec.kind === "strength").length + 1} exercises`
       )
     );
     expect(router.push).toHaveBeenLastCalledWith({

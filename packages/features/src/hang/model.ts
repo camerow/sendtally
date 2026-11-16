@@ -1,6 +1,5 @@
 import type { HangData, HangSessionRecord } from "@sendtally/api-client";
 import {
-  BUILT_IN_GRIP_NAMES,
   BUILT_IN_GRIPS,
   doseIndex,
   doseProtocol,
@@ -18,6 +17,7 @@ import {
   type SetupLayer,
 } from "@sendtally/core/hang";
 import type { LibraryWorkout } from "../workouts/types";
+import { currentLibrary } from "../library/current";
 import { builtInGripName } from "./names";
 
 /** Everything the hang timer reads, with built-in names in the user's language. */
@@ -75,19 +75,27 @@ export function hangWorkoutOf(
     : hangWorkoutFromItem(w, { exercise: first.exercise, dose });
 }
 
-export function hangModel(data: HangData, library: readonly LibraryWorkout[]): HangModel {
-  const workouts = library.flatMap((w) => hangWorkoutOf(w) ?? []);
+/**
+ * The hang timer's model. A built-in grip the library retired is hidden like one the user hid,
+ * so it leaves the pickers but still names its sessions.
+ */
+export function hangModel(data: HangData, all: readonly LibraryWorkout[]): HangModel {
+  const workouts = all.flatMap((w) => hangWorkoutOf(w) ?? []);
   const grips = [
-    ...BUILT_IN_GRIPS.map((id) => ({
-      hidden: false,
-      ...data.grips.find((g) => g.id === id),
-      id,
-      name: builtInGripName(id),
-      custom: false,
-    })),
+    ...currentLibrary().grips.flatMap((entry) => {
+      if (!isBuiltInGrip(entry.id)) return [];
+      const own = data.grips.find((g) => g.id === entry.id);
+      return {
+        ...own,
+        hidden: entry.status === "retired" || own?.hidden === true,
+        id: entry.id,
+        name: builtInGripName(entry.id),
+        custom: false,
+      };
+    }),
     ...data.grips.filter((g) => !isBuiltInGrip(g.id)),
   ];
-  const hangboard = new Map(library.filter((w) => w.kind === "hangboard").map((w) => [w.id, w]));
+  const hangboard = new Map(all.filter((w) => w.kind === "hangboard").map((w) => [w.id, w]));
   const names = new Map(grips.map((g) => [g.id, g.name]));
   const hidden = new Set(grips.filter((g) => g.hidden).map((g) => g.id));
   return {
@@ -148,7 +156,7 @@ export function renameClash(
   name: string
 ): Grip | undefined {
   const wanted = nameKey(name);
-  const english = BUILT_IN_GRIPS.find((id) => nameKey(BUILT_IN_GRIP_NAMES[id]) === wanted);
+  const english = currentLibrary().grips.find((g) => nameKey(g.name) === wanted)?.id;
   const clash =
     english === undefined
       ? findGrip(

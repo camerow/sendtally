@@ -26,6 +26,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { colors } from "@sendtally/design/tokens";
 import { resolveLocale, setLocale } from "@sendtally/features/i18n";
 import { OutboxProvider } from "@sendtally/features/outbox";
+import { LibraryProvider } from "@sendtally/features/library";
 import { GradeScalesProvider } from "@sendtally/features/settings";
 import { AnalyticsProvider } from "../features/analytics/AnalyticsProvider";
 import { AlreadyRunningSheet } from "../features/live-session/AlreadyRunningSheet";
@@ -100,32 +101,34 @@ function AppStack(): React.ReactElement | null {
   if (!isLoaded) return null;
   return (
     <GradeScalesProvider api={api}>
-      <ReminderPromptProvider>
-        <Stack
-          screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}
-        >
-          <Stack.Protected guard={isSignedIn}>
-            {SIGNED_IN_SCREENS.map((name) => (
-              <Stack.Screen key={name} name={name} />
-            ))}
-            {LIVE_SCREENS.map((name) => (
+      <LibraryProvider api={api}>
+        <ReminderPromptProvider>
+          <Stack
+            screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}
+          >
+            <Stack.Protected guard={isSignedIn}>
+              {SIGNED_IN_SCREENS.map((name) => (
+                <Stack.Screen key={name} name={name} />
+              ))}
+              {LIVE_SCREENS.map((name) => (
+                <Stack.Screen
+                  key={name}
+                  name={name}
+                  options={{ gestureEnabled: false, animation: "slide_from_bottom" }}
+                />
+              ))}
               <Stack.Screen
-                key={name}
-                name={name}
-                options={{ gestureEnabled: false, animation: "slide_from_bottom" }}
+                name="workout/done"
+                options={{ gestureEnabled: false, animation: "fade" }}
               />
-            ))}
-            <Stack.Screen
-              name="workout/done"
-              options={{ gestureEnabled: false, animation: "fade" }}
-            />
-          </Stack.Protected>
-        </Stack>
-        {isSignedIn && <AlreadyRunningSheet />}
-        {isSignedIn && (
-          <UpdateReadyOverlay hidden={LIVE_SCREENS.some((name) => pathname === `/${name}`)} />
-        )}
-      </ReminderPromptProvider>
+            </Stack.Protected>
+          </Stack>
+          {isSignedIn && <AlreadyRunningSheet />}
+          {isSignedIn && (
+            <UpdateReadyOverlay hidden={LIVE_SCREENS.some((name) => pathname === `/${name}`)} />
+          )}
+        </ReminderPromptProvider>
+      </LibraryProvider>
     </GradeScalesProvider>
   );
 }

@@ -9,20 +9,21 @@ import {
   type ModerationTab,
 } from "@sendtally/features/areas";
 import { formatNumber } from "@sendtally/features/i18n";
+import { filterCounts } from "@sendtally/features/library";
+import { queries, useQuery } from "@sendtally/features/query";
 import { useClientApi } from "../../lib/useClientApi";
 import { CreationsPanel } from "./CreationsPanel";
 import { DuplicateCard } from "./DuplicateCard";
+import { LibraryPanel } from "./LibraryPanel";
 import { ReportCard } from "./ReportCard";
 import { RevisionCard } from "./RevisionCard";
 
 const tabOf = (value: string | null): ModerationTab =>
   MODERATION_TABS.find((tab) => tab === value) ?? "creations";
 
-function itemsOf(
-  api: SendtallyApi,
-  queue: ModerationQueue,
-  tab: ModerationTab
-): React.ReactElement[] {
+type QueueTab = Exclude<ModerationTab, "library">;
+
+function itemsOf(api: SendtallyApi, queue: ModerationQueue, tab: QueueTab): React.ReactElement[] {
   switch (tab) {
     case "creations":
       return [<CreationsPanel key="creations" api={api} />];
@@ -42,10 +43,15 @@ function itemsOf(
 export function ModerationPage({ apiUrl }: { apiUrl: string }): React.ReactElement {
   const api = useClientApi(apiUrl);
   const { state } = useModerationQueue(api);
+  const { state: library } = useQuery(queries.library(api));
   const [params, setParams] = useSearchParams();
   const tab = tabOf(params.get("tab"));
   const queue = state.status === "ready" ? state.data : null;
-  const current = queue?.[tab] ?? null;
+  const current = queue === null || tab === "library" ? null : queue[tab];
+  const count = (value: ModerationTab): number | null => {
+    if (value !== "library") return queue?.[value].count ?? null;
+    return library.status === "ready" ? filterCounts(library.data).noDescription : null;
+  };
 
   return (
     <div className="mod-page">
@@ -69,19 +75,35 @@ export function ModerationPage({ apiUrl }: { apiUrl: string }): React.ReactEleme
             }
           >
             {moderationTabLabel(value)}
-            {queue !== null && (
-              <span className="mod-tab-count">{formatNumber(queue[value].count)}</span>
+            {count(value) !== null && (
+              <span className="mod-tab-count">{formatNumber(count(value) ?? 0)}</span>
             )}
           </button>
         ))}
       </div>
 
       <div role="tabpanel" className="mod-list" data-tab={tab}>
-        {state.status === "loading" && <span className="area-meta">Loading…</span>}
-        {state.status === "error" && (
-          <span className="area-meta">Could not load the moderation queue.</span>
+        {tab === "library" && library.status === "ready" && (
+          <LibraryPanel
+            api={api}
+            library={library.data}
+            item={params.get("item")}
+            onOpen={(item) =>
+              setParams(item === null ? { tab } : { tab, item }, { replace: item === null })
+            }
+          />
         )}
-        {queue !== null && current !== null && (
+        {(tab === "library" ? library : state).status === "loading" && (
+          <span className="area-meta">Loading…</span>
+        )}
+        {(tab === "library" ? library : state).status === "error" && (
+          <span className="area-meta">
+            {tab === "library"
+              ? "Could not load the library."
+              : "Could not load the moderation queue."}
+          </span>
+        )}
+        {queue !== null && current !== null && tab !== "library" && (
           <>
             {current.count === 0 && tab !== "creations" && (
               <p className="area-empty">Nothing waiting here.</p>

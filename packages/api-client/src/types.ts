@@ -14,6 +14,11 @@ export type {
   AreaSummary,
   Block,
   BlockInput,
+  BuiltInExerciseEntry,
+  BuiltInGripEntry,
+  BuiltInItemSpec,
+  BuiltInLibrary,
+  BuiltInWorkoutEntry,
   Circuit,
   CircuitColour,
   Dose,
@@ -34,6 +39,8 @@ export type {
   ImportBody,
   Item,
   ItemDone,
+  LibraryEntry,
+  LibraryType,
   Loads,
   LogClimbInput,
   LogSessionInput,
@@ -72,6 +79,17 @@ type Ok<T> = InferResponseType<T, 200>;
 export type ConnectionStatus = Ok<Client["v1"]["status"]["$get"]>;
 
 export type GradeScales = ConnectionStatus["gradeScales"];
+
+type LibraryItemRoutes = Client["v1"]["moderation"]["library"][":type"][":id"];
+
+/** A moderator's edit to a built-in's text and status. */
+export type LibraryEdit = InferRequestType<LibraryItemRoutes["$put"]>["json"];
+
+/** One logged edit to a built-in, by whom, with the state before and after it. */
+export type LibraryChange = Extract<
+  Ok<LibraryItemRoutes["changes"]["$get"]>,
+  { changes: unknown }
+>["changes"][number];
 export type TrainingReminderSettings = ConnectionStatus["trainingReminders"];
 
 export type Entitlements = Ok<Client["v1"]["entitlements"]["$get"]>;

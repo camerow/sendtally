@@ -18,22 +18,6 @@ export const BUILT_IN_GRIPS = [
 
 export type BuiltInGrip = (typeof BUILT_IN_GRIPS)[number];
 
-/** English names, for server-side text such as a Strava description. Apps translate by id. */
-export const BUILT_IN_GRIP_NAMES: Record<BuiltInGrip, string> = {
-  half: "Half crimp",
-  full: "Full crimp",
-  open: "Open hand",
-  drag: "3-finger drag",
-  sloper: "Sloper",
-  pinch: "Pinch",
-  front3: "Front 3",
-  back3: "Back 3",
-  front2: "Front 2",
-  middle2: "Middle 2",
-  back2: "Back 2",
-  mono: "Mono",
-};
-
 export const isBuiltInGrip = (id: string): id is BuiltInGrip =>
   (BUILT_IN_GRIPS as readonly string[]).includes(id);
 

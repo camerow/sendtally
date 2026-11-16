@@ -3,6 +3,7 @@ import { type Context, Hono, type MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
+import { etag } from "hono/etag";
 import { mcp } from "./mcp";
 import {
   areaIdsOnPath,
@@ -103,6 +104,7 @@ import { getPostHog, identifyUser } from "./lib/posthog";
 import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 import { RevenueCatClient, webhookBody, webhookUserIds } from "./lib/revenuecat";
+import { editedState, libraryEditBody, libraryParam } from "./lib/library";
 import { authorizeUrl, exchangeAuthCode, StravaUnauthorizedError } from "./lib/strava";
 import { sessionTagsBody, tagSlug } from "./lib/tags";
 
@@ -721,6 +723,13 @@ const app = new Hono<AppEnv>()
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     })(c, next)
   )
+
+  // The built-in library is the same for everyone, so it needs no user and caches anywhere,
+  // revalidated by its ETag on every read so a moderation edit shows on the next fetch.
+  .get("/v1/library", etag(), async (c) => {
+    c.header("Cache-Control", "public, no-cache");
+    return c.json({ library: await repo.library(c.env.DB) });
+  })
 
   .use("/v1/*", async (c, next) => {
     const user = await auth.verifyUser(c.req.raw, c.env);
@@ -1418,6 +1427,51 @@ const app = new Hono<AppEnv>()
     return c.json({ creations, revisions, duplicates, reports });
   })
 
+  .put(
+    "/v1/moderation/library/:type/:id",
+    zValidator("param", libraryParam, invalidBody),
+    zValidator("json", libraryEditBody, invalidBody),
+    async (c) => {
+      const { type, id } = c.req.valid("param");
+      const before = await repo.libraryEntry(c.env.DB, type, id);
+      if (before === null) return c.json({ error: "not found" }, 404);
+      const after = editedState(before, c.req.valid("json"));
+      return c.json({
+        entry: await repo.saveLibraryEntry(c.env.DB, c.get("userId"), before, after),
+      });
+    }
+  )
+
+  .get(
+    "/v1/moderation/library/:type/:id/changes",
+    zValidator("param", libraryParam, invalidBody),
+    async (c) => {
+      const { type, id } = c.req.valid("param");
+      const changes = await repo.libraryChangesOf(c.env.DB, type, id);
+      const names = await auth.userNames([...new Set(changes.map((ch) => ch.changedBy))], c.env);
+      return c.json({
+        changes: changes.map(({ changedBy, ...change }) => ({
+          ...change,
+          changedBy: names.get(changedBy) ?? "A moderator",
+        })),
+      });
+    }
+  )
+
+  .post(
+    "/v1/moderation/library/changes/:id/restore",
+    zValidator("param", z.object({ id: z.string().min(1).max(64) }), invalidBody),
+    async (c) => {
+      const change = await repo.libraryChange(c.env.DB, c.req.valid("param").id);
+      if (change === null) return c.json({ error: "not found" }, 404);
+      const before = await repo.libraryEntry(c.env.DB, change.type, change.itemId);
+      if (before === null) return c.json({ error: "not found" }, 404);
+      return c.json({
+        entry: await repo.saveLibraryEntry(c.env.DB, c.get("userId"), before, change.before),
+      });
+    }
+  )
+
   .get("/v1/moderation/creations", async (c) =>
     c.json(await creationsQueue(c.env.DB, c.env, await viewerOf(c), MODERATION_LIST_LIMIT))
   )
@@ -2007,6 +2061,15 @@ export type {
 } from "./lib/activities";
 export type { Exercise, ExerciseInput } from "./lib/exercises";
 export type { HangData, HangHistoryRow, HangPostState, HangSessionRecord } from "./lib/hang";
+export type {
+  BuiltInExerciseEntry,
+  BuiltInGripEntry,
+  BuiltInItemSpec,
+  BuiltInLibrary,
+  BuiltInWorkoutEntry,
+  LibraryEntry,
+  LibraryType,
+} from "@sendtally/core/hang";
 export type {
   Block,
   CalendarDate,

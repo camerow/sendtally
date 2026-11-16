@@ -3,6 +3,8 @@ import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useLocation, useParams } from "react-router";
 import type { Exercise, WorkoutRecord } from "@sendtally/api-client";
+import { setLibrary } from "@sendtally/features/library";
+import { TEST_LIBRARY } from "@sendtally/features/library/testing";
 import { libraryOf } from "@sendtally/features/workouts";
 import { ToastProvider } from "../../components/Toast";
 import { WithHang } from "../data/testHang";
@@ -67,6 +69,7 @@ vi.mock("@sendtally/features/workouts", async (actual) => ({
 vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<typeof T_exercises>()),
   useExerciseActions: () => ({ merge: state.merge, remove: state.remove }),
+  useMakeExercise: () => vi.fn(),
 }));
 
 let container: HTMLDivElement;
@@ -100,6 +103,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  setLibrary(TEST_LIBRARY);
   act(() => root.unmount());
   container.remove();
 });
@@ -131,6 +135,24 @@ const menu = (): string[] => {
 };
 
 describe("ExercisePage", () => {
+  it("shows the library's description on a built-in, and on the user's own copy of one", () => {
+    setLibrary({
+      ...TEST_LIBRARY,
+      exercises: TEST_LIBRARY.exercises.map((e) =>
+        e.id === "pullUps" ? { ...e, description: "Shoulders down first." } : e
+      ),
+    });
+    mount("/app/train/exercise/pullUps");
+    expect(container.querySelector("h1")?.textContent).toBe("Pull-ups");
+    expect(container.querySelector(".desc-text")?.textContent).toBe("Shoulders down first.");
+
+    act(() => root.unmount());
+    root = createRoot(container);
+    state.exercises = [ex("mine", "Pull-ups", { builtIn: "pullUps", description: "Stale" })];
+    mount("/app/train/exercise/mine");
+    expect(container.querySelector(".desc-text")?.textContent).toBe("Shoulders down first.");
+  });
+
   it("says nothing is logged yet, and lists the workouts using it", () => {
     state.workouts = [
       {

@@ -7,7 +7,12 @@ import {
   useActivities,
   useWeightUnit,
 } from "@sendtally/features/activities";
-import { builtInExercise, exerciseLabel, pickedOf } from "@sendtally/features/exercises";
+import {
+  builtInExercise,
+  exerciseDescription,
+  exerciseLabel,
+  pickedOf,
+} from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import {
   exerciseKey,
@@ -91,7 +96,7 @@ function Detail({
           <span className="train-label">{kindLabel(exercise.kind)}</span>
         </span>
         <h1 className="train-title intro-title">{exerciseLabel(exercise)}</h1>
-        <Description text={exercise.description} fold />
+        <Description text={exerciseDescription(exercise)} fold />
       </div>
       {logged === undefined ? (
         <DashedPanel body={t("workouts.exerciseNothingLogged")} />

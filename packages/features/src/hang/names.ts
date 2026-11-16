@@ -1,24 +1,22 @@
-import type { BuiltInGrip, Grip } from "@sendtally/core/hang";
+import type { Grip } from "@sendtally/core/hang";
 import { isBuiltInGrip } from "@sendtally/core/hang";
 import { t, type MessageKey } from "../i18n";
+import { currentLibrary } from "../library/current";
+import { entryDescription, entryName, findEntry } from "../library/entries";
 
-const GRIP_KEYS: Record<BuiltInGrip, MessageKey> = {
-  half: "hang.grip.half",
-  full: "hang.grip.full",
-  open: "hang.grip.open",
-  drag: "hang.grip.drag",
-  sloper: "hang.grip.sloper",
-  pinch: "hang.grip.pinch",
-  front3: "hang.grip.front3",
-  back3: "hang.grip.back3",
-  front2: "hang.grip.front2",
-  middle2: "hang.grip.middle2",
-  back2: "hang.grip.back2",
-  mono: "hang.grip.mono",
-};
+/** A built-in grip's name, or none while the library has not loaded, for a line that can go without. */
+export function builtInGripLabel(id: string): string | null {
+  const entry = findEntry(currentLibrary().grips, id);
+  return entry === undefined ? null : entryName(entry);
+}
 
-export function builtInGripName(id: BuiltInGrip): string {
-  return t(GRIP_KEYS[id]);
+/** A built-in grip's name in the user's language, or its id when the library has none. */
+export const builtInGripName = (id: string): string => builtInGripLabel(id) ?? id;
+
+/** What a built-in grip's library entry says about it, in the user's language; nothing for a custom grip. */
+export function gripDescription(id: string): string {
+  const entry = findEntry(currentLibrary().grips, id);
+  return entry === undefined ? "" : entryDescription(entry);
 }
 
 export function gripName(id: string, custom: readonly Grip[]): string {

@@ -11,6 +11,7 @@ import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
 import { AddToSheet } from "../components/AddToSheet";
 import { DashedPanel } from "../components/DashedPanel";
+import { Description } from "../components/Description";
 import { DetailActions } from "../components/DetailActions";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
@@ -44,6 +45,7 @@ export function BuiltInExerciseScreen({ builtIn }: BuiltInExerciseScreenProps): 
           <Label color={colors.textSecondary}>{kindLabel(builtIn.kind)}</Label>
         </View>
         <Title size={38}>{builtIn.name}</Title>
+        <Description text={builtIn.description} fold />
       </View>
       <DashedPanel body={t("workouts.exerciseNothingLogged")} />
       {usedIn.length > 0 && (

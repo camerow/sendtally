@@ -4,6 +4,7 @@ import { render, screen, type RenderResult } from "@testing-library/react-native
 import React from "react";
 import type {
   ActivityRecord,
+  BuiltInLibrary,
   ConnectionStatus,
   Exercise,
   HangData as ApiHangData,
@@ -15,6 +16,8 @@ import type {
 import { defaultMeasure, type ExerciseKind } from "@sendtally/core/hang";
 import { hangModel, type HangActions } from "@sendtally/features/hang";
 import { queries } from "@sendtally/features/query";
+import { LibraryProvider } from "@sendtally/features/library";
+import { TEST_LIBRARY } from "@sendtally/features/library/testing";
 import { libraryOf } from "@sendtally/features/workouts";
 import { HangDataContext } from "./HangDataContext";
 
@@ -114,6 +117,8 @@ export type HangWorld = {
   activities?: readonly ActivityRecord[];
   /** The account's connections; fetched, and so unknown at first, when left out. */
   status?: ConnectionStatus;
+  /** The built-in library; the test one when left out. */
+  library?: BuiltInLibrary;
 };
 
 /**
@@ -132,6 +137,7 @@ export async function renderWithHang(
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: Infinity, staleTime: Infinity } },
   });
+  client.setQueryData(["library"], world.library ?? TEST_LIBRARY);
   client.setQueryData(["hang"], data);
   client.setQueryData(["workouts"], workouts);
   client.setQueryData(
@@ -154,7 +160,9 @@ export async function renderWithHang(
   if (world.status !== undefined) client.setQueryData(["status"], world.status);
   const result = await render(
     <QueryClientProvider client={client}>
-      <HangDataContext.Provider value={value}>{ui}</HangDataContext.Provider>
+      <LibraryProvider api={{} as SendtallyApi}>
+        <HangDataContext.Provider value={value}>{ui}</HangDataContext.Provider>
+      </LibraryProvider>
     </QueryClientProvider>
   );
   return { ...result, actions };

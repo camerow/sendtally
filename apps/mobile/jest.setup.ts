@@ -107,3 +107,7 @@ jest.mock("expo-router/react-navigation", () => ({
   ...jest.requireActual<object>("expo-router/react-navigation"),
   usePreventRemove: jest.fn(),
 }));
+
+import { loadTestLibrary } from "@sendtally/features/library/testing";
+
+loadTestLibrary();

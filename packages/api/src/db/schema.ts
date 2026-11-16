@@ -784,3 +784,42 @@ export const exercises = sqliteTable(
     uniqueIndex("idx_exercises_user_name").on(t.user_id, t.name_key),
   ]
 );
+
+// The built-in training library every user gets: exercises, hangboard grips and workouts,
+// keyed by the ids the apps, logs and plans already use. Rows are never deleted; a retired
+// one leaves pickers but still names history. `translations` is JSON {de|fr|es: {name?,
+// description?}}, `spec` the type's JSON shape. A seeded row has no `updated_at` until edited.
+export const libraryItems = sqliteTable(
+  "library_items",
+  {
+    type: text("type", { enum: ["exercise", "grip", "workout"] }).notNull(),
+    id: text("id").notNull(),
+    position: integer("position").notNull(),
+    status: text("status", { enum: ["active", "retired"] })
+      .notNull()
+      .default("active"),
+    name: text("name").notNull(),
+    description: text("description"),
+    translations: text("translations").notNull().default("{}"),
+    spec: text("spec").notNull().default("{}"),
+    updated_at: text("updated_at"),
+    updated_by: text("updated_by"),
+  },
+  (t) => [primaryKey({ columns: [t.type, t.id] })]
+);
+
+// Every moderation edit to a library item, as the row before and after, so any one can be
+// restored by writing its `before` back as a new change.
+export const libraryChanges = sqliteTable(
+  "library_changes",
+  {
+    id: text("id").primaryKey(),
+    item_type: text("item_type", { enum: ["exercise", "grip", "workout"] }).notNull(),
+    item_id: text("item_id").notNull(),
+    changed_by: text("changed_by").notNull(),
+    changed_at: text("changed_at").notNull(),
+    before_json: text("before_json").notNull(),
+    after_json: text("after_json").notNull(),
+  },
+  (t) => [index("idx_library_changes_item").on(t.item_type, t.item_id, t.changed_at)]
+);

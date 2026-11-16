@@ -5,6 +5,7 @@ import { kindLabel } from "@sendtally/features/activities";
 import { pickedOf } from "@sendtally/features/exercises";
 import {
   canCompareGrips,
+  gripDescription,
   gripSessionRows,
   gripSetupLabel,
   gripTiles,
@@ -18,6 +19,7 @@ import { DetailFrame } from "../../components/detail/DetailFrame";
 import { SummaryTiles } from "../../components/detail/SummaryTiles";
 import { CategoryMark } from "../components/CategoryMark";
 import { DashedPanel } from "../components/DashedPanel";
+import { Description } from "../components/Description";
 import { UsedIn } from "../components/UsedIn";
 import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
@@ -102,6 +104,7 @@ export function GripPage({ id }: { id: string }): React.ReactElement {
           <span className="train-label">{kindLabel("hangboard")}</span>
         </span>
         <h1 className="train-title intro-title">{name}</h1>
+        <Description text={gripDescription(id)} fold />
       </div>
       {setups.length > 1 && (
         <SetupChips setups={setups} picked={setup} onPick={setPicked} withAll />

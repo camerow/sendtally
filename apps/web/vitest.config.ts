@@ -8,5 +8,6 @@ export default defineConfig({
     // file to back it; turning it off leaves the test DOM's.
     poolOptions: { forks: { execArgv: ["--no-experimental-webstorage"] } },
     include: ["app/**/*.test.{ts,tsx}"],
+    setupFiles: ["./vitest.setup.ts"],
   },
 });

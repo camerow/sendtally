@@ -7,6 +7,7 @@ import { MoreMenu } from "../../components/MoreMenu";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { CategoryMark } from "../components/CategoryMark";
 import { DashedPanel } from "../components/DashedPanel";
+import { Description } from "../components/Description";
 import { UsedIn } from "../components/UsedIn";
 import { useLibrary } from "../library/useLibrary";
 import { usePick } from "../editor/useMake";
@@ -42,6 +43,7 @@ export function BuiltInExercisePage({ builtIn }: { builtIn: BuiltInExercise }): 
           <span className="train-label">{kindLabel(builtIn.kind)}</span>
         </span>
         <h1 className="train-title intro-title">{builtIn.name}</h1>
+        <Description text={builtIn.description} fold />
       </div>
       <DashedPanel body={t("workouts.exerciseNothingLogged")} />
       <UsedIn workouts={usedIn} />

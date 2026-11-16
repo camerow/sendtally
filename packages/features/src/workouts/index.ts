@@ -1,4 +1,4 @@
-export { BUILT_IN_WORKOUT_IDS, builtInWorkouts } from "./builtIns";
+export { builtInWorkout, builtInWorkouts } from "./builtIns";
 export {
   activityKindOf,
   bodySummary,

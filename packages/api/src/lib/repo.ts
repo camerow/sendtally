@@ -44,6 +44,8 @@ import {
   hangSessions,
   hangSettings,
   journalEntries,
+  libraryChanges,
+  libraryItems,
   memberships,
   sessionClimbLinks,
   sessions,
@@ -67,11 +69,14 @@ import {
   loadKey,
   measureOf,
   type Block,
+  type BuiltInLibrary,
   type GripMeasure,
   type HangSession,
   type HangSettings,
   type Item,
   type ItemDone,
+  type LibraryEntry,
+  type LibraryType,
   type Loads,
   type Membership,
   type MembershipDays,
@@ -87,6 +92,7 @@ import type { RegradedSession } from "./climbs";
 import type { ClimbLink } from "./manual";
 import type { BlockInput, FocusOptional } from "./plan";
 import type { EntryWrite } from "./entries";
+import { entryOf, libraryOf, libraryState, stateOf, type LibraryState } from "./library";
 import type { StoreEntitlement } from "./revenuecat";
 import type { NormalizedTag } from "./tags";
 
@@ -3701,4 +3707,98 @@ export async function mergeExercise(
     into.name,
     d.delete(exercises).where(and(eq(exercises.user_id, userId), eq(exercises.id, from.id)))
   );
+}
+
+export async function library(db: D1Database): Promise<BuiltInLibrary> {
+  return libraryOf(await drizzle(db).select().from(libraryItems));
+}
+
+export async function libraryEntry(
+  db: D1Database,
+  type: LibraryType,
+  id: string
+): Promise<LibraryEntry | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(libraryItems)
+    .where(and(eq(libraryItems.type, type), eq(libraryItems.id, id)))
+    .get();
+  return row === undefined ? null : entryOf(row);
+}
+
+/** Writes a built-in's new text and status, logging the change. */
+export async function saveLibraryEntry(
+  db: D1Database,
+  userId: string,
+  before: LibraryEntry,
+  after: LibraryState
+): Promise<LibraryEntry> {
+  const { type, id } = before;
+  const now = new Date().toISOString();
+  const d = drizzle(db);
+  await d.batch([
+    d
+      .update(libraryItems)
+      .set({
+        name: after.name,
+        description: after.description || null,
+        translations: JSON.stringify(after.translations),
+        status: after.status,
+        updated_at: now,
+        updated_by: userId,
+      })
+      .where(and(eq(libraryItems.type, type), eq(libraryItems.id, id))),
+    d.insert(libraryChanges).values({
+      id: crypto.randomUUID(),
+      item_type: type,
+      item_id: id,
+      changed_by: userId,
+      changed_at: now,
+      before_json: JSON.stringify(stateOf(before)),
+      after_json: JSON.stringify(after),
+    }),
+  ]);
+  return { ...before, ...after, updatedAt: now };
+}
+
+export type LibraryChange = {
+  id: string;
+  changedBy: string;
+  changedAt: string;
+  before: LibraryState;
+  after: LibraryState;
+};
+
+const changeOf = (row: typeof libraryChanges.$inferSelect): LibraryChange => ({
+  id: row.id,
+  changedBy: row.changed_by,
+  changedAt: row.changed_at,
+  before: libraryState.parse(JSON.parse(row.before_json)),
+  after: libraryState.parse(JSON.parse(row.after_json)),
+});
+
+/** A built-in's changes, newest first. */
+export async function libraryChangesOf(
+  db: D1Database,
+  type: LibraryType,
+  id: string
+): Promise<LibraryChange[]> {
+  const rows = await drizzle(db)
+    .select()
+    .from(libraryChanges)
+    .where(and(eq(libraryChanges.item_type, type), eq(libraryChanges.item_id, id)))
+    .orderBy(desc(libraryChanges.changed_at));
+  return rows.map(changeOf);
+}
+
+export async function libraryChange(
+  db: D1Database,
+  changeId: string
+): Promise<(LibraryChange & { type: LibraryType; itemId: string }) | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(libraryChanges)
+    .where(eq(libraryChanges.id, changeId))
+    .get();
+  return row === undefined ? null : { ...changeOf(row), type: row.item_type, itemId: row.item_id };
 }

@@ -7,7 +7,7 @@ export {
   renameClash,
   type HangModel,
 } from "./model";
-export { builtInGripName, effortWord, gripName } from "./names";
+export { builtInGripName, effortWord, gripDescription, gripName } from "./names";
 export { useHang, type HangFeature } from "./useHang";
 export { useHangActions, type HangActions } from "./useHangActions";
 export * from "./progress";

@@ -2,6 +2,7 @@ export {
   builtInDose,
   builtInExercise,
   builtInExercises,
+  exerciseDescription,
   exerciseLabel,
   unclaimedBuiltIns,
 } from "./builtIns";

@@ -1,4 +1,4 @@
-import { BUILT_IN_EXERCISES } from "@sendtally/core/hang";
+import type { BuiltInLibrary } from "@sendtally/core/hang";
 import { exerciseBody, exerciseNameKey, type ExerciseInput } from "../lib/exercises";
 import { id } from "../lib/plan";
 import * as repo from "../lib/repo";
@@ -6,9 +6,11 @@ import { saveExercise as save } from "../training";
 import type { ConnectorTool } from "./types";
 
 /** The built-in exercise of this name, as the user's own exercise linked to it. */
-export function builtInExercise(name: string): ExerciseInput | undefined {
-  const b = BUILT_IN_EXERCISES.find((e) => exerciseNameKey(e.name) === exerciseNameKey(name));
-  return b && { name: b.name, kind: b.kind, measure: b.measure, builtIn: b.id };
+export function builtInExercise(library: BuiltInLibrary, name: string): ExerciseInput | undefined {
+  const b = library.exercises.find(
+    (e) => e.status === "active" && exerciseNameKey(e.name) === exerciseNameKey(name)
+  );
+  return b && { name: b.name, kind: b.spec.kind, measure: b.spec.measure, builtIn: b.id };
 }
 
 export const retryKey = id
@@ -57,19 +59,20 @@ export const saveExercise: ConnectorTool<typeof inputSchema> = {
   inputSchema,
   annotations: { readOnlyHint: false, destructiveHint: false },
   run: async ({ key, id: editing, ...body }, { env, userId }) => {
+    const library = await repo.library(env.DB);
     if (editing !== undefined) {
       owned(
         await repo.getExercise(env.DB, userId, editing),
         "exercise",
         editing,
-        BUILT_IN_EXERCISES
+        library.exercises
       );
     }
     const { exercise, taken } = await save(
       env.DB,
       userId,
       editing ?? key ?? crypto.randomUUID(),
-      (editing === undefined && builtInExercise(body.name)) || body
+      (editing === undefined && builtInExercise(library, body.name)) || body
     );
     const { name, kind, measure, eachSide, description } = exercise;
     return {

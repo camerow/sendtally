@@ -1,7 +1,7 @@
 import type { HangHistoryRow } from "@sendtally/api-client";
 import { isBuiltInGrip } from "@sendtally/core/hang";
 import { setupLabel } from "../hang/format";
-import { builtInGripName } from "../hang/names";
+import { builtInGripLabel } from "../hang/names";
 import { t } from "../i18n";
 import { builtInWorkouts } from "../workouts/builtIns";
 
@@ -15,7 +15,7 @@ export function hangTitle(row: Pick<HangHistoryRow, "workoutId" | "protocol">): 
 
 export function hangGripLabel(row: Pick<HangHistoryRow, "gripId" | "gripName">): string | null {
   if (row.gripName !== null) return row.gripName;
-  return isBuiltInGrip(row.gripId) ? builtInGripName(row.gripId) : null;
+  return isBuiltInGrip(row.gripId) ? builtInGripLabel(row.gripId) : null;
 }
 
 /** "Hangboard session · Half crimp · 20 mm · +4 kg". Loads read in kg: sendtally has no unit setting. */

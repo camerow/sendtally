@@ -4,13 +4,14 @@ import { climbTypeLabel } from "./transforms";
 import type { ClimbType } from "./types";
 
 // Moderation is internal tooling: English only, no i18n.
-export type ModerationTab = "creations" | "revisions" | "duplicates" | "reports";
+export type ModerationTab = "creations" | "revisions" | "duplicates" | "reports" | "library";
 
 export const MODERATION_TABS: readonly ModerationTab[] = [
   "creations",
   "revisions",
   "duplicates",
   "reports",
+  "library",
 ];
 
 const TAB_LABELS: Record<ModerationTab, string> = {
@@ -18,6 +19,7 @@ const TAB_LABELS: Record<ModerationTab, string> = {
   revisions: "Edits",
   duplicates: "Duplicates",
   reports: "Reports",
+  library: "Library",
 };
 
 export function moderationTabLabel(tab: ModerationTab): string {

@@ -21,6 +21,7 @@ import { ToastProvider } from "../components/Toast";
 import { useAppApi } from "../lib/useAppApi";
 import { useIsModerator } from "../lib/useIsModerator";
 import { WebOutboxProvider } from "../lib/WebOutboxProvider";
+import { LibraryProvider } from "@sendtally/features/library";
 import { GradeScalesProvider } from "@sendtally/features/settings";
 import appShellStyles from "../styles/app-shell.css?url";
 import { pageMeta } from "../lib/seo";
@@ -165,13 +166,15 @@ export default function AppLayout(): React.ReactElement {
   const { userId } = useAuth();
   return (
     <GradeScalesProvider api={api}>
-      <ToastProvider>
-        <WebOutboxProvider api={api} userId={userId ?? ""}>
-          <Shell>
-            <Outlet />
-          </Shell>
-        </WebOutboxProvider>
-      </ToastProvider>
+      <LibraryProvider api={api}>
+        <ToastProvider>
+          <WebOutboxProvider api={api} userId={userId ?? ""}>
+            <Shell>
+              <Outlet />
+            </Shell>
+          </WebOutboxProvider>
+        </ToastProvider>
+      </LibraryProvider>
     </GradeScalesProvider>
   );
 }
