@@ -98,18 +98,15 @@ function allEntries(world: PickerWorld): PickerEntry[] {
 }
 
 /**
- * The picker's rows for a category, or all, and what was typed: the most used first, the
- * user's own before the starter library, then by name.
+ * The picker's rows for a category, or all, and what was typed: grips and exercises in one
+ * list, the most used first, then by name.
  */
 export function pickerEntries(world: PickerWorld, filter: PickerFilter): PickerEntry[] {
   const words = fold(filter.text).split(/\s+/).filter(Boolean);
   return allEntries(world)
     .filter((e) => filter.category === "all" || e.kind === filter.category)
     .filter((e) => words.every((w) => fold(e.name).includes(w)))
-    .sort(
-      (a, b) =>
-        b.uses - a.uses || Number(a.library) - Number(b.library) || a.name.localeCompare(b.name)
-    );
+    .sort((a, b) => b.uses - a.uses || a.name.localeCompare(b.name));
 }
 
 /** The entry already named this, in any category and any case: what New picks instead of a duplicate. */

@@ -37,7 +37,7 @@ const names = (filter: Parameters<typeof pickerEntries>[1], w = world): string[]
   pickerEntries(w, filter).map((e) => e.name);
 
 describe("pickerEntries", () => {
-  it("lists a category most used first, then the user's own, then the library, without archived ones", () => {
+  it("lists a category most used first, then by name, without archived ones", () => {
     const strength = pickerEntries(world, { category: "strength", text: "" });
     expect(strength.slice(0, 2).map((e) => [e.name, e.uses, e.inWorkout])).toEqual([
       ["Back squat", 12, true],
@@ -50,9 +50,9 @@ describe("pickerEntries", () => {
 
   it("searches every category with All, ignoring case and accents", () => {
     expect(names({ category: "all", text: "CURL" })).toEqual([
-      "Jefferson curl",
       "Biceps curl",
       "Hammer curl",
+      "Jefferson curl",
       "Nordic hamstring curl",
       "Reverse wrist curls",
       "Wrist curls",
@@ -73,6 +73,20 @@ describe("pickerEntries", () => {
     expect(names({ category: "all", text: "crimp" }, empty)).toEqual(["Half crimp"]);
     expect(names({ category: "hangboard", text: "" }, empty)).toEqual(["Half crimp"]);
     expect(names({ category: "all", text: "pull-up" }, empty)).toContain("Weighted pull-up");
+  });
+
+  it("orders grips and exercises as one list under All, most used first, then by name", () => {
+    const fresh = {
+      ...world,
+      offer: "all" as const,
+      inWorkout: [],
+      uses: new Map([["deadlift", 2]]),
+    };
+    const all = names({ category: "all", text: "" }, fresh);
+    expect(all[0]).toBe("Deadlift");
+    const rest = all.slice(1);
+    expect(rest).toEqual([...rest].sort((a, b) => a.localeCompare(b)));
+    expect(rest.indexOf("Half crimp")).toBeGreaterThan(rest.indexOf("Back squat"));
   });
 });
 
