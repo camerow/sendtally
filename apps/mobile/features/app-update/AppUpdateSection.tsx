@@ -51,7 +51,7 @@ export function AppUpdateSection(): React.ReactElement | null {
           alignItems: "center",
           justifyContent: "center",
           borderRadius: radius.control,
-          backgroundColor: colors.gunmetal,
+          backgroundColor: colors.azureInk,
           opacity: restarting ? 0.55 : 1,
         })}
       >

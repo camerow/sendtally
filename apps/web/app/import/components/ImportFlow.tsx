@@ -10,7 +10,7 @@ import {
 import { importAll, withAddedTags, withTag, type ImportSource } from "@sendtally/features/import";
 import { sameTagName, useTagVocabulary } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
-import { BackLink, backLinkStyle } from "../../components/BackLink";
+import { BackLink } from "../../components/BackLink";
 import { Section } from "../../settings/components/Section";
 import { bodyText, pageTitle, secondaryButton } from "../../settings/components/styles";
 import { sha256Hex } from "../sha256Hex";
@@ -123,19 +123,9 @@ export function ImportFlow({
           <BackLink to={then}>{t("import.backToFirstRun")}</BackLink>
         ))}
       {state.step === "review" && (
-        <button
-          type="button"
-          onClick={() => setState({ step: "choose" })}
-          style={{
-            ...backLinkStyle,
-            background: "none",
-            border: "none",
-            padding: 0,
-            cursor: "pointer",
-          }}
-        >
-          ← {t("import.chooseAnother")}
-        </button>
+        <BackLink onClick={() => setState({ step: "choose" })}>
+          {t("import.chooseAnother")}
+        </BackLink>
       )}
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <h1 style={{ ...pageTitle, fontSize: 36 }}>{title}</h1>

@@ -1,5 +1,4 @@
 import React from "react";
-import { t } from "@sendtally/features/i18n";
 import type { WorkoutRun } from "@sendtally/features/workouts";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { PlayerClock } from "./PlayerClock";
@@ -23,7 +22,7 @@ export function PlayerFrame({
   return (
     <DetailFrame
       backTo="/app/plan"
-      backLabel={t("tally.minimise")}
+      minimise
       action={<PlayerClock startedAt={startedAt} />}
       footer={footer}
     >

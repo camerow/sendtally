@@ -8,7 +8,6 @@ import { ON_DARK, ON_DARK_LINE } from "@sendtally/features/workouts";
 
 export type ButtonVariant =
   | "primary"
-  | "azure"
   | "gold"
   | "goldText"
   | "outline"
@@ -30,8 +29,7 @@ export type ButtonProps = {
 };
 
 const LOOKS: Record<ButtonVariant, { box: ViewStyle; ink: string }> = {
-  primary: { box: { backgroundColor: colors.gunmetal }, ink: colors.white },
-  azure: { box: { backgroundColor: colors.azureInk }, ink: colors.white },
+  primary: { box: { backgroundColor: colors.azureInk }, ink: colors.white },
   gold: { box: { backgroundColor: colors.gold }, ink: colors.gunmetal },
   goldText: { box: { paddingHorizontal: 8 }, ink: colors.gold },
   outline: { box: { borderWidth: 1, borderColor: colors.lineOnLightStrong }, ink: colors.gunmetal },

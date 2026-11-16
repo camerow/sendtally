@@ -110,7 +110,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
     <DetailFrame
       wide
       backTo={BACK_TO}
-      {...(editing && { backLabel: t("common.cancel"), onBack: cancel })}
+      {...(editing && { backLabel: t("common.cancel"), danger: true, onBack: cancel })}
       {...(footer !== undefined && { footer })}
       action={
         !editing && (

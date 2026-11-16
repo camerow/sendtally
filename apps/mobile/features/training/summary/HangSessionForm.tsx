@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Text } from "react-native";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { hangResult, shortDate } from "@sendtally/features/hang";
@@ -8,7 +8,6 @@ import { protocolDose, type ItemDone } from "@sendtally/core/hang";
 import { hangGrid, hangSets, keptSets } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
-import { Button } from "../components/Button";
 import { DateField } from "../components/DateField";
 import { EffortField } from "../components/EffortField";
 import { FocusField } from "../components/FocusField";
@@ -19,6 +18,7 @@ import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { DoneDetails } from "../activity/DoneDetails";
+import { EditorHeader } from "../components/EditorHeader";
 import { SetupPill } from "../done/SetupPill";
 import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
@@ -89,20 +89,7 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 10,
-        }}
-      >
-        <Button label={t("common.cancel")} onPress={() => router.back()} variant="muted" />
-        <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
-          {t("summary.editWorkout")}
-        </Text>
-        <Button label={t("common.save")} onPress={save} variant="plain" />
-      </View>
+      <EditorHeader title={t("summary.editWorkout")} onCancel={() => router.back()} onSave={save} />
       <KeypadScrollView
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 4, paddingBottom: 32, gap: 18 }}
       >

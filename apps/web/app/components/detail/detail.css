@@ -19,28 +19,6 @@
   min-height: 44px;
 }
 
-.detail-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 44px;
-  padding: 0;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--bs-gunmetal);
-}
-
-.detail-back-chevron {
-  display: inline-flex;
-  transform: rotate(180deg);
-}
-
 .detail-body {
   flex: 1;
   display: flex;

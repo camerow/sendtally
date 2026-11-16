@@ -778,6 +778,11 @@
   cursor: pointer;
 }
 
+.outline-action--danger {
+  border-color: var(--bs-watermelon-ink);
+  color: var(--bs-watermelon-ink);
+}
+
 .outline-action:hover {
   background: var(--surface-soft);
 }

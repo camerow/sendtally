@@ -68,6 +68,7 @@ function Form({
     <DetailFrame
       backTo={EXERCISES_VIEW}
       backLabel={t("common.cancel")}
+      danger
       footer={
         <button type="button" className="detail-primary" disabled={blocked} onClick={save}>
           {t("common.save")}

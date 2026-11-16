@@ -98,7 +98,7 @@ export function ImportScreen({
         backLabel={then === "/first-run" ? t("import.backToFirstRun") : undefined}
         footer={
           <View style={{ gap: 6 }}>
-            <Button variant="azure" label={t("import.chooseFile")} onPress={() => void pick()} />
+            <Button variant="primary" label={t("import.chooseFile")} onPress={() => void pick()} />
             {later}
           </View>
         }
@@ -127,7 +127,7 @@ export function ImportScreen({
           <>
             {review.error !== null && <Text style={messageText}>{review.error}</Text>}
             <Button
-              variant="azure"
+              variant="primary"
               label={review.busy ? t("import.importing") : t("import.confirm", { count })}
               onPress={() => void confirm(review)}
               disabled={review.busy || count === 0}
@@ -135,7 +135,11 @@ export function ImportScreen({
           </>
         ) : (
           <View style={{ gap: 6 }}>
-            <Button variant="azure" label={t("import.chooseAnother")} onPress={() => void pick()} />
+            <Button
+              variant="primary"
+              label={t("import.chooseAnother")}
+              onPress={() => void pick()}
+            />
             {later}
           </View>
         )

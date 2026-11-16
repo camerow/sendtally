@@ -2,9 +2,9 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { effortWord } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, fonts } from "@sendtally/design/tokens";
 import { Sheet } from "../../components/Sheet";
-import { press } from "../../lib/press";
+import { Button } from "../training/components/Button";
 
 export type FinishSheetProps = {
   visible: boolean;
@@ -78,32 +78,18 @@ export function FinishSheet({
         <Text style={{ fontFamily: fonts.sans, fontSize: 14, color: colors.textSecondary }}>
           {hint}
         </Text>
-        <Pressable
+        <Button
+          label={t("common.save")}
           onPress={() => onSave(rpe)}
-          accessibilityRole="button"
-          style={press({
-            height: 54,
-            borderRadius: radius.card,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: colors.gunmetal,
-          })}
-        >
-          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.white }}>
-            {t("common.save")}
-          </Text>
-        </Pressable>
-        <Pressable
+          variant="primary"
+          height={54}
+        />
+        <Button
+          label={t("tally.discardSession")}
           onPress={onDiscard}
-          accessibilityRole="button"
-          style={press({ height: 44, alignItems: "center", justifyContent: "center" })}
-        >
-          <Text
-            style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.watermelonInk }}
-          >
-            {t("tally.discardSession")}
-          </Text>
-        </Pressable>
+          variant="danger"
+          height={44}
+        />
       </View>
     </Sheet>
   );

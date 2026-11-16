@@ -1,27 +1,39 @@
 import React from "react";
 import { Link } from "react-router";
+import { Icon } from "./Icon";
 
-export const backLinkStyle: React.CSSProperties = {
-  fontFamily: "var(--font-mono)",
-  fontWeight: 500,
-  fontSize: 12,
-  letterSpacing: "0.04em",
-  textTransform: "uppercase",
-  color: "var(--text-label-accent)",
-  textDecoration: "none",
-  alignSelf: "flex-start",
-};
-
-export function BackLink({
-  to,
-  children,
-}: {
-  to: string;
+export type BackLinkProps = {
   children: React.ReactNode;
-}): React.ReactElement {
+  /** A Cancel or Discard that throws away a draft: danger red, with no Back chevron. */
+  danger?: boolean;
+} & ({ to: string; onClick?: undefined } | { onClick: () => void; to?: undefined });
+
+/** Back as every page draws it: a chevron and a gunmetal mono label, to a route or a step back. */
+export function BackLink({
+  children,
+  danger = false,
+  ...target
+}: BackLinkProps): React.ReactElement {
+  const className = danger ? "detail-back detail-back--danger" : "detail-back";
+  const content = (
+    <>
+      {!danger && (
+        <span className="detail-back-chevron">
+          <Icon name="chevron" size={14} strokeWidth={2.2} />
+        </span>
+      )}
+      {children}
+    </>
+  );
+  if (target.to !== undefined)
+    return (
+      <Link to={target.to} className={className}>
+        {content}
+      </Link>
+    );
   return (
-    <Link to={to} style={backLinkStyle}>
-      ← {children}
-    </Link>
+    <button type="button" onClick={target.onClick} className={className}>
+      {content}
+    </button>
   );
 }
