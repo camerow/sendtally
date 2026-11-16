@@ -5,6 +5,7 @@ import {
   exerciseResults,
   gripSessions,
   hangGrid,
+  hangTotals,
   pastSessions,
   seriesPoint,
   setChange,
@@ -165,6 +166,25 @@ describe("hang sessions", () => {
     expect(grid.loads).toEqual([2, 5]);
     expect(grid.held).toBe(10);
     expect(grid.total).toBe(12);
+  });
+
+  it("counts the hangs of every grip a session ran", () => {
+    const sets = (...reps: number[]) => reps.map((r) => ({ reps: r, onS: 7, weightKg: 0 }));
+    const done = [
+      { item: 0, exercise: "half", sets: sets(6, 6, 6) },
+      { item: 1, exercise: "open", sets: sets(6, 4, 6) },
+      { item: 2, exercise: "pinch", sets: sets(6, 6) },
+    ];
+    expect(hangTotals({ gripId: "half", protocol, pct: 0, loadKg: 0, done })).toMatchObject({
+      held: 46,
+      total: 48,
+    });
+  });
+
+  it("counts one grip as its grid does", () => {
+    const done = [{ item: 0, exercise: "half", sets: [{ reps: 6 }, { reps: 4, weightKg: 5 }] }];
+    const one = { gripId: "half", protocol, pct: 0, loadKg: 2, done };
+    expect(hangTotals(one)).toEqual({ held: 10, total: 12, loads: [2, 5] });
   });
 
   it("finds every session on the grip", () => {

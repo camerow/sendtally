@@ -3,7 +3,7 @@ import React from "react";
 import { kindLabel } from "@sendtally/features/activities";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { clock, hangSessionSeconds } from "@sendtally/core/hang";
-import { gripSessions, hangGrid, pastSessions } from "@sendtally/features/activities";
+import { gripSessions, hangTotals, pastSessions } from "@sendtally/features/activities";
 import { newBestOf, type HangActions, type HangModel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
@@ -32,7 +32,7 @@ export function HangSummary({
 }: HangSummaryProps): React.ReactElement {
   const unit = model.settings.units;
   const all = model.sessions;
-  const grid = hangGrid(session);
+  const totals = hangTotals(session);
   const best = newBestOf(session, all, model.gripName(session.gripId), unit);
   return (
     <SummaryFrame
@@ -42,7 +42,7 @@ export function HangSummary({
       tiles={[
         { value: clock(hangSessionSeconds(session), true), label: t("summary.length") },
         effortTile(session.rpe, log.workout(session.workoutId)?.targetRpe ?? null),
-        { value: `${grid.held}/${grid.total}`, label: t("summary.hangsHeld") },
+        { value: `${totals.held}/${totals.total}`, label: t("summary.hangsHeld") },
       ]}
       target={{ kind: "hang", record: session }}
       onDelete={() => void actions.deleteSession(session.id)}

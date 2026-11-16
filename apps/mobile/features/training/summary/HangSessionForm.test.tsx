@@ -94,6 +94,7 @@ describe("Editing a hangboard session", () => {
     await fireEvent.press(screen.getByLabelText("open-hand, set 2 · Hangs"));
     await fireEvent.press(screen.getByLabelText("4"));
     await fireEvent.press(screen.getByLabelText("Done"));
+    expect(screen.getByText("52 of 54 hangs · top load +10 kg")).toBeTruthy();
     await fireEvent.press(screen.getByText("Save"));
     const saved = jest.mocked(actions.saveSession).mock.calls[0]?.[0];
     expect(saved?.done.map((d) => [d.exercise, d.sets.map((s) => s.reps)])).toEqual([

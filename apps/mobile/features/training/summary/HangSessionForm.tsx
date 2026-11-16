@@ -5,7 +5,7 @@ import type { HangSessionRecord } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { hangEditResult, hangEditSets, shortDate } from "@sendtally/features/hang";
 import { hangSessionItems } from "@sendtally/core/hang";
-import { hangGrid } from "@sendtally/features/activities";
+import { hangTotals } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
 import { DateField } from "../components/DateField";
@@ -54,7 +54,7 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
     edgeMm: draft.edgeMm,
     loadKg: draft.loadKg,
   });
-  const grid = hangGrid({ ...draft, done: result.done });
+  const totals = hangTotals({ ...draft, done: result.done });
 
   const save = (): void => {
     const { stravaActivityId: _s, postState: _p, postError: _e, updatedAt: _u, ...fields } = draft;
@@ -129,7 +129,7 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
           onChange={(done, off) => setSets({ done, off })}
         />
         <Text style={[type.monoBold, { fontSize: 13, color: colors.gunmetal }]}>
-          {hangCount(grid, unit)}
+          {hangCount(totals, unit)}
         </Text>
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
         <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />

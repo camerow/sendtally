@@ -56,6 +56,8 @@ export {
   exerciseResults,
   gripSessions,
   hangGrid,
+  hangTotals,
+  type HangTotals,
   hangSets,
   pastSessions,
   seriesPoint,

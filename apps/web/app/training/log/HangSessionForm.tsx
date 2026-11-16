@@ -1,7 +1,7 @@
 import React from "react";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { hangSessionItems } from "@sendtally/core/hang";
-import { hangCount, hangGrid } from "@sendtally/features/activities";
+import { hangCount, hangTotals } from "@sendtally/features/activities";
 import { hangEditResult, hangEditSets } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
@@ -33,7 +33,7 @@ export function HangSessionForm({ session }: { session: HangSessionRecord }): Re
     edgeMm: draft.edgeMm,
     loadKg: draft.loadKg,
   });
-  const grid = hangGrid({ ...draft, done: result.done });
+  const totals = hangTotals({ ...draft, done: result.done });
   const grips = model.grips.filter((g) => !g.hidden || g.id === draft.gripId);
 
   const save = (): void => {
@@ -117,7 +117,7 @@ export function HangSessionForm({ session }: { session: HangSessionRecord }): Re
         }
         onChange={(done, off) => setSets({ done, off })}
       />
-      <span className="hang-count">{hangCount(grid, unit)}</span>
+      <span className="hang-count">{hangCount(totals, unit)}</span>
       <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
       <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />
     </DetailFrame>
