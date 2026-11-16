@@ -36,7 +36,7 @@ describe("import from first run", () => {
       a.getAttribute("href"),
     ]);
     expect(links).toContainEqual(["Skip for now", "/app/start?later=1"]);
-    expect(links).toContainEqual(["← Your old log", "/app/start"]);
+    expect(links).toContainEqual(["Your old log", "/app/start"]);
     expect(host.textContent).toContain("Open thecrag.com");
   });
 });
