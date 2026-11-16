@@ -8,6 +8,7 @@ import { Button } from "./Button";
 export type EditorHeaderProps = {
   title: string;
   onCancel: () => void;
+  cancelLabel?: string;
   onSave: () => void;
   saveDisabled?: boolean;
   /** Save as a solid button, for an Edit mode on a detail screen. */
@@ -18,6 +19,7 @@ export type EditorHeaderProps = {
 export function EditorHeader({
   title,
   onCancel,
+  cancelLabel = t("hang.cancel"),
   onSave,
   saveDisabled,
   solid = false,
@@ -28,11 +30,12 @@ export function EditorHeader({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingHorizontal: 8,
+        paddingLeft: 2,
+        paddingRight: solid ? 18 : 2,
         paddingVertical: 4,
       }}
     >
-      <Button label={t("hang.cancel")} onPress={onCancel} variant="link" height={44} />
+      <Button label={cancelLabel} onPress={onCancel} variant="danger" height={44} />
       <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>{title}</Text>
       <Button
         label={t("hang.save")}

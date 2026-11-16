@@ -633,11 +633,11 @@ export function LogSessionForm({
               justifyContent: "center",
               borderRadius: radius.control,
               borderWidth: 1,
-              borderColor: "rgba(64,63,76,0.24)",
+              borderColor: colors.watermelonInk,
             })}
           >
             <Text
-              style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.textSecondary }}
+              style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.watermelonInk }}
             >
               {t("common.discard")}
             </Text>

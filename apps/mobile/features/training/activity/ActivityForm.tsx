@@ -1,7 +1,7 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { Alert, KeyboardAvoidingView, Platform, Text, TextInput, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, TextInput, View } from "react-native";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import {
@@ -31,13 +31,13 @@ import { TimeField } from "../../../components/TimeField";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
+import { EditorHeader } from "../components/EditorHeader";
 import { EffortField } from "../components/EffortField";
 import { FocusField } from "../components/FocusField";
 import { Label } from "../components/Label";
 import { SheetSection } from "../components/SheetSection";
 import { Title } from "../components/Title";
 import { KIND_LOOK } from "@sendtally/features/training";
-import { type } from "../type";
 import { liveRun } from "../../live-session/liveRun";
 import { DoneDetails } from "./DoneDetails";
 import { ReadRow } from "./ReadRow";
@@ -189,28 +189,18 @@ export function ActivityForm({
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 10,
-        }}
-      >
-        {live ? (
-          <Button label={t("hang.discard")} onPress={discard} variant="danger" />
-        ) : (
-          <Button label={t("common.cancel")} onPress={() => router.back()} variant="muted" />
-        )}
-        <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
-          {logged !== null
+      <EditorHeader
+        title={
+          logged !== null
             ? t("summary.editWorkout")
             : reviewing
               ? t("activities.logWorkout")
-              : t("activities.logActivity")}
-        </Text>
-        <Button label={t("common.save")} onPress={save} variant="plain" />
-      </View>
+              : t("activities.logActivity")
+        }
+        cancelLabel={live ? t("hang.discard") : t("common.cancel")}
+        onCancel={live ? discard : () => router.back()}
+        onSave={save}
+      />
       <KeypadScrollView
         contentContainerStyle={{
           paddingHorizontal: 18,

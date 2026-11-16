@@ -246,7 +246,7 @@ export function AddClimbScreen(): React.ReactElement {
             paddingHorizontal: 8,
           })}
         >
-          <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.textSecondary }}>
+          <Text style={{ fontFamily: fonts.sans, fontSize: 15, color: colors.watermelonInk }}>
             {t("common.cancel")}
           </Text>
         </Pressable>
