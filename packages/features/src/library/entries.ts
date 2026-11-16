@@ -1,5 +1,11 @@
-import { entryText, type LibraryEntry } from "@sendtally/core/hang";
+import {
+  entryText,
+  type LibraryEntry,
+  type LibraryPicture,
+  type LibraryType,
+} from "@sendtally/core/hang";
 import { getLocale } from "../i18n";
+import { currentLibrary } from "./current";
 
 /** An entry's name in the user's language. */
 export const entryName = (entry: LibraryEntry): string => entryText(entry, getLocale()).name;
@@ -16,3 +22,9 @@ export const findEntry = <T extends LibraryEntry>(
   entries: readonly T[],
   id: string | null
 ): T | undefined => entries.find((e) => e.id === id);
+
+const SHELVES = { exercise: "exercises", grip: "grips", workout: "workouts" } as const;
+
+/** A built-in's pictures, the first leading; none for an id that is not a built-in's. */
+export const libraryPictures = (type: LibraryType, id: string | null): LibraryPicture[] =>
+  findEntry<LibraryEntry>(currentLibrary()[SHELVES[type]], id)?.media ?? [];

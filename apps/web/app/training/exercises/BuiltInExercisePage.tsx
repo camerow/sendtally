@@ -1,4 +1,5 @@
 import React from "react";
+import { libraryPictures } from "@sendtally/features/library";
 import { kindLabel } from "@sendtally/features/activities";
 import type { BuiltInExercise } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
@@ -32,6 +33,7 @@ export function BuiltInExercisePage({ builtIn }: { builtIn: BuiltInExercise }): 
   return (
     <DetailFrame
       backTo={EXERCISES_VIEW}
+      hero={libraryPictures("exercise", builtIn.id)}
       action={
         <span className="detail-actions">
           <MoreMenu label={t("summary.more")} items={items} />

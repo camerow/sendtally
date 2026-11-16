@@ -1,8 +1,14 @@
 import type { BuiltInExerciseEntry } from "@sendtally/api-client";
-import { entryNames, type Dose } from "@sendtally/core/hang";
+import { entryNames, type Dose, type LibraryPicture } from "@sendtally/core/hang";
 import { currentLibrary } from "../library/current";
-import { entryDescription, entryName, findEntry, offered } from "../library/entries";
-import type { BuiltInExercise } from "./types";
+import {
+  entryDescription,
+  entryName,
+  findEntry,
+  libraryPictures,
+  offered,
+} from "../library/entries";
+import type { BuiltInExercise, PickerSource } from "./types";
 
 const builtInOf = (entry: BuiltInExerciseEntry): BuiltInExercise => ({
   id: entry.id,
@@ -55,4 +61,11 @@ export function exerciseLabel(e: { name: string; builtIn: string | null }): stri
   if (entry === undefined) return e.name;
   const renamed = !entryNames(entry).some((name) => nameKey(name) === nameKey(e.name));
   return renamed ? e.name : entryName(entry);
+}
+
+/** The pictures of the built-in a picker or shelf row stands for: its grip, or the exercise it came from. */
+export function sourcePictures(source: PickerSource): LibraryPicture[] {
+  if ("grip" in source) return libraryPictures("grip", source.grip.id);
+  if ("builtIn" in source) return libraryPictures("exercise", source.builtIn.id);
+  return libraryPictures("exercise", source.exercise.builtIn);
 }

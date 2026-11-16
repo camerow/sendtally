@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import type { WorkoutKind } from "@sendtally/core/hang";
+import type { LibraryPicture, WorkoutKind } from "@sendtally/core/hang";
 import { AddButton } from "../../../components/AddButton";
 import { Icon } from "../../../components/Icon";
 import { press } from "../../../lib/press";
@@ -17,6 +17,8 @@ export type AddWorkoutRowProps = {
   name: string;
   /** What it holds in a line, such as "3 × 8" or "In 2 workouts". */
   meta: string | null;
+  /** The built-in's first picture, as its tile. */
+  picture?: LibraryPicture;
   state: AddState;
   /** "In block", or the day's word for a plan already on it. */
   thereLabel: string;
@@ -30,6 +32,7 @@ export function AddWorkoutRow({
   kind,
   name,
   meta,
+  picture,
   state,
   thereLabel,
   onOpen,
@@ -38,7 +41,7 @@ export function AddWorkoutRow({
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <CategoryRow kind={kind} name={name} meta={meta} onPress={onOpen} />
+        <CategoryRow kind={kind} name={name} meta={meta} picture={picture} onPress={onOpen} />
       </View>
       {state === "there" ? (
         <Text style={[type.mono, { fontSize: 12, color: colors.textMuted }]}>{thereLabel}</Text>

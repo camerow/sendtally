@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
-import type { WorkoutKind } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
+import { hasAbout, type About } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { KIND_LOOK } from "@sendtally/features/training";
 import { Sheet } from "../../../components/Sheet";
@@ -9,8 +9,7 @@ import { Description } from "./Description";
 import { IconButton } from "./IconButton";
 import { SheetHeader } from "./SheetHeader";
 
-/** What an info sheet is about: a workout or an exercise. */
-export type About = { kind: WorkoutKind; name: string; description: string };
+export type { About };
 
 export type AboutButtonProps = {
   about: About | undefined;
@@ -19,10 +18,10 @@ export type AboutButtonProps = {
   color: string;
 };
 
-/** An info button beside a name, opening its description whole in a sheet; none without one. */
+/** An info button beside a name, opening its pictures and description in a sheet; none without either. */
 export function AboutButton({ about, label, color }: AboutButtonProps): React.ReactElement | null {
   const [open, setOpen] = React.useState(false);
-  if (about === undefined || about.description === "") return null;
+  if (!hasAbout(about)) return null;
   const close = (): void => setOpen(false);
   return (
     <>
@@ -34,7 +33,7 @@ export function AboutButton({ about, label, color }: AboutButtonProps): React.Re
         size={28}
         iconSize={18}
       />
-      <Sheet visible={open} onClose={close} closeLabel={t("common.done")}>
+      <Sheet visible={open} onClose={close} closeLabel={t("common.done")} hero={about.pictures}>
         <View style={{ gap: 12, paddingHorizontal: 18, paddingBottom: 12 }}>
           <SheetHeader
             kicker={kindLabel(about.kind)}
@@ -43,7 +42,7 @@ export function AboutButton({ about, label, color }: AboutButtonProps): React.Re
             action={t("common.done")}
             onAction={close}
           />
-          <Description text={about.description} />
+          {about.description !== "" && <Description text={about.description} />}
         </View>
       </Sheet>
     </>

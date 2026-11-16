@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router";
+import type { LibraryPicture } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "./Icon";
 
@@ -31,6 +32,8 @@ export type SheetProps = {
   action?: SheetAction;
   /** Off when the action only closes, such as Done, so Cancel would offer the same thing. */
   cancel?: boolean;
+  /** A built-in's picture across the top, with the header on a white card over its bottom edge. */
+  hero?: LibraryPicture;
   children?: React.ReactNode;
 };
 
@@ -54,6 +57,7 @@ function OpenSheet({
   onClose,
   action,
   cancel = true,
+  hero,
   children,
 }: Omit<SheetProps, "open">): React.ReactElement {
   const dialog = React.useRef<HTMLDialogElement>(null);
@@ -71,7 +75,7 @@ function OpenSheet({
   return (
     <dialog
       ref={dialog}
-      className="sheet"
+      className={hero === undefined ? "sheet" : "sheet sheet--hero"}
       tabIndex={-1}
       aria-labelledby={titleId}
       onCancel={(e) => {
@@ -85,6 +89,12 @@ function OpenSheet({
         if (pressedScrim.current && e.target === e.currentTarget) onClose();
       }}
     >
+      {hero !== undefined && (
+        <div className="sheet-hero">
+          <img src={hero.url} alt={hero.alt} />
+          {hero.credit !== "" && <span className="detail-hero-credit">{hero.credit}</span>}
+        </div>
+      )}
       <div className="sheet-handle" />
       <div className="sheet-head">
         {onBack !== undefined && (

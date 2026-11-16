@@ -1,6 +1,6 @@
 import type { Exercise } from "@sendtally/api-client";
-import type { Grip, Workout, WorkoutKind } from "@sendtally/core/hang";
-import { exerciseLabel, unclaimedBuiltIns } from "./builtIns";
+import type { Grip, LibraryPicture, Workout, WorkoutKind } from "@sendtally/core/hang";
+import { exerciseLabel, sourcePictures, unclaimedBuiltIns } from "./builtIns";
 import { categoryShelves } from "./shelves";
 import type { CategoryShelf, PickerSource } from "./types";
 import { usedInText, workoutsWith } from "./wrapper";
@@ -13,6 +13,8 @@ export type ShelfCard = {
   meta: string | null;
   /** A built-in the user has not made their own yet. */
   library: boolean;
+  /** The first picture of the built-in it stands for, as its row's tile. */
+  picture?: LibraryPicture;
   opens: { grip: string } | { exercise: string } | { builtIn: string };
 };
 
@@ -42,6 +44,7 @@ export function exerciseShelves(w: ShelfWorld): CategoryShelf<ShelfCard>[] {
       name,
       meta: uses === 0 ? null : usedInText(uses),
       library: "builtIn" in source,
+      picture: sourcePictures(source)[0],
       opens,
     };
   };

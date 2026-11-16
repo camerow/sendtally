@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
+import { libraryPictures } from "@sendtally/features/library";
 import { focusLabel, focusMeaning } from "@sendtally/features/training";
 import {
   libraryLine,
@@ -53,6 +54,7 @@ export function LibraryShelf({
           kind={w.kind}
           name={w.name}
           meta={libraryLine(w, model.settings.units)}
+          picture={libraryPictures("workout", w.id)[0]}
           onPress={() => onPick(w)}
         />
       ))}

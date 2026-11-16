@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { libraryPictures } from "@sendtally/features/library";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
@@ -39,7 +40,11 @@ export function BuiltInExerciseScreen({ builtIn }: BuiltInExerciseScreenProps): 
   const toast = addTo.toast ?? inPlan.block.toast;
   const menu = [...[addTo.row, inPlan.block.row].filter((r) => r !== null), inPlan.schedule];
   return (
-    <ScreenFrame overlay={toast && <Toast {...toast} />} action={<DetailActions menu={menu} />}>
+    <ScreenFrame
+      overlay={toast && <Toast {...toast} />}
+      action={<DetailActions menu={menu} />}
+      hero={libraryPictures("exercise", builtIn.id)}
+    >
       <View style={{ gap: 8 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <CategoryMark kind={builtIn.kind} size={28} />

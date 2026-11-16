@@ -49,6 +49,45 @@
   padding: 8px 0 24px;
 }
 
+.detail-hero {
+  position: sticky;
+  top: 0;
+  margin-top: 8px;
+}
+
+.detail-hero img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 420px;
+  object-fit: cover;
+  border-radius: var(--radius-card-lg);
+  background: var(--surface-soft);
+  color: var(--text-on-white-secondary);
+}
+
+.detail-hero-credit {
+  position: absolute;
+  left: 14px;
+  max-width: calc(100% - 28px);
+  bottom: 42px;
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: rgba(20, 19, 26, 0.55);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--bs-white);
+}
+
+.detail-body--hero {
+  position: relative;
+  z-index: 1;
+  margin-top: -30px;
+  padding-top: 22px;
+  border-radius: 24px 24px 0 0;
+  background: var(--bs-white);
+}
+
 .detail-footer {
   position: sticky;
   bottom: 0;

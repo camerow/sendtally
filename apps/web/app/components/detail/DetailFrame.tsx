@@ -1,4 +1,5 @@
 import React from "react";
+import type { LibraryPicture } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { useGoBack } from "../../lib/useGoBack";
 import { Icon } from "../Icon";
@@ -15,6 +16,8 @@ export type DetailFrameProps = {
   footer?: React.ReactNode;
   /** The full content width, for a page whose grids would scroll in the 720 column. */
   wide?: boolean;
+  /** A built-in's pictures; the first stays still at the top while the page scrolls over it. */
+  hero?: readonly LibraryPicture[];
   children?: React.ReactNode;
 };
 
@@ -26,9 +29,11 @@ export function DetailFrame({
   action,
   footer,
   wide = false,
+  hero = [],
   children,
 }: DetailFrameProps): React.ReactElement {
   const back = useGoBack(backTo);
+  const picture = hero[0];
   return (
     <div className={wide ? "detail detail--wide" : "detail"}>
       <div className="detail-bar">
@@ -40,7 +45,15 @@ export function DetailFrame({
         </button>
         {action}
       </div>
-      <div className="detail-body">{children}</div>
+      {picture !== undefined && (
+        <div className="detail-hero">
+          <img src={picture.url} alt={picture.alt} />
+          {picture.credit !== "" && <span className="detail-hero-credit">{picture.credit}</span>}
+        </div>
+      )}
+      <div className={picture === undefined ? "detail-body" : "detail-body detail-body--hero"}>
+        {children}
+      </div>
       {footer !== undefined && <div className="detail-footer">{footer}</div>}
     </div>
   );

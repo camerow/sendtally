@@ -4,6 +4,7 @@ export {
   builtInExercises,
   exerciseDescription,
   exerciseLabel,
+  sourcePictures,
   unclaimedBuiltIns,
 } from "./builtIns";
 export {
@@ -24,7 +25,7 @@ export type {
   PickerSource,
   TallyMeasure,
 } from "./types";
-export { exerciseAbout, type ExerciseAbout } from "./about";
+export { exerciseAbout, hasAbout, sourceAbout, workoutAbout, type About } from "./about";
 export * from "./exerciseText";
 export { usePickerWorld } from "./usePickerWorld";
 export { useExerciseActions, type ExerciseActions } from "./useExerciseActions";

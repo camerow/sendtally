@@ -1,12 +1,19 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { measureLabel, type PickerEntry } from "@sendtally/features/exercises";
+import {
+  measureLabel,
+  sourceAbout,
+  sourcePictures,
+  type PickerEntry,
+} from "@sendtally/features/exercises";
 import { gripMeta } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { pressRow } from "../../../lib/press";
+import { AboutButton } from "../components/AboutButton";
 import { CheckBox } from "../components/CheckBox";
 import { IconButton } from "../components/IconButton";
+import { KindTile } from "../components/KindTile";
 import { Label } from "../components/Label";
 import { useHangData, type HangData } from "../data/HangDataContext";
 import { MineBadge } from "../library/MineBadge";
@@ -69,6 +76,7 @@ export function PickerRow({
         })}
       >
         {multi && <CheckBox checked={ticked} color={colors.gunmetal} />}
+        <KindTile kind={entry.kind} picture={sourcePictures(entry.source)[0]} />
         <View style={{ flex: 1, gap: 2, paddingVertical: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Text style={[type.bodyBold, { flexShrink: 1, fontSize: 15, color: colors.gunmetal }]}>
@@ -82,6 +90,11 @@ export function PickerRow({
         </View>
         {entry.inWorkout && <Label color={colors.textSecondary}>{t("workouts.inWorkout")}</Label>}
       </Pressable>
+      <AboutButton
+        about={sourceAbout(entry)}
+        label={t("workouts.aboutExercise")}
+        color={colors.textMuted}
+      />
       {onEdit !== undefined && (
         <IconButton
           icon="edit"

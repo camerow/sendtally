@@ -1,4 +1,5 @@
 import React from "react";
+import { workoutAbout } from "@sendtally/features/exercises";
 import type { ActivityKind } from "@sendtally/api-client";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
@@ -21,7 +22,7 @@ export function PlayerHeader({ kind, title, workoutId }: PlayerHeaderProps): Rea
       </span>
       <span className="player-title-row">
         <h1 className="train-title player-title">{title}</h1>
-        <AboutButton about={workout} label={t("workouts.about")} />
+        <AboutButton about={workout && workoutAbout(workout)} label={t("workouts.about")} />
       </span>
       {workout?.targetRpe != null && (
         <span className="player-target">{t("plan.targetValue", { n: workout.targetRpe })}</span>

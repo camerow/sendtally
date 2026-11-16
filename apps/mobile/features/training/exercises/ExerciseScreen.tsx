@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { libraryPictures } from "@sendtally/features/library";
 import { Alert, View } from "react-native";
 import type { Exercise } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
@@ -93,6 +94,7 @@ function Detail({ exercise, all }: DetailProps): React.ReactElement {
   return (
     <ScreenFrame
       overlay={toast && <Toast {...toast} />}
+      hero={libraryPictures("exercise", exercise.builtIn)}
       action={
         <DetailActions
           onEdit={() =>

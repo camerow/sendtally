@@ -61,7 +61,7 @@ export function ExerciseShelves(): React.ReactElement {
                 meta={c.meta ?? t("workouts.notInWorkout")}
                 faded={c.meta === null}
                 showKind={false}
-                showMark={false}
+                picture={c.picture}
                 to={pathOf(c)}
               />
             ))

@@ -4,6 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { press } from "../lib/press";
+import { FLOATING, FloatingBar } from "./FloatingBar";
 import { Icon } from "./Icon";
 
 export function BackButton({
@@ -13,6 +14,29 @@ export function BackButton({
   label?: string;
   onPress?: () => void;
 }): React.ReactElement {
+  const floating = React.useContext(FloatingBar);
+  if (floating)
+    return (
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={label ?? t("common.back")}
+        style={press([
+          {
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            alignItems: "center",
+            justifyContent: "center",
+          },
+          FLOATING,
+        ])}
+      >
+        <View style={{ transform: [{ rotate: "180deg" }] }}>
+          <Icon name="chevron" size={16} strokeWidth={2.2} color={colors.gunmetal} />
+        </View>
+      </Pressable>
+    );
   return (
     <Pressable
       onPress={onPress}
