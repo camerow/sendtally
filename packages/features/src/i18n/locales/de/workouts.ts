@@ -14,7 +14,6 @@ export const workouts = {
   "workouts.notDoneYet": "Noch nicht gemacht",
   "workouts.newWorkout": "Neues Workout",
   "workouts.createWorkout": "Workout erstellen",
-  "workouts.pickCategory": "Welche Art von Workout?",
   "workouts.pickExerciseCategory": "Welche Art von Übung?",
   "workouts.category": "Kategorie",
   "workouts.namePlaceholder": "Dienstag im Gym",

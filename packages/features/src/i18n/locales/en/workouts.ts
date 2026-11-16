@@ -13,7 +13,6 @@ export const workouts = {
   "workouts.notDoneYet": "Not done yet",
   "workouts.newWorkout": "New workout",
   "workouts.createWorkout": "Create workout",
-  "workouts.pickCategory": "What kind of workout?",
   "workouts.pickExerciseCategory": "What kind of exercise?",
   "workouts.category": "Category",
   "workouts.namePlaceholder": "Tuesday gym",

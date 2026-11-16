@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Exercise } from "@sendtally/api-client";
 import { exerciseLabel } from "./builtIns";
-import { entryNamed, pickerEntries, type PickerWorld } from "./picker";
+import { entryNamed, exerciseKindIn, pickerEntries, pickerOffer, type PickerWorld } from "./picker";
 
 const mine = (id: string, name: string, more: Partial<Exercise> = {}): Exercise => ({
   id,
@@ -30,7 +30,7 @@ const world: PickerWorld = {
     ["half", 3],
   ]),
   inWorkout: ["Back squat"],
-  fingers: false,
+  offer: "exercises",
 };
 
 const names = (filter: Parameters<typeof pickerEntries>[1], w = world): string[] =>
@@ -61,11 +61,37 @@ describe("pickerEntries", () => {
   });
 
   it("offers grips only to a Fingers workout, and nothing else", () => {
-    const fingers = { ...world, fingers: true, inWorkout: ["half"] };
+    const fingers = { ...world, offer: "grips" as const, inWorkout: ["half"] };
     expect(pickerEntries(fingers, { category: "all", text: "" })).toMatchObject([
       { name: "Half crimp", uses: 3, inWorkout: true },
     ]);
     expect(names({ category: "all", text: "crimp" })).toEqual([]);
+  });
+
+  it("offers grips beside everything else to a workout with nothing in it", () => {
+    const empty = { ...world, offer: "all" as const, inWorkout: [] };
+    expect(names({ category: "all", text: "crimp" }, empty)).toEqual(["Half crimp"]);
+    expect(names({ category: "hangboard", text: "" }, empty)).toEqual(["Half crimp"]);
+    expect(names({ category: "all", text: "pull-up" }, empty)).toContain("Weighted pull-up");
+  });
+});
+
+describe("pickerOffer", () => {
+  it("follows what the workout holds, so taking out the last grip offers everything again", () => {
+    expect(pickerOffer(world, [])).toBe("all");
+    expect(pickerOffer(world, ["half", "open"])).toBe("grips");
+    expect(pickerOffer(world, ["Back squat"])).toBe("exercises");
+    expect(pickerOffer(world, ["half"].slice(1))).toBe("all");
+  });
+});
+
+describe("exerciseKindIn", () => {
+  it("knows grips, the user's own and the built-ins, and nothing else", () => {
+    const kindIn = exerciseKindIn(world);
+    expect(kindIn("half")).toBe("hangboard");
+    expect(kindIn("jefferson CURL")).toBe("mobility");
+    expect(kindIn("Bench press")).toBe("strength");
+    expect(kindIn("Made just now")).toBeUndefined();
   });
 });
 

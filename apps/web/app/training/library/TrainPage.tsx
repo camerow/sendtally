@@ -20,13 +20,13 @@ const readView = (param: string | null): TrainView =>
 
 /**
  * The Train tab: blocks, the workout library, and exercises. Create makes any of them; a
- * workout or an exercise asks its category first.
+ * an exercise asks its category first.
  */
 export function TrainPage(): React.ReactElement {
   const [params, setParams] = useSearchParams();
   const view = readView(params.get("view"));
   const navigate = useNavigate();
-  const [making, setMaking] = React.useState<"workout" | "exercise" | null>(null);
+  const [making, setMaking] = React.useState(false);
   const newBlock = useNewBlock();
   return (
     <div className="train">
@@ -39,8 +39,8 @@ export function TrainPage(): React.ReactElement {
           label={t("plan.create")}
           items={[
             { label: t("plan.createBlock"), onSelect: newBlock },
-            { label: t("workouts.createWorkout"), onSelect: () => setMaking("workout") },
-            { label: t("workouts.createExercise"), onSelect: () => setMaking("exercise") },
+            { label: t("workouts.createWorkout"), onSelect: () => void navigate(newWorkoutPath()) },
+            { label: t("workouts.createExercise"), onSelect: () => setMaking(true) },
           ]}
         />
         <AccountButton />
@@ -64,13 +64,10 @@ export function TrainPage(): React.ReactElement {
           <ExerciseShelves />
         )}
       </HangDataProvider>
-      {making !== null && (
+      {making && (
         <CategorySheet
-          making={making}
-          onPick={(kind) =>
-            void navigate(making === "workout" ? newWorkoutPath(kind) : newExercisePath(kind))
-          }
-          onClose={() => setMaking(null)}
+          onPick={(kind) => void navigate(newExercisePath(kind))}
+          onClose={() => setMaking(false)}
         />
       )}
     </div>

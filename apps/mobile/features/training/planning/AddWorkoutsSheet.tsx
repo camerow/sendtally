@@ -32,7 +32,7 @@ import { openExerciseEditor } from "../exercises/openExerciseEditor";
 import { useMakeExercise } from "../exercises/useMakeExercise";
 import { HangSheet } from "../data/HangSheet";
 import { LibrarySearch } from "../library/LibrarySearch";
-import { NewWorkoutSheet } from "../library/NewWorkoutSheet";
+import { ExerciseCategorySheet } from "../exercises/ExerciseCategorySheet";
 import { useLibrary } from "../library/useLibrary";
 import { usePlanActions } from "../plan/usePlanActions";
 import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
@@ -95,7 +95,7 @@ export function AddWorkoutsSheet({
   useFocusEffect(React.useCallback(() => setAway(false), []));
 
   const make = useMakeExercise();
-  const world = usePickerWorld([], false);
+  const world = usePickerWorld([], "all");
   const save = useWorkoutActions(useApi(), failed).saveWorkout;
   const library = state.status === "ready" ? state.data : null;
   const workouts = library?.workouts ?? [];
@@ -181,7 +181,7 @@ export function AddWorkoutsSheet({
     ) : (
       <Button
         label={mode === "exercise" ? t("workouts.newExercise") : t("workouts.newWorkout")}
-        onPress={() => setMaking(true)}
+        onPress={() => (mode === "exercise" ? setMaking(true) : leave("/workout/edit", {}))}
         variant="primary"
         icon="plus"
         height={50}
@@ -299,15 +299,7 @@ export function AddWorkoutsSheet({
           )}
         </View>
       </HangSheet>
-      {making && (
-        <NewWorkoutSheet
-          making={mode === "exercise" ? "exercise" : "workout"}
-          onPick={(kind) =>
-            mode === "exercise" ? newExercise(kind) : leave("/workout/edit", { kind })
-          }
-          onClose={() => setMaking(false)}
-        />
-      )}
+      {making && <ExerciseCategorySheet onPick={newExercise} onClose={() => setMaking(false)} />}
     </>
   );
 }

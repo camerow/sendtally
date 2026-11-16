@@ -81,7 +81,7 @@ export function AddWorkoutsSheet({
   );
   const save = useWorkoutActions(api, failed).saveWorkout;
   const pick = pickWith(useMake());
-  const world = usePickerWorld(api, model, [], false);
+  const world = usePickerWorld(api, model, [], "all");
   const library = state.status === "ready" ? state.data : null;
   const workouts = library?.workouts ?? [];
   const ensure = useExerciseWorkout({ workouts, pick, save, newId: () => crypto.randomUUID() });

@@ -13,7 +13,16 @@ export {
   tallyMeasureOf,
   tallyMeasuresOf,
 } from "./measure";
-export { entryNamed, entryShelves, pickerEntries, type PickerWorld } from "./picker";
+export {
+  entryNamed,
+  entryShelves,
+  exerciseKindIn,
+  isGripOf,
+  pickerEntries,
+  pickerOffer,
+  type PickerOffer,
+  type PickerWorld,
+} from "./picker";
 export { categoryShelves } from "./shelves";
 export { eachSideOf } from "./sides";
 export type {

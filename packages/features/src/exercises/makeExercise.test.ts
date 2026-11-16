@@ -24,9 +24,11 @@ describe("makeExercise", () => {
   it("names a grip by its id and an exercise by its name, with its measure", () => {
     expect(pickedOf({ grip: { id: "g1", name: "Pinch", custom: true, hidden: false } })).toEqual({
       exercise: "g1",
+      kind: "hangboard",
     });
     expect(pickedOf({ exercise: squat })).toEqual({
       exercise: "Back squat",
+      kind: "strength",
       measure: "repsWeight",
     });
   });
@@ -38,12 +40,14 @@ describe("makeExercise", () => {
     };
     expect(await pickWith(make)(builtIn as never)).toEqual({
       exercise: "Back squat",
+      kind: "strength",
       measure: "repsWeight",
     });
     expect(make).toHaveBeenCalledWith(expect.objectContaining({ name: "Back squat" }), "b1");
     expect(await pickWith(async () => null)(builtIn as never)).toBeNull();
     expect(await pickWith(make)({ exercise: squat })).toEqual({
       exercise: "Back squat",
+      kind: "strength",
       measure: "repsWeight",
     });
   });

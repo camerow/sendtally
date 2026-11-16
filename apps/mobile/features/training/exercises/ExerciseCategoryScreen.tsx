@@ -27,7 +27,7 @@ const mine = ({ source }: PickerEntry): boolean =>
  * used first, to search; the plus makes a new one in it.
  */
 export function ExerciseCategoryScreen({ kind }: ExerciseCategoryScreenProps): React.ReactElement {
-  const world = usePickerWorld([], kind === "hangboard");
+  const world = usePickerWorld([], kind === "hangboard" ? "grips" : "exercises");
   const [text, setText] = React.useState("");
   const label = kindLabel(kind);
   const entries = pickerEntries(world, { category: kind, text });

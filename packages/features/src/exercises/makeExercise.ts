@@ -16,11 +16,13 @@ export function pickedOf(made: MadeExercise): Picked {
   if ("grip" in made)
     return {
       exercise: made.grip.id,
+      kind: "hangboard",
       ...(made.grip.measure === undefined ? {} : { measure: made.grip.measure }),
     };
   const dose = builtInDose(made.exercise.builtIn);
   return {
     exercise: made.exercise.name,
+    kind: made.exercise.kind,
     measure: doseMeasureOf(made.exercise),
     ...(dose === undefined ? {} : { dose }),
   };

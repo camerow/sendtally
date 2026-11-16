@@ -82,12 +82,12 @@ vi.mock("@sendtally/features/workouts", async (actual) => ({
 }));
 vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<typeof T_exercises>()),
-  usePickerWorld: (_api: unknown, _model: unknown, inWorkout: string[], fingers: boolean) => ({
+  usePickerWorld: (_api: unknown, _model: unknown, inWorkout: string[], offer: string) => ({
     mine: [zercher],
     grips: [],
     uses: new Map(),
     inWorkout,
-    fingers,
+    offer,
   }),
 }));
 vi.mock("@sendtally/features/statistics", async (actual) => ({
@@ -229,12 +229,12 @@ describe("WorkoutEditorPage", () => {
     expect(saved().items[0]?.exercise).toBe("Zercher squat");
   });
 
-  it("makes a new workout in its category and focus, then opens it", () => {
-    mount(<WorkoutEditorPage kind="strength" focus="power" />);
+  it("makes a new workout without asking its category, in its focus, then opens it", () => {
+    mount(<WorkoutEditorPage focus="power" />);
     type(container.querySelector<HTMLInputElement>(".name-field")!, "Fast pulls");
     click(container.querySelector(".detail-primary"));
     const [id] = writes.saveWorkout.mock.calls[0] as unknown as [string];
-    expect(saved()).toMatchObject({ name: "Fast pulls", kind: "strength", focus: "power" });
+    expect(saved()).toMatchObject({ name: "Fast pulls", kind: "other", focus: "power" });
     expect(at.path).toBe(`/app/train/workouts/${id}`);
   });
 
