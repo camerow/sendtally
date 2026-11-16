@@ -8,6 +8,7 @@ import {
   doneOfShort,
   effortText,
   KIND_LOOK,
+  blockName,
 } from "@sendtally/features/training";
 import { BlockWeekBars } from "../blocks/BlockWeekBars";
 import { PlanRow } from "../components/PlanRow";
@@ -49,7 +50,7 @@ export function BlockRecapView({ recap, workout }: BlockRecapViewProps): React.R
               onOpen={() =>
                 openMembership(
                   { id: r.membershipId, blockId: recap.block.id, workoutId: w.id },
-                  recap.block.name
+                  blockName(recap.block)
                 )
               }
             />

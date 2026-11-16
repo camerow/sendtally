@@ -336,7 +336,7 @@
 
 .tally-fell:disabled,
 .tally-sent-button:disabled {
-  opacity: 0.35;
+  opacity: var(--opacity-disabled);
   cursor: default;
 }
 
@@ -380,19 +380,6 @@
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--bs-gunmetal);
-}
-
-.finish-discard {
-  align-self: center;
-  height: 44px;
-  padding: 0 12px;
-  border: none;
-  background: none;
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--bs-watermelon-ink);
-  cursor: pointer;
 }
 
 @media (max-width: 767px) {

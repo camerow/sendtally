@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router";
-import { currentBlockLine, useTrainingLog } from "@sendtally/features/training";
+import { currentBlockLine, useTrainingLog, blockName } from "@sendtally/features/training";
 import { useAppApi } from "../../../lib/useAppApi";
 import { blockPath } from "../../../training/blocks/paths";
 import { useHangData } from "../../../training/data/HangDataContext";
@@ -13,8 +13,12 @@ export function CurrentBlockRow(): React.ReactElement | null {
   if (line === null) return null;
   const { block, meta } = line;
   return (
-    <Link to={blockPath(block.id)} className="current-block" aria-label={`${block.name}, ${meta}`}>
-      <span className="current-block-name">{block.name}</span>
+    <Link
+      to={blockPath(block.id)}
+      className="current-block"
+      aria-label={`${blockName(block)}, ${meta}`}
+    >
+      <span className="current-block-name">{blockName(block)}</span>
       <span className="stats-meta">{meta}</span>
     </Link>
   );

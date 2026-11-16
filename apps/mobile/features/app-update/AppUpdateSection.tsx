@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { press } from "../../lib/press";
 import { bodyText, sectionCard, sectionLabel } from "../../lib/styles";
@@ -52,7 +52,7 @@ export function AppUpdateSection(): React.ReactElement | null {
           justifyContent: "center",
           borderRadius: radius.control,
           backgroundColor: colors.azureInk,
-          opacity: restarting ? 0.55 : 1,
+          opacity: restarting ? disabledOpacity : 1,
         })}
       >
         <Icon name="refresh" size={16} strokeWidth={2.2} color={colors.white} />

@@ -88,7 +88,9 @@ export function BlockHeader({
   return (
     <>
       <div className="block-head">
-        <span className="train-label form-mode">{t("plan.editBlock")}</span>
+        <span className="train-label">
+          {dated === null ? t("plan.template") : t("plan.scheduled")}
+        </span>
         <input
           className="name-field block-name-field"
           aria-label={t("hang.name")}

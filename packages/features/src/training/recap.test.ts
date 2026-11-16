@@ -234,6 +234,11 @@ describe("blockTagOf", () => {
     expect(blockTagOf(plan, "m1", "2026-11-30")).toBe("Winter base");
   });
 
+  it("calls an unnamed block Untitled block rather than leaving its name empty", () => {
+    const unnamed = { ...plan, blocks: plan.blocks.map((b) => ({ ...b, name: "" })) };
+    expect(blockTagOf(unnamed, "m1", "2026-10-06")).toBe("Untitled block · W2");
+  });
+
   it("says nothing for a session outside a block's workouts", () => {
     expect(blockTagOf(plan, "m2", "2026-10-06")).toBeNull();
     expect(blockTagOf(plan, null, "2026-10-06")).toBeNull();

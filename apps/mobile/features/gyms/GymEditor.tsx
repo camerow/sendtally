@@ -25,7 +25,7 @@ import {
 } from "@sendtally/features/gyms";
 import { scaleLabel } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { BackButton } from "../../components/BackButton";
 import { AddButton } from "../../components/AddButton";
 import { Icon } from "../../components/Icon";
@@ -274,7 +274,7 @@ export function GymEditor({
         onPress={save}
         disabled={saving}
         accessibilityRole="button"
-        style={press({ ...primaryButton, opacity: saving ? 0.55 : 1 })}
+        style={press({ ...primaryButton, opacity: saving ? disabledOpacity : 1 })}
       >
         <Text style={primaryButtonLabel}>{saving ? t("gyms.saving") : t("gyms.save")}</Text>
       </Pressable>

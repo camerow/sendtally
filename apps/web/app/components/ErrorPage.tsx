@@ -83,14 +83,14 @@ function RouteArt({ kind }: { kind: Kind }): React.ReactElement {
 
 function Actions({ kind }: { kind: Kind }): React.ReactElement {
   const backToLog = (
-    <Button variant="gold" size="sm" href="/app">
+    <Button variant="azure" size="sm" href="/app">
       {t("common.backToLog")}
     </Button>
   );
   if (kind === "server") {
     return (
       <>
-        <Button variant="gold" size="sm" onClick={() => window.location.reload()}>
+        <Button variant="azure" size="sm" onClick={() => window.location.reload()}>
           {t("common.tryAgain")}
         </Button>
         <Button variant="ghostOnLight" size="sm" href="/app">

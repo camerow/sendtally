@@ -2,7 +2,7 @@ import React from "react";
 import { ActivityIndicator, Linking, Pressable, Text, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { WEB_URL } from "../../lib/config";
 import { PlanPicker } from "./PlanPicker";
 import { defaultPackage, packageLabel, storeBillingAvailable, storeLabel } from "./store";
@@ -65,7 +65,7 @@ export function PurchaseControls({ purchase }: PurchaseControlsProps): React.Rea
               minHeight: 48,
               alignItems: "center",
               justifyContent: "center",
-              opacity: busy ? 0.6 : 1,
+              opacity: busy ? disabledOpacity : 1,
             })}
           >
             {purchase.status === "purchasing" ? (

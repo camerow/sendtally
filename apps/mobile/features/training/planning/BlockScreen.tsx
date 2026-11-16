@@ -193,7 +193,7 @@ export function BlockScreen({
         <>
           <View style={{ gap: 4 }}>
             <Label color={colors.fern}>{t("plan.finished")}</Label>
-            <Title size={34}>{block.name}</Title>
+            <Title size={34}>{blockName(block)}</Title>
             <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
               {`${blockDateRange(dated)} · ${t("calendar.weeks", { count: block.weeks })}`}
             </Text>

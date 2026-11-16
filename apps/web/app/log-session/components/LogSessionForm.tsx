@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import type { ClimbSummary, SendtallyApi } from "@sendtally/api-client";
 import { Button } from "@sendtally/design";
-import { effortColor } from "@sendtally/design/tokens";
+import { disabledOpacity, effortColor } from "@sendtally/design/tokens";
 import { climbFormFromDraft, withAreaClimb, type AreaClimb } from "@sendtally/features/areas";
 import { useClimbVocabulary } from "@sendtally/features/climbs";
 import { useGyms, type Gym } from "@sendtally/features/gyms";
@@ -474,7 +474,7 @@ export function LogSessionForm({
               gap: 14,
             }}
           >
-            <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
+            <span style={{ ...monoLabel, color: "var(--bs-gunmetal)" }}>
               {t("logSession.climbsCount", { n: draft.climbs.length })}
             </span>
             <span style={columnHead}>{t("logSession.scalesInSettings")}</span>
@@ -626,7 +626,7 @@ export function LogSessionForm({
               color: "var(--bs-white)",
               border: "none",
               cursor: "pointer",
-              opacity: saving ? 0.45 : 1,
+              opacity: saving ? disabledOpacity : 1,
             }}
           >
             {saving

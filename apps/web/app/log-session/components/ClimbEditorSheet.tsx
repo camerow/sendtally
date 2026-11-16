@@ -165,7 +165,7 @@ export function ClimbEditorSheet({
         >
           <div className="climb-sheet-handle" />
           <div className="climb-sheet-heading">
-            <h2 className="climb-sheet-title">{t("logSession.addClimb")}</h2>
+            <h2 className="sheet-title">{t("logSession.addClimb")}</h2>
             <span className="climb-sheet-count">
               {count > 0
                 ? t("logSession.climbOf", { n: index + 1, total: count })

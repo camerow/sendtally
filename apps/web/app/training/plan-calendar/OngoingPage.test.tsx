@@ -107,7 +107,7 @@ describe("OngoingPage", () => {
     expect(on()).toEqual([false, true, true, false, true, false, false]);
     act(() => container.querySelector<HTMLButtonElement>(".ongoing-remove")?.click());
     expect(container.querySelector(".plan-grid-row:not(.plan-grid-days)")).toBeNull();
-    act(() => container.querySelector<HTMLButtonElement>(".detail-primary")?.click());
+    act(() => container.querySelector<HTMLButtonElement>(".editor-bar-save")?.click());
     expect(state.saveDraft).toHaveBeenCalledOnce();
   });
 });

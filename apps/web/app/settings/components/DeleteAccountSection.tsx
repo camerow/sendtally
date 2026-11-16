@@ -3,6 +3,7 @@ import { DELETE_CONFIRMATION_WORD, type DeleteAccountFeature } from "@sendtally/
 import { t } from "@sendtally/features/i18n";
 import { bodyText, dangerButton, messageText, underlineButton } from "./styles";
 import { sectionLabel } from "../../components/styles";
+import { disabledOpacity } from "@sendtally/design/tokens";
 
 export type DeleteAccountSectionProps = {
   deletion: DeleteAccountFeature;
@@ -44,7 +45,7 @@ export function DeleteAccountSection({ deletion }: DeleteAccountSectionProps): R
               disabled={!deletion.canConfirm || busy}
               style={{
                 ...dangerButton,
-                opacity: !deletion.canConfirm || busy ? 0.5 : 1,
+                opacity: !deletion.canConfirm || busy ? disabledOpacity : 1,
                 cursor: !deletion.canConfirm || busy ? "not-allowed" : "pointer",
               }}
             >

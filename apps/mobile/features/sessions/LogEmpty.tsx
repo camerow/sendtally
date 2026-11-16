@@ -76,7 +76,7 @@ export function LogEmpty({
         <Button
           label={primary.label}
           onPress={primary.onPress}
-          variant="gold"
+          variant="primary"
           icon="plus"
           height={52}
           style={{ alignSelf: "stretch" }}

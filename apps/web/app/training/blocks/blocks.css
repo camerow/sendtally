@@ -206,7 +206,7 @@
 }
 
 .weeks-step:disabled {
-  opacity: 0.4;
+  opacity: var(--opacity-disabled);
   cursor: default;
 }
 
@@ -275,7 +275,7 @@
 }
 
 .week-nav-step:disabled {
-  opacity: 0.4;
+  opacity: var(--opacity-disabled);
   cursor: default;
   background: none;
 }
@@ -576,7 +576,7 @@
 }
 
 .block-order .icon-button:disabled {
-  opacity: 0.3;
+  opacity: var(--opacity-disabled);
   background: none;
   cursor: default;
 }

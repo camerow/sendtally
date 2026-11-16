@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { planCardOf } from "./store";
 import { press } from "../../lib/press";
 
@@ -40,7 +40,7 @@ export function PlanPicker({
               borderRadius: radius.card,
               padding: 14,
               gap: 4,
-              opacity: disabled ? 0.6 : 1,
+              opacity: disabled ? disabledOpacity : 1,
             })}
           >
             <View style={{ minHeight: 16, alignItems: "flex-start" }}>

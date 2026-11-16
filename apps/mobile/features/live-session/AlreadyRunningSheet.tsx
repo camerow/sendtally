@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import { sheetTitleSize } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { Sheet } from "../../components/Sheet";
 import { confirmDestructive } from "../../lib/confirmDestructive";
@@ -28,7 +29,7 @@ function Body({ asking }: { asking: Asking }): React.ReactElement {
   return (
     <View style={{ gap: 12, paddingHorizontal: 18, paddingBottom: 8 }}>
       <Label color={AMBER}>{t("tally.alreadyRunning")}</Label>
-      <Title size={26}>{t("tally.stillGoing", name)}</Title>
+      <Title size={sheetTitleSize}>{t("tally.stillGoing", name)}</Title>
       <Button
         label={t("hang.resume")}
         onPress={() => {

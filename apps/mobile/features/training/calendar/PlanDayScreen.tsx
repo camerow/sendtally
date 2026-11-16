@@ -4,7 +4,13 @@ import { weekday, type CalendarDate } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { dayMonth, weekdayLong } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { trainingDay, useTrainingLog, blockTag, blockOn } from "@sendtally/features/training";
+import {
+  trainingDay,
+  useTrainingLog,
+  blockTag,
+  blockOn,
+  blockName,
+} from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
@@ -26,7 +32,7 @@ export function PlanDayScreen({ date }: PlanDayScreenProps): React.ReactElement 
   const { log } = useTrainingLog(useApi());
   const day = trainingDay(log, date, today);
   const block = blockOn(log.plan.blocks, date);
-  const kicker = block === null ? null : blockTag(block.name, block, date);
+  const kicker = block === null ? null : blockTag(blockName(block), block, date);
   const [adding, setAdding] = React.useState(false);
   const [scheduled, setScheduled] = React.useState<Scheduled | null>(null);
   return (

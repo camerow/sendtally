@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { effortWord } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts } from "@sendtally/design/tokens";
+import { colors, fonts, sheetTitleSize } from "@sendtally/design/tokens";
 import { Sheet } from "../../components/Sheet";
 import { Button } from "../training/components/Button";
 
@@ -35,7 +35,7 @@ export function FinishSheet({
             accessibilityRole="header"
             style={{
               fontFamily: fonts.displayHeavy,
-              fontSize: 28,
+              fontSize: sheetTitleSize,
               letterSpacing: -0.8,
               color: colors.gunmetal,
             }}

@@ -17,7 +17,7 @@ import {
   type FirstGoStyle,
 } from "@sendtally/features/log-session/resultRule";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { SwitchTrack } from "../../components/SwitchTrack";
 import { press, pressRow, tap } from "../../lib/press";
@@ -95,7 +95,7 @@ function StepButton({
         borderColor: "rgba(64,63,76,0.18)",
         alignItems: "center",
         justifyContent: "center",
-        opacity: disabled ? 0.4 : 1,
+        opacity: disabled ? disabledOpacity : 1,
       })}
     >
       <Text style={{ fontFamily: fonts.monoMedium, fontSize: 16, color: colors.gunmetal }}>

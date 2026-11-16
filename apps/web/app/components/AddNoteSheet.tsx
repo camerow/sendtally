@@ -89,7 +89,11 @@ export function AddNoteSheet({
         onChange={(e) => setDraft(e.target.value)}
       />
       {editing !== null && (
-        <button type="button" className="danger-outline" onClick={() => setConfirming(true)}>
+        <button
+          type="button"
+          className="outline-button outline-button--wide outline-button--danger"
+          onClick={() => setConfirming(true)}
+        >
           {t("climbs.deleteNote")}
         </button>
       )}

@@ -696,12 +696,12 @@ a.mod-title:hover {
 }
 
 .mod-bulk-button[data-primary] {
-  background: var(--bs-gold);
-  color: var(--bs-gunmetal-deep);
+  background: var(--bs-azure-ink);
+  color: var(--bs-white);
 }
 
 .mod-bulk-button:disabled {
-  opacity: 0.6;
+  opacity: var(--opacity-disabled);
   cursor: default;
 }
 

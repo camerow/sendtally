@@ -11,6 +11,7 @@ import {
   type WorkoutLookup,
   useLit,
   useBlockWeekGrid,
+  blockName,
 } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
@@ -109,7 +110,7 @@ export function BlockWeek({
     <button
       type="button"
       className="detail-primary block-action"
-      aria-label={t("plan.addToBlock", { name: block.name })}
+      aria-label={t("plan.addToBlock", { name: blockName(block) })}
       onClick={() => setAdding(true)}
     >
       <Icon name="plus" size={18} strokeWidth={2.4} />

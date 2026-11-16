@@ -11,7 +11,7 @@ import {
   type LiveSession,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
-import { colors, fonts } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts } from "@sendtally/design/tokens";
 import { LIVE_HEADER, MinimiseButton } from "../../components/MinimiseButton";
 import { press } from "../../lib/press";
 import { Button } from "../training/components/Button";
@@ -219,7 +219,7 @@ export function LapsTally({
             borderColor: "rgba(255,255,255,0.5)",
             alignItems: "center",
             justifyContent: "center",
-            opacity: laps.off ? 0.35 : 1,
+            opacity: laps.off ? disabledOpacity : 1,
           })}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 18, color: colors.white }}>
@@ -239,7 +239,7 @@ export function LapsTally({
               backgroundColor: colors.gold,
               alignItems: "center",
               justifyContent: "center",
-              opacity: laps.done ? 0.35 : 1,
+              opacity: laps.done ? disabledOpacity : 1,
             })}
           >
             <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 18, color: colors.gunmetal }}>

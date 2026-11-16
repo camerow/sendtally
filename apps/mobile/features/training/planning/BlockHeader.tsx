@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { isDated, type Block, type CalendarDate } from "@sendtally/core/hang";
 import { MAX_DESCRIPTION } from "@sendtally/core/text";
-import { colors } from "@sendtally/design/tokens";
+import { colors, disabledOpacity } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { press } from "../../../lib/press";
 import { BlockWeekChips } from "../blocks/BlockWeekChips";
@@ -85,7 +85,7 @@ export function BlockHeader({
           justifyContent: "center",
           borderWidth: 1,
           borderColor: colors.lineOnLightStrong,
-          opacity: disabled ? 0.4 : 1,
+          opacity: disabled ? disabledOpacity : 1,
         })}
       >
         <Text style={[type.bodyBold, { fontSize: 18, color: colors.gunmetal }]}>{glyph}</Text>

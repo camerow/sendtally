@@ -12,6 +12,7 @@ import { HangSheet } from "../data/HangSheet";
 import { usePlanActions } from "../plan/usePlanActions";
 import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
 import { PlanAgainStart } from "./PlanAgainStart";
+import { blockName } from "@sendtally/features/training";
 
 export type PlanAgainSheetProps = {
   block: Block;
@@ -46,7 +47,7 @@ export function PlanAgainSheet({ block, back, onClose }: PlanAgainSheetProps): R
     <HangSheet visible onClose={onClose} closeLabel={t("common.cancel")}>
       <View style={{ gap: 20, paddingBottom: 12 }}>
         <SheetHeader
-          kicker={block.name}
+          kicker={blockName(block)}
           title={t("plan.planAgainStart")}
           action={t("common.cancel")}
           onAction={onClose}

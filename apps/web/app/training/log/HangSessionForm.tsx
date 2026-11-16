@@ -48,17 +48,7 @@ export function HangSessionForm({ session }: { session: HangSessionRecord }): Re
   };
 
   return (
-    <DetailFrame
-      backTo="/app"
-      backLabel={t("common.cancel")}
-      danger
-      footer={
-        <button type="button" className="detail-primary" onClick={save}>
-          {t("common.save")}
-        </button>
-      }
-    >
-      <span className="train-label form-mode">{t("summary.editWorkout")}</span>
+    <DetailFrame backTo="/app" editor={{ title: t("summary.editWorkout"), onSave: save }}>
       <h1 className="train-title form-title">{hangTitle(session)}</h1>
       <div className="form-row">
         <div className="form-section">

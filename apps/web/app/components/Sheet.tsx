@@ -28,8 +28,10 @@ export type SheetProps = {
   /** A step inside the sheet: a chevron back to the one before it. */
   onBack?: () => void;
   onClose: () => void;
-  /** The footer's one button; Cancel sits beside it on desktop. */
+  /** The footer's main button; Cancel sits beside it on desktop. */
   action?: SheetAction;
+  /** Red text under the footer, such as Discard. */
+  secondary?: Pick<SheetAction, "label" | "onPress">;
   /** Off when the action only closes, such as Done, so Cancel would offer the same thing. */
   cancel?: boolean;
   /** A built-in's picture across the top, with the header on a white card over its bottom edge. */
@@ -56,6 +58,7 @@ function OpenSheet({
   onBack,
   onClose,
   action,
+  secondary,
   cancel = true,
   hero,
   children,
@@ -146,6 +149,11 @@ function OpenSheet({
             {action.label}
           </button>
         </div>
+      )}
+      {secondary !== undefined && (
+        <button type="button" className="sheet-secondary" onClick={secondary.onPress}>
+          {secondary.label}
+        </button>
       )}
     </dialog>
   );

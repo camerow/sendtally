@@ -16,7 +16,7 @@ import {
 } from "@sendtally/features/log-session";
 import { queries, useQuery } from "@sendtally/features/query";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
-import { colors, fonts } from "@sendtally/design/tokens";
+import { colors, disabledOpacity, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { LIVE_HEADER, leaveLiveScreen, MinimiseButton } from "../../components/MinimiseButton";
 import { useApi } from "../../lib/api";
@@ -322,7 +322,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
               borderColor: "rgba(255,255,255,0.5)",
               alignItems: "center",
               justifyContent: "center",
-              opacity: off ? 0.35 : 1,
+              opacity: off ? disabledOpacity : 1,
             })}
           >
             <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 18, color: colors.white }}>
@@ -343,7 +343,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
               backgroundColor: off ? "transparent" : colors.gold,
               alignItems: "center",
               justifyContent: "center",
-              opacity: off ? 0.35 : 1,
+              opacity: off ? disabledOpacity : 1,
             })}
           >
             <Text

@@ -461,7 +461,7 @@
 }
 
 .month-calendar-day:disabled > span {
-  opacity: 0.3;
+  opacity: var(--opacity-disabled);
 }
 
 .block-band {
@@ -776,11 +776,6 @@
   font-size: 14px;
   color: var(--bs-gunmetal);
   cursor: pointer;
-}
-
-.outline-action--danger {
-  border-color: var(--bs-watermelon-ink);
-  color: var(--bs-watermelon-ink);
 }
 
 .outline-action:hover {

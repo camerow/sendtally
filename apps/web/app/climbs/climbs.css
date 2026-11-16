@@ -156,38 +156,6 @@
   color: var(--text-on-white-secondary);
 }
 
-.editor-bar {
-  min-height: 44px;
-  display: grid;
-  grid-template-columns: 72px 1fr 72px;
-  align-items: center;
-}
-
-.editor-cancel {
-  justify-self: start;
-  min-height: 44px;
-  padding: 0;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--bs-watermelon-ink);
-}
-
-.editor-title {
-  margin: 0;
-  text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--bs-gunmetal);
-}
-
 .add-climb-body {
   gap: 16px;
 }

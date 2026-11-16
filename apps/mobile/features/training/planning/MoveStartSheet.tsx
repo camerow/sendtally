@@ -10,6 +10,7 @@ import { SheetHeader } from "../components/SheetHeader";
 import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
 import { type } from "../type";
+import { blockName } from "@sendtally/features/training";
 
 export type MoveStartSheetProps = {
   block: DatedBlock;
@@ -36,7 +37,7 @@ export function MoveStartSheet({
     <HangSheet visible onClose={onClose} closeLabel={t("common.cancel")}>
       <View style={{ gap: 20, paddingBottom: 12 }}>
         <SheetHeader
-          kicker={block.name}
+          kicker={blockName(block)}
           title={t("plan.planAgainStart")}
           action={t("common.cancel")}
           onAction={onClose}
