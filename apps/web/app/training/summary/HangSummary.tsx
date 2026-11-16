@@ -1,6 +1,6 @@
 import React from "react";
 import type { HangSessionRecord } from "@sendtally/api-client";
-import { clock, totalSeconds } from "@sendtally/core/hang";
+import { clock, hangSessionSeconds } from "@sendtally/core/hang";
 import {
   effortTile,
   gripSessions,
@@ -44,7 +44,7 @@ export function HangSummary({
       kickerColor={KIND_LOOK.hangboard.ink}
       title={hangTitle(session)}
       tiles={[
-        { value: clock(totalSeconds(session.protocol), true), label: t("summary.length") },
+        { value: clock(hangSessionSeconds(session), true), label: t("summary.length") },
         effortTile(session.rpe, log.workout(session.workoutId)?.targetRpe ?? null),
         { value: `${grid.held}/${grid.total}`, label: t("summary.hangsHeld") },
       ]}

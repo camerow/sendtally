@@ -3,7 +3,7 @@ import {
   FOCI,
   gripSeries,
   setupsOf,
-  totalSeconds,
+  hangSessionSeconds,
   type Focus,
   type WorkoutKind,
 } from "@sendtally/core/hang";
@@ -88,7 +88,7 @@ function doneOf(log: SessionLogWithClimbs): Done[] {
       focus: h.focus ?? null,
       at: Date.parse(h.date),
       rpe: h.rpe,
-      minutes: Math.round(totalSeconds(h.protocol) / 60),
+      minutes: Math.round(hangSessionSeconds(h) / 60),
     })),
     ...log.activities.map((a): Done => ({
       kind: a.kind,

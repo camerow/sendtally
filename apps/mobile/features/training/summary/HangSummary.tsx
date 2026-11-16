@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { kindLabel } from "@sendtally/features/activities";
 import type { HangSessionRecord } from "@sendtally/api-client";
-import { clock, totalSeconds } from "@sendtally/core/hang";
+import { clock, hangSessionSeconds } from "@sendtally/core/hang";
 import { gripSessions, hangGrid, pastSessions } from "@sendtally/features/activities";
 import { newBestOf, type HangActions, type HangModel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -40,7 +40,7 @@ export function HangSummary({
       kickerColor={KIND_LOOK.hangboard.ink}
       title={hangTitle(session)}
       tiles={[
-        { value: clock(totalSeconds(session.protocol), true), label: t("summary.length") },
+        { value: clock(hangSessionSeconds(session), true), label: t("summary.length") },
         effortTile(session.rpe, log.workout(session.workoutId)?.targetRpe ?? null),
         { value: `${grid.held}/${grid.total}`, label: t("summary.hangsHeld") },
       ]}
