@@ -114,24 +114,33 @@ Kind and colour are the non-grip majority's.
 - A mix opens the sets or checklist player even when every item is timed; the part is one card in item order where its first grip sits, with Start.
 - Not started: the grips, each with its dose and planned edge and load, and Start.
 - Running: Start opens the hang timer on the part's grips only; the timer's minimise returns to the workout view with the part shown as running, and its live bar entry reopens the timer.
-- Finished: the timer's finish returns to the workout view instead of the hang review; the card is always-editable set rows per grip, like any other exercise (Will, 2026-11-16: no Edit button): target hangs, hangs done, load per set and a tick, with the edge on each grip's setup pill; the next item is live.
+- Finished: the timer's finish returns to the workout view instead of the hang review; the card is always-editable set rows per grip, like any other exercise (Will, 2026-11-16: no Edit button): target hangs, hangs done, load per set and a set RPE (Will, 2026-11-16: no tick, 'x of y hangs' says whether it was done), with the edge on each grip's setup pill; the next item is live.
 - Skipped: the card collapses like any skipped exercise; no part is written.
 - Half done, minimised: the timer's run is still live, so the card offers Resume (`resumedTimer`, as today).
 - Half done, minimised, shows its rows read-only: the timer still owns them until it ends, so two writers never race over one set.
-- Half done, ended with End: the same editable rows as finished, filled from the timer's held sets (`setsHeld`); unreached sets and grips are empty and unticked; an ended run is never resumed.
+- Half done, ended with End: the same editable rows as finished, filled from the timer's held sets (`setsHeld`); unreached sets and grips are empty; an ended run is never resumed.
 - It can sit anywhere in the order, and a workout holds one part.
 
 ### 4. Editing the finished part
 
 Before Finish, the part's sets edit in place on the workout view, with no Edit step, in the same set rows the activity review uses for grips (`ActivityForm` in hang mode: hangs per set, load per set, the setup pill for edge and load).
-When the timer ends, the live run turns its held sets into the part's `done` (`ItemDone[]` with `reps`, `weightKg` and `edgeMm` per set) and ticked list, the same shape the sets player keeps for its own items; edits write there, and Finish saves it through `hangResult`, which already keeps a set's own `weightKg` over the setup's load.
+When the timer ends, the live run turns its held sets into the part's `done` (`ItemDone[]` with `reps`, `weightKg` and `edgeMm` per set), the same shape the sets player keeps for its own items, without its ticked list; edits write there, and Finish saves it through `hangResult`, which already keeps a set's own `weightKg` over the setup's load.
 No model change: per-set load and hangs are `SetDone` fields today.
+
+### Set RPE and no tick on hang rows
+
+Will, 2026-11-16: the hangs count already says whether a set was done, and a set RPE is more useful than a tick.
+Hang set rows in every place they appear drop the tick and take the shipped Set RPE column (header, box, keypad) in its place: the part on the workout view, the review after Finish, the standalone fingers timer's review, and the hang session edit, which all share `ActivityForm`'s hang mode, so there is one way for both.
+- Storage: `SetDone.rpe` (1 to 10) exists since Set RPE and `doneBody` accepts it, so a rated hang set is `done_json[i].sets[j].rpe` in `hang_sessions`, exactly as in `activities`; no migration. The session's own `rpe` column stays the run's effort.
+- Done signal: a hang set is kept when it held anything (hangs above 0, or a lone hang's cut seconds), which is the rule `setsHeld` already applies to the timer's sets; clearing a set's hangs drops it, and a dropped set is not missed, as today. The part's live state has no ticked list.
+- Target: a grip dose can hold `targetRpe` (the type and `doseBody` allow it) but the editor does not offer it (`FINGERS_FIELDS` in `doseFields.ts` has no RPE field), so hang rows show the RPE box without a target until a grip dose offers one.
+- Showing it: Set RPE deferred hang sets because `HangSummary` and `HangResultCard` would show a rating nowhere; they now show each set's RPE beside its hangs and load, for parts and standalone sessions alike, so no rating is entered and then hidden.
 After Finish, the review and later edits are the activity's `ActivityForm`, which shows the part's grips inline with the other exercises in that same hang mode and saves both rows in one request.
 There is one editor for grip sets, `ActivityForm`'s hang mode; `HangSessionForm` should move onto it too, which also fixes its first-grip-only defect.
 
 ### 5. Leaving and coming back
 
-- One live run per user: the sets player's `RunState` gains `fingers?: { run: Run; setups: HangSetup[] } | { done: ItemDone[]; ticked: string[]; setups: HangSetup[] }` (the timer's run while it is live, the editable sets once it has ended), and the timer opened from the workout view reads and writes that, so closing the app mid-timer resumes the timer, and between parts resumes the workout view.
+- One live run per user: the sets player's `RunState` gains `fingers?: { run: Run; setups: HangSetup[] } | { done: ItemDone[]; setups: HangSetup[] }` (the timer's run while it is live, the editable sets once it has ended), and the timer opened from the workout view reads and writes that, so closing the app mid-timer resumes the timer, and between parts resumes the workout view.
 - Stopping after the part: Finish logs the activity with the part and every other item not done; the run still counts once.
 - Discarding the live run is the one place a finished part can be lost: nothing is saved until Finish, so Discard throws away the held hangs with everything else.
   Its confirmation says so when the part has held sets: "Discard this workout? Its fingerboard part (21 hangs held) goes too."
