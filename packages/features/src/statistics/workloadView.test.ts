@@ -22,7 +22,8 @@ describe("workloadVM", () => {
     const vm = workloadVM(steady, "7d", now);
     expect(vm).toMatchObject({ state: "ratio", ratio: "1.00", zone: "sweet", acute: "1,080" });
     expect(vm.sentence).toBe("In line with your last four weeks.");
-    expect(vm.sheet.division).toBe("1,080 ÷ 1,080 = 1.00 · Sweet spot");
+    expect(vm.sheet.footer).toBe("1,080 ÷ 1,080 = 1.00 · Sweet spot");
+    expect(vm.sheet.tiles.map((x) => x.note)).toEqual(["Nov 10 to Nov 16", "Oct 20 to Nov 16 ÷ 4"]);
     expect(vm.sheet.weeks.map((w) => w.load)).toEqual([1080, 1080, 1080, 1080]);
   });
 
@@ -47,6 +48,8 @@ describe("workloadVM", () => {
       headline: "3 of 5 counted",
     });
     expect(vm.leftOutLine).toBe("2 not counted in the last 7 days: no effort or time");
+    expect(vm.sheet.footer).toBe("No zone: more than a quarter left out");
+    expect(vm.sheet.tiles.map((x) => x.counted)).toEqual(["3 of 5 counted", "12 of 14 counted"]);
     expect(vm.sheet.leftOut.map((l) => [l.ref.id, l.detail])).toEqual([
       ["r1", "Nov 15 · no effort"],
       ["climb", "Nov 14 · no time"],

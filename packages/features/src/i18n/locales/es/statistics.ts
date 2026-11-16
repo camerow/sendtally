@@ -64,9 +64,7 @@ export const statistics = {
   "statistics.workloadNoTime": "sin duración",
   "statistics.workloadNoEither": "sin esfuerzo ni duración",
   "statistics.workloadLast7": "Últimos 7 días",
-  "statistics.workloadLast7Note": "últimos 7 días",
   "statistics.workloadAverage": "Semana media",
-  "statistics.workloadAverageNote": "últimos 28 días ÷ 4",
   "statistics.workloadAfter4": "tras 4 semanas",
   "statistics.workloadSpan": "del {from} al {to}",
   "statistics.workloadBarsNote":

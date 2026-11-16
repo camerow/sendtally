@@ -70,7 +70,7 @@ export function WorkloadChart({
                 strokeDasharray="2 3"
               />
             ))}
-            {WORKLOAD_EDGES.map((edge) => tick(edge))}
+            {tick(WORKLOAD_EDGES[2])}
             {tick(1, true)}
             <line
               x1={plot.left}

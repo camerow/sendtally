@@ -714,6 +714,13 @@
   font-size: 11px;
 }
 
+.workload-chart {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  column-gap: 8px;
+  row-gap: 6px;
+}
+
 .workload-bars {
   position: relative;
   display: flex;
@@ -721,26 +728,8 @@
   align-items: flex-end;
 }
 
-.workload-bar {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.workload-bar .workload-mono {
-  position: relative;
-  z-index: 1;
-  padding: 0 4px;
-  background: var(--bs-white);
-  font-size: 11px;
-}
-
 .workload-bar-fill {
-  position: relative;
-  z-index: 1;
-  width: 100%;
+  flex: 1;
   border-radius: 6px 6px 2px 2px;
   background: rgba(64, 63, 76, 0.22);
 }
@@ -750,16 +739,46 @@
   box-shadow: inset 0 0 0 1.5px var(--bs-gunmetal);
 }
 
-.workload-bar-label {
-  font-size: 9.5px;
-}
-
 .workload-average {
   position: absolute;
   left: 0;
   right: 0;
   border-top: 1.5px dashed var(--bs-gunmetal);
   pointer-events: none;
+}
+
+.workload-gutter {
+  position: relative;
+}
+
+.workload-average-label {
+  position: absolute;
+  left: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--bs-gunmetal);
+}
+
+.workload-bar-labels {
+  display: flex;
+  gap: 10px;
+}
+
+.workload-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.workload-bar .workload-mono {
+  font-size: 11px;
+}
+
+.workload-bar-label {
+  font-size: 9.5px;
 }
 
 .workload-left-out {

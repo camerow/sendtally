@@ -63,7 +63,9 @@ describe("workloadOn", () => {
   it("withholds the zone past a quarter left out of the last 28 days", () => {
     const missing = (n: number): Loadable[] =>
       [10, 12, 15, 18, 20].slice(0, n).map((d) => hour(d, null));
-    expect(workloadOn([...steady(6), ...missing(4)], today).state).toBe("ratio");
+    const quarter = workloadOn([...steady(6), ...missing(4)], today);
+    expect(quarter.month).toEqual({ total: 16, leftOut: 4 });
+    expect(quarter.state).toBe("ratio");
     expect(workloadOn([...steady(6), ...missing(5)], today).state).toBe("partial");
   });
 

@@ -4,13 +4,14 @@ import { Pressable, Text, View } from "react-native";
 import Svg, { Line } from "react-native-svg";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import type { DoneRef, WorkloadVM } from "@sendtally/features/statistics";
+import type { DoneRef, WorkloadTileVM, WorkloadVM } from "@sendtally/features/statistics";
 import { Sheet } from "../../../components/Sheet";
 import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { type } from "../type";
 
 const BAR = 82;
+const GUTTER = 44;
 
 function open(ref: DoneRef): void {
   if (ref.type === "session")
@@ -18,15 +19,7 @@ function open(ref: DoneRef): void {
   else router.push({ pathname: "/activity/[id]", params: { id: ref.id } });
 }
 
-function Tile({
-  label,
-  value,
-  note,
-}: {
-  label: string;
-  value: string;
-  note: string;
-}): React.ReactElement {
+function Tile({ label, value, note, counted }: WorkloadTileVM): React.ReactElement {
   return (
     <View
       style={{
@@ -42,6 +35,9 @@ function Tile({
       </Label>
       <Text style={[type.display, { fontSize: 26, color: colors.gunmetal }]}>{value}</Text>
       <Text style={[type.mono, { fontSize: 11, color: colors.textSecondary }]}>{note}</Text>
+      {counted !== null && (
+        <Text style={[type.mono, { fontSize: 11, color: colors.gunmetal }]}>{counted}</Text>
+      )}
     </View>
   );
 }
@@ -57,98 +53,101 @@ export function WorkloadSheet({
   onClose: () => void;
 }): React.ReactElement {
   const s = w.sheet;
-  const partial = w.state === "partial";
   const top = Math.max(s.average, ...s.weeks.map((x) => x.load), 1);
+  const averageAt = (s.average / top) * BAR;
   return (
     <Sheet visible={visible} onClose={onClose} closeLabel={t("common.close")}>
       <View style={{ paddingHorizontal: 18, gap: 14 }}>
-        <View
-          style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" }}
-        >
-          <Text style={[type.display, { fontSize: 22, color: colors.gunmetal }]}>
-            {t("statistics.workloadTitle")}
-          </Text>
-          <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{s.span}</Text>
-        </View>
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <Tile
-            label={t("statistics.workloadLast7")}
-            value={w.acute}
-            note={partial ? s.weekCounted : t("statistics.workloadLast7Note")}
-          />
-          {w.state !== "break" && (
-            <Tile
-              label={t("statistics.workloadAverage")}
-              value={w.chronic ?? t("statistics.workloadAfter4")}
-              note={partial ? s.monthCounted : t("statistics.workloadAverageNote")}
-            />
-          )}
-        </View>
-        <Text style={[type.mono, { fontSize: 13, color: colors.gunmetal }]}>
-          {s.division ?? (partial ? t("statistics.workloadNoZone") : w.sentence)}
+        <Text style={[type.display, { fontSize: 22, color: colors.gunmetal }]}>
+          {t("statistics.workloadTitle")}
         </Text>
-        <View style={{ flexDirection: "row", gap: 10, alignItems: "flex-end", height: BAR + 48 }}>
-          {s.average > 0 && (
-            <View
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 21 + (s.average / top) * BAR,
-                height: 2,
-              }}
-            >
-              <Svg width="100%" height={2}>
-                <Line
-                  x1="0"
-                  x2="100%"
-                  y1={1}
-                  y2={1}
-                  stroke={colors.gunmetal}
-                  strokeWidth={1.5}
-                  strokeDasharray="4 3"
-                />
-              </Svg>
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          {s.tiles.map((tile) => (
+            <Tile key={tile.label} {...tile} />
+          ))}
+        </View>
+        <Text style={[type.mono, { fontSize: 13, color: colors.gunmetal }]}>{s.footer}</Text>
+        <View style={{ gap: 6 }}>
+          <View style={{ flexDirection: "row", gap: 8, height: BAR }}>
+            <View style={{ flex: 1, flexDirection: "row", gap: 10, alignItems: "flex-end" }}>
+              {s.weeks.map((week, i) => {
+                const last = i === s.weeks.length - 1;
+                return (
+                  <View
+                    key={week.label}
+                    style={{
+                      flex: 1,
+                      height: Math.max(2, (week.load / top) * BAR),
+                      borderTopLeftRadius: 6,
+                      borderTopRightRadius: 6,
+                      borderBottomLeftRadius: 2,
+                      borderBottomRightRadius: 2,
+                      backgroundColor: last ? colors.gold : colors.lineOnLightStrong,
+                      borderWidth: last ? 1.5 : 0,
+                      borderColor: colors.gunmetal,
+                    }}
+                  />
+                );
+              })}
+              {s.average > 0 && (
+                <View
+                  pointerEvents="none"
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: averageAt - 1,
+                    height: 2,
+                  }}
+                >
+                  <Svg width="100%" height={2}>
+                    <Line
+                      x1="0"
+                      x2="100%"
+                      y1={1}
+                      y2={1}
+                      stroke={colors.gunmetal}
+                      strokeWidth={1.5}
+                      strokeDasharray="4 3"
+                    />
+                  </Svg>
+                </View>
+              )}
             </View>
-          )}
-          {s.weeks.map((week, i) => {
-            const last = i === s.weeks.length - 1;
-            return (
-              <View key={week.label} style={{ flex: 1, alignItems: "center", gap: 6 }}>
+            <View style={{ width: GUTTER }}>
+              {s.average > 0 && (
                 <Text
                   style={[
-                    type.mono,
+                    type.monoBold,
                     {
-                      zIndex: 1,
-                      paddingHorizontal: 4,
+                      position: "absolute",
+                      left: 0,
+                      bottom: averageAt - 7,
                       fontSize: 11,
                       color: colors.gunmetal,
-                      backgroundColor: colors.white,
                     },
                   ]}
                 >
-                  {week.value}
+                  {s.averageLabel}
                 </Text>
-                <View
-                  style={{
-                    width: "100%",
-                    height: Math.max(2, (week.load / top) * BAR),
-                    borderTopLeftRadius: 6,
-                    borderTopRightRadius: 6,
-                    borderBottomLeftRadius: 2,
-                    borderBottomRightRadius: 2,
-                    backgroundColor: last ? colors.gold : colors.lineOnLightStrong,
-                    borderWidth: last ? 1.5 : 0,
-                    borderColor: colors.gunmetal,
-                  }}
-                />
-                <Label color={colors.textSecondary} small style={{ fontSize: 9.5 }}>
-                  {week.label}
-                </Label>
-              </View>
-            );
-          })}
+              )}
+            </View>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <View style={{ flex: 1, flexDirection: "row", gap: 10 }}>
+              {s.weeks.map((week) => (
+                <View key={week.label} style={{ flex: 1, alignItems: "center", gap: 2 }}>
+                  <Text style={[type.mono, { fontSize: 11, color: colors.gunmetal }]}>
+                    {week.value}
+                  </Text>
+                  <Label color={colors.textSecondary} small style={{ fontSize: 9.5 }}>
+                    {week.label}
+                  </Label>
+                </View>
+              ))}
+            </View>
+            <View style={{ width: GUTTER }} />
+          </View>
         </View>
         <Text style={[type.mono, { fontSize: 11.5, color: colors.textSecondary }]}>
           {t("statistics.workloadBarsNote")}

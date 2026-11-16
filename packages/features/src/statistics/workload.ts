@@ -28,7 +28,7 @@ export type Workload = {
 };
 
 /** Past this share of records left out, either window can be off by a whole zone. */
-export const LEFT_OUT_LIMIT = 0.25;
+const LEFT_OUT_LIMIT = 0.25;
 
 export const loadOf = (d: Loadable): number | null =>
   d.rpe === null || d.minutes <= 0 ? null : d.rpe * d.minutes;

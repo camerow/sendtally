@@ -106,6 +106,9 @@ export function workloadPlot(
 
 export type WorkloadLeftOutVM = { ref: DoneRef; detail: string };
 
+/** A load with the days it covers and, when too much was left out, how much was counted. */
+export type WorkloadTileVM = { label: string; value: string; note: string; counted: string | null };
+
 export type WorkloadWeekVM = { label: string; load: number; value: string };
 
 export type WorkloadVM = {
@@ -127,12 +130,14 @@ export type WorkloadVM = {
   /** "2 not counted this week: no effort or time". */
   leftOutLine: string | null;
   sheet: {
-    span: string;
-    division: string | null;
-    weekCounted: string;
-    monthCounted: string;
+    /** The last 7 days, then the average week unless there is none to give after a break. */
+    tiles: WorkloadTileVM[];
+    /** The division and zone, why there is no zone, or why there is no ratio yet. */
+    footer: string;
     weeks: WorkloadWeekVM[];
     average: number;
+    /** The dashed average line's own label, "1,480". */
+    averageLabel: string;
     leftOut: WorkloadLeftOutVM[];
   };
 };
@@ -157,22 +162,49 @@ const shortDay = (ms: number): string =>
 const counted = ({ total, leftOut }: Workload["week"]): string =>
   t("statistics.workloadCounted", { counted: total - leftOut, total });
 
-function missing(d: Done): string {
-  if (d.rpe === null && d.minutes <= 0) return t("statistics.workloadNoEither");
-  return d.rpe === null ? t("statistics.workloadNoEffort") : t("statistics.workloadNoTime");
+function why(noEffort: boolean, noTime: boolean): string {
+  if (noEffort && noTime) return t("statistics.workloadNoEither");
+  return noEffort ? t("statistics.workloadNoEffort") : t("statistics.workloadNoTime");
 }
+
+const noEffort = (d: Done): boolean => d.rpe === null;
+const noTime = (d: Done): boolean => d.minutes <= 0;
 
 function leftOutLine(left: readonly Done[]): string | null {
   if (left.length === 0) return null;
-  const noEffort = left.some((d) => d.rpe === null);
-  const noTime = left.some((d) => d.minutes <= 0);
-  const why =
-    noEffort && noTime
-      ? t("statistics.workloadNoEither")
-      : noEffort
-        ? t("statistics.workloadNoEffort")
-        : t("statistics.workloadNoTime");
-  return t("statistics.workloadLeftOut", { count: left.length, why });
+  const reason = why(left.some(noEffort), left.some(noTime));
+  return t("statistics.workloadLeftOut", { count: left.length, why: reason });
+}
+
+function tiles(w: Workload, today: number): WorkloadTileVM[] {
+  const partial = w.state === "partial";
+  const span = (days: number): string =>
+    t("statistics.workloadSpan", {
+      from: shortDay(today - (days - 1) * DAY_MS),
+      to: shortDay(today),
+    });
+  const week: WorkloadTileVM = {
+    label: t("statistics.workloadLast7"),
+    value: load(w.acute),
+    note: span(7),
+    counted: partial ? counted(w.week) : null,
+  };
+  if (w.state === "break") return [week];
+  return [
+    week,
+    {
+      label: t("statistics.workloadAverage"),
+      value: w.state === "early" ? t("statistics.workloadAfter4") : load(w.chronic),
+      note: `${span(28)} ÷ 4`,
+      counted: partial ? counted(w.month) : null,
+    },
+  ];
+}
+
+function footer(w: Workload, zone: WorkloadZone | null, line: string): string {
+  if (zone !== null && w.ratio !== null)
+    return `${load(w.acute)} ÷ ${load(w.chronic)} = ${ratioText(w.ratio)} · ${workloadZoneLabel(zone)}`;
+  return w.state === "partial" ? t("statistics.workloadNoZone") : line;
 }
 
 function headline(w: Workload): string {
@@ -209,12 +241,17 @@ export function workloadVM(done: readonly Done[], range: TrendRange, now: Date):
   const days = plotDays(range, now, first);
   const lastWeek = done.filter((d) => d.at >= today - 6 * DAY_MS && d.at < today + DAY_MS);
   const left = lastWeek.filter((d) => loadOf(d) === null).sort((a, b) => b.at - a.at);
+  const span = t("statistics.workloadSpan", {
+    from: shortDay(today - 6 * DAY_MS),
+    to: shortDay(today),
+  });
+  const said = sentence(w, zone);
   return {
     state: w.state,
     ratio: zone === null || w.ratio === null ? null : ratioText(w.ratio),
     zone,
     headline: zone === null ? headline(w) : "",
-    sentence: sentence(w, zone),
+    sentence: said,
     points: days.map((day) => {
       const p = workloadOn(done, day);
       return p.state === "ratio" ? p.ratio : null;
@@ -225,23 +262,19 @@ export function workloadVM(done: readonly Done[], range: TrendRange, now: Date):
     chronic: w.state === "early" || w.state === "break" ? null : load(w.chronic),
     leftOutLine: leftOutLine(left),
     sheet: {
-      span: t("statistics.workloadSpan", {
-        from: shortDay(today - 6 * DAY_MS),
-        to: shortDay(today),
-      }),
-      division:
-        zone === null || w.ratio === null
-          ? null
-          : `${load(w.acute)} ÷ ${load(w.chronic)} = ${ratioText(w.ratio)} · ${workloadZoneLabel(zone)}`,
-      weekCounted: counted(w.week),
-      monthCounted: counted(w.month),
+      tiles: tiles(w, today),
+      footer: footer(w, zone, said),
       weeks: w.weeks.map((n, i) => ({
         label: i === 3 ? t("statistics.workloadLast7") : shortDay(today - (27 - i * 7) * DAY_MS),
         load: n,
         value: load(n),
       })),
       average: w.chronic,
-      leftOut: left.map((d) => ({ ref: d.ref, detail: `${shortDay(d.at)} · ${missing(d)}` })),
+      averageLabel: load(w.chronic),
+      leftOut: left.map((d) => ({
+        ref: d.ref,
+        detail: `${shortDay(d.at)} · ${why(noEffort(d), noTime(d))}`,
+      })),
     },
   };
 }
