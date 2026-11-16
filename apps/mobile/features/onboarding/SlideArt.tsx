@@ -249,7 +249,8 @@ function Exercise({
 }
 
 function WorkoutsArt({ play }: { play: Play }): React.ReactElement {
-  const ring = useAnimatedProps(() => ({ strokeDashoffset: RING * play.value }));
+  // The rest runs down part way, so its last frame still shows the ring.
+  const ring = useAnimatedProps(() => ({ strokeDashoffset: RING * 0.6 * play.value }));
   return (
     <View style={CARD}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>

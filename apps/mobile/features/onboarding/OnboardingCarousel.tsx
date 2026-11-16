@@ -14,6 +14,17 @@ const PAGE_PADDING = 22;
  */
 const ART_BOX_HEIGHT = 310;
 const TEXT_BOX_HEIGHT = 170;
+const ART_TEXT_GAP = 24;
+
+/**
+ * The art box's height and the art's scale on a page this tall: the full 310 where it fits, else
+ * what is left over the text box, with the art scaled down whole, so every slide stays alike.
+ */
+export function artFit(pageHeight: number | null): { height: number; scale: number } {
+  if (pageHeight === null) return { height: ART_BOX_HEIGHT, scale: 1 };
+  const height = Math.min(ART_BOX_HEIGHT, pageHeight - TEXT_BOX_HEIGHT - ART_TEXT_GAP);
+  return { height, scale: height / ART_BOX_HEIGHT };
+}
 
 function Dots({ count, active }: { count: number; active: number }): React.ReactElement {
   return (
@@ -54,6 +65,8 @@ export function OnboardingCarousel({
   const window = useWindowDimensions();
   const width = pageWidth ?? window.width;
   const [active, setActive] = React.useState(0);
+  const [pageHeight, setPageHeight] = React.useState<number | null>(null);
+  const art = artFit(fill ? pageHeight : null);
 
   function onScroll(e: NativeSyntheticEvent<NativeScrollEvent>): void {
     const next = Math.round(e.nativeEvent.contentOffset.x / Math.max(1, width));
@@ -69,6 +82,7 @@ export function OnboardingCarousel({
         onScroll={onScroll}
         scrollEventThrottle={16}
         style={{ flex: fill ? 1 : undefined }}
+        onLayout={(e) => setPageHeight(e.nativeEvent.layout.height)}
       >
         {slides.map((slide, i) => (
           <View
@@ -77,11 +91,20 @@ export function OnboardingCarousel({
               width,
               paddingHorizontal: PAGE_PADDING,
               justifyContent: "center",
-              gap: 24,
+              gap: ART_TEXT_GAP,
             }}
           >
-            <View style={{ height: ART_BOX_HEIGHT, justifyContent: "flex-end" }}>
-              <SlideArt slide={slide.key} show={i === active} />
+            <View style={{ height: art.height, justifyContent: "flex-end" }}>
+              <View
+                style={{
+                  height: ART_BOX_HEIGHT,
+                  justifyContent: "flex-end",
+                  transform: [{ scale: art.scale }],
+                  transformOrigin: "bottom",
+                }}
+              >
+                <SlideArt slide={slide.key} show={i === active} />
+              </View>
             </View>
             <View style={{ gap: 10, minHeight: TEXT_BOX_HEIGHT }}>
               <Text

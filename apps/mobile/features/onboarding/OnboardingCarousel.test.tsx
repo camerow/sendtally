@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react-native";
 import React from "react";
 import { StyleSheet, type StyleProp, type TextStyle } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { OnboardingCarousel } from "./OnboardingCarousel";
+import { artFit, OnboardingCarousel } from "./OnboardingCarousel";
 import { ART_CARD_HEIGHT } from "./SlideArt";
 
 type Node = { props: { style?: unknown; children?: unknown }; children: (Node | string)[] };
@@ -54,5 +54,10 @@ describe("onboarding carousel", () => {
   it("gives every slide's art the same height, so it never jumps", async () => {
     const cards = (await show()).filter((n) => styleOf(n).height === ART_CARD_HEIGHT);
     expect(cards).toHaveLength(4);
+  });
+
+  it("keeps the 310 art box where it fits, and scales the art down whole on a short phone", () => {
+    expect(artFit(560)).toEqual({ height: 310, scale: 1 });
+    expect(artFit(394)).toEqual({ height: 200, scale: 200 / 310 });
   });
 });
