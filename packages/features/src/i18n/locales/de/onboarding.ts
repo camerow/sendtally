@@ -22,4 +22,10 @@ export const onboarding = {
   "onboarding.art.fingerStrength": "Fingerkraft",
   "onboarding.art.loadBuilds": "Belastung steigt",
   "onboarding.art.deload": "Entlastung",
+  "onboarding.art.maxHangs": "Max Hangs",
+  "onboarding.art.antagonistPush": "Antagonisten: Drücken",
+  "onboarding.art.pushUps": "Liegestütze",
+  "onboarding.art.overheadPress": "Schulterdrücken",
+  "onboarding.art.dips": "Dips",
+  "onboarding.art.externalRotation": "Außenrotation mit Band",
 } as const;

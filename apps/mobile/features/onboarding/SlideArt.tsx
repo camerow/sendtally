@@ -173,7 +173,7 @@ function ExercisesArt({ play }: { play: Play }): React.ReactElement {
       <View
         style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" }}
       >
-        <Text style={TITLE}>{`${t("workouts.builtIn.max10.name")} · 20mm`}</Text>
+        <Text style={TITLE}>{`${t("onboarding.art.maxHangs")} · 20mm`}</Text>
         <Text style={{ fontFamily: fonts.monoSemiBold, fontSize: 13, color: colors.petalInk }}>
           +12 kg
         </Text>
@@ -271,7 +271,7 @@ function WorkoutsArt({ play }: { play: Play }): React.ReactElement {
         </Svg>
         <View style={{ gap: 2, flexShrink: 1 }}>
           <Text style={MONO_LABEL}>
-            {t("onboarding.art.rest", { workout: t("workouts.builtIn.strength-antagonist.name") })}
+            {t("onboarding.art.rest", { workout: t("onboarding.art.antagonistPush") })}
           </Text>
           <Text style={{ fontFamily: fonts.displayHeavy, fontSize: 34, color: colors.gunmetal }}>
             1:30
@@ -279,12 +279,12 @@ function WorkoutsArt({ play }: { play: Play }): React.ReactElement {
         </View>
       </View>
       <View>
-        <Exercise play={play} name={t("workouts.exercise.pushUps")} dose="3 × 15" lit="now" />
-        <Exercise play={play} name={t("workouts.exercise.overheadPress")} dose="3 × 8" lit="next" />
-        <Exercise play={play} name={t("workouts.exercise.dips")} dose="3 × 10" lit={null} />
+        <Exercise play={play} name={t("onboarding.art.pushUps")} dose="3 × 15" lit="now" />
+        <Exercise play={play} name={t("onboarding.art.overheadPress")} dose="3 × 8" lit="next" />
+        <Exercise play={play} name={t("onboarding.art.dips")} dose="3 × 10" lit={null} />
         <Exercise
           play={play}
-          name={t("workouts.exercise.externalRotation")}
+          name={t("onboarding.art.externalRotation")}
           dose="4 × 15"
           lit={null}
         />

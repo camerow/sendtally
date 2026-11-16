@@ -1,8 +1,9 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 import { render, screen } from "@testing-library/react-native";
 import React from "react";
 import { StyleSheet, type StyleProp, type TextStyle } from "react-native";
 import { colors } from "@sendtally/design/tokens";
+import * as i18n from "@sendtally/features/i18n";
 import { artFit, OnboardingCarousel } from "./OnboardingCarousel";
 import { ART_CARD_HEIGHT } from "./SlideArt";
 
@@ -59,5 +60,17 @@ describe("onboarding carousel", () => {
   it("keeps the 310 art box where it fits, and scales the art down whole on a short phone", () => {
     expect(artFit(560)).toEqual({ height: 310, scale: 1 });
     expect(artFit(394)).toEqual({ height: 200, scale: 200 / 310 });
+  });
+
+  it("names its art with its own keys, never the built-in library's", async () => {
+    const t = jest.spyOn(i18n, "t");
+    try {
+      await show();
+      const keys = t.mock.calls.map(([key]) => String(key));
+      expect(keys).toContain("onboarding.art.maxHangs");
+      expect(keys.filter((k) => /^workouts\.(builtIn|exercise)\./.test(k))).toEqual([]);
+    } finally {
+      t.mockRestore();
+    }
   });
 });
