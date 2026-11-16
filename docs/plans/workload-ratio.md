@@ -59,7 +59,8 @@ The work is a filter and sum over the log per plotted point; at a few thousand r
 
 ## 5. The plot
 
-One point per bucket of the page's existing range control (`bucketsFor`), each the ratio as of the bucket's last day: days on 7D, weeks on 1M to 6M, months on 1Y and All.
+The range comes from the page's existing range control; each point is the ratio as of that day: one a day on 7D and 1M, one a week (the ratio on each week's last day) on longer ranges.
+The axis is fixed at 0 to 2.0; a ratio above 2.0 is drawn at the top edge with a marker.
 Buckets with no ratio (too early, or after a break) are gaps in the line.
 The four zones are horizontal bands behind the line, drawn with the page's chart geometry (`plot`, `polyline` in `chartGeometry.ts`); no new chart primitive unless the designer's board needs one.
 Today's ratio and zone are stated in words above the chart, and tapping the card opens the acute and chronic loads behind it and the records left out.
