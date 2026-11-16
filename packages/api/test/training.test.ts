@@ -362,8 +362,41 @@ describe("workouts", () => {
     const { exerciseRestS: _, ...noRest } = squatWorkout;
     const strength = await call(userId, "PUT", "/v1/workouts/w1", noRest);
     expect(await json(strength)).toMatchObject({ workout: { exerciseRestS: 0 } });
-    const hang = await call(userId, "PUT", "/v1/workouts/w2", { ...noRest, kind: "hangboard" });
+    const hang = await call(userId, "PUT", "/v1/workouts/w2", {
+      ...noRest,
+      kind: "hangboard",
+      items: [{ exercise: "half", doses: [{ sets: 3, reps: 6, onS: 7, offS: 3 }] }],
+    });
     expect(await json(hang)).toMatchObject({ workout: { exerciseRestS: 180 } });
+  });
+
+  it("reads the kind off the exercises, keeping the one sent for a workout with none", async () => {
+    const userId = "user_workouts_derived_kind";
+    await call(userId, "PUT", "/v1/exercises/e1", { name: "Hip openers", kind: "mobility" });
+    await call(userId, "PUT", "/v1/exercises/e2", { name: "Pigeon", kind: "mobility" });
+    const dose = { doses: [{ sets: 2, onS: 60 }] };
+    const kindOf = async (id: string, body: object): Promise<unknown> =>
+      (
+        await json<{ workout: WorkoutRecord }>(
+          await call(userId, "PUT", `/v1/workouts/${id}`, body)
+        )
+      ).workout.kind;
+    const mixed = {
+      ...squatWorkout,
+      items: [
+        ...squatWorkout.items,
+        { exercise: "Hip openers", ...dose },
+        { exercise: "Pigeon", ...dose },
+      ],
+    };
+    expect(await kindOf("w1", mixed)).toBe("mobility");
+    const { kind: _, ...noKind } = squatWorkout;
+    expect(await kindOf("w2", { ...noKind, items: [{ exercise: "half", ...dose }] })).toBe(
+      "hangboard"
+    );
+    expect(await kindOf("w3", { ...squatWorkout, kind: "climbing", items: [] })).toBe("climbing");
+    expect(await kindOf("w3", { ...noKind, items: [] })).toBe("climbing");
+    expect(await kindOf("w4", { ...noKind, items: [] })).toBe("other");
   });
 
   it("folds an older app's variations into items where their exercises line up", async () => {

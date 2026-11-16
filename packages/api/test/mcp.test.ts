@@ -681,6 +681,20 @@ describe("connector", () => {
       expect(await mine(user + "_other")).toEqual([]);
     });
 
+    it("works out a workout's kind from its items when none is given", async () => {
+      const user = "user_save_workout_no_kind";
+      await toolJson(user, "save_exercise", { name: "Hip openers", kind: "mobility" });
+      const base = { name: "Loosen up", description: "", minutes: null, targetRpe: null };
+      const kindOf = async (body: Record<string, unknown>): Promise<string> =>
+        (await toolJson<{ workout: { kind: string } }>(user, "save_workout", body)).workout.kind;
+      const items = [{ exercise: "Hip openers", doses: [{ sets: 2, onS: 60 }] }];
+      expect(await kindOf({ ...base, items })).toBe("mobility");
+      expect(await kindOf({ ...base, name: "Board", kind: "climbing", items: [] })).toBe(
+        "climbing"
+      );
+      expect(await kindOf({ ...base, name: "Later", items: [] })).toBe("other");
+    });
+
     it("explains which field is out of range", async () => {
       const result = await callTool("user_save_invalid", env, "save_workout", {
         kind: "strength",

@@ -1,5 +1,4 @@
 import {
-  defaultExerciseRestS,
   FOCI,
   foldVariations,
   isCalendarDate,
@@ -116,8 +115,9 @@ export type FocusOptional<T extends { focus: Focus | null }> = Omit<T, "focus"> 
 /** A description as typed; the apps read its few formatting marks. */
 export const description = z.string().trim().max(MAX_DESCRIPTION);
 
+// Worked out from the items on save; a workout with none keeps the one sent or saved.
 export const workoutFields = {
-  kind: z.enum(WORKOUT_KINDS),
+  kind: z.enum(WORKOUT_KINDS).optional(),
   name: title,
   description,
   minutes: minutes.nullable(),
@@ -157,7 +157,7 @@ export const workoutBody = z
     minutes,
     targetRpe,
     items: "items" in body ? body.items : body.variations,
-    exerciseRestS: exerciseRestS ?? defaultExerciseRestS(kind),
+    exerciseRestS,
     focus,
   }));
 
@@ -260,7 +260,10 @@ export const planLinkShape = {
   focus,
 };
 
-export type WorkoutInput = z.infer<typeof workoutBody>;
+export type WorkoutBody = z.infer<typeof workoutBody>;
+
+/** What the apps send: they always say the kind and the rest between exercises. */
+export type WorkoutInput = WorkoutBody & Pick<Workout, "kind" | "exerciseRestS">;
 
 export type BlockInput = z.infer<typeof blockBody>;
 

@@ -66,6 +66,7 @@ Keeping an empty workout's kind matters because an empty climbing workout is how
 Grips and other exercises do not mix in one workout.
 Grips log as hang sessions (protocol, edge, grip trends) and everything else as activity sets, so a mix needs a new player and a split log, which is not worth it for this change.
 The first exercise picked decides: once a grip is in, the picker offers grips only; once anything else is in, grips are hidden.
+The lock follows the items, not the first pick as an event: removing the only grip, or the last other exercise, brings the full picker back.
 A new workout's picker starts on All, which now includes grips under a Fingers chip.
 The editor switches to the hangboard layout when its first grip lands, and back when the last one goes.
 
@@ -115,8 +116,9 @@ Slices 2 and 3 can ship as one pull request; slice 1 must merge first.
 - `workouts.pickCategory` in `en`, `de`, `fr`, `es`.
 - `kind` as a required field on the API and on `save_workout`.
 
-## Open questions for the lead (approver)
+## Decisions (lead, 2026-11-15)
 
-1. Mixed grips and exercises in one workout is out of scope; say if you want it planned separately (it needs a player that runs hangs and sets and a log split across both).
-2. A climbing day with nothing in it: with the question gone, a new empty workout is Other and opens the activity form. Is "add a climbing exercise" (which then opens the sets player, not the live session) good enough, or should a workout whose items are all climbing exercises open the live session too?
-3. Should the picker's New under All offer New grip alongside the four exercise categories?
+1. Colour follows the derived kind, not focus.
+2. Grips mixed with other exercises in one workout stays out of scope.
+3. A new build cannot make an empty climbing workout; old ones and the built-in Climbing workout keep opening the live session.
+4. The picker's New under All offers New grip beside the four exercise categories.
