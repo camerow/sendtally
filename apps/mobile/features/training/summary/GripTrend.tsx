@@ -1,14 +1,14 @@
 import React from "react";
 import { Text, View } from "react-native";
 import type { HangKind, WeightUnit } from "@sendtally/core/hang";
-import type { GripLoad } from "@sendtally/features/activities";
+import { loadShares, type GripLoad } from "@sendtally/features/activities";
 import { colors } from "@sendtally/design/tokens";
 import { loadLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { Label } from "../components/Label";
 import { type } from "../type";
 
-const LOW = 10;
+const MIN = 4;
 const HIGH = 70;
 
 export type GripTrendProps = {
@@ -26,11 +26,9 @@ export function GripTrend({
   currentId,
   unit,
 }: GripTrendProps): React.ReactElement | null {
-  const [first] = sessions;
-  if (first === undefined || sessions.length < 2) return null;
+  if (sessions.length < 2) return null;
   const loads = sessions.map((s) => s.loadKg);
-  const [lo, hi] = [Math.min(...loads), Math.max(...loads)];
-  const height = (kg: number): number => LOW + ((kg - lo) / (hi - lo || 1)) * (HIGH - LOW);
+  const shares = loadShares(loads);
   const label = (kg: number): string => loadLabel(kind, kg, unit);
   return (
     <View
@@ -53,17 +51,17 @@ export function GripTrend({
         accessibilityRole="image"
         accessibilityLabel={t("statistics.exerciseChart", {
           exercise: t("summary.addedWeight"),
-          from: label(first.loadKg),
-          to: label(loads.at(-1) ?? first.loadKg),
+          from: label(loads[0] ?? 0),
+          to: label(loads.at(-1) ?? 0),
         })}
         style={{ height: HIGH, flexDirection: "row", alignItems: "flex-end", gap: 6 }}
       >
-        {sessions.map((s) => (
+        {sessions.map((s, i) => (
           <View
             key={s.id}
             style={{
               flex: 1,
-              height: height(s.loadKg),
+              height: Math.max(MIN, (shares[i] ?? 0) * HIGH),
               borderRadius: 3,
               backgroundColor: s.id === currentId ? colors.gold : "rgba(64,63,76,0.3)",
             }}

@@ -4,7 +4,7 @@ import { exerciseSeries } from "../statistics/exercises";
 import {
   exerciseResults,
   gripLoads,
-  hangGrid,
+  loadShares,
   hangGrids,
   hangTotals,
   pastSessions,
@@ -159,22 +159,18 @@ describe("hang sessions", () => {
     done,
   });
 
-  it("fills the hangs held from the first set, the rest let go", () => {
-    const grid = hangGrid({ protocol, pct: 94, loadKg: 0 });
-    expect(grid.held).toBe(17);
-    expect(grid.total).toBe(18);
-    expect(grid.rows[2]).toEqual([true, true, true, true, true, false]);
-    expect(grid.rows[0]?.every(Boolean)).toBe(true);
-    expect(grid.loads).toEqual([0, 0, 0]);
-  });
-
   it("reads each set's hangs and load as saved, hangs filling from the left", () => {
     const done = [{ item: 0, exercise: "half", sets: [{ reps: 6 }, { reps: 4, weightKg: 5 }] }];
-    const grid = hangGrid({ protocol, pct: 0, loadKg: 2, done });
-    expect(grid.rows[1]).toEqual([true, true, true, true, false, false]);
-    expect(grid.loads).toEqual([2, 5]);
-    expect(grid.held).toBe(10);
-    expect(grid.total).toBe(12);
+    expect(
+      hangGrids({ gripId: "half", edgeMm: 20, protocol, pct: 0, loadKg: 2, done })
+    ).toMatchObject([
+      {
+        rows: [Array(6).fill(true), [true, true, true, true, false, false]],
+        loads: [2, 5],
+        held: 10,
+        total: 12,
+      },
+    ]);
   });
 
   it("counts the hangs of every grip a session ran", () => {
@@ -241,15 +237,19 @@ describe("hang sessions", () => {
     expect(cards[1]?.rows[1]).toEqual([true, true, true, true, false, false]);
   });
 
-  it("draws a one-grip session as its grid", () => {
+  it("draws a one-grip session's card from its share held", () => {
     const one = { gripId: "half", edgeMm: 20, protocol, pct: 94, loadKg: 0 };
+    const held = Array(6).fill(true);
     expect(hangGrids(one)).toEqual([
       {
-        ...hangGrid(one),
         gripId: "half",
         kind: "hang",
         edgeMm: 20,
-        rpes: Array(3).fill(undefined),
+        rows: [held, held, [true, true, true, true, true, false]],
+        loads: [0, 0, 0],
+        rpes: [undefined, undefined, undefined],
+        held: 17,
+        total: 18,
       },
     ]);
   });
@@ -274,6 +274,20 @@ describe("hang sessions", () => {
       { id: "2", loadKg: 4 },
       { id: "3", loadKg: 8 },
     ]);
+  });
+
+  it("charts a one-grip session at its load", () => {
+    const all = [hang("1", "2026-10-20", "half", 5), hang("2", "2026-10-22", "half", 10)];
+    expect(gripLoads({ gripId: "half", kind: "hang" }, all)).toEqual([
+      { id: "1", loadKg: 5 },
+      { id: "2", loadKg: 10 },
+    ]);
+  });
+
+  it("draws added weight from zero: equal loads full, the rest in proportion", () => {
+    expect(loadShares([4.5, 4.5, 4.5])).toEqual([1, 1, 1]);
+    expect(loadShares([5, 15, 25])).toEqual([0.2, 0.6, 1]);
+    expect(loadShares([-10, -5, 0])).toEqual([0, 0.5, 1]);
   });
 
   it("charts no added weight on a grip only ever hung at bodyweight", () => {

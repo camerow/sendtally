@@ -175,17 +175,15 @@ export function hangSets({ protocol, pct, loadKg, done = [] }: HangLog): SetDone
 /** Each hang of each set, held or let go, with each set's load: hangs fill from the left. */
 export type HangGrid = { rows: boolean[][]; loads: number[]; held: number; total: number };
 
-export function hangGrid(session: HangLog): HangGrid {
-  const { reps } = session.protocol;
-  const sets = hangSets(session);
+const gridOf = (sets: readonly SetDone[], reps: number, loadKg: number): HangGrid => {
   const rows = sets.map((s) => Array.from({ length: reps }, (_, r) => r < (s.reps ?? reps)));
   return {
     rows,
-    loads: sets.map((s) => s.weightKg ?? session.loadKg),
+    loads: sets.map((s) => s.weightKg ?? loadKg),
     held: rows.flat().filter(Boolean).length,
     total: rows.flat().length,
   };
-}
+};
 
 /** One grip a session ran, as its card draws it: its edge, each set's hangs and load, and each set's RPE where rated. */
 export type HangGripGrid = HangGrid & {
@@ -200,36 +198,20 @@ type HangRun = HangLog & Pick<HangSession, "gripId" | "edgeMm">;
 /** Every grip a session ran that kept a set, in the order it ran; the first always. */
 export function hangGrids(session: HangRun): HangGripGrid[] {
   const done = session.done ?? [];
-  const first = hangGrid(session);
-  const sets = hangSets(session);
-  const later = hangSessionItems({ ...session, done }).flatMap(({ exercise, dose }, item) => {
-    const kept = done.find((d) => d.item === item)?.sets ?? [];
-    if (item === 0 || kept.length === 0) return [];
-    const reps = dose.reps ?? 1;
-    const rows = kept.map((s) => Array.from({ length: reps }, (_, r) => r < (s.reps ?? reps)));
+  return hangSessionItems({ ...session, done }).flatMap(({ exercise, dose }, item) => {
+    const first = item === 0;
+    const sets = first ? hangSets(session) : (done.find((d) => d.item === item)?.sets ?? []);
+    if (sets.length === 0) return [];
     return [
       {
+        ...gridOf(sets, dose.reps ?? 1, session.loadKg),
         gripId: exercise,
-        kind: hangKindOf(dose),
-        edgeMm: kept[0]?.edgeMm ?? dose.edgeMm ?? 0,
-        rows,
-        loads: kept.map((s) => s.weightKg ?? session.loadKg),
-        rpes: kept.map((s) => s.rpe),
-        held: rows.flat().filter(Boolean).length,
-        total: rows.flat().length,
+        kind: first ? session.protocol.kind : hangKindOf(dose),
+        edgeMm: first ? session.edgeMm : (sets[0]?.edgeMm ?? dose.edgeMm ?? 0),
+        rpes: sets.map((s) => s.rpe),
       },
     ];
   });
-  return [
-    {
-      ...first,
-      gripId: session.gripId,
-      kind: session.protocol.kind,
-      edgeMm: session.edgeMm,
-      rpes: sets.map((s) => s.rpe),
-    },
-    ...later,
-  ];
 }
 
 /** Hangs held of hangs asked, and each set's load, over every grip a session ran. */
@@ -265,4 +247,13 @@ export function gripLoads(
       .map((g) => ({ id: s.id, loadKg: Math.max(0, ...g.loads) }))
   );
   return on.every((s) => s.loadKg === 0) ? [] : on;
+}
+
+/**
+ * Each load's bar as a share of the chart's height, from zero: equal loads draw equal full bars and
+ * the rest in proportion. Assisted loads run from the most assisted up to zero.
+ */
+export function loadShares(loads: readonly number[]): number[] {
+  const [lo, hi] = [Math.min(0, ...loads), Math.max(0, ...loads)];
+  return loads.map((kg) => (kg - lo) / (hi - lo || 1));
 }
