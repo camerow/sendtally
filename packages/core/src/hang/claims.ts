@@ -9,7 +9,7 @@ import {
   type PlanChange,
   type WorkoutKind,
 } from "./plan";
-import type { CalendarDate } from "./types";
+import type { CalendarDate, Weekday } from "./types";
 
 /** What of a plan decides which days its workouts land on. */
 export type PlanDays = {
@@ -27,6 +27,27 @@ export type LoggedSession = {
   workoutId: string | null;
   membershipId: string | null;
 };
+
+/** A membership's days: its own weekdays, then each block week its days changed from. */
+export type DaySchedule = { membershipId: string; weekdays: Weekday[]; weeks: MembershipDays[] };
+
+/** A block membership's day changes, earliest week first. */
+export const scheduleOf = (
+  plan: Pick<PlanDays, "membershipDays">,
+  m: Pick<Membership, "id" | "weekdays">
+): DaySchedule => ({
+  membershipId: m.id,
+  weekdays: [...m.weekdays],
+  weeks: plan.membershipDays
+    .filter((d) => d.membershipId === m.id)
+    .sort((a, b) => a.fromWeek - b.fromWeek),
+});
+
+/** The weekdays a schedule lands on in one block week: the latest change at or before it. */
+export function daysInWeek(schedule: DaySchedule, week: number): Weekday[] {
+  const edit = schedule.weeks.filter((d) => d.fromWeek <= week).at(-1);
+  return edit === undefined ? schedule.weekdays : edit.weekdays;
+}
 
 export const blockOfMembership = (
   plan: Pick<PlanDays, "blocks">,
@@ -46,11 +67,7 @@ export function asOn(
 ): Membership {
   const week = block === null ? null : blockWeekOn(block, d);
   if (week === null) return m;
-  const edit = plan.membershipDays
-    .filter((x) => x.membershipId === m.id && x.fromWeek <= week)
-    .sort((a, b) => a.fromWeek - b.fromWeek)
-    .at(-1);
-  return { ...m, weekdays: edit === undefined ? m.weekdays : edit.weekdays };
+  return { ...m, weekdays: daysInWeek(scheduleOf(plan, m), week) };
 }
 
 /** The skip or move made on the day a membership was planned. */
