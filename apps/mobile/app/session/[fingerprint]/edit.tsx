@@ -31,7 +31,7 @@ export default function EditSessionScreen(): React.ReactElement {
               style={{
                 fontFamily: fonts.mono,
                 fontSize: 12,
-                color: colors.watermelonInk,
+                color: state.status === "error" ? colors.watermelonInk : colors.textSecondary,
                 textAlign: "center",
               }}
             >

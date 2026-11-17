@@ -78,7 +78,7 @@ export default function EditSessionRoute(): React.ReactElement {
             header={(summary) => <EditHeader summary={summary} />}
           />
         ) : (
-          <span style={{ ...monoLabel, color: "var(--bs-watermelon-ink)" }}>
+          <span style={{ ...monoLabel, color: "var(--text-on-white-secondary)" }}>
             {t("sessions.readOnlyBoard")}{" "}
             <Link to={backTo}>{t("sessionDetail.backToSession")}</Link>
           </span>
