@@ -26,13 +26,20 @@ export function KeypadScrollView({
   const { scrollRef, onScroll, reveal, room } = useKeepAboveKeypad();
   const [request, setRequest] = React.useState<KeypadRequest | null>(null);
   const [openId, setOpenId] = React.useState<string | null>(null);
+  const current = React.useRef<KeypadRequest | null>(null);
   const host = React.useMemo<KeypadHost>(
     () => ({
       open: (r) => {
+        const was = current.current;
+        current.current = r;
+        if (was !== null && was.id !== r.id) was.close();
         setRequest(r);
         setOpenId(r.id);
       },
-      close: (id) => setOpenId((open) => (open === id ? null : open)),
+      close: (id) => {
+        if (current.current?.id === id) current.current = null;
+        setOpenId((open) => (open === id ? null : open));
+      },
     }),
     []
   );

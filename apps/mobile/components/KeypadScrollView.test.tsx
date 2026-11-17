@@ -49,4 +49,22 @@ describe("KeypadScrollView", () => {
     });
     expect(onKeypadChange).toHaveBeenLastCalledWith(true);
   });
+
+  it("closes a field when one in another row opens, so the first can open again", async () => {
+    await render(
+      <KeypadScrollView>
+        <TimeField label="Rest A" value={60} onChange={() => {}} />
+        <TimeField label="Rest B" value={90} onChange={() => {}} />
+      </KeypadScrollView>
+    );
+    const expanded = (name: string): boolean | undefined =>
+      screen.getByLabelText(name).props.accessibilityState?.expanded;
+    await fireEvent.press(screen.getByLabelText("Rest A"));
+    await fireEvent.press(screen.getByLabelText("Rest B"));
+    expect(expanded("Rest A")).toBe(false);
+    expect(expanded("Rest B")).toBe(true);
+    await fireEvent.press(screen.getByLabelText("Rest A"));
+    expect(expanded("Rest A")).toBe(true);
+    expect(expanded("Rest B")).toBe(false);
+  });
 });
