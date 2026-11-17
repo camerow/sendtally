@@ -232,12 +232,21 @@ describe("a workout's fingerboard part", () => {
   });
 
   const kindSessions = (vm: ReturnType<typeof trainingInsightsVM>): number =>
-    vm.trained.reduce((n, k) => n + Number(k.detail.split(" · ")[0]), 0);
+    vm.trained.reduce(
+      (n, k) =>
+        n +
+        (k.detail.includes(" · ")
+          ? Number(k.detail.split(" · ")[0])
+          : /^\d+$/.test(k.detail)
+            ? Number(k.detail)
+            : 0),
+      0
+    );
 
   it("moves only its minutes to Fingers: the run is one session under its own kind", () => {
     const vm = trainingInsightsVM(log, "7d", TRAINED_KINDS, grip, NOW);
     expect(vm.trained.map((k) => [k.kind, k.detail])).toEqual([
-      ["hangboard", `0 · ${durationLabel(fingers)}`],
+      ["hangboard", durationLabel(fingers)],
       ["strength", `1 · ${durationLabel(60 - fingers)}`],
     ]);
     expect(kindSessions(vm)).toBe(vm.sessions);
@@ -248,7 +257,7 @@ describe("a workout's fingerboard part", () => {
     const short = { ...log, activities: [{ ...run, minutes: fingers }] };
     const vm = trainingInsightsVM(short, "7d", TRAINED_KINDS, grip, NOW);
     expect(vm.trained.map((k) => [k.kind, k.detail])).toEqual([
-      ["hangboard", `0 · ${durationLabel(fingers)}`],
+      ["hangboard", durationLabel(fingers)],
       ["strength", "1"],
     ]);
     expect(kindSessions(vm)).toBe(vm.sessions);

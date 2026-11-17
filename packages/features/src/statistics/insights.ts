@@ -201,7 +201,12 @@ function mix<K>(
         key,
         name: name(key),
         share: count / shown.length,
-        detail: time === 0 ? String(count) : `${count} · ${durationLabel(time)}`,
+        detail:
+          time === 0
+            ? String(count)
+            : count === 0
+              ? durationLabel(time)
+              : `${count} · ${durationLabel(time)}`,
       },
     ];
   });
