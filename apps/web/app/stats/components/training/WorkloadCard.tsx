@@ -70,9 +70,9 @@ export function WorkloadCard({ workload: w }: { workload: WorkloadVM }): React.R
       <p className="workload-sentence">{w.sentence}</p>
       {w.state === "early" ? (
         <Weeks days={w.daysLogged} />
-      ) : (
+      ) : w.points.length > 0 ? (
         <WorkloadChart points={w.points} from={w.from} />
-      )}
+      ) : null}
       <div>
         <Row onClick={() => setOpen(true)}>
           {t("statistics.workloadLast7")} <b>{w.acute}</b>

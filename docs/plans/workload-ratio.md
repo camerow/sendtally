@@ -58,6 +58,8 @@ No ratio until the first counted record is at least 28 days old; before then the
 No ratio when the three weeks before this one hold no counted load (back after a break); the card says so and shows this week's load.
 Without that rule a first week back reads 4.0, which only says the person was away.
 After one week back the ratio returns, and a high value then is accurate: this week is much bigger than the last four.
+No ratio when the 28 days hold fewer than four counted records, about one a week; the card says too few sessions to compare.
+Below that the ratio only takes a few fixed values (one or two sessions in the window give 0, 2.0 or 4.0) and swings between the floor and the top.
 
 ## 3. The window
 
@@ -75,8 +77,11 @@ The work is a filter and sum over the log per plotted point; at a few thousand r
 ## 5. The plot
 
 The range comes from the page's existing range control; each point is the ratio as of that day: one a day on 7D and 1M, one a week (the ratio on each week's last day) on longer ranges.
-The axis is fixed at 0 to 2.0; a ratio above 2.0 is drawn at the top edge with a marker.
-Buckets with no ratio (too early, or after a break) are gaps in the line.
+The axis is logarithmic from 0.25 to 4.0, centred on 1.0, so half and double sit the same distance from it and no ratio is clipped (4.0 is the ceiling); a ratio under 0.25 sits on the floor.
+A week with nothing logged is a hollow dot in a Rest lane under the axis, not a drop of the line.
+Each point is a dot, joined to its neighbours by a thin line, so a lone point between two gaps still shows.
+Points with no ratio (too early, too much left out, after a break, or too few counted) are gaps; under four points the chart is left out and the card says it in words.
+The first axis label carries the year when the range crosses into another year.
 The four zones are horizontal bands behind the line, drawn with the page's chart geometry (`plot`, `polyline` in `chartGeometry.ts`); no new chart primitive unless the designer's board needs one.
 Today's ratio and zone are stated in words above the chart, and tapping the card opens the acute and chronic loads behind it and the records left out.
 

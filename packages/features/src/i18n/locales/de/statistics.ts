@@ -74,6 +74,11 @@ export const statistics = {
   "statistics.workloadWeek1": "Woche 1",
   "statistics.workloadWeek4": "Woche 4",
   "statistics.workloadToday": "Heute",
+  "statistics.workloadRest": "Pause",
+  "statistics.workloadFew_one": "{count} gezählt",
+  "statistics.workloadFew_other": "{count} gezählt",
+  "statistics.workloadFewLine":
+    "Zu wenige Einheiten in den letzten vier Wochen für einen Vergleich.",
   "statistics.workloadUnder": "unter {n}",
   "statistics.workloadBetween": "{from} bis {to}",
   "statistics.workloadOver": "über {n}",

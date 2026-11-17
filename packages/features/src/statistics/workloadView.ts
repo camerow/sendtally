@@ -1,6 +1,6 @@
 import { colors, effortScale } from "@sendtally/design/tokens";
 import { formatDate, formatNumber, t, type MessageKey } from "../i18n";
-import { DAY_MS, bucketsFor, dayStart, wallClock, windowOf } from "../trends/buckets";
+import { DAY_MS, bucketsFor, dayStart, wallClock, windowOf, yearOfMs } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
 import type { Point } from "./chartGeometry";
 import type { Done, DoneRef } from "./insights";
@@ -13,8 +13,15 @@ import {
   type WorkloadZone,
 } from "./workload";
 
-/** The plot's fixed top; a ratio above it sits on the edge, marked. */
-export const WORKLOAD_MAX = 2;
+/** The plot's floor and top on a log scale centred on 1.0; 4.0 is the most a ratio can be. */
+const WORKLOAD_FLOOR = 0.25;
+const WORKLOAD_CEIL = 4;
+
+/** Half and double sit the same distance from 1.0. */
+export const WORKLOAD_TICKS = [0.5, 1, 2, 4] as const;
+
+/** Under this many points, the card says it in words with no chart. */
+const MIN_POINTS = 4;
 
 /** The zone edges on the plot, bottom up. */
 export const WORKLOAD_EDGES = [0.8, 1.3, 1.5] as const;
@@ -48,28 +55,36 @@ export function workloadBands(): WorkloadBandVM[] {
     hi,
   });
   return [
-    band("light", 0, a, t("statistics.workloadUnder", { n: n(a) })),
+    band("light", WORKLOAD_FLOOR, a, t("statistics.workloadUnder", { n: n(a) })),
     band("sweet", a, b, t("statistics.workloadBetween", { from: n(a), to: n(b) })),
     band("caution", b, c, t("statistics.workloadBetween", { from: n(b), to: n(c) })),
-    band("high", c, WORKLOAD_MAX, t("statistics.workloadOver", { n: n(c) })),
+    band("high", c, WORKLOAD_CEIL, t("statistics.workloadOver", { n: n(c) })),
   ];
 }
 
 export const WORKLOAD_GUTTER = 36;
 const PLOT_PAD = 10;
+const REST_LANE = 18;
 
 export type WorkloadPlot = {
   y: (ratio: number) => number;
   left: number;
   right: number;
-  /** Runs of consecutive ratios, each its own polyline. */
+  /** Where a week with nothing logged sits, in its own lane under the plot. */
+  restY: number;
+  /** Runs of consecutive ratios above 0, each its own thin line. */
   runs: Point[][];
   dots: Point[];
+  /** Up to 3.2, smaller where weekly points crowd a phone so neighbours never touch. */
+  dotRadius: number;
+  /** Rest weeks, drawn as hollow dots in the rest lane. */
+  rest: Point[];
+  restRadius: number;
   /** Today's point, drawn in gold. */
   today: Point | null;
-  /** Points above the plot's top, drawn on the edge with a marker. */
-  over: Point[];
 };
+
+const LOG_SPAN = Math.log2(WORKLOAD_CEIL / WORKLOAD_FLOOR);
 
 /** Where the ratio line sits in a `width` by `height` box with the value axis on the left. */
 export function workloadPlot(
@@ -79,28 +94,40 @@ export function workloadPlot(
 ): WorkloadPlot {
   const left = WORKLOAD_GUTTER;
   const right = width - 6;
+  const bottom = height - PLOT_PAD - REST_LANE;
+  const restY = height - PLOT_PAD - 2;
   const y = (r: number): number =>
-    PLOT_PAD + (height - PLOT_PAD * 2) * (1 - Math.min(r, WORKLOAD_MAX) / WORKLOAD_MAX);
+    PLOT_PAD +
+    (bottom - PLOT_PAD) *
+      (1 -
+        Math.log2(Math.min(Math.max(r, WORKLOAD_FLOOR), WORKLOAD_CEIL) / WORKLOAD_FLOOR) /
+          LOG_SPAN);
+  const span = right - left - 12;
   const x = (i: number): number =>
-    left + 6 + (right - left - 12) * (points.length > 1 ? i / (points.length - 1) : 0.5);
+    left + 6 + span * (points.length > 1 ? i / (points.length - 1) : 0.5);
+  const at = (r: number, i: number): Point => [x(i), r === 0 ? restY : y(r)];
   const runs: Point[][] = [];
   let run: Point[] = [];
   points.forEach((r, i) => {
-    if (r === null) {
+    if (r === null || r === 0) {
       if (run.length > 0) runs.push(run);
       run = [];
-    } else run.push([x(i), y(r)]);
+    } else run.push(at(r, i));
   });
   if (run.length > 0) runs.push(run);
   const last = points.at(-1);
+  const dotRadius = Math.min(3.2, Math.max(1.5, span / Math.max(points.length - 1, 1) / 3));
   return {
     y,
     left,
     right,
-    runs,
+    restY,
+    runs: runs.filter((r) => r.length > 1),
     dots: runs.flat(),
-    today: last === null || last === undefined ? null : [x(points.length - 1), y(last)],
-    over: points.flatMap((r, i): Point[] => (r !== null && r > WORKLOAD_MAX ? [[x(i), y(r)]] : [])),
+    dotRadius,
+    restRadius: dotRadius * 0.72,
+    rest: points.flatMap((r, i): Point[] => (r === 0 ? [at(0, i)] : [])),
+    today: last === null || last === undefined ? null : at(last, points.length - 1),
   };
 }
 
@@ -123,7 +150,7 @@ export type WorkloadVM = {
   /** The headline when there is no ratio: "Day 12 of 28", "Back after a break", "3 of 7 counted". */
   headline: string;
   sentence: string;
-  /** Ratio per point, oldest first; `null` where the card has no ratio to show. */
+  /** Ratio per point, oldest first; `null` where the card has no ratio to show; empty when too few to draw. */
   points: (number | null)[];
   from: string;
   /** Out of 28, for the early progress bar. */
@@ -161,8 +188,13 @@ const load = (n: number): string => formatNumber(Math.round(n));
 const ratioText = (n: number): string =>
   formatNumber(n, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const shortDay = (ms: number): string =>
-  formatDate(new Date(ms), { month: "short", day: "numeric", timeZone: "UTC" });
+const shortDay = (ms: number, year = false): string =>
+  formatDate(new Date(ms), {
+    month: "short",
+    day: "numeric",
+    ...(year ? { year: "numeric" } : {}),
+    timeZone: "UTC",
+  });
 
 const counted = ({ total, leftOut }: Workload["week"]): string =>
   t("statistics.workloadCounted", { counted: total - leftOut, total });
@@ -184,7 +216,10 @@ const noTime = (d: Done): boolean => d.minutes <= 0;
 function leftOutLine(left: readonly Done[]): string | null {
   if (left.length === 0) return null;
   const reason = why(left.some(noEffort), left.some(noTime));
-  return t("statistics.workloadLeftOut", { count: left.length, why: reason });
+  return t("statistics.workloadLeftOut", {
+    count: left.length,
+    why: reason.replace(/ /g, "\u00a0"),
+  });
 }
 
 function tiles(w: Workload, today: number): WorkloadTileVM[] {
@@ -221,6 +256,8 @@ function footer(w: Workload, zone: WorkloadZone | null, line: string): string {
 function headline(w: Workload): string {
   if (w.state === "partial") return counted(w.week.leftOut > 0 ? w.week : w.month);
   if (w.state === "early") return t("statistics.workloadDay", { day: 28 - w.daysToGo });
+  if (w.state === "few")
+    return t("statistics.workloadFew", { count: w.month.total - w.month.leftOut });
   return t("statistics.workloadBreak");
 }
 
@@ -229,6 +266,7 @@ function sentence(w: Workload, zone: WorkloadZone | null): string {
     return w.acute === 0 ? t("statistics.workloadRestLine") : t(ZONE_KEYS[zone].sentence);
   if (w.state === "partial") return t("statistics.workloadPartialLine");
   if (w.state === "early") return t("statistics.workloadEarlyLine");
+  if (w.state === "few") return t("statistics.workloadFewLine");
   return t("statistics.workloadBreakLine");
 }
 
@@ -243,6 +281,9 @@ function plotDays(range: TrendRange, now: Date, first: number | null): number[] 
   return days;
 }
 
+const enough = (points: readonly (number | null)[]): boolean =>
+  points.filter((p) => p !== null).length >= MIN_POINTS;
+
 /** The workload card and its sheet: today's ratio and zone, the line over the range, and the loads behind it. */
 export function workloadVM(done: readonly Done[], range: TrendRange, now: Date): WorkloadVM {
   const today = dayStart(wallClock(now));
@@ -253,6 +294,10 @@ export function workloadVM(done: readonly Done[], range: TrendRange, now: Date):
   const lastWeek = done.filter((d) => d.at >= today - 6 * DAY_MS && d.at < today + DAY_MS);
   const left = lastWeek.filter((d) => loadOf(d) === null).sort((a, b) => b.at - a.at);
   const said = sentence(w, zone);
+  const points = days.map((day) => {
+    const p = workloadOn(done, day);
+    return p.state === "ratio" ? p.ratio : null;
+  });
   const top = Math.max(w.chronic, ...w.weeks, 1);
   return {
     state: w.state,
@@ -260,11 +305,8 @@ export function workloadVM(done: readonly Done[], range: TrendRange, now: Date):
     zone,
     headline: zone === null ? headline(w) : "",
     sentence: said,
-    points: days.map((day) => {
-      const p = workloadOn(done, day);
-      return p.state === "ratio" ? p.ratio : null;
-    }),
-    from: days[0] === undefined ? "" : shortDay(days[0]),
+    points: w.state !== "few" && enough(points) ? points : [],
+    from: days[0] === undefined ? "" : shortDay(days[0], yearOfMs(days[0]) !== yearOfMs(today)),
     daysLogged: 28 - w.daysToGo,
     acute: load(w.acute),
     chronic: w.state === "early" || w.state === "break" ? null : load(w.chronic),
