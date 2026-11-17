@@ -137,12 +137,12 @@ describe("trainingInsightsVM", () => {
     expect(vm.line).toBe("Effort 6.8, up 0.8 · 5 sessions a week");
   });
 
-  it("splits what was trained by sessions, with each kind's time", () => {
+  it("splits what was trained by minutes, each kind's bar its share of the time (Will, 2026-11-17)", () => {
     const vm = trainingInsightsVM(log, "1m", TRAINED_KINDS, grip, NOW);
     expect(vm.trained.map((k) => [k.kind, k.share])).toEqual([
-      ["climbing", 3 / 7],
-      ["hangboard", 2 / 7],
-      ["strength", 2 / 7],
+      ["climbing", 270 / 392],
+      ["hangboard", 42 / 392],
+      ["strength", 80 / 392],
     ]);
     expect(vm.trained[2]?.detail).toBe("2 · 1h 20m");
   });
@@ -155,9 +155,9 @@ describe("trainingInsightsVM", () => {
     };
     const vm = trainingInsightsVM(focused, "1m", TRAINED_KINDS, grip, NOW);
     expect(vm.byFocus.map((f) => [f.focus, f.name, f.share])).toEqual([
-      ["strength", "Strength", 1 / 5],
-      ["power_endurance", "Power endurance", 1 / 5],
-      [null, "General", 3 / 5],
+      ["strength", "Strength", 40 / 331],
+      ["power_endurance", "Power endurance", 21 / 331],
+      [null, "General", 270 / 331],
     ]);
   });
 
