@@ -62,7 +62,12 @@ describe("hangEditResult", () => {
     ]);
     expect(result.done[1]?.dose).toMatchObject({ sets: 2, reps: 5, onS: 10 });
     const saved = { ...session, pct: result.pct, done: result.done };
-    expect(hangEditResult(saved, hangEditSets(saved), "half", setup).pct).toBe(67);
+    const reopened = hangEditSets(saved);
+    expect(reopened.done[1]?.sets).toEqual([{ reps: 0 }, { reps: 0 }]);
+    expect(hangEditResult(saved, reopened, "half", setup)).toMatchObject({
+      pct: 67,
+      done: result.done,
+    });
   });
 
   it("reads a later grip against the dose it ran, so a set left out of the run stays unheld", () => {

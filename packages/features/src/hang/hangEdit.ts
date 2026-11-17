@@ -3,6 +3,7 @@ import {
   type HangSession,
   type HangSetup,
   type ItemDone,
+  type SetDone,
 } from "@sendtally/core/hang";
 import { hangSets } from "../activities/summary";
 import { hangResult, keptHangs, type HangResult } from "./hangResult";
@@ -14,17 +15,25 @@ type Edited = Pick<HangSession, "gripId" | "protocol" | "pct" | "loadKg" | "done
 
 /**
  * A logged session's sets as its edit opens: every grip it ran, the first grip's sets at the
- * session's load following the pill, every other set keeping its own load.
+ * session's load following the pill, every other set keeping its own load; a grip that held
+ * nothing opens on its planned sets, none held.
  */
 export function hangEditSets(session: Edited): HangEditSets {
+  const items = hangSessionItems(session);
+  const unheld = (item: number): SetDone[] =>
+    Array.from({ length: items[item]?.dose.sets ?? 0 }, () => ({ reps: 0 }));
+  const sets = hangSets(session).map(({ weightKg, ...set }) =>
+    weightKg === undefined || weightKg === session.loadKg ? set : { ...set, weightKg }
+  );
   const first: ItemDone = {
     item: 0,
     exercise: session.gripId,
-    sets: hangSets(session).map(({ weightKg, ...set }) =>
-      weightKg === undefined || weightKg === session.loadKg ? set : { ...set, weightKg }
-    ),
+    sets: sets.length > 0 ? sets : unheld(0),
   };
-  return { done: [first, ...session.done.filter((d) => d.item !== 0)], off: [] };
+  const rest = session.done
+    .filter((d) => d.item !== 0)
+    .map((d) => (d.sets.length > 0 ? d : { ...d, sets: unheld(d.item) }));
+  return { done: [first, ...rest], off: [] };
 }
 
 /**
