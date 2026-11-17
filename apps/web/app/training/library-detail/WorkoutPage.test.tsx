@@ -199,6 +199,13 @@ describe("WorkoutPage", () => {
     expect(at.action).toBe("REPLACE");
   });
 
+  it("left empty, still starts, into its review as mobile does", () => {
+    mount("empty");
+    click(button("Start"));
+    expect(at.path).toBe("/app/activity/new");
+    expect(at.action).toBe("REPLACE");
+  });
+
   it("asks before deleting the user's own, then goes back", async () => {
     mount("legs");
     menu();
