@@ -311,10 +311,10 @@ describe("summaries", () => {
     ).toBe(
       ["6 × 7s on / 3s off", "3 sets", "3:00 rest", "20 mm", "5 kg"]
         .map((part) => part.replaceAll(" ", "\u00A0"))
-        .join(" · ")
+        .join("\u00A0· ")
     );
     expect(doseSummary("hangboard", { sets: 5, reps: 1, onS: 10, edgeMm: 0 }, "kg")).toBe(
-      "10s\u00A0pull · 5\u00A0sets · 0s\u00A0rest"
+      "10s\u00A0pull\u00A0· 5\u00A0sets\u00A0· 0s\u00A0rest"
     );
   });
 
