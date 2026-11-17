@@ -8,12 +8,14 @@ import {
   type LiveSession,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
-import type { RestClock } from "@sendtally/features/workouts";
+import { ON_DARK_LINE, type RestClock } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
 import { useGoBack } from "../../lib/useGoBack";
 import { IdleRestRow } from "../../training/players/IdleRestRow";
 import { RestRow } from "../../training/players/RestRow";
 import { LiveClimbEditor } from "./LiveClimbEditor";
+
+const LAPS_EDIT_VARS = { "--on-dark-line": ON_DARK_LINE } as React.CSSProperties;
 
 export type LapsTallyProps = {
   draft: LogSessionDraft;
@@ -114,13 +116,14 @@ export function LapsTally({
               )}
             </div>
           )}
-          <div className="laps-edit">
-            <button type="button" className="tally-finish" onClick={laps.addLap}>
+          <div className="laps-edit" style={LAPS_EDIT_VARS}>
+            <button type="button" className="outline-button" onClick={laps.addLap}>
+              <Icon name="plus" size={16} strokeWidth={2.2} />
               {t("tally.addLap")}
             </button>
             {laps.removeLap !== null && (
-              <button type="button" className="tally-finish" onClick={laps.removeLap}>
-                {t("tally.removeLap")}
+              <button type="button" className="outline-button" onClick={laps.removeLap}>
+                − {t("tally.removeLap")}
               </button>
             )}
           </div>

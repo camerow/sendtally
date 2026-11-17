@@ -513,6 +513,17 @@ button.lap-row:hover {
 .laps-edit {
   display: flex;
   gap: 8px;
+  margin-top: 6px;
+}
+
+.laps-edit .outline-button {
+  background: none;
+  border-color: var(--on-dark-line);
+  color: var(--text-on-dark);
+}
+
+.laps-edit .outline-button:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .tally .player-row {
