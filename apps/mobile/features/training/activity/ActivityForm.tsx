@@ -12,6 +12,7 @@ import {
 } from "@sendtally/core/hang";
 import {
   activityFromDraft,
+  justLogged,
   previousSets,
   useActivities,
   kindLabel,
@@ -29,6 +30,7 @@ import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { Toast } from "../../../components/Toast";
 import { TimeField } from "../../../components/TimeField";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
+import { landOnTabRoot } from "../../../lib/landOnTabRoot";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { EditorHeader } from "../components/EditorHeader";
@@ -122,10 +124,15 @@ export function ActivityForm({
     router.push({ pathname: "/workout/[id]", params: { id: workoutId } });
   };
   const save = (): void => {
-    if (hang === undefined) {
+    if (hang !== undefined) hang.save(draft);
+    else if (logged === null) {
+      void actions.saveActivity(activityFromDraft(id, draft));
+      justLogged.tell({ id, name: draft.title.trim() || kindLabel(draft.kind) });
+      landOnTabRoot();
+    } else {
       void actions.saveActivity(activityFromDraft(id, draft));
       router.back();
-    } else hang.save(draft);
+    }
     if (live) liveRun.clear();
   };
   const discard = (): void =>

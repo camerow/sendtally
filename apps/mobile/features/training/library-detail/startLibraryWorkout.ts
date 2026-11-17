@@ -16,7 +16,10 @@ import { startWorkout } from "../timer/startWorkout";
 
 export type { PlannedItems };
 
-/** Runs a workout in the player its items call for (see `workoutStart`). */
+/**
+ * Runs a workout in the player its items call for (see `workoutStart`), in place of the workout
+ * page, so leaving the run lands where the page was opened from.
+ */
 export function startLibraryWorkout(
   w: LibraryWorkout,
   date: CalendarDate,
@@ -30,15 +33,19 @@ export function startLibraryWorkout(
     case "timer":
       return startWorkout(w.name, w.id, start.gripId, session, link);
     case "liveSession":
-      return startLiveSession(link.membershipId === null ? undefined : link, w.name);
+      return startLiveSession(
+        link.membershipId === null ? undefined : link,
+        w.name,
+        router.replace
+      );
     case "form":
-      return router.push(activityFormPath(start.run));
+      return router.replace(activityFormPath(start.run));
     case "intervals":
       return startIntervals(start.run);
     default: {
       const { run } = start;
       const player = start.open === "sets" ? "/workout/sets" : "/workout/checklist";
-      return startLive(() => router.push(runPath(player, run)));
+      return startLive(() => router.replace(runPath(player, run)));
     }
   }
 }

@@ -21,12 +21,13 @@ export type StartAction = { label: string; resume: boolean; onPress: () => void 
 /**
  * Start for a workout one of the players runs, or the live session a climbing day with no
  * exercises opens, once whatever else is live is dealt with; Resume while this workout is the
- * run going. None for the activity form.
+ * run going. None for the activity form. From the workout's own page, the run takes its place.
  */
 export function useWorkoutStart(
   workout: LibraryWorkout,
   date: CalendarDate,
-  planned: PlannedItems
+  planned: PlannedItems,
+  ownPage = false
 ): StartAction | null {
   const navigate = useNavigate();
   const startLive = useStartLive();
@@ -51,10 +52,14 @@ export function useWorkoutStart(
     return {
       label: t("hang.start"),
       resume: false,
-      onPress: () => startLive(`${LIVE_PATH}?${params}`),
+      onPress: () => startLive(`${LIVE_PATH}?${params}`, ownPage),
     };
   }
   const route = playerRoute(workout, start, planned);
   if (route === null) return null;
-  return { label: t("hang.start"), resume: false, onPress: () => startLive(runPath(route)) };
+  return {
+    label: t("hang.start"),
+    resume: false,
+    onPress: () => startLive(runPath(route), ownPage),
+  };
 }

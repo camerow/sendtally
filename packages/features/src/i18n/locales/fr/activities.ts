@@ -67,6 +67,7 @@ export const activities = {
   "activities.setsOfMax": "{n} séries sur {max}",
   "activities.started": "Début",
   "activities.removeSet": "Retirer la série {n}",
+  "activities.loggedName": "{name} enregistré",
   "activities.removeLastSet": "Retirer la série",
   "activities.removeLastSetFrom": "Retirer la dernière série de {exercise}",
   "activities.setRemoved": "Série {n} retirée",

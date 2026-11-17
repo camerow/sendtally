@@ -67,6 +67,7 @@ export const activities = {
   "activities.setsOfMax": "{n} von {max} Sätzen",
   "activities.started": "Gestartet",
   "activities.removeSet": "Satz {n} entfernen",
+  "activities.loggedName": "{name} eingetragen",
   "activities.removeLastSet": "Satz entfernen",
   "activities.removeLastSetFrom": "Letzten Satz von {exercise} entfernen",
   "activities.setRemoved": "Satz {n} entfernt",

@@ -9,6 +9,7 @@ import {
 } from "@sendtally/core/hang";
 import {
   activityFromDraft,
+  justLoggedText,
   kindLabel,
   minutesOf,
   previousSets,
@@ -31,6 +32,7 @@ import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { workoutPath } from "../library/useLibrary";
 import { DoneDetails } from "./DoneDetails";
+import { activityPath } from "./paths";
 import { EffortField } from "./EffortField";
 import { FocusField } from "./FocusField";
 import { KindChips } from "./KindChips";
@@ -116,6 +118,11 @@ export function ActivityForm({
       return;
     }
     void actions.saveActivity(activityFromDraft(id, draft));
+    if (logged === null)
+      toast.show({
+        message: justLoggedText({ id, name: draft.title.trim() || kindLabel(draft.kind) }),
+        action: { label: t("common.view"), onPress: () => void navigate(activityPath(id)) },
+      });
     leave();
   };
   const saveAsWorkout = (): void => {

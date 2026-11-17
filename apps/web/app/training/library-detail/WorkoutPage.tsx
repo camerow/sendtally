@@ -48,7 +48,7 @@ function Detail({
   const activities = useActivities(api).state;
   const menu = useWorkoutMenu(workout);
   const logIt = logLink(workout, today, session);
-  const start = useWorkoutStart(workout, today, unplannedItems(workout, session));
+  const start = useWorkoutStart(workout, today, unplannedItems(workout, session), true);
   const hang = workout.kind === "hangboard" ? model.workout(workout.id) : undefined;
   const next = hang === undefined ? undefined : (hangWorkoutOf(workout, session) ?? hang);
   const gripId = hang === undefined ? "" : model.defaultGrip(hang);
@@ -85,7 +85,7 @@ function Detail({
               {t("plan.schedule")}
             </Link>
             {logIt !== null && (
-              <Link to={logIt} className="outline-button outline-button--wide">
+              <Link to={logIt} replace className="outline-button outline-button--wide">
                 {t("workouts.logIt")}
               </Link>
             )}

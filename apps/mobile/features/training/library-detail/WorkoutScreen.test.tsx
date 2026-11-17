@@ -8,7 +8,9 @@ import { aHang, hangData, renderWithHang } from "../data/renderWithHang";
 import { LibraryCard } from "../library/LibraryCard";
 import { WorkoutScreen } from "./WorkoutScreen";
 
-jest.mock("expo-router", () => ({ router: { push: jest.fn(), back: jest.fn() } }));
+jest.mock("expo-router", () => ({
+  router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() },
+}));
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("../../../components/Sheet", () => ({ Sheet: () => null }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "copy" }));
@@ -155,6 +157,17 @@ describe("Other workouts", () => {
     expect(screen.getByText("RPE 8")).toBeTruthy();
     await fireEvent.press(screen.getAllByText("Back squat 5 × 80 kg · 45 min")[0]!);
     expect(router.push).toHaveBeenCalledWith({ pathname: "/activity/[id]", params: { id: "a2" } });
+  });
+
+  it("starts in place of itself, so leaving the run lands where it was opened from", async () => {
+    await renderWithHang(<WorkoutScreen id="legs" />, hangData(), { workouts: [legs] });
+    await fireEvent.press(screen.getByText("Start"));
+    expect(router.replace).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: "/workout/sets" })
+    );
+    expect(router.push).not.toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: "/workout/sets" })
+    );
   });
 
   it("starts or schedules it from its footer", async () => {

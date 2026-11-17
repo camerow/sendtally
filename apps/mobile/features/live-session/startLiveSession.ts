@@ -7,9 +7,13 @@ import { startLive } from "./startLive";
  * Starts a new live session, linked to the plan and named after the workout when given, once
  * whatever already runs is dealt with.
  */
-export function startLiveSession(link?: PlanLink, name?: string): void {
+export function startLiveSession(
+  link?: PlanLink,
+  name?: string,
+  go: typeof router.push = router.push
+): void {
   startLive(() =>
-    router.push({
+    go({
       pathname: "/session/live",
       params: {
         ...(link === undefined ? {} : planLinkParams(link)),

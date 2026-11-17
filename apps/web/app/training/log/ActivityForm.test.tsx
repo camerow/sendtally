@@ -119,6 +119,13 @@ describe("ActivityForm", () => {
     expect(store.read()).toBeNull();
   });
 
+  it("says what it logged once saved, with View to open it", () => {
+    mount();
+    save();
+    expect(document.querySelector(".toast")?.textContent).toContain("Logged Gym, legs");
+    expect(document.querySelector(".toast-action")?.textContent).toBe("View");
+  });
+
   it("removes a set with an Undo that puts it back", () => {
     mount();
     click(rows()[2]?.querySelector(".set-remove"));

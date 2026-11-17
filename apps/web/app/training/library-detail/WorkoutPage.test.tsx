@@ -186,6 +186,13 @@ describe("WorkoutPage", () => {
     expect(at.action).toBe("REPLACE");
   });
 
+  it("starts in place of itself, so leaving the run lands where it was opened from", () => {
+    mount("legs");
+    click(button("Start"));
+    expect(at.path).toBe("/app/workout/sets");
+    expect(at.action).toBe("REPLACE");
+  });
+
   it("asks before deleting the user's own, then goes back", async () => {
     mount("legs");
     menu();

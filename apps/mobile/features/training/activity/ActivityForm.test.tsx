@@ -5,7 +5,7 @@ import { Alert } from "react-native";
 import React from "react";
 import type { ActivityRecord } from "@sendtally/api-client";
 import type * as Activities from "@sendtally/features/activities";
-import { activityFromDraft, newActivityDraft } from "@sendtally/features/activities";
+import { activityFromDraft, justLogged, newActivityDraft } from "@sendtally/features/activities";
 import { ActivityForm } from "./ActivityForm";
 
 let mockPrevious: Partial<ActivityRecord>[] = [];
@@ -17,7 +17,13 @@ jest.mock("../../../components/Sheet", () => ({
     visible ? children : null,
 }));
 jest.mock("expo-router", () => ({
-  router: { back: jest.fn(), push: jest.fn(), dismiss: jest.fn() },
+  router: {
+    back: jest.fn(),
+    push: jest.fn(),
+    dismiss: jest.fn(),
+    dismissAll: jest.fn(),
+    canDismiss: () => true,
+  },
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "w-new" }));
 jest.mock("@sendtally/features/workouts", () => ({
@@ -58,7 +64,8 @@ async function keys(...pressed: string[]): Promise<void> {
 }
 
 describe("Log activity", () => {
-  it("saves an untitled activity under its kind's name with its effort, from the header", async () => {
+  it("saves an untitled activity under its kind's name with its effort, from the header, and lands on the tab it came from", async () => {
+    jest.mocked(router.back).mockClear();
     await render(
       <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={null} />
     );
@@ -84,7 +91,9 @@ describe("Log activity", () => {
       focus: null,
       done: [],
     });
-    expect(router.back).toHaveBeenCalled();
+    expect(router.dismissAll).toHaveBeenCalled();
+    expect(router.back).not.toHaveBeenCalled();
+    expect(justLogged.read()).toEqual({ id: "a1", name: "Mobility" });
   });
 
   it("reads a timed run's date, start and length, opening one in place to change it", async () => {
