@@ -1,11 +1,11 @@
 import React from "react";
-import type { HangSessionRecord } from "@sendtally/api-client";
+import type { HangRun } from "@sendtally/core/hang";
 import { fromUnit, toUnit, type HangKind, type WeightUnit } from "@sendtally/core/hang";
 import { loadLabel } from "@sendtally/features/hang";
 import { SeriesChart } from "./SeriesChart";
 
 export type LoadChartProps = {
-  series: readonly HangSessionRecord[];
+  series: readonly HangRun[];
   kind: HangKind;
   unit: WeightUnit;
   label: string;

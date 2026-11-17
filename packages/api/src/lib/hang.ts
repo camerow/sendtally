@@ -144,8 +144,15 @@ export type HangSessionRecord = HangSession & {
 /** A hang session as sendtally's history lists it. `gripName` is set for the user's own grips only: the apps name a built-in in their language. */
 export type HangHistoryRow = HangSessionRecord & { gripName: string | null };
 
-/** A workout's fingerboard part, a hang session of the activity it ran in. */
-export type HangPart = HangSessionRecord & { activityId: string };
+/** A workout's fingerboard part, a hang session of the activity it ran in; no workout once its run has none. */
+export type HangPart = Omit<HangSessionRecord, "workoutId"> & {
+  workoutId: string | null;
+  activityId: string;
+};
+
+// The column holds "" for a part whose run lost its workout; readers see null.
+const partWorkout = (row: HangSessionRow): string | null =>
+  row.workout_id === "" ? null : row.workout_id;
 
 export type HangData = {
   grips: Grip[];
@@ -225,7 +232,9 @@ export function hangSessionOf(row: HangSessionRow): HangSessionRecord {
 
 /** The part a row is, or null for a session of its own. */
 export const hangPartOf = (row: HangSessionRow): HangPart | null =>
-  row.activity_id === null ? null : { ...hangSessionOf(row), activityId: row.activity_id };
+  row.activity_id === null
+    ? null
+    : { ...hangSessionOf(row), workoutId: partWorkout(row), activityId: row.activity_id };
 
 export function hangHistoryOf(
   row: HangSessionRow,
@@ -238,7 +247,7 @@ export function hangHistoryOf(
 }
 
 /** A workout's fingerboard part as history lists it, beside its activity. */
-export type HangHistoryPart = HangHistoryRow & { activityId: string };
+export type HangHistoryPart = HangPart & { gripName: string | null };
 
 /** History's sessions of their own, and the parts its activities carry, each listed once. */
 export function hangHistory(
@@ -249,11 +258,10 @@ export function hangHistory(
     hangSessions: rows
       .filter((r) => r.activity_id === null)
       .map((r) => hangHistoryOf(r, customGrips)),
-    hangParts: rows.flatMap((r) =>
-      r.activity_id === null
-        ? []
-        : [{ ...hangHistoryOf(r, customGrips), activityId: r.activity_id }]
-    ),
+    hangParts: rows.flatMap((r) => {
+      const part = hangPartOf(r);
+      return part === null ? [] : [{ ...part, gripName: hangHistoryOf(r, customGrips).gripName }];
+    }),
   };
 }
 

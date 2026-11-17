@@ -89,7 +89,7 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
       ? ofWorkout(activities.status === "ready" ? activities.data : [], workout.id).map((a) =>
           activityItem(a, model.settings.units)
         )
-      : ofWorkout(model.sessions, workout.id).map((s) => hangItem(s, model));
+      : ofWorkout(model.data.sessions, workout.id).map((s) => hangItem(s, model));
   const planned = run === undefined ? undefined : plannedItems(run);
   const missed = run?.status === "missed";
   const logIt = (

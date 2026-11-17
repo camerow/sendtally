@@ -65,7 +65,9 @@ export function HangSummary({
         </React.Fragment>
       ))}
       <HistoryList
-        items={pastSessions(session, all).map((s) => hangItem(s, model, session.id))}
+        items={pastSessions(session, model.data.sessions).map((s) =>
+          hangItem(s, model, session.id)
+        )}
         to={activityPath}
       />
     </SummaryFrame>

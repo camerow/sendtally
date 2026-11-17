@@ -1,4 +1,4 @@
-import type { HangData, HangSessionRecord } from "@sendtally/api-client";
+import type { HangData, HangPart, HangSessionRecord } from "@sendtally/api-client";
 import {
   BUILT_IN_GRIPS,
   doseIndex,
@@ -27,7 +27,8 @@ export type HangModel = {
   /** Every hangboard workout in the library, as the timer runs its first item. */
   workouts: HangWorkout[];
   grips: Grip[];
-  sessions: HangSessionRecord[];
+  /** Sessions of their own and workouts' fingerboard parts, for what grips read. */
+  sessions: (HangSessionRecord | HangPart)[];
   /** A hangboard workout as the timer runs its first item. */
   workout: (id: string) => HangWorkout | undefined;
   gripName: (id: string) => string;
@@ -79,11 +80,9 @@ export function hangWorkoutOf(
  * The hang timer's model. A built-in grip the library retired is hidden like one the user hid,
  * so it leaves the pickers but still names its sessions.
  */
-/**
- * Every hang session for what grips read: sessions of their own and workouts' fingerboard
- * parts, newest first, each list's own order kept within a day. A log counts a part as its activity, so only grip readers take this.
- */
-export const hangsWithParts = (data: Pick<HangData, "sessions" | "parts">): HangSessionRecord[] =>
+export const hangsWithParts = (
+  data: Pick<HangData, "sessions" | "parts">
+): (HangSessionRecord | HangPart)[] =>
   [...data.sessions, ...data.parts].sort((a, b) => b.date.localeCompare(a.date));
 
 export function hangModel(data: HangData, all: readonly LibraryWorkout[]): HangModel {

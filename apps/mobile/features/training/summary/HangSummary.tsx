@@ -60,7 +60,9 @@ export function HangSummary({
         </React.Fragment>
       ))}
       <HistoryList
-        items={pastSessions(session, all).map((s) => hangItem(s, model, session.id))}
+        items={pastSessions(session, model.data.sessions).map((s) =>
+          hangItem(s, model, session.id)
+        )}
         onOpen={(id) => router.push({ pathname: "/activity/[id]", params: { id } })}
       />
     </SummaryFrame>

@@ -1,5 +1,5 @@
 import React from "react";
-import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
+import type { ActivityRecord, HangPart } from "@sendtally/api-client";
 import type { WeightUnit } from "@sendtally/core/hang";
 import {
   activityItem,
@@ -28,7 +28,7 @@ export type ActivitySummaryProps = {
   unit: WeightUnit;
   actions: ActivityActions;
   /** Its workout's fingerboard part, if it ran one, with its grips named. */
-  part?: { session: HangSessionRecord; gripName: (id: string) => string };
+  part?: { session: HangPart; gripName: (id: string) => string };
 };
 
 /**
