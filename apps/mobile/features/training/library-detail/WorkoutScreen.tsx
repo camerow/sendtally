@@ -180,7 +180,9 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
       )}
       <WorkoutOverTime workout={workout} gripId={hang === undefined ? null : gripId} />
       <HistoryList items={history} onOpen={openActivity} />
-      <PlanList workoutId={workout.id} name={workout.name} kind={workout.kind} />
+      {run === undefined && (
+        <PlanList workoutId={workout.id} name={workout.name} kind={workout.kind} />
+      )}
       {changes.sheets}
       {addToBlock.sheet && <AddToSheet {...addToBlock.sheet} />}
     </ScreenFrame>

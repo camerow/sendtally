@@ -159,6 +159,15 @@ describe("Other workouts", () => {
     expect(router.push).toHaveBeenCalledWith({ pathname: "/activity/[id]", params: { id: "a2" } });
   });
 
+  it("opened from a plan day, leaves out Scheduled in", async () => {
+    await renderWithHang(
+      <WorkoutScreen id="legs" run={{ date: "2026-09-28", membershipId: "m1" }} />,
+      hangData(),
+      { workouts: [legs], plan: planned }
+    );
+    expect(labels()).not.toContain("Scheduled in");
+  });
+
   it("starts in place of itself, so leaving the run lands where it was opened from", async () => {
     await renderWithHang(<WorkoutScreen id="legs" />, hangData(), { workouts: [legs] });
     await fireEvent.press(screen.getByText("Start"));
