@@ -6,18 +6,18 @@ import { timerParams } from "@sendtally/features/workouts";
 
 /**
  * Runs a hangboard workout in the timer as its `session`th session, against the plan it
- * was planned in when it was, once whatever already runs is dealt with. It takes the place of
- * the workout page, so leaving the run lands where the page was opened from.
+ * was planned in when it was, once whatever already runs is dealt with.
  */
 export function startWorkout(
   name: string,
   workoutId: string,
   gripId: string,
   session: number,
-  link: PlanLink = NO_PLAN
+  link: PlanLink = NO_PLAN,
+  go: typeof router.push = router.push
 ): void {
   startLive(() =>
-    router.replace({
+    go({
       pathname: "/workout/timer",
       params: timerParams(workoutId, gripId, session, link),
     })

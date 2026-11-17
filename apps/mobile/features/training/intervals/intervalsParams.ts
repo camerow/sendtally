@@ -6,7 +6,7 @@ export function intervalsPath(r: IntervalsRun): Href {
   return { pathname: "/workout/intervals", params: intervalsParams(r) };
 }
 
-/** Runs it in the intervals player in place of the workout page, once whatever already runs is dealt with. */
-export function startIntervals(r: IntervalsRun): void {
-  startLive(() => router.replace(intervalsPath(r)));
+/** Runs it in the intervals player, once whatever already runs is dealt with. */
+export function startIntervals(r: IntervalsRun, go: typeof router.push = router.push): void {
+  startLive(() => go(intervalsPath(r)));
 }

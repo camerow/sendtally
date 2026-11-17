@@ -104,13 +104,15 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
     />
   );
   const start = missed ? null : run !== undefined ? (
-    <StartButton workout={workout} date={run.date} planned={planned} height={54} />
+    <StartButton workout={workout} date={run.date} planned={planned} ownPage height={54} />
   ) : hang === undefined ? (
-    <StartButton workout={workout} date={today} height={54} />
+    <StartButton workout={workout} date={today} ownPage height={54} />
   ) : (
     <Button
       label={t("hang.start")}
-      onPress={() => startWorkout(workout.name, workout.id, gripId, session)}
+      onPress={() =>
+        startWorkout(workout.name, workout.id, gripId, session, undefined, router.replace)
+      }
       variant="primary"
       height={54}
       icon="play"

@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import React from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 import type { CalendarDate } from "@sendtally/core/hang";
@@ -15,6 +16,8 @@ export type StartButtonProps = {
   date: CalendarDate;
   /** What the plan prescribes; else the workout's next session as written. */
   planned?: PlannedItems;
+  /** On the workout's own page, the run takes its place. */
+  ownPage?: boolean;
   height: number;
   style?: StyleProp<ViewStyle>;
 };
@@ -24,6 +27,7 @@ export function StartButton({
   workout,
   date,
   planned,
+  ownPage = false,
   height,
   style,
 }: StartButtonProps): React.ReactElement {
@@ -35,7 +39,16 @@ export function StartButton({
   return (
     <Button
       label={t("hang.start")}
-      onPress={() => startLibraryWorkout(workout, date, run, eachSide, tally)}
+      onPress={() =>
+        startLibraryWorkout(
+          workout,
+          date,
+          run,
+          eachSide,
+          tally,
+          ownPage ? router.replace : router.push
+        )
+      }
       variant="primary"
       height={height}
       icon="play"
