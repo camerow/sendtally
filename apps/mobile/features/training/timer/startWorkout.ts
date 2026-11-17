@@ -13,10 +13,11 @@ export function startWorkout(
   workoutId: string,
   gripId: string,
   session: number,
-  link: PlanLink = NO_PLAN
+  link: PlanLink = NO_PLAN,
+  go: typeof router.push = router.push
 ): void {
   startLive(() =>
-    router.push({
+    go({
       pathname: "/workout/timer",
       params: timerParams(workoutId, gripId, session, link),
     })

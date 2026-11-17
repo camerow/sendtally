@@ -3,6 +3,7 @@ import { PostHog } from "posthog-node";
 import { describe, expect, it, vi } from "vitest";
 import type { Env } from "../src/bindings";
 import * as posthog from "../src/lib/posthog";
+import * as repo from "../src/lib/repo";
 import { testApp } from "./harness";
 
 type ToolResult = { isError?: boolean; content: Array<{ text: string }> };
@@ -432,6 +433,61 @@ describe("connector", () => {
     const others = await toolJson<Library>(other, "get_training_library");
     expect(others.exercises.every((e) => e.builtIn)).toBe(true);
     expect(await toolJson(other, "get_plan")).toEqual({ blocks: [], outsideBlocks: [] });
+  });
+
+  it("lists a planned workout done on another day of its week as moved there, as the app shows it", async () => {
+    const user = "user_claims";
+    await put(user, "/v1/workouts/w1", {
+      kind: "strength",
+      name: "Back squat",
+      description: "",
+      minutes: 45,
+      targetRpe: 8,
+      items: [{ exercise: "Back squat", doses: [{ sets: 5, reps: 5, weightKg: 100 }] }],
+    });
+    await put(user, "/v1/memberships/m1", {
+      workoutId: "w1",
+      blockId: null,
+      weekdays: [1],
+      start: "2026-11-02",
+    });
+    await put(user, "/v1/activities/a1", {
+      kind: "strength",
+      title: "Back squat",
+      date: "2026-11-16",
+      startTime: "18:30",
+      minutes: 50,
+      rpe: 7,
+      notes: null,
+      workoutId: "w1",
+      membershipId: "m1",
+      week: null,
+      focus: null,
+      done: [],
+    });
+    const plan = await toolJson<{ outsideBlocks: Array<{ skippedOrMoved: unknown[] }> }>(
+      user,
+      "get_plan"
+    );
+    expect(plan.outsideBlocks[0]?.skippedOrMoved).toEqual([
+      { plannedOn: "2026-11-17", kind: "move", movedTo: "2026-11-16", reason: null, byLog: true },
+    ]);
+    await put(user, "/v1/activities/a0", {
+      kind: "strength",
+      title: "Back squat",
+      date: "2026-10-01",
+      startTime: "18:30",
+      minutes: 50,
+      rpe: 7,
+      notes: null,
+      workoutId: "w1",
+      membershipId: "m1",
+      week: null,
+      focus: null,
+      done: [],
+    });
+    const read = await repo.planLogRows(env.DB, user, "2026-11-02");
+    expect(read.activities.map((a) => a.date)).toEqual(["2026-11-16"]);
   });
 
   const CSV = [

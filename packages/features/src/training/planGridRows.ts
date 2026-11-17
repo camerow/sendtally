@@ -14,7 +14,7 @@ import { durationLabel } from "../sessions/years";
 import { humanDuration, loadLabel } from "../hang/format";
 import type { HangModel } from "../hang/model";
 import { t } from "../i18n";
-import { bodySummary, workoutMinutes } from "../workouts/library";
+import { bodySummary, workoutMinutes, type MeasuredExercises } from "../workouts/library";
 
 /** How a dated day went for a row: an occurrence's status, or moved in from another day. */
 export type CellMark = OccurrenceStatus | "movedIn";
@@ -47,13 +47,15 @@ export type GridOptions = {
   marks?: (m: Membership) => readonly (CellMark | null)[];
   press?: (m: Membership, day: number) => (() => void) | undefined;
   toggle?: (m: Membership, day: number) => (() => void) | undefined;
+  /** The exercises a climbing row reads its measure from, such as laps of a circuit. */
+  exercises: MeasuredExercises;
 };
 
 /** How grips read: their names, and the grip a one-grip workout was set to. */
 export type GripNames = Pick<HangModel, "gripName" | "defaultGrip" | "workout">;
 
 /** Fingers: its grip and edge, or how many grips. Else what it holds and how long it takes. */
-export function workoutLines(w: Workout, grips: GripNames): string[] {
+export function workoutLines(w: Workout, grips: GripNames, exercises: MeasuredExercises): string[] {
   if (w.kind === "hangboard") {
     const used = [...new Set(w.items.map((i) => i.exercise))];
     const [grip] = used;
@@ -66,7 +68,7 @@ export function workoutLines(w: Workout, grips: GripNames): string[] {
     return [grips.gripName(hang === undefined ? grip : grips.defaultGrip(hang)), ...one];
   }
   const minutes = workoutMinutes(w);
-  const lines = [bodySummary(w), minutes === null ? null : durationLabel(minutes)];
+  const lines = [bodySummary(w, exercises), minutes === null ? null : durationLabel(minutes)];
   const kept = [...new Set(lines.filter((l) => l !== null))];
   return kept.length === 0 ? [kindLabel(w.kind)] : kept;
 }
@@ -79,9 +81,10 @@ export function weekLines(
   w: Workout,
   changes: readonly Partial<Dose>[],
   grips: GripNames,
-  unit: WeightUnit
+  unit: WeightUnit,
+  exercises: MeasuredExercises
 ): GridPart[][] {
-  const [first = "", second] = workoutLines(w, grips);
+  const [first = "", second] = workoutLines(w, grips, exercises);
   // Edge and load read for one hang with one dose; anything more counts its changes instead.
   const [only] = w.items;
   const dose = w.items.length === 1 && only?.doses.length === 1 ? only.doses[0] : undefined;
@@ -118,7 +121,7 @@ export function planGridRows(
   grips: GripNames,
   options: GridOptions
 ): PlanGridRow[] {
-  const { open, week, marks, toggle, press } = options;
+  const { open, week, marks, toggle, press, exercises } = options;
   return members.flatMap((m): PlanGridRow[] => {
     const w = workout(m.workoutId);
     if (w === undefined) return [];
@@ -140,8 +143,8 @@ export function planGridRows(
         name: w.name,
         lines:
           week === undefined
-            ? workoutLines(w, grips).map((text) => [{ text }])
-            : weekLines(w, changes(week.n), grips, week.unit),
+            ? workoutLines(w, grips, exercises).map((text) => [{ text }])
+            : weekLines(w, changes(week.n), grips, week.unit, exercises),
         days: m.weekdays,
         ...(marks !== undefined && { marks: marks(m) }),
         open: () => open(m),

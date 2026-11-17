@@ -1,4 +1,6 @@
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
+import { useApi } from "../../../lib/api";
 import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
 import { libraryPictures } from "@sendtally/features/library";
@@ -32,6 +34,7 @@ export function LibraryShelf({
   onAdd,
 }: LibraryShelfProps): React.ReactElement {
   const { model } = useHangData();
+  const exercises = useExerciseList(useApi());
   const label = focusLabel(shelf.focus);
   const more = shelf.workouts.length > SHELF_ROWS;
   return (
@@ -53,7 +56,7 @@ export function LibraryShelf({
           key={w.id}
           kind={w.kind}
           name={w.name}
-          meta={libraryLine(w, model.settings.units)}
+          meta={libraryLine(w, model.settings.units, exercises)}
           picture={libraryPictures("workout", w.id)[0]}
           onPress={() => onPick(w)}
         />

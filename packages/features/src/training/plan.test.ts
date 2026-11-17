@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Plan } from "@sendtally/api-client";
 import type { Workout } from "@sendtally/core/hang";
 import {
+  claimedPlan,
   nextOccurrence,
   occurrencesOn,
   withoutBlock,
@@ -343,3 +344,66 @@ describe("days edited partway through a block", () => {
     ]);
   });
 });
+
+describe("a planned workout done on another day of its week", () => {
+  const status = (date: string, sessions: LoggedSession[], p: Plan = plan, id = "m1") =>
+    occurrencesOn(claimedPlan(p, workout, sessions), workout, sessions, date, TODAY).find(
+      (o) => o.membership.id === id
+    )?.status;
+
+  it("done early, moves to the day it was done, done there", () => {
+    const early = [logged({ date: "2026-11-09" })];
+    expect(status("2026-11-10", early)).toBe("moved");
+    expect(status("2026-11-09", early)).toBe("done");
+    expect(status("2026-11-13", early)).toBe("planned");
+  });
+
+  it("done late, takes the nearest missed day of its Block week", () => {
+    const late = [logged({ date: "2026-11-04" })];
+    expect(status("2026-11-03", late)).toBe("moved");
+    expect(status("2026-11-04", late)).toBe("done");
+    expect(status("2026-11-06", late)).toBe("missed");
+  });
+
+  it("done twice in a week, each log takes the nearest day not taken", () => {
+    const twice = [logged({ date: "2026-11-09" }), logged({ date: "2026-11-11" })];
+    expect(status("2026-11-10", twice)).toBe("moved");
+    expect(status("2026-11-13", twice)).toBe("moved");
+    expect(status("2026-11-09", twice)).toBe("done");
+    expect(status("2026-11-11", twice)).toBe("done");
+  });
+
+  it("leaves a day moved by hand alone", () => {
+    const moved: Plan = { ...plan, planChanges: [moveOf(on2(plan, "2026-11-10")!, "2026-11-12")] };
+    const early = [logged({ date: "2026-11-09" })];
+    expect(status("2026-11-10", early, moved)).toBe("moved");
+    expect(status("2026-11-12", early, moved)).toBe("planned");
+    expect(status("2026-11-13", early, moved)).toBe("moved");
+    expect(status("2026-11-09", early, moved)).toBe("done");
+  });
+
+  it("puts the plan back once the log is gone", () => {
+    expect(status("2026-11-10", [])).toBe("planned");
+    expect(status("2026-11-09", [])).toBeUndefined();
+  });
+
+  it("stays inside its Block week, and claims nothing before the Block", () => {
+    const before = [logged({ date: "2026-11-01" })];
+    expect(status("2026-11-03", before)).toBe("missed");
+    const sunday = [logged({ date: "2026-11-08" })];
+    expect(status("2026-11-06", sunday)).toBe("moved");
+    expect(status("2026-11-10", sunday)).toBe("planned");
+  });
+
+  it("outside a Block, moves within its calendar week from Monday", () => {
+    const climb = (date: string): LoggedSession =>
+      logged({ date, kind: "climbing", membershipId: "m2" });
+    expect(status("2026-11-11", [climb("2026-11-09")], plan, "m2")).toBe("moved");
+    expect(status("2026-11-09", [climb("2026-11-09")], plan, "m2")).toBe("done");
+    expect(status("2026-11-04", [climb("2026-11-08")], plan, "m2")).toBe("moved");
+    expect(status("2026-11-11", [climb("2026-11-08")], plan, "m2")).toBe("planned");
+  });
+});
+
+const on2 = (p: Plan, date: string) =>
+  occurrencesOn(p, workout, [], date, TODAY).find((o) => o.membership.id === "m1");

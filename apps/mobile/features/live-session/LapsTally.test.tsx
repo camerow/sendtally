@@ -100,6 +100,26 @@ describe("Circuit laps on the tally", () => {
     ]);
   });
 
+  it("takes back an added lap with Remove lap, gone again at the planned laps", async () => {
+    await both({ sets: 2, reps: 40 });
+    await fireEvent.press(screen.getByText("Start"));
+    expect(screen.queryByText("Remove lap")).toBeNull();
+    await fireEvent.press(screen.getByText("Add lap"));
+    expect(screen.getByText("Lap 1 of 3")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Remove lap"));
+    expect(screen.getByText("Lap 1 of 2")).toBeTruthy();
+    expect(screen.queryByText("Remove lap")).toBeNull();
+  });
+
+  it("opens a lap done on its circuit, titled Edit climb", async () => {
+    await both({ sets: 2, reps: 40 });
+    await fireEvent.press(screen.getByText("Start"));
+    await fireEvent.press(screen.getByText("Sent"));
+    await fireEvent.press(screen.getByLabelText("Lap 1, 40"));
+    expect(screen.getByText("Edit climb")).toBeTruthy();
+    expect(screen.queryByText("Add climb")).toBeNull();
+  });
+
   it("times a lap from Start lap, keeps the time so far on Fell, and goes clean at its target", async () => {
     await both({ sets: 2, onS: 60 });
     expect(screen.getByText("2 laps of 1 min")).toBeTruthy();

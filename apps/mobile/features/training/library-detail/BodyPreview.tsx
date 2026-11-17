@@ -15,7 +15,6 @@ import { climbingDoseLine } from "@sendtally/features/activities";
 import type { TallyMeasure } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import {
-  bodySummary,
   doseSummary,
   exerciseName,
   letterName,
@@ -23,7 +22,6 @@ import {
   withTarget,
   type LibraryWorkout,
 } from "@sendtally/features/workouts";
-import { DashedPanel } from "../components/DashedPanel";
 import { IntervalsBar } from "../components/IntervalsBar";
 import { Label } from "../components/Label";
 import { LetterBadge } from "../components/LetterBadge";
@@ -53,7 +51,6 @@ export function BodyPreview({
   tally,
   openExercise,
 }: BodyPreviewProps): React.ReactElement {
-  if (bodySummary(workout) === null) return <DashedPanel body={t("workouts.noBody")} />;
   const turns = turnsOf(workout.items);
   const items = sessionItems(workout.items, session);
   const timed = items.every((item) => item.dose.onS !== undefined);

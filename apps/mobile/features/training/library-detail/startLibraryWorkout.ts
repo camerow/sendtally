@@ -16,29 +16,33 @@ import { startWorkout } from "../timer/startWorkout";
 
 export type { PlannedItems };
 
-/** Runs a workout in the player its items call for (see `workoutStart`). */
+/**
+ * Runs a workout in the player its items call for (see `workoutStart`). From the workout's own
+ * page `go` is `router.replace`, so leaving the run lands where that page was opened from.
+ */
 export function startLibraryWorkout(
   w: LibraryWorkout,
   date: CalendarDate,
   planned: PlannedItems,
   eachSide: (exercise: string) => boolean,
-  tally?: (exercise: string) => TallyMeasure | null
+  tally?: (exercise: string) => TallyMeasure | null,
+  go: typeof router.push = router.push
 ): void {
   const { link, session } = planned;
   const start = workoutStart(w, date, planned, eachSide, tally);
   switch (start.open) {
     case "timer":
-      return startWorkout(w.name, w.id, start.gripId, session, link);
+      return startWorkout(w.name, w.id, start.gripId, session, link, go);
     case "liveSession":
-      return startLiveSession(link.membershipId === null ? undefined : link, w.name);
+      return startLiveSession(link.membershipId === null ? undefined : link, w.name, go);
     case "form":
-      return router.push(activityFormPath(start.run));
+      return go(activityFormPath(start.run));
     case "intervals":
-      return startIntervals(start.run);
+      return startIntervals(start.run, go);
     default: {
       const { run } = start;
       const player = start.open === "sets" ? "/workout/sets" : "/workout/checklist";
-      return startLive(() => router.push(runPath(player, run)));
+      return startLive(() => go(runPath(player, run)));
     }
   }
 }

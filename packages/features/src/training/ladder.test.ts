@@ -180,11 +180,11 @@ describe("ladderView", () => {
       },
       libraryOf([])
     );
-    const view = ladderView(l.plan, l, model, "m1", 0, "2026-10-06");
+    const view = ladderView(l.plan, l, model, "m1", 0, "2026-10-06", []);
     expect(view?.workout.name).toBe("Legs");
     expect(view?.turns).toBe(1);
     expect(view?.current).toBe(2);
-    expect(ladderView(l.plan, l, model, "gone", 0, "2026-10-06")).toBeNull();
+    expect(ladderView(l.plan, l, model, "gone", 0, "2026-10-06", [])).toBeNull();
   });
 });
 

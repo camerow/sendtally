@@ -12,6 +12,7 @@ import {
 } from "@sendtally/core/hang";
 import {
   activityFromDraft,
+  justLogged,
   previousSets,
   useActivities,
   kindLabel,
@@ -29,6 +30,7 @@ import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { Toast } from "../../../components/Toast";
 import { TimeField } from "../../../components/TimeField";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
+import { landOnTabRoot } from "../../../lib/landOnTabRoot";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { EditorHeader } from "../components/EditorHeader";
@@ -121,12 +123,22 @@ export function ActivityForm({
     });
     router.push({ pathname: "/workout/[id]", params: { id: workoutId } });
   };
-  const save = (): void => {
-    if (hang === undefined) {
-      void actions.saveActivity(activityFromDraft(id, draft));
-      router.back();
-    } else hang.save(draft);
+  const [saving, setSaving] = React.useState(false);
+  /** Leaves only once the server holds it, so a failed save keeps the form and what is in it. */
+  const save = async (): Promise<void> => {
+    if (hang !== undefined) {
+      hang.save(draft);
+      if (live) liveRun.clear();
+      return;
+    }
+    setSaving(true);
+    const saved = await actions.saveActivity(activityFromDraft(id, draft));
+    setSaving(false);
+    if (!saved) return;
     if (live) liveRun.clear();
+    if (logged !== null) return router.back();
+    justLogged.tell({ id, name: draft.title.trim() || kindLabel(draft.kind) });
+    landOnTabRoot();
   };
   const discard = (): void =>
     confirmDestructive({
@@ -199,7 +211,8 @@ export function ActivityForm({
         }
         cancelLabel={live ? t("hang.discard") : t("common.cancel")}
         onCancel={live ? discard : () => router.back()}
-        onSave={save}
+        onSave={() => void save()}
+        saveDisabled={saving}
       />
       <KeypadScrollView
         contentContainerStyle={{

@@ -80,6 +80,8 @@ export type ClimbEditorSheetProps = {
   project: boolean;
   /** Defaults to "not the last climb"; a live session lets the last one go too. */
   removable?: boolean;
+  /** It opens on a climb already logged, so it reads Edit climb. */
+  editing?: boolean;
   suggestions: ClimbSummary[];
   onChange: (climb: ClimbDraft) => void;
   onChangeName: (name: string) => void;
@@ -103,6 +105,7 @@ export function ClimbEditorSheet({
   prefs,
   project,
   removable = count > 1,
+  editing = false,
   suggestions,
   onChange,
   onChangeName,
@@ -126,7 +129,10 @@ export function ClimbEditorSheet({
 
   React.useEffect(() => {
     const el = dialog.current;
-    if (el !== null && !el.open) el.showModal();
+    if (el === null || el.open) return;
+    el.showModal();
+    // As every sheet does: the dialog holds focus itself, not its scrolling panel or first field.
+    el.focus();
   }, []);
 
   const nameProps: ClimbNameFieldProps = {
@@ -142,11 +148,13 @@ export function ClimbEditorSheet({
     onChange: onChangeName,
     onPick,
   };
+  const title = editing ? t("climbs.editClimb") : t("logSession.addClimb");
   return (
     <dialog
       ref={dialog}
       className="climb-sheet"
-      aria-label={t("logSession.addClimb")}
+      tabIndex={-1}
+      aria-label={title}
       onCancel={(e) => {
         e.preventDefault();
         onClose();
@@ -165,7 +173,7 @@ export function ClimbEditorSheet({
         >
           <div className="climb-sheet-handle" />
           <div className="climb-sheet-heading">
-            <h2 className="sheet-title">{t("logSession.addClimb")}</h2>
+            <h2 className="sheet-title">{title}</h2>
             <span className="climb-sheet-count">
               {count > 0
                 ? t("logSession.climbOf", { n: index + 1, total: count })

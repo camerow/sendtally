@@ -9,8 +9,9 @@ import type {
 import { queries } from "../query";
 
 export type ActivityActions = {
-  saveActivity: (activity: Activity) => Promise<void>;
-  deleteActivity: (id: string) => Promise<void>;
+  /** True once the server holds it; false when it failed and the cache fell back. */
+  saveActivity: (activity: Activity) => Promise<boolean>;
+  deleteActivity: (id: string) => Promise<boolean>;
 };
 
 const upsert = <T extends { id: string }>(list: readonly T[], item: T): T[] =>
@@ -43,7 +44,8 @@ let chain: Promise<unknown> = Promise.resolve();
 /**
  * Writes apply to the cache at once and go to the server in order behind it.
  * A failed write refetches, so the screen falls back to what the server holds,
- * and is reported through `onError`; the returned promises never reject.
+ * and is reported through `onError`; the returned promises never reject, and say whether the
+ * server took the write.
  */
 export function useActivityActions(
   api: SendtallyApi,
@@ -56,16 +58,18 @@ export function useActivityActions(
       key: QueryKey,
       patch: (data: T) => T,
       request: () => Promise<unknown>
-    ): Promise<void> => {
+    ): Promise<boolean> => {
       client.setQueryData<T>(key, (data) => (data === undefined ? data : patch(data)));
       await client.cancelQueries({ queryKey: key }, { revert: false });
       const next = chain.then(request);
       chain = next.catch(() => undefined);
       try {
         await next;
+        return true;
       } catch (error) {
         onError(error);
         await client.invalidateQueries({ queryKey: key });
+        return false;
       }
     };
     const activities = queries.activities(api).queryKey;

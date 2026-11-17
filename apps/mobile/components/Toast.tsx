@@ -9,6 +9,8 @@ export type ToastProps = {
   /** One link, such as View, that also dismisses it. */
   action?: { label: string; onPress: () => void };
   onHide: () => void;
+  /** From the foot of its parent, in place of clearing the safe area and any footer. */
+  bottom?: number;
 };
 
 const SHOWN_MS = 4000;
@@ -17,7 +19,7 @@ const SHOWN_MS = 4000;
 export const ToastFooter = React.createContext(0);
 
 /** A short word on what just happened, at the foot of the screen above any footer, gone after a few seconds. */
-export function Toast({ message, action, onHide }: ToastProps): React.ReactElement {
+export function Toast({ message, action, onHide, bottom }: ToastProps): React.ReactElement {
   const insets = useSafeAreaInsets();
   const footer = React.useContext(ToastFooter);
   const hide = React.useRef(onHide);
@@ -36,7 +38,7 @@ export function Toast({ message, action, onHide }: ToastProps): React.ReactEleme
         position: "absolute",
         left: 18,
         right: 18,
-        bottom: insets.bottom + (footer > 0 ? footer + 12 : 8),
+        bottom: bottom ?? insets.bottom + (footer > 0 ? footer + 12 : 8),
         minHeight: 52,
         paddingVertical: 6,
         borderRadius: 14,

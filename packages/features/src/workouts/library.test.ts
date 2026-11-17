@@ -264,6 +264,18 @@ describe("dose names", () => {
 describe("summaries", () => {
   const byId = (id: string): LibraryWorkout => library().find((w) => w.id === id)!;
 
+  it("reads a circuit's laps of moves, as its exercise measures them", () => {
+    const laps: Pick<LibraryWorkout, "kind" | "items"> = {
+      kind: "climbing",
+      items: [{ exercise: "Circuit laps", doses: [{ sets: 3, reps: 40 }] }],
+    };
+    const circuit = [{ name: "Circuit laps", kind: "climbing", measure: "laps" }] as const;
+    expect(bodySummary(laps, circuit)).toBe("3 laps of 40 moves");
+    expect(libraryLine({ ...byId("climb-4x4"), ...laps }, "kg", circuit)).toBe(
+      "1 exercise · 3 laps of 40 moves"
+    );
+  });
+
   it("sums up a workout in a few words", () => {
     expect(bodySummary(byId("strength-5x5"))).toBe("3 exercises");
     expect(bodySummary(byId("w-stretch"))).toBe("1 exercise");

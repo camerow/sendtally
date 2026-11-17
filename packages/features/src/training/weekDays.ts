@@ -1,29 +1,16 @@
 import type { MembershipDays, Plan } from "@sendtally/api-client";
 import {
   blockWeekOn,
+  daysInWeek,
+  scheduleOf,
   type Block,
+  type DaySchedule,
   type CalendarDate,
   type Membership,
   type Weekday,
 } from "@sendtally/core/hang";
 
-/** A membership's days: its own weekdays, then each block week its days changed from. */
-export type DaySchedule = { membershipId: string; weekdays: Weekday[]; weeks: MembershipDays[] };
-
-/** A block membership's day changes, earliest week first. */
-export const scheduleOf = (plan: Pick<Plan, "membershipDays">, m: Membership): DaySchedule => ({
-  membershipId: m.id,
-  weekdays: [...m.weekdays],
-  weeks: plan.membershipDays
-    .filter((d) => d.membershipId === m.id)
-    .sort((a, b) => a.fromWeek - b.fromWeek),
-});
-
-/** The weekdays a schedule lands on in one block week: the latest change at or before it. */
-export function daysInWeek(schedule: DaySchedule, week: number): Weekday[] {
-  const edit = schedule.weeks.filter((d) => d.fromWeek <= week).at(-1);
-  return edit === undefined ? schedule.weekdays : edit.weekdays;
-}
+export { daysInWeek, scheduleOf, type DaySchedule };
 
 /** The days a plan lands on this week: its block's first week when the block is not running. */
 export const daysThisWeek = (

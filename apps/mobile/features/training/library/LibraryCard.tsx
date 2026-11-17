@@ -1,4 +1,6 @@
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
+import { useApi } from "../../../lib/api";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { doseProtocol, intervalsOf, sessionItems } from "@sendtally/core/hang";
@@ -38,8 +40,9 @@ export function LibraryCard({
   showKind = true,
   width,
 }: LibraryCardProps): React.ReactElement {
+  const exercises = useExerciseList(useApi());
   const minutes = workoutMinutes(workout, use?.count ?? 0);
-  const summary = bodySummary(workout);
+  const summary = bodySummary(workout, exercises);
   const items = sessionItems(workout.items, use?.count ?? 0);
   const [first] = items;
   const timed = items.length > 0 && items.every((i) => i.dose.onS !== undefined);

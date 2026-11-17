@@ -1,4 +1,6 @@
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
+import { useAppApi } from "../../lib/useAppApi";
 import { Link } from "react-router";
 import {
   doseProtocol,
@@ -33,9 +35,10 @@ export function LibraryCard({
   use,
   showKind = true,
 }: LibraryCardProps): React.ReactElement {
+  const exercises = useExerciseList(useAppApi());
   const count = use?.count ?? 0;
   const minutes = workoutMinutes(workout, count);
-  const summary = bodySummary(workout);
+  const summary = bodySummary(workout, exercises);
   const items = sessionItems(workout.items, count);
   const [first] = items;
   const timed = items.length > 0 && items.every((i) => i.dose.onS !== undefined);

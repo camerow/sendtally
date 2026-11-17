@@ -53,3 +53,4 @@ export {
   wrapperOf,
   type ExerciseEntry,
 } from "./wrapper";
+export { useExerciseList } from "./useExerciseList";

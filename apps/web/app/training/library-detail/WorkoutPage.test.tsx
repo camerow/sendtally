@@ -51,7 +51,7 @@ const legs: WorkoutRecord = {
 };
 
 const library = (): WorkoutLibrary => {
-  const workouts = libraryOf([legs]);
+  const workouts = libraryOf([legs, { ...legs, id: "empty", items: [] }]);
   return {
     workouts,
     usage: new Map([["legs", { count: 3, last: "2026-11-10" }]]),
@@ -173,6 +173,12 @@ describe("WorkoutPage", () => {
     expect(container.querySelector(".rest-divider")?.textContent).toContain("3:00");
   });
 
+  it("left empty on purpose, has no Exercises row", () => {
+    mount("empty");
+    expect(container.textContent).not.toContain("Exercises");
+    expect(container.textContent).not.toContain("No exercises");
+  });
+
   it("duplicates into a copy that takes the original's place", async () => {
     mount("legs");
     expect(menu()).toEqual(["Duplicate", "Delete workout"]);
@@ -183,6 +189,13 @@ describe("WorkoutPage", () => {
     );
     const [id] = writes.saveWorkout.mock.calls[0] as unknown as [string];
     expect(at.path).toBe(`/app/train/workouts/${id}`);
+    expect(at.action).toBe("REPLACE");
+  });
+
+  it("starts in place of itself, so leaving the run lands where it was opened from", () => {
+    mount("legs");
+    click(button("Start"));
+    expect(at.path).toBe("/app/workout/sets");
     expect(at.action).toBe("REPLACE");
   });
 

@@ -10,7 +10,9 @@ import {
   lapElapsed,
   lapLine,
   lapsClimb,
+  lapRemovable,
   withLapAdded,
+  withLapRemoved,
   withLapLogged,
   withLapRest,
   withLapStarted,
@@ -51,6 +53,8 @@ export type LapsTally = {
   moreRest: () => void;
   skipRest: () => void;
   addLap: () => void;
+  /** Takes back a lap + Add lap put on, none once only the planned laps are left. */
+  removeLap: (() => void) | null;
 };
 
 const restKey = (lap: number): string => `lap-${lap}`;
@@ -152,5 +156,6 @@ export function useLapsTally(
     },
     skipRest: () => live.replace(endRest(draft)),
     addLap: () => live.replace(withLapAdded(draft)),
+    removeLap: lapRemovable(draft) ? () => live.replace(withLapRemoved(draft)) : null,
   };
 }

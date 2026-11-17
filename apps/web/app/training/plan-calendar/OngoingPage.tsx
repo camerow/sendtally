@@ -1,4 +1,5 @@
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
 import { useNavigate } from "react-router";
 import type { Weekday } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
@@ -29,6 +30,7 @@ import { AddWorkoutsSheet } from "../plan-week/AddWorkoutsSheet";
 export function OngoingPage(): React.ReactElement {
   const navigate = useNavigate();
   const { today, model } = useHangData();
+  const exercises = useExerciseList(useAppApi());
   const api = useAppApi();
   const plan = usePlan(api);
   const { log } = useTrainingLog(api);
@@ -48,11 +50,12 @@ export function OngoingPage(): React.ReactElement {
     model,
     draft.editing
       ? {
+          exercises,
           open,
           toggle: (m, day) => () =>
             draft.toggle(m.id, { week: 1, day: day as Weekday, following: true, last: 1 }),
         }
-      : { open }
+      : { exercises, open }
   );
   const dayless = members.filter((m) => !hasDays(scheduleOf(draft.plan, m)));
 

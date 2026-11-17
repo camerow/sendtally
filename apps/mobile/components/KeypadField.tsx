@@ -138,6 +138,7 @@ export function KeypadField({
         {before}
         <Pressable
           ref={box}
+          onTouchStart={(e) => host !== null && e.stopPropagation()}
           onPress={tap(onOpen ?? (() => setOpenOwn(true)))}
           accessibilityRole="button"
           accessibilityLabel={accessibilityLabel}

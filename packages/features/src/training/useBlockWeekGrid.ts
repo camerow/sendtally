@@ -1,3 +1,4 @@
+import type { MeasuredExercises } from "../workouts/library";
 import React from "react";
 import type { Plan } from "@sendtally/api-client";
 import {
@@ -29,6 +30,8 @@ export type BlockWeekGridArgs = {
   plan: Plan;
   log: TrainingLog;
   model: HangModel;
+  /** The exercises a climbing row reads its measure from. */
+  exercises: MeasuredExercises;
   workout: WorkoutLookup;
   today: CalendarDate;
   /** The week shown; none reads the week as written. */
@@ -68,6 +71,7 @@ export function useBlockWeekGrid({
   plan,
   log,
   model,
+  exercises,
   workout,
   today,
   week,
@@ -112,6 +116,7 @@ export function useBlockWeekGrid({
   const options: GridOptions = editing
     ? {
         open,
+        exercises,
         ...(marks !== undefined && { marks }),
         // A day gone by keeps how it went; today and later are set.
         toggle: (m: Membership, day: number) =>
@@ -127,6 +132,7 @@ export function useBlockWeekGrid({
       }
     : {
         open,
+        exercises,
         ...(!isDated(block) &&
           week !== undefined &&
           week > 1 && {

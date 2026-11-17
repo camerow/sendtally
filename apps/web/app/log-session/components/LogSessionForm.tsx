@@ -183,6 +183,7 @@ export function LogSessionForm({
   const circuitChoices = draft.location === "indoor" ? circuitGyms(gyms.gyms) : [];
   const narrow = useIsNarrow();
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
+  const [addedKey, setAddedKey] = React.useState<string | null>(null);
   const [addingGym, setAddingGym] = React.useState(false);
   const [adding, setAdding] = React.useState<
     { kind: "crag"; key: string; name: string } | { kind: "climb"; key: string } | null
@@ -288,6 +289,7 @@ export function LogSessionForm({
     const kind = readClimbKind(climbKindStorage, circuitChoices);
     const climb = nextFormClimb(draft, kind, prefs.scales, circuitChoices);
     setDraft({ ...draft, climbs: [...draft.climbs, climb] });
+    setAddedKey(climb.key);
     if (narrow) setEditingKey(climb.key);
   }
 
@@ -486,7 +488,10 @@ export function LogSessionForm({
                   key={climb.key}
                   climb={climb}
                   project={isProject(climb)}
-                  onPress={() => setEditingKey(climb.key)}
+                  onPress={() => {
+                    setAddedKey(null);
+                    setEditingKey(climb.key);
+                  }}
                 />
               ) : (
                 <ClimbCard
@@ -555,6 +560,7 @@ export function LogSessionForm({
           climb={editingClimb}
           index={editingIndex}
           count={draft.climbs.length}
+          editing={editingKey !== addedKey}
           gyms={circuitChoices}
           prefs={prefs.scales}
           project={isProject(editingClimb)}

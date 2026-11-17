@@ -9,6 +9,7 @@ import { useFirstRun } from "@sendtally/features/settings";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon, type IconName } from "../../components/Icon";
 import { LiveBar } from "../../features/live-session/LiveBar";
+import { JustLoggedToast } from "../../features/training/activity/JustLoggedToast";
 import { RestStrip } from "../../features/live-session/RestStrip";
 import { useApi } from "../../lib/api";
 
@@ -58,6 +59,7 @@ function SignedInTabs(): React.ReactElement | null {
     <Tabs
       tabBar={(props) => (
         <View>
+          <JustLoggedToast />
           <LiveBar />
           <RestStrip />
           <BottomTabBar {...props} />

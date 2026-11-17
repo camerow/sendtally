@@ -60,6 +60,7 @@ const library = (): WorkoutLibrary => {
 
 vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<typeof T_exercises>()),
+  useExerciseList: () => [],
   usePickerWorld: () => ({
     mine: [],
     grips: [],

@@ -1,4 +1,5 @@
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
 import { letterOf, type Dose } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
@@ -41,6 +42,7 @@ const BACK_TO = "/app/train";
  */
 export function LadderPage({ id }: { id: string }): React.ReactElement {
   const { model, today } = useHangData();
+  const exercises = useExerciseList(useAppApi());
   const unit = model.settings.units;
   const api = useAppApi();
   const loaded = usePlan(api);
@@ -55,7 +57,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
   const [open, setOpen] = React.useState<readonly number[]>([0]);
   const [removing, setRemoving] = React.useState(false);
   const { plan } = draft;
-  const view = ladderView(plan, log, model, id, turn, today);
+  const view = ladderView(plan, log, model, id, turn, today, exercises);
 
   if (loaded.state.status !== "ready")
     return (

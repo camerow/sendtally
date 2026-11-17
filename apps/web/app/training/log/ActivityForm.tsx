@@ -9,6 +9,7 @@ import {
 } from "@sendtally/core/hang";
 import {
   activityFromDraft,
+  justLoggedText,
   kindLabel,
   minutesOf,
   previousSets,
@@ -31,6 +32,7 @@ import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { workoutPath } from "../library/useLibrary";
 import { DoneDetails } from "./DoneDetails";
+import { activityPath } from "./paths";
 import { EffortField } from "./EffortField";
 import { FocusField } from "./FocusField";
 import { KindChips } from "./KindChips";
@@ -109,13 +111,23 @@ export function ActivityForm({
       back();
     }
   };
-  const save = (): void => {
+  const [saving, setSaving] = React.useState(false);
+  /** Leaves only once the server holds it, so a failed save keeps the form and what is in it. */
+  const save = async (): Promise<void> => {
     if (hang !== undefined) {
       if (live) liveRun.clear();
       hang.save(draft);
       return;
     }
-    void actions.saveActivity(activityFromDraft(id, draft));
+    setSaving(true);
+    const saved = await actions.saveActivity(activityFromDraft(id, draft));
+    setSaving(false);
+    if (!saved) return;
+    if (logged === null)
+      toast.show({
+        message: justLoggedText({ id, name: draft.title.trim() || kindLabel(draft.kind) }),
+        action: { label: t("common.view"), onPress: () => void navigate(activityPath(id)) },
+      });
     leave();
   };
   const saveAsWorkout = (): void => {
@@ -146,7 +158,8 @@ export function ActivityForm({
             : reviewing
               ? t("activities.logWorkout")
               : t("activities.logActivity"),
-        onSave: save,
+        onSave: () => void save(),
+        saveDisabled: saving,
         heading: draft.workoutId === null,
       }}
     >

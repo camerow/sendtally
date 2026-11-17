@@ -1,4 +1,5 @@
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
 import { useNavigate } from "react-router";
 import type { Plan } from "@sendtally/api-client";
 import { isDated, type Block, type Membership } from "@sendtally/core/hang";
@@ -73,6 +74,7 @@ export function BlockWeek({
   onMove,
 }: BlockWeekProps): React.ReactElement {
   const { model, today } = useHangData();
+  const exercises = useExerciseList(useAppApi());
   const { log } = useTrainingLog(useAppApi());
   const navigate = useNavigate();
   const plan = drafted ?? log.plan;
@@ -91,6 +93,7 @@ export function BlockWeek({
     plan,
     log,
     model,
+    exercises,
     workout,
     today,
     week,

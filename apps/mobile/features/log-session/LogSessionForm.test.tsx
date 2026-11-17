@@ -120,6 +120,17 @@ describe("each climb's area", () => {
     await fireEvent.press(await screen.findByLabelText("Stanage Popular"));
   };
 
+  it("titles a climb just added Add climb, and one opened again Edit climb", async () => {
+    await renderForm();
+    await fireEvent.press(addClimb());
+    expect(screen.getAllByText("Add climb")).toHaveLength(2);
+    await fireEvent.changeText(screen.getByPlaceholderText(/name/i), "Arete");
+    await fireEvent.press(screen.getByText("Save"));
+    await fireEvent.press(screen.getByLabelText(/ Arete, /));
+    expect(screen.getByText("Edit climb")).toBeTruthy();
+    expect(screen.getAllByText("Add climb")).toHaveLength(1);
+  });
+
   it("leaves the form and sits in the climb sheet, outdoors for every climb", async () => {
     await renderForm();
     await fireEvent.press(screen.getByText("Outdoor"));

@@ -10,15 +10,19 @@ const reviewingLive = (): boolean =>
   window.location.pathname === "/app/activity/new" &&
   new URLSearchParams(window.location.search).get("live") === "1";
 
-/** Starts whatever `to` opens, once whatever already runs is dealt with. */
-export function useStartLive(): (to: string) => void {
+/**
+ * Starts whatever `to` opens, once whatever already runs is dealt with; with `replace`, in place
+ * of the page it starts from.
+ */
+export function useStartLive(): (to: string, replace?: boolean) => void {
   const navigate = useNavigate();
   const session = useLiveSessionStorage();
   const store = useLiveRunStore();
   return React.useCallback(
-    (to: string) => {
-      const go = (path: string): void => void navigate(path, { replace: reviewingLive() });
-      startLive(running(session, store, go), () => go(to));
+    (to: string, replace = false) => {
+      const go = (path: string, ownPage = false): void =>
+        void navigate(path, { replace: ownPage || reviewingLive() });
+      startLive(running(session, store, go), () => go(to, replace));
     },
     [navigate, session, store]
   );

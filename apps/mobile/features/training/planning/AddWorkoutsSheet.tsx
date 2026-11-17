@@ -1,6 +1,7 @@
 import { randomUUID } from "expo-crypto";
 import { router, useFocusEffect } from "expo-router";
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
 import type { Block, CalendarDate, WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
@@ -70,6 +71,7 @@ export function AddWorkoutsSheet({
   onScheduled,
 }: AddWorkoutsSheetProps): React.ReactElement {
   const { model, today } = useHangData();
+  const exercises = useExerciseList(useApi());
   const actions = usePlanActions();
   const prompt = useReminderPrompt();
   const newBlock = useNewBlock(t("plan.tab"));
@@ -288,7 +290,7 @@ export function AddWorkoutsSheet({
                         key={w.id}
                         kind={w.kind}
                         name={w.name}
-                        meta={libraryLine(w, model.settings.units)}
+                        meta={libraryLine(w, model.settings.units, exercises)}
                         picture={libraryPictures("workout", w.id)[0]}
                         state={now}
                         thereLabel={thereLabel}

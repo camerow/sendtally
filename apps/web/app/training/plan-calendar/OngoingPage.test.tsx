@@ -32,6 +32,10 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
+vi.mock("@sendtally/features/exercises", async (actual) => ({
+  ...(await actual<object>()),
+  useExerciseList: () => [],
+}));
 vi.mock("../data/HangDataContext", () => ({
   useHangData: () => ({ model: hangModel(hangData(), libraryOf([])), today: "2026-11-12" }),
 }));

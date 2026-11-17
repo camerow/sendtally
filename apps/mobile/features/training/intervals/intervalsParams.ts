@@ -7,6 +7,6 @@ export function intervalsPath(r: IntervalsRun): Href {
 }
 
 /** Runs it in the intervals player, once whatever already runs is dealt with. */
-export function startIntervals(r: IntervalsRun): void {
-  startLive(() => router.push(intervalsPath(r)));
+export function startIntervals(r: IntervalsRun, go: typeof router.push = router.push): void {
+  startLive(() => go(intervalsPath(r)));
 }

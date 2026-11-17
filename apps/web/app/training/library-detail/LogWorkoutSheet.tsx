@@ -1,4 +1,6 @@
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
+import { useAppApi } from "../../lib/useAppApi";
 import { t } from "@sendtally/features/i18n";
 import { libraryPictures } from "@sendtally/features/library";
 import { focusLabel } from "@sendtally/features/training";
@@ -13,6 +15,7 @@ import { logLink } from "../log/logLink";
 
 function Picker(): React.ReactElement {
   const { model, today } = useHangData();
+  const exercises = useExerciseList(useAppApi());
   const { state } = useLibrary();
   const [text, setText] = React.useState("");
   const library = state.status === "ready" ? state.data : null;
@@ -44,7 +47,7 @@ function Picker(): React.ReactElement {
                   key={w.id}
                   kind={w.kind}
                   name={w.name}
-                  meta={libraryLine(w, model.settings.units)}
+                  meta={libraryLine(w, model.settings.units, exercises)}
                   picture={libraryPictures("workout", w.id)[0]}
                   to={to}
                 />

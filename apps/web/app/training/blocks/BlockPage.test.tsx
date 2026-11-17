@@ -61,6 +61,10 @@ vi.mock("../library/useLibrary", async (actual) => ({
   useLibrary: () => ({ state: { status: "ready", data: library() }, reload: vi.fn() }),
 }));
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
+vi.mock("@sendtally/features/exercises", async (actual) => ({
+  ...(await actual<object>()),
+  useExerciseList: () => [],
+}));
 vi.mock("../data/HangDataContext", () => ({
   useHangData: () => ({ model: hangModel(hangData(), libraryOf([])), today: TODAY }),
 }));

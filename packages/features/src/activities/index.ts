@@ -77,3 +77,4 @@ export * from "./summaryText";
 export type { HistoryItem, Stat } from "./types";
 export { hangCount, hangLoadText, hangLoadValue } from "./hangText";
 export { stravaLabel } from "./stravaLabel";
+export { justLogged, justLoggedText, useJustLogged, type JustLogged } from "./justLogged";

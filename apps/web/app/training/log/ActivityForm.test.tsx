@@ -17,7 +17,7 @@ HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogEleme
 };
 
 const writes = vi.hoisted(() => ({
-  saveActivity: vi.fn(async () => undefined),
+  saveActivity: vi.fn(async (): Promise<boolean> => true),
   deleteActivity: vi.fn(async () => undefined),
   saveWorkout: vi.fn(async () => undefined),
   deleteWorkout: vi.fn(async () => undefined),
@@ -97,7 +97,7 @@ describe("ActivityForm", () => {
     expect(saved()[0]?.sets).toHaveLength(2);
   });
 
-  it("ends the live run it reviews when saved, and only after asking when discarded", () => {
+  it("ends the live run it reviews when saved, and only after asking when discarded", async () => {
     const { store } = liveRunOf("u1");
     const running = (): void =>
       store.write({
@@ -115,8 +115,24 @@ describe("ActivityForm", () => {
     click(document.querySelector(".sheet-action--danger"));
     expect(store.read()).toBeNull();
     running();
-    save();
+    await act(async () => save());
     expect(store.read()).toBeNull();
+  });
+
+  it("stays on the form with no toast when the save fails", async () => {
+    writes.saveActivity.mockResolvedValueOnce(false);
+    mount();
+    await act(async () => save());
+    expect(writes.saveActivity).toHaveBeenCalledOnce();
+    expect(document.querySelector(".toast")).toBeNull();
+    expect(container.querySelector("h1")?.textContent).toBe("Gym, legs");
+  });
+
+  it("says what it logged once saved, with View to open it", async () => {
+    mount();
+    await act(async () => save());
+    expect(document.querySelector(".toast")?.textContent).toContain("Logged Gym, legs");
+    expect(document.querySelector(".toast-action")?.textContent).toBe("View");
   });
 
   it("removes a set with an Undo that puts it back", () => {

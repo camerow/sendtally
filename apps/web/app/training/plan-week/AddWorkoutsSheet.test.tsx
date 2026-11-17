@@ -81,6 +81,7 @@ vi.mock("@sendtally/features/workouts", async (actual) => ({
 }));
 vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<typeof T_exercises>()),
+  useExerciseList: () => [],
   usePickerWorld: () => ({
     mine: [exercise("e1", "Pull-ups"), exercise("e2", "Back squat")],
     grips: [],

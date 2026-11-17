@@ -104,13 +104,15 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
     />
   );
   const start = missed ? null : run !== undefined ? (
-    <StartButton workout={workout} date={run.date} planned={planned} height={54} />
+    <StartButton workout={workout} date={run.date} planned={planned} ownPage height={54} />
   ) : hang === undefined ? (
-    <StartButton workout={workout} date={today} height={54} />
+    <StartButton workout={workout} date={today} ownPage height={54} />
   ) : (
     <Button
       label={t("hang.start")}
-      onPress={() => startWorkout(workout.name, workout.id, gripId, session)}
+      onPress={() =>
+        startWorkout(workout.name, workout.id, gripId, session, undefined, router.replace)
+      }
       variant="primary"
       height={54}
       icon="play"
@@ -158,29 +160,33 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
           day: <DayLine week={run.week} date={run.date} missed={missed} />,
         })}
       />
-      <View style={{ gap: 8 }}>
-        <Label color={colors.gunmetal}>{t("workouts.exercises")}</Label>
-        {next === undefined ? (
-          <BodyPreview
-            workout={workout}
-            unit={model.settings.units}
-            session={use?.count ?? 0}
-            tally={tallyMeasuresOf(
-              exercises.status === "ready" ? exercises.data : [],
-              workout.kind
-            )}
-            openExercise={openExercise}
-          />
-        ) : (
-          <PreviewRow title={model.gripName(gripId)} detail="" note={lastUsed} />
-        )}
-      </View>
+      {workout.items.length > 0 && (
+        <View style={{ gap: 8 }}>
+          <Label color={colors.gunmetal}>{t("workouts.exercises")}</Label>
+          {next === undefined ? (
+            <BodyPreview
+              workout={workout}
+              unit={model.settings.units}
+              session={use?.count ?? 0}
+              tally={tallyMeasuresOf(
+                exercises.status === "ready" ? exercises.data : [],
+                workout.kind
+              )}
+              openExercise={openExercise}
+            />
+          ) : (
+            <PreviewRow title={model.gripName(gripId)} detail="" note={lastUsed} />
+          )}
+        </View>
+      )}
       {next !== undefined && (
         <ProtocolPanel workout={next} minutes={workoutMinutes(workout, session)} />
       )}
       <WorkoutOverTime workout={workout} gripId={hang === undefined ? null : gripId} />
       <HistoryList items={history} onOpen={openActivity} />
-      <PlanList workoutId={workout.id} name={workout.name} kind={workout.kind} />
+      {run === undefined && (
+        <PlanList workoutId={workout.id} name={workout.name} kind={workout.kind} />
+      )}
       {changes.sheets}
       {addToBlock.sheet && <AddToSheet {...addToBlock.sheet} />}
     </ScreenFrame>

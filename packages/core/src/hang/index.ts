@@ -15,3 +15,4 @@ export * from "./trends";
 export * from "./workoutRun";
 export type * from "./types";
 export * from "./builtIns";
+export * from "./claims";

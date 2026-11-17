@@ -7,6 +7,7 @@ import {
   type Dose,
   type Focus,
   type ItemDone,
+  type LoggedSession,
   type Item,
   type Membership,
   type MembershipDays,
@@ -19,11 +20,13 @@ import {
 } from "@sendtally/core/hang";
 import { MAX_DESCRIPTION } from "@sendtally/core/text";
 import { z } from "zod";
+import { isHolder } from "./holders";
 import type {
   BlockRow,
   MembershipDaysRow,
   MembershipRow,
   PlanChangeRow,
+  PlanLogRows,
   WeekChangeRow,
   WorkoutRow,
 } from "./repo";
@@ -344,3 +347,27 @@ export const membershipDaysOf = (row: MembershipDaysRow): MembershipDays => ({
 });
 
 export const doneOf = (json: string): ItemDone[] => JSON.parse(json) as ItemDone[];
+
+/** Everything logged, as the plan reads it, the same as the apps' read of the training log. */
+export const loggedSessionsOf = (rows: PlanLogRows): LoggedSession[] => [
+  ...rows.climbs
+    .filter((s) => !isHolder(s))
+    .map((s) => ({
+      kind: "climbing" as const,
+      date: new Date(s.start_at).toISOString().slice(0, 10),
+      membershipId: s.membership_id,
+      workoutId: null,
+    })),
+  ...rows.hangs.map((s) => ({
+    kind: "hangboard" as const,
+    date: s.date,
+    membershipId: s.membership_id,
+    workoutId: s.workout_id,
+  })),
+  ...rows.activities.map((a) => ({
+    kind: a.kind,
+    date: a.date,
+    membershipId: a.membership_id,
+    workoutId: a.workout_id,
+  })),
+];

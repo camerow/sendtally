@@ -48,7 +48,7 @@ function Detail({
   const activities = useActivities(api).state;
   const menu = useWorkoutMenu(workout);
   const logIt = logLink(workout, today, session);
-  const start = useWorkoutStart(workout, today, unplannedItems(workout, session));
+  const start = useWorkoutStart(workout, today, unplannedItems(workout, session), true);
   const hang = workout.kind === "hangboard" ? model.workout(workout.id) : undefined;
   const next = hang === undefined ? undefined : (hangWorkoutOf(workout, session) ?? hang);
   const gripId = hang === undefined ? "" : model.defaultGrip(hang);
@@ -85,7 +85,7 @@ function Detail({
               {t("plan.schedule")}
             </Link>
             {logIt !== null && (
-              <Link to={logIt} className="outline-button outline-button--wide">
+              <Link to={logIt} replace className="outline-button outline-button--wide">
                 {t("workouts.logIt")}
               </Link>
             )}
@@ -95,22 +95,24 @@ function Detail({
       }
     >
       <LibraryIntro workout={workout} use={use} />
-      <section className="detail-section">
-        <SectionHeading title={t("workouts.exercises")} />
-        {next === undefined ? (
-          <BodyPreview
-            workout={workout}
-            unit={model.settings.units}
-            session={session}
-            tally={tallyMeasuresOf(
-              exercises.status === "ready" ? exercises.data : [],
-              workout.kind
-            )}
-          />
-        ) : (
-          <PreviewRow title={model.gripName(gripId)} detail="" note={lastUsed} />
-        )}
-      </section>
+      {workout.items.length > 0 && (
+        <section className="detail-section">
+          <SectionHeading title={t("workouts.exercises")} />
+          {next === undefined ? (
+            <BodyPreview
+              workout={workout}
+              unit={model.settings.units}
+              session={session}
+              tally={tallyMeasuresOf(
+                exercises.status === "ready" ? exercises.data : [],
+                workout.kind
+              )}
+            />
+          ) : (
+            <PreviewRow title={model.gripName(gripId)} detail="" note={lastUsed} />
+          )}
+        </section>
+      )}
       {next !== undefined && (
         <ProtocolPanel workout={next} minutes={workoutMinutes(workout, session)} />
       )}

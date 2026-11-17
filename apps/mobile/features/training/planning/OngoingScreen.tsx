@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
 import { Text, View } from "react-native";
 import type { Weekday } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
@@ -38,6 +39,7 @@ export type OngoingScreenProps = {
 /** The weekly plans in no block: their week, and Edit to set their days, add and take them out. */
 export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement {
   const { today, model } = useHangData();
+  const exercises = useExerciseList(useApi());
   const api = useApi();
   const plan = usePlan(api);
   const { log } = useTrainingLog(api);
@@ -57,11 +59,12 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
     model,
     draft.editing
       ? {
+          exercises,
           open: (m) => openMembership(m, name),
           toggle: (m, day) => () =>
             draft.toggle(m.id, { week: 1, day: day as Weekday, following: true, last: 1 }),
         }
-      : { open: (m) => openMembership(m, name) }
+      : { exercises, open: (m) => openMembership(m, name) }
   );
   const dayless = members.filter((m) => !hasDays(scheduleOf(draft.plan, m)));
   const save = (): void => {

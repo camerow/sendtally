@@ -222,3 +222,37 @@ describe("LogSessionForm duration", () => {
     expect(sent(api)).not.toHaveProperty("startTime");
   });
 });
+
+describe("LogSessionForm on a phone", () => {
+  HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+    this.setAttribute("open", "");
+  };
+  HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+    this.removeAttribute("open");
+  };
+  it("titles a climb opened from its row Edit climb, and one just added Add climb", async () => {
+    window.matchMedia = vi.fn(() => ({
+      matches: true,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    })) as unknown as typeof window.matchMedia;
+    render(fakeApi());
+    await settle();
+    const heading = (): string | null | undefined =>
+      container.querySelector(".climb-sheet .sheet-title")?.textContent;
+    act(() =>
+      container
+        .querySelector<HTMLElement>(".climb-ledger [role=button], .climb-ledger button")!
+        .click()
+    );
+    expect(heading()).toBe("Edit climb");
+    act(() =>
+      container.querySelector<HTMLElement>(".climb-sheet")!.dispatchEvent(new Event("cancel"))
+    );
+    const add = [...container.querySelectorAll("button")].find(
+      (b) => b.textContent === "Add climb"
+    )!;
+    act(() => add.click());
+    expect(heading()).toBe("Add climb");
+  });
+});

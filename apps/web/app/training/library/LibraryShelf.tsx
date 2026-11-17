@@ -1,4 +1,6 @@
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
+import { useAppApi } from "../../lib/useAppApi";
 import { t } from "@sendtally/features/i18n";
 import { libraryPictures } from "@sendtally/features/library";
 import { focusLabel, focusMeaning, focusParam } from "@sendtally/features/training";
@@ -22,6 +24,7 @@ export function LibraryShelf({
   onAdd: () => void;
 }): React.ReactElement {
   const { model } = useHangData();
+  const exercises = useExerciseList(useAppApi());
   const label = focusLabel(shelf.focus);
   const count = shelf.workouts.length;
   return (
@@ -39,7 +42,7 @@ export function LibraryShelf({
           key={w.id}
           kind={w.kind}
           name={w.name}
-          meta={libraryLine(w, model.settings.units)}
+          meta={libraryLine(w, model.settings.units, exercises)}
           picture={libraryPictures("workout", w.id)[0]}
           to={workoutPath(w.id)}
         />

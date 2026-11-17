@@ -1,4 +1,6 @@
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
+import { useApi } from "../../../lib/api";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
@@ -18,6 +20,7 @@ export type LogWorkoutSheetProps = { visible: boolean; onClose: () => void };
 
 function Picker({ visible, onClose }: LogWorkoutSheetProps): React.ReactElement {
   const { model, today } = useHangData();
+  const exercises = useExerciseList(useApi());
   const { state } = useLibrary();
   const [text, setText] = React.useState("");
   const library = state.status === "ready" ? state.data : null;
@@ -46,7 +49,7 @@ function Picker({ visible, onClose }: LogWorkoutSheetProps): React.ReactElement 
               <LogWorkoutRow
                 key={w.id}
                 workout={w}
-                dose={libraryLine(w, model.settings.units)}
+                dose={libraryLine(w, model.settings.units, exercises)}
                 date={today}
                 onLogged={close}
               />

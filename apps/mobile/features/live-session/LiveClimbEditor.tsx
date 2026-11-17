@@ -41,6 +41,7 @@ export function LiveClimbEditor({
       index={index}
       count={count}
       removable
+      editing
       prefs={prefs}
       gyms={gyms}
       project={project}
