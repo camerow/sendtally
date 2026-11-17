@@ -38,8 +38,6 @@ export type NumberFieldProps = {
   display?: string;
   /** A small box sized to its value with no label shown, for a value in a table row. */
   compact?: boolean;
-  /** A compact box this many characters wide whatever its value, so a column of them lines up. */
-  chars?: number;
   /** Amber: a value short of what was asked. */
   short?: boolean;
   /** An emptied box commits zero rather than keeping the value it had. */
@@ -85,7 +83,6 @@ export function NumberField({
   mode,
   unit,
   compact = false,
-  chars,
   short = false,
   placeholder = "–",
   range,
@@ -132,9 +129,7 @@ export function NumberField({
           autoComplete="off"
           autoFocus={autoFocus}
           placeholder={placeholder}
-          size={
-            compact ? (chars ?? Math.max(2, (text === "" ? placeholder : text).length)) : undefined
-          }
+          size={compact ? Math.max(2, (text === "" ? placeholder : text).length) : undefined}
           value={draft ?? text}
           onFocus={(e) => e.currentTarget.select()}
           onChange={(e) =>

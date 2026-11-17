@@ -64,7 +64,7 @@ export function SetDoneFields({
     signed: true,
   } as const;
   return (
-    <span className="set-fields">
+    <span className={hangs ? "set-fields set-fields--hangs" : "set-fields"}>
       {reps && (
         <NumberField
           compact
@@ -83,9 +83,8 @@ export function SetDoneFields({
           value={kg === undefined ? null : toUnit(kg, unit)}
           onChange={(n) => onChange({ ...set, weightKg: fromUnit(n, unit) })}
           mode={weightLimits}
-          {...(hangs && { chars: 6 })}
           {...(hangs && kg !== undefined && { display: hangLoadValue(kg, unit) })}
-          {...(!unitless && !(hangs && toUnit(kg ?? 0, unit) === 0) && { unit })}
+          {...(!(hangs ? toUnit(kg ?? 0, unit) === 0 : unitless) && { unit })}
         />
       )}
       {(reps || weight) && hold && <Joiner mark="·" />}

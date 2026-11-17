@@ -103,7 +103,7 @@ export function DoneDetails({
               </span>
               <span className="set-col-rpe">RPE</span>
               {!hangs && <span className="set-tick" />}
-              <span className="set-remove" />
+              {!hangs && <span className="set-remove" />}
             </div>
             {d.sets.map((set, i) => (
               <ReviewSetRow
