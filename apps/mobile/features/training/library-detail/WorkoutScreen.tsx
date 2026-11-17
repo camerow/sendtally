@@ -131,7 +131,7 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
         />
       </View>
     ) : (
-      logIt
+      <View style={{ flexDirection: "row" }}>{logIt}</View>
     );
 
   return (
