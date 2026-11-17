@@ -83,12 +83,13 @@ const climbs = (): Array<{ grade: string; tries: number; kind: string }> =>
   ).draft?.climbs.map(({ grade, tries, kind }) => ({ grade, tries, kind })) ?? [];
 
 describe("TallyPage", () => {
-  it("starts a session, and a grade then Fell and Sent log the climb's goes", async () => {
+  it("starts a session, and a grade then Attempt and Sent log the climb's goes", async () => {
     await mount();
     expect(storage.read()).not.toBeNull();
-    expect(button("Fell").disabled).toBe(true);
+    expect(button("Attempt").disabled).toBe(true);
+    expect(button("Attempt").className).toBe("tally-fell");
     act(() => button("V5").click());
-    act(() => button("Fell").click());
+    act(() => button("Attempt").click());
     expect(climbs()).toEqual([{ grade: "V5", tries: 1, kind: "attempt" }]);
     act(() => button("Sent").click());
     expect(climbs()).toEqual([{ grade: "V5", tries: 2, kind: "send" }]);

@@ -136,7 +136,7 @@ export function LapsTally({
               disabled={laps.off}
               onClick={() => setEditing(laps.fell())}
             >
-              {t("tally.fell")}
+              {t("tally.attempt")}
             </button>
             {!laps.timed && (
               <button

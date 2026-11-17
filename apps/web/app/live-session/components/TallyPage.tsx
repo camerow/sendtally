@@ -226,7 +226,7 @@ export function TallyPage({ exercise = false }: TallyPageProps): React.ReactElem
               disabled={off}
               onClick={() => tally.go("fell")}
             >
-              {t("tally.fell")}
+              {t("tally.attempt")}
             </button>
             <button
               type="button"

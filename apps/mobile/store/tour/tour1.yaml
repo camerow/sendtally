@@ -19,13 +19,13 @@ appId: com.sendtally.app
 - tapOn: "V3"
 - tapOn: "Sent"
 - tapOn: "V4"
-- tapOn: "Fell"
+- tapOn: "Attempt"
 - tapOn: "Sent"
 - tapOn: "V5"
-- tapOn: "Fell"
+- tapOn: "Attempt"
 - tapOn: "Sent"
 - tapOn: "V6"
-- tapOn: "Fell"
+- tapOn: "Attempt"
 - tapOn: "Finish"
 - waitForAnimationToEnd
 - tapOn:

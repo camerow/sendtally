@@ -131,7 +131,7 @@ describe("The tally in exercise mode", () => {
     await click("V4");
     await click("Sent");
     await click("V3");
-    await click("Fell");
+    await click("Attempt");
     expect(text(".tally-time")).toBe("Rest 4:00");
     expect(text(".tally-summary")).toBe("4x4s · Set 2 of 2 next");
     await click("+30s");

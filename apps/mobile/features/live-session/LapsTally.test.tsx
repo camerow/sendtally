@@ -79,7 +79,7 @@ describe("Circuit laps on the tally", () => {
     jest.clearAllMocks();
   });
 
-  it("logs a moves lap clean on Sent, rests on play, and asks how far a Fell lap got", async () => {
+  it("logs a moves lap clean on Sent, rests on play, and asks how far an Attempt lap got", async () => {
     await both({ sets: 2, reps: 40, setRestS: 120 });
     expect(screen.getByText("2 laps of 40 moves")).toBeTruthy();
     await fireEvent.press(screen.getByText("Start"));
@@ -90,7 +90,7 @@ describe("Circuit laps on the tally", () => {
     expect(screen.getByText("Lap 2 of 2")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Start rest"));
     await advance(30_000);
-    await fireEvent.press(screen.getByText("Fell"));
+    await fireEvent.press(screen.getByText("Attempt"));
     expect(screen.getByText("rest 0:30")).toBeTruthy();
     expect(screen.getByText("Fell after")).toBeTruthy();
     expect(screen.getByText("All laps done")).toBeTruthy();
@@ -120,7 +120,7 @@ describe("Circuit laps on the tally", () => {
     expect(screen.queryByText("Add climb")).toBeNull();
   });
 
-  it("times a lap from Start lap, keeps the time so far on Fell, and goes clean at its target", async () => {
+  it("times a lap from Start lap, keeps the time so far on Attempt, and goes clean at its target", async () => {
     await both({ sets: 2, onS: 60 });
     expect(screen.getByText("2 laps of 1 min")).toBeTruthy();
     await fireEvent.press(screen.getByText("Start"));
@@ -128,7 +128,7 @@ describe("Circuit laps on the tally", () => {
 
     await fireEvent.press(screen.getByText("Start lap"));
     await advance(20_000);
-    await fireEvent.press(screen.getByText("Fell"));
+    await fireEvent.press(screen.getByText("Attempt"));
     await fireEvent.press(screen.getByText("Start lap"));
     await advance(61_000);
     expect(screen.getByText("All laps done")).toBeTruthy();

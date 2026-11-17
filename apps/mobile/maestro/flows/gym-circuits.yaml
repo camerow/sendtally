@@ -35,7 +35,7 @@ name: gym-circuits
 - tapOn: "Maestro Barn"
 - assertVisible: "Gym, Maestro Barn"
 - tapOn: "Yellow"
-- tapOn: "Fell"
+- tapOn: "Attempt"
 - tapOn: "Edit climb"
 - assertVisible: "1 OF 1"
 - assertVisible: "Type, Maestro Barn circuits"

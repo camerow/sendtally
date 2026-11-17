@@ -66,7 +66,7 @@ const both = (): Promise<unknown> =>
     }
   );
 
-const go = async (grade: string, outcome: "Sent" | "Fell"): Promise<void> => {
+const go = async (grade: string, outcome: "Sent" | "Attempt"): Promise<void> => {
   await fireEvent.press(screen.getByLabelText(grade));
   await fireEvent.press(screen.getByText(outcome));
 };
@@ -98,7 +98,7 @@ describe("The tally in exercise mode", () => {
     jest.mocked(router.back).mockClear();
 
     await go("V4", "Sent");
-    await go("V3", "Fell");
+    await go("V3", "Attempt");
     expect(screen.getByText("Rest 4:00")).toBeTruthy();
     expect(screen.getByText("4x4s · Set 2 of 2 next")).toBeTruthy();
     await advance(60_000);
@@ -152,13 +152,13 @@ describe("The tally in exercise mode", () => {
     await go("V4", "Sent");
     await go("V5", "Sent");
     await go("V6", "Sent");
-    await go("V7", "Fell");
+    await go("V7", "Attempt");
 
     expect(screen.getByText("4x4s · Set 2 of 4 · 0 of 4 climbs")).toBeTruthy();
     expect(screen.getByLabelText("V7, 1 fall")).not.toBeSelected();
     expect(screen.queryByLabelText("Edit climb")).toBeNull();
     expect(screen.getByLabelText("V7")).not.toBeSelected();
-    expect(screen.getByRole("button", { name: "Fell" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Attempt" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Sent" })).toBeDisabled();
 
     await fireEvent.press(screen.getByText("Undo"));
@@ -178,13 +178,13 @@ describe("The tally in exercise mode", () => {
       { exercises: [anExercise("e1", "ARC", "climbing", { measure: "seconds" })] }
     );
     await fireEvent.press(screen.getByText("Start"));
-    await go("V1", "Fell");
+    await go("V1", "Attempt");
     expect(screen.getByLabelText("V1, 1 fall")).toBeSelected();
 
     await advance(61_000);
     expect(screen.getByLabelText("V1, 1 fall")).not.toBeSelected();
     expect(screen.queryByLabelText("Edit climb")).toBeNull();
-    expect(screen.getByRole("button", { name: "Fell" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Attempt" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Sent" })).toBeDisabled();
   });
 
@@ -192,7 +192,7 @@ describe("The tally in exercise mode", () => {
     await both();
     await fireEvent.press(screen.getByText("Start"));
     await go("V4", "Sent");
-    await go("V3", "Fell");
+    await go("V3", "Attempt");
     expect(screen.getByText("Rest 4:00")).toBeTruthy();
 
     await fireEvent.press(screen.getByText("Undo"));
@@ -222,7 +222,7 @@ describe("The tally in exercise mode", () => {
     await fireEvent.press(screen.getByLabelText("V2"));
     await advance(30_000);
     expect(screen.getByText("0:00 left")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Fell"));
+    await fireEvent.press(screen.getByText("Attempt"));
     expect(screen.getByText("ARC · Set 2 of 2 next")).toBeTruthy();
     expect(screen.getByText("Rest 0:30")).toBeTruthy();
     await fireEvent.press(screen.getByText("Skip rest"));
