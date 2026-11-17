@@ -49,6 +49,8 @@ export type ClimbEditorSheetProps = {
   count: number;
   /** The form keeps one climb; a live session may lose its last one. */
   removable?: boolean;
+  /** It opens on a climb already logged, so it reads Edit climb. */
+  editing?: boolean;
   prefs: GradePrefs;
   /** Gyms with circuits a climb can be put on instead of graded. */
   gyms?: readonly Gym[];
@@ -345,6 +347,7 @@ export function ClimbEditorSheet({
   index,
   count,
   removable = count > 1,
+  editing = false,
   prefs,
   gyms = [],
   project,
@@ -413,7 +416,9 @@ export function ClimbEditorSheet({
       {climb !== null && (
         <View style={{ gap: 14, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 4 }}>
           <View style={{ gap: 3 }}>
-            <Title size={sheetTitleSize}>{t("logSession.addClimb")}</Title>
+            <Title size={sheetTitleSize}>
+              {editing ? t("climbs.editClimb") : t("logSession.addClimb")}
+            </Title>
             <Text style={{ ...label, color: colors.textMuted }}>
               {count > 0
                 ? t("logSession.climbOf", { n: index + 1, total: count })
