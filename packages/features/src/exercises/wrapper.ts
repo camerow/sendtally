@@ -39,16 +39,24 @@ const itemName = (e: ExerciseEntry): string =>
       ? e.source.exercise.name
       : e.source.builtIn.name;
 
-/** The workouts with an item of the entry, matched as the Worker matches names; a grip only counts on the hangboard. */
+/**
+ * The workouts a grip runs in: Fingers workouts and workouts with a fingerboard part alike. A
+ * grip item names its grip's id exactly, so an exercise named like a built-in grip's id is not it.
+ */
+export const workoutsWithGrip = <W extends Pick<Workout, "items">>(
+  workouts: readonly W[],
+  gripId: string
+): W[] => workouts.filter((w) => w.items.some((i) => i.exercise === gripId));
+
+/** The workouts with an item of the entry; an exercise never counts on the hangboard. */
 export function workoutsWith<W extends Pick<Workout, "kind" | "items">>(
   workouts: readonly W[],
   e: ExerciseEntry
 ): W[] {
-  const grip = "grip" in e.source;
+  if ("grip" in e.source) return workoutsWithGrip(workouts, itemName(e));
   const key = exerciseNameKey(itemName(e));
   return workouts.filter(
-    (w) =>
-      (w.kind === "hangboard") === grip && w.items.some((i) => exerciseNameKey(i.exercise) === key)
+    (w) => w.kind !== "hangboard" && w.items.some((i) => exerciseNameKey(i.exercise) === key)
   );
 }
 

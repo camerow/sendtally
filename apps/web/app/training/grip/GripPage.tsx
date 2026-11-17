@@ -3,7 +3,7 @@ import { libraryPictures } from "@sendtally/features/library";
 import { Link, useNavigate } from "react-router";
 import { gripSeries, setupsOf, summarise, type GripSetup } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
-import { pickedOf } from "@sendtally/features/exercises";
+import { pickedOf, workoutsWithGrip } from "@sendtally/features/exercises";
 import {
   canCompareGrips,
   gripDescription,
@@ -57,12 +57,7 @@ export function GripPage({ id }: { id: string }): React.ReactElement {
     summary === null || setup === null
       ? ""
       : insight(summary, { workout: name, grip: caption, kind, unit });
-  const usedIn =
-    library.status === "ready"
-      ? library.data.workouts.filter(
-          (w) => w.kind === "hangboard" && w.items.some((i) => i.exercise === id)
-        )
-      : [];
+  const usedIn = library.status === "ready" ? workoutsWithGrip(library.data.workouts, id) : [];
   const addTo = useAddToWorkout({
     name,
     pick: async () =>

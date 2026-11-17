@@ -13,6 +13,7 @@ import {
   milestoneRows,
 } from "@sendtally/features/hang";
 import { kindLabel } from "@sendtally/features/activities";
+import { workoutsWithGrip } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { LinkRow } from "../../../components/LinkRow";
 import { ScreenFrame } from "../../../components/ScreenFrame";
@@ -63,12 +64,7 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
     summary === null || setup === null
       ? ""
       : insight(summary, { workout: name, grip: caption, kind, unit });
-  const usedIn =
-    library.status === "ready"
-      ? library.data.workouts.filter(
-          (w) => w.kind === "hangboard" && w.items.some((i) => i.exercise === id)
-        )
-      : [];
+  const usedIn = library.status === "ready" ? workoutsWithGrip(library.data.workouts, id) : [];
 
   const addTo = useAddToWorkout({
     name,
