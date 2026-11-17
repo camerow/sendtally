@@ -28,7 +28,7 @@ import { pickedOf, usePick } from "./usePick";
 import { usePickerWorld } from "./usePickerWorld";
 
 export type ExercisePickerSheetProps = {
-  /** The workout's items, tagged in the list; grips in it offer grips only, anything else no grips. */
+  /** The workout's items, tagged in the list. */
   items: readonly Item[];
   /** Tick several and add them; otherwise a tap picks one, to swap. */
   multi: boolean;
@@ -42,9 +42,8 @@ type Category = WorkoutKind | "all";
  * The exercise library, to build a workout from: search, a category or all, the most used
  * first. Ticked exercises are added in the order they were ticked; New adds them, then opens
  * the exercise editor on what was typed in the category in view, asking which one under All,
- * and adds the exercise once saved. It starts on All; once a grip is in the workout or ticked
- * it offers only grips, and once anything else is, no grips. A grip's pencil opens it in the
- * exercise editor.
+ * and adds the exercise once saved. It starts on All, grips beside everything else. A grip's
+ * pencil opens it in the exercise editor.
  */
 export function ExercisePickerSheet({
   items,
@@ -62,12 +61,7 @@ export function ExercisePickerSheet({
     items.map((i) => i.exercise),
     "all"
   );
-  const { offer, kinds, newKind } = pickerState(
-    world,
-    items.map((i) => i.exercise),
-    ticked,
-    category
-  );
+  const { offer, kinds, newKind } = pickerState(category);
   const entries = pickerEntries({ ...world, offer }, { category, text });
   const typed = text.trim();
 
@@ -172,17 +166,15 @@ export function ExercisePickerSheet({
               },
             ]}
           />
-          {offer !== "grips" && (
-            <ChipRow<Category>
-              scroll
-              value={category}
-              onChange={setCategory}
-              options={[
-                { value: "all" as const, label: t("workouts.allCategories") },
-                ...kinds.map((k) => ({ value: k, label: kindLabel(k), mark: KIND_COLORS[k] })),
-              ]}
-            />
-          )}
+          <ChipRow<Category>
+            scroll
+            value={category}
+            onChange={setCategory}
+            options={[
+              { value: "all" as const, label: t("workouts.allCategories") },
+              ...kinds.map((k) => ({ value: k, label: kindLabel(k), mark: KIND_COLORS[k] })),
+            ]}
+          />
           {entries.length === 0 ? (
             typed !== "" && (
               <View style={{ gap: 12, alignItems: "flex-start", paddingTop: 8 }}>

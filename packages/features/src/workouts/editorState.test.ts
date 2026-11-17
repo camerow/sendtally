@@ -72,6 +72,36 @@ describe("workout editor state", () => {
     ]);
   });
 
+  it("keeps a mix's grips one block with their own doses, and gives a swapped place its own dose", () => {
+    const hang = { sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 180 };
+    const isGrip = (e: string): boolean => ["half", "open"].includes(e);
+    const bench = { exercise: "Bench press", doses: [{ sets: 3, reps: 8 }] };
+    const mix: WorkoutDraft = {
+      ...legs,
+      items: [squat, { exercise: "half", doses: [hang] }, bench],
+    };
+    const added = withItemsAdded(
+      mix,
+      [
+        { exercise: "Dips", kind: "strength" },
+        { exercise: "open", kind: "hangboard" },
+      ],
+      () => "id",
+      isGrip
+    );
+    expect(added.items.map((i) => [i.exercise, i.doses[0]])).toEqual([
+      ["Back squat", squat.doses[0]],
+      ["half", hang],
+      ["open", hang],
+      ["Bench press", bench.doses[0]],
+      ["Dips", { sets: 3, reps: 8 }],
+    ]);
+    const swapped = withExerciseSwapped(mix, 1, { exercise: "Dips", kind: "strength" }, isGrip);
+    expect(swapped.items[1]).toEqual({ exercise: "Dips", doses: [{ sets: 3, reps: 8 }] });
+    const toGrip = withExerciseSwapped(mix, 0, { exercise: "open", kind: "hangboard" }, isGrip);
+    expect(toGrip.items[0]?.doses).toEqual([{ sets: 3, reps: 6, onS: 7, offS: 3, setRestS: 180 }]);
+  });
+
   it("reads its kind off its exercises as they come and go", () => {
     const kinds: Record<string, WorkoutKind> = {
       half: "hangboard",

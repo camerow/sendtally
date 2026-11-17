@@ -1,14 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Exercise } from "@sendtally/api-client";
 import { exerciseLabel } from "./builtIns";
-import {
-  entryNamed,
-  exerciseKindIn,
-  pickerEntries,
-  pickerOffer,
-  pickerState,
-  type PickerWorld,
-} from "./picker";
+import { entryNamed, exerciseKindIn, pickerEntries, pickerState, type PickerWorld } from "./picker";
 
 const mine = (id: string, name: string, more: Partial<Exercise> = {}): Exercise => ({
   id,
@@ -97,15 +90,6 @@ describe("pickerEntries", () => {
   });
 });
 
-describe("pickerOffer", () => {
-  it("follows what the workout holds, so taking out the last grip offers everything again", () => {
-    expect(pickerOffer(world, [])).toBe("all");
-    expect(pickerOffer(world, ["half", "open"])).toBe("grips");
-    expect(pickerOffer(world, ["Back squat"])).toBe("exercises");
-    expect(pickerOffer(world, ["half"].slice(1))).toBe("all");
-  });
-});
-
 describe("exerciseKindIn", () => {
   it("knows grips, the user's own and the built-ins, and nothing else", () => {
     const kindIn = exerciseKindIn(world);
@@ -136,13 +120,10 @@ describe("exerciseLabel", () => {
 });
 
 describe("pickerState", () => {
-  it("offers every category and asks what New makes until something is in, then keeps to one side", () => {
-    expect(pickerState(world, [], [], "all")).toMatchObject({ offer: "all", newKind: "choose" });
-    expect(pickerState(world, [], [], "all").kinds).toContain("hangboard");
-    const grips = pickerState(world, ["half"], [], "all");
-    expect(grips).toMatchObject({ offer: "grips", newKind: "hangboard" });
-    const lifts = pickerState(world, ["Back squat"], [], "all");
-    expect(lifts.kinds).not.toContain("hangboard");
-    expect(pickerState(world, ["Back squat"], [], "mobility").newKind).toBe("mobility");
+  it("offers grips beside every category whatever the workout holds, and asks what New makes under All", () => {
+    expect(pickerState("all")).toMatchObject({ offer: "all", newKind: "choose" });
+    expect(pickerState("all").kinds).toContain("hangboard");
+    expect(pickerState("hangboard").newKind).toBe("hangboard");
+    expect(pickerState("mobility").newKind).toBe("mobility");
   });
 });

@@ -28,7 +28,7 @@ import { NewExerciseSheet } from "./NewExerciseSheet";
 import { useMake, usePick } from "./useMake";
 
 export type ExercisePickerProps = {
-  /** The workout's items, tagged in the list; grips in it offer grips only, anything else no grips. */
+  /** The workout's items, tagged in the list. */
   items: readonly Item[];
   /** Tick several and add them; otherwise a press picks one, to swap. */
   multi: boolean;
@@ -41,8 +41,8 @@ type Category = WorkoutKind | "all";
 /**
  * The exercise library, to build a workout from: search, a category or all, the most used
  * first. Ticked exercises are added in the order they were ticked; New makes one in the
- * category in view, asking which one under All, and adds it once saved. It starts on All; once
- * a grip is in the workout or ticked it offers only grips, and once anything else is, no grips.
+ * category in view, asking which one under All, and adds it once saved. It starts on All,
+ * grips beside everything else.
  */
 export function ExercisePicker({
   items,
@@ -63,12 +63,7 @@ export function ExercisePicker({
     items.map((i) => i.exercise),
     "all"
   );
-  const { offer, kinds, newKind } = pickerState(
-    world,
-    items.map((i) => i.exercise),
-    ticked,
-    category
-  );
+  const { offer, kinds, newKind } = pickerState(category);
   const entries = pickerEntries({ ...world, offer }, { category, text });
   const typed = text.trim();
 
@@ -160,24 +155,20 @@ export function ExercisePicker({
           />
           {newButton}
         </div>
-        {offer !== "grips" && (
-          <div className="setup-chips">
-            {["all" as const, ...kinds].map((k) => (
-              <button
-                key={k}
-                type="button"
-                aria-pressed={category === k}
-                style={chipStyle(category === k, { minHeight: 40 })}
-                onClick={() => setCategory(k)}
-              >
-                {k !== "all" && (
-                  <span className="chip-mark" style={{ background: KIND_COLORS[k] }} />
-                )}
-                {k === "all" ? t("workouts.allCategories") : kindLabel(k)}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="setup-chips">
+          {["all" as const, ...kinds].map((k) => (
+            <button
+              key={k}
+              type="button"
+              aria-pressed={category === k}
+              style={chipStyle(category === k, { minHeight: 40 })}
+              onClick={() => setCategory(k)}
+            >
+              {k !== "all" && <span className="chip-mark" style={{ background: KIND_COLORS[k] }} />}
+              {k === "all" ? t("workouts.allCategories") : kindLabel(k)}
+            </button>
+          ))}
+        </div>
         {entries.length === 0 ? (
           typed !== "" && (
             <p className="form-hint">{t("workouts.noExerciseCalled", { name: typed })}</p>

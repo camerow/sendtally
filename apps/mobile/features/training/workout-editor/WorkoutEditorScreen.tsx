@@ -11,7 +11,7 @@ import {
   type WorkoutKind,
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { exerciseKindIn, exerciseLabel } from "@sendtally/features/exercises";
+import { exerciseKindIn, exerciseLabel, isGripOf } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { durationLabel } from "@sendtally/features/sessions";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
@@ -106,10 +106,9 @@ function Editor({
   const actions = useWorkoutActions(api, reportFailure);
   const exercises = useExercises(api).state;
   const { model } = useHangData();
-  const { state, setState, remember } = useDerivedKindDraft(
-    initial,
-    exerciseKindIn(usePickerWorld([], "all"))
-  );
+  const world = usePickerWorld([], "all");
+  const isGrip = isGripOf(world);
+  const { state, setState, remember } = useDerivedKindDraft(initial, exerciseKindIn(world));
   const estimate = estimatedMinutes(state);
   const [untouched] = React.useState(initial);
   const release = useDiscardGuard(state !== untouched);
@@ -119,11 +118,11 @@ function Editor({
       ? exercises.data.find((e) => exerciseKey(e.name) === exerciseKey(name))
       : undefined;
   const measureOf = (item: Item) =>
-    state.kind === "hangboard"
+    isGrip(item.exercise)
       ? gripMeasureOf(item.doses[0] ?? { sets: 1 })
       : doseMeasureOf(exerciseNamed(item.exercise));
   const nameOf = (exercise: string): string => {
-    if (state.kind === "hangboard") return model.gripName(exercise);
+    if (isGrip(exercise)) return model.gripName(exercise);
     const own = exerciseNamed(exercise);
     return own === undefined ? exercise : exerciseLabel(own);
   };
@@ -183,7 +182,7 @@ function Editor({
                 />
               )}
               <ItemEditor
-                kind={state.kind}
+                kind={isGrip(item.exercise) ? "hangboard" : state.kind}
                 item={item}
                 name={nameOf(item.exercise)}
                 measure={measureOf(item)}
@@ -230,8 +229,13 @@ function Editor({
             remember(list);
             setState((s) =>
               picking === "add"
-                ? withItemsAdded(s, list, randomUUID)
-                : withExerciseSwapped(s, picking.swap, list[0] ?? { exercise: "", kind: s.kind })
+                ? withItemsAdded(s, list, randomUUID, isGrip)
+                : withExerciseSwapped(
+                    s,
+                    picking.swap,
+                    list[0] ?? { exercise: "", kind: s.kind },
+                    isGrip
+                  )
             );
           }}
           onClose={() => setPicking(null)}

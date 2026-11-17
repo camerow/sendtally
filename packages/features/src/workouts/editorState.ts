@@ -1,6 +1,7 @@
 import {
   defaultExerciseRestS,
   gripMeasureOf,
+  gripsTogether,
   withItemIds,
   workoutKindOf,
   type Dose,
@@ -18,17 +19,25 @@ export const MAX_DOSES = 10;
 const fitsGrip = (item: Item, measure?: DoseMeasure): boolean =>
   gripMeasureOf(item.doses[0] ?? { sets: 1 }) === fingersMeasure(measure);
 
+/** Which items name grips; by default every item of a Fingers workout and none of any other. */
+type IsGrip = (exercise: string) => boolean;
+const byKind =
+  (s: WorkoutDraft): IsGrip =>
+  () =>
+    s.kind === "hangboard";
+
 /**
- * New items for what was picked, in order: a grip takes the doses of the grip before it
- * when they are measured the same, anything else the dose its built-in starts at, else its
- * measure's starting dose.
+ * New items for what was picked, in order: a grip takes the doses of the last grip when they
+ * are measured the same, anything else the dose its built-in starts at, else its measure's
+ * starting dose. Grips stay one block, so a new grip lands after the last grip.
  */
 export function withItemsAdded(
   s: WorkoutDraft,
   picked: readonly Picked[],
-  newId: () => string
+  newId: () => string,
+  isGrip: IsGrip = byKind(s)
 ): WorkoutDraft {
-  const last = s.items[s.items.length - 1];
+  const last = s.items.filter((i) => isGrip(i.exercise)).at(-1);
   const items = picked.map(({ exercise, kind, measure, dose }): Item => ({
     id: newId(),
     exercise,
@@ -37,7 +46,11 @@ export function withItemsAdded(
         ? last.doses.map((d) => ({ ...d }))
         : [dose === undefined ? newDoseFor(kind, measure) : { ...dose }],
   }));
-  return { ...s, items: [...s.items, ...items] };
+  const grips = new Set(picked.filter((p) => p.kind === "hangboard").map((p) => p.exercise));
+  return {
+    ...s,
+    items: gripsTogether([...s.items, ...items], (e) => grips.has(e) || isGrip(e)),
+  };
 }
 
 /**
@@ -59,18 +72,22 @@ export function withDerivedKind(
   return { ...s, kind, exerciseRestS: rest ? defaultExerciseRestS(kind) : s.exerciseRestS };
 }
 
-/** Another exercise in the item's place, keeping its doses unless a grip is measured another way. */
+/**
+ * Another exercise in the item's place, keeping its doses unless a grip is measured another
+ * way, or a grip and an exercise trade places.
+ */
 export const withExerciseSwapped = (
   s: WorkoutDraft,
   at: number,
-  { exercise, measure }: Picked
+  { exercise, kind, measure }: Picked,
+  isGrip: IsGrip = byKind(s)
 ): WorkoutDraft => ({
   ...s,
   items: s.items.map((x, i) =>
     i !== at
       ? x
-      : s.kind === "hangboard" && !fitsGrip(x, measure)
-        ? { ...x, exercise, doses: [newDoseFor(s.kind, measure)] }
+      : (kind === "hangboard" ? !isGrip(x.exercise) || !fitsGrip(x, measure) : isGrip(x.exercise))
+        ? { ...x, exercise, doses: [newDoseFor(kind, measure)] }
         : { ...x, exercise }
   ),
 });
