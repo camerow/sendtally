@@ -3,8 +3,10 @@ import {
   addDays,
   blockWeekOn,
   focusOf,
+  isDated,
   occursOn,
   prescription,
+  weekStart,
   type Block,
   type CalendarDate,
   type Membership,
@@ -114,6 +116,101 @@ const lands = (plan: Plan, m: Membership, block: Block | null, d: CalendarDate):
   (occursOn(asOn(plan, m, block, d), block, d) && changeOn(plan, m, d) === null) ||
   plan.planChanges.some((c) => c.membershipId === m.id && c.kind === "move" && c.movedTo === d);
 
+/** The days of the week a log falls in: its Block's week, or outside a Block its calendar week. */
+function weekOf(block: Block | null, d: CalendarDate): CalendarDate[] {
+  if (block !== null && !isDated(block)) return [];
+  const week = block === null ? null : blockWeekOn(block, d);
+  if (block !== null && week === null) return [];
+  const from =
+    block === null || week === null ? weekStart(d) : addDays(block.start, (week - 1) * 7);
+  return Array.from({ length: 7 }, (_, i) => addDays(from, i));
+}
+
+const daysApart = (a: CalendarDate, b: CalendarDate): number =>
+  Math.abs(Date.parse(a) - Date.parse(b)) / 86_400_000;
+
+/**
+ * A planned workout done on another day of its week moves there, done: each log that names the
+ * membership (or, naming none, its workout) on a day it does not land claims the nearest
+ * occurrence that week not done, not changed by hand and not claimed already, earlier on a tie.
+ * Derived on every read, so deleting or re-dating the log puts the plan back.
+ */
+function claimedMoves(
+  plan: Plan,
+  workout: WorkoutLookup,
+  logged: readonly LoggedSession[]
+): PlanChange[] {
+  const moves: PlanChange[] = [];
+  const claimed = (m: Membership, d: CalendarDate): boolean =>
+    moves.some((c) => c.membershipId === m.id && c.plannedOn === d);
+  for (const log of [...logged].sort((a, b) => a.date.localeCompare(b.date))) {
+    const owners = plan.memberships.filter((m) =>
+      log.membershipId === null
+        ? log.workoutId !== null && m.workoutId === log.workoutId
+        : m.id === log.membershipId
+    );
+    const countedThere = plan.memberships.some((m) => {
+      const kind = workout(m.workoutId)?.kind;
+      const on =
+        lands(plan, m, blockOfMembership(plan, m), log.date) ||
+        moves.some((c) => c.membershipId === m.id && c.movedTo === log.date);
+      return on && (log.membershipId === m.id || (log.membershipId === null && log.kind === kind));
+    });
+    if (countedThere) continue;
+    const open = owners.flatMap((m) => {
+      const block = blockOfMembership(plan, m);
+      if (m.blockId !== null && block === null) return [];
+      const kind = workout(m.workoutId)?.kind;
+      return weekOf(block, log.date)
+        .filter(
+          (d) =>
+            d !== log.date &&
+            occursOn(asOn(plan, m, block, d), block, d) &&
+            changeOn(plan, m, d) === null &&
+            !claimed(m, d) &&
+            doneBy(m, kind, logged, d) === undefined
+        )
+        .map((d) => ({ m, d }));
+    });
+    const [nearest] = open.sort(
+      (a, b) => daysApart(a.d, log.date) - daysApart(b.d, log.date) || a.d.localeCompare(b.d)
+    );
+    if (nearest !== undefined)
+      moves.push({
+        membershipId: nearest.m.id,
+        plannedOn: nearest.d,
+        kind: "move",
+        movedTo: log.date,
+        reason: null,
+        note: null,
+      });
+  }
+  return moves;
+}
+
+const derived = new WeakMap<Plan, WeakMap<readonly LoggedSession[], Plan>>();
+const isDerived = new WeakSet<Plan>();
+
+/** The plan with the moves its logs claim laid over the ones made by hand. */
+function withClaimedMoves(
+  plan: Plan,
+  workout: WorkoutLookup,
+  logged: readonly LoggedSession[]
+): Plan {
+  if (isDerived.has(plan)) return plan;
+  const byLog = derived.get(plan) ?? new WeakMap<readonly LoggedSession[], Plan>();
+  derived.set(plan, byLog);
+  const known = byLog.get(logged);
+  if (known !== undefined) return known;
+  const out = {
+    ...plan,
+    planChanges: [...plan.planChanges, ...claimedMoves(plan, workout, logged)],
+  };
+  isDerived.add(out);
+  byLog.set(logged, out);
+  return out;
+}
+
 /** How many sessions of the workout were logged before a date, or in all without one. */
 export const sessionsOf = (
   plan: Pick<Plan, "memberships">,
@@ -180,6 +277,7 @@ export function occurrencesOn(
   date: CalendarDate,
   today: CalendarDate
 ): Occurrence[] {
+  plan = withClaimedMoves(plan, workout, logged);
   const planned = plan.memberships
     .filter((m) => {
       const block = blockOfMembership(plan, m);
@@ -207,6 +305,7 @@ export function nextOccurrence(
   today: CalendarDate,
   horizonDays = 366
 ): Occurrence | null {
+  plan = withClaimedMoves(plan, workout, logged);
   const block = blockOfMembership(plan, m);
   if (m.blockId !== null && block === null) return null;
   for (let i = 0; i < horizonDays; i++) {
