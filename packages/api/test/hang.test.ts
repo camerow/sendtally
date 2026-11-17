@@ -99,6 +99,7 @@ describe("hangboard", () => {
       defaultGrips: {},
       loads: {},
       sessions: [],
+      parts: [],
       settings: {
         units: "lb",
         theme: "moss",

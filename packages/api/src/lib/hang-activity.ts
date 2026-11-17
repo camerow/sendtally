@@ -1,4 +1,6 @@
 import {
+  doseProtocol,
+  hangSessionItems,
   isTimed,
   toUnit,
   hangSessionSeconds,
@@ -58,6 +60,22 @@ export function hangDescription(s: HangSession, unit: WeightUnit): string {
     protocolLine(s.protocol, s.edgeMm),
     `Load ${loadLabel(s.protocol.kind, s.loadKg, unit)}`,
   ].join("\n");
+}
+
+/** A workout's fingerboard part in its activity's description: a line per grip, with its load. */
+export function partLines(
+  s: HangSession,
+  gripName: (id: string) => string,
+  unit: WeightUnit
+): string[] {
+  return hangSessionItems(s).flatMap(({ exercise, dose }, k) => {
+    if (dose.sets === 0) return [];
+    const p = k === 0 ? s.protocol : doseProtocol(exercise, dose);
+    const kg = k === 0 ? s.loadKg : dose.weightKg;
+    const load = kg === undefined ? [] : [`Load ${loadLabel(p.kind, kg, unit)}`];
+    const edge = k === 0 ? s.edgeMm : (dose.edgeMm ?? 0);
+    return [[gripName(exercise), protocolLine(p, edge), ...load].join(" · ")];
+  });
 }
 
 // A hang session is a calendar date with no clock time, so it lands at local

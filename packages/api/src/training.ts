@@ -4,6 +4,7 @@ import type { PlanChange } from "@sendtally/core/hang";
 import { z } from "zod";
 import { type AppEnv, invalidBody, postAfterResponse } from "./context";
 import { activitiesQuery, activityBody, activityOf } from "./lib/activities";
+import { hangPartOf } from "./lib/hang";
 import {
   exerciseBody,
   exerciseOf,
@@ -32,7 +33,7 @@ import {
 } from "./lib/plan";
 import { syncActivityToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
-import { MIXED_GRIPS, MixedGripsError, withDerivedKind } from "./lib/workoutKind";
+import { withDerivedKind } from "./lib/workoutKind";
 import { captureWorkoutLogged } from "./workoutLogged";
 
 // Training other than climbing and hangboarding. The app generates every id,
@@ -55,12 +56,15 @@ export const activities = new Hono<AppEnv>()
       await repo.ensureUser(c.env.DB, userId);
       const existing = await repo.getActivity(c.env.DB, userId, id);
       const body = c.req.valid("json");
-      const row = await repo.saveActivity(c.env.DB, userId, id, body);
+      const { activity, part } = await repo.saveActivity(c.env.DB, userId, id, body);
       if (existing === null || existing.strava_activity_id !== null) {
         postAfterResponse(c, id, () => syncActivityToStrava(c.env, userId, id));
       }
       if (existing === null) await captureWorkoutLogged(c, body);
-      return c.json({ activity: activityOf(row) });
+      return c.json({
+        activity: activityOf(activity),
+        part: part === null ? null : hangPartOf(part),
+      });
     }
   )
 
@@ -266,12 +270,8 @@ export const workouts = new Hono<AppEnv>()
       const body = c.req.valid("json");
       const saved =
         body.kind === undefined ? (await repo.getWorkout(c.env.DB, userId, id))?.kind : undefined;
-      const workout = await withDerivedKind(c.env.DB, userId, body, saved).catch((e: unknown) => {
-        if (e instanceof MixedGripsError) return null;
-        throw e;
-      });
-      if (workout === null) return c.json({ error: MIXED_GRIPS }, 400);
-      const row = await repo.saveWorkout(c.env.DB, userId, { id, ...workout });
+      const { workout, isGrip } = await withDerivedKind(c.env.DB, userId, body, saved);
+      const row = await repo.saveWorkout(c.env.DB, userId, { id, ...workout }, isGrip);
       return c.json({ workout: workoutOf(row) });
     }
   )

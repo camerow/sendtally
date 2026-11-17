@@ -43,19 +43,29 @@ function doneLines(done: readonly ItemDone[], unit: WeightUnit): string[] {
 
 // As for climbing and hangboard sessions, the effort rides in the description's
 // first line because Strava's public API drops perceived_exertion.
-export function trainingDescription(a: Activity, unit: WeightUnit): string {
+/** `fingers` is its workout's fingerboard part, a line per grip. */
+export function trainingDescription(
+  a: Activity,
+  unit: WeightUnit,
+  fingers: readonly string[] = []
+): string {
   return [
     ...(a.rpe === null ? [] : [`RPE ${a.rpe}/10`]),
     "created by https://sendtally.com",
     ...doneLines(a.done, unit),
+    ...fingers,
   ].join("\n");
 }
 
 // An activity with no start time lands at local noon on its day, as a hang session does.
-export function trainingActivity(a: Activity, unit: WeightUnit): StravaActivity {
+export function trainingActivity(
+  a: Activity,
+  unit: WeightUnit,
+  fingers: readonly string[] = []
+): StravaActivity {
   return {
     name: a.title,
-    description: trainingDescription(a, unit),
+    description: trainingDescription(a, unit, fingers),
     sportType: SPORT_TYPES[a.kind],
     startDateLocal: new Date(`${a.date}T${a.startTime ?? "12:00"}:00Z`),
     elapsedSeconds: a.minutes * 60,

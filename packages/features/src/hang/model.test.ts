@@ -15,6 +15,7 @@ const data = (overrides: Partial<HangData> = {}): HangData => ({
   defaultGrips: {},
   loads: {},
   sessions: [],
+  parts: [],
   settings: {
     units: "kg",
     theme: "moss",

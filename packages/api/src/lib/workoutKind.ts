@@ -1,8 +1,8 @@
 import {
   defaultExerciseRestS,
   exerciseKinds,
+  gripsTogether,
   isBuiltInGrip,
-  mixesGrips,
   workoutKindOf,
   type Workout,
   type WorkoutKind,
@@ -10,39 +10,30 @@ import {
 import type { FocusOptional, WorkoutBody } from "./plan";
 import * as repo from "./repo";
 
-/** What a save that mixes grips with other exercises is refused with. */
-export const MIXED_GRIPS =
-  "A workout holds only grips or no grips: grips run in the hang timer and log as hang sessions, other exercises run in the sets player.";
-
-export class MixedGripsError extends Error {
-  constructor() {
-    super(MIXED_GRIPS);
-  }
-}
-
 /**
- * The workout as saved: its kind read off its exercises, the kind sent standing in for
- * an exercise not saved yet; with none, the one sent, else the one saved, else Other.
- * Throws MixedGripsError for items that mix grips with other exercises.
+ * The workout as saved: its grips together as its fingerboard part, and its kind read off its
+ * exercises, the kind sent standing in for an exercise not saved yet; with none, the one sent,
+ * else the one saved, else Other. `isGrip` says which items are grips.
  */
 export async function withDerivedKind(
   db: D1Database,
   userId: string,
   body: WorkoutBody,
   saved?: WorkoutKind
-): Promise<Omit<FocusOptional<Workout>, "id">> {
+): Promise<{ workout: Omit<FocusOptional<Workout>, "id">; isGrip: (exercise: string) => boolean }> {
   const fallback = body.kind ?? saved ?? "other";
-  const exercises = body.items.map((i) => i.exercise);
-  let kind = fallback;
-  if (exercises.length > 0) {
-    const { isGrip, kindIn } = await kindLookup(db, userId);
-    if (mixesGrips(exercises, isGrip)) throw new MixedGripsError();
-    kind = workoutKindOf(exercises, (e) => kindIn(e) ?? fallback, fallback);
-  }
-  return { ...body, kind, exerciseRestS: body.exerciseRestS ?? defaultExerciseRestS(kind) };
+  const { isGrip, kindIn } = await kindLookup(db, userId);
+  const items = gripsTogether(body.items, isGrip);
+  const kind = workoutKindOf(
+    items.map((i) => i.exercise),
+    kindIn,
+    fallback
+  );
+  const exerciseRestS = body.exerciseRestS ?? defaultExerciseRestS(kind);
+  return { workout: { ...body, items, kind, exerciseRestS }, isGrip };
 }
 
-async function kindLookup(
+export async function kindLookup(
   db: D1Database,
   userId: string
 ): Promise<{

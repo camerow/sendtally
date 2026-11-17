@@ -51,7 +51,7 @@ export function withDerivedKind(
 ): WorkoutDraft {
   const kind = workoutKindOf(
     s.items.map((i) => i.exercise),
-    (e) => kindIn(e) ?? s.kind,
+    kindIn,
     s.kind
   );
   if (kind === s.kind) return s;

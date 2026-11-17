@@ -73,6 +73,7 @@ Clients never address a part by its own id: a part carries `activityId`, and the
 ### Grip ids in a mix's items
 
 Two API paths assume a non-fingers workout names only exercises, and a mix breaks that:
+
 - `workoutExercises` (`lib/exercises.ts`) creates an exercise for every item of a non-hangboard workout, so it would create exercises named by grip ids; it skips items where `isGrip`.
 - `renameEverywhere` (`lib/repo.ts`) rewrites matching item names in every non-hangboard workout; it skips grip items, so an exercise renamed to a grip id's text can never capture a grip.
 
@@ -142,11 +143,13 @@ No model change: per-set load and hangs are `SetDone` fields today.
 
 Will, 2026-11-16: the hangs count already says whether a set was done, and a set RPE is more useful than a tick.
 Hang set rows in every place they appear drop the tick and take the shipped Set RPE column (header, box, keypad) in its place: the part on the workout view, the review after Finish, the standalone fingers timer's review, and the hang session edit, which all share `ActivityForm`'s hang mode, so there is one way for both.
+
 - Storage: `SetDone.rpe` (1 to 10) exists since Set RPE and `doneBody` accepts it, so a rated hang set is `done_json[i].sets[j].rpe` in `hang_sessions`, exactly as in `activities`; no migration. The session's own `rpe` column stays the run's effort.
 - Done signal: a hang set is kept when it held anything (hangs above 0, or a lone hang's cut seconds), which is the rule `setsHeld` already applies to the timer's sets; clearing a set's hangs drops it, and a dropped set is not missed, as today. The part's live state has no ticked list.
 - Target: none, by Will's decision 4. A grip dose can hold `targetRpe` (the type and `doseBody` allow it) but the editor keeps offering none (`FINGERS_FIELDS` in `doseFields.ts` has no RPE field), so hang rows show the RPE box without a target.
 - Showing it: Set RPE deferred hang sets because `HangSummary` and `HangResultCard` would show a rating nowhere; they now show each set's RPE beside its hangs and load, for parts and standalone sessions alike, so no rating is entered and then hidden.
   That shipped in PR #447 (merge 7949b0fc): `hangGrids(session)` in `activities/summary.ts` gives one `HangGripGrid` per grip in item order, read through `hangSessionItems`, and `HangResultCard` takes a grid and shows its RPE column only when a set has one.
+
 After Finish, the review and later edits are the activity's `ActivityForm`, which shows the part's grips inline with the other exercises in that same hang mode and saves both rows in one request.
 There is one editor for grip sets, `ActivityForm`'s hang mode; `HangSessionForm` should move onto it too, which also fixes its first-grip-only defect.
 

@@ -67,6 +67,7 @@ import {
   addDays,
   daysBetween,
   defaultMeasure,
+  isBuiltInGrip,
   loadKey,
   measureOf,
   type Block,
@@ -2672,6 +2673,7 @@ export type HangRows = {
   grips: HangGripRow[];
   defaultGrips: Array<typeof hangDefaultGrips.$inferSelect>;
   loads: Loads;
+  /** Sessions of their own and workouts' fingerboard parts alike. */
   sessions: HangSessionRow[];
   settings: HangSettingsRow | null;
 };
@@ -2844,11 +2846,12 @@ export async function getHangSession(
   return row ?? null;
 }
 
+/** Sessions of their own: a workout's fingerboard part is listed as its activity. */
 export async function listHangSessions(db: D1Database, userId: string): Promise<HangSessionRow[]> {
   return drizzle(db)
     .select()
     .from(hangSessions)
-    .where(eq(hangSessions.user_id, userId))
+    .where(and(eq(hangSessions.user_id, userId), isNull(hangSessions.activity_id)))
     .orderBy(desc(hangSessions.date), desc(hangSessions.created_at))
     .all();
 }
@@ -2991,12 +2994,18 @@ export async function listActivities(
     .all();
 }
 
+/**
+ * Saves an activity and, in the same batch, its fingerboard part: what the part shares with
+ * its run is copied on every save, `fingerboard` replaces the part's own fields, null removes
+ * the part and leaving it out keeps them. The part's id is the API's own, found by the
+ * activity, so a replayed save writes the same two rows.
+ */
 export async function saveActivity(
   db: D1Database,
   userId: string,
   id: string,
   a: ActivityInput
-): Promise<ActivityRow> {
+): Promise<{ activity: ActivityRow; part: HangSessionRow | null }> {
   const now = new Date().toISOString();
   const fields = {
     kind: a.kind,
@@ -3014,7 +3023,30 @@ export async function saveActivity(
     updated_at: now,
   };
   const d = drizzle(db);
-  const [rows] = await d.batch([
+  const ofRun = and(eq(hangSessions.user_id, userId), eq(hangSessions.activity_id, id));
+  const shared = {
+    date: a.date,
+    ...(a.workoutId === null ? {} : { workout_id: a.workoutId }),
+    membership_id: a.membershipId,
+    week: a.week,
+    focus: a.focus,
+    rpe: a.rpe,
+    updated_at: now,
+  };
+  const part = a.fingerboard;
+  const own =
+    part === undefined || part === null
+      ? null
+      : {
+          grip_id: part.gripId,
+          edge_mm: part.edgeMm,
+          load_kg: part.loadKg,
+          pct: part.pct,
+          misses: part.misses,
+          protocol_json: JSON.stringify(part.protocol),
+          done_json: JSON.stringify(part.done),
+        };
+  const [rows, ...rest] = await d.batch([
     d
       .insert(activities)
       .values({ user_id: userId, id, ...fields, created_at: now })
@@ -3025,8 +3057,29 @@ export async function saveActivity(
       userId,
       a.done.map((e) => ({ name: e.exercise, kind: a.kind, measure: measureOf(a.kind, e.sets) }))
     ),
+    part === null
+      ? d.delete(hangSessions).where(ofRun)
+      : own === null
+        ? d.update(hangSessions).set(shared).where(ofRun)
+        : d
+            .insert(hangSessions)
+            .values({
+              user_id: userId,
+              id: crypto.randomUUID(),
+              activity_id: id,
+              workout_id: a.workoutId ?? "",
+              ...shared,
+              ...own,
+              created_at: now,
+            })
+            .onConflictDoUpdate({
+              target: [hangSessions.user_id, hangSessions.activity_id],
+              set: { ...shared, ...own },
+            }),
+    d.select().from(hangSessions).where(ofRun),
   ]);
-  return only(rows);
+  const parts = rest.at(-1) as HangSessionRow[];
+  return { activity: only(rows), part: parts[0] ?? null };
 }
 
 const activity = (userId: string, id: string): SQL | undefined =>
@@ -3081,11 +3134,30 @@ export async function markActivityPostFailed(
     .where(activity(userId, id));
 }
 
+/** Its fingerboard part goes with it. */
 export async function deleteActivity(db: D1Database, userId: string, id: string): Promise<boolean> {
-  const result = await drizzle(db)
-    .delete(activities)
-    .where(and(eq(activities.user_id, userId), eq(activities.id, id)));
+  const d = drizzle(db);
+  const [result] = await d.batch([
+    d.delete(activities).where(and(eq(activities.user_id, userId), eq(activities.id, id))),
+    d
+      .delete(hangSessions)
+      .where(and(eq(hangSessions.user_id, userId), eq(hangSessions.activity_id, id))),
+  ]);
   return result.meta.changes > 0;
+}
+
+/** A run's fingerboard part, if it has one. */
+export async function getActivityPart(
+  db: D1Database,
+  userId: string,
+  id: string
+): Promise<HangSessionRow | null> {
+  const row = await drizzle(db)
+    .select()
+    .from(hangSessions)
+    .where(and(eq(hangSessions.user_id, userId), eq(hangSessions.activity_id, id)))
+    .get();
+  return row ?? null;
 }
 
 export type BlockRow = typeof trainingBlocks.$inferSelect;
@@ -3404,7 +3476,8 @@ export async function getWorkout(
 export async function saveWorkout(
   db: D1Database,
   userId: string,
-  w: FocusOptional<Workout>
+  w: FocusOptional<Workout>,
+  isGrip: (exercise: string) => boolean
 ): Promise<WorkoutRow> {
   const now = new Date().toISOString();
   const fields = {
@@ -3425,7 +3498,7 @@ export async function saveWorkout(
       .values({ user_id: userId, id: w.id, ...fields, created_at: now })
       .onConflictDoUpdate({ target: [workouts.user_id, workouts.id], set: fields })
       .returning(),
-    ...addExercises(d, userId, workoutExercises(w)),
+    ...addExercises(d, userId, workoutExercises(w, isGrip)),
   ]);
   return only(rows);
 }
@@ -3679,10 +3752,10 @@ async function renameEverywhere(
   then: BatchItem<"sqlite">
 ): Promise<void> {
   const key = exerciseNameKey(from);
-  const hit = (x: { exercise: string }): boolean => exerciseNameKey(x.exercise) === key;
+  const hit = (x: { exercise: string }): boolean => exerciseNameKey(x.exercise) === key && !grip(x);
   const renamed = <T extends { exercise: string }>(x: T): T =>
     hit(x) ? { ...x, exercise: name } : x;
-  const [ws, as] = await d.batch([
+  const [ws, as, grips] = await d.batch([
     d
       .select({
         id: workouts.id,
@@ -3696,7 +3769,11 @@ async function renameEverywhere(
       .select({ id: activities.id, json: activities.done_json })
       .from(activities)
       .where(eq(activities.user_id, userId)),
+    d.select({ id: hangGrips.id }).from(hangGrips).where(eq(hangGrips.user_id, userId)),
   ]);
+  const gripIds = new Set(grips.map((g) => g.id));
+  const grip = (x: { exercise: string }): boolean =>
+    isBuiltInGrip(x.exercise) || gripIds.has(x.exercise);
   const now = new Date().toISOString();
   const workoutWrites = ws.flatMap((w) => {
     const items = JSON.parse(w.json) as Item[];
