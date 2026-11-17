@@ -16,6 +16,7 @@ import {
 } from "./fingersPart";
 import { liveRunSummary, type LiveRun, type RunState } from "./liveRun";
 import type { WorkoutRun } from "./runParams";
+import type { PlannedRun } from "./usePlannedRun";
 
 const half = { exercise: "half", dose: { sets: 2, reps: 3, onS: 7, offS: 3, setRestS: 60 } };
 const open = { exercise: "open", dose: { sets: 1, reps: 2, onS: 10, offS: 0 } };
@@ -122,6 +123,13 @@ describe("a mix's fingerboard part", () => {
     expect(partHangs(ended)).toBe(partHangs({ run, setups, planned }));
     expect(partHangs(ended)).toBeGreaterThan(0);
     expect(partEnded({ run, setups }, (id) => id)).toBeUndefined();
+    const [first, second] = planned.items;
+    if (second === undefined) throw new Error("no second grip");
+    const longer: PlannedRun = {
+      ...planned,
+      items: [first, { ...second, dose: { ...second.dose, sets: 4 } }],
+    };
+    expect(partEnded({ run, setups, planned: longer }, (id) => id)?.done[1]?.sets).toHaveLength(4);
   });
 
   it("edits a logged part as it was saved, every grip keeping its own", () => {

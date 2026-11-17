@@ -100,7 +100,7 @@ export function partEnded(
   if (planned === undefined) return undefined;
   const grips = planned.items.map((i) => i.workout.grip);
   const setup = (): HangSetup => setups[0] ?? { edgeMm: 0, loadKg: 0 };
-  const done = partRows(planned, hangRunDone(run, planned, grips, setups), {
+  const done = partRows(planned, hangRunDone(run, planned, grips, setups, partDoses(planned)), {
     setup,
     gripName,
   });

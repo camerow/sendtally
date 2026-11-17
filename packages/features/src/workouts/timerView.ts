@@ -2,6 +2,7 @@ import {
   currentPhase,
   isWork,
   protocolDose,
+  type Dose,
   setOf,
   setsHeld,
   type HangKind,
@@ -78,14 +79,14 @@ export function timerView(
   };
 }
 
-/** What a finished timer run did, for its review: the sets held, and those it came off. */
+/** What a timer run did, for its review: the sets held against each grip's dose, and those it came off. */
 export function hangRunDone(
   run: Run<HangPhase>,
   planned: PlannedRun,
   grips: readonly string[],
-  setups: HangSetup[]
+  setups: HangSetup[],
+  doses: readonly Dose[] = planned.items.map((i) => protocolDose(i.workout))
 ): TimerRun {
-  const doses = planned.items.map((i) => protocolDose(i.workout));
   const held = setsHeld(run, doses);
   const dose = (item: number): SetDone => setOf(doses[item] ?? { sets: 0 });
   return {
