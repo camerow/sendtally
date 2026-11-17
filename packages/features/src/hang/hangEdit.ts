@@ -6,7 +6,7 @@ import {
   type SetDone,
 } from "@sendtally/core/hang";
 import { hangSets } from "../activities/summary";
-import { hangResult, keptHangs, type HangResult } from "./hangResult";
+import { hangResult, keptHangs, type HangItemSetup, type HangResult } from "./hangResult";
 
 /** Every grip's sets as an edit holds them, and the sets removed by hand. */
 export type HangEditSets = { done: ItemDone[]; off: string[] };
@@ -20,8 +20,15 @@ type Edited = Pick<HangSession, "gripId" | "protocol" | "pct" | "loadKg" | "done
  */
 export function hangEditSets(session: Edited): HangEditSets {
   const items = hangSessionItems(session);
-  const unheld = (item: number): SetDone[] =>
-    Array.from({ length: items[item]?.dose.sets ?? 0 }, () => ({ reps: 0 }));
+  const unheld = (item: number): SetDone[] => {
+    const dose = items[item]?.dose;
+    const set: SetDone = {
+      reps: 0,
+      ...(dose?.edgeMm !== undefined && { edgeMm: dose.edgeMm }),
+      ...(dose?.weightKg !== undefined && { weightKg: dose.weightKg }),
+    };
+    return Array.from({ length: dose?.sets ?? 0 }, () => set);
+  };
   const sets = hangSets(session).map(({ weightKg, ...set }) =>
     weightKg === undefined || weightKg === session.loadKg ? set : { ...set, weightKg }
   );
@@ -35,6 +42,19 @@ export function hangEditSets(session: Edited): HangEditSets {
     .map((d) => (d.sets.length > 0 ? d : { ...d, sets: unheld(d.item) }));
   return { done: [first, ...rest], off: [] };
 }
+
+/** A later grip's name, edge and load: from its kept sets, or the rows it showed when none held. */
+const itemSetup = (session: Edited, d: ItemDone, shown: SetDone | undefined): HangItemSetup => {
+  const first = d.sets[0] ?? shown;
+  return {
+    exercise: session.done.find((s) => s.item === d.item)?.exercise ?? d.exercise,
+    setup: {
+      edgeMm: first?.edgeMm ?? 0,
+      loadKg: d.sets.length > 0 ? session.loadKg : (first?.weightKg ?? session.loadKg),
+    },
+    hang: first?.edgeMm !== undefined,
+  };
+};
 
 /**
  * What an edit saves. The first grip takes the edited grip and setup; every other grip keeps its
@@ -50,11 +70,7 @@ export function hangEditResult(
   const result = hangResult(keptHangs(edited.done, edited.off), hangSessionItems(session), (d) =>
     d.item === 0
       ? { exercise: gripId, setup, hang: session.protocol.kind === "hang" }
-      : {
-          exercise: session.done.find((s) => s.item === d.item)?.exercise ?? d.exercise,
-          setup: { edgeMm: d.sets[0]?.edgeMm ?? 0, loadKg: session.loadKg },
-          hang: d.sets[0]?.edgeMm !== undefined,
-        }
+      : itemSetup(session, d, edited.done.find((x) => x.item === d.item)?.sets[0])
   );
   const shown = new Set(edited.done.map((d) => d.item));
   const unseen = session.done.filter((d) => !shown.has(d.item));

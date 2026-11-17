@@ -60,10 +60,19 @@ describe("hangEditResult", () => {
       ["open", 0],
       ["pinch", 2],
     ]);
-    expect(result.done[1]?.dose).toMatchObject({ sets: 2, reps: 5, onS: 10 });
+    expect(result.done[1]?.dose).toMatchObject({
+      sets: 2,
+      reps: 5,
+      onS: 10,
+      edgeMm: 18,
+      weightKg: 0,
+    });
     const saved = { ...session, pct: result.pct, done: result.done };
     const reopened = hangEditSets(saved);
-    expect(reopened.done[1]?.sets).toEqual([{ reps: 0 }, { reps: 0 }]);
+    expect(reopened.done[1]?.sets).toEqual([
+      { reps: 0, edgeMm: 18, weightKg: 0 },
+      { reps: 0, edgeMm: 18, weightKg: 0 },
+    ]);
     expect(hangEditResult(saved, reopened, "half", setup)).toMatchObject({
       pct: 67,
       done: result.done,

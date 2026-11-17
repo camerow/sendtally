@@ -1,4 +1,4 @@
-import type { HangSetup, ItemDone, SessionItem, SetDone } from "@sendtally/core/hang";
+import type { Dose, HangSetup, ItemDone, SessionItem, SetDone } from "@sendtally/core/hang";
 import { percentOf } from "@sendtally/core/hang";
 import { keptSets, setKeyOf } from "../activities/done";
 
@@ -21,6 +21,12 @@ export type HangResult = { done: ItemDone[]; pct: number; misses: number };
 /** Seconds on the edge, or lifts, that sets hold; a set with no time of its own holds its dose's. */
 const workOf = (sets: readonly SetDone[], dose: SetDone | undefined): number =>
   sets.reduce((n, s) => n + (s.reps ?? 1) * (s.onS ?? dose?.onS ?? 1), 0);
+
+const setUp = (dose: Dose, setup: HangSetup, hang: boolean): Dose => ({
+  ...dose,
+  ...(hang && dose.edgeMm === undefined && setup.edgeMm > 0 && { edgeMm: setup.edgeMm }),
+  ...(dose.weightKg === undefined && { weightKg: setup.loadKg }),
+});
 
 /**
  * A hangboard session as it saves: each kept set on its item's grip, on the edge when it hangs and
@@ -63,10 +69,12 @@ export function hangResult(
       const ran = d.item === 0 ? undefined : dose(d.item);
       const stored = ran !== undefined && ran.sets > 0;
       const rest = prescribed[d.item]?.restAfterS ?? 0;
+      // A grip that held nothing has no set to carry its edge and load, so its dose does.
+      const kept = stored && d.sets.length === 0 ? setUp(ran, setup, hang) : ran;
       return {
         item: d.item,
         exercise,
-        ...(stored && { dose: ran }),
+        ...(stored && { dose: kept }),
         ...(rest > 0 && { restAfterS: rest }),
         sets: d.sets.map((s) => ({
           ...s,
