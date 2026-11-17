@@ -94,6 +94,12 @@ async function body<T>(pending: Promise<JsonResponse>): Promise<T> {
   return (await response.json()) as T;
 }
 
+/** A Worker from before workouts' fingerboard parts answers without hangParts. */
+const withParts = <T extends { hangParts: unknown[] }>(log: T): T => ({
+  ...log,
+  hangParts: (log as Partial<T>).hangParts ?? [],
+});
+
 export class SendtallyApi {
   private readonly client: ReturnType<typeof hc<AppType>>;
 
@@ -129,12 +135,12 @@ export class SendtallyApi {
     return body(this.client.v1.entitlements.refresh.$post());
   }
 
-  sessions(): Promise<SessionLog> {
-    return body(this.client.v1.sessions.$get());
+  async sessions(): Promise<SessionLog> {
+    return withParts(await body(this.client.v1.sessions.$get()));
   }
 
-  sessionsWithClimbs(): Promise<SessionLogWithClimbs> {
-    return body(this.client.v1.sessions.$get({ query: { include: "climbs" } }));
+  async sessionsWithClimbs(): Promise<SessionLogWithClimbs> {
+    return withParts(await body(this.client.v1.sessions.$get({ query: { include: "climbs" } })));
   }
 
   session(fingerprint: string): Promise<{ session: SessionDetail }> {
