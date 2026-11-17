@@ -19,14 +19,14 @@ export const monoMuted: React.CSSProperties = {
   color: "rgba(64,63,76,0.55)",
 };
 
-/** A section's heading in the label accent. */
+/** A section's heading. */
 export const sectionLabel: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
   fontWeight: 500,
   fontSize: 10,
   letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "var(--text-label-accent)",
+  color: "var(--text-on-white-secondary)",
 };
 
 export const inputStyle: React.CSSProperties = {

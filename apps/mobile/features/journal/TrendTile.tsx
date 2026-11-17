@@ -78,7 +78,7 @@ export function TrendTile({ tile }: { tile: TrendTileVM }): React.ReactElement {
       </View>
       <Text
         numberOfLines={1}
-        style={{ ...monoLabel, color: point === null ? colors.textSecondary : colors.labelAccent }}
+        style={{ ...monoLabel, color: point === null ? colors.textSecondary : colors.gunmetal }}
       >
         {point?.label ?? tile.caption}
       </Text>

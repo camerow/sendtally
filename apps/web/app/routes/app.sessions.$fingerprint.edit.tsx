@@ -65,7 +65,7 @@ export default function EditSessionRoute(): React.ReactElement {
       {!(state.status === "ready" && state.data.editable) && <EditHeader />}
       {state.status === "loading" && <span style={monoLabel}>{t("common.loading")}</span>}
       {state.status === "error" && (
-        <span style={{ ...monoLabel, textTransform: "none", color: "var(--text-label-accent)" }}>
+        <span style={{ ...monoLabel, textTransform: "none", color: "var(--bs-watermelon-ink)" }}>
           {t("sessionDetail.loadFailed")}{" "}
           <Link to={backTo}>{t("sessionDetail.backToSession")}</Link>
         </span>
@@ -78,7 +78,7 @@ export default function EditSessionRoute(): React.ReactElement {
             header={(summary) => <EditHeader summary={summary} />}
           />
         ) : (
-          <span style={{ ...monoLabel, color: "var(--text-label-accent)" }}>
+          <span style={{ ...monoLabel, color: "var(--text-on-white-secondary)" }}>
             {t("sessions.readOnlyBoard")}{" "}
             <Link to={backTo}>{t("sessionDetail.backToSession")}</Link>
           </span>

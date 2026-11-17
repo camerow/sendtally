@@ -1,19 +1,14 @@
 import React from "react";
 
 export type LabelProps = {
-  on?: "dark" | "accent" | "light";
+  on?: "dark" | "light";
   size?: number;
   children?: React.ReactNode;
   style?: React.CSSProperties;
 };
 
 export function Label({ on = "dark", size = 11, children, style }: LabelProps): React.ReactElement {
-  const color =
-    on === "dark"
-      ? "var(--text-on-dark-label)"
-      : on === "accent"
-        ? "var(--text-label-accent)"
-        : "var(--text-on-white-secondary)";
+  const color = on === "dark" ? "var(--text-on-dark-label)" : "var(--text-on-white-secondary)";
   return (
     <span
       style={{

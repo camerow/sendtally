@@ -522,7 +522,7 @@ body:has(.climb-sheet[open]) {
   margin: 0;
   font-size: 13px;
   line-height: 1.4;
-  color: var(--text-label-accent);
+  color: var(--bs-watermelon-ink);
 }
 
 .climb-sheet-done:disabled {

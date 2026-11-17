@@ -28,7 +28,7 @@ export function FeatureSection({ feature, flip }: FeatureSectionProps): React.Re
         />
       )}
       <Reveal className="l-feature-copy">
-        <Label on={tone === "photo" ? "dark" : "accent"}>{feature.eyebrow}</Label>
+        <Label on={tone === "photo" ? "dark" : "light"}>{feature.eyebrow}</Label>
         <h2 className="l-feature-title">{feature.title}</h2>
         <p className="l-feature-body">{feature.body}</p>
         {feature.points.length > 0 && (

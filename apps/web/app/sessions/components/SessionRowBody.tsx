@@ -53,7 +53,7 @@ export function SessionRowBody({
             style={{
               fontFamily: "var(--font-mono)",
               fontWeight: g.kind === "sent" ? 600 : 500,
-              color: g.kind === "sent" ? "var(--text-label-accent)" : "rgba(64,63,76,0.55)",
+              color: g.kind === "sent" ? "var(--bs-gunmetal)" : "rgba(64,63,76,0.55)",
               letterSpacing: "0.04em",
             }}
           >

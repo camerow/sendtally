@@ -48,7 +48,7 @@ describe("onboarding carousel", () => {
   });
 
   it("keeps red text off the slides", async () => {
-    const red = (await show()).filter((n) => styleOf(n).color === colors.labelAccent);
+    const red = (await show()).filter((n) => styleOf(n).color === colors.watermelonInk);
     expect(red).toEqual([]);
   });
 

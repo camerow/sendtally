@@ -12,7 +12,7 @@
 }
 
 .area-crumbs a {
-  color: var(--text-label-accent);
+  color: var(--text-link);
   text-decoration: none;
 }
 
@@ -250,7 +250,7 @@
 .area-error {
   font-size: 13px;
   line-height: 1.45;
-  color: var(--text-label-accent);
+  color: var(--bs-watermelon-ink);
 }
 
 @media (max-width: 767px) {

@@ -16,7 +16,7 @@ export function PageHeader({
 }: PageHeaderProps): React.ReactElement {
   return (
     <header id="top" className="l-pricing-head">
-      <Label on="accent">{eyebrow}</Label>
+      <Label on="light">{eyebrow}</Label>
       <h1 className="l-pricing-title">{title}</h1>
       <p className="l-pricing-body">{body}</p>
       {children}

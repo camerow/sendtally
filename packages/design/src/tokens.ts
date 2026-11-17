@@ -19,7 +19,6 @@ export const colors = {
   petalInk: PETAL_INK,
   fern: "#157F52",
   white: "#FFFFFF",
-  labelAccent: WATERMELON_INK,
   dataBarPeak: PETAL_INK,
   surfaceSoft: "#F7F6F3",
   surfaceSelected: "rgba(249,220,92,0.35)",

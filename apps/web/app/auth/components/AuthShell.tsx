@@ -71,7 +71,7 @@ export function StepCard({
           fontSize: 11,
           letterSpacing: "0.1em",
           textTransform: "uppercase",
-          color: "var(--text-label-accent)",
+          color: "var(--text-on-white-secondary)",
         }}
       >
         {step}
