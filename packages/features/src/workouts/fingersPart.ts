@@ -1,5 +1,6 @@
 import {
   currentPhase,
+  heldSet,
   hangSessionItems,
   type Dose,
   protocolDose,
@@ -99,7 +100,10 @@ export function partEnded(
   if (planned === undefined) return undefined;
   const grips = planned.items.map((i) => i.workout.grip);
   const setup = (): HangSetup => setups[0] ?? { edgeMm: 0, loadKg: 0 };
-  const done = partRows(planned, hangRunDone(run, planned, grips, setups), { setup, gripName });
+  const done = partRows(planned, hangRunDone(run, planned, grips, setups), {
+    setup,
+    gripName,
+  });
   return { done, setups, planned };
 }
 
@@ -120,7 +124,7 @@ export function partBody(part: PartRows): Fingerboard | null {
     { date: "", rpe: null, membershipId: null, week: null, focus: null, done: part.done, off: [] },
     ""
   );
-  if (s.done.every((d) => d.sets.length === 0)) return null;
+  if (!s.done.some((d) => d.sets.some(heldSet))) return null;
   const { gripId, edgeMm, loadKg, pct, misses, protocol, done } = s;
   return { gripId, edgeMm, loadKg, pct, misses, protocol, done };
 }

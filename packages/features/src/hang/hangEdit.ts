@@ -6,7 +6,7 @@ import {
   type SetDone,
 } from "@sendtally/core/hang";
 import { hangSets } from "../activities/summary";
-import { hangResult, keptHangs, type HangItemSetup, type HangResult } from "./hangResult";
+import { hangResult, heldSet, keptHangs, type HangItemSetup, type HangResult } from "./hangResult";
 
 /** Every grip's sets as an edit holds them, and the sets removed by hand. */
 export type HangEditSets = { done: ItemDone[]; off: string[] };
@@ -35,11 +35,11 @@ export function hangEditSets(session: Edited): HangEditSets {
   const first: ItemDone = {
     item: 0,
     exercise: session.gripId,
-    sets: sets.length > 0 ? sets : unheld(0),
+    sets: sets.some(heldSet) ? sets : unheld(0),
   };
   const rest = session.done
     .filter((d) => d.item !== 0)
-    .map((d) => (d.sets.length > 0 ? d : { ...d, sets: unheld(d.item) }));
+    .map((d) => (d.sets.some(heldSet) ? d : { ...d, sets: unheld(d.item) }));
   return { done: [first, ...rest], off: [] };
 }
 

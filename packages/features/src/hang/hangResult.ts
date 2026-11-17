@@ -1,9 +1,8 @@
 import type { Dose, HangSetup, ItemDone, SessionItem, SetDone } from "@sendtally/core/hang";
-import { percentOf } from "@sendtally/core/hang";
+import { heldSet, percentOf } from "@sendtally/core/hang";
 import { keptSets, setKeyOf } from "../activities/done";
 
-/** A hang set counts when it held anything: a hang or more, or a lone hang's cut seconds. */
-export const heldSet = (s: SetDone): boolean => (s.reps ?? 1) > 0 && (s.onS ?? 1) > 0;
+export { heldSet };
 
 /** What a hang review saves: the sets that held anything and are not off; hang rows have no tick. */
 export const keptHangs = (done: readonly ItemDone[], off: readonly string[]): ItemDone[] =>
@@ -34,7 +33,8 @@ const setUp = (dose: Dose, setup: HangSetup, hang: boolean): Dose => ({
  * a hang short of its set's prescribed reps, and a set left out is not missed, just not held. A later
  * grip keeps the dose it ran, which its session has no other place for, and every grip the rest
  * the timer ran after it. A planned grip that held nothing saves with no sets, so what was planned
- * stays whole.
+ * stays whole; the first saves one set of no hangs instead, since builds before this one read a
+ * first grip with no sets as its share of the percentage held.
  */
 export function hangResult(
   kept: readonly ItemDone[],
@@ -57,10 +57,10 @@ export function hangResult(
     0
   );
   const held = kept.reduce((n, d) => n + workOf(d.sets, dose(d.item)), 0);
-  const unheld = prescribed.flatMap((p, item) =>
+  const unheld = prescribed.flatMap((p, item): ItemDone[] =>
     p.dose.sets === 0 || kept.some((d) => d.item === item)
       ? []
-      : [{ item, exercise: p.exercise, sets: [] }]
+      : [{ item, exercise: p.exercise, sets: item === 0 ? [{ reps: 0 }] : [] }]
   );
   const done = [...kept, ...unheld]
     .sort((a, b) => a.item - b.item)
