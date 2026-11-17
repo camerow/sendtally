@@ -1,7 +1,8 @@
 import * as AppleAuthentication from "expo-apple-authentication";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
+import { TextInput } from "../components/TextInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GoogleMark, useSignInFlow } from "@sendtally/auth-native";
 import { t } from "@sendtally/features/i18n";

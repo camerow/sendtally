@@ -52,6 +52,31 @@ export default tseslint.config(
     ...reactHooks.configs.flat.recommended,
   },
   {
+    // The app's TextInput tells the root tap observer a tap was on a text input, so moving
+    // between inputs keeps the keyboard up; React Native's own would dismiss it.
+    files: ["apps/mobile/**/*.ts", "apps/mobile/**/*.tsx"],
+    ignores: [
+      "apps/mobile/components/TextInput.tsx",
+      "apps/mobile/**/*.test.ts",
+      "apps/mobile/**/*.test.tsx",
+      "apps/mobile/jest.setup.ts",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "react-native",
+              importNames: ["TextInput"],
+              message: "Use TextInput from apps/mobile/components/TextInput.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["**/*.test.ts", "**/*.test.tsx"],
     rules: { "@typescript-eslint/no-non-null-assertion": "off" },
   }

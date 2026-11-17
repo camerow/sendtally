@@ -39,6 +39,7 @@ import { CLERK_PUBLISHABLE_KEY } from "../lib/config";
 import { outbox } from "../lib/api";
 import { QueryProvider } from "../lib/QueryProvider";
 import { useApi } from "../lib/api";
+import { useOutsideTapRoot } from "../components/outsideTap";
 import { useFreshInstallUpdate } from "../features/app-update/useFreshInstallUpdate";
 import { useUpdateCheckOnForeground } from "../features/app-update/useUpdateCheckOnForeground";
 
@@ -145,12 +146,13 @@ function RootLayout(): React.ReactElement | null {
     IBMPlexMono_500Medium,
     IBMPlexMono_600SemiBold,
   });
+  const outsideTaps = useOutsideTapRoot();
   const updateSettled = useFreshInstallUpdate();
   useUpdateCheckOnForeground();
   if (!fontsLoaded || !updateSettled) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1 }} {...outsideTaps}>
       <ClerkProvider
         publishableKey={CLERK_PUBLISHABLE_KEY}
         tokenCache={tokenCache}

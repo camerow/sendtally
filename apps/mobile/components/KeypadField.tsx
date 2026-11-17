@@ -4,6 +4,7 @@ import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { tap } from "../lib/press";
 import { Keypad, type KeypadMode } from "./Keypad";
 import { KeypadHostContext } from "./keypadHost";
+import { outsideTap } from "./outsideTap";
 import type { FieldSlot } from "./useFieldOrder";
 
 export type KeypadFieldProps = FieldSlot & {
@@ -105,6 +106,10 @@ export function KeypadField({
       onReset,
     };
   });
+  React.useEffect(
+    () => (open && host === null ? outsideTap.subscribe(() => latest.current.close()) : undefined),
+    [open, host]
+  );
   React.useEffect(() => {
     if (!open || host === null) return;
     const field = latest.current;
@@ -138,7 +143,7 @@ export function KeypadField({
         {before}
         <Pressable
           ref={box}
-          onTouchStart={(e) => host !== null && e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
           onPress={tap(onOpen ?? (() => setOpenOwn(true)))}
           accessibilityRole="button"
           accessibilityLabel={accessibilityLabel}
