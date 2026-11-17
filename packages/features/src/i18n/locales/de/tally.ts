@@ -39,6 +39,7 @@ export const tally = {
   "tally.allLapsDone": "Alle Runden geschafft",
   "tally.onTheWall": "In der Wand",
   "tally.addLap": "+ Runde hinzufügen",
+  "tally.removeLap": "− Runde entfernen",
   "tally.startLap": "Runde starten",
   "tally.restTook": "Pause {time}",
   "tally.startRest": "Pause starten",

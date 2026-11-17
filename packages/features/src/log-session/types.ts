@@ -71,6 +71,8 @@ export type ExerciseTally = {
   onS?: number;
   /** Set for a circuit: each set is a lap of this many moves or seconds. */
   lap?: { unit: EnduranceUnit; target: number };
+  /** The laps the workout asked for, kept once + Add lap goes past them. */
+  plannedSets?: number;
   /** The rest taken after each lap, by lap. */
   rests?: number[];
   restS: number;

@@ -510,8 +510,9 @@ button.lap-row:hover {
   margin-left: auto;
 }
 
-.laps-add {
-  align-self: flex-start;
+.laps-edit {
+  display: flex;
+  gap: 8px;
 }
 
 .tally .player-row {

@@ -5,8 +5,10 @@ import {
   lapElapsed,
   lapSets,
   lapsDone,
+  lapRemovable,
   withLapAdded,
   withLapLogged,
+  withLapRemoved,
   withLapStarted,
 } from "./exerciseLaps";
 import { tallyDraft } from "./tally";
@@ -40,6 +42,25 @@ describe("circuit laps", () => {
     const more = withLapAdded(two);
     expect(allLapsDone(more)).toBe(false);
     expect(lapClockLabel(more)).toBe("Lap 3 of 3");
+  });
+
+  it("takes back an added lap while it holds nothing, down to the laps asked for", () => {
+    const one = withLapLogged(circuit("moves", 40), 40);
+    expect(lapRemovable(one)).toBe(false);
+    const three = withLapAdded(withLapAdded(one));
+    expect(lapClockLabel(three)).toBe("Lap 2 of 4");
+    expect(lapRemovable(three)).toBe(true);
+    const back = withLapRemoved(withLapRemoved(three));
+    expect(lapClockLabel(back)).toBe("Lap 2 of 2");
+    expect(lapRemovable(back)).toBe(false);
+    expect(withLapRemoved(back)).toBe(back);
+
+    const full = withLapLogged(
+      withLapLogged(withLapAdded(withLapLogged(circuit("moves", 40), 40)), 40),
+      40
+    );
+    expect(allLapsDone(full)).toBe(true);
+    expect(lapRemovable(full)).toBe(false);
   });
 
   it("times a lap from its start and keeps no more than its target", () => {

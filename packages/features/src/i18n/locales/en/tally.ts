@@ -39,6 +39,7 @@ export const tally = {
   "tally.allLapsDone": "All laps done",
   "tally.onTheWall": "On the wall",
   "tally.addLap": "+ Add lap",
+  "tally.removeLap": "− Remove lap",
   "tally.startLap": "Start lap",
   "tally.restTook": "rest {time}",
   "tally.startRest": "Start rest",

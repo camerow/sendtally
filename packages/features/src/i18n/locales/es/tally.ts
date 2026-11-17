@@ -39,6 +39,7 @@ export const tally = {
   "tally.allLapsDone": "Todas las vueltas hechas",
   "tally.onTheWall": "En la pared",
   "tally.addLap": "+ Añadir vuelta",
+  "tally.removeLap": "− Quitar vuelta",
   "tally.startLap": "Empezar vuelta",
   "tally.restTook": "descanso {time}",
   "tally.startRest": "Empezar descanso",

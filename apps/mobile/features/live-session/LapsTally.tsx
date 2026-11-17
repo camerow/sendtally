@@ -190,8 +190,16 @@ export function LapsTally({
           </View>
         )}
 
-        <View style={{ alignItems: "flex-start" }}>
+        <View style={{ flexDirection: "row", gap: 8 }}>
           <Button label={t("tally.addLap")} onPress={laps.addLap} variant="goldText" height={44} />
+          {laps.removeLap !== null && (
+            <Button
+              label={t("tally.removeLap")}
+              onPress={laps.removeLap}
+              variant="goldText"
+              height={44}
+            />
+          )}
         </View>
       </ScrollView>
 

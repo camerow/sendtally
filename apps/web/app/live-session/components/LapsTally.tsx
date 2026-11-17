@@ -114,9 +114,16 @@ export function LapsTally({
               )}
             </div>
           )}
-          <button type="button" className="tally-finish laps-add" onClick={laps.addLap}>
-            {t("tally.addLap")}
-          </button>
+          <div className="laps-edit">
+            <button type="button" className="tally-finish" onClick={laps.addLap}>
+              {t("tally.addLap")}
+            </button>
+            {laps.removeLap !== null && (
+              <button type="button" className="tally-finish" onClick={laps.removeLap}>
+                {t("tally.removeLap")}
+              </button>
+            )}
+          </div>
         </div>
         <div className="tally-controls">
           <div className="tally-goes">

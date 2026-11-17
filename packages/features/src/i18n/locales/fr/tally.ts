@@ -39,6 +39,7 @@ export const tally = {
   "tally.allLapsDone": "Tous les tours faits",
   "tally.onTheWall": "Sur le mur",
   "tally.addLap": "+ Ajouter un tour",
+  "tally.removeLap": "− Retirer un tour",
   "tally.startLap": "Lancer le tour",
   "tally.restTook": "repos {time}",
   "tally.startRest": "Lancer le repos",

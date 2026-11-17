@@ -57,7 +57,23 @@ export function withLapLogged(draft: LogSessionDraft, done: number): LogSessionD
 /** + Add lap: one more than the exercise asks for. */
 export function withLapAdded(draft: LogSessionDraft): LogSessionDraft {
   const ex = draft.exercise;
-  return ex === undefined ? draft : { ...draft, exercise: { ...ex, sets: lapsPlanned(draft) + 1 } };
+  if (ex === undefined) return draft;
+  const exercise = { ...ex, sets: lapsPlanned(draft) + 1, plannedSets: ex.plannedSets ?? ex.sets };
+  return { ...draft, exercise };
+}
+
+/** − Remove lap: the last lap goes while it is one added past the plan and holds nothing yet. */
+export function lapRemovable(draft: LogSessionDraft): boolean {
+  const ex = draft.exercise;
+  if (ex === undefined) return false;
+  const planned = lapsPlanned(draft);
+  return planned > (ex.plannedSets ?? ex.sets) && lapsDone(draft).length < planned;
+}
+
+export function withLapRemoved(draft: LogSessionDraft): LogSessionDraft {
+  const ex = draft.exercise;
+  if (ex === undefined || !lapRemovable(draft)) return draft;
+  return { ...draft, exercise: { ...ex, sets: lapsPlanned(draft) - 1 } };
 }
 
 /** A time lap's clock starts. */
