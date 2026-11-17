@@ -1,10 +1,11 @@
 import { router } from "expo-router";
 import React from "react";
 import { kindLabel } from "@sendtally/features/activities";
-import type { ActivityRecord } from "@sendtally/api-client";
+import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import {
   exerciseResults,
+  hangGrids,
   pastSessions,
   type ActivityActions,
 } from "@sendtally/features/activities";
@@ -16,6 +17,7 @@ import { Label } from "../components/Label";
 import { HistoryList } from "../history/HistoryList";
 import { activityItem } from "@sendtally/features/activities";
 import { ExerciseResultCard } from "./ExerciseResultCard";
+import { HangResultCard } from "./HangResultCard";
 import { OverTime } from "./OverTime";
 import { SummaryFrame } from "./SummaryFrame";
 import { effortTile } from "@sendtally/features/activities";
@@ -27,9 +29,14 @@ export type ActivitySummaryProps = {
   log: TrainingLog;
   unit: WeightUnit;
   actions: ActivityActions;
+  /** Its workout's fingerboard part, if it ran one, with its grips named. */
+  part?: { session: HangSessionRecord; gripName: (id: string) => string };
 };
 
-/** A finished strength, mobility or other workout: each exercise, over time, and its past sessions. */
+/**
+ * A finished strength, mobility or other workout: its fingerboard part grip by grip, each other
+ * exercise, over time, and its past sessions.
+ */
 export function ActivitySummary({
   activity,
   activities,
@@ -37,11 +44,14 @@ export function ActivitySummary({
   log,
   unit,
   actions,
+  part,
 }: ActivitySummaryProps): React.ReactElement {
   const results = exerciseResults(activity, activities);
+  const grids = part === undefined ? [] : hangGrids(part.session);
   const done = results.map((r) => exerciseKey(r.exercise));
   const trends = done.flatMap((key) => series.filter((s) => s.key === key && s.untracked !== true));
-  const sets = results.reduce((n, r) => n + r.sets.length, 0);
+  const sets =
+    results.reduce((n, r) => n + r.sets.length, 0) + grids.reduce((n, g) => n + g.rows.length, 0);
   const target = activity.workoutId === null ? null : log.workout(activity.workoutId);
   return (
     <SummaryFrame
@@ -56,11 +66,19 @@ export function ActivitySummary({
       target={{ kind: "activity", record: activity }}
       onDelete={() => void actions.deleteActivity(activity.id)}
     >
-      {results.length > 0 && (
+      {results.length + grids.length > 0 && (
         <Label color={colors.textSecondary} style={{ paddingTop: 4 }}>
           {t("summary.whatYouDid")}
         </Label>
       )}
+      {grids.map((grid, i) => (
+        <HangResultCard
+          key={i}
+          grid={grid}
+          gripName={part?.gripName(grid.gripId) ?? ""}
+          unit={unit}
+        />
+      ))}
       {results.map((r) => (
         <ExerciseResultCard key={r.exercise} result={r} unit={unit} />
       ))}

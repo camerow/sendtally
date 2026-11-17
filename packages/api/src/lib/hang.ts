@@ -237,6 +237,26 @@ export function hangHistoryOf(
   };
 }
 
+/** A workout's fingerboard part as history lists it, beside its activity. */
+export type HangHistoryPart = HangHistoryRow & { activityId: string };
+
+/** History's sessions of their own, and the parts its activities carry, each listed once. */
+export function hangHistory(
+  rows: readonly HangSessionRow[],
+  customGrips: readonly HangGripRow[]
+): { hangSessions: HangHistoryRow[]; hangParts: HangHistoryPart[] } {
+  return {
+    hangSessions: rows
+      .filter((r) => r.activity_id === null)
+      .map((r) => hangHistoryOf(r, customGrips)),
+    hangParts: rows.flatMap((r) =>
+      r.activity_id === null
+        ? []
+        : [{ ...hangHistoryOf(r, customGrips), activityId: r.activity_id }]
+    ),
+  };
+}
+
 export function settingsOf(row: HangSettingsRow | null): HangSettings {
   if (row === null) return DEFAULT_HANG_SETTINGS;
   return {

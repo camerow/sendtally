@@ -47,7 +47,7 @@ const timed: DoneParams = {
 };
 
 describe("hangReview", () => {
-  it("opens on what the timer ran, at its setup, its start and its length", () => {
+  it("opens on what the timer ran, at its setup, its start and its length, unreached sets empty", () => {
     const review = hangReview(timed, planned, model);
     expect(review.setups).toEqual([{ edgeMm: 18, loadKg: 10 }]);
     const draft = hangReviewDraft(
@@ -61,11 +61,11 @@ describe("hangReview", () => {
       date: "2026-10-22",
       startTime: "18:05",
       minutes: 25,
-      off: ["0:1"],
+      off: [],
     });
     expect(draft.done[0]).toMatchObject({
       exercise: "Open hand",
-      sets: [{ reps: 2 }, { reps: 1 }],
+      sets: [{ reps: 2 }, { reps: 0 }],
     });
   });
 

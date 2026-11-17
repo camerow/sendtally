@@ -43,7 +43,12 @@ jest.mock("../../lib/api", () => {
   const api = new Proxy(
     {
       climbs: async () => ({ climbs: [mockServerClimb] }),
-      sessionsWithClimbs: async () => ({ sessions: [], hangSessions: [], activities: [] }),
+      sessionsWithClimbs: async () => ({
+        sessions: [],
+        hangSessions: [],
+        hangParts: [],
+        activities: [],
+      }),
       updateClimb: (id: string, change: ClimbChange) => mockUpdateClimb(id, change),
       logSession: mockLogSession,
       deleteClimb: (id: string) => mockDeleteClimb(id),
@@ -97,7 +102,7 @@ describe("editing a climb", () => {
       client.setQueryData(queries.climbs(mockApiForKeys).queryKey, [arete], { updatedAt: 0 });
       client.setQueryData(
         queries.sessionsWithClimbs(mockApiForKeys).queryKey,
-        { sessions: [], hangSessions: [], activities: [] },
+        { sessions: [], hangSessions: [], hangParts: [], activities: [] },
         { updatedAt: 0 }
       );
     });

@@ -145,7 +145,7 @@ describe("a workout's fingerboard part", () => {
     expect(res.status).toBe(400);
   });
 
-  it("changes only through its run, and stays out of the session history", async () => {
+  it("changes only through its run, and lists apart from the history's own sessions", async () => {
     const userId = "user_part_doors";
     const { part } = await save(userId, { ...run, fingerboard });
     const id = part?.id ?? "";
@@ -160,10 +160,12 @@ describe("a workout's fingerboard part", () => {
     expect((await call(userId, "PUT", `/v1/hang/sessions/${id}`, session)).status).toBe(409);
     expect((await call(userId, "DELETE", `/v1/hang/sessions/${id}`)).status).toBe(409);
     expect((await call(userId, "POST", `/v1/hang/sessions/${id}/strava`)).status).toBe(409);
-    const history = await json<{ hangSessions: unknown[] }>(
-      await call(userId, "GET", "/v1/sessions")
-    );
+    const history = await json<{
+      hangSessions: unknown[];
+      hangParts: { id: string; activityId: string }[];
+    }>(await call(userId, "GET", "/v1/sessions"));
     expect(history.hangSessions).toEqual([]);
+    expect(history.hangParts.map((p) => [p.id, p.activityId])).toEqual([[id, "a1"]]);
     expect((await hang(userId)).parts).toHaveLength(1);
   });
 

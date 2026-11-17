@@ -9,6 +9,7 @@ export {
   type TrainedKindVM,
   type TrainingInsightsVM,
 } from "./insights";
+export { runMinutes } from "./runMinutes";
 export { useTrainingInsights } from "./useTrainingInsights";
 export {
   focusKey,

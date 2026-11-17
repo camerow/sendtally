@@ -45,11 +45,15 @@ const ended: DoneParams = {
 };
 
 describe("A hangboard workout's review", () => {
-  it("walks each set's hangs then load down the sets with Next", async () => {
+  it("walks each set's hangs, load and RPE down the sets with Next", async () => {
     await renderWithHang(<DoneScreen params={ended} />);
     await fireEvent.press(screen.getByLabelText("Half crimp, set 1 · Hangs"));
     await fireEvent.press(screen.getByText("Next"));
     expect(screen.getByLabelText("Half crimp, set 1 · Load")).toHaveProp("accessibilityState", {
+      expanded: true,
+    });
+    await fireEvent.press(screen.getByLabelText("Next"));
+    expect(screen.getByLabelText("Half crimp, set 1 · RPE")).toHaveProp("accessibilityState", {
       expanded: true,
     });
     await fireEvent.press(screen.getByLabelText("Next"));
@@ -58,14 +62,9 @@ describe("A hangboard workout's review", () => {
     });
   });
 
-  it("keeps an unticked set's fields live, and ticks it once a value is typed", async () => {
+  it("has no tick: a set the timer never reached opens empty, its fields live", async () => {
     await renderWithHang(<DoneScreen params={ended} />);
-    const set5 = (): unknown => screen.getByLabelText("Half crimp, set 5").props.accessibilityState;
-    expect(set5()).toEqual({ checked: false });
-    await fireEvent.press(screen.getByLabelText("Half crimp, set 5 · Hangs"));
-    await fireEvent.press(screen.getByLabelText("3"));
-    await fireEvent.press(screen.getByLabelText("Done"));
-    expect(set5()).toEqual({ checked: true });
+    expect(screen.queryByRole("checkbox")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Half crimp, set 5 · Load"));
     await fireEvent.press(screen.getByLabelText("Previous"));
     expect(screen.getByLabelText("Half crimp, set 5 · Hangs")).toHaveProp("accessibilityState", {
@@ -99,11 +98,9 @@ describe("A hangboard workout's review", () => {
     expect(screen.getByText("4 of 6 hangs")).toBeTruthy();
     expect(screen.queryByText("Started")).toBeNull();
     expect(screen.queryByText("Focus")).toBeNull();
-    expect(screen.getByLabelText("Half crimp, set 5").props.accessibilityState).toEqual({
-      checked: false,
-    });
-
-    await fireEvent.press(screen.getByLabelText("Half crimp, set 5"));
+    await fireEvent.press(screen.getByLabelText("Half crimp, set 5 · Hangs"));
+    await fireEvent.press(screen.getByLabelText("6"));
+    await fireEvent.press(screen.getByLabelText("Done"));
     await fireEvent.press(screen.getByLabelText("Change edge and weight"));
     await fireEvent.press(screen.getByLabelText("Shallower edge"));
     await fireEvent.press(screen.getByLabelText("Effort 8 of 10"));

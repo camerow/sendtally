@@ -2,6 +2,7 @@ export * from "./format";
 export {
   findGrip,
   hangModel,
+  hangsWithParts,
   hangWorkoutFromItem,
   hangWorkoutOf,
   renameClash,

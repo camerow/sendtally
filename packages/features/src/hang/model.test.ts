@@ -3,7 +3,7 @@ import type { HangData } from "@sendtally/api-client";
 import { setLocale } from "../i18n";
 import { libraryOf } from "../workouts/library";
 import type { LibraryWorkout } from "../workouts/types";
-import { hangModel, hangWorkoutOf, renameClash } from "./model";
+import { hangModel, hangsWithParts, hangWorkoutOf, renameClash } from "./model";
 
 afterEach(() => setLocale("en"));
 
@@ -179,5 +179,13 @@ describe("setup", () => {
     expect(m.lastUsed(rep73, "open")).toBeNull();
     expect(m.lastUsed(w1, "open")).toEqual({ edgeMm: 20, loadKg: -4 });
     expect(m.lastUsed(w1, "half")).toBeNull();
+  });
+
+  it("reads a workout's fingerboard part for its grips, newest first, and never as a workout of its own", () => {
+    const part = { ...session, id: "p1", date: "2026-10-05", workoutId: "", activityId: "a1" };
+    const m = model({ sessions: [session], parts: [part] });
+    expect(m.sessions.map((s) => s.id)).toEqual(["p1", "h1"]);
+    expect(hangsWithParts({ sessions: [session], parts: [part] })).toEqual(m.sessions);
+    expect(m.setup(m.workout("rep73")!, "half")).toEqual({ edgeMm: 20, loadKg: 6 });
   });
 });

@@ -2846,12 +2846,12 @@ export async function getHangSession(
   return row ?? null;
 }
 
-/** Sessions of their own: a workout's fingerboard part is listed as its activity. */
+/** Sessions of their own and workouts' fingerboard parts alike, newest first. */
 export async function listHangSessions(db: D1Database, userId: string): Promise<HangSessionRow[]> {
   return drizzle(db)
     .select()
     .from(hangSessions)
-    .where(and(eq(hangSessions.user_id, userId), isNull(hangSessions.activity_id)))
+    .where(eq(hangSessions.user_id, userId))
     .orderBy(desc(hangSessions.date), desc(hangSessions.created_at))
     .all();
 }

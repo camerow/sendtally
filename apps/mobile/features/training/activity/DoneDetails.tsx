@@ -10,6 +10,7 @@ import {
   setKeyOf,
   shortOf,
 } from "@sendtally/features/activities";
+import { heldSet } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { useFieldOrder } from "../../../components/useFieldOrder";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
@@ -48,7 +49,8 @@ const offWithoutKey = (off: readonly string[], item: number, set: number): strin
 
 /**
  * What was done, to review before saving: each exercise as its sets' table, ticked when it
- * counts, amber where it fell short, a number typed in place, a set added or swiped away.
+ * counts, amber where it fell short, a number typed in place, a set added or swiped away. A hang
+ * set has no tick: it counts when it held anything, and takes an RPE like any set.
  */
 export function DoneDetails({
   done,
@@ -64,11 +66,15 @@ export function DoneDetails({
   onRemoved,
 }: DoneDetailsProps): React.ReactElement {
   const edit = (next: ItemDone[]): void => onChange(next, [...off]);
-  // A hang set's count, then its load, then the next set's.
+  // A hang set's count, then its load, then its RPE, then the next set's.
   const counts = useFieldOrder(
     hangs
       ? done.flatMap((d) =>
-          d.sets.flatMap((_, i) => [setKeyOf(d.item, i), `${setKeyOf(d.item, i)}:load`])
+          d.sets.flatMap((_, i) => [
+            setKeyOf(d.item, i),
+            `${setKeyOf(d.item, i)}:load`,
+            `${setKeyOf(d.item, i)}:rpe`,
+          ])
         )
       : []
   );
@@ -79,8 +85,9 @@ export function DoneDetails({
   const remove = (d: ItemDone, set: number): void => {
     const removed = (): void => {
       onChange(removeSet(done, d.item, set), offWithout(off, d.item, set));
-      // An unticked set holds nothing logged, so it goes quietly.
-      if (!off.includes(setKeyOf(d.item, set)))
+      // An unticked set, or a hang set that held nothing, holds nothing logged, so it goes quietly.
+      const held = !hangs || (d.sets[set] !== undefined && heldSet(d.sets[set]));
+      if (!off.includes(setKeyOf(d.item, set)) && held)
         onRemoved?.(t("activities.setRemoved", { n: set + 1 }), () =>
           onChange([...done], [...off])
         );
@@ -141,15 +148,13 @@ export function DoneDetails({
                     ? t("activities.colDoneUnit", { unit })
                     : t("activities.colDone")}
               </Label>
-              {!hangs && (
-                <Label small color={colors.textSecondary} style={SET_COLUMNS.rpe}>
-                  RPE
-                </Label>
-              )}
-              <View style={SET_COLUMNS.tick} />
+              <Label small color={colors.textSecondary} style={SET_COLUMNS.rpe}>
+                RPE
+              </Label>
+              {!hangs && <View style={SET_COLUMNS.tick} />}
             </View>
             {d.sets.map((set, i) => {
-              const on = !off.includes(setKeyOf(d.item, i));
+              const on = !off.includes(setKeyOf(d.item, i)) && (!hangs || heldSet(set));
               return (
                 <ReviewSetRow
                   key={i}
@@ -172,13 +177,14 @@ export function DoneDetails({
                   slot={hangs ? counts.slot(setKeyOf(d.item, i)) : undefined}
                   loadSlot={hangs ? counts.slot(`${setKeyOf(d.item, i)}:load`) : undefined}
                   defaultLoadKg={hangLoadKg}
-                  {...(!hangs && {
-                    rpe: { slot: rpes.slot(`${setKeyOf(d.item, i)}:rpe`), target: d.targetRpe },
-                  })}
+                  rpe={{
+                    slot: (hangs ? counts : rpes).slot(`${setKeyOf(d.item, i)}:rpe`),
+                    target: d.targetRpe,
+                  }}
                   onChange={(value) =>
                     onChange(changeSet(done, d.item, i, value), offWithoutKey(off, d.item, i))
                   }
-                  onToggle={() => toggle(d.item, i)}
+                  onToggle={hangs ? undefined : () => toggle(d.item, i)}
                   onRemove={() => remove(d, i)}
                 />
               );

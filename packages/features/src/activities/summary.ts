@@ -114,12 +114,15 @@ export function exerciseResults(activity: Logged, activities: readonly Logged[])
     });
 }
 
-/** Every session of the same workout, this one included, newest first; none without a workout. */
+/**
+ * Every session of the same workout, this one included, newest first; none without a workout,
+ * which a fingerboard part whose run lost its workout says with an empty id.
+ */
 export function pastSessions<T extends Dated & { workoutId: string | null }>(
   session: T,
   all: readonly T[]
 ): T[] {
-  if (session.workoutId === null) return [];
+  if (session.workoutId === null || session.workoutId === "") return [];
   return all
     .filter((s) => s.workoutId === session.workoutId)
     .sort(chronological)

@@ -79,8 +79,16 @@ export function hangWorkoutOf(
  * The hang timer's model. A built-in grip the library retired is hidden like one the user hid,
  * so it leaves the pickers but still names its sessions.
  */
+/**
+ * Every hang session for what grips read: sessions of their own and workouts' fingerboard
+ * parts, newest first, each list's own order kept within a day. A log counts a part as its activity, so only grip readers take this.
+ */
+export const hangsWithParts = (data: Pick<HangData, "sessions" | "parts">): HangSessionRecord[] =>
+  [...data.sessions, ...data.parts].sort((a, b) => b.date.localeCompare(a.date));
+
 export function hangModel(data: HangData, all: readonly LibraryWorkout[]): HangModel {
   const workouts = all.flatMap((w) => hangWorkoutOf(w) ?? []);
+  const hangs = hangsWithParts(data);
   const grips = [
     ...currentLibrary().grips.flatMap((entry) => {
       if (!isBuiltInGrip(entry.id)) return [];
@@ -103,7 +111,7 @@ export function hangModel(data: HangData, all: readonly LibraryWorkout[]): HangM
     settings: data.settings,
     workouts,
     grips,
-    sessions: data.sessions,
+    sessions: hangs,
     workout: (id) => {
       const w = hangboard.get(id);
       return w === undefined ? undefined : (hangWorkoutOf(w) ?? undefined);
@@ -120,15 +128,14 @@ export function hangModel(data: HangData, all: readonly LibraryWorkout[]): HangM
       ]),
     lastUsed: (w, gripId) => {
       const used =
-        lastSession(data.sessions, w.id, gripId) !== undefined ||
-        loadKey(w.id, gripId) in data.loads;
+        lastSession(hangs, w.id, gripId) !== undefined || loadKey(w.id, gripId) in data.loads;
       return used ? resolveSetup(w.kind, usedLayers(w.id, gripId)) : null;
     },
   };
 
   function usedLayers(workoutId: string, gripId: string): SetupLayer[] {
     return [
-      lastSession(data.sessions, workoutId, gripId),
+      lastSession(hangs, workoutId, gripId),
       { loadKg: data.loads[loadKey(workoutId, gripId)] },
     ];
   }

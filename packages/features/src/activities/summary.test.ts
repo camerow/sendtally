@@ -109,6 +109,8 @@ describe("pastSessions", () => {
 
   it("has none for a log with no workout behind it", () => {
     expect(pastSessions({ ...(logs[0] as Log), workoutId: null }, logs)).toEqual([]);
+    const orphans = logs.map((l) => ({ ...l, workoutId: "" }));
+    expect(pastSessions(orphans[0] as Log, orphans)).toEqual([]);
   });
 });
 

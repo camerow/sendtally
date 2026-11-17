@@ -13,6 +13,7 @@ const rec = (days: number, rpe: number | null = 6, minutes = 60, name = `r${days
   at: today - days * DAY_MS + 18 * 3_600_000,
   rpe,
   minutes,
+  fingers: 0,
 });
 const steady = Array.from({ length: 42 }, (_, i) => i)
   .filter((i) => i % 7 < 3)
@@ -149,7 +150,7 @@ describe("doneOf", () => {
       focus: null,
     }) as SessionWithClimbs;
   const load = (times: SessionWithClimbs["times"]): Done | undefined =>
-    doneOf({ sessions: [climb(times)], hangSessions: [], activities: [] })[0];
+    doneOf({ sessions: [climb(times)], hangSessions: [], hangParts: [], activities: [] })[0];
 
   it("counts a form-logged climbing session by its duration", () => {
     expect(load("duration")).toMatchObject({ rpe: 6, minutes: 90 });

@@ -60,6 +60,7 @@ function fakeApi(sessions: SessionDetail[]): DayClimbApi & { sent: unknown[] } {
     sessions: vi.fn(async () => ({
       sessions: sessions as SessionRow[],
       hangSessions: [],
+      hangParts: [],
       activities: [],
     })),
     session: vi.fn(async (fp: string) => ({ session: byId.get(fp)! })),

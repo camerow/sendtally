@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hangResult } from "./hangResult";
+import { hangResult, keptHangs } from "./hangResult";
 
 const dose = { sets: 2, reps: 6, onS: 7 };
 const prescribed = [{ exercise: "half", dose }];
@@ -38,5 +38,21 @@ describe("a hangboard session's result", () => {
     const result = hangResult(kept, prescribed, () => ({ ...at, hang: false }));
     expect(result).toMatchObject({ pct: 50, misses: 0 });
     expect(result.done[0]?.sets).toEqual([{ reps: 6, weightKg: 10 }]);
+  });
+});
+
+describe("keptHangs", () => {
+  it("keeps a set that held anything and is not off, with no tick to read", () => {
+    const done = [
+      {
+        item: 0,
+        exercise: "half",
+        sets: [{ reps: 6, onS: 7 }, { reps: 0, onS: 7 }, { onS: 4 }, { reps: 6, onS: 7 }],
+      },
+      { item: 1, exercise: "pinch", sets: [{ reps: 0 }] },
+    ];
+    expect(keptHangs(done, ["0:3"])).toEqual([
+      { item: 0, exercise: "half", sets: [{ reps: 6, onS: 7 }, { onS: 4 }] },
+    ]);
   });
 });

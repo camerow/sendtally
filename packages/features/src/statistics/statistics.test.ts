@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Activity as Logged, HangHistoryRow, SessionWithClimbs } from "@sendtally/api-client";
 import { isLockedRange, shownRange } from "../trends/types";
-import { trainingInsightsVM } from "./insights";
+import { hangSessionSeconds } from "@sendtally/core/hang";
+import { durationLabel } from "../sessions/years";
+import { doneOf, trainingInsightsVM } from "./insights";
 import { TRAINED_KINDS } from "./overview";
 
 const NOW = new Date("2026-10-22T20:00:00Z");
@@ -118,6 +120,7 @@ describe("trainingInsightsVM", () => {
       climbing("2026-10-08T18:00:00Z", 5),
     ],
     hangSessions: [hang("2026-10-16", 6, 2), hang("2026-10-22", 8, 6)],
+    hangParts: [],
     activities: [lift("2026-10-10", 100), lift("2026-10-19", 110)],
   };
 
@@ -203,5 +206,43 @@ describe("trainingInsightsVM", () => {
     const vm = trainingInsightsVM(log, "1m", ["climbing"], grip, NOW);
     expect(vm.sessions).toBe(3);
     expect(vm.exercises).toEqual([]);
+  });
+});
+
+describe("a workout's fingerboard part", () => {
+  const run: Logged = { ...lift("2026-10-20", 100), minutes: 60, rpe: 7, workoutId: "w1" };
+  const part = { ...hang("2026-10-20", 7, 10), id: "p1", workoutId: "w1", activityId: run.id };
+  const fingers = Math.round(hangSessionSeconds(part) / 60);
+  const log = { sessions: [], hangSessions: [], hangParts: [part], activities: [run] };
+
+  it("counts once, as its run, with the run's whole minutes and effort for the workload", () => {
+    expect(doneOf(log)).toEqual([
+      expect.objectContaining({
+        ref: expect.objectContaining({ id: run.id }),
+        minutes: 60,
+        rpe: 7,
+        fingers,
+      }),
+    ]);
+    const vm = trainingInsightsVM(log, "7d", TRAINED_KINDS, grip, NOW);
+    expect(vm.sessions).toBe(1);
+    expect(vm.workload.acute).toBe(
+      trainingInsightsVM({ ...log, hangParts: [] }, "7d", TRAINED_KINDS, grip, NOW).workload.acute
+    );
+  });
+
+  it("gives its minutes to Fingers in the mix and the rest to the run's kind", () => {
+    const vm = trainingInsightsVM(log, "7d", TRAINED_KINDS, grip, NOW);
+    expect(vm.trained.map((k) => [k.kind, k.detail])).toEqual([
+      ["hangboard", `1 · ${durationLabel(fingers)}`],
+      ["strength", `1 · ${durationLabel(60 - fingers)}`],
+    ]);
+  });
+
+  it("adds its grips to the grip trends", () => {
+    const vm = trainingInsightsVM(log, "7d", TRAINED_KINDS, grip, NOW);
+    expect(
+      vm.exercises.find((g) => g.kind === "hangboard")?.rows.map((r) => [r.key, r.count])
+    ).toEqual([["half", 1]]);
   });
 });
