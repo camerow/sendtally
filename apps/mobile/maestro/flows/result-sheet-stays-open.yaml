@@ -16,7 +16,7 @@ name: result-sheet-stays-open
     text: "^V[0-9]+$"
     index: 2
 # A fall keeps the climb selected, which is what puts its edit button on the row.
-- tapOn: "Fell"
+- tapOn: "Attempt"
 - tapOn: "Edit climb"
 - assertVisible: "1 OF 1"
 - repeat:

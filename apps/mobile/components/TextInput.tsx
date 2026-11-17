@@ -22,3 +22,7 @@ export function TextInput(props: TextInputProps): React.ReactElement {
     />
   );
 }
+
+/** The text input that has the keyboard, if any. */
+export const focusedInput = (): NativeTextInput | null =>
+  NativeTextInput.State.currentlyFocusedInput() as NativeTextInput | null;

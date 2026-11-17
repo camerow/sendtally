@@ -124,4 +124,9 @@ export type LogSessionDraft = {
   plan?: PlanLink;
   /** The workout exercise it logs, which makes it part of that workout and never a session. */
   exercise?: ExerciseTally;
+  /** The time each set of a timed exercise spent on the wall, kept once the set ends. */
+  wallTimes?: WallTime[];
 };
+
+/** How long one set of a timed exercise was on the wall. */
+export type WallTime = { item: number; set: number; onS: number };

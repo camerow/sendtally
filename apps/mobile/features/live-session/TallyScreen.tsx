@@ -326,7 +326,7 @@ export function TallyScreen({ exercise = false }: TallyScreenProps): React.React
             })}
           >
             <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 18, color: colors.white }}>
-              {t("tally.fell")}
+              {t("tally.attempt")}
             </Text>
           </Pressable>
           <Pressable

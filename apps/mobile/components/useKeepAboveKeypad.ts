@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Keyboard,
   useWindowDimensions,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -8,6 +9,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { keypadHeight } from "./Keypad";
+import { focusedInput } from "./TextInput";
 
 const CLEARANCE = 12;
 
@@ -20,7 +22,10 @@ export type KeepAboveKeypad = {
   room: number;
 };
 
-/** Keeps a field opened on the in-app keypad in sight: spread `scrollRef` and `onScroll` on its scroll view. */
+/**
+ * Keeps a field opened on the in-app keypad in sight, and a text input above the system
+ * keyboard when it comes up: spread `scrollRef` and `onScroll` on its scroll view.
+ */
 export function useKeepAboveKeypad(): KeepAboveKeypad {
   const scrollRef = React.useRef<ScrollView | null>(null);
   const offset = React.useRef(0);
@@ -40,5 +45,14 @@ export function useKeepAboveKeypad(): KeepAboveKeypad {
     },
     [windowHeight, room]
   );
+  React.useEffect(() => {
+    const shown = Keyboard.addListener("keyboardDidShow", (e) =>
+      focusedInput()?.measureInWindow((_x, y, _width, height) => {
+        const over = y + height + CLEARANCE - e.endCoordinates.screenY;
+        if (over > 0) scrollRef.current?.scrollTo({ y: offset.current + over, animated: true });
+      })
+    );
+    return () => shown.remove();
+  }, []);
   return { scrollRef, onScroll, reveal, room };
 }

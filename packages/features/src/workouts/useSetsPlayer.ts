@@ -164,14 +164,13 @@ export function useSetsPlayer({
     if (!ticked.has(h.at)) toggle(at);
   };
   const hold = useHold(store, (h) => endHold(h, h.targetS));
-  const climbedSets = (item: number): SetDone[] =>
-    tallyOf(item) === "laps"
-      ? lapSets(climbs, item)
-      : exerciseSets(
-          climbs,
-          item,
-          tallyOf(item) === "wallTime" ? run.items[item]?.dose.onS : undefined
-        );
+  const climbedSets = (item: number): SetDone[] => {
+    const draft = tally.stored?.draft;
+    if (tallyOf(item) === "laps") return lapSets(climbs, item);
+    if (draft === undefined) return [];
+    const plannedS = tallyOf(item) === "wallTime" ? run.items[item]?.dose.onS : undefined;
+    return exerciseSets(draft, item, plannedS, new Date());
+  };
 
   const extra = (item: number): { sets: number; max: number; canAdd: boolean } | null => {
     const min = run.items[item]?.dose.sets ?? 0;

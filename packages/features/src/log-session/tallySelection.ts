@@ -44,7 +44,7 @@ export function tallyStep(
     const grade = tallyGradeOf(climb);
     return {
       id: (previous?.id ?? 0) + 1,
-      message: go === "fell" ? t("tally.fellOn", { grade }) : t("tally.sentGrade", { grade }),
+      message: go === "fell" ? t("tally.attemptOn", { grade }) : t("tally.sentGrade", { grade }),
       draft,
       selection,
     };

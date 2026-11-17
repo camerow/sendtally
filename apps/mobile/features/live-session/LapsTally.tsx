@@ -238,7 +238,7 @@ export function LapsTally({
           })}
         >
           <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 18, color: colors.white }}>
-            {t("tally.fell")}
+            {t("tally.attempt")}
           </Text>
         </Pressable>
         {!laps.timed && (

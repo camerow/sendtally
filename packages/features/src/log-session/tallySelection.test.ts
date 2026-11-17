@@ -11,7 +11,7 @@ describe("tallyStep", () => {
     const fell = tallyStep(start, { kind: "pending", chip: "V4" }, "fell", grade, null)!;
     const key = fell.draft.climbs[0]!.key;
     expect(fell.selection).toEqual({ kind: "row", key });
-    expect(fell.undo).toMatchObject({ id: 1, message: "Fell on V4", draft: start });
+    expect(fell.undo).toMatchObject({ id: 1, message: "Attempt on V4", draft: start });
 
     const sent = tallyStep(fell.draft, fell.selection, "sent", grade, fell.undo)!;
     expect(sent.selection).toBeNull();
