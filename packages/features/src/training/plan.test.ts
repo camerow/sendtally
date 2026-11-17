@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Plan } from "@sendtally/api-client";
 import type { Workout } from "@sendtally/core/hang";
 import {
+  claimedPlan,
   nextOccurrence,
   occurrencesOn,
   withoutBlock,
@@ -346,7 +347,9 @@ describe("days edited partway through a block", () => {
 
 describe("a planned workout done on another day of its week", () => {
   const status = (date: string, sessions: LoggedSession[], p: Plan = plan, id = "m1") =>
-    occurrencesOn(p, workout, sessions, date, TODAY).find((o) => o.membership.id === id)?.status;
+    occurrencesOn(claimedPlan(p, workout, sessions), workout, sessions, date, TODAY).find(
+      (o) => o.membership.id === id
+    )?.status;
 
   it("done early, moves to the day it was done, done there", () => {
     const early = [logged({ date: "2026-11-09" })];

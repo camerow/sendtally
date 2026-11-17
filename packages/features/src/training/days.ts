@@ -2,7 +2,13 @@ import type { Activity, HangSessionRecord, Plan, SessionRow } from "@sendtally/a
 import { addDays, type CalendarDate, type Focus, type WorkoutKind } from "@sendtally/core/hang";
 import { utcDate } from "../log-session/transforms";
 import { isUnscored } from "../sessions/meta";
-import { occurrencesOn, type LoggedSession, type Occurrence, type WorkoutLookup } from "./plan";
+import {
+  claimedPlan,
+  occurrencesOn,
+  type LoggedSession,
+  type Occurrence,
+  type WorkoutLookup,
+} from "./plan";
 
 /** Something logged on a training day. */
 export type LoggedItem =
@@ -55,6 +61,19 @@ export function loggedSessions(log: Omit<TrainingLog, "plan" | "workout">): Logg
   ];
 }
 
+// ponytail: one remembered log, enough while screens read one log at a time; key on more if
+// two logs ever alternate.
+let lastRead: { log: TrainingLog; logged: LoggedSession[]; plan: Plan } | null = null;
+
+/** What a log's days read: what was logged, and the plan with the moves those logs claim. */
+function readOf(log: TrainingLog): { logged: LoggedSession[]; plan: Plan } {
+  if (lastRead?.log !== log) {
+    const logged = loggedSessions(log);
+    lastRead = { log, logged, plan: claimedPlan(log.plan, log.workout, logged) };
+  }
+  return lastRead;
+}
+
 export function trainingDay(
   log: TrainingLog,
   date: CalendarDate,
@@ -75,7 +94,7 @@ export function trainingDay(
         .filter((a) => a.date === date)
         .map((activity): LoggedItem => ({ kind: "activity", activity })),
     ],
-    plans: occurrencesOn(log.plan, log.workout, loggedSessions(log), date, today),
+    plans: occurrencesOn(readOf(log).plan, log.workout, readOf(log).logged, date, today),
   };
 }
 

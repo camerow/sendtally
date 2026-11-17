@@ -434,6 +434,45 @@ describe("connector", () => {
     expect(await toolJson(other, "get_plan")).toEqual({ blocks: [], outsideBlocks: [] });
   });
 
+  it("lists a planned workout done on another day of its week as moved there, as the app shows it", async () => {
+    const user = "user_claims";
+    await put(user, "/v1/workouts/w1", {
+      kind: "strength",
+      name: "Back squat",
+      description: "",
+      minutes: 45,
+      targetRpe: 8,
+      items: [{ exercise: "Back squat", doses: [{ sets: 5, reps: 5, weightKg: 100 }] }],
+    });
+    await put(user, "/v1/memberships/m1", {
+      workoutId: "w1",
+      blockId: null,
+      weekdays: [1],
+      start: "2026-11-02",
+    });
+    await put(user, "/v1/activities/a1", {
+      kind: "strength",
+      title: "Back squat",
+      date: "2026-11-16",
+      startTime: "18:30",
+      minutes: 50,
+      rpe: 7,
+      notes: null,
+      workoutId: "w1",
+      membershipId: "m1",
+      week: null,
+      focus: null,
+      done: [],
+    });
+    const plan = await toolJson<{ outsideBlocks: Array<{ skippedOrMoved: unknown[] }> }>(
+      user,
+      "get_plan"
+    );
+    expect(plan.outsideBlocks[0]?.skippedOrMoved).toEqual([
+      { plannedOn: "2026-11-17", kind: "move", movedTo: "2026-11-16", reason: null, byLog: true },
+    ]);
+  });
+
   const CSV = [
     "date,session,location,gym,climb,grade,kind,tries,climb_notes",
     "2026-09-01,Tuesday night session,indoor,,Crimp line,V4,send,2,Felt strong",

@@ -12,6 +12,7 @@ import { z } from "zod";
 import * as repo from "./repo";
 import type { ClimbGrade, SessionRow, UserClimbRow } from "./repo";
 import { gradeSchema } from "./manual";
+import { isHolder } from "./holders";
 import { tagSlug } from "./tags";
 
 export const MAX_CLIMB_NAME_LENGTH = 200;
@@ -378,10 +379,6 @@ export function regradedSessions(
 ): RegradedSession[] {
   return rewrittenSessions(sessions, records, climbId, (c) => withGrade(c, grade));
 }
-
-/** The untitled session a climb added on its own is filed in. */
-const isHolder = (s: ScorableSession): boolean =>
-  s.source === "manual" && (s.name ?? "").trim() === "" && s.rpe_source === "none";
 
 export type ClearedHolders = { emptied: string[]; trimmed: RegradedSession[] };
 

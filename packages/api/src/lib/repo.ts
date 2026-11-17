@@ -3172,6 +3172,47 @@ export type PlanRows = {
   membershipDays: MembershipDaysRow[];
 };
 
+export type PlanLogRows = {
+  climbs: Pick<SessionRow, "start_at" | "membership_id" | "source" | "name" | "rpe_source">[];
+  hangs: { date: string; membership_id: string | null; workout_id: string }[];
+  activities: Pick<ActivityRow, "kind" | "date" | "membership_id" | "workout_id">[];
+};
+
+// The day and plan of everything logged, which the plan reads for the moves a log claims.
+export async function planLogRows(db: D1Database, userId: string): Promise<PlanLogRows> {
+  const d = drizzle(db);
+  const [climbs, hangs, logged] = await d.batch([
+    d
+      .select({
+        start_at: sessions.start_at,
+        membership_id: sessions.membership_id,
+        source: sessions.source,
+        name: sessions.name,
+        rpe_source: sessions.rpe_source,
+      })
+      .from(sessions)
+      .where(eq(sessions.user_id, userId)),
+    d
+      .select({
+        date: hangSessions.date,
+        membership_id: hangSessions.membership_id,
+        workout_id: hangSessions.workout_id,
+      })
+      .from(hangSessions)
+      .where(eq(hangSessions.user_id, userId)),
+    d
+      .select({
+        kind: activities.kind,
+        date: activities.date,
+        membership_id: activities.membership_id,
+        workout_id: activities.workout_id,
+      })
+      .from(activities)
+      .where(eq(activities.user_id, userId)),
+  ]);
+  return { climbs, hangs, activities: logged };
+}
+
 // Everything the plan reads, in one round trip.
 export async function planRows(db: D1Database, userId: string): Promise<PlanRows> {
   const d = drizzle(db);
