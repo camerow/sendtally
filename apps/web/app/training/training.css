@@ -1254,9 +1254,9 @@
   gap: 5px;
 }
 
-/* A hang load fits "+102.5 lb" whatever it holds, so every grip's loads line up in one column. */
+/* A hang load fits "+102.5" whatever it holds, so every grip's loads line up in one column. */
 .set-fields--hangs .set-joiner + .number-field .number-field-box {
-  min-width: 88px;
+  min-width: 78px;
   justify-content: center;
   font-variant-numeric: tabular-nums;
 }

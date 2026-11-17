@@ -12,6 +12,8 @@ export type KeypadFieldProps = FieldSlot & {
   label: string;
   /** A small box sized to its value with no label shown, for a value in a table row. */
   compact?: boolean;
+  /** A compact box this wide whatever its value, so a column of them lines up. */
+  width?: number;
   /** A small box filling its table column, gold when `marked`. Implies no label, like `compact`. */
   cell?: { marked: boolean };
   /** Amber: a value short of what was asked, such as a set cut short. */
@@ -55,6 +57,7 @@ export const keypadFieldLabel = {
 export function KeypadField({
   label,
   compact = false,
+  width,
   cell,
   short = false,
   note,
@@ -173,6 +176,7 @@ export function KeypadField({
               borderRadius: 8,
               borderWidth: open ? 2 : 1,
             },
+            compact && width !== undefined && { width },
             short && !open && { backgroundColor: SHORT, borderWidth: 1.5, borderColor: AMBER_LINE },
             cell !== undefined && {
               flex: 1,

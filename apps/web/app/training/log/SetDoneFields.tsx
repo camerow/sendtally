@@ -84,7 +84,7 @@ export function SetDoneFields({
           onChange={(n) => onChange({ ...set, weightKg: fromUnit(n, unit) })}
           mode={weightLimits}
           {...(hangs && kg !== undefined && { display: hangLoadValue(kg, unit) })}
-          {...(!(hangs ? toUnit(kg ?? 0, unit) === 0 : unitless) && { unit })}
+          {...(!unitless && !(hangs && toUnit(kg ?? 0, unit) === 0) && { unit })}
         />
       )}
       {(reps || weight) && hold && <Joiner mark="·" />}
