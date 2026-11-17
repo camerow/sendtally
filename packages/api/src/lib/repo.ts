@@ -3026,7 +3026,7 @@ export async function saveActivity(
   const ofRun = and(eq(hangSessions.user_id, userId), eq(hangSessions.activity_id, id));
   const shared = {
     date: a.date,
-    ...(a.workoutId === null ? {} : { workout_id: a.workoutId }),
+    workout_id: a.workoutId ?? "",
     membership_id: a.membershipId,
     week: a.week,
     focus: a.focus,
@@ -3046,17 +3046,12 @@ export async function saveActivity(
           protocol_json: JSON.stringify(part.protocol),
           done_json: JSON.stringify(part.done),
         };
-  const [rows, ...rest] = await d.batch([
+  const [rows, , parts] = await d.batch([
     d
       .insert(activities)
       .values({ user_id: userId, id, ...fields, created_at: now })
       .onConflictDoUpdate({ target: [activities.user_id, activities.id], set: fields })
       .returning(),
-    ...addExercises(
-      d,
-      userId,
-      a.done.map((e) => ({ name: e.exercise, kind: a.kind, measure: measureOf(a.kind, e.sets) }))
-    ),
     part === null
       ? d.delete(hangSessions).where(ofRun)
       : own === null
@@ -3067,7 +3062,6 @@ export async function saveActivity(
               user_id: userId,
               id: crypto.randomUUID(),
               activity_id: id,
-              workout_id: a.workoutId ?? "",
               ...shared,
               ...own,
               created_at: now,
@@ -3077,8 +3071,12 @@ export async function saveActivity(
               set: { ...shared, ...own },
             }),
     d.select().from(hangSessions).where(ofRun),
+    ...addExercises(
+      d,
+      userId,
+      a.done.map((e) => ({ name: e.exercise, kind: a.kind, measure: measureOf(a.kind, e.sets) }))
+    ),
   ]);
-  const parts = rest.at(-1) as HangSessionRow[];
   return { activity: only(rows), part: parts[0] ?? null };
 }
 

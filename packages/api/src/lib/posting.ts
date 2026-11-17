@@ -205,9 +205,11 @@ export async function syncActivityToStrava(
   ]);
   const { units } = settingsOf(hangSettings);
   const part = partRow === null ? null : hangSessionOf(partRow);
-  const names = new Map<string, string>();
-  for (const g of part === null ? [] : new Set([part.gripId, ...part.done.map((d) => d.exercise)]))
-    names.set(g, await gripName(env, userId, g));
+  const grips =
+    part === null ? [] : [...new Set([part.gripId, ...part.done.map((d) => d.exercise)])];
+  const names = new Map(
+    await Promise.all(grips.map(async (g) => [g, await gripName(env, userId, g)] as const))
+  );
   const fingers = part === null ? [] : partLines(part, (g) => names.get(g) ?? g, units);
   return post(env, connection, {
     activityId: row.strava_activity_id,

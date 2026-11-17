@@ -122,6 +122,8 @@ describe("a workout's fingerboard part", () => {
     await save(userId, { ...run, fingerboard });
     const moved = await save(userId, { ...run, date: "2026-11-17", rpe: 9 });
     expect(moved.part).toMatchObject({ date: "2026-11-17", rpe: 9, pct: 100, gripId: "half" });
+    const unlinked = await save(userId, { ...run, workoutId: null });
+    expect(unlinked.part?.workoutId).toBe("");
     const removed = await save(userId, { ...run, fingerboard: null });
     expect(removed.part).toBeNull();
     expect((await hang(userId)).parts).toEqual([]);
