@@ -91,6 +91,7 @@ export function milestoneRows(
 }
 
 export type GripSessionVM = {
+  /** What the row opens: the session, or a fingerboard part's activity. */
   id: string;
   load: string;
   /** "Sep 25 · 20 mm · 10s × 6" */
@@ -102,12 +103,12 @@ export type GripSessionVM = {
 
 /** Every session in a grip's series newest first, each marked when it set a best. */
 export function gripSessionRows(
-  series: readonly HangRun[],
+  series: readonly (HangRun & { activityId?: string })[],
   all: readonly HangRun[],
   unit: WeightUnit
 ): GripSessionVM[] {
   return [...series].reverse().map((s) => ({
-    id: s.id,
+    id: s.activityId ?? s.id,
     load: loadLabel(s.protocol.kind, s.loadKg, unit),
     meta: `${dayMonth(s.date)} · ${gripSetupLabel(setupOf(s))} × ${s.protocol.reps * s.protocol.sets}`,
     completion: `${s.pct}%`,

@@ -221,9 +221,9 @@ export function hangGrids(session: HangRun): HangGripGrid[] {
  * time: the first is the session itself; a later grip runs the dose it saved, at its edge and top
  * load, complete when it held every hang it asked.
  */
-export function gripRuns(session: GripRun): GripRun[] {
+export function gripRuns<T extends GripRun>(session: T): T[] {
   const { done } = session;
-  return hangSessionItems(session).flatMap(({ exercise, dose }, item) => {
+  return hangSessionItems(session).flatMap(({ exercise, dose }, item): T[] => {
     if (item === 0) return [session];
     const sets = done.find((d) => d.item === item)?.sets ?? [];
     if (sets.length === 0) return [];
@@ -231,14 +231,13 @@ export function gripRuns(session: GripRun): GripRun[] {
     return [
       {
         ...session,
-        id: `${session.id}:${item}`,
         gripId: exercise,
         protocol: doseProtocol(session.protocol.name, dose),
         edgeMm: sets[0]?.edgeMm ?? dose.edgeMm ?? 0,
         loadKg: Math.max(...grid.loads),
         pct: grid.total === 0 ? 0 : Math.round((100 * grid.held) / grid.total),
         done: [{ item: 0, exercise, sets }],
-      },
+      } as T,
     ];
   });
 }

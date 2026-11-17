@@ -4,6 +4,7 @@ import { setLocale } from "../i18n";
 import { libraryOf } from "../workouts/library";
 import type { LibraryWorkout } from "../workouts/types";
 import { hangModel, hangsWithParts, hangWorkoutOf, renameClash } from "./model";
+import { canCompareGrips, compareGrips, gripMeta, gripSessionRows, newBestOf } from "./progress";
 
 afterEach(() => setLocale("en"));
 
@@ -187,5 +188,88 @@ describe("setup", () => {
     expect(m.sessions.map((s) => s.id)).toEqual(["p1", "h1"]);
     expect(hangsWithParts({ sessions: [session], parts: [part] })).toEqual(m.sessions);
     expect(m.setup(m.workout("rep73")!, "half")).toEqual({ edgeMm: 20, loadKg: 6 });
+  });
+});
+
+describe("a later grip, read as a run of that grip", () => {
+  const protocol = {
+    name: "Max hangs",
+    kind: "hang" as const,
+    hangS: 10,
+    restS: 0,
+    reps: 1,
+    sets: 2,
+    setRestS: 180,
+  };
+  const open = (weightKg: number, reps = 1) => ({
+    item: 1,
+    exercise: "open",
+    dose: { sets: 2, reps: 1, onS: 10, edgeMm: 20 },
+    sets: [
+      { reps: 1, onS: 10, edgeMm: 20, weightKg },
+      { reps, onS: 10, edgeMm: 20, weightKg },
+    ],
+  });
+  const record = {
+    workoutId: "rep73",
+    gripId: "half",
+    edgeMm: 20,
+    loadKg: 4,
+    pct: 100,
+    misses: 0,
+    rpe: null,
+    protocol,
+    membershipId: null,
+    week: null,
+    focus: null,
+    stravaActivityId: null,
+    postState: null,
+    postError: null,
+    updatedAt: "t",
+  };
+  const standalone = { ...record, id: "h1", date: "2026-10-01", done: [open(5)] };
+  const part = {
+    ...record,
+    id: "p1",
+    date: "2026-10-05",
+    workoutId: null,
+    activityId: "a1",
+    done: [open(8, 0)],
+  };
+  const m = model({ sessions: [standalone], parts: [part] });
+  const runs = m.sessions.filter((s) => s.gripId === "open");
+
+  it("counts in the grip's runs, newest first, a part's opening its activity", () => {
+    expect(runs.map((r) => [r.date, r.loadKg, r.pct])).toEqual([
+      ["2026-10-05", 8, 50],
+      ["2026-10-01", 5, 100],
+    ]);
+    expect(gripSessionRows([...runs].reverse(), m.sessions, "kg").map((r) => r.id)).toEqual([
+      "a1",
+      "h1",
+    ]);
+  });
+
+  it("gives the grip its last-used setup in the workout that ran it", () => {
+    expect(m.setup(m.workout("rep73")!, "open")).toEqual({ edgeMm: 20, loadKg: 5 });
+  });
+
+  it("names a best only from a run that held every hang", () => {
+    expect(gripMeta(m.sessions, "open", "2026-10-06", "kg").replace(/\s/g, " ")).toBe(
+      "Best +5 kg · 20 mm"
+    );
+    const later = { ...record, id: "h2", gripId: "open", date: "2026-10-08", loadKg: 6, done: [] };
+    expect(newBestOf(later, [...m.sessions, later], "Open hand", "kg")?.title).toBe(
+      "Open hand +6 kg"
+    );
+    const lighter = { ...later, id: "h3", loadKg: 5 };
+    expect(newBestOf(lighter, [...m.sessions, lighter], "Open hand", "kg")).toBeNull();
+  });
+
+  it("compares with the other grips on its setup", () => {
+    expect(canCompareGrips(m.sessions)).toBe(true);
+    expect(
+      compareGrips(m.sessions, { edgeMm: 20, hangS: 10 }, (id) => id).map((r) => r.gripId)
+    ).toEqual(["open", "half"]);
   });
 });

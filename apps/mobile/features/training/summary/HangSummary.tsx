@@ -52,7 +52,7 @@ export function HangSummary({
         <React.Fragment key={i}>
           <HangResultCard grid={grid} gripName={model.gripName(grid.gripId)} unit={unit} />
           <GripTrend
-            sessions={gripLoads(grid, all)}
+            sessions={gripLoads(grid, [...model.data.sessions, ...model.data.parts])}
             kind={grid.kind}
             currentId={session.id}
             unit={unit}

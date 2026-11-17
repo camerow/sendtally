@@ -18,6 +18,7 @@ import {
 } from "@sendtally/core/hang";
 import type { LibraryWorkout } from "../workouts/types";
 import { currentLibrary } from "../library/current";
+import { gripRuns } from "../activities/summary";
 import { builtInGripName } from "./names";
 
 /** Everything the hang timer reads, with built-in names in the user's language. */
@@ -83,7 +84,9 @@ export function hangWorkoutOf(
 export const hangsWithParts = (
   data: Pick<HangData, "sessions" | "parts">
 ): (HangSessionRecord | HangPart)[] =>
-  [...data.sessions, ...data.parts].sort((a, b) => b.date.localeCompare(a.date));
+  [...data.sessions, ...data.parts]
+    .flatMap((s) => gripRuns<HangSessionRecord | HangPart>(s))
+    .sort((a, b) => b.date.localeCompare(a.date));
 
 export function hangModel(data: HangData, all: readonly LibraryWorkout[]): HangModel {
   const workouts = all.flatMap((w) => hangWorkoutOf(w) ?? []);
