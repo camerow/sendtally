@@ -9,7 +9,10 @@ import { activityFromDraft, justLogged, newActivityDraft } from "@sendtally/feat
 import { ActivityForm } from "./ActivityForm";
 
 let mockPrevious: Partial<ActivityRecord>[] = [];
-const mockActions = { saveActivity: jest.fn(), deleteActivity: jest.fn() };
+const mockActions = {
+  saveActivity: jest.fn(async (): Promise<boolean> => true),
+  deleteActivity: jest.fn(async (): Promise<boolean> => true),
+};
 const mockWorkouts = { saveWorkout: jest.fn(), deleteWorkout: jest.fn() };
 
 jest.mock("../../../components/Sheet", () => ({
@@ -94,6 +97,21 @@ describe("Log activity", () => {
     expect(router.dismissAll).toHaveBeenCalled();
     expect(router.back).not.toHaveBeenCalled();
     expect(justLogged.read()).toEqual({ id: "a1", name: "Mobility" });
+  });
+
+  it("stays on the form with what is in it when the save fails", async () => {
+    jest.mocked(router.dismissAll).mockClear();
+    justLogged.clear();
+    mockActions.saveActivity.mockResolvedValueOnce(false);
+    await render(
+      <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={null} />
+    );
+    await fireEvent.press(screen.getByText("Mobility"));
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockActions.saveActivity).toHaveBeenCalled();
+    expect(router.dismissAll).not.toHaveBeenCalled();
+    expect(justLogged.read()).toBeNull();
+    expect(screen.getAllByText("Mobility").length).toBeGreaterThan(0);
   });
 
   it("reads a timed run's date, start and length, opening one in place to change it", async () => {
