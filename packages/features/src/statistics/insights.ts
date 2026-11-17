@@ -20,7 +20,7 @@ import { gripRuns } from "../activities/summary";
 import { kindLabel } from "../activities/format";
 import { TRAINED_KINDS, oneDecimal } from "./overview";
 import { workoutsDone, type WorkoutsDoneVM } from "./workouts";
-import { workloadVM, type WorkloadVM } from "./workloadView";
+import { WORKLOAD_WINDOWS, workloadVM, type WorkloadVM } from "./workloadView";
 
 /** Where a record opens: a climbing session by fingerprint, anything trained by id. */
 export type DoneRef = { type: "session" | "activity"; id: string; name: string };
@@ -292,6 +292,6 @@ export function trainingInsightsVM(
     ].join(" · "),
     exercises: groups.filter((g) => g.rows.length > 0),
     workouts: workoutsDone(log, within, kinds),
-    workload: workloadVM(all, range, now),
+    workload: workloadVM(all, WORKLOAD_WINDOWS[0], now),
   };
 }

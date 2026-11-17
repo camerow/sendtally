@@ -61,6 +61,8 @@ export {
   type WorkloadTileVM,
   WORKLOAD_TICKS,
   workloadVM,
+  WORKLOAD_WINDOWS,
+  type WorkloadWeeks,
   workloadZoneLabel,
   type WorkloadLeftOutVM,
   type WorkloadVM,

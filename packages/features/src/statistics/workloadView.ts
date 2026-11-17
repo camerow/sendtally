@@ -1,7 +1,6 @@
 import { colors, effortScale } from "@sendtally/design/tokens";
 import { formatDate, formatNumber, t, type MessageKey } from "../i18n";
-import { DAY_MS, bucketsFor, dayStart, wallClock, windowOf, yearOfMs } from "../trends/buckets";
-import type { TrendRange } from "../trends/types";
+import { DAY_MS, dayStart, wallClock, yearOfMs } from "../trends/buckets";
 import type { Point } from "./chartGeometry";
 import type { Done, DoneRef } from "./insights";
 import {
@@ -270,27 +269,24 @@ function sentence(w: Workload, zone: WorkloadZone | null): string {
   return t("statistics.workloadBreakLine");
 }
 
-/** The days a range plots: one a day on 7D and 1M, one a week beyond, ending today. */
-function plotDays(range: TrendRange, now: Date, first: number | null): number[] {
-  const { start, end } = windowOf(bucketsFor(range, now, first));
-  const step = range === "7d" || range === "1m" ? DAY_MS : 7 * DAY_MS;
-  const last = Math.min(dayStart(wallClock(now)), end - DAY_MS);
-  const from = range === "1m" ? last - 27 * DAY_MS : start;
-  const days: number[] = [];
-  for (let d = last; d >= from; d -= step) days.unshift(d);
-  return days;
-}
+/** The windows the card offers, in weeks back from today. */
+export const WORKLOAD_WINDOWS = [4, 8, 12] as const;
+
+export type WorkloadWeeks = (typeof WORKLOAD_WINDOWS)[number];
+
+/** One day a point over the last `weeks` weeks, ending today. */
+const plotDays = (weeks: WorkloadWeeks, today: number): number[] =>
+  Array.from({ length: weeks * 7 }, (_, i) => today - (weeks * 7 - 1 - i) * DAY_MS);
 
 const enough = (points: readonly (number | null)[]): boolean =>
   points.filter((p) => p !== null).length >= MIN_POINTS;
 
-/** The workload card and its sheet: today's ratio and zone, the line over the range, and the loads behind it. */
-export function workloadVM(done: readonly Done[], range: TrendRange, now: Date): WorkloadVM {
+/** The workload card and its sheet: today's ratio and zone, the line over the window, and the loads behind it. */
+export function workloadVM(done: readonly Done[], weeks: WorkloadWeeks, now: Date): WorkloadVM {
   const today = dayStart(wallClock(now));
   const w = workloadOn(done, today);
   const zone = w.state === "ratio" && w.ratio !== null ? workloadZone(w.ratio) : null;
-  const first = done.length === 0 ? null : Math.min(...done.map((d) => d.at));
-  const days = plotDays(range, now, first);
+  const days = plotDays(weeks, today);
   const lastWeek = done.filter((d) => d.at >= today - 6 * DAY_MS && d.at < today + DAY_MS);
   const left = lastWeek.filter((d) => loadOf(d) === null).sort((a, b) => b.at - a.at);
   const said = sentence(w, zone);

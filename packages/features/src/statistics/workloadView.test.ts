@@ -21,7 +21,7 @@ const steady = Array.from({ length: 42 }, (_, i) => i)
 
 describe("workloadVM", () => {
   it("states a ratio and its zone in words, with the division in the sheet", () => {
-    const vm = workloadVM(steady, "7d", now);
+    const vm = workloadVM(steady, 4, now);
     expect(vm).toMatchObject({ state: "ratio", ratio: "1.00", zone: "sweet", acute: "1,080" });
     expect(vm.sentence).toBe("In line with your last four weeks.");
     expect(vm.sheet.footer).toBe("1,080 ÷ 1,080 = 1.00 · Sweet spot");
@@ -32,45 +32,64 @@ describe("workloadVM", () => {
   });
 
   it("scales the bars and the average line against the tallest of them", () => {
-    const vm = workloadVM([...steady, rec(0), rec(1), rec(2)], "7d", now);
+    const vm = workloadVM([...steady, rec(0), rec(1), rec(2)], 4, now);
     expect(vm.sheet.weeks.map((w) => w.height)).toEqual([0.5, 0.5, 0.5, 1]);
     expect(vm.sheet.averageAt).toBeCloseTo(1350 / 2160);
-    expect(workloadVM([], "7d", now).sheet).toMatchObject({ averageAt: 0 });
+    expect(workloadVM([], 4, now).sheet).toMatchObject({ averageAt: 0 });
   });
 
-  it("plots a point a day on 7D and 1M and a week beyond", () => {
+  it("plots a point a day over the window, ending today", () => {
     const year = Array.from({ length: 700 }, (_, i) => i)
       .filter((i) => i % 7 < 3)
       .map((i) => rec(i));
-    expect(workloadVM(year, "7d", now).points).toHaveLength(7);
-    expect(workloadVM(year, "1m", now).points).toHaveLength(28);
-    expect(workloadVM(year, "3m", now).points).toHaveLength(13);
-    expect(workloadVM(year, "y2026", now)).toMatchObject({ from: "Jan 5" });
-    expect(workloadVM(year, "y2026", now).points).toHaveLength(46);
-    expect(workloadVM(year, "1y", now)).toMatchObject({ from: "Dec 1, 2025" });
-    expect(workloadVM(year, "1y", now).points).toHaveLength(51);
+    expect(workloadVM(year, 4, now)).toMatchObject({ from: "Oct 20" });
+    expect(workloadVM(year, 4, now).points).toHaveLength(28);
+    expect(workloadVM(year, 8, now).points).toHaveLength(56);
+    expect(workloadVM(year, 12, now)).toMatchObject({ from: "Aug 25" });
+    expect(workloadVM(year, 12, now).points).toHaveLength(84);
+  });
+
+  it("keeps a long history to the window, whatever came before it", () => {
+    const cluster = (from: number, weeks: number): Done[] =>
+      Array.from({ length: weeks * 7 }, (_, i) => from - i)
+        .filter((d) => d % 7 < 3)
+        .map((d) => rec(d));
+    const unscored = Array.from({ length: 80 }, (_, i) => rec(i * 61 + 5, null, 0, `u${i}`));
+    const history = [
+      rec(Math.round((today - Date.UTC(2012, 0, 3)) / DAY_MS), null, 0, "first"),
+      ...cluster(1300, 30),
+      ...cluster(140, 20),
+      ...unscored,
+    ];
+    for (const weeks of [4, 8, 12] as const) {
+      const vm = workloadVM(history, weeks, now);
+      expect(vm.points).toHaveLength(weeks * 7);
+      expect(vm.from).not.toMatch(/20\d\d/);
+      expect(vm.state).toBe("partial");
+      expect(vm.points.filter((p) => p !== null).length).toBeGreaterThan(weeks * 4);
+    }
   });
 
   it("plots only ratios the card would state, and words alone under four of them", () => {
     const sparse = [0, 10, 20, 30, 40, 50, 60, 70, 80].map((d) => rec(d));
-    const vm = workloadVM(sparse, "3m", now);
+    const vm = workloadVM(sparse, 12, now);
     expect(vm).toMatchObject({ state: "few", headline: "3 counted" });
     expect(vm.sentence).toBe("Too few sessions in the last four weeks to compare.");
     expect(vm.points).toEqual([]);
     const thinned = [...steady.filter((d) => d.at < today - 27 * DAY_MS), rec(0), rec(9)];
-    const thin = workloadVM(thinned, "3m", now);
+    const thin = workloadVM(thinned, 12, now);
     expect(thin.state).toBe("few");
     expect(thin.points).toEqual([]);
   });
 
   it("breaks the line where there is no ratio", () => {
-    const points = workloadVM(steady, "1m", now).points;
+    const points = workloadVM(steady, 4, now).points;
     expect(points.slice(0, 13).every((p) => p === null)).toBe(true);
     expect(points.at(-1)).toBe(1);
   });
 
   it("withholds the zone and lists what was left out, newest first", () => {
-    const vm = workloadVM([...steady, rec(1, null), rec(2, 7, 0, "climb")], "7d", now);
+    const vm = workloadVM([...steady, rec(1, null), rec(2, 7, 0, "climb")], 4, now);
     expect(vm).toMatchObject({
       state: "partial",
       ratio: null,
@@ -89,7 +108,7 @@ describe("workloadVM", () => {
   });
 
   it("counts the first days and has no average week yet", () => {
-    const vm = workloadVM([rec(11)], "7d", now);
+    const vm = workloadVM([rec(11)], 4, now);
     expect(vm).toMatchObject({
       state: "early",
       headline: "Day 12 of 28",
@@ -154,13 +173,13 @@ describe("doneOf", () => {
 
   it("counts a form-logged climbing session by its duration", () => {
     expect(load("duration")).toMatchObject({ rpe: 6, minutes: 90 });
-    const vm = workloadVM([...steady, load("duration")!], "7d", now);
+    const vm = workloadVM([...steady, load("duration")!], 4, now);
     expect(vm.sheet.leftOut).toEqual([]);
   });
 
   it("leaves out a climbing session with no times as missing its time", () => {
     expect(load("none")).toMatchObject({ minutes: 0 });
-    const vm = workloadVM([...steady, load("none")!], "7d", now);
+    const vm = workloadVM([...steady, load("none")!], 4, now);
     expect(vm.sheet.leftOut.map((l) => [l.ref.type, l.missing])).toEqual([["session", "time"]]);
   });
 });
