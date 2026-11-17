@@ -10,7 +10,7 @@ import {
   setKeyOf,
   shortOf,
 } from "@sendtally/features/activities";
-import { heldSet } from "@sendtally/features/hang";
+import { heldSet } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { useFieldOrder } from "../../../components/useFieldOrder";
 import { confirmDestructive } from "../../../lib/confirmDestructive";

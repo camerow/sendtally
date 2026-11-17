@@ -100,7 +100,6 @@ function timeText(seconds: number, unit: TimeUnit): string {
   return unit === "min" ? clock(seconds, true) : t("hang.seconds", { n: seconds });
 }
 
-/** "6 × 7s on / 3s off · 6 sets · 3:00 rest" */
 /** A protocol's parts in order, "6 × 7s on / 3s off", "3 sets", "2:00 rest", which a summary joins. */
 export function protocolParts(p: Protocol, units: TimeUnits): string[] {
   const setRest = timeText(p.setRestS, units.setRestS);
@@ -117,6 +116,7 @@ export function protocolParts(p: Protocol, units: TimeUnits): string[] {
   return [core, t("hang.partSets", { sets: p.sets }), t("hang.partRest", { setRest })];
 }
 
+/** "6 × 7s on / 3s off · 6 sets · 3:00 rest" */
 export const protocolSummary = (p: Protocol, units: TimeUnits): string =>
   protocolParts(p, units).join(" · ");
 

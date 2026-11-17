@@ -2,8 +2,6 @@ import type { Dose, HangSetup, ItemDone, SessionItem, SetDone } from "@sendtally
 import { heldSet, percentOf } from "@sendtally/core/hang";
 import { keptSets, setKeyOf } from "../activities/done";
 
-export { heldSet };
-
 /** What a hang review saves: the sets that held anything and are not off; hang rows have no tick. */
 export const keptHangs = (done: readonly ItemDone[], off: readonly string[]): ItemDone[] =>
   keptSets(done, [

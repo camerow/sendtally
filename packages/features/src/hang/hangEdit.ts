@@ -1,12 +1,13 @@
 import {
   hangSessionItems,
+  heldSet,
   type HangSession,
   type HangSetup,
   type ItemDone,
   type SetDone,
 } from "@sendtally/core/hang";
 import { hangSets } from "../activities/summary";
-import { hangResult, heldSet, keptHangs, type HangItemSetup, type HangResult } from "./hangResult";
+import { hangResult, keptHangs, type HangItemSetup, type HangResult } from "./hangResult";
 
 /** Every grip's sets as an edit holds them, and the sets removed by hand. */
 export type HangEditSets = { done: ItemDone[]; off: string[] };
