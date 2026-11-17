@@ -136,7 +136,7 @@ export function doseSummary(
   const edge = dose.edgeMm ? t("hang.edgeMm", { n: dose.edgeMm }) : null;
   if (kind === "hangboard") {
     const p = doseProtocol("", dose);
-    return [protocolSummary(p, timeUnitsOf(p)), edge, weight].filter((x) => x !== null).join(" · ");
+    return separated([protocolSummary(p, timeUnitsOf(p)), edge, weight]);
   }
   const work = [
     dose.reps === undefined ? null : countText(dose.reps, dose.repsMax),
@@ -149,6 +149,14 @@ export function doseSummary(
       : `${countText(dose.sets, dose.setsMax)} × ${eachSide ? t("workouts.aSide", { value: done }) : done}`;
   return [main, weight, edge].filter((x) => x !== null).join(" · ");
 }
+
+/** Parts joined by " · ", a line breaking only at a separator so a value keeps its unit. */
+const separated = (parts: readonly (string | null)[]): string =>
+  parts
+    .filter((x) => x !== null)
+    .flatMap((x) => x.split(" · "))
+    .map((x) => x.replaceAll(" ", "\u00A0"))
+    .join(" · ");
 
 /** "RPE 8": the effort an exercise aims for, when it sets one. */
 export const exerciseTarget = ({ targetRpe }: Pick<Dose, "targetRpe">): string | undefined =>

@@ -70,7 +70,7 @@ export function SetDoneFields({
           compact
           label={`${label} · ${hangs ? t("plan.colHangs") : t("workouts.dose.reps")}`}
           short={short}
-          value={set.reps ?? null}
+          value={hangs && set.reps === 0 ? null : (set.reps ?? null)}
           onChange={(n) => onChange({ ...set, reps: n })}
           mode={{ kind: "number", step: 1, max: 1000 }}
         />
@@ -83,6 +83,7 @@ export function SetDoneFields({
           value={kg === undefined ? null : toUnit(kg, unit)}
           onChange={(n) => onChange({ ...set, weightKg: fromUnit(n, unit) })}
           mode={weightLimits}
+          {...(hangs && { chars: 6 })}
           {...(hangs && kg !== undefined && { display: hangLoadValue(kg, unit) })}
           {...(!unitless && !(hangs && toUnit(kg ?? 0, unit) === 0) && { unit })}
         />

@@ -87,7 +87,7 @@ export function SetDoneFields({
           {...(hangs && column !== undefined ? column : slot("reps"))}
           {...named(hangs ? t("plan.colHangs") : t("workouts.dose.reps"))}
           short={short}
-          value={set.reps ?? null}
+          value={hangs && set.reps === 0 ? null : (set.reps ?? null)}
           onChange={(n) => onChange({ ...set, reps: n })}
           step={1}
           max={1000}
