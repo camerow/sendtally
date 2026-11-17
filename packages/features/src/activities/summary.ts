@@ -166,7 +166,7 @@ type HangLog = Pick<HangSession, "protocol" | "pct" | "loadKg"> & {
  */
 export function hangSets({ protocol, pct, loadKg, done = [] }: HangLog): SetDone[] {
   const saved = done.find((d) => d.item === 0)?.sets;
-  if (saved !== undefined && saved.length > 0) return saved;
+  if (saved !== undefined) return saved;
   const held = Math.round((protocol.sets * protocol.reps * pct) / 100);
   return Array.from({ length: protocol.sets }, (_, s) => ({
     reps: Math.max(0, Math.min(protocol.reps, held - s * protocol.reps)),

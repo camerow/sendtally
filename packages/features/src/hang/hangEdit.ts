@@ -30,7 +30,7 @@ export function hangEditSets(session: Edited): HangEditSets {
 /**
  * What an edit saves. The first grip takes the edited grip and setup; every other grip keeps its
  * own. A grip the edit never held keeps its sets as saved, so no save drops one unseen. A grip's
- * dose saves back only where the session stored one: a shape read from kept sets is not a dose run.
+ * dose saves back where the session stored one, or where it holds no sets to read it from.
  */
 export function hangEditResult(
   session: Edited,
@@ -50,6 +50,8 @@ export function hangEditResult(
   const shown = new Set(edited.done.map((d) => d.item));
   const unseen = session.done.filter((d) => !shown.has(d.item));
   const stored = new Set(session.done.filter((d) => d.dose !== undefined).map((d) => d.item));
-  const done = result.done.map(({ dose, ...d }) => (stored.has(d.item) ? { ...d, dose } : d));
+  const done = result.done
+    .filter((d) => shown.has(d.item))
+    .map(({ dose, ...d }) => (stored.has(d.item) || d.sets.length === 0 ? { ...d, dose } : d));
   return { ...result, done: [...done, ...unseen].sort((a, b) => a.item - b.item) };
 }

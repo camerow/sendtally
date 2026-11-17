@@ -76,7 +76,7 @@ describe("a mix's fingerboard part", () => {
     expect(partHangs({ done: rows, setups, planned })).toBe(3);
   });
 
-  it("saves the sets that held, as the hang review saves a session, and nothing when none held", () => {
+  it("saves the sets that held, a grip that held none with its dose, and nothing when none held", () => {
     if (planned === null) throw new Error("no part");
     const done = [
       {
@@ -93,7 +93,9 @@ describe("a mix's fingerboard part", () => {
     expect(body).toMatchObject({ gripId: "half", edgeMm: 20, loadKg: 5, misses: 1 });
     expect(body?.done.map((d) => [d.exercise, d.sets.map((s) => s.reps)])).toEqual([
       ["half", [3, 2]],
+      ["open", []],
     ]);
+    expect(body?.done[1]?.dose).toMatchObject({ sets: 1, reps: 2, onS: 10 });
     const empty = done.map((d) => ({ ...d, sets: d.sets.map((s) => ({ ...s, reps: 0 })) }));
     expect(partBody({ done: empty, setups, planned })).toBeNull();
     expect(

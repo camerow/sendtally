@@ -99,7 +99,7 @@ export function partBody(part: PartRows): Fingerboard | null {
     { date: "", rpe: null, membershipId: null, week: null, focus: null, done: part.done, off: [] },
     ""
   );
-  if (s.done.length === 0) return null;
+  if (s.done.every((d) => d.sets.length === 0)) return null;
   const { gripId, edgeMm, loadKg, pct, misses, protocol, done } = s;
   return { gripId, edgeMm, loadKg, pct, misses, protocol, done };
 }

@@ -47,14 +47,22 @@ describe("hangEditResult", () => {
     expect(result.done.map((d) => d.exercise)).toEqual(["half", "open", "pinch"]);
   });
 
-  it("drops a grip whose every set the person removed", () => {
-    const result = hangEditResult(
-      session,
-      { ...hangEditSets(session), off: ["1:0", "1:1"] },
-      "half",
-      { edgeMm: 20, loadKg: 0 }
+  it("keeps a grip edited down to no held sets, with its dose, so its percentage holds on the next edit", () => {
+    const setup = { edgeMm: 20, loadKg: 0 };
+    const edited = hangEditSets(session);
+    const zeroed = edited.done.map((d) =>
+      d.item === 1 ? { ...d, sets: d.sets.map((s) => ({ ...s, reps: 0 })) } : d
     );
-    expect(result.done.map((d) => d.exercise)).toEqual(["half", "pinch"]);
+    const result = hangEditResult(session, { done: zeroed, off: [] }, "half", setup);
+    expect(result.pct).toBe(67);
+    expect(result.done.map((d) => [d.exercise, d.sets.length])).toEqual([
+      ["half", 2],
+      ["open", 0],
+      ["pinch", 2],
+    ]);
+    expect(result.done[1]?.dose).toMatchObject({ sets: 2, reps: 5, onS: 10 });
+    const saved = { ...session, pct: result.pct, done: result.done };
+    expect(hangEditResult(saved, hangEditSets(saved), "half", setup).pct).toBe(67);
   });
 
   it("reads a later grip against the dose it ran, so a set left out of the run stays unheld", () => {
