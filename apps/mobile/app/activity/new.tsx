@@ -14,13 +14,13 @@ import { ActivityForm } from "../../features/training/activity/ActivityForm";
 import { HangDataProvider } from "../../features/training/data/HangDataProvider";
 import { readPlanLink, readSession } from "@sendtally/features/training";
 import { useGrips } from "@sendtally/features/hang";
-import { livePartForm, usePrescribed } from "@sendtally/features/workouts";
+import { livePartForm, partEnded, usePrescribed } from "@sendtally/features/workouts";
 import { liveRun } from "../../features/live-session/liveRun";
 import { useApi } from "../../lib/api";
 
 // A plan or a library workout opens this with what it already knows: the kind, its title,
 // the day, itself and the plan it ran. What it prescribes starts as done, so the form
-// waits for it to load. A mix's grips are its fingerboard part: the rows its timer ended with
+// waits for it to load. A mix's grips are its fingerboard part: the sets it held
 // when it ran, and nothing when it is logged without running.
 export default function NewActivityScreen(): React.ReactElement {
   const params = useLocalSearchParams<ActivityPrefill & { live?: string }>();
@@ -30,7 +30,8 @@ export default function NewActivityScreen(): React.ReactElement {
   const [part] = React.useState(() => {
     const state = params.live === "1" ? liveRun.read()?.state : undefined;
     const fingers = state?.player === "sets" ? state.fingers : undefined;
-    return fingers !== undefined && "done" in fingers ? livePartForm(fingers) : undefined;
+    const rows = partEnded(fingers, grips.gripName);
+    return rows === undefined ? undefined : livePartForm(rows);
   });
   const prescribed = usePrescribed(
     api,

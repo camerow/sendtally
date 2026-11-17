@@ -6,7 +6,7 @@ import {
 } from "@sendtally/features/activities";
 import { readPlanLink, readSession } from "@sendtally/features/training";
 import { useGrips } from "@sendtally/features/hang";
-import { livePartForm, usePrescribed } from "@sendtally/features/workouts";
+import { livePartForm, partEnded, usePrescribed } from "@sendtally/features/workouts";
 import { useAppApi } from "../../lib/useAppApi";
 import { useLiveRunStore } from "../../lib/useLiveRun";
 import { useHangData } from "../data/HangDataContext";
@@ -25,13 +25,14 @@ export function NewActivityPage({
   const [id] = React.useState(() => crypto.randomUUID());
   const api = useAppApi();
   const store = useLiveRunStore();
-  const { isGrip } = useGrips(api);
-  // A mix's grips are its fingerboard part: the rows its timer ended with when it ran, and
+  const { isGrip, gripName } = useGrips(api);
+  // A mix's grips are its fingerboard part: the sets it held when it ran, and
   // nothing when it is logged without running.
   const [part] = React.useState(() => {
     const state = params.live === "1" ? store.read()?.state : undefined;
     const fingers = state?.player === "sets" ? state.fingers : undefined;
-    return fingers !== undefined && "done" in fingers ? livePartForm(fingers) : undefined;
+    const rows = partEnded(fingers, gripName);
+    return rows === undefined ? undefined : livePartForm(rows);
   });
   const prescribed = usePrescribed(
     api,

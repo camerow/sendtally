@@ -6,6 +6,7 @@ import {
   loggedPartForm,
   livePartForm,
   partBody,
+  partEnded,
   partHangs,
   partPlaces,
   partPlanned,
@@ -104,6 +105,23 @@ describe("a mix's fingerboard part", () => {
     expect(
       livePartForm({ done, setups, planned }).body(done, { edgeMm: 25, loadKg: 5 })
     ).toMatchObject({ edgeMm: 25 });
+  });
+
+  it("ends a part still in its timer on the sets it held so far, every grip in place", () => {
+    if (planned === null) throw new Error("no part");
+    const run = tick(
+      startWorkoutRun(
+        planned.items.map((i) => protocolOf(i.workout)),
+        [],
+        0
+      ),
+      20_000
+    );
+    const ended = partEnded({ run, setups, planned }, (id) => id);
+    expect(ended?.done.map((d) => d.exercise)).toEqual(["half", "open"]);
+    expect(partHangs(ended)).toBe(partHangs({ run, setups, planned }));
+    expect(partHangs(ended)).toBeGreaterThan(0);
+    expect(partEnded({ run, setups }, (id) => id)).toBeUndefined();
   });
 
   it("edits a logged part as it was saved, every grip keeping its own", () => {

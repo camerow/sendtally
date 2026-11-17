@@ -18,6 +18,7 @@ import { t } from "../i18n";
 import { NO_PLAN } from "../training/planLinkParams";
 import type { LiveRun } from "./liveRun";
 import { hangReview, hangReviewDraft, hangSessionOf } from "./hangReview";
+import { hangRunDone } from "./timerView";
 import type { TimerRun, WorkoutRun } from "./runParams";
 import type { PlannedRun } from "./usePlannedRun";
 
@@ -26,7 +27,8 @@ import type { PlannedRun } from "./usePlannedRun";
  * sets it held as editable rows (each grip by its id, a set never reached at no hangs), with
  * each grip's setup, the first the one its pill sets.
  */
-export type FingersPart = { run: Run<HangPhase>; setups: HangSetup[] } | PartRows;
+export type FingersPart =
+  { run: Run<HangPhase>; setups: HangSetup[]; planned?: PlannedRun } | PartRows;
 
 /** The part's rows once its timer ends, and what it ran, which its save reads. */
 export type PartRows = { done: ItemDone[]; setups: HangSetup[]; planned: PlannedRun };
@@ -82,6 +84,23 @@ export function partRows(
     ...d,
     exercise: review.grips[d.item] ?? d.exercise,
   }));
+}
+
+/**
+ * The part as its review opens it: the rows its timer ended with, or, when the run ends with the
+ * timer still going, the sets it held so far; none when it never ran.
+ */
+export function partEnded(
+  part: FingersPart | undefined,
+  gripName: (id: string) => string
+): PartRows | undefined {
+  if (part === undefined || !("run" in part)) return part;
+  const { run, setups, planned } = part;
+  if (planned === undefined) return undefined;
+  const grips = planned.items.map((i) => i.workout.grip);
+  const setup = (): HangSetup => setups[0] ?? { edgeMm: 0, loadKg: 0 };
+  const done = partRows(planned, hangRunDone(run, planned, grips, setups), { setup, gripName });
+  return { done, setups, planned };
 }
 
 /** What the part saves with its run: the sets it held, as the hang review saves a session. */

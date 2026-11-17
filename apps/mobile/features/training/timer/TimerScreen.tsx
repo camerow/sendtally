@@ -239,7 +239,7 @@ export function PartTimerScreen({ workoutId }: { workoutId: string }): React.Rea
       resumed={resumed}
       end={false}
       write={(timerRun, now) => {
-        if (timerRun.finished === null) keep({ run: timerRun, setups: now });
+        if (timerRun.finished === null) keep({ run: timerRun, setups: now, planned });
       }}
       onFinish={({ run: done }) => {
         if (done !== null)
