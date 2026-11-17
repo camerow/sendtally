@@ -12,9 +12,9 @@ export function GripSessions({ rows }: { rows: readonly GripSessionVM[] }): Reac
       <SectionHeading
         title={t("hang.history", { count: t("hang.sessionCount", { count: rows.length }) })}
       />
-      {rows.map((s) => (
+      {rows.map((s, i) => (
         <Link
-          key={s.id}
+          key={`${s.id}:${i}`}
           to={activityPath(s.id)}
           className="grip-session"
           aria-label={[

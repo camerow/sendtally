@@ -52,6 +52,7 @@ const activity = (date: string, over: Partial<Activity> = {}): Activity => ({
 });
 
 const log = {
+  hangParts: [],
   hangSessions: [
     hang("2026-10-20"),
     hang("2026-10-25", { id: "h-last", rpe: 9 }),
@@ -116,11 +117,11 @@ describe("workoutsDone", () => {
     expect(max?.sessions[2]).toEqual({
       id: "h-last",
       dateLabel: "Sun, Oct 25",
-      duration: "1m",
+      detail: "1m · 6 of 6 hangs",
       rpe: "RPE 9",
     });
     expect(max?.total).toBe(5);
-    expect(vm.category[0]?.rows[0]?.sessions[0]).toMatchObject({ duration: "1h 30m", rpe: null });
+    expect(vm.category[0]?.rows[0]?.sessions[0]).toMatchObject({ detail: "1h 30m", rpe: null });
   });
 
   it("counts the minutes of every grip a session ran, not only the first", () => {
@@ -132,9 +133,32 @@ describe("workoutsDone", () => {
     const three = hang("2026-10-26", {
       done: [grip(0, "half"), grip(1, "open"), grip(2, "pinch")],
     });
-    const row = workoutsDone({ hangSessions: [three], activities: [] }, october, TRAINED_KINDS)
-      .category[0]?.rows[0];
-    expect(row?.sessions[0]?.duration).toBe("3m");
+    const row = workoutsDone(
+      { hangSessions: [three], hangParts: [], activities: [] },
+      october,
+      TRAINED_KINDS
+    ).category[0]?.rows[0];
+    expect(row?.sessions[0]?.detail).toMatch(/^3m · /);
+  });
+
+  it("says the hangs a run's fingerboard part held beside its length", () => {
+    const run = activity("2026-10-27", {
+      id: "a-mix",
+      kind: "strength",
+      title: "Fingers and pull",
+    });
+    const part = {
+      ...hang("2026-10-27"),
+      activityId: "a-mix",
+      done: [{ item: 0, exercise: "half", sets: [{ reps: 6 }, { reps: 4 }] }],
+      protocol: { ...hang("2026-10-27").protocol, reps: 6, sets: 2 },
+    };
+    const row = workoutsDone(
+      { hangSessions: [], hangParts: [part], activities: [run] },
+      october,
+      TRAINED_KINDS
+    ).category[0]?.rows[0];
+    expect(row?.sessions[0]?.detail).toBe("1h 30m · 10 of 12 hangs");
   });
 
   it("knows a workout logged without one from the library by its title", () => {

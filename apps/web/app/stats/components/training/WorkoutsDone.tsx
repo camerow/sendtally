@@ -21,7 +21,7 @@ function Sessions({ row }: { row: WorkoutDoneVM }): React.ReactElement {
       {row.sessions.map((s) => (
         <Link key={s.id} to={activityPath(s.id)} className="workout-session">
           <span className="workout-session-date">{s.dateLabel}</span>
-          <span className="stats-meta">{s.duration}</span>
+          <span className="stats-meta">{s.detail}</span>
           <span className="workout-session-rpe">{s.rpe}</span>
         </Link>
       ))}

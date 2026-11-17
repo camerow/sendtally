@@ -15,9 +15,9 @@ export function GripSessions({ rows }: { rows: readonly GripSessionVM[] }): Reac
       <Label color={colors.gunmetal}>
         {t("hang.history", { count: t("hang.sessionCount", { count: rows.length }) })}
       </Label>
-      {rows.map((s) => (
+      {rows.map((s, i) => (
         <Pressable
-          key={s.id}
+          key={`${s.id}:${i}`}
           accessibilityRole="button"
           accessibilityLabel={[
             s.load,

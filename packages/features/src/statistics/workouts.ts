@@ -4,9 +4,11 @@ import {
   hangSessionSeconds,
   type CalendarDate,
   type Focus,
+  type HangRun,
   type WorkoutKind,
 } from "@sendtally/core/hang";
 import { kindLabel } from "../activities/format";
+import { hangTotals } from "../activities/summary";
 import { shortDate } from "../hang/format";
 import { t } from "../i18n";
 import { durationLabel } from "../sessions/years";
@@ -21,7 +23,8 @@ export type TrainedBy = "category" | "focus";
 export type WorkoutSessionVM = {
   id: string;
   dateLabel: string;
-  duration: string | null;
+  /** "52 min · 21 of 23 hangs": its length, and the hangs it held when it ran a fingerboard. */
+  detail: string | null;
   rpe: string | null;
 };
 
@@ -56,11 +59,21 @@ type Done = {
   date: CalendarDate;
   minutes: number;
   rpe: number | null;
+  /** Hangs held of those planned, for a hang session or a run with a fingerboard part. */
+  hangs: { held: number; total: number } | null;
 };
 
 export const focusKey = (focus: Focus | null): string => focus ?? "general";
 
-function workoutsOf(log: Pick<SessionLogWithClimbs, "hangSessions" | "activities">): Done[] {
+type Log = Pick<SessionLogWithClimbs, "hangSessions" | "hangParts" | "activities">;
+
+function workoutsOf(log: Log): Done[] {
+  const parts = new Map(log.hangParts.map((p) => [p.activityId, p]));
+  const hangsOf = (s: HangRun | undefined): Done["hangs"] => {
+    if (s === undefined) return null;
+    const { held, total } = hangTotals(s);
+    return { held, total };
+  };
   return [
     ...log.hangSessions.map((h): Done => {
       const name = hangTitle(h);
@@ -73,6 +86,7 @@ function workoutsOf(log: Pick<SessionLogWithClimbs, "hangSessions" | "activities
         date: h.date,
         minutes: Math.round(hangSessionSeconds(h) / 60),
         rpe: h.rpe,
+        hangs: hangsOf(h),
       };
     }),
     ...log.activities.map((a): Done => ({
@@ -84,6 +98,7 @@ function workoutsOf(log: Pick<SessionLogWithClimbs, "hangSessions" | "activities
       date: a.date,
       minutes: a.minutes,
       rpe: a.rpe,
+      hangs: hangsOf(parts.get(a.id)),
     })),
   ];
 }
@@ -106,7 +121,11 @@ function rowsOf(shown: readonly Done[], totals: ReadonlyMap<string, number>): Wo
         sessions: done.slice(0, 3).map((d) => ({
           id: d.id,
           dateLabel: shortDate(d.date),
-          duration: d.minutes > 0 ? durationLabel(d.minutes) : null,
+          detail:
+            [
+              ...(d.minutes > 0 ? [durationLabel(d.minutes)] : []),
+              ...(d.hangs === null ? [] : [t("summary.hangsOf", d.hangs)]),
+            ].join(" · ") || null,
           rpe: d.rpe === null ? null : `RPE ${d.rpe}`,
         })),
         total: totals.get(latest.key) ?? done.length,
@@ -116,7 +135,7 @@ function rowsOf(shown: readonly Done[], totals: ReadonlyMap<string, number>): Wo
 
 /** Every workout done in range, the most done first, grouped both by category and by focus. */
 export function workoutsDone(
-  log: Pick<SessionLogWithClimbs, "hangSessions" | "activities">,
+  log: Log,
   within: (ms: number) => boolean,
   kinds: readonly WorkoutKind[]
 ): WorkoutsDoneVM {
