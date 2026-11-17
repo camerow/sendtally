@@ -1,4 +1,4 @@
-import { claimedMoves } from "@sendtally/core/hang";
+import { claimedMoves, weekStart } from "@sendtally/core/hang";
 import * as repo from "../lib/repo";
 import {
   blockOf,
@@ -20,10 +20,9 @@ export const plan: ConnectorTool<typeof inputSchema> = {
   inputSchema,
   annotations: { readOnlyHint: true, destructiveHint: false },
   run: async (_args, { env, userId }) => {
-    const [rows, workouts, logs, library] = await Promise.all([
+    const [rows, workouts, library] = await Promise.all([
       repo.planRows(env.DB, userId),
       repo.listWorkouts(env.DB, userId),
-      repo.planLogRows(env.DB, userId),
       repo.library(env.DB, env.MEDIA_URL),
     ]);
     const workoutName = new Map(workouts.map((w) => [w.id, w.name]));
@@ -36,6 +35,15 @@ export const plan: ConnectorTool<typeof inputSchema> = {
     const membershipDays = rows.membershipDays.map(membershipDaysOf);
     const weekChanges = rows.weekChanges.map(weekChangeOf);
     const handMade = rows.planChanges.map(planChangeOf);
+    // A log claims within its week, so nothing logged before the week the plan starts can.
+    const starts = [
+      ...memberships.map((m) => m.start),
+      ...blocks.flatMap((b) => (b.start === null ? [] : [b.start])),
+    ].sort();
+    const logs =
+      starts[0] === undefined
+        ? { climbs: [], hangs: [], activities: [] }
+        : await repo.planLogRows(env.DB, userId, weekStart(starts[0]));
     const byLog = claimedMoves(
       { blocks, memberships, membershipDays, planChanges: handMade },
       (id) => kinds.get(id),

@@ -3,6 +3,7 @@ import { PostHog } from "posthog-node";
 import { describe, expect, it, vi } from "vitest";
 import type { Env } from "../src/bindings";
 import * as posthog from "../src/lib/posthog";
+import * as repo from "../src/lib/repo";
 import { testApp } from "./harness";
 
 type ToolResult = { isError?: boolean; content: Array<{ text: string }> };
@@ -471,6 +472,22 @@ describe("connector", () => {
     expect(plan.outsideBlocks[0]?.skippedOrMoved).toEqual([
       { plannedOn: "2026-11-17", kind: "move", movedTo: "2026-11-16", reason: null, byLog: true },
     ]);
+    await put(user, "/v1/activities/a0", {
+      kind: "strength",
+      title: "Back squat",
+      date: "2026-10-01",
+      startTime: "18:30",
+      minutes: 50,
+      rpe: 7,
+      notes: null,
+      workoutId: "w1",
+      membershipId: "m1",
+      week: null,
+      focus: null,
+      done: [],
+    });
+    const read = await repo.planLogRows(env.DB, user, "2026-11-02");
+    expect(read.activities.map((a) => a.date)).toEqual(["2026-11-16"]);
   });
 
   const CSV = [

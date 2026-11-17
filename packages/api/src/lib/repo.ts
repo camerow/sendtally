@@ -3178,8 +3178,12 @@ export type PlanLogRows = {
   activities: Pick<ActivityRow, "kind" | "date" | "membership_id" | "workout_id">[];
 };
 
-// The day and plan of everything logged, which the plan reads for the moves a log claims.
-export async function planLogRows(db: D1Database, userId: string): Promise<PlanLogRows> {
+// The day and plan of everything logged from `from` on, which the plan reads for the moves a log claims.
+export async function planLogRows(
+  db: D1Database,
+  userId: string,
+  from: string
+): Promise<PlanLogRows> {
   const d = drizzle(db);
   const [climbs, hangs, logged] = await d.batch([
     d
@@ -3191,7 +3195,7 @@ export async function planLogRows(db: D1Database, userId: string): Promise<PlanL
         rpe_source: sessions.rpe_source,
       })
       .from(sessions)
-      .where(eq(sessions.user_id, userId)),
+      .where(and(eq(sessions.user_id, userId), gte(sessions.start_at, from))),
     d
       .select({
         date: hangSessions.date,
@@ -3199,7 +3203,7 @@ export async function planLogRows(db: D1Database, userId: string): Promise<PlanL
         workout_id: hangSessions.workout_id,
       })
       .from(hangSessions)
-      .where(eq(hangSessions.user_id, userId)),
+      .where(and(eq(hangSessions.user_id, userId), gte(hangSessions.date, from))),
     d
       .select({
         kind: activities.kind,
@@ -3208,7 +3212,7 @@ export async function planLogRows(db: D1Database, userId: string): Promise<PlanL
         workout_id: activities.workout_id,
       })
       .from(activities)
-      .where(eq(activities.user_id, userId)),
+      .where(and(eq(activities.user_id, userId), gte(activities.date, from))),
   ]);
   return { climbs, hangs, activities: logged };
 }
