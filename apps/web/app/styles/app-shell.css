@@ -1197,6 +1197,19 @@
   .app-shell:has(.rest-strip) .app-content--live .log-menu-wrap--fab {
     bottom: calc(169px + env(safe-area-inset-bottom));
   }
+
+  /* A floating action button keeps 12px of room under the last row, so the end of a list scrolls clear of it. */
+  .app-content:has(.page-action-wrap, .log-menu-wrap--fab) {
+    padding-bottom: calc(153px + env(safe-area-inset-bottom));
+  }
+
+  .app-content--live:has(.page-action-wrap, .log-menu-wrap--fab) {
+    padding-bottom: calc(209px + env(safe-area-inset-bottom));
+  }
+
+  .app-shell:has(.rest-strip) .app-content--live:has(.page-action-wrap, .log-menu-wrap--fab) {
+    padding-bottom: calc(233px + env(safe-area-inset-bottom));
+  }
 }
 
 .option-rows {
