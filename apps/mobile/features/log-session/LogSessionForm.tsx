@@ -151,6 +151,7 @@ export function LogSessionForm({
   const setGym = (next: Gym | null): void => setDraft(withGym(draft, next));
   const [addingGym, setAddingGym] = React.useState(false);
   const [editingKey, setEditingKey] = React.useState<string | null>(null);
+  const [addedKey, setAddedKey] = React.useState<string | null>(null);
   const editingIndex = draft.climbs.findIndex((c) => c.key === editingKey);
   const editingClimb = editingIndex < 0 ? null : draft.climbs[editingIndex]!;
   const outdoor = draft.location === "outdoor";
@@ -221,6 +222,7 @@ export function LogSessionForm({
     const kind = readClimbKind(climbKindStorage, circuitChoices);
     const climb = nextFormClimb(draft, kind, gradePrefs, circuitChoices);
     setDraft({ ...draft, climbs: [...draft.climbs, climb] });
+    setAddedKey(climb.key);
     setEditingKey(climb.key);
   }
 
@@ -514,7 +516,10 @@ export function LogSessionForm({
               key={climb.key}
               climb={climb}
               project={isProject(climb)}
-              onPress={() => setEditingKey(climb.key)}
+              onPress={() => {
+                setAddedKey(null);
+                setEditingKey(climb.key);
+              }}
             />
           ))}
         </View>
@@ -556,6 +561,7 @@ export function LogSessionForm({
         climb={editingClimb}
         index={editingIndex}
         count={draft.climbs.length}
+        editing={editingKey !== addedKey}
         prefs={gradePrefs}
         gyms={circuitChoices}
         project={editingClimb === null ? false : isProject(editingClimb)}
