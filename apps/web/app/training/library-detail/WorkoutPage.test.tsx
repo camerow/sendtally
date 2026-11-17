@@ -51,7 +51,7 @@ const legs: WorkoutRecord = {
 };
 
 const library = (): WorkoutLibrary => {
-  const workouts = libraryOf([legs]);
+  const workouts = libraryOf([legs, { ...legs, id: "empty", items: [] }]);
   return {
     workouts,
     usage: new Map([["legs", { count: 3, last: "2026-11-10" }]]),
@@ -171,6 +171,12 @@ describe("WorkoutPage", () => {
     const rows = [...container.querySelectorAll(".preview-row-title")].map((r) => r.textContent);
     expect(rows).toEqual(["Back squat", "Deadlift"]);
     expect(container.querySelector(".rest-divider")?.textContent).toContain("3:00");
+  });
+
+  it("left empty on purpose, has no Exercises row", () => {
+    mount("empty");
+    expect(container.textContent).not.toContain("Exercises");
+    expect(container.textContent).not.toContain("No exercises");
   });
 
   it("duplicates into a copy that takes the original's place", async () => {

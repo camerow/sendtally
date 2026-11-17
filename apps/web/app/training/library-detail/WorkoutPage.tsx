@@ -95,22 +95,24 @@ function Detail({
       }
     >
       <LibraryIntro workout={workout} use={use} />
-      <section className="detail-section">
-        <SectionHeading title={t("workouts.exercises")} />
-        {next === undefined ? (
-          <BodyPreview
-            workout={workout}
-            unit={model.settings.units}
-            session={session}
-            tally={tallyMeasuresOf(
-              exercises.status === "ready" ? exercises.data : [],
-              workout.kind
-            )}
-          />
-        ) : (
-          <PreviewRow title={model.gripName(gripId)} detail="" note={lastUsed} />
-        )}
-      </section>
+      {workout.items.length > 0 && (
+        <section className="detail-section">
+          <SectionHeading title={t("workouts.exercises")} />
+          {next === undefined ? (
+            <BodyPreview
+              workout={workout}
+              unit={model.settings.units}
+              session={session}
+              tally={tallyMeasuresOf(
+                exercises.status === "ready" ? exercises.data : [],
+                workout.kind
+              )}
+            />
+          ) : (
+            <PreviewRow title={model.gripName(gripId)} detail="" note={lastUsed} />
+          )}
+        </section>
+      )}
       {next !== undefined && (
         <ProtocolPanel workout={next} minutes={workoutMinutes(workout, session)} />
       )}

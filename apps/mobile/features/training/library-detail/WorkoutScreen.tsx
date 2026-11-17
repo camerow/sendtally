@@ -160,23 +160,25 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
           day: <DayLine week={run.week} date={run.date} missed={missed} />,
         })}
       />
-      <View style={{ gap: 8 }}>
-        <Label color={colors.gunmetal}>{t("workouts.exercises")}</Label>
-        {next === undefined ? (
-          <BodyPreview
-            workout={workout}
-            unit={model.settings.units}
-            session={use?.count ?? 0}
-            tally={tallyMeasuresOf(
-              exercises.status === "ready" ? exercises.data : [],
-              workout.kind
-            )}
-            openExercise={openExercise}
-          />
-        ) : (
-          <PreviewRow title={model.gripName(gripId)} detail="" note={lastUsed} />
-        )}
-      </View>
+      {workout.items.length > 0 && (
+        <View style={{ gap: 8 }}>
+          <Label color={colors.gunmetal}>{t("workouts.exercises")}</Label>
+          {next === undefined ? (
+            <BodyPreview
+              workout={workout}
+              unit={model.settings.units}
+              session={use?.count ?? 0}
+              tally={tallyMeasuresOf(
+                exercises.status === "ready" ? exercises.data : [],
+                workout.kind
+              )}
+              openExercise={openExercise}
+            />
+          ) : (
+            <PreviewRow title={model.gripName(gripId)} detail="" note={lastUsed} />
+          )}
+        </View>
+      )}
       {next !== undefined && (
         <ProtocolPanel workout={next} minutes={workoutMinutes(workout, session)} />
       )}

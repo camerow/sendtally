@@ -103,6 +103,14 @@ describe("Hangboard workout", () => {
     expect(labels()).toEqual(["Exercises"]);
   });
 
+  it("left empty on purpose, has no Exercises row", async () => {
+    await renderWithHang(<WorkoutScreen id="empty" />, hangData(), {
+      workouts: [{ ...legs, id: "empty", items: [] }],
+    });
+    expect(screen.queryByText("Exercises")).toBeNull();
+    expect(screen.queryByText(/No exercises/)).toBeNull();
+  });
+
   it("lists its sessions after its exercises and over time, each opening its summary", async () => {
     await renderWithHang(<WorkoutScreen id="fingers-ab" />, hangData({ sessions: [logged] }));
     expect(labels()).toEqual(["Exercises", "Over time", "History · 1 session"]);
