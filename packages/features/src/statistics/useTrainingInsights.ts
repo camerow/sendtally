@@ -3,20 +3,25 @@ import type { SendtallyApi } from "@sendtally/api-client";
 import { queries, useQuery, type QueryState } from "../query";
 import type { TrendRange } from "../trends/types";
 import { trainingInsightsVM, type TrainingInsightsVM } from "./insights";
+import type { WorkloadWeeks } from "./workloadView";
 import type { WorkoutKind } from "@sendtally/core/hang";
 
 export function useTrainingInsights(
   api: SendtallyApi,
   range: TrendRange,
   kinds: readonly WorkoutKind[],
-  gripName: (id: string) => string
+  gripName: (id: string) => string,
+  workloadWeeks: WorkloadWeeks
 ): QueryState<TrainingInsightsVM> {
   const { state } = useQuery(queries.sessionsWithClimbs(api));
   return React.useMemo(
     (): QueryState<TrainingInsightsVM> =>
       state.status !== "ready"
         ? state
-        : { status: "ready", data: trainingInsightsVM(state.data, range, kinds, gripName) },
-    [state, range, kinds, gripName]
+        : {
+            status: "ready",
+            data: trainingInsightsVM(state.data, range, kinds, gripName, new Date(), workloadWeeks),
+          },
+    [state, range, kinds, gripName, workloadWeeks]
   );
 }

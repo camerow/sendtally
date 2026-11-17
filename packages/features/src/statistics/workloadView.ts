@@ -69,16 +69,14 @@ export type WorkloadPlot = {
   y: (ratio: number) => number;
   left: number;
   right: number;
-  /** Where a week with nothing logged sits, in its own lane under the plot. */
+  /** Where a day with nothing in its last 7 sits, in its own lane under the plot. */
   restY: number;
-  /** Runs of consecutive ratios above 0, each its own thin line. */
+  /** Runs of two or more consecutive ratios above 0, each its own line. */
   runs: Point[][];
-  dots: Point[];
-  /** Up to 3.2, smaller where weekly points crowd a phone so neighbours never touch. */
-  dotRadius: number;
-  /** Rest weeks, drawn as hollow dots in the rest lane. */
-  rest: Point[];
-  restRadius: number;
+  /** A ratio with no ratio either side, drawn as a 3px dot. */
+  lone: Point[];
+  /** Runs of rest days as bars in the rest lane, from and to x; a lone day has both the same. */
+  rest: [number, number][];
   /** Today's point, drawn in gold. */
   today: Point | null;
 };
@@ -106,8 +104,14 @@ export function workloadPlot(
     left + 6 + span * (points.length > 1 ? i / (points.length - 1) : 0.5);
   const at = (r: number, i: number): Point => [x(i), r === 0 ? restY : y(r)];
   const runs: Point[][] = [];
+  const rest: [number, number][] = [];
   let run: Point[] = [];
   points.forEach((r, i) => {
+    if (r === 0) {
+      const bar = rest.at(-1);
+      if (bar !== undefined && points[i - 1] === 0) bar[1] = x(i);
+      else rest.push([x(i), x(i)]);
+    }
     if (r === null || r === 0) {
       if (run.length > 0) runs.push(run);
       run = [];
@@ -115,17 +119,14 @@ export function workloadPlot(
   });
   if (run.length > 0) runs.push(run);
   const last = points.at(-1);
-  const dotRadius = Math.min(3.2, Math.max(1.5, span / Math.max(points.length - 1, 1) / 3));
   return {
     y,
     left,
     right,
     restY,
     runs: runs.filter((r) => r.length > 1),
-    dots: runs.flat(),
-    dotRadius,
-    restRadius: dotRadius * 0.72,
-    rest: points.flatMap((r, i): Point[] => (r === 0 ? [at(0, i)] : [])),
+    lone: runs.flatMap((r) => (r.length === 1 ? r : [])),
+    rest,
     today: last === null || last === undefined ? null : at(last, points.length - 1),
   };
 }
@@ -273,6 +274,10 @@ function sentence(w: Workload, zone: WorkloadZone | null): string {
 export const WORKLOAD_WINDOWS = [4, 8, 12] as const;
 
 export type WorkloadWeeks = (typeof WORKLOAD_WINDOWS)[number];
+
+/** A stored window, or 4 weeks when there is none or it is no longer offered. */
+export const workloadWeeksOf = (stored: string | null): WorkloadWeeks =>
+  WORKLOAD_WINDOWS.find((w) => String(w) === stored) ?? WORKLOAD_WINDOWS[0];
 
 /** One day a point over the last `weeks` weeks, ending today. */
 const plotDays = (weeks: WorkloadWeeks, today: number): number[] =>

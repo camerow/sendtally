@@ -1,7 +1,15 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
-import { WORKLOAD_TINTS, workloadZoneLabel, type WorkloadVM } from "@sendtally/features/statistics";
+import {
+  WORKLOAD_TINTS,
+  WORKLOAD_WINDOWS,
+  workloadWeeksOf,
+  workloadZoneLabel,
+  type WorkloadVM,
+  type WorkloadWeeks,
+} from "@sendtally/features/statistics";
 import { Icon } from "../../../components/Icon";
+import { Segmented } from "../../../components/Segmented";
 import { WorkloadChart } from "./WorkloadChart";
 import { WorkloadSheet } from "./WorkloadSheet";
 
@@ -40,7 +48,15 @@ function Weeks({ days }: { days: number }): React.ReactElement {
 }
 
 /** This week's load against the last four: the ratio and its zone in words, the line, and the loads behind it. */
-export function WorkloadCard({ workload: w }: { workload: WorkloadVM }): React.ReactElement {
+export function WorkloadCard({
+  workload: w,
+  weeks,
+  onWeeks,
+}: {
+  workload: WorkloadVM;
+  weeks: WorkloadWeeks;
+  onWeeks: (weeks: WorkloadWeeks) => void;
+}): React.ReactElement {
   const [open, setOpen] = React.useState(false);
   const average = w.chronic;
 
@@ -71,7 +87,19 @@ export function WorkloadCard({ workload: w }: { workload: WorkloadVM }): React.R
       {w.state === "early" ? (
         <Weeks days={w.daysLogged} />
       ) : w.points.length > 0 ? (
-        <WorkloadChart points={w.points} from={w.from} />
+        <>
+          <Segmented<`${WorkloadWeeks}`>
+            soft
+            label={t("statistics.workloadTitle")}
+            options={WORKLOAD_WINDOWS.map((n) => ({
+              value: `${n}`,
+              label: t("common.weekCount", { count: n }),
+            }))}
+            value={`${weeks}`}
+            onChange={(next) => onWeeks(workloadWeeksOf(next))}
+          />
+          <WorkloadChart points={w.points} from={w.from} weeks={weeks} />
+        </>
       ) : null}
       <div>
         <Row onClick={() => setOpen(true)}>

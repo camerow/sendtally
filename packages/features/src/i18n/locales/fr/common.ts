@@ -91,4 +91,6 @@ export const common = {
   "common.addedTo": "Ajouté à « {name} »",
   "common.view": "Voir",
   "common.copied": "Copié",
+  "common.weekCount_one": "{count} semaine",
+  "common.weekCount_other": "{count} semaines",
 } as const;

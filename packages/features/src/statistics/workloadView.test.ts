@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DAY_MS } from "../trends/buckets";
 import type { SessionWithClimbs } from "@sendtally/api-client";
 import { doneOf, type Done } from "./insights";
-import { workloadPlot, workloadVM } from "./workloadView";
+import { workloadPlot, workloadVM, workloadWeeksOf } from "./workloadView";
 
 const now = new Date(Date.UTC(2026, 10, 16, 20) + new Date().getTimezoneOffset() * 60_000);
 const today = Date.UTC(2026, 10, 16);
@@ -47,6 +47,13 @@ describe("workloadVM", () => {
     expect(workloadVM(year, 8, now).points).toHaveLength(56);
     expect(workloadVM(year, 12, now)).toMatchObject({ from: "Aug 25" });
     expect(workloadVM(year, 12, now).points).toHaveLength(84);
+  });
+
+  it("reads the stored window, 4 weeks when there is none or it is not offered", () => {
+    expect(workloadWeeksOf("8")).toBe(8);
+    expect(workloadWeeksOf("12")).toBe(12);
+    expect(workloadWeeksOf(null)).toBe(4);
+    expect(workloadWeeksOf("6")).toBe(4);
   });
 
   it("keeps a long history to the window, whatever came before it", () => {
@@ -126,28 +133,28 @@ describe("workloadPlot", () => {
     expect(plot.y(2) - plot.y(4)).toBeCloseTo(plot.y(1) - plot.y(2));
   });
 
-  it("spans 0.25 to 4.0 with nothing clipped and rest weeks in a lane below", () => {
+  it("spans 0.25 to 4.0 with nothing clipped and rest days in a lane below", () => {
     expect(plot.y(4)).toBe(10);
     expect(plot.y(0.1)).toBe(plot.y(0.25));
     expect(plot.restY).toBeGreaterThan(plot.y(0.25));
-    expect(plot.rest).toEqual([[expect.any(Number), plot.restY]]);
     for (const r of [0.3, 0.8, 1.3, 1.5, 3.9]) {
       expect(plot.y(r)).toBeGreaterThan(plot.y(4));
       expect(plot.y(r)).toBeLessThan(plot.y(0.25));
     }
   });
 
-  it("draws every point as a dot, joins runs, and breaks at gaps and rest weeks", () => {
-    expect(plot.dots).toHaveLength(6);
+  it("draws the line in runs that break at gaps and rest days, a lone day as a dot", () => {
     expect(plot.runs.map((r) => r.length)).toEqual([2]);
-    expect(plot.today).toEqual(plot.dots.at(-1));
+    expect(plot.lone.map(([, y]) => y)).toEqual([1, 4, 1.2, 0.1].map(plot.y));
+    expect(plot.today).toEqual([expect.any(Number), plot.y(0.1)]);
   });
 
-  it("shrinks the dots until neighbours on a crowded phone plot no longer touch", () => {
-    const year = Array.from({ length: 46 }, () => 1);
-    expect(workloadPlot(year, 900, 132).dotRadius).toBe(3.2);
-    const phone = workloadPlot(year, 300, 132);
-    expect(phone.dotRadius * 2).toBeLessThan((phone.dots[1]?.[0] ?? 0) - (phone.dots[0]?.[0] ?? 0));
+  it("draws each run of rest days as one bar in the rest lane", () => {
+    const rested = workloadPlot([1, 0, 0, 0, 1, 0, 1], 336, 132);
+    expect(rested.rest).toHaveLength(2);
+    const [long, lone] = rested.rest;
+    expect(long?.[1]).toBeGreaterThan(long?.[0] ?? Infinity);
+    expect(lone?.[0]).toBe(lone?.[1]);
   });
 
   it("puts today in the rest lane after a week with nothing logged", () => {

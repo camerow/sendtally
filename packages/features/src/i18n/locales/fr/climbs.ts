@@ -1,8 +1,6 @@
 export const climbs = {
   "climbs.addClimbHint": "Une voie à sa date, sans séance",
   "climbs.thisWeek": "Cette semaine",
-  "climbs.weekCount_one": "{count} semaine",
-  "climbs.weekCount_other": "{count} semaines",
   "climbs.attempts": "Essais",
   "climbs.took": "Durée",
   "climbs.running": "En cours",

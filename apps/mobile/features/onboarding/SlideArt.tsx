@@ -337,7 +337,7 @@ function BlocksArt({ play }: { play: Play }): React.ReactElement {
     <View style={{ ...CARD, gap: 10 }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         <Text style={TITLE}>{t("onboarding.art.fingerStrength")}</Text>
-        <Text style={MONO_LABEL}>{t("climbs.weekCount", { count: WEEKS.length })}</Text>
+        <Text style={MONO_LABEL}>{t("common.weekCount", { count: WEEKS.length })}</Text>
       </View>
       <View style={{ flex: 1, flexDirection: "row", gap: 10 }}>
         {WEEKS.map((load, i) => (

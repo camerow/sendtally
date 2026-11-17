@@ -231,6 +231,14 @@ describe("a workout's fingerboard part", () => {
     );
   });
 
+  it("plots the workload over its own window, whatever the range", () => {
+    const vm = (weeks: 4 | 8 | 12) =>
+      trainingInsightsVM(log, "all", TRAINED_KINDS, grip, NOW, weeks).workload;
+    expect(trainingInsightsVM(log, "all", TRAINED_KINDS, grip, NOW).workload).toEqual(vm(4));
+    expect(vm(12).sheet).toEqual(vm(4).sheet);
+    expect(vm(12).from).not.toBe(vm(4).from);
+  });
+
   const kindSessions = (vm: ReturnType<typeof trainingInsightsVM>): number =>
     vm.trained.reduce(
       (n, k) =>

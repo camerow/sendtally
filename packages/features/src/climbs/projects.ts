@@ -100,7 +100,7 @@ export function weeksBetween(fromIso: string, toIso: string): number {
 
 function spanLabel(weeks: number): string {
   if (weeks < 1) return t("climbs.thisWeek");
-  return t("climbs.weekCount", { count: weeks });
+  return t("common.weekCount", { count: weeks });
 }
 
 // Every session the climb appears in, oldest first: the attempts that went into

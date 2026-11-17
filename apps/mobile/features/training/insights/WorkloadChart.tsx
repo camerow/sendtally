@@ -16,13 +16,15 @@ import { type } from "../type";
 
 const HEIGHT = 132;
 
-/** The ratio over the range on a log axis against the four zones, rest weeks in their own lane, today in gold. */
+/** The ratio a day over the window on a log axis against the four zones, rest days in their own lane, today in gold. */
 export function WorkloadChart({
   points,
   from,
+  weeks,
 }: {
   points: readonly (number | null)[];
   from: string;
+  weeks: number;
 }): React.ReactElement {
   const [width, setWidth] = React.useState(0);
   const plot = workloadPlot(points, width, HEIGHT);
@@ -49,7 +51,7 @@ export function WorkloadChart({
             width={width}
             height={HEIGHT}
             accessible
-            accessibilityLabel={t("statistics.workloadChartLabel")}
+            accessibilityLabel={t("statistics.workloadChartLabel", { weeks })}
           >
             {bands.map((b) => (
               <Rect
@@ -86,23 +88,24 @@ export function WorkloadChart({
                 key={`${run[0]?.[0]}`}
                 points={polyline(run)}
                 fill="none"
-                stroke={colors.lineOnLightStrong}
-                strokeWidth={1.5}
+                stroke={colors.gunmetal}
+                strokeWidth={1.6}
                 strokeLinejoin="round"
               />
             ))}
-            {plot.dots.map(([x, y]) => (
-              <Circle key={x} cx={x} cy={y} r={plot.dotRadius} fill={colors.gunmetal} />
+            {plot.lone.map(([x, y]) => (
+              <Circle key={`l${x}`} cx={x} cy={y} r={1.5} fill={colors.gunmetal} />
             ))}
-            {plot.rest.map(([x, y]) => (
-              <Circle
-                key={`r${x}`}
-                cx={x}
-                cy={y}
-                r={plot.restRadius}
-                fill={colors.white}
+            {plot.rest.map(([x1, x2]) => (
+              <Line
+                key={`r${x1}`}
+                x1={x1}
+                x2={x2}
+                y1={plot.restY}
+                y2={plot.restY}
                 stroke={colors.gunmetal}
-                strokeWidth={1.5}
+                strokeWidth={2.4}
+                strokeLinecap="round"
               />
             ))}
             {plot.today !== null && (

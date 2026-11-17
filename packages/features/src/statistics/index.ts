@@ -10,6 +10,7 @@ export {
   type TrainingInsightsVM,
 } from "./insights";
 export { useTrainingInsights } from "./useTrainingInsights";
+export { useWorkloadWeeks } from "./useWorkloadWeeks";
 export {
   focusKey,
   pickedWorkouts,
@@ -62,6 +63,7 @@ export {
   WORKLOAD_TICKS,
   workloadVM,
   WORKLOAD_WINDOWS,
+  workloadWeeksOf,
   type WorkloadWeeks,
   workloadZoneLabel,
   type WorkloadLeftOutVM,
