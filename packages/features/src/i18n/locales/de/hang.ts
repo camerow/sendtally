@@ -12,8 +12,10 @@ export const hang = {
 
   "hang.summaryRepeats": "{reps} × {on} an / {off} Pause",
   "hang.summarySingle": "{on} hängen",
-  "hang.summaryHang": "{core} · {sets} Sätze · {setRest} Pause",
-  "hang.summaryPull": "{reps} Züge × {sets} Sätze · {setRest} zwischen Sätzen",
+  "hang.partPullSets": "{reps} Züge × {sets} Sätze",
+  "hang.partBetweenSets": "{setRest} zwischen Sätzen",
+  "hang.partSets": "{sets} Sätze",
+  "hang.partRest": "{setRest} Pause",
   "hang.summaryTimedPull": "{on} ziehen",
 
   "hang.untitledWorkout": "Workout ohne Namen",
