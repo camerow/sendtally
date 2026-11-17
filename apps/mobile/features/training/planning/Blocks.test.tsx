@@ -839,7 +839,7 @@ describe("week grid", () => {
             defaultGrip: (w) => w.grip,
             workout: () => undefined,
           },
-          { open: (m) => openMembership(m) }
+          { exercises: [], open: (m) => openMembership(m) }
         )}
       />
     );

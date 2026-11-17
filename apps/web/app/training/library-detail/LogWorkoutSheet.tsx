@@ -1,5 +1,5 @@
 import React from "react";
-import { useExerciseList } from "@sendtally/features/statistics";
+import { useExerciseList } from "@sendtally/features/exercises";
 import { useAppApi } from "../../lib/useAppApi";
 import { t } from "@sendtally/features/i18n";
 import { libraryPictures } from "@sendtally/features/library";

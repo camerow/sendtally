@@ -60,6 +60,7 @@ const library = (): WorkoutLibrary => {
 
 vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<typeof T_exercises>()),
+  useExerciseList: () => [],
   usePickerWorld: () => ({
     mine: [],
     grips: [],
@@ -75,7 +76,6 @@ vi.mock("@sendtally/features/workouts", async (actual) => ({
 vi.mock("@sendtally/features/statistics", async (actual) => ({
   ...(await actual<typeof T_statistics>()),
   useExercises: () => ({ state: { status: "ready", data: [] } }),
-  useExerciseList: () => [],
 }));
 vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
 vi.mock("../library/useLibrary", async (actual) => ({

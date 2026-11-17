@@ -1,4 +1,5 @@
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
 import { useNavigate } from "react-router";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -43,6 +44,7 @@ function Section({
 /** Train › Blocks: what is active (running blocks, then plans in no block), then upcoming blocks, templates and completed ones. */
 export function BlocksList(): React.ReactElement {
   const { today, model } = useHangData();
+  const exercises = useExerciseList(useAppApi());
   const api = useAppApi();
   const loaded = usePlan(api);
   const { log } = useTrainingLog(api);
@@ -50,6 +52,7 @@ export function BlocksList(): React.ReactElement {
   const { plan, workout } = log;
   const { current, upcoming, templates, past } = blockGroups(plan.blocks, today);
   const ongoing = planGridRows(ongoingMembers(plan, today), workout, model, {
+    exercises,
     open: (m) => void navigate(workoutPath(m.workoutId)),
   });
   const weeks = (n: number): string => t("calendar.weeks", { count: n });

@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
@@ -50,10 +51,12 @@ function Section({
 /** Train > Blocks: what is active (running blocks, then plans in no block), then upcoming blocks, templates and completed ones. */
 export function BlocksList(): React.ReactElement {
   const { today, model } = useHangData();
+  const exercises = useExerciseList(useApi());
   const { log } = useTrainingLog(useApi());
   const { plan, workout } = log;
   const { current, upcoming, templates, past } = blockGroups(plan.blocks, today);
   const ongoing = planGridRows(ongoingMembers(plan, today), workout, model, {
+    exercises,
     open: (m) => openMembership(m),
   });
   const weeks = (n: number): string => t("calendar.weeks", { count: n });

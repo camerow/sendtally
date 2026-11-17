@@ -1,4 +1,6 @@
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
+import { useApi } from "../../../lib/api";
 import type { DatedBlock, Membership } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -23,7 +25,9 @@ export type BlockCardProps = {
 /** A training block: where it is and what is in it. Tap to open it. */
 export function BlockCard({ block, members, workout }: BlockCardProps): React.ReactElement {
   const { model } = useHangData();
+  const exercises = useExerciseList(useApi());
   const rows = planGridRows(members, workout, model, {
+    exercises,
     open: (m) => openMembership(m, t("training.train")),
   });
   return (

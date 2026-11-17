@@ -22,7 +22,7 @@ import {
 import { dayMonth } from "../hang/format";
 import type { HangModel } from "../hang/model";
 import { t } from "../i18n";
-import { bodySummary, doseSummary } from "../workouts/library";
+import { bodySummary, doseSummary, type MeasuredExercises } from "../workouts/library";
 import { blockOfMembership } from "./plan";
 import { blockWeekColumns } from "./blockWeekDays";
 import { trainingDay, type TrainingLog } from "./days";
@@ -128,7 +128,8 @@ export function ladderView(
   model: HangModel,
   membershipId: string,
   turn: number,
-  today: CalendarDate
+  today: CalendarDate,
+  exercises: MeasuredExercises
 ): LadderView | null {
   const membership = plan.memberships.find((x) => x.id === membershipId);
   const block = membership === undefined ? null : blockOfMembership(plan, membership);
@@ -155,7 +156,7 @@ export function ladderView(
     lines:
       workout.kind === "hangboard"
         ? (bodySummary(workout)?.split(" · ") ?? [])
-        : workoutLines(workout, model),
+        : workoutLines(workout, model, exercises),
   };
 }
 

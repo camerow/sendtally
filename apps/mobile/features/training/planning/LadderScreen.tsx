@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { useExerciseList } from "@sendtally/features/exercises";
 import { Text, View } from "react-native";
 import { letterOf, type Dose } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
@@ -48,6 +49,7 @@ export type LadderScreenProps = {
  */
 export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElement | null {
   const { model, today } = useHangData();
+  const exercises = useExerciseList(useApi());
   const unit = model.settings.units;
   const { log } = useTrainingLog(useApi());
   const actions = usePlanActions();
@@ -56,7 +58,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
   const [turn, setTurn] = React.useState(0);
   const [open, setOpen] = React.useState<readonly number[]>([0]);
   const { plan } = draft;
-  const view = ladderView(plan, log, model, id, turn, today);
+  const view = ladderView(plan, log, model, id, turn, today, exercises);
   const library = useRunWorkout(view?.workout.id ?? null);
   if (view === null) return null;
   const { membership: m, block, workout: w, turns, items, current, ended, done, lines } = view;

@@ -70,10 +70,6 @@ vi.mock("../library/useLibrary", async (actual) => ({
   useLibrary: () => ({ state: { status: "ready", data: library() }, reload: vi.fn() }),
 }));
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
-vi.mock("@sendtally/features/statistics", async (actual) => ({
-  ...(await actual<object>()),
-  useExerciseList: () => [],
-}));
 vi.mock("../data/usePlanActions", () => ({ usePlanActions: () => ({}) }));
 vi.mock("../editor/useMake", () => ({ useMake: () => vi.fn() }));
 vi.mock("../data/HangDataContext", () => ({
@@ -85,6 +81,7 @@ vi.mock("@sendtally/features/workouts", async (actual) => ({
 }));
 vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<typeof T_exercises>()),
+  useExerciseList: () => [],
   usePickerWorld: () => ({
     mine: [exercise("e1", "Pull-ups"), exercise("e2", "Back squat")],
     grips: [],

@@ -34,7 +34,7 @@ const library = (): Library => {
 };
 
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
-vi.mock("@sendtally/features/statistics", async (actual) => ({
+vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<object>()),
   useExerciseList: () => [],
 }));

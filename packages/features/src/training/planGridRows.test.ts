@@ -25,7 +25,8 @@ describe("workoutLines", () => {
     expect(
       workoutLines(
         fingers(["half"]),
-        named(() => "Half crimp")
+        named(() => "Half crimp"),
+        []
       )
     ).toEqual(["Half crimp", "20 mm"]);
   });
@@ -41,19 +42,22 @@ describe("workoutLines", () => {
     expect(
       workoutLines(
         at(0),
-        named((id) => id)
+        named((id) => id),
+        []
       )
     ).toEqual(["half"]);
     expect(
       workoutLines(
         at(20, 15),
-        named((id) => id)
+        named((id) => id),
+        []
       )
     ).toEqual(["half"]);
     expect(
       workoutLines(
         at(20, 20),
-        named((id) => id)
+        named((id) => id),
+        []
       )
     ).toEqual(["half", "20 mm"]);
   });
@@ -62,7 +66,8 @@ describe("workoutLines", () => {
     expect(
       workoutLines(
         fingers(["half"]),
-        named((id) => id, "drag3")
+        named((id) => id, "drag3"),
+        []
       )
     ).toEqual(["drag3", "20\u00A0mm"]);
   });
@@ -71,9 +76,39 @@ describe("workoutLines", () => {
     expect(
       workoutLines(
         fingers(["half", "open", "half"]),
-        named((id) => id)
+        named((id) => id),
+        []
       )
     ).toEqual(["2 grips"]);
+  });
+});
+
+describe("a circuit", () => {
+  const laps: Workout = {
+    ...fingers([]),
+    kind: "climbing",
+    name: "Laps",
+    items: [{ exercise: "Circuit laps", doses: [{ sets: 3, reps: 40 }] }],
+  };
+  const circuit = [{ name: "Circuit laps", kind: "climbing", measure: "laps" }] as const;
+
+  it("reads laps of moves in the grid, as the exercise measures it", () => {
+    expect(
+      workoutLines(
+        laps,
+        named((id) => id),
+        circuit
+      )[0]
+    ).toBe("3 laps of 40 moves");
+    expect(
+      weekLines(
+        laps,
+        [{}],
+        named((id) => id),
+        "kg",
+        circuit
+      )[0]
+    ).toEqual([{ text: "3 laps of 40 moves" }]);
   });
 });
 
@@ -84,7 +119,8 @@ describe("weekLines", () => {
         fingers(["half"]),
         [{ weightKg: 8 }],
         named((id) => id),
-        "kg"
+        "kg",
+        []
       )
     ).toEqual([
       [{ text: "half" }],
@@ -101,7 +137,8 @@ describe("weekLines", () => {
         fingers(["half", "open"]),
         [{}, { sets: 3 }],
         named((id) => id),
-        "kg"
+        "kg",
+        []
       )
     ).toEqual([[{ text: "2 grips" }], [{ text: "1 changed", changed: true }]]);
   });

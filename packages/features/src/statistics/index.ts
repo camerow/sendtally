@@ -37,7 +37,7 @@ export {
   type ExerciseSummary,
 } from "./exercises";
 export { useExerciseSeries } from "./useExerciseSeries";
-export { useExerciseList, useExercises } from "./useExercises";
+export { useExercises } from "./useExercises";
 export { area, dots, paddedRange, plot, polyline, type Point } from "./chartGeometry";
 export { focusColor } from "./focusColors";
 export {

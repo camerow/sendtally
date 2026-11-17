@@ -1,5 +1,5 @@
 import React from "react";
-import { useExerciseList } from "@sendtally/features/statistics";
+import { useExerciseList } from "@sendtally/features/exercises";
 import type { Block, CalendarDate } from "@sendtally/core/hang";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";

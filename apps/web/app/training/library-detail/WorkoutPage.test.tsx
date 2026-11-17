@@ -75,7 +75,6 @@ vi.mock("./WorkoutOverTime", () => ({ WorkoutOverTime: () => null }));
 vi.mock("@sendtally/features/statistics", async (actual) => ({
   ...(await actual<typeof T_statistics>()),
   useExercises: () => ({ state: { status: "ready", data: [] } }),
-  useExerciseList: () => [],
 }));
 vi.mock("@sendtally/features/activities", async (actual) => ({
   ...(await actual<typeof T_activities>()),

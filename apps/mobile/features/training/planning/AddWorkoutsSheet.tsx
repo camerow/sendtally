@@ -1,7 +1,7 @@
 import { randomUUID } from "expo-crypto";
 import { router, useFocusEffect } from "expo-router";
 import React from "react";
-import { useExerciseList } from "@sendtally/features/statistics";
+import { useExerciseList } from "@sendtally/features/exercises";
 import type { Block, CalendarDate, WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { shortDate } from "@sendtally/features/hang";
