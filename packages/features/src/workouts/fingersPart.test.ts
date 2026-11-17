@@ -10,6 +10,8 @@ import {
   partPlaces,
   partPlanned,
   partRows,
+  partSetLine,
+  partTotal,
 } from "./fingersPart";
 import { liveRunSummary, type LiveRun, type RunState } from "./liveRun";
 import type { WorkoutRun } from "./runParams";
@@ -44,6 +46,7 @@ describe("a mix's fingerboard part", () => {
       ["half", 3, 2],
       ["open", 2, 1],
     ]);
+    expect(partTotal(planned!)).toBe(8);
     expect(partPlanned(run, partPlaces([pulls], isGrip))).toBeNull();
   });
 
@@ -152,6 +155,9 @@ describe("a mix's fingerboard part", () => {
       discardRunBody(live({ ...sets, fingers: { done: rows, setups, planned: planned } }))
     ).toBe("Its fingerboard part (5 hangs held) goes too.");
     expect(discardRunBody(live(sets))).toBe("Nothing from it is logged.");
+    expect(partSetLine(timerRun, planned, (id) => (id === "half" ? "Half crimp" : id))).toBe(
+      "Half crimp · Set 1 of 2"
+    );
     expect(liveRunSummary(live({ ...sets, fingers: { run: timerRun, setups } }))).toBe(
       "Fingerboard · Set 1 of 2"
     );

@@ -87,7 +87,6 @@ export function useActivityActions(
           async () => {
             const { id, ...input } = activity;
             const saved = await api.saveActivity(id, input);
-            // Its fingerboard part is read with the hangboard data and the log's sessions.
             if (input.fingerboard !== undefined)
               await Promise.all(
                 [queries.hang(api), queries.sessions(api), queries.sessionsWithClimbs(api)].map(

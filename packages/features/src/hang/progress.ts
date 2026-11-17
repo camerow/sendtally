@@ -113,7 +113,8 @@ export type GripSessionVM = {
 /**
  * A grip's hangs in one session, and its seconds under tension: each set's hangs held times its
  * hang length, or a lone hang's cut seconds where the set stored them. Hangs cut short in a set of
- * several store no seconds of their own, so only its full hangs count.
+ * several store no seconds of their own, so only its full hangs count. Its total is the dose it
+ * planned, which a series entry carries as its protocol: a set that held nothing is never saved.
  */
 export function gripHeld(s: HangRun): { held: number; total: number; seconds: number } {
   const sets = hangSets(s);

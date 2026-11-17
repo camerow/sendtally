@@ -185,7 +185,7 @@ function hangTrends(
 }
 
 /**
- * Each group's sessions and time, its bar its share of the time (Will, 2026-11-17), leaving out
+ * Each group's sessions and time, its bar its share of the time, leaving out
  * groups with neither. A record is one session under its own group; `minutesIn` gives each group
  * its time. With no time logged at all, the bar falls back to the sessions.
  */
@@ -218,7 +218,7 @@ function mix<K>(
   });
 }
 
-/** A run's time under its kind, but its fingerboard part's under Fingers (Will, 2026-11-16). */
+/** A run's time under its kind, but its fingerboard part's under Fingers. */
 const kindMinutes = (d: Done, kind: WorkoutKind): number =>
   (d.kind === kind ? d.minutes - d.fingers : 0) + (kind === "hangboard" ? d.fingers : 0);
 

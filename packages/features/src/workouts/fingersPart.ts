@@ -1,5 +1,7 @@
 import {
+  currentPhase,
   hangSessionItems,
+  type Dose,
   protocolDose,
   type HangKind,
   type HangPhase,
@@ -104,6 +106,27 @@ export function partBody(part: PartRows): Fingerboard | null {
   return { gripId, edgeMm, loadKg, pct, misses, protocol, done };
 }
 
+/** Each grip's dose, as the part runs it. */
+export const partDoses = (planned: PlannedRun): Dose[] =>
+  planned.items.map((i) => i.dose ?? protocolDose(i.workout));
+
+/** Hangs the part plans over every grip. */
+export const partTotal = (planned: PlannedRun): number =>
+  partDoses(planned).reduce((n, d) => n + d.sets * (d.reps ?? 1), 0);
+
+/** Where the part's timer is, "Half crimp · Set 2 of 3": its grip, and the set of that grip's sets. */
+export function partSetLine(
+  run: Run<HangPhase>,
+  planned: PlannedRun,
+  gripName: (id: string) => string
+): string {
+  const { item, set } = currentPhase(run);
+  const sets = Math.max(set, ...run.phases.filter((p) => p.item === item).map((p) => p.set));
+  const grip = planned.items[item]?.workout.grip;
+  const line = t("hang.setOf", { set, sets });
+  return grip === undefined ? line : `${gripName(grip)} · ${line}`;
+}
+
 /** Hangs the part held so far: the timer's hangs done while it runs, else its rows' hangs. */
 export const partHangs = (part: FingersPart | undefined): number =>
   part === undefined
@@ -137,7 +160,7 @@ export function livePartForm(part: PartRows): PartForm {
     done: part.done,
     setup: setups[0] ?? { edgeMm: 0, loadKg: 0 },
     kind: planned.items[0].workout.kind,
-    planned: planned.items.map((i) => i.dose ?? protocolDose(i.workout)),
+    planned: partDoses(planned),
     body: (done, setup) => partBody({ done, setups: [setup, ...setups.slice(1)], planned }),
   };
 }

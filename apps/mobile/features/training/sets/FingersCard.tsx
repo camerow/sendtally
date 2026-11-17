@@ -1,10 +1,17 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { currentPhase, protocolDose, type HangSetup, type WeightUnit } from "@sendtally/core/hang";
+import { protocolDose, type HangSetup, type WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { KIND_LOOK } from "@sendtally/features/training";
-import { doseSummary, partHangs, type PartInPlayer } from "@sendtally/features/workouts";
+import {
+  doseSummary,
+  partDoses,
+  partHangs,
+  partSetLine,
+  partTotal,
+  type PartInPlayer,
+} from "@sendtally/features/workouts";
 import { PartSets } from "../activity/PartSets";
 import { Button } from "../components/Button";
 import { type } from "../type";
@@ -31,10 +38,6 @@ export function FingersCard({
 }: FingersCardProps): React.ReactElement {
   const { planned, state } = part;
   const running = state !== undefined && "run" in state;
-  const total = planned.items.reduce((n, i) => {
-    const dose = i.dose ?? protocolDose(i.workout);
-    return n + dose.sets * (dose.reps ?? 1);
-  }, 0);
   const mark = (
     <View
       style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: KIND_LOOK.hangboard.ink }}
@@ -56,14 +59,14 @@ export function FingersCard({
         </Text>
         {state !== undefined && (
           <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-            {t("summary.hangsOf", { held: partHangs(state), total })}
+            {t("summary.hangsOf", { held: partHangs(state), total: partTotal(planned) })}
           </Text>
         )}
       </View>
       {state !== undefined && "done" in state ? (
         <PartSets
           done={state.done}
-          planned={planned.items.map((i) => i.dose ?? protocolDose(i.workout))}
+          planned={partDoses(planned)}
           setup={state.setups[0] ?? { edgeMm: 0, loadKg: 0 }}
           kind={planned.items[0].workout.kind}
           unit={unit}
@@ -93,7 +96,7 @@ export function FingersCard({
           ))}
           {running && (
             <Text style={[type.monoBold, { fontSize: 13, color: colors.gunmetal }]}>
-              {t("hang.setOf", { set: currentPhase(state.run).set, sets: state.run.sets })}
+              {partSetLine(state.run, planned, gripName)}
             </Text>
           )}
           <Button

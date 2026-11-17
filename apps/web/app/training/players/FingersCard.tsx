@@ -1,8 +1,15 @@
 import React from "react";
-import { currentPhase, protocolDose, type WeightUnit } from "@sendtally/core/hang";
+import { protocolDose, type WeightUnit } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { KIND_LOOK } from "@sendtally/features/training";
-import { doseSummary, partHangs, type PartInPlayer } from "@sendtally/features/workouts";
+import {
+  doseSummary,
+  partDoses,
+  partHangs,
+  partSetLine,
+  partTotal,
+  type PartInPlayer,
+} from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
 import { PartSets } from "../log/PartSets";
 
@@ -28,24 +35,20 @@ export function FingersCard({
 }: FingersCardProps): React.ReactElement {
   const { planned, state } = part;
   const running = state !== undefined && "run" in state;
-  const total = planned.items.reduce((n, i) => {
-    const dose = i.dose ?? protocolDose(i.workout);
-    return n + dose.sets * (dose.reps ?? 1);
-  }, 0);
   return (
     <section className="player-card">
       <div className="player-card-head">
         <h2 className="player-card-name">{t("workouts.fingerboard")}</h2>
         {state !== undefined && (
           <span className="player-card-meta">
-            {t("summary.hangsOf", { held: partHangs(state), total })}
+            {t("summary.hangsOf", { held: partHangs(state), total: partTotal(planned) })}
           </span>
         )}
       </div>
       {state !== undefined && "done" in state ? (
         <PartSets
           done={state.done}
-          planned={planned.items.map((i) => i.dose ?? protocolDose(i.workout))}
+          planned={partDoses(planned)}
           setup={state.setups[0] ?? { edgeMm: 0, loadKg: 0 }}
           kind={planned.items[0].workout.kind}
           unit={unit}
@@ -68,9 +71,7 @@ export function FingersCard({
             </div>
           ))}
           {running && (
-            <span className="player-dose">
-              {t("hang.setOf", { set: currentPhase(state.run).set, sets: state.run.sets })}
-            </span>
+            <span className="player-dose">{partSetLine(state.run, planned, gripName)}</span>
           )}
           <button type="button" className="detail-primary player-start" onClick={onStart}>
             <Icon name="play" size={16} strokeWidth={2.2} />
