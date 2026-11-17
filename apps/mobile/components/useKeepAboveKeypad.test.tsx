@@ -2,13 +2,18 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 import {
   Dimensions,
+  Keyboard,
+  type KeyboardEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   type ScrollView,
   type View,
 } from "react-native";
 import { keypadHeight } from "./Keypad";
+import { focusedInput } from "./TextInput";
 import { useKeepAboveKeypad } from "./useKeepAboveKeypad";
+
+jest.mock("./TextInput", () => ({ focusedInput: jest.fn() }));
 
 const windowHeight = Dimensions.get("window").height;
 const keypadTop = windowHeight - keypadHeight(0);
@@ -56,6 +61,22 @@ describe("useKeepAboveKeypad", () => {
     );
     await waitFor(() => expect(measured).toHaveBeenCalled());
     expect(scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("scrolls a focused text input the system keyboard would cover to just above it", async () => {
+    let shown: ((e: KeyboardEvent) => void) | undefined;
+    jest.spyOn(Keyboard, "addListener").mockImplementation(((
+      _event: string,
+      listener: (e: KeyboardEvent) => void
+    ) => {
+      shown = listener;
+      return { remove: () => {} };
+    }) as unknown as typeof Keyboard.addListener);
+    jest.mocked(focusedInput).mockReturnValue(fieldAt(600, 94) as never);
+    const { result, scrollTo } = await keep();
+    await act(() => result.current.onScroll(scrolledTo(300)));
+    await act(() => shown?.({ endCoordinates: { screenY: 500 } } as KeyboardEvent));
+    expect(scrollTo).toHaveBeenCalledWith({ y: 300 + 600 + 94 + 12 - 500, animated: true });
   });
 
   it("leaves room under the content as tall as the keypad", async () => {
