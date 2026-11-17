@@ -147,7 +147,7 @@ export function useTally({
   const settle = React.useCallback(
     (next: LogSessionDraft, at: Date): LogSessionDraft => {
       if (!setOver(next, at)) return next;
-      const ended = withSetEnded(next);
+      const ended = withSetEnded(next, at);
       if (ended.restS > 0) rest.tick("tally", ended.restS);
       return ended.draft;
     },
@@ -254,7 +254,7 @@ export function useTally({
     done: () => {
       if (draft === null) return;
       rest.skip();
-      live.replace(withExerciseDone(draft));
+      live.replace(withExerciseDone(draft, new Date()));
     },
   };
 }

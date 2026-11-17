@@ -1,7 +1,7 @@
 import type { SetClimb, SetDone } from "@sendtally/core/hang";
 import { t } from "../i18n";
 import { tallyDraft } from "./tally";
-import type { ClimbDraft, ExerciseTally, LogSessionDraft } from "./types";
+import type { ClimbDraft, ExerciseTally, LogSessionDraft, WallTime } from "./types";
 
 /** What an exercise's tally is started from: everything but where it has got to. */
 export type ExerciseTallyStart = Omit<ExerciseTally, "set" | "setStartedAt">;
@@ -36,7 +36,7 @@ export function startExercise(
   start: ExerciseTallyStart,
   now: Date
 ): LogSessionDraft {
-  const base = draft ?? tallyDraft(now);
+  const base = draft === null ? tallyDraft(now) : withExerciseDone(draft, now);
   return {
     ...base,
     startedAt: now.toISOString(),
@@ -49,7 +49,7 @@ export function wallLeft(ex: ExerciseTally, now: Date): number | null {
   if (ex.onS === undefined) return null;
   const started = Date.parse(ex.setStartedAt ?? "");
   if (Number.isNaN(started)) return ex.onS;
-  return Math.max(0, ex.onS - Math.floor((now.getTime() - started) / 1000));
+  return Math.min(ex.onS, Math.max(0, ex.onS - Math.floor((now.getTime() - started) / 1000)));
 }
 
 /** A grade picked in a time set that has not started starts its clock. */
@@ -75,22 +75,44 @@ export function setOver(draft: LogSessionDraft, now: Date): boolean {
   return ex.setStartedAt !== undefined && wallLeft(ex, now) === 0;
 }
 
+/** Only a set whose clock started gets a time on the wall. */
+function wallTimesAt(draft: LogSessionDraft, now: Date): WallTime[] | undefined {
+  const ex = draft.exercise;
+  const left = ex === undefined ? null : wallLeft(ex, now);
+  if (ex?.onS === undefined || ex.setStartedAt === undefined || left === null)
+    return draft.wallTimes;
+  return [...(draft.wallTimes ?? []), { item: ex.item, set: ex.set, onS: ex.onS - left }];
+}
+
 /** The set after, and the rest before it: none after the last. */
-export function withSetEnded(draft: LogSessionDraft): { draft: LogSessionDraft; restS: number } {
+export function withSetEnded(
+  draft: LogSessionDraft,
+  now: Date
+): { draft: LogSessionDraft; restS: number } {
   const ex = draft.exercise;
   if (ex === undefined) return { draft, restS: 0 };
   const { setStartedAt: _ended, ...rest } = ex;
   const set = ex.set + 1;
-  return { draft: { ...draft, exercise: { ...rest, set } }, restS: set > ex.sets ? 0 : ex.restS };
+  const wallTimes = wallTimesAt(draft, now);
+  return {
+    draft: {
+      ...draft,
+      exercise: { ...rest, set },
+      ...(wallTimes === undefined ? {} : { wallTimes }),
+    },
+    restS: set > ex.sets ? 0 : ex.restS,
+  };
 }
 
 /**
- * Done: the tally stops being the exercise's, keeping its climbs. A set left part way counts
- * as done, so the next Start resumes at the one after it.
+ * Done: the tally stops being the exercise's, keeping its climbs and the time the set being
+ * climbed spent on the wall. A set left part way counts as done, so the next Start resumes at
+ * the one after it.
  */
-export const withExerciseDone = (draft: LogSessionDraft): LogSessionDraft => {
+export const withExerciseDone = (draft: LogSessionDraft, now: Date): LogSessionDraft => {
   const { exercise: _done, ...rest } = draft;
-  return rest;
+  const wallTimes = wallTimesAt(draft, now);
+  return wallTimes === undefined ? rest : { ...rest, wallTimes };
 };
 
 /** "4x4s · Set 2 of 4 · 2 of 4 climbs", "ARC · Set 1 of 2 · 9 laps", or the set next while resting. */
@@ -144,12 +166,25 @@ export const setClimbOf = (c: ClimbDraft): SetClimb => ({
   ...(c.name.trim() === "" ? {} : { name: c.name.trim() }),
 });
 
-/** An item's climbs as the sets they went in, from the first to the last with a climb, each with its time on the wall. */
-export function exerciseSets(climbs: readonly ClimbDraft[], item: number, onS?: number): SetDone[] {
-  const mine = climbsOfItem(climbs, item);
+/**
+ * An item's climbs as the sets they went in, from the first to the last with a climb, each with
+ * its time on the wall: a set still running counts to `now`, and only a set with no clock at all
+ * takes the planned time.
+ */
+export function exerciseSets(
+  draft: LogSessionDraft,
+  item: number,
+  plannedS: number | undefined,
+  now: Date
+): SetDone[] {
+  const mine = climbsOfItem(draft.climbs, item);
   const last = Math.max(0, ...mine.map(setOf));
-  return Array.from({ length: last }, (_, i) => ({
-    ...(onS === undefined ? {} : { onS }),
-    climbs: mine.filter((c) => setOf(c) === i + 1).map(setClimbOf),
-  }));
+  const wallTimes = wallTimesAt(draft, now);
+  return Array.from({ length: last }, (_, i) => {
+    const onS = wallTimes?.find((w) => w.item === item && w.set === i + 1)?.onS ?? plannedS;
+    return {
+      ...(onS === undefined ? {} : { onS }),
+      climbs: mine.filter((c) => setOf(c) === i + 1).map(setClimbOf),
+    };
+  });
 }

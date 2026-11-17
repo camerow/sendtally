@@ -46,12 +46,12 @@ describe("exercise tally", () => {
     draft = climb(draft, "V4");
     expect(setOver(draft, NOW)).toBe(true);
 
-    const ended = withSetEnded(draft);
+    const ended = withSetEnded(draft, NOW);
     expect(ended.restS).toBe(240);
     expect(exerciseLine(ended.draft, true)).toBe("4x4s · Set 2 of 4 next");
     expect(ended.draft.climbs.map((c) => c.set)).toEqual([1, 1, 1, 1]);
 
-    const last = withSetEnded({ ...ended.draft, exercise: { ...fourByFours, set: 4 } });
+    const last = withSetEnded({ ...ended.draft, exercise: { ...fourByFours, set: 4 } }, NOW);
     expect(last.restS).toBe(0);
     expect(exerciseLine(last.draft, false)).toBe("4x4s · All sets done");
     expect(setOver(last.draft, NOW)).toBe(false);
@@ -59,7 +59,7 @@ describe("exercise tally", () => {
 
   it("keeps the climbs on Done and resumes at the set after the last one climbed", () => {
     let draft = climb(startExercise(null, fourByFours, NOW), "V4");
-    draft = withExerciseDone(draft);
+    draft = withExerciseDone(draft, NOW);
     expect(draft.exercise).toBeUndefined();
     expect(nextSet(draft.climbs, 0)).toBe(2);
 
@@ -85,7 +85,7 @@ describe("exercise tally", () => {
     expect(setOver(draft, at(1199))).toBe(false);
     expect(setOver(draft, at(1200))).toBe(true);
 
-    const ended = withSetEnded(draft);
+    const ended = withSetEnded(draft, NOW);
     expect(ended.restS).toBe(300);
     expect(ended.draft.exercise).toMatchObject({ set: 2 });
     expect(ended.draft.exercise?.setStartedAt).toBeUndefined();
@@ -102,7 +102,7 @@ describe("exercise tally", () => {
   it("groups the exercise's climbs by set, the current set first and each newest first", () => {
     let draft = startExercise(null, fourByFours, NOW);
     for (const grade of ["V4", "V3", "V4", "V2"]) draft = climb(draft, grade);
-    draft = climb(withSetEnded(draft).draft, "V4");
+    draft = climb(withSetEnded(draft, NOW).draft, "V4");
     draft = climb(draft, "V3");
     const groups = setGroups(draft);
     expect(groups.map((g) => g.label)).toEqual(["Set 2", "Set 1 · 4 of 4 climbs"]);
@@ -113,15 +113,45 @@ describe("exercise tally", () => {
   it("hands each item's climbs back as the sets they went in", () => {
     let draft = startExercise(null, arc, NOW);
     draft = climb(draft, "V1", "fell");
-    draft = climb(withSetEnded(draft).draft, "V2");
-    draft = climb(startExercise(withExerciseDone(draft), fourByFours, at(2000)), "V4");
-    expect(exerciseSets(draft.climbs, 1, 1200)).toEqual([
-      { onS: 1200, climbs: [{ grade: "V1", scale: "v", tries: 1, sent: false }] },
-      { onS: 1200, climbs: [{ grade: "V2", scale: "v", tries: 1, sent: true, style: "flash" }] },
+    draft = climb(withSetEnded(draft, NOW).draft, "V2");
+    draft = climb(startExercise(withExerciseDone(draft, NOW), fourByFours, at(2000)), "V4");
+    expect(exerciseSets(draft, 1, undefined, NOW)).toEqual([
+      { climbs: [{ grade: "V1", scale: "v", tries: 1, sent: false }] },
+      { climbs: [{ grade: "V2", scale: "v", tries: 1, sent: true, style: "flash" }] },
     ]);
-    expect(exerciseSets(draft.climbs, 0)).toEqual([
+    expect(exerciseSets(draft, 0, undefined, NOW)).toEqual([
       { climbs: [{ grade: "V4", scale: "v", tries: 1, sent: true, style: "flash" }] },
     ]);
-    expect(exerciseSets(draft.climbs, 5)).toEqual([]);
+    expect(exerciseSets(draft, 5, undefined, NOW)).toEqual([]);
+  });
+
+  it("logs each time set with the time spent on the wall, not the time planned", () => {
+    let draft = climb(withWallStarted(startExercise(null, arc, NOW), NOW), "V1");
+    draft = withSetEnded(draft, at(1200)).draft;
+    draft = climb(withWallStarted(draft, at(1500)), "V2");
+    draft = withExerciseDone(draft, at(1520));
+    expect(exerciseSets(draft, 1, 600, at(1600)).map((s) => s.onS)).toEqual([1200, 20]);
+  });
+
+  it("logs a set still on the wall when the run finishes with its time so far", () => {
+    const draft = climb(withWallStarted(startExercise(null, arc, NOW), NOW), "V1");
+    expect(exerciseSets(draft, 1, 1200, at(23)).map((s) => s.onS)).toEqual([23]);
+  });
+
+  it("keeps a running set's time on the wall when another exercise starts", () => {
+    let draft = climb(withWallStarted(startExercise(null, arc, NOW), NOW), "V1");
+    draft = climb(startExercise(draft, fourByFours, at(30)), "V4");
+    expect(exerciseSets(draft, 1, 1200, at(90)).map((s) => s.onS)).toEqual([30]);
+  });
+
+  it("never logs a negative time on the wall when the clock has moved back past the set's start", () => {
+    const draft = climb(withWallStarted(startExercise(null, arc, NOW), at(300)), "V1");
+    expect(wallLeft(draft.exercise!, NOW)).toBe(1200);
+    expect(exerciseSets(withExerciseDone(draft, NOW), 1, 600, NOW).map((s) => s.onS)).toEqual([0]);
+  });
+
+  it("logs the planned time for a set with no time on the wall kept, as a draft from before did", () => {
+    const draft = climb(startExercise(null, arc, NOW), "V1");
+    expect(exerciseSets(draft, 1, 1200, at(60)).map((s) => s.onS)).toEqual([1200]);
   });
 });
