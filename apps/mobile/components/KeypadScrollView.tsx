@@ -12,6 +12,7 @@ export type KeypadScrollViewProps = Omit<ScrollViewProps, "keyboardShouldPersist
 /**
  * A form's scroll view: text fields keep the system keyboard, and every number or time field
  * in it types on one keypad that lifts the field above itself and switches field on Next.
+ * A touch anywhere else in it closes the keypad, keeping what was typed, and still lands.
  */
 export function KeypadScrollView({
   onKeypadChange,
@@ -46,6 +47,10 @@ export function KeypadScrollView({
         onScroll={onScroll}
         scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
+        onTouchStart={(e) => {
+          if (open) request?.close();
+          props.onTouchStart?.(e);
+        }}
       >
         {children}
         {open && <View testID="keypad-room" style={{ height: room }} />}

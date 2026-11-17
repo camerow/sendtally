@@ -35,7 +35,7 @@ export type KeypadProps = {
   mode: KeypadMode;
   /** Seconds in time mode. The first digit typed replaces it. */
   value: number;
-  /** Done, Next and a tap outside all commit; an unchanged value is not committed. A range commits its top too. */
+  /** Done, Next, a tap outside and being hidden all commit; an unchanged value is not committed. A range commits its top too. */
   onCommit: (value: number, max?: number) => void;
   onClose: () => void;
   /** Shows a Next key that commits, closes and calls this. */
@@ -138,6 +138,15 @@ export function Keypad({
     finish();
     onClose();
   };
+  const latestFinish = React.useRef(finish);
+  React.useEffect(() => {
+    latestFinish.current = finish;
+  });
+  const wasVisible = React.useRef(visible);
+  React.useEffect(() => {
+    if (wasVisible.current && !visible) latestFinish.current();
+    wasVisible.current = visible;
+  }, [visible]);
   const reset = (): void => {
     setEntries((e) => ({ ...e, committed: true }));
     onClose();
