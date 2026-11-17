@@ -62,12 +62,13 @@ export function withLapAdded(draft: LogSessionDraft): LogSessionDraft {
   return { ...draft, exercise };
 }
 
-/** − Remove lap: the last lap goes while it is one added past the plan and holds nothing yet. */
+/** Remove lap: the last lap goes while it is one added past the plan and holds nothing yet. */
 export function lapRemovable(draft: LogSessionDraft): boolean {
   const ex = draft.exercise;
   if (ex === undefined) return false;
-  const planned = lapsPlanned(draft);
-  return planned > (ex.plannedSets ?? ex.sets) && lapsDone(draft).length < planned;
+  const last = lapsPlanned(draft) - 1;
+  const addedPastPlan = last >= (ex.plannedSets ?? ex.sets);
+  return addedPastPlan && lapsDone(draft)[last] === undefined;
 }
 
 export function withLapRemoved(draft: LogSessionDraft): LogSessionDraft {
