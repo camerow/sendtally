@@ -4,6 +4,9 @@ import { Keypad } from "./Keypad";
 import { KeypadHostContext, type KeypadHost, type KeypadRequest } from "./keypadHost";
 import { useKeepAboveKeypad } from "./useKeepAboveKeypad";
 
+/** How far a finger may drift and still tap, the same slop a press allows. */
+const TAP_SLOP = 10;
+
 export type KeypadScrollViewProps = Omit<ScrollViewProps, "keyboardShouldPersistTaps"> & {
   /** Told when the keypad comes up and goes down, to hide a pinned footer meanwhile. */
   onKeypadChange?: (open: boolean) => void;
@@ -12,7 +15,8 @@ export type KeypadScrollViewProps = Omit<ScrollViewProps, "keyboardShouldPersist
 /**
  * A form's scroll view: text fields keep the system keyboard, and every number or time field
  * in it types on one keypad that lifts the field above itself and switches field on Next.
- * A touch anywhere else in it closes the keypad, keeping what was typed, and still lands.
+ * A tap anywhere else in it closes the keypad, keeping what was typed, and still lands; a
+ * scroll leaves it up.
  */
 export function KeypadScrollView({
   onKeypadChange,
@@ -33,6 +37,7 @@ export function KeypadScrollView({
     []
   );
   const open = openId !== null;
+  const touch = React.useRef<{ x: number; y: number } | null>(null);
 
   React.useEffect(() => onKeypadChange?.(open), [open, onKeypadChange]);
   React.useEffect(() => {
@@ -48,8 +53,17 @@ export function KeypadScrollView({
         scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
         onTouchStart={(e) => {
-          if (open) request?.close();
+          touch.current = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY };
           props.onTouchStart?.(e);
+        }}
+        onTouchEnd={(e) => {
+          const from = touch.current;
+          touch.current = null;
+          const moved =
+            from === null ||
+            Math.hypot(e.nativeEvent.pageX - from.x, e.nativeEvent.pageY - from.y) > TAP_SLOP;
+          if (open && !moved) request?.close();
+          props.onTouchEnd?.(e);
         }}
       >
         {children}

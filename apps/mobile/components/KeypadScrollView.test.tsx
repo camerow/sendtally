@@ -5,7 +5,7 @@ import { KeypadScrollView } from "./KeypadScrollView";
 import { TimeField } from "./TimeField";
 
 describe("KeypadScrollView", () => {
-  it("closes the keypad on a touch outside it, keeps what was typed, and the touch still lands", async () => {
+  it("closes the keypad on a tap outside it, keeps what was typed, and the tap still lands; a scroll leaves it up", async () => {
     const onChange = jest.fn();
     const onTick = jest.fn();
     const onKeypadChange = jest.fn();
@@ -21,7 +21,13 @@ describe("KeypadScrollView", () => {
     await fireEvent.press(screen.getByLabelText("1"));
     expect(onKeypadChange).toHaveBeenLastCalledWith(true);
 
-    await fireEvent(screen.getByTestId("form"), "touchStart", {});
+    const at = (y: number) => ({ nativeEvent: { pageX: 100, pageY: y } });
+    await fireEvent(screen.getByTestId("form"), "touchStart", at(300));
+    await fireEvent(screen.getByTestId("form"), "touchEnd", at(260));
+    expect(onKeypadChange).toHaveBeenLastCalledWith(true);
+
+    await fireEvent(screen.getByTestId("form"), "touchStart", at(300));
+    await fireEvent(screen.getByTestId("form"), "touchEnd", at(303));
     await fireEvent.press(screen.getByText("Tick"));
 
     expect(onKeypadChange).toHaveBeenLastCalledWith(false);
@@ -37,7 +43,10 @@ describe("KeypadScrollView", () => {
       </KeypadScrollView>
     );
     await fireEvent.press(screen.getByLabelText("Rest"));
-    await fireEvent(screen.getByLabelText("Rest"), "touchStart", { stopPropagation: () => {} });
+    await fireEvent(screen.getByLabelText("Rest"), "touchStart", {
+      stopPropagation: () => {},
+      nativeEvent: { pageX: 0, pageY: 0 },
+    });
     expect(onKeypadChange).toHaveBeenLastCalledWith(true);
   });
 });
