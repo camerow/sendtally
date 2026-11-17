@@ -30,6 +30,7 @@ export function hangData(overrides: Partial<ApiHangData> = {}): ApiHangData {
     grips: [],
     defaultGrips: {},
     loads: {},
+    parts: [],
     sessions: [],
     settings: {
       units: "kg",

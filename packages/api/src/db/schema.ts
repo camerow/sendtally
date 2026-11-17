@@ -586,6 +586,8 @@ export const hangSessions = sqliteTable(
     week: integer("week"),
     focus: text("focus", { enum: FOCI }),
     done_json: text("done_json").notNull().default("[]"),
+    // The workout run this is the fingerboard part of; null for a session of its own.
+    activity_id: text("activity_id"),
     strava_activity_id: integer("strava_activity_id"),
     posted_at: text("posted_at"),
     post_state: text("post_state").$type<"pending" | "posted" | "failed">(),
@@ -596,6 +598,7 @@ export const hangSessions = sqliteTable(
   (t) => [
     primaryKey({ columns: [t.user_id, t.id] }),
     index("idx_hang_sessions_user_date").on(t.user_id, t.date),
+    uniqueIndex("idx_hang_sessions_user_activity").on(t.user_id, t.activity_id),
   ]
 );
 

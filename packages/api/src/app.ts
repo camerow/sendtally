@@ -88,7 +88,7 @@ import {
 } from "./lib/entries";
 import { exportCsv } from "./lib/export";
 import { activityOf } from "./lib/activities";
-import { hangHistoryOf } from "./lib/hang";
+import { hangHistory } from "./lib/hang";
 import { dedupedWalls, gymBody, gymOf, newGymBody } from "./lib/gyms";
 import { importBody } from "./lib/import";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
@@ -903,8 +903,9 @@ const app = new Hono<AppEnv>()
     // Hangboard sessions and other training live in their own tables and are
     // listed beside the climbing ones, never as them: they carry the effort
     // the user entered.
-    const hangSessions = hangRows.map((row) => hangHistoryOf(row, hangGrips));
-    return c.json({ sessions, hangSessions, activities: activityRows.map(activityOf) });
+    // A workout's fingerboard part is listed apart, read for grips and minutes beside its activity.
+    const { hangSessions, hangParts } = hangHistory(hangRows, hangGrips);
+    return c.json({ sessions, hangSessions, hangParts, activities: activityRows.map(activityOf) });
   })
 
   .get("/v1/entries", async (c) => {
@@ -2307,7 +2308,14 @@ export type {
   ActivityRecord,
 } from "./lib/activities";
 export type { Exercise, ExerciseInput } from "./lib/exercises";
-export type { HangData, HangHistoryRow, HangPostState, HangSessionRecord } from "./lib/hang";
+export type {
+  HangData,
+  HangHistoryPart,
+  HangHistoryRow,
+  HangPart,
+  HangPostState,
+  HangSessionRecord,
+} from "./lib/hang";
 export type {
   BuiltInExerciseEntry,
   BuiltInGripEntry,

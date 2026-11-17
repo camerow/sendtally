@@ -44,10 +44,13 @@ export function HangGrid({ rows, loads, rpes, unit }: HangGridProps): React.Reac
               />
             ))}
             <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
               style={[
                 load === 0 ? type.mono : type.monoBold,
                 {
-                  width: 54,
+                  width: 66,
                   fontSize: 13,
                   textAlign: "right",
                   color: load === 0 ? colors.textSecondary : colors.gunmetal,

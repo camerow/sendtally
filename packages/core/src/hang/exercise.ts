@@ -96,12 +96,3 @@ export function exerciseKinds(
   const kinds = new Map(exercises.map((e) => [exerciseNameKey(e.name), e.kind] as const));
   return (exercise) => (isGrip(exercise) ? "hangboard" : kinds.get(exerciseNameKey(exercise)));
 }
-
-/** Whether a workout's items mix grips with other exercises, which no player can run. */
-export function mixesGrips(
-  exercises: readonly string[],
-  isGrip: (exercise: string) => boolean
-): boolean {
-  const grips = exercises.filter(isGrip).length;
-  return grips > 0 && grips < exercises.length;
-}

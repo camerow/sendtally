@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { fingerboardBody } from "./hang";
 import { calendarDate, doneBody, doneOf, id, minutes, planLinkShape, rpe, title } from "./plan";
 import type { ActivityRow } from "./repo";
 
@@ -7,22 +8,29 @@ export const ACTIVITY_KINDS = ["climbing", "strength", "mobility", "other"] as c
 
 export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
 
-export const activityBody = z.object({
-  kind: z.enum(ACTIVITY_KINDS),
-  title,
-  date: calendarDate,
-  startTime: z
-    .string()
-    .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
-    .nullable(),
-  minutes,
-  rpe: rpe.nullable(),
-  notes: z.string().trim().max(2000).nullable(),
-  // The library workout it ran, if any.
-  workoutId: id.nullable().default(null),
-  ...planLinkShape,
-  done: doneBody.default([]),
-});
+export const activityBody = z
+  .object({
+    kind: z.enum(ACTIVITY_KINDS),
+    title,
+    date: calendarDate,
+    startTime: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+      .nullable(),
+    minutes,
+    rpe: rpe.nullable(),
+    notes: z.string().trim().max(2000).nullable(),
+    // The library workout it ran, if any.
+    workoutId: id.nullable().default(null),
+    ...planLinkShape,
+    done: doneBody.default([]),
+    // Its workout's fingerboard part: left out keeps the part as it is, null removes it.
+    fingerboard: fingerboardBody.nullable().optional(),
+  })
+  .refine(
+    (a) => a.fingerboard == null || a.workoutId !== null,
+    "a fingerboard part needs its workout"
+  );
 
 export const activitiesQuery = z.object({
   from: calendarDate.optional(),

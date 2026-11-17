@@ -68,27 +68,49 @@ export const hangLoadsBody = z.object({
     .refine((loads) => Object.keys(loads).length <= 200, "too many loads"),
 });
 
+// What a session holds of its own, as against what a workout's fingerboard part takes from its run.
+const sessionShape = {
+  gripId: hangId,
+  edgeMm: edgeMm.optional(),
+  loadKg: kg,
+  pct: z.number().int().min(0).max(100),
+  misses: z.number().int().min(0).max(10_000),
+  protocol: protocolSchema,
+  done: doneBody.default([]),
+};
+
 // App builds before setups send the edge inside the protocol instead.
+const withEdge = <T extends { edgeMm?: number; protocol: z.infer<typeof protocolSchema> }>({
+  edgeMm: mm,
+  protocol,
+  ...rest
+}: T): Omit<T, "edgeMm" | "protocol"> & { edgeMm: number; protocol: Protocol } => ({
+  ...rest,
+  edgeMm: mm ?? protocol.edgeMm ?? defaultSetup(protocol.kind).edgeMm,
+  protocol: protocolOf(protocol),
+});
+
+const hasEdge = (s: { edgeMm: number; protocol: Protocol }): boolean =>
+  s.protocol.kind === "pull" || s.edgeMm >= 4;
+
 export const hangSessionBody = z
   .object({
     workoutId: hangId,
-    gripId: hangId,
     date: calendarDate,
-    edgeMm: edgeMm.optional(),
-    loadKg: kg,
-    pct: z.number().int().min(0).max(100),
-    misses: z.number().int().min(0).max(10_000),
     rpe: z.number().int().min(1).max(10).nullable(),
-    protocol: protocolSchema,
+    ...sessionShape,
     ...planLinkShape,
-    done: doneBody.default([]),
   })
-  .transform(({ edgeMm: mm, protocol, ...rest }) => ({
-    ...rest,
-    edgeMm: mm ?? protocol.edgeMm ?? defaultSetup(protocol.kind).edgeMm,
-    protocol: protocolOf(protocol),
-  }))
-  .refine((s) => s.protocol.kind === "pull" || s.edgeMm >= 4, "a hang needs an edge");
+  .transform(withEdge)
+  .refine(hasEdge, "a hang needs an edge");
+
+/** A workout's fingerboard part: its date, workout, plan link and effort are its run's. */
+export const fingerboardBody = z
+  .object(sessionShape)
+  .transform(withEdge)
+  .refine(hasEdge, "a hang needs an edge");
+
+export type Fingerboard = z.infer<typeof fingerboardBody>;
 
 export const hangSettingsBody = z
   .object({
@@ -122,11 +144,24 @@ export type HangSessionRecord = HangSession & {
 /** A hang session as sendtally's history lists it. `gripName` is set for the user's own grips only: the apps name a built-in in their language. */
 export type HangHistoryRow = HangSessionRecord & { gripName: string | null };
 
+/** A workout's fingerboard part, a hang session of the activity it ran in; no workout once its run has none. */
+export type HangPart = Omit<HangSessionRecord, "workoutId"> & {
+  workoutId: string | null;
+  activityId: string;
+};
+
+// The column holds "" for a part whose run lost its workout; readers see null.
+const partWorkout = (row: HangSessionRow): string | null =>
+  row.workout_id === "" ? null : row.workout_id;
+
 export type HangData = {
   grips: Grip[];
   defaultGrips: Record<string, string>;
   loads: Loads;
+  /** Sessions of their own; parts are counted as their activities. */
   sessions: HangSessionRecord[];
+  /** Every workout's fingerboard part, read with `sessions` for grips only. */
+  parts: HangPart[];
   settings: HangSettings;
   strava: { connected: boolean };
 };
@@ -195,6 +230,12 @@ export function hangSessionOf(row: HangSessionRow): HangSessionRecord {
   };
 }
 
+/** The part a row is, or null for a session of its own. */
+export const hangPartOf = (row: HangSessionRow): HangPart | null =>
+  row.activity_id === null
+    ? null
+    : { ...hangSessionOf(row), workoutId: partWorkout(row), activityId: row.activity_id };
+
 export function hangHistoryOf(
   row: HangSessionRow,
   customGrips: readonly HangGripRow[]
@@ -202,6 +243,25 @@ export function hangHistoryOf(
   return {
     ...hangSessionOf(row),
     gripName: customGrips.find((g) => g.id === row.grip_id)?.name ?? null,
+  };
+}
+
+/** A workout's fingerboard part as history lists it, beside its activity. */
+export type HangHistoryPart = HangPart & { gripName: string | null };
+
+/** History's sessions of their own, and the parts its activities carry, each listed once. */
+export function hangHistory(
+  rows: readonly HangSessionRow[],
+  customGrips: readonly HangGripRow[]
+): { hangSessions: HangHistoryRow[]; hangParts: HangHistoryPart[] } {
+  return {
+    hangSessions: rows
+      .filter((r) => r.activity_id === null)
+      .map((r) => hangHistoryOf(r, customGrips)),
+    hangParts: rows.flatMap((r) => {
+      const part = hangPartOf(r);
+      return part === null ? [] : [{ ...part, gripName: hangHistoryOf(r, customGrips).gripName }];
+    }),
   };
 }
 

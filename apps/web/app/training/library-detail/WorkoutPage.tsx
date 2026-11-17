@@ -62,7 +62,7 @@ function Detail({
       ? ofWorkout(activities.status === "ready" ? activities.data : [], workout.id).map((a) =>
           activityItem(a, model.settings.units)
         )
-      : ofWorkout(model.sessions, workout.id).map((s) => hangItem(s, model));
+      : ofWorkout(model.data.sessions, workout.id).map((s) => hangItem(s, model));
 
   return (
     <DetailFrame

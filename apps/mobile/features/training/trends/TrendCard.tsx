@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import type { HangSessionRecord } from "@sendtally/api-client";
+import type { HangRun } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import type { HangKind, TrendSummary, WeightUnit } from "@sendtally/core/hang";
 import { bestIndex, dayMonth, loadLabel } from "@sendtally/features/hang";
@@ -18,7 +18,7 @@ export type TrendCardProps = {
   name: string;
   /** Top right: the setup the series ran on. */
   caption: string;
-  series: readonly HangSessionRecord[];
+  series: readonly HangRun[];
   summary: TrendSummary;
   kind: HangKind;
   unit: WeightUnit;

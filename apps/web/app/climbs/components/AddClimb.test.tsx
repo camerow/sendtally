@@ -33,7 +33,12 @@ vi.mock("../../lib/useAppApi", () => {
   const api = new Proxy(
     {
       climbs: async () => ({ climbs: [arete] }),
-      sessionsWithClimbs: async () => ({ sessions: [], hangSessions: [], activities: [] }),
+      sessionsWithClimbs: async () => ({
+        sessions: [],
+        hangSessions: [],
+        hangParts: [],
+        activities: [],
+      }),
       updateClimb: (id: string, change: ClimbChange) => updateClimb(id, change),
       logSession: (...args: unknown[]) => logSession(...args),
     },

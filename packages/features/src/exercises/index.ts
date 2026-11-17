@@ -47,6 +47,7 @@ export {
   entryOf,
   exerciseEntry,
   usedInText,
+  workoutsWithGrip,
   useExerciseWorkout,
   workoutsWith,
   wrapperOf,

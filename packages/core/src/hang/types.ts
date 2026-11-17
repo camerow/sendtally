@@ -68,6 +68,9 @@ export type HangSession = {
     done: ItemDone[];
   };
 
+/** A hang session as grips read it: a workout's fingerboard part may have lost its workout. */
+export type HangRun = Omit<HangSession, "workoutId"> & { workoutId: string | null };
+
 export type HangSettings = {
   units: WeightUnit;
   theme: ThemeName;

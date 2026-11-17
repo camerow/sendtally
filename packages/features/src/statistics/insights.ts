@@ -16,6 +16,7 @@ import { hangTitle } from "../sessions/hang";
 import { DAY_MS, bucketsFor, priorWindow, windowOf } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
 import { exerciseSeries, type ExerciseMetric } from "./exercises";
+import { gripRuns } from "../activities/summary";
 import { kindLabel } from "../activities/format";
 import { TRAINED_KINDS, oneDecimal } from "./overview";
 import { workoutsDone, type WorkoutsDoneVM } from "./workouts";
@@ -30,7 +31,10 @@ export type Done = {
   focus: Focus | null;
   at: number;
   rpe: number | null;
+  /** The whole run, its fingerboard part's minutes included. */
   minutes: number;
+  /** The minutes of the run that were its fingerboard part, counted as Fingers in the mix. */
+  fingers: number;
 };
 
 export type InsightsPointVM = {
@@ -78,7 +82,16 @@ export type TrainingInsightsVM = {
   workload: WorkloadVM;
 };
 
+/** A run's minutes that were its fingerboard part: every grip and the rests between them. */
+const partMinutes = (
+  minutes: number,
+  part: Parameters<typeof hangSessionSeconds>[0] | undefined
+): number =>
+  part === undefined ? 0 : Math.min(minutes, Math.round(hangSessionSeconds(part) / 60));
+
+/** Every record once: a run's fingerboard part counts inside its activity, never on its own. */
 export function doneOf(log: SessionLogWithClimbs): Done[] {
+  const parts = new Map(log.hangParts.map((p) => [p.activityId, p]));
   return [
     ...log.sessions.map((s): Done => ({
       ref: { type: "session", id: s.fingerprint, name: s.name ?? s.title },
@@ -87,6 +100,7 @@ export function doneOf(log: SessionLogWithClimbs): Done[] {
       at: Date.parse(s.start_at),
       rpe: isUnscored(s) ? null : s.rpe,
       minutes: sessionMinutes(s),
+      fingers: 0,
     })),
     ...log.hangSessions.map((h): Done => ({
       ref: { type: "activity", id: h.id, name: hangTitle(h) },
@@ -95,6 +109,7 @@ export function doneOf(log: SessionLogWithClimbs): Done[] {
       at: Date.parse(h.date),
       rpe: h.rpe,
       minutes: Math.round(hangSessionSeconds(h) / 60),
+      fingers: 0,
     })),
     ...log.activities.map((a): Done => ({
       ref: { type: "activity", id: a.id, name: a.title },
@@ -103,6 +118,7 @@ export function doneOf(log: SessionLogWithClimbs): Done[] {
       at: Date.parse(a.date),
       rpe: a.rpe,
       minutes: a.minutes,
+      fingers: partMinutes(a.minutes, parts.get(a.id)),
     })),
   ];
 }
@@ -145,7 +161,9 @@ function hangTrends(
   within: (ms: number) => boolean,
   gripName: (id: string) => string
 ): ExerciseTrendVM[] {
-  const shown = log.hangSessions.filter((h) => within(Date.parse(h.date)));
+  const shown = [...log.hangSessions, ...log.hangParts]
+    .filter((h) => within(Date.parse(h.date)))
+    .flatMap(gripRuns);
   return [...new Set(shown.map((h) => h.gripId))]
     .flatMap((id) => {
       const [setup] = setupsOf(shown, id);
@@ -166,27 +184,40 @@ function hangTrends(
     .sort((a, b) => b.count - a.count);
 }
 
-/** Each group's share of the sessions and its time, leaving out groups with none. */
+/**
+ * Each group's share of the sessions and its time, leaving out groups with neither. A record is
+ * one session under its own group; `minutesIn` gives each group its time.
+ */
 function mix<K>(
   shown: readonly Done[],
   keys: readonly K[],
   keyOf: (d: Done) => K,
-  name: (k: K) => string
+  name: (k: K) => string,
+  minutesIn: (d: Done, key: K) => number = (d, key) => (keyOf(d) === key ? d.minutes : 0)
 ): (TrainedVM & { key: K })[] {
   return keys.flatMap((key) => {
-    const of = shown.filter((d) => keyOf(d) === key);
-    if (of.length === 0) return [];
-    const time = of.reduce((n, d) => n + d.minutes, 0);
+    const count = shown.filter((d) => keyOf(d) === key).length;
+    const time = shown.reduce((n, d) => n + minutesIn(d, key), 0);
+    if (count === 0 && time === 0) return [];
     return [
       {
         key,
         name: name(key),
-        share: of.length / shown.length,
-        detail: time === 0 ? String(of.length) : `${of.length} · ${durationLabel(time)}`,
+        share: count / shown.length,
+        detail:
+          time === 0
+            ? String(count)
+            : count === 0
+              ? durationLabel(time)
+              : `${count} · ${durationLabel(time)}`,
       },
     ];
   });
 }
+
+/** A run's time under its kind, but its fingerboard part's under Fingers (Will, 2026-11-16). */
+const kindMinutes = (d: Done, kind: WorkoutKind): number =>
+  (d.kind === kind ? d.minutes - d.fingers : 0) + (kind === "hangboard" ? d.fingers : 0);
 
 /**
  * Training over a range: effort and sessions per bucket, the mix of kinds by sessions and time,
@@ -245,10 +276,12 @@ export function trainingInsightsVM(
       const inside = shown.filter((d) => d.at >= b.start && d.at < b.end);
       return { label: b.label, axis: b.axis, sessions: inside.length, effort: effortOf(inside) };
     }),
-    trained: mix(shown, TRAINED_KINDS, (d) => d.kind, kindLabel).map(({ key, ...k }) => ({
-      ...k,
-      kind: key,
-    })),
+    trained: mix(shown, TRAINED_KINDS, (d) => d.kind, kindLabel, kindMinutes).map(
+      ({ key, ...k }) => ({
+        ...k,
+        kind: key,
+      })
+    ),
     byFocus: mix(shown, [...FOCI, null], (d) => d.focus, focusLabel).map(({ key, ...f }) => ({
       ...f,
       focus: key,

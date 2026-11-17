@@ -19,7 +19,12 @@ const input: LogSessionInput = {
   climbs: [{ name: "Arete", grade: { scale: "v", value: 4 }, kind: "send" }],
 };
 
-const emptyLog: SessionLogWithClimbs = { sessions: [], hangSessions: [], activities: [] };
+const emptyLog: SessionLogWithClimbs = {
+  sessions: [],
+  hangSessions: [],
+  hangParts: [],
+  activities: [],
+};
 
 async function world() {
   let file: string | null = null;

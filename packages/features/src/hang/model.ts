@@ -1,4 +1,4 @@
-import type { HangData, HangSessionRecord } from "@sendtally/api-client";
+import type { HangData, HangPart, HangSessionRecord } from "@sendtally/api-client";
 import {
   BUILT_IN_GRIPS,
   doseIndex,
@@ -18,6 +18,7 @@ import {
 } from "@sendtally/core/hang";
 import type { LibraryWorkout } from "../workouts/types";
 import { currentLibrary } from "../library/current";
+import { gripRuns } from "../activities/summary";
 import { builtInGripName } from "./names";
 
 /** Everything the hang timer reads, with built-in names in the user's language. */
@@ -27,7 +28,8 @@ export type HangModel = {
   /** Every hangboard workout in the library, as the timer runs its first item. */
   workouts: HangWorkout[];
   grips: Grip[];
-  sessions: HangSessionRecord[];
+  /** Sessions of their own and workouts' fingerboard parts, for what grips read. */
+  sessions: (HangSessionRecord | HangPart)[];
   /** A hangboard workout as the timer runs its first item. */
   workout: (id: string) => HangWorkout | undefined;
   gripName: (id: string) => string;
@@ -79,8 +81,16 @@ export function hangWorkoutOf(
  * The hang timer's model. A built-in grip the library retired is hidden like one the user hid,
  * so it leaves the pickers but still names its sessions.
  */
+export const hangsWithParts = (
+  data: Pick<HangData, "sessions" | "parts">
+): (HangSessionRecord | HangPart)[] =>
+  [...data.sessions, ...data.parts]
+    .flatMap((s) => gripRuns<HangSessionRecord | HangPart>(s))
+    .sort((a, b) => b.date.localeCompare(a.date));
+
 export function hangModel(data: HangData, all: readonly LibraryWorkout[]): HangModel {
   const workouts = all.flatMap((w) => hangWorkoutOf(w) ?? []);
+  const hangs = hangsWithParts(data);
   const grips = [
     ...currentLibrary().grips.flatMap((entry) => {
       if (!isBuiltInGrip(entry.id)) return [];
@@ -103,7 +113,7 @@ export function hangModel(data: HangData, all: readonly LibraryWorkout[]): HangM
     settings: data.settings,
     workouts,
     grips,
-    sessions: data.sessions,
+    sessions: hangs,
     workout: (id) => {
       const w = hangboard.get(id);
       return w === undefined ? undefined : (hangWorkoutOf(w) ?? undefined);
@@ -120,15 +130,14 @@ export function hangModel(data: HangData, all: readonly LibraryWorkout[]): HangM
       ]),
     lastUsed: (w, gripId) => {
       const used =
-        lastSession(data.sessions, w.id, gripId) !== undefined ||
-        loadKey(w.id, gripId) in data.loads;
+        lastSession(hangs, w.id, gripId) !== undefined || loadKey(w.id, gripId) in data.loads;
       return used ? resolveSetup(w.kind, usedLayers(w.id, gripId)) : null;
     },
   };
 
   function usedLayers(workoutId: string, gripId: string): SetupLayer[] {
     return [
-      lastSession(data.sessions, workoutId, gripId),
+      lastSession(hangs, workoutId, gripId),
       { loadKg: data.loads[loadKey(workoutId, gripId)] },
     ];
   }

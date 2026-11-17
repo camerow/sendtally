@@ -1,5 +1,16 @@
 import type { HangSetup, ItemDone, SessionItem, SetDone } from "@sendtally/core/hang";
 import { percentOf } from "@sendtally/core/hang";
+import { keptSets, setKeyOf } from "../activities/done";
+
+/** A hang set counts when it held anything: a hang or more, or a lone hang's cut seconds. */
+export const heldSet = (s: SetDone): boolean => (s.reps ?? 1) > 0 && (s.onS ?? 1) > 0;
+
+/** What a hang review saves: the sets that held anything and are not off; hang rows have no tick. */
+export const keptHangs = (done: readonly ItemDone[], off: readonly string[]): ItemDone[] =>
+  keptSets(done, [
+    ...off,
+    ...done.flatMap((d) => d.sets.flatMap((s, i) => (heldSet(s) ? [] : [setKeyOf(d.item, i)]))),
+  ]);
 
 /** Where a kept item was done: its grip, the edge and load it hung on, and whether it hangs or pulls. */
 export type HangItemSetup = { exercise: string; setup: HangSetup; hang: boolean };

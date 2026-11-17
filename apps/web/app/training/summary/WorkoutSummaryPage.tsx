@@ -29,7 +29,8 @@ export function WorkoutSummaryPage({ id }: { id: string }): React.ReactElement {
   const actions = useActivityActions(api, failed);
   const activities = state.status === "ready" ? state.data : [];
   const activity = activities.find((a) => a.id === id);
-  const hang = model.sessions.find((s) => s.id === id);
+  const hang = model.data.sessions.find((s) => s.id === id);
+  const part = model.data.parts.find((p) => p.activityId === id);
   const found: Found | undefined =
     activity !== undefined
       ? { kind: "activity", record: activity }
@@ -51,6 +52,7 @@ export function WorkoutSummaryPage({ id }: { id: string }): React.ReactElement {
         log={log}
         unit={model.settings.units}
         actions={actions}
+        {...(part !== undefined && { part: { session: part, gripName: model.gripName } })}
       />
     );
   return (

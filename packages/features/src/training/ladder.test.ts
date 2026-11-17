@@ -167,6 +167,7 @@ describe("ladderView", () => {
         defaultGrips: {},
         loads: {},
         sessions: [],
+        parts: [],
         settings: {
           units: "kg",
           theme: "gunmetal",

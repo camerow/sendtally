@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Activity as Logged, HangHistoryRow, SessionWithClimbs } from "@sendtally/api-client";
 import { isLockedRange, shownRange } from "../trends/types";
-import { trainingInsightsVM } from "./insights";
+import { hangSessionSeconds } from "@sendtally/core/hang";
+import { durationLabel } from "../sessions/years";
+import { doneOf, trainingInsightsVM } from "./insights";
 import { TRAINED_KINDS } from "./overview";
 
 const NOW = new Date("2026-10-22T20:00:00Z");
@@ -118,6 +120,7 @@ describe("trainingInsightsVM", () => {
       climbing("2026-10-08T18:00:00Z", 5),
     ],
     hangSessions: [hang("2026-10-16", 6, 2), hang("2026-10-22", 8, 6)],
+    hangParts: [],
     activities: [lift("2026-10-10", 100), lift("2026-10-19", 110)],
   };
 
@@ -203,5 +206,133 @@ describe("trainingInsightsVM", () => {
     const vm = trainingInsightsVM(log, "1m", ["climbing"], grip, NOW);
     expect(vm.sessions).toBe(3);
     expect(vm.exercises).toEqual([]);
+  });
+});
+
+describe("a workout's fingerboard part", () => {
+  const run: Logged = { ...lift("2026-10-20", 100), minutes: 60, rpe: 7, workoutId: "w1" };
+  const part = { ...hang("2026-10-20", 7, 10), id: "p1", workoutId: "w1", activityId: run.id };
+  const fingers = Math.round(hangSessionSeconds(part) / 60);
+  const log = { sessions: [], hangSessions: [], hangParts: [part], activities: [run] };
+
+  it("counts once, as its run, with the run's whole minutes and effort for the workload", () => {
+    expect(doneOf(log)).toEqual([
+      expect.objectContaining({
+        ref: expect.objectContaining({ id: run.id }),
+        minutes: 60,
+        rpe: 7,
+        fingers,
+      }),
+    ]);
+    const vm = trainingInsightsVM(log, "7d", TRAINED_KINDS, grip, NOW);
+    expect(vm.sessions).toBe(1);
+    expect(vm.workload.acute).toBe(
+      trainingInsightsVM({ ...log, hangParts: [] }, "7d", TRAINED_KINDS, grip, NOW).workload.acute
+    );
+  });
+
+  const kindSessions = (vm: ReturnType<typeof trainingInsightsVM>): number =>
+    vm.trained.reduce(
+      (n, k) =>
+        n +
+        (k.detail.includes(" · ")
+          ? Number(k.detail.split(" · ")[0])
+          : /^\d+$/.test(k.detail)
+            ? Number(k.detail)
+            : 0),
+      0
+    );
+
+  it("moves only its minutes to Fingers: the run is one session under its own kind", () => {
+    const vm = trainingInsightsVM(log, "7d", TRAINED_KINDS, grip, NOW);
+    expect(vm.trained.map((k) => [k.kind, k.detail])).toEqual([
+      ["hangboard", durationLabel(fingers)],
+      ["strength", `1 · ${durationLabel(60 - fingers)}`],
+    ]);
+    expect(kindSessions(vm)).toBe(vm.sessions);
+    expect(vm.total).toContain(durationLabel(60));
+  });
+
+  it("gives a part that fills the run all of its minutes, and the run's kind its session", () => {
+    const short = { ...log, activities: [{ ...run, minutes: fingers }] };
+    const vm = trainingInsightsVM(short, "7d", TRAINED_KINDS, grip, NOW);
+    expect(vm.trained.map((k) => [k.kind, k.detail])).toEqual([
+      ["hangboard", durationLabel(fingers)],
+      ["strength", "1"],
+    ]);
+    expect(kindSessions(vm)).toBe(vm.sessions);
+    expect(vm.total).toContain(durationLabel(fingers));
+  });
+
+  it("counts a Fingers run with a part once, with its whole minutes", () => {
+    const fingersRun = { ...run, kind: "hangboard" } as unknown as Logged;
+    const vm = trainingInsightsVM(
+      { ...log, activities: [fingersRun] },
+      "7d",
+      TRAINED_KINDS,
+      grip,
+      NOW
+    );
+    expect(vm.trained.map((k) => [k.kind, k.detail])).toEqual([
+      ["hangboard", `1 · ${durationLabel(60)}`],
+    ]);
+  });
+
+  it("adds its grips to the grip trends", () => {
+    const vm = trainingInsightsVM(log, "7d", TRAINED_KINDS, grip, NOW);
+    expect(
+      vm.exercises.find((g) => g.kind === "hangboard")?.rows.map((r) => [r.key, r.count])
+    ).toEqual([["half", 1]]);
+  });
+
+  it("trends a part's second grip, from the dose it ran", () => {
+    const pinch = {
+      item: 1,
+      exercise: "pinch",
+      dose: { sets: 2, reps: 5, onS: 10, edgeMm: 20 },
+      sets: [
+        { reps: 5, onS: 10, edgeMm: 20, weightKg: 6 },
+        { reps: 5, onS: 10, edgeMm: 20, weightKg: 6 },
+      ],
+    };
+    const twoGrips = { ...part, done: [pinch] };
+    const vm = trainingInsightsVM(
+      { ...log, hangParts: [twoGrips] },
+      "7d",
+      TRAINED_KINDS,
+      grip,
+      NOW
+    );
+    expect(
+      vm.exercises.find((g) => g.kind === "hangboard")?.rows.map((r) => [r.key, r.count, r.values])
+    ).toEqual([
+      ["half", 1, [10]],
+      ["pinch", 1, [6]],
+    ]);
+  });
+});
+
+describe("a standalone session of several grips", () => {
+  it("trends every grip it ran, each on its own setup", () => {
+    const open = {
+      item: 1,
+      exercise: "open",
+      dose: { sets: 1, reps: 3, onS: 7, edgeMm: 15 },
+      sets: [{ reps: 2, onS: 7, edgeMm: 15, weightKg: 0 }],
+    };
+    const session = { ...hang("2026-10-20", 7, 4), done: [open] };
+    const vm = trainingInsightsVM(
+      { sessions: [], hangSessions: [session], hangParts: [], activities: [] },
+      "7d",
+      TRAINED_KINDS,
+      grip,
+      NOW
+    );
+    const rows = vm.exercises.find((g) => g.kind === "hangboard")?.rows ?? [];
+    expect(rows.map((r) => [r.key, r.count])).toEqual([
+      ["half", 1],
+      ["open", 1],
+    ]);
+    expect(rows.find((r) => r.key === "open")?.values).toEqual([]);
   });
 });

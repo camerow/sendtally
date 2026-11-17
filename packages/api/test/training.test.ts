@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Activity, ActivityRecord } from "../src/lib/activities";
 import type { Plan, WorkoutRecord } from "../src/lib/plan";
 import { encryptSecret } from "../src/lib/crypto";
-import { MIXED_GRIPS } from "../src/lib/workoutKind";
 import { jsonResponse, makeFakeFetch } from "./fakes";
 import { testApp } from "./harness";
 
@@ -107,6 +106,7 @@ describe("activities", () => {
         postState: null,
         postError: null,
       },
+      part: null,
     });
     const list = await json<{ activities: Activity[] }>(
       await call(userId, "GET", "/v1/activities")
@@ -400,14 +400,29 @@ describe("workouts", () => {
     expect(await kindOf("w4", { ...noKind, items: [] })).toBe("other");
   });
 
-  it("refuses a workout that mixes grips with other exercises, saving nothing", async () => {
-    const userId = "user_workouts_mixed_grips";
-    const items = [...squatWorkout.items, { exercise: "half", doses: [{ sets: 3, onS: 10 }] }];
+  it("saves a mix with its grips together at the first grip's place, as the other exercises' kind", async () => {
+    const userId = "user_workouts_mix";
+    const hang = { doses: [{ sets: 3, reps: 6, onS: 7, offS: 3 }] };
+    const items = [
+      { exercise: "Hip openers", doses: [{ sets: 2, onS: 60 }] },
+      { exercise: "half", ...hang },
+      ...squatWorkout.items,
+      { exercise: "open", ...hang },
+    ];
     const res = await call(userId, "PUT", "/v1/workouts/w1", { ...squatWorkout, items });
-    expect(res.status).toBe(400);
-    expect(await json<{ error: string }>(res)).toEqual({ error: MIXED_GRIPS });
-    const list = await json<{ workouts: unknown[] }>(await call(userId, "GET", "/v1/workouts"));
-    expect(list.workouts).toEqual([]);
+    expect(res.status).toBe(200);
+    const { workout } = await json<{ workout: WorkoutRecord }>(res);
+    expect(workout.items.map((i) => i.exercise)).toEqual([
+      "Hip openers",
+      "half",
+      "open",
+      "Back squat",
+    ]);
+    expect(workout.kind).toBe("strength");
+    const { exercises } = await json<{ exercises: { name: string }[] }>(
+      await call(userId, "GET", "/v1/exercises")
+    );
+    expect(exercises.map((e) => e.name).sort()).toEqual(["Back squat", "Hip openers"]);
   });
 
   it("folds an older app's variations into items where their exercises line up", async () => {

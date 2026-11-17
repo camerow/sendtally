@@ -29,8 +29,10 @@ export type {
   CalendarDate,
   Grip,
   HangData,
+  HangHistoryPart,
   HangHistoryRow,
   HangKind,
+  HangPart,
   HangPostState,
   HangSession,
   HangSessionRecord,
@@ -69,7 +71,12 @@ export type {
   WorkoutRecord,
 } from "@sendtally/api/app";
 
-import type { Activity, HangHistoryRow, LogClimbInput as ClimbInput } from "@sendtally/api/app";
+import type {
+  Activity,
+  HangHistoryPart,
+  HangHistoryRow,
+  LogClimbInput as ClimbInput,
+} from "@sendtally/api/app";
 
 export type CircuitRef = NonNullable<ClimbInput["circuit"]>;
 
@@ -124,12 +131,16 @@ export type SessionWithClimbs = SessionRow & { climbs: SessionClimb[] };
 export type SessionLog = {
   sessions: SessionRow[];
   hangSessions: HangHistoryRow[];
+  /** Workouts' fingerboard parts, each counted as its activity and read only for grips and minutes. */
+  hangParts: HangHistoryPart[];
   activities: Activity[];
 };
 
 export type SessionLogWithClimbs = {
   sessions: SessionWithClimbs[];
   hangSessions: HangHistoryRow[];
+  /** Workouts' fingerboard parts, each counted as its activity and read only for grips and minutes. */
+  hangParts: HangHistoryPart[];
   activities: Activity[];
 };
 

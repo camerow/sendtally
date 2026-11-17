@@ -23,7 +23,7 @@ vi.mock("../../lib/useAppApi", () => ({
   useAppApi: () => ({
     gyms: async () => ({ gyms: [] }),
     climbs: async () => ({ climbs: [] }),
-    sessions: async () => ({ sessions: [], hangSessions: [], activities: [] }),
+    sessions: async () => ({ sessions: [], hangSessions: [], hangParts: [], activities: [] }),
     status: () => new Promise(() => undefined),
   }),
 }));

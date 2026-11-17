@@ -52,7 +52,7 @@ export function HangSummary({
         <React.Fragment key={i}>
           <HangResultCard grid={grid} gripName={model.gripName(grid.gripId)} unit={unit} />
           <GripTrend
-            sessions={gripLoads(grid, all)}
+            sessions={gripLoads(grid, [...model.data.sessions, ...model.data.parts])}
             kind={grid.kind}
             currentId={session.id}
             unit={unit}
@@ -60,7 +60,9 @@ export function HangSummary({
         </React.Fragment>
       ))}
       <HistoryList
-        items={pastSessions(session, all).map((s) => hangItem(s, model, session.id))}
+        items={pastSessions(session, model.data.sessions).map((s) =>
+          hangItem(s, model, session.id)
+        )}
         onOpen={(id) => router.push({ pathname: "/activity/[id]", params: { id } })}
       />
     </SummaryFrame>

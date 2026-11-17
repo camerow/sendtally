@@ -53,7 +53,7 @@ jest.mock("@sendtally/features/query", () => ({
   useQueryPair: () => ({
     state: {
       status: "ready",
-      data: [{ sessions: [], hangSessions: [], activities: [] }, []],
+      data: [{ sessions: [], hangSessions: [], hangParts: [], activities: [] }, []],
     },
     refreshFailed: false,
     reload: () => Promise.resolve(),

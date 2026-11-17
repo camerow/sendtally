@@ -14,7 +14,10 @@ export type ReviewSetRowProps = {
   hangs: boolean;
   lifting: boolean;
   unit: WeightUnit;
-  /** Ticked, it counts; off, it does not save, though its fields stay live and typing ticks it. */
+  /**
+   * Ticked, it counts; off, it does not save, though its fields stay live and typing ticks it. A
+   * hang set counts when it held anything, so it has no tick.
+   */
   on: boolean;
   /** "4 of 6 hangs" when it fell short of its target. */
   short: string | null;
@@ -23,7 +26,8 @@ export type ReviewSetRowProps = {
   /** The set's RPE cell, with the target it shows dim. */
   rpe?: { target: number | undefined };
   onChange: (set: SetDone) => void;
-  onToggle: () => void;
+  /** Ticks or unticks it; none for a hang set. */
+  onToggle?: () => void;
   onRemove: () => void;
 };
 
@@ -35,7 +39,7 @@ const targetText = (target: SetDone, hangs: boolean, unit: WeightUnit): string =
       ? setText(target, unit)
       : setChip(target, unit);
 
-/** One set to review: what it asked, what was done, its tick, and × to remove it. */
+/** One set to review: what it asked, what was done, its RPE, its tick, and × to remove it. */
 export function ReviewSetRow({
   n,
   target,
@@ -81,9 +85,11 @@ export function ReviewSetRow({
           {on && <RpeField set={done} target={rpe.target} label={label} onChange={onChange} />}
         </span>
       )}
-      <label className="set-tick">
-        <input type="checkbox" checked={on} onChange={onToggle} aria-label={label} />
-      </label>
+      {onToggle !== undefined && (
+        <label className="set-tick">
+          <input type="checkbox" checked={on} onChange={onToggle} aria-label={label} />
+        </label>
+      )}
       <button
         type="button"
         className="set-remove"

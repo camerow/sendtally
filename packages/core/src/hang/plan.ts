@@ -166,18 +166,37 @@ export const defaultExerciseRestS = (kind: WorkoutKind): number =>
 
 /**
  * A workout's kind, read off its exercises: hangboard when all are grips, else the kind most
- * of them share, a tie going to the first. With none it keeps the kind it had, unless that was
- * hangboard, which needs a grip.
+ * of the other exercises share, a tie going to the first; grips do not vote beside them. An
+ * exercise of no known kind counts as the kind it had, so a grip not saved yet in a Fingers
+ * workout stays a grip. With none it keeps the kind it had, unless that was hangboard, which
+ * needs a grip.
  */
 export function workoutKindOf(
   exercises: readonly string[],
-  kindOf: (exercise: string) => WorkoutKind,
+  kindOf: (exercise: string) => WorkoutKind | undefined,
   kept: WorkoutKind
 ): WorkoutKind {
-  const kinds = exercises.map(kindOf);
-  const count = (k: WorkoutKind): number => kinds.filter((x) => x === k).length;
-  const empty = kept === "hangboard" ? "other" : kept;
-  return kinds.reduce((best, k) => (count(k) > count(best) ? k : best), kinds[0] ?? empty);
+  const kinds = exercises.map((e) => kindOf(e) ?? kept);
+  const voters = kinds.filter((k) => k !== "hangboard");
+  const [first] = voters;
+  if (first === undefined)
+    return kinds.length > 0 ? "hangboard" : kept === "hangboard" ? "other" : kept;
+  const count = (k: WorkoutKind): number => voters.filter((x) => x === k).length;
+  return voters.reduce((best, k) => (count(k) > count(best) ? k : best), first);
+}
+
+/**
+ * The items with every grip moved to the first grip's place, keeping the grips' order and
+ * everything else's: a workout's fingerboard part is its grips, run together.
+ */
+export function gripsTogether<T extends Pick<Item, "exercise">>(
+  items: readonly T[],
+  isGrip: (exercise: string) => boolean
+): T[] {
+  const at = items.findIndex((i) => isGrip(i.exercise));
+  if (at < 0) return [...items];
+  const rest = items.filter((i) => !isGrip(i.exercise));
+  return [...rest.slice(0, at), ...items.filter((i) => isGrip(i.exercise)), ...rest.slice(at)];
 }
 
 /** A run of weeks from a start date, or with none a template to schedule. */

@@ -8,6 +8,7 @@ import {
   setKeyOf,
   shortOf,
 } from "@sendtally/features/activities";
+import { heldSet } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
@@ -40,7 +41,8 @@ const offWithoutKey = (off: readonly string[], item: number, set: number): strin
 
 /**
  * What was done, to review before saving: each exercise as its sets' table, ticked when it
- * counts, amber where it fell short, a number typed in place, a set added or removed.
+ * counts, amber where it fell short, a number typed in place, a set added or removed. A hang set
+ * has no tick: it counts when it held anything, and takes an RPE like any set.
  */
 export function DoneDetails({
   done,
@@ -58,7 +60,9 @@ export function DoneDetails({
   const [lastOf, setLastOf] = React.useState<ItemDone | null>(null);
   const removed = (d: ItemDone, set: number): void => {
     onChange(removeSet(done, d.item, set), offWithout(off, d.item, set));
-    if (!off.includes(setKeyOf(d.item, set)))
+    // An unticked set, or a hang set that held nothing, holds nothing logged, so it goes quietly.
+    const held = !hangs || (d.sets[set] !== undefined && heldSet(d.sets[set]));
+    if (!off.includes(setKeyOf(d.item, set)) && held)
       onRemoved?.(t("activities.setRemoved", { n: set + 1 }), () => onChange([...done], [...off]));
   };
   const remove = (d: ItemDone, set: number): void =>
@@ -94,8 +98,8 @@ export function DoneDetails({
                     ? t("activities.colDoneUnit", { unit })
                     : t("activities.colDone")}
               </span>
-              {!hangs && <span className="set-col-rpe">RPE</span>}
-              <span className="set-tick" />
+              <span className="set-col-rpe">RPE</span>
+              {!hangs && <span className="set-tick" />}
               <span className="set-remove" />
             </div>
             {d.sets.map((set, i) => (
@@ -111,15 +115,15 @@ export function DoneDetails({
                 hangs={hangs}
                 lifting={lifting}
                 unit={unit}
-                on={!off.includes(setKeyOf(d.item, i))}
+                on={!off.includes(setKeyOf(d.item, i)) && (!hangs || heldSet(set))}
                 short={shortOf(set, target, hangs)}
                 label={t("activities.setOf", { exercise: d.exercise, n: i + 1 })}
                 defaultLoadKg={hangLoadKg}
-                {...(!hangs && { rpe: { target: d.targetRpe } })}
+                rpe={{ target: d.targetRpe }}
                 onChange={(value) =>
                   onChange(changeSet(done, d.item, i, value), offWithoutKey(off, d.item, i))
                 }
-                onToggle={() => toggle(d.item, i)}
+                onToggle={hangs ? undefined : () => toggle(d.item, i)}
                 onRemove={() => remove(d, i)}
               />
             ))}

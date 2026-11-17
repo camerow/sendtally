@@ -1,12 +1,12 @@
 import { daysBetween } from "./calendar";
 import { plannedWork } from "./protocol";
-import type { CalendarDate, HangSession } from "./types";
+import type { CalendarDate, HangRun } from "./types";
 
-export const byDate = (a: HangSession, b: HangSession): number =>
+export const byDate = (a: HangRun, b: HangRun): number =>
   a.date.localeCompare(b.date) || a.id.localeCompare(b.id);
 
 /** One series per workout and grip, oldest first. */
-export function seriesFor<T extends HangSession>(
+export function seriesFor<T extends HangRun>(
   sessions: readonly T[],
   workoutId: string,
   gripId: string
@@ -19,7 +19,7 @@ export type GripSetup = { edgeMm: number; hangS: number };
 
 const PULL_SETUP: GripSetup = { edgeMm: 0, hangS: 0 };
 
-export const setupOf = (s: Pick<HangSession, "edgeMm" | "protocol">): GripSetup =>
+export const setupOf = (s: Pick<HangRun, "edgeMm" | "protocol">): GripSetup =>
   s.protocol.kind === "pull" || s.edgeMm === 0
     ? PULL_SETUP
     : { edgeMm: s.edgeMm, hangS: s.protocol.hangS };
@@ -29,10 +29,10 @@ export const sameSetup = (a: GripSetup, b: GripSetup): boolean =>
 
 export const isPullSetup = (setup: GripSetup): boolean => setup.edgeMm === 0;
 
-const isComplete = (s: Pick<HangSession, "pct">): boolean => s.pct >= 100;
+const isComplete = (s: Pick<HangRun, "pct">): boolean => s.pct >= 100;
 
 /** One grip across every workout, oldest first; on one setup when given. */
-export function gripSeries<T extends HangSession>(
+export function gripSeries<T extends HangRun>(
   sessions: readonly T[],
   gripId: string,
   setup?: GripSetup
@@ -43,7 +43,7 @@ export function gripSeries<T extends HangSession>(
 }
 
 /** The setups sessions ran on, the most used first, then the most recent. */
-export function setupsOf(sessions: readonly HangSession[], gripId?: string): GripSetup[] {
+export function setupsOf(sessions: readonly HangRun[], gripId?: string): GripSetup[] {
   const used = new Map<string, { setup: GripSetup; count: number; last: string }>();
   for (const s of [...sessions].sort(byDate)) {
     if (gripId !== undefined && s.gripId !== gripId) continue;
@@ -57,10 +57,7 @@ export function setupsOf(sessions: readonly HangSession[], gripId?: string): Gri
 }
 
 /** The heaviest completed load on the session's grip and setup before it; null when none was. */
-export function previousBest(
-  sessions: readonly HangSession[],
-  session: HangSession
-): number | null {
+export function previousBest(sessions: readonly HangRun[], session: HangRun): number | null {
   const before = gripSeries(sessions, session.gripId, setupOf(session)).filter(
     (s) => byDate(s, session) < 0 && isComplete(s)
   );
@@ -68,7 +65,7 @@ export function previousBest(
 }
 
 /** How far a completed session beat the best before it on its grip and setup; null when it did not. */
-export function newBestBy(sessions: readonly HangSession[], session: HangSession): number | null {
+export function newBestBy(sessions: readonly HangRun[], session: HangRun): number | null {
   const previous = previousBest(sessions, session);
   return isComplete(session) && previous !== null && session.loadKg > previous
     ? session.loadKg - previous
@@ -76,9 +73,9 @@ export function newBestBy(sessions: readonly HangSession[], session: HangSession
 }
 
 export type Milestone =
-  | { kind: "first"; session: HangSession }
-  | { kind: "over"; kg: number; session: HangSession }
-  | { kind: "edge"; session: HangSession };
+  | { kind: "first"; session: HangRun }
+  | { kind: "over"; kg: number; session: HangRun }
+  | { kind: "edge"; session: HangRun };
 
 const roundStep = (setup: GripSetup): number => (isPullSetup(setup) ? 10 : 5);
 
@@ -87,7 +84,7 @@ const roundStep = (setup: GripSetup): number => (isPullSetup(setup) ? 10 : 5);
  * round number on its setup (every 5 kg, 10 kg for pulls); and each first bodyweight-or-better
  * hang on an edge smaller than any held that way before.
  */
-export function milestones(series: readonly HangSession[]): Milestone[] {
+export function milestones(series: readonly HangRun[]): Milestone[] {
   const ordered = [...series].sort(byDate);
   const first = ordered[0];
   if (first === undefined) return [];
@@ -120,17 +117,14 @@ export type TrendSummary = {
   completed: number;
   /** The newest session's load, complete or not. */
   latest: number;
-  topAttempt: HangSession | null;
+  topAttempt: HangRun | null;
   avgRpe: number | null;
   avgPct: number;
   work: number;
   weeks: number;
 };
 
-export function summarise(
-  series: readonly HangSession[],
-  today: CalendarDate
-): TrendSummary | null {
+export function summarise(series: readonly HangRun[], today: CalendarDate): TrendSummary | null {
   const oldest = series[0];
   const newest = series.at(-1);
   if (oldest === undefined || newest === undefined) return null;

@@ -10,7 +10,7 @@ import {
   toUnit,
   type CalendarDate,
   type GripSetup,
-  type HangSession,
+  type HangRun,
   type Milestone,
   type TrendSummary,
   type WeightUnit,
@@ -18,10 +18,10 @@ import {
 import { formatNumber, t } from "../i18n";
 import { dayMonth, gripSetupLabel, loadLabel } from "./format";
 
-const complete = (s: Pick<HangSession, "pct">): boolean => s.pct >= 100;
+const complete = (s: Pick<HangRun, "pct">): boolean => s.pct >= 100;
 
 /** Where the best sits in a series: the completed session that first reached it; -1 with none. */
-export function bestIndex(series: readonly HangSession[], summary: TrendSummary): number {
+export function bestIndex(series: readonly HangRun[], summary: TrendSummary): number {
   return series.findIndex((s) => complete(s) && s.loadKg === summary.best);
 }
 
@@ -29,7 +29,7 @@ export type GripTileVM = { value: string; label: string };
 
 /** Best completed with its date, top attempt with its completion, and average effort. */
 export function gripTiles(
-  series: readonly HangSession[],
+  series: readonly HangRun[],
   summary: TrendSummary,
   unit: WeightUnit
 ): GripTileVM[] {
@@ -75,7 +75,7 @@ function milestoneText(m: Milestone, unit: WeightUnit): string {
 
 /** A grip's milestones newest first; on mixed setups each also names the setup it came on. */
 export function milestoneRows(
-  series: readonly HangSession[],
+  series: readonly HangRun[],
   unit: WeightUnit,
   mixed: boolean
 ): MilestoneVM[] {
@@ -91,6 +91,7 @@ export function milestoneRows(
 }
 
 export type GripSessionVM = {
+  /** What the row opens: the session, or a fingerboard part's activity. */
   id: string;
   load: string;
   /** "Sep 25 · 20 mm · 10s × 6" */
@@ -102,12 +103,12 @@ export type GripSessionVM = {
 
 /** Every session in a grip's series newest first, each marked when it set a best. */
 export function gripSessionRows(
-  series: readonly HangSession[],
-  all: readonly HangSession[],
+  series: readonly (HangRun & { activityId?: string })[],
+  all: readonly HangRun[],
   unit: WeightUnit
 ): GripSessionVM[] {
   return [...series].reverse().map((s) => ({
-    id: s.id,
+    id: s.activityId ?? s.id,
     load: loadLabel(s.protocol.kind, s.loadKg, unit),
     meta: `${dayMonth(s.date)} · ${gripSetupLabel(setupOf(s))} × ${s.protocol.reps * s.protocol.sets}`,
     completion: `${s.pct}%`,
@@ -125,7 +126,7 @@ export type GripCompareVM = {
 
 /** Each grip's best completed load on one setup, heaviest first; grips with none there left out. */
 export function compareGrips(
-  sessions: readonly HangSession[],
+  sessions: readonly HangRun[],
   setup: GripSetup,
   gripName: (id: string) => string
 ): GripCompareVM[] {
@@ -148,7 +149,7 @@ export function compareGrips(
 }
 
 /** Two or more grips have a completed session on one setup, so there is something to compare. */
-export function canCompareGrips(sessions: readonly HangSession[]): boolean {
+export function canCompareGrips(sessions: readonly HangRun[]): boolean {
   return setupsOf(sessions).some((setup) => compareGrips(sessions, setup, String).length > 1);
 }
 
@@ -156,8 +157,8 @@ export type NewBestVM = { title: string; meta: string };
 
 /** "Half crimp +12 kg", "20 mm · 10s · up 2 kg on your last best"; null unless it beat one. */
 export function newBestOf(
-  session: HangSession,
-  all: readonly HangSession[],
+  session: HangRun,
+  all: readonly HangRun[],
   gripName: string,
   unit: WeightUnit
 ): NewBestVM | null {
@@ -178,7 +179,7 @@ export function newBestOf(
  * on, and with `dated` the day it was last done; Not done yet before its first session.
  */
 export function gripMeta(
-  sessions: readonly HangSession[],
+  sessions: readonly HangRun[],
   gripId: string,
   today: CalendarDate,
   unit: WeightUnit,

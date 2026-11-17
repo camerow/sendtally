@@ -14,6 +14,7 @@ import {
   hangIdParam,
   hangLoadsBody,
   hangSessionBody,
+  hangPartOf,
   hangSessionOf,
   hangSettingsBody,
   hangWorkoutParam,
@@ -23,6 +24,9 @@ import {
 import { syncHangSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 import { captureWorkoutLogged } from "./workoutLogged";
+
+// A workout's fingerboard part changes only through its activity.
+const PART = "part of a workout; change it through the workout";
 
 // Hangboard and ground-pull training. The app generates every id,
 // so each write is an idempotent PUT it can retry or replay offline.
@@ -37,7 +41,8 @@ export const hang = new Hono<AppEnv>()
       grips: rows.grips.map(gripOf),
       defaultGrips: Object.fromEntries(rows.defaultGrips.map((r) => [r.workout_id, r.grip_id])),
       loads: rows.loads,
-      sessions: rows.sessions.map(hangSessionOf),
+      sessions: rows.sessions.filter((r) => r.activity_id === null).map(hangSessionOf),
+      parts: rows.sessions.flatMap((r) => hangPartOf(r) ?? []),
       settings: settingsOf(rows.settings),
       strava: { connected: strava?.status === "active" },
     };
@@ -152,6 +157,7 @@ export const hang = new Hono<AppEnv>()
       const userId = c.get("userId");
       await repo.ensureUser(c.env.DB, userId);
       const existing = await repo.getHangSession(c.env.DB, userId, id);
+      if (existing?.activity_id != null) return c.json({ error: PART }, 409);
       const body = c.req.valid("json");
       const row = await repo.saveHangSession(c.env.DB, userId, { id, ...body });
       if (existing === null || existing.strava_activity_id !== null) {
@@ -165,15 +171,18 @@ export const hang = new Hono<AppEnv>()
   // Its Strava activity, if any, stays on Strava.
   .delete("/sessions/:id", zValidator("param", hangIdParam, invalidBody), async (c) => {
     const { id } = c.req.valid("param");
-    return c.json({ deleted: await repo.deleteHangSession(c.env.DB, c.get("userId"), id) });
+    const userId = c.get("userId");
+    const existing = await repo.getHangSession(c.env.DB, userId, id);
+    if (existing?.activity_id != null) return c.json({ error: PART }, 409);
+    return c.json({ deleted: await repo.deleteHangSession(c.env.DB, userId, id) });
   })
 
   .post("/sessions/:id/strava", zValidator("param", hangIdParam, invalidBody), async (c) => {
     const { id } = c.req.valid("param");
     const userId = c.get("userId");
-    if ((await repo.getHangSession(c.env.DB, userId, id)) === null) {
-      return c.json({ error: "not found" }, 404);
-    }
+    const existing = await repo.getHangSession(c.env.DB, userId, id);
+    if (existing === null) return c.json({ error: "not found" }, 404);
+    if (existing.activity_id !== null) return c.json({ error: PART }, 409);
     const result = await syncHangSessionToStrava(c.env, userId, id, true);
     if (result.outcome === "failed") {
       return c.json({ outcome: result.outcome, reason: result.reason }, 502);

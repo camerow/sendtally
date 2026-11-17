@@ -51,14 +51,19 @@ export const exerciseKindOf = (kind: WorkoutKind): ExerciseKind | null =>
   EXERCISE_KINDS.find((k) => k === kind) ?? null;
 
 /** Every exercise a workout's items name, with the kind they take from it and the measure its doses write. */
-export function workoutExercises(w: Pick<Workout, "kind" | "items">): ExerciseInput[] {
+export function workoutExercises(
+  w: Pick<Workout, "kind" | "items">,
+  isGrip: (exercise: string) => boolean
+): ExerciseInput[] {
   const kind = exerciseKindOf(w.kind);
   if (kind === null) return [];
-  return w.items.map((i) => ({
-    name: i.exercise.trim(),
-    kind,
-    measure: measureOf(kind, i.doses),
-  }));
+  return w.items
+    .filter((i) => !isGrip(i.exercise))
+    .map((i) => ({
+      name: i.exercise.trim(),
+      kind,
+      measure: measureOf(kind, i.doses),
+    }));
 }
 
 export const exerciseOf = (row: ExerciseRow): Exercise => ({

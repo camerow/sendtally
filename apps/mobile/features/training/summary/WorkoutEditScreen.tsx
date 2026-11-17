@@ -16,7 +16,7 @@ export function WorkoutEditScreen({ id }: { id: string }): React.ReactElement {
   const { model } = useHangData();
   const { state } = useActivities(useApi());
   const activity = state.status === "ready" ? state.data.find((a) => a.id === id) : undefined;
-  const hang = model.sessions.find((s) => s.id === id);
+  const hang = model.data.sessions.find((s) => s.id === id);
   const [kept, setKept] = React.useState<Found | null>(null);
   if (kept === null && activity !== undefined) setKept({ kind: "activity", record: activity });
   else if (kept === null && hang !== undefined) setKept({ kind: "hang", record: hang });

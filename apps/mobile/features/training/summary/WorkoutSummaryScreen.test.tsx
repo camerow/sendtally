@@ -6,6 +6,7 @@ import { Alert, Linking } from "react-native";
 import type {
   ActivityRecord,
   ConnectionStatus,
+  HangPart,
   HangSessionRecord,
   Plan,
   WorkoutRecord,
@@ -125,9 +126,10 @@ const plan: Plan = {
 const show = async (
   id: string,
   activities: ActivityRecord[],
-  sessions: HangSessionRecord[] = []
+  sessions: HangSessionRecord[] = [],
+  parts: HangPart[] = []
 ): Promise<void> => {
-  await renderWithHang(<WorkoutSummaryScreen id={id} />, hangData({ sessions }), {
+  await renderWithHang(<WorkoutSummaryScreen id={id} />, hangData({ sessions, parts }), {
     activities,
     workouts: [legs],
     plan,
@@ -159,6 +161,29 @@ describe("A finished workout's summary", () => {
     expect(screen.getByText("Last time 5 × 80 kg · Fri, Oct 23")).toBeTruthy();
     expect(screen.getByText("Over time")).toBeTruthy();
     expect(screen.getByText("+2.5 kg · best yet")).toBeTruthy();
+  });
+
+  it("shows its workout's fingerboard part grip by grip before the other exercises", async () => {
+    const sets = [
+      { reps: 1, onS: 10, rpe: 8 },
+      { reps: 1, onS: 10 },
+    ];
+    const part = {
+      ...aHang({
+        date: "2026-10-28",
+        workoutId: "legs",
+        done: [{ item: 0, exercise: "half", sets }],
+      }),
+      activityId: "a1",
+    };
+    await show("a1", [today, before], [], [part]);
+    const names = screen
+      .getAllByText(/^(Half crimp.*|Back squat)$/)
+      .map((n) => n.props.children as string);
+    expect(names[0]).toMatch(/^Half crimp/);
+    expect(names.slice(1)).toContain("Back squat");
+    expect(screen.queryByText("5")).toBeNull();
+    expect(screen.getAllByText("7")).toHaveLength(2);
   });
 
   it("lists the workout's past sessions with this one marked, each opening its summary", async () => {

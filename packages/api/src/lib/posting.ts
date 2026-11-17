@@ -3,7 +3,7 @@ import type { Env } from "../bindings";
 import { activityOf } from "./activities";
 import { decryptSecret, encryptSecret } from "./crypto";
 import { builtInGripName, hangSessionOf, settingsOf } from "./hang";
-import { hangActivity } from "./hang-activity";
+import { hangActivity, partLines } from "./hang-activity";
 import * as repo from "./repo";
 import { trainingActivity } from "./training-activity";
 import {
@@ -199,10 +199,21 @@ export async function syncActivityToStrava(
     return skipped("posting is off");
   }
 
-  const { units } = settingsOf(await repo.getHangSettings(env.DB, userId));
+  const [hangSettings, partRow] = await Promise.all([
+    repo.getHangSettings(env.DB, userId),
+    repo.getActivityPart(env.DB, userId, id),
+  ]);
+  const { units } = settingsOf(hangSettings);
+  const part = partRow === null ? null : hangSessionOf(partRow);
+  const grips =
+    part === null ? [] : [...new Set([part.gripId, ...part.done.map((d) => d.exercise)])];
+  const names = new Map(
+    await Promise.all(grips.map(async (g) => [g, await gripName(env, userId, g)] as const))
+  );
+  const fingers = part === null ? [] : partLines(part, (g) => names.get(g) ?? g, units);
   return post(env, connection, {
     activityId: row.strava_activity_id,
-    activity: trainingActivity(activityOf(row), units),
+    activity: trainingActivity(activityOf(row), units, fingers),
     markPending: () => repo.markActivityPostPending(env.DB, userId, id),
     markPosted: (activityId) => repo.markActivityPosted(env.DB, userId, id, activityId),
     markFailed: (error) => repo.markActivityPostFailed(env.DB, userId, id, error),

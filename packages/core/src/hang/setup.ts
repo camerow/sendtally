@@ -1,7 +1,7 @@
 import { DEFAULT_PULL_KG } from "./loads";
 import { clamp } from "./parse";
 import { seriesFor } from "./trends";
-import type { HangKind, HangSession } from "./types";
+import type { HangKind, HangRun } from "./types";
 
 export const DEFAULT_EDGE_MM = 20;
 export const MIN_EDGE_MM = 4;
@@ -26,7 +26,7 @@ export function resolveSetup(kind: HangKind, layers: readonly SetupLayer[]): Han
   return { edgeMm: pick("edgeMm"), loadKg: pick("loadKg") };
 }
 
-export function lastSession<T extends HangSession>(
+export function lastSession<T extends HangRun>(
   sessions: readonly T[],
   workoutId: string,
   gripId: string

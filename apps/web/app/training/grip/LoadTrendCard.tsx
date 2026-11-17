@@ -1,5 +1,5 @@
+import type { HangRun } from "@sendtally/core/hang";
 import React from "react";
-import type { HangSessionRecord } from "@sendtally/api-client";
 import {
   fromUnit,
   toUnit,
@@ -17,7 +17,7 @@ export type LoadTrendCardProps = {
   name: string;
   /** Top right: the setup the series ran on. */
   caption: string;
-  series: readonly HangSessionRecord[];
+  series: readonly HangRun[];
   summary: TrendSummary;
   kind: HangKind;
   unit: WeightUnit;

@@ -5,6 +5,7 @@ import {
   exerciseWorkout,
   usedInText,
   workoutsWith,
+  workoutsWithGrip,
   wrapperOf,
   type ExerciseEntry,
 } from "./wrapper";
@@ -69,11 +70,18 @@ describe("wrapperOf", () => {
     expect(wrapperOf([lower, named], elan)?.id).toBe("w2");
   });
 
-  it("finds a grip's on the hangboard only, by its id", () => {
+  it("finds a grip by its exact id in Fingers workouts and mixes alike", () => {
     const hang = workout("w1", "Half crimp", ["half"], { kind: "hangboard" });
-    const named = workout("w2", "Half crimp", ["half"]);
-    expect(wrapperOf([named, hang], grip)?.id).toBe("w1");
-    expect(workoutsWith([named, hang], grip).map((w) => w.id)).toEqual(["w1"]);
+    const mix = workout("w2", "Fingers and pull", ["half", "Pull-ups"]);
+    const lift = workout("w3", "Half crimp", ["Half"]);
+    expect(workoutsWith([hang, mix, lift], grip).map((w) => w.id)).toEqual(["w1", "w2"]);
+    expect(workoutsWithGrip([hang, mix, lift], "half").map((w) => w.id)).toEqual(["w1", "w2"]);
+    expect(wrapperOf([lift, mix, hang], grip)?.id).toBe("w1");
+  });
+
+  it("never finds an exercise in a Fingers workout", () => {
+    const hang = workout("w1", "Pull-ups", ["Pull-ups"], { kind: "hangboard" });
+    expect(workoutsWith([hang], entry)).toEqual([]);
   });
 });
 
