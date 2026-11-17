@@ -7,6 +7,7 @@ export const hang = {
   "hang.loadPlain": "{value} {unit}",
   "hang.seconds": "{n} s",
   "hang.minutes": "{n} Min",
+  "hang.underTension": "{time} unter Spannung",
   "hang.edgeMm": "{n}\u00A0mm",
 
   "hang.summaryRepeats": "{reps} × {on} an / {off} Pause",

@@ -7,8 +7,13 @@ import { t } from "@sendtally/features/i18n";
 import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { type } from "../type";
+import { DayColumn } from "../../sessions/SessionRowParts";
+import { rowMeta, rowTitle } from "../../sessions/SessionRow";
 
-/** Every session on the grip, newest first: load, day and setup, completion, Best on a best. */
+/**
+ * Every session on the grip, newest first, read like the log: its day, this grip's hangs with Best
+ * on a best, the edge and time under tension, and the added weight rightmost.
+ */
 export function GripSessions({ rows }: { rows: readonly GripSessionVM[] }): React.ReactElement {
   return (
     <View style={{ gap: 2 }}>
@@ -20,25 +25,27 @@ export function GripSessions({ rows }: { rows: readonly GripSessionVM[] }): Reac
           key={`${s.id}:${i}`}
           accessibilityRole="button"
           accessibilityLabel={[
-            s.load,
+            `${s.weekday} ${s.day}`,
+            s.title,
             s.meta,
-            s.completion,
+            s.load,
             ...(s.best ? [t("statistics.best")] : []),
           ].join(", ")}
           onPress={() => router.push({ pathname: "/activity/[id]", params: { id: s.id } })}
           style={pressRow({
-            minHeight: 52,
             flexDirection: "row",
             alignItems: "center",
-            gap: 10,
+            gap: 12,
+            paddingVertical: 11,
             borderBottomWidth: 1,
-            borderBottomColor: colors.lineOnLight,
+            borderBottomColor: colors.lineOnLightSoft,
           })}
         >
-          <View style={{ flex: 1, gap: 2 }}>
+          <DayColumn weekday={s.weekday} day={s.day} />
+          <View style={{ flex: 1, gap: 3 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Text style={[type.monoBold, { fontSize: 15, color: colors.gunmetal }]}>
-                {s.load}
+              <Text numberOfLines={1} style={{ flexShrink: 1, ...rowTitle }}>
+                {s.title}
               </Text>
               {s.best && (
                 <Label
@@ -56,10 +63,14 @@ export function GripSessions({ rows }: { rows: readonly GripSessionVM[] }): Reac
                 </Label>
               )}
             </View>
-            <Text style={[type.mono, { fontSize: 11, color: colors.textMuted }]}>{s.meta}</Text>
+            {s.meta !== "" && (
+              <Text numberOfLines={1} style={rowMeta}>
+                {s.meta}
+              </Text>
+            )}
           </View>
-          <Text style={[type.monoBold, { fontSize: 12, color: colors.textSecondary }]}>
-            {s.completion}
+          <Text style={[type.monoBold, { flexShrink: 0, fontSize: 15, color: colors.gunmetal }]}>
+            {s.load}
           </Text>
         </Pressable>
       ))}

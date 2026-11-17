@@ -70,13 +70,37 @@ describe("grip screen", () => {
 
   it("lists sessions newest first, marking each that beat the best before it", () => {
     const rows = gripSessionRows(series, series, "kg");
-    expect(rows.map((r) => [r.load, r.completion, r.best])).toEqual([
-      ["+6 kg", "100%", false],
-      ["+9 kg", "75%", false],
-      ["+6 kg", "100%", true],
-      ["+2 kg", "100%", false],
+    expect(rows.map((r) => [r.load, r.title, r.best])).toEqual([
+      ["+6 kg", "6 of 6 hangs", false],
+      ["+9 kg", "5 of 6 hangs", false],
+      ["+6 kg", "6 of 6 hangs", true],
+      ["+2 kg", "6 of 6 hangs", false],
     ]);
-    expect(rows[0]?.meta).toBe("Sep 22 · 20\u00A0mm · 10s × 6");
+    expect(rows[0]).toMatchObject({
+      day: 22,
+      weekday: "Tue",
+      meta: "20\u00A0mm · 1:00 under tension",
+    });
+  });
+
+  it("counts a grip's own hangs and seconds held, a lone hang's cut seconds too, and no edge on a pull", () => {
+    const cut = hang("2026-09-25", 4, {
+      done: [
+        {
+          item: 0,
+          exercise: "half",
+          sets: [
+            { reps: 1, onS: 10 },
+            { reps: 1, onS: 6 },
+          ],
+        },
+        { item: 1, exercise: "open", sets: [{ reps: 1, onS: 10 }] },
+      ],
+    });
+    const [row] = gripSessionRows([cut], [cut], "kg");
+    expect(row).toMatchObject({ title: "2 of 6 hangs", meta: "20\u00A0mm · 0:16 under tension" });
+    const pull = hang("2026-09-26", 20, { protocol: pulls, edgeMm: 0 });
+    expect(gripSessionRows([pull], [pull], "kg")[0]?.meta).toBe("");
   });
 
   it("says each milestone newest first, naming the setup only when they are mixed", () => {

@@ -104,7 +104,7 @@ describe("GripScreen", () => {
 
   it("tags a best and opens its session", async () => {
     await renderWithHang(<GripScreen id="half" />, hangData({ sessions }));
-    const best = screen.getByLabelText(/^\+6 kg, Sep 8 .*, Best$/);
+    const best = screen.getByLabelText(/^\w+ 8, .*, \+6 kg, Best$/);
     await fireEvent.press(best);
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/activity/[id]",

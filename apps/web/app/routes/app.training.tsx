@@ -8,12 +8,14 @@ import { HangDataProvider } from "../training/data/HangDataProvider";
 import blockStyles from "../training/blocks/blocks.css?url";
 import playerStyles from "../training/players/players.css?url";
 import timerStyles from "../training/players/timer/timer.css?url";
+import logStyles from "../sessions/log.css?url";
 import trainingStyles from "../training/training.css?url";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: detailStyles },
   { rel: "stylesheet", href: stravaStyles },
   { rel: "stylesheet", href: pageActionStyles },
+  { rel: "stylesheet", href: logStyles },
   { rel: "stylesheet", href: trainingStyles },
   { rel: "stylesheet", href: blockStyles },
   { rel: "stylesheet", href: playerStyles },
