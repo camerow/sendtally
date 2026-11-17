@@ -81,6 +81,11 @@ describe("ClimbEditorSheet", () => {
     expect(dialog.getAttribute("aria-label")).toBe("Add climb");
   });
 
+  it("holds focus itself on open, as every sheet does, not its scrolling panel", () => {
+    const dialog = mount(() => {});
+    expect(document.activeElement).toBe(dialog);
+  });
+
   it("closes on a tap that starts and ends on the backdrop", () => {
     const onClose = vi.fn();
     const dialog = mount(onClose);

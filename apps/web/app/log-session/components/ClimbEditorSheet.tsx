@@ -129,7 +129,10 @@ export function ClimbEditorSheet({
 
   React.useEffect(() => {
     const el = dialog.current;
-    if (el !== null && !el.open) el.showModal();
+    if (el === null || el.open) return;
+    el.showModal();
+    // As every sheet does: the dialog holds focus itself, not its scrolling panel or first field.
+    el.focus();
   }, []);
 
   const nameProps: ClimbNameFieldProps = {
@@ -150,6 +153,7 @@ export function ClimbEditorSheet({
     <dialog
       ref={dialog}
       className="climb-sheet"
+      tabIndex={-1}
       aria-label={title}
       onCancel={(e) => {
         e.preventDefault();
