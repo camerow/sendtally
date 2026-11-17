@@ -42,7 +42,8 @@
 }
 
 .app-content {
-  padding: 36px 44px 72px;
+  --app-gutter: 44px;
+  padding: 36px var(--app-gutter) 72px;
   max-width: 1120px;
   width: 100%;
   box-sizing: border-box;
@@ -120,7 +121,8 @@
   }
 
   .app-content {
-    padding: 22px 18px calc(97px + env(safe-area-inset-bottom));
+    --app-gutter: 18px;
+    padding: 22px var(--app-gutter) calc(97px + env(safe-area-inset-bottom));
   }
 
   /* A focused sub-screen owns the bottom edge with its own action bar. */
@@ -873,15 +875,36 @@
   color: var(--text-on-white-secondary);
 }
 
-.grade-chips {
+/* A sideways row of chips that runs into the gutter around it, fading there on desktop, with room for focus rings. */
+.chip-row {
+  --chip-bleed: var(--app-gutter, 0px);
   display: flex;
-  gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
+  margin: -3px calc(-1 * var(--chip-bleed));
+  padding: 3px var(--chip-bleed);
+  scroll-padding-inline: var(--chip-bleed);
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--chip-bleed),
+    #000 calc(100% - var(--chip-bleed)),
+    transparent
+  );
 }
 
-.grade-chips::-webkit-scrollbar {
+.chip-row::-webkit-scrollbar {
   display: none;
+}
+
+@media (max-width: 767px) {
+  .chip-row {
+    mask-image: none;
+  }
+}
+
+.grade-chips {
+  gap: 8px;
 }
 
 .grade-chip {

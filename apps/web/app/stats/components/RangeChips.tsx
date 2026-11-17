@@ -33,7 +33,7 @@ export function RangeChips({
       ?.scrollIntoView?.({ inline: "center", block: "nearest" });
   }, [shown]);
   return (
-    <div ref={row} role="group" aria-label={t("trends.timeRange")} className="range-chips">
+    <div ref={row} role="group" aria-label={t("trends.timeRange")} className="range-chips chip-row">
       {trendRanges(years).map((range) => {
         const locked = isLockedRange(member, range);
         const label = trendRangeLabel(range);

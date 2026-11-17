@@ -25,7 +25,7 @@ export function ScopeBar({
   }, [currentKey]);
   return (
     <div className="scope-bar">
-      <div ref={strip} className="scope-strip">
+      <div ref={strip} className="scope-strip chip-row">
         {items.map((item) => (
           <button
             key={item.key}

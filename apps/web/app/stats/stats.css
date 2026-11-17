@@ -5,10 +5,7 @@
 }
 
 .range-chips {
-  display: flex;
   gap: 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
 .range-chip {
