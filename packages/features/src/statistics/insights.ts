@@ -19,7 +19,6 @@ import { exerciseSeries, type ExerciseMetric } from "./exercises";
 import { kindLabel } from "../activities/format";
 import { TRAINED_KINDS, oneDecimal } from "./overview";
 import { workoutsDone, type WorkoutsDoneVM } from "./workouts";
-import { runMinutes } from "./runMinutes";
 import { workloadVM, type WorkloadVM } from "./workloadView";
 
 /** Where a record opens: a climbing session by fingerprint, anything trained by id. */
@@ -82,6 +81,13 @@ export type TrainingInsightsVM = {
   workload: WorkloadVM;
 };
 
+/** A run's minutes that were its fingerboard part: every grip and the rests between them. */
+const partMinutes = (
+  minutes: number,
+  part: Parameters<typeof hangSessionSeconds>[0] | undefined
+): number =>
+  part === undefined ? 0 : Math.min(minutes, Math.round(hangSessionSeconds(part) / 60));
+
 /** Every record once: a run's fingerboard part counts inside its activity, never on its own. */
 export function doneOf(log: SessionLogWithClimbs): Done[] {
   const parts = new Map(log.hangParts.map((p) => [p.activityId, p]));
@@ -111,7 +117,7 @@ export function doneOf(log: SessionLogWithClimbs): Done[] {
       at: Date.parse(a.date),
       rpe: a.rpe,
       minutes: a.minutes,
-      fingers: runMinutes(a.minutes, parts.get(a.id)).fingers,
+      fingers: partMinutes(a.minutes, parts.get(a.id)),
     })),
   ];
 }
@@ -176,38 +182,34 @@ function hangTrends(
 }
 
 /**
- * Each group's share of the sessions and its time, leaving out groups with none. A record
- * counts in every group `shares` gives it time in, with that time.
+ * Each group's share of the sessions and its time, leaving out groups with neither. A record is
+ * one session under its own group; `minutesIn` gives each group its time.
  */
 function mix<K>(
   shown: readonly Done[],
   keys: readonly K[],
-  shares: (d: Done) => readonly (readonly [K, number])[],
-  name: (k: K) => string
+  keyOf: (d: Done) => K,
+  name: (k: K) => string,
+  minutesIn: (d: Done, key: K) => number = (d, key) => (keyOf(d) === key ? d.minutes : 0)
 ): (TrainedVM & { key: K })[] {
   return keys.flatMap((key) => {
-    const of = shown.flatMap((d) => shares(d).filter(([k]) => k === key));
-    if (of.length === 0) return [];
-    const time = of.reduce((n, [, minutes]) => n + minutes, 0);
+    const count = shown.filter((d) => keyOf(d) === key).length;
+    const time = shown.reduce((n, d) => n + minutesIn(d, key), 0);
+    if (count === 0 && time === 0) return [];
     return [
       {
         key,
         name: name(key),
-        share: of.length / shown.length,
-        detail: time === 0 ? String(of.length) : `${of.length} · ${durationLabel(time)}`,
+        share: count / shown.length,
+        detail: time === 0 ? String(count) : `${count} · ${durationLabel(time)}`,
       },
     ];
   });
 }
 
-/** A run's time under its kind, its fingerboard part's under Fingers (Will, 2026-11-16). */
-const kindShares = (d: Done): (readonly [WorkoutKind, number])[] =>
-  d.fingers === 0
-    ? [[d.kind, d.minutes]]
-    : [
-        [d.kind, d.minutes - d.fingers],
-        ["hangboard", d.fingers],
-      ];
+/** A run's time under its kind, but its fingerboard part's under Fingers (Will, 2026-11-16). */
+const kindMinutes = (d: Done, kind: WorkoutKind): number =>
+  (d.kind === kind ? d.minutes - d.fingers : 0) + (kind === "hangboard" ? d.fingers : 0);
 
 /**
  * Training over a range: effort and sessions per bucket, the mix of kinds by sessions and time,
@@ -266,16 +268,16 @@ export function trainingInsightsVM(
       const inside = shown.filter((d) => d.at >= b.start && d.at < b.end);
       return { label: b.label, axis: b.axis, sessions: inside.length, effort: effortOf(inside) };
     }),
-    trained: mix(shown, TRAINED_KINDS, kindShares, kindLabel).map(({ key, ...k }) => ({
-      ...k,
-      kind: key,
-    })),
-    byFocus: mix(shown, [...FOCI, null], (d) => [[d.focus, d.minutes]], focusLabel).map(
-      ({ key, ...f }) => ({
-        ...f,
-        focus: key,
+    trained: mix(shown, TRAINED_KINDS, (d) => d.kind, kindLabel, kindMinutes).map(
+      ({ key, ...k }) => ({
+        ...k,
+        kind: key,
       })
     ),
+    byFocus: mix(shown, [...FOCI, null], (d) => d.focus, focusLabel).map(({ key, ...f }) => ({
+      ...f,
+      focus: key,
+    })),
     total: [
       t("statistics.sessionCount", { count: shown.length }),
       ...(minutes === 0 ? [] : [durationLabel(minutes)]),

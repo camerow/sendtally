@@ -231,11 +231,41 @@ describe("a workout's fingerboard part", () => {
     );
   });
 
-  it("gives its minutes to Fingers in the mix and the rest to the run's kind", () => {
+  const kindSessions = (vm: ReturnType<typeof trainingInsightsVM>): number =>
+    vm.trained.reduce((n, k) => n + Number(k.detail.split(" · ")[0]), 0);
+
+  it("moves only its minutes to Fingers: the run is one session under its own kind", () => {
     const vm = trainingInsightsVM(log, "7d", TRAINED_KINDS, grip, NOW);
     expect(vm.trained.map((k) => [k.kind, k.detail])).toEqual([
-      ["hangboard", `1 · ${durationLabel(fingers)}`],
+      ["hangboard", `0 · ${durationLabel(fingers)}`],
       ["strength", `1 · ${durationLabel(60 - fingers)}`],
+    ]);
+    expect(kindSessions(vm)).toBe(vm.sessions);
+    expect(vm.total).toContain(durationLabel(60));
+  });
+
+  it("gives a part that fills the run all of its minutes, and the run's kind its session", () => {
+    const short = { ...log, activities: [{ ...run, minutes: fingers }] };
+    const vm = trainingInsightsVM(short, "7d", TRAINED_KINDS, grip, NOW);
+    expect(vm.trained.map((k) => [k.kind, k.detail])).toEqual([
+      ["hangboard", `0 · ${durationLabel(fingers)}`],
+      ["strength", "1"],
+    ]);
+    expect(kindSessions(vm)).toBe(vm.sessions);
+    expect(vm.total).toContain(durationLabel(fingers));
+  });
+
+  it("counts a Fingers run with a part once, with its whole minutes", () => {
+    const fingersRun = { ...run, kind: "hangboard" } as unknown as Logged;
+    const vm = trainingInsightsVM(
+      { ...log, activities: [fingersRun] },
+      "7d",
+      TRAINED_KINDS,
+      grip,
+      NOW
+    );
+    expect(vm.trained.map((k) => [k.kind, k.detail])).toEqual([
+      ["hangboard", `1 · ${durationLabel(60)}`],
     ]);
   });
 
