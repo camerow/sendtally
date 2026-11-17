@@ -1,4 +1,5 @@
 import React from "react";
+import { useExerciseList } from "@sendtally/features/statistics";
 import type { Block, CalendarDate } from "@sendtally/core/hang";
 import { shortDate } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -63,6 +64,7 @@ export function AddWorkoutsSheet({
   onScheduled,
 }: AddWorkoutsSheetProps): React.ReactElement {
   const { model, today } = useHangData();
+  const exercises = useExerciseList(useAppApi());
   const api = useAppApi();
   const actions = usePlanActions();
   const { plan } = useTrainingLog(api).log;
@@ -241,7 +243,7 @@ export function AddWorkoutsSheet({
                         key={w.id}
                         kind={w.kind}
                         name={w.name}
-                        meta={libraryLine(w, model.settings.units)}
+                        meta={libraryLine(w, model.settings.units, exercises)}
                         picture={libraryPictures("workout", w.id)[0]}
                         to={workoutPath(w.id)}
                         state={stateOf(w.id, [w.id])}

@@ -1,4 +1,4 @@
-import type { ActivityKind, WorkoutRecord } from "@sendtally/api-client";
+import type { ActivityKind, Exercise, WorkoutRecord } from "@sendtally/api-client";
 import {
   defaultExerciseRestS,
   doseProtocol,
@@ -21,6 +21,7 @@ import {
   FOCI,
 } from "@sendtally/core/hang";
 import { climbingDoseLine } from "../activities/climbing";
+import { tallyMeasuresOf } from "../exercises/measure";
 import { weightValue } from "../activities/done";
 import { ACTIVITY_KINDS, kindLabel } from "../activities/format";
 import { countText, humanDuration, protocolSummary } from "../hang/format";
@@ -180,11 +181,17 @@ export function turnName(items: readonly Pick<Item, "doses">[], n: number): stri
   ]?.name;
 }
 
+/** The exercises a workout's climbing line reads its measure from, such as laps of a circuit. */
+export type MeasuredExercises = readonly Pick<Exercise, "name" | "kind" | "measure">[];
+
 /**
- * "6 × 7s on, 3s off" for a one-item hangboard workout, "4 sets of 4 climbs" for a one-item
- * climbing one, "3 exercises", or null with none.
+ * "6 × 7s on, 3s off" for a one-item hangboard workout, "4 sets of 4 climbs" or "3 laps of 40
+ * moves" for a one-item climbing one, "3 exercises", or null with none.
  */
-export function bodySummary(w: Pick<Workout, "kind" | "items">): string | null {
+export function bodySummary(
+  w: Pick<Workout, "kind" | "items">,
+  exercises: MeasuredExercises = []
+): string | null {
   const items = sessionItems(w.items, 0);
   const [only] = items;
   if (only === undefined) return null;
@@ -193,7 +200,14 @@ export function bodySummary(w: Pick<Workout, "kind" | "items">): string | null {
     return protocolSummary(p, timeUnitsOf(p));
   }
   if (w.kind === "climbing" && items.length === 1)
-    return climbingDoseLine(only.dose, only.dose.onS === undefined ? "climbs" : "wallTime");
+    return climbingDoseLine(
+      only.dose,
+      tallyMeasuresOf(exercises, w.kind)(only.exercise) === "laps"
+        ? "laps"
+        : only.dose.onS === undefined
+          ? "climbs"
+          : "wallTime"
+    );
   return t("activities.exerciseCount", { count: items.length });
 }
 
@@ -203,7 +217,11 @@ export function bodySummary(w: Pick<Workout, "kind" | "items">): string | null {
  * workout with no exercises reads only its length, or nothing.
  * "1 exercise · 3 × 8", "4 exercises · 30m".
  */
-export function libraryLine(w: Workout, unit: WeightUnit): string | null {
+export function libraryLine(
+  w: Workout,
+  unit: WeightUnit,
+  exercises: MeasuredExercises = []
+): string | null {
   const items = sessionItems(w.items, 0);
   const [only] = items;
   const minutes = workoutMinutes(w);
@@ -211,7 +229,7 @@ export function libraryLine(w: Workout, unit: WeightUnit): string | null {
     only === undefined || items.length > 1 || w.kind === "hangboard"
       ? null
       : w.kind === "climbing"
-        ? bodySummary(w)
+        ? bodySummary(w, exercises)
         : doseSummary(w.kind, only.dose, unit);
   const tail = dose ?? (minutes === null ? null : durationLabel(minutes));
   if (only === undefined) return tail;
