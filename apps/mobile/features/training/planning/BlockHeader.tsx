@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { TextInput } from "../../../components/TextInput";
 import { isDated, type Block, type CalendarDate } from "@sendtally/core/hang";
 import { MAX_DESCRIPTION } from "@sendtally/core/text";
 import { colors, disabledOpacity } from "@sendtally/design/tokens";

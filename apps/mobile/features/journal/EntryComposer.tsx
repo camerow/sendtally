@@ -1,14 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { TextInput } from "../../components/TextInput";
 import type { JournalEntry, SendtallyApi, SessionRow } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
 import {

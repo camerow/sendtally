@@ -279,7 +279,10 @@ export function Keypad({
       closeLabel={t("common.close")}
       dim={false}
     >
-      <View style={{ paddingHorizontal: 12, paddingTop: PAD_TOP, gap: ROW_GAP }}>
+      <View
+        onTouchStart={(e) => e.stopPropagation()}
+        style={{ paddingHorizontal: 12, paddingTop: PAD_TOP, gap: ROW_GAP }}
+      >
         <View
           style={{
             flexDirection: "row",

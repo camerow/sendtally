@@ -7,9 +7,9 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
+import { TextInput } from "../../components/TextInput";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbFormFromDraft, withAreaClimb, type ClimbFormValues } from "@sendtally/features/areas";
 import { findClimb, useClimbVocabulary } from "@sendtally/features/climbs";

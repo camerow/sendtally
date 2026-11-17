@@ -1,7 +1,8 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { Alert, KeyboardAvoidingView, Platform, TextInput, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, View } from "react-native";
+import { TextInput } from "../../../components/TextInput";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import {

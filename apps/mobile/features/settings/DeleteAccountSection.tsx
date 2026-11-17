@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { TextInput } from "../../components/TextInput";
 import { DELETE_CONFIRMATION_WORD, type DeleteAccountFeature } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
