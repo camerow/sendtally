@@ -15,6 +15,7 @@ import { eachSideOf } from "../exercises/sides";
 import { lapSets } from "../log-session/exerciseLaps";
 import { exerciseSets, startExercise } from "../log-session/exerciseTally";
 import type { LiveSession } from "../log-session/useLiveSession";
+import { partPlaces, partPlanned, type FingersPart } from "./fingersPart";
 import type { Hold } from "./holdClock";
 import { exerciseName } from "./library";
 import type { LiveRunStore } from "./liveRun";
@@ -29,7 +30,8 @@ import {
   withPrevious,
   type SetAt,
 } from "./setsRun";
-import { useHold, useRest, type HoldClock, type RestClock } from "./useLiveRun";
+import { useHold, useLiveRun, useRest, type HoldClock, type RestClock } from "./useLiveRun";
+import type { PlannedRun } from "./usePlannedRun";
 
 export type SetsPlayerInputs = {
   run: WorkoutRun;
@@ -40,6 +42,19 @@ export type SetsPlayerInputs = {
   activities: readonly Pick<Activity, "workoutId" | "done">[] | null;
   /** The exercise library, for which items log on the tally and which go each side; null until it loads. */
   exercises: readonly Pick<Exercise, "name" | "kind" | "measure" | "eachSide">[] | null;
+  /** Which items name grips: together they are the run's fingerboard part. */
+  isGrip: (exercise: string) => boolean;
+};
+
+/** A mix's fingerboard part in the player: where it sits, what its timer runs, and where it is. */
+export type PartInPlayer = {
+  /** Its grips' places in the run, the first where its card sits. */
+  places: number[];
+  planned: PlannedRun;
+  /** None until its timer starts. */
+  state: FingersPart | undefined;
+  /** Where it is now: the timer's run while it has it, or its rows once edited. */
+  change: (next: FingersPart) => void;
 };
 
 export type ClimbingItem = {
@@ -92,6 +107,8 @@ export type SetsPlayer = {
   finished: () => { done: ItemDone[]; off: string[] };
   /** Whether what it needs to finish has loaded. */
   loaded: boolean;
+  /** Its fingerboard part, when it has grips. */
+  part: PartInPlayer | null;
 };
 
 /**
@@ -105,6 +122,7 @@ export function useSetsPlayer({
   tally,
   activities,
   exercises,
+  isGrip,
 }: SetsPlayerInputs): SetsPlayer {
   const [resumed] = React.useState(() => {
     const live = store.resumed("/workout/sets", run.workoutId);
@@ -118,21 +136,45 @@ export function useSetsPlayer({
   const [ticked, setTicked] = React.useState<ReadonlySet<string>>(() => new Set(resumed?.ticked));
   const [opened, setOpened] = React.useState<ReadonlySet<number>>(new Set());
   const rest = useRest(store);
+  // Kept by value: grips load after the run opens, and a new list each render would write each render.
+  const placesKey = partPlaces(run.items, isGrip).join(",");
+  const places = React.useMemo(
+    () => (placesKey === "" ? [] : placesKey.split(",").map(Number)),
+    [placesKey]
+  );
+  const stored = useLiveRun(store);
+  const fingers =
+    stored?.pathname === "/workout/sets" &&
+    stored.workoutId === run.workoutId &&
+    stored.state.player === "sets"
+      ? stored.state.fingers
+      : undefined;
   React.useEffect(() => {
+    // The part is the timer's while it runs, so this keeps whatever the store holds of it.
+    const live = store.resumed("/workout/sets", run.workoutId)?.state;
+    const part = live?.player === "sets" ? live.fingers : undefined;
     store.write({
       title: run.title,
       workoutId: run.workoutId,
       pathname: "/workout/sets",
       params: runParams(run),
       startedAt,
-      state: { player: "sets", done, ticked: [...ticked] },
+      state: {
+        player: "sets",
+        done,
+        ticked: [...ticked],
+        ...(part && { fingers: part }),
+        ...(places.length > 0 && { grips: places }),
+      },
     });
-  }, [store, run, startedAt, done, ticked]);
+  }, [store, run, startedAt, done, ticked, places]);
+  const planned = partPlanned(run, places);
+  const inPart = (item: number): boolean => places.includes(item);
   const tallyMeasure = tallyMeasuresOf(exercises ?? [], run.kind);
   const tallyOf = (item: number): TallyMeasure | null =>
     tallyMeasure(run.items[item]?.exercise ?? "");
   const live = withDoneSets(run.items, done);
-  const sets = allSets(live).filter((at) => tallyOf(at.item) === null);
+  const sets = allSets(live).filter((at) => tallyOf(at.item) === null && !inPart(at.item));
   const previous = (exercise: string): SetDone[] =>
     activities === null || run.workoutId === null
       ? []
@@ -276,12 +318,25 @@ export function useSetsPlayer({
       rest.skip();
       hold.stop();
       return {
-        done: shown.map((d) =>
-          tallyOf(d.item) === null ? d : { ...d, sets: climbedSets(d.item) }
+        done: shown.flatMap((d) =>
+          inPart(d.item) ? [] : [tallyOf(d.item) === null ? d : { ...d, sets: climbedSets(d.item) }]
         ),
         off: sets.map(setKey).filter((key) => !ticked.has(key)),
       };
     },
     loaded: activities !== null && exercises !== null,
+    part:
+      planned === null
+        ? null
+        : {
+            places,
+            planned,
+            state: fingers,
+            change: (next) => {
+              const now = store.resumed("/workout/sets", run.workoutId);
+              if (now?.state.player === "sets")
+                store.writeAsIs({ ...now, state: { ...now.state, fingers: next } });
+            },
+          },
   };
 }

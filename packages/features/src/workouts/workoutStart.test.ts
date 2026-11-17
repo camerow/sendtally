@@ -32,6 +32,25 @@ describe("starting a climbing workout", () => {
     expect(workoutStart(climbing, "2026-10-30", run, () => false, measure).open).toBe("sets");
   });
 
+  it("opens a mix of grips and timed exercises in the sets player, never the intervals player", () => {
+    const strength = { ...climbing, kind: "strength" } as LibraryWorkout;
+    const plank = { exercise: "Plank", dose: { sets: 3, onS: 60 } };
+    const half = { exercise: "half", dose: { sets: 3, reps: 6, onS: 7, offS: 3 } };
+    const run = { link: PLAN, session: 0, items: [half, plank] };
+    expect(workoutStart(strength, "2026-10-30", run, () => false).open).toBe("sets");
+    const own = { link: PLAN, session: 0, items: [{ ...half, exercise: "g-mine" }, plank] };
+    expect(workoutStart(strength, "2026-10-30", own, () => false).open).toBe("intervals");
+    const known = workoutStart(
+      strength,
+      "2026-10-30",
+      own,
+      () => false,
+      undefined,
+      (e) => e === "g-mine"
+    );
+    expect(known.open).toBe("sets");
+  });
+
   it("opens the live session for the built-in Climbing day", () => {
     const day = builtInWorkouts().find((w) => w.id === "climb-session");
     const run = { link: PLAN, session: 0, items: [] };

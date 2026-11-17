@@ -19,6 +19,7 @@ import type * as T_activities from "@sendtally/features/activities";
 import type * as T_statistics from "@sendtally/features/statistics";
 import type * as T_training from "@sendtally/features/training";
 import type * as T_workouts from "@sendtally/features/workouts";
+import type * as T_hang from "@sendtally/features/hang";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -59,6 +60,10 @@ const library = (): WorkoutLibrary => {
   };
 };
 
+vi.mock("@sendtally/features/hang", async (actual) => ({
+  ...(await actual<typeof T_hang>()),
+  useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),
+}));
 vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
 vi.mock("../library/useLibrary", async (actual) => ({
   ...(await actual<typeof T_useLibrary>()),

@@ -11,6 +11,8 @@ import { liveRunOf } from "../../lib/useLiveRun";
 import { SetsPage } from "../../training/players/SetsPage";
 import { TallyPage } from "./TallyPage";
 import type * as T_useLibrary from "../../training/library/useLibrary";
+import type * as T_hang from "@sendtally/features/hang";
+import type * as T_toast from "../../components/Toast";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -18,6 +20,14 @@ HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogEleme
   this.setAttribute("open", "");
 };
 
+vi.mock("../../components/Toast", async (actual) => ({
+  ...(await actual<typeof T_toast>()),
+  useToast: () => ({ show: vi.fn() }),
+}));
+vi.mock("@sendtally/features/hang", async (actual) => ({
+  ...(await actual<typeof T_hang>()),
+  useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),
+}));
 vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
 vi.mock("../../lib/useAppApi", () => ({
   useAppApi: () => ({

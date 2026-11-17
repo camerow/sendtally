@@ -2,13 +2,21 @@ import { currentPhase, type HangSetup, type ItemDone, type Run } from "@sendtall
 import { phaseLabel } from "../hang/timerText";
 import { t } from "../i18n";
 import { exerciseName } from "./library";
+import type { FingersPart } from "./fingersPart";
 import { COUNT_IN_S, SWITCH_S, type Hold } from "./holdClock";
 import type { Rest } from "./restCountdown";
 
 /** Where a player is: the timer's run, or the sets and items ticked so far. */
 export type RunState =
   | { player: "timer"; run: Run; setups?: HangSetup[]; laps?: boolean }
-  | { player: "sets"; done: ItemDone[]; ticked: string[] }
+  | {
+      player: "sets";
+      done: ItemDone[];
+      ticked: string[];
+      /** A mix's fingerboard part, and its grips' places in `done`, which are no sets to tick. */
+      fingers?: FingersPart;
+      grips?: number[];
+    }
   | { player: "checklist"; ticked: number[]; count: number };
 
 /** Each player by the path mobile opens it at; the web prefixes its own. */
@@ -129,7 +137,15 @@ export function liveRunSummary({ state }: LiveRun): string {
   }
   if (state.player === "checklist")
     return t("plan.doneOf", { done: state.ticked.length, planned: state.count });
-  for (const d of state.done) {
+  if (
+    state.fingers !== undefined &&
+    "run" in state.fingers &&
+    state.fingers.run.finished === null
+  ) {
+    const { set } = currentPhase(state.fingers.run);
+    return `${t("workouts.fingerboard")} · ${t("hang.setOf", { set, sets: state.fingers.run.sets })}`;
+  }
+  for (const d of state.done.filter((x) => !(state.grips ?? []).includes(x.item))) {
     const set = d.sets.findIndex((_, s) => !state.ticked.includes(`${d.item}:${s}`));
     if (set !== -1)
       return `${exerciseName(d.exercise)} · ${t("hang.setOf", { set: set + 1, sets: d.sets.length })}`;

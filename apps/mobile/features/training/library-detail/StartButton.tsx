@@ -3,6 +3,7 @@ import React from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 import type { CalendarDate } from "@sendtally/core/hang";
 import { eachSideOf, tallyMeasuresOf } from "@sendtally/features/exercises";
+import { useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { useExercises } from "@sendtally/features/statistics";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
@@ -31,7 +32,9 @@ export function StartButton({
   height,
   style,
 }: StartButtonProps): React.ReactElement {
-  const exercises = useExercises(useApi()).state;
+  const api = useApi();
+  const exercises = useExercises(api).state;
+  const { isGrip } = useGrips(api);
   const mine = exercises.status === "ready" ? exercises.data : [];
   const eachSide = eachSideOf(mine);
   const tally = tallyMeasuresOf(mine, workout.kind);
@@ -46,6 +49,7 @@ export function StartButton({
           run,
           eachSide,
           tally,
+          isGrip,
           ownPage ? router.replace : router.push
         )
       }

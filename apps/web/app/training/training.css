@@ -1148,6 +1148,18 @@
   border: 1px solid var(--line-on-light-strong);
 }
 
+/* A fingerboard part's grips sit in its own card, one after another with no card each. */
+.done-flat {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.done-card.done-card--flat {
+  padding: 0;
+  border: none;
+}
+
 .done-card-head {
   display: flex;
   align-items: center;

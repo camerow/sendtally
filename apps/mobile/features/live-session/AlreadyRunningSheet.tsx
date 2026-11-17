@@ -2,6 +2,8 @@ import React from "react";
 import { View } from "react-native";
 import { sheetTitleSize } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
+import { discardRunBody } from "@sendtally/features/workouts";
+import { liveRun } from "./liveRun";
 import { Sheet } from "../../components/Sheet";
 import { confirmDestructive } from "../../lib/confirmDestructive";
 import { liveRunStorage } from "../../lib/liveRunStorage";
@@ -18,7 +20,7 @@ function Body({ asking }: { asking: Asking }): React.ReactElement {
   const discard = (): void =>
     confirmDestructive({
       title: running.climbing ? t("tally.discardTitle") : t("hang.discardRunTitle"),
-      body: running.climbing ? t("tally.discardBody") : t("hang.discardRunBody"),
+      body: running.climbing ? t("tally.discardBody") : discardRunBody(liveRun.read()),
       action: t("hang.discard"),
       onConfirm: () => {
         askingStore.close();

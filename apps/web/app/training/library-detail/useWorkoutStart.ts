@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import type { CalendarDate } from "@sendtally/core/hang";
 import { eachSideOf, tallyMeasuresOf } from "@sendtally/features/exercises";
+import { useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { useExercises } from "@sendtally/features/statistics";
 import { planLinkParams } from "@sendtally/features/training";
@@ -35,7 +36,9 @@ export function useWorkoutStart(
   const navigate = useNavigate();
   const startLive = useStartLive();
   const run = useLiveRun(useLiveRunStore());
-  const exercises = useExercises(useAppApi()).state;
+  const api = useAppApi();
+  const exercises = useExercises(api).state;
+  const { isGrip } = useGrips(api);
   if (run?.workoutId === workout.id)
     return { label: t("hang.resume"), resume: true, onPress: () => void navigate(runPath(run)) };
   if (exercises.status !== "ready") return null;
@@ -44,7 +47,8 @@ export function useWorkoutStart(
     date,
     planned,
     eachSideOf(exercises.data),
-    tallyMeasuresOf(exercises.data, workout.kind)
+    tallyMeasuresOf(exercises.data, workout.kind),
+    isGrip
   );
   if (start.open === "liveSession") {
     const { link } = planned;

@@ -1,6 +1,7 @@
 import type { TallyMeasure } from "../exercises/types";
 import {
   intervalsOf,
+  isBuiltInGrip,
   sessionItems,
   type CalendarDate,
   type PlanLink,
@@ -47,16 +48,18 @@ const playerOf = (items: readonly SessionItem[]): "sets" | "checklist" =>
 /**
  * The player a workout's items call for: hangboard in the timer, all timed in the
  * intervals player (climbing measured in time too, as laps), any exercise logged in climbs on
- * the tally or with reps or weight in the sets player, anything else as a checklist. A climbing
- * workout with no items opens the live session, and any other workout with none the activity
- * form. An exercise done on each side plays twice in the intervals player.
+ * the tally or with reps or weight in the sets player, anything else as a checklist. A mix of
+ * grips and other exercises always opens the sets player, where its grips are one fingerboard
+ * part. A climbing workout with no items opens the live session, and any other workout with
+ * none the activity form. An exercise done on each side plays twice in the intervals player.
  */
 export function workoutStart(
   w: LibraryWorkout,
   date: CalendarDate,
   { link, items }: PlannedItems,
   eachSide: (exercise: string) => boolean,
-  tally: (exercise: string) => TallyMeasure | null = () => null
+  tally: (exercise: string) => TallyMeasure | null = () => null,
+  isGrip: (exercise: string) => boolean = isBuiltInGrip
 ): WorkoutStart {
   const kind = activityKindOf(w.kind);
   const [first] = items;
@@ -65,6 +68,8 @@ export function workoutStart(
   if (kind === null || (kind === "climbing" && first === undefined)) return { open: "liveSession" };
   const run = { kind, title: w.name, date, workoutId: w.id, link, minutes: w.minutes };
   if (first === undefined) return { open: "form", run };
+  if (items.some((i) => isGrip(i.exercise)))
+    return { open: "sets", run: { ...run, exerciseRestS: w.exerciseRestS, items: [...items] } };
   const onTally = items.some((i) => tally(i.exercise) !== null);
   const climbs = items.some((i) => ["climbs", "laps"].includes(tally(i.exercise) ?? ""));
   if (!climbs && items.every((i) => i.dose.onS !== undefined))

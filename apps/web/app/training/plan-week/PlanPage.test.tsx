@@ -15,6 +15,7 @@ import { hangData } from "../data/testHang";
 import type * as T_statistics from "@sendtally/features/statistics";
 import type * as T_exercises from "@sendtally/features/exercises";
 import type * as T_workouts from "@sendtally/features/workouts";
+import type * as T_hang from "@sendtally/features/hang";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -58,6 +59,10 @@ const library = (): WorkoutLibrary => {
   return { workouts, usage: new Map(), workout: (id) => workouts.find((w) => w.id === id) };
 };
 
+vi.mock("@sendtally/features/hang", async (actual) => ({
+  ...(await actual<typeof T_hang>()),
+  useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),
+}));
 vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<typeof T_exercises>()),
   useExerciseList: () => [],

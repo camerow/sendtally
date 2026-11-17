@@ -59,6 +59,8 @@ export type HangTimerInputs = PlayerInputs & {
   resumed: ResumedTimer | null;
   /** The finished run's review. */
   onFinish: (review: DoneParams) => void;
+  /** Keeps the run somewhere other than its own live run: a mix's part keeps it in its workout's. */
+  write?: (run: Run<HangPhase>, setups: HangSetup[]) => void;
 };
 
 /** A hangboard workout in the timer, kept in `store` so it outlasts the page, handed to its review once it finishes. */
@@ -73,6 +75,7 @@ export function useHangTimerPlayer({
   playSound,
   end,
   onFinish,
+  write,
 }: HangTimerInputs): HangTimer<HangPhase> {
   const workout = planned.items[0].workout;
   const timer = useHangTimer(
@@ -88,7 +91,12 @@ export function useHangTimerPlayer({
   const { run } = timer;
   const gripId = grips[0] ?? workout.grip;
 
+  const keep = useLatest(write);
   React.useEffect(() => {
+    if (keep.current !== undefined) {
+      keep.current(run, setups);
+      return;
+    }
     store.write({
       title: workout.name,
       workoutId: workout.id,
@@ -97,7 +105,7 @@ export function useHangTimerPlayer({
       startedAt: run.startedAt,
       state: { player: "timer", run, setups },
     });
-  }, [store, run, workout, gripId, session, link, setups]);
+  }, [store, run, workout, gripId, session, link, setups, keep]);
 
   useEndOnOpen(end, timer);
 

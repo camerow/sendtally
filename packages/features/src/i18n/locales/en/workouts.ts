@@ -65,6 +65,8 @@ export const workouts = {
   "workouts.inWorkouts_one": "In {count} workout",
   "workouts.inWorkouts_other": "In {count} workouts",
   "workouts.notInWorkout": "Not in a workout yet",
+  "workouts.fingerboard": "Fingerboard",
+  "workouts.discardPartBody": "Its fingerboard part ({n} hangs held) goes too.",
   "workouts.usedIn": "Used in",
   "workouts.mergeExercise": "Merge into…",
   "workouts.mergeExerciseTitle": "Merge {from} into {into}?",

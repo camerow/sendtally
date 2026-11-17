@@ -64,6 +64,8 @@ export const workouts = {
   "workouts.inWorkouts_one": "En {count} entreno",
   "workouts.inWorkouts_other": "En {count} entrenos",
   "workouts.notInWorkout": "Aún no está en ningún entreno",
+  "workouts.fingerboard": "Multipresa",
+  "workouts.discardPartBody": "Su parte de multipresa ({n} suspensiones aguantadas) se va también.",
   "workouts.usedIn": "Se usa en",
   "workouts.mergeExercise": "Fusionar con…",
   "workouts.mergeExerciseTitle": "¿Fusionar {from} con {into}?",
