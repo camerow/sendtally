@@ -284,4 +284,55 @@ describe("a workout's fingerboard part", () => {
       vm.exercises.find((g) => g.kind === "hangboard")?.rows.map((r) => [r.key, r.count])
     ).toEqual([["half", 1]]);
   });
+
+  it("trends a part's second grip, from the dose it ran", () => {
+    const pinch = {
+      item: 1,
+      exercise: "pinch",
+      dose: { sets: 2, reps: 5, onS: 10, edgeMm: 20 },
+      sets: [
+        { reps: 5, onS: 10, edgeMm: 20, weightKg: 6 },
+        { reps: 5, onS: 10, edgeMm: 20, weightKg: 6 },
+      ],
+    };
+    const twoGrips = { ...part, done: [pinch] };
+    const vm = trainingInsightsVM(
+      { ...log, hangParts: [twoGrips] },
+      "7d",
+      TRAINED_KINDS,
+      grip,
+      NOW
+    );
+    expect(
+      vm.exercises.find((g) => g.kind === "hangboard")?.rows.map((r) => [r.key, r.count, r.values])
+    ).toEqual([
+      ["half", 1, [10]],
+      ["pinch", 1, [6]],
+    ]);
+  });
+});
+
+describe("a standalone session of several grips", () => {
+  it("trends every grip it ran, each on its own setup", () => {
+    const open = {
+      item: 1,
+      exercise: "open",
+      dose: { sets: 1, reps: 3, onS: 7, edgeMm: 15 },
+      sets: [{ reps: 2, onS: 7, edgeMm: 15, weightKg: 0 }],
+    };
+    const session = { ...hang("2026-10-20", 7, 4), done: [open] };
+    const vm = trainingInsightsVM(
+      { sessions: [], hangSessions: [session], hangParts: [], activities: [] },
+      "7d",
+      TRAINED_KINDS,
+      grip,
+      NOW
+    );
+    const rows = vm.exercises.find((g) => g.kind === "hangboard")?.rows ?? [];
+    expect(rows.map((r) => [r.key, r.count])).toEqual([
+      ["half", 1],
+      ["open", 1],
+    ]);
+    expect(rows.find((r) => r.key === "open")?.values).toEqual([]);
+  });
 });

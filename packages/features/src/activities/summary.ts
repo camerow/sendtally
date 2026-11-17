@@ -1,9 +1,11 @@
 import type { Activity } from "@sendtally/api-client";
 import {
+  doseProtocol,
   hangKindOf,
   hangSessionItems,
   type CalendarDate,
   type HangKind,
+  type HangRun as GripRun,
   type HangSession,
   type SetDone,
 } from "@sendtally/core/hang";
@@ -209,6 +211,33 @@ export function hangGrids(session: HangRun): HangGripGrid[] {
         kind: first ? session.protocol.kind : hangKindOf(dose),
         edgeMm: first ? session.edgeMm : (sets[0]?.edgeMm ?? dose.edgeMm ?? 0),
         rpes: sets.map((s) => s.rpe),
+      },
+    ];
+  });
+}
+
+/**
+ * Every grip a session ran, each as a session of that grip alone, for what follows a grip over
+ * time: the first is the session itself; a later grip runs the dose it saved, at its edge and top
+ * load, complete when it held every hang it asked.
+ */
+export function gripRuns(session: GripRun): GripRun[] {
+  const { done } = session;
+  return hangSessionItems(session).flatMap(({ exercise, dose }, item) => {
+    if (item === 0) return [session];
+    const sets = done.find((d) => d.item === item)?.sets ?? [];
+    if (sets.length === 0) return [];
+    const grid = gridOf(sets, dose.reps ?? 1, session.loadKg);
+    return [
+      {
+        ...session,
+        id: `${session.id}:${item}`,
+        gripId: exercise,
+        protocol: doseProtocol(session.protocol.name, dose),
+        edgeMm: sets[0]?.edgeMm ?? dose.edgeMm ?? 0,
+        loadKg: Math.max(...grid.loads),
+        pct: grid.total === 0 ? 0 : Math.round((100 * grid.held) / grid.total),
+        done: [{ item: 0, exercise, sets }],
       },
     ];
   });

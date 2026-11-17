@@ -16,6 +16,7 @@ import { hangTitle } from "../sessions/hang";
 import { DAY_MS, bucketsFor, priorWindow, windowOf } from "../trends/buckets";
 import type { TrendRange } from "../trends/types";
 import { exerciseSeries, type ExerciseMetric } from "./exercises";
+import { gripRuns } from "../activities/summary";
 import { kindLabel } from "../activities/format";
 import { TRAINED_KINDS, oneDecimal } from "./overview";
 import { workoutsDone, type WorkoutsDoneVM } from "./workouts";
@@ -160,7 +161,9 @@ function hangTrends(
   within: (ms: number) => boolean,
   gripName: (id: string) => string
 ): ExerciseTrendVM[] {
-  const shown = [...log.hangSessions, ...log.hangParts].filter((h) => within(Date.parse(h.date)));
+  const shown = [...log.hangSessions, ...log.hangParts]
+    .filter((h) => within(Date.parse(h.date)))
+    .flatMap(gripRuns);
   return [...new Set(shown.map((h) => h.gripId))]
     .flatMap((id) => {
       const [setup] = setupsOf(shown, id);
