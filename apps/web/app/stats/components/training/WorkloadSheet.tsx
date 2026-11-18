@@ -1,17 +1,10 @@
 import React from "react";
-import { Link } from "react-router";
 import { t } from "@sendtally/features/i18n";
-import type { WorkloadLeftOutVM, WorkloadTileVM, WorkloadVM } from "@sendtally/features/statistics";
+import type { WorkloadTileVM, WorkloadVM } from "@sendtally/features/statistics";
 import { Sheet } from "../../../components/Sheet";
-import { activityPath } from "../../../training/log/paths";
+import { NotCountedRows } from "./NotCountedRows";
 
 const BAR = 82;
-
-function pathOf({ ref, missing }: WorkloadLeftOutVM): string {
-  if (ref.type === "activity") return activityPath(ref.id);
-  const session = `/app/sessions/${encodeURIComponent(ref.id)}`;
-  return missing === "effort" ? session : `${session}/edit?field=duration`;
-}
 
 function Tile({ label, value, note, counted }: WorkloadTileVM): React.ReactElement {
   return (
@@ -81,16 +74,7 @@ export function WorkloadSheet({
         <span className="workload-mono workload-muted">{t("statistics.workloadBarsNote")}</span>
         {s.leftOut.length > 0 && (
           <div className="workload-left-out">
-            <span className="stats-label workload-muted">{t("statistics.workloadNotCounted")}</span>
-            {s.leftOut.map((l) => (
-              <Link key={`${l.ref.type}${l.ref.id}`} to={pathOf(l)} className="workload-left-row">
-                <span className="workload-left-name">{l.ref.name}</span>
-                <span className="workload-mono workload-muted">{`${l.detail} ›`}</span>
-              </Link>
-            ))}
-            <span className="workload-mono workload-muted">
-              {t("statistics.workloadOpensRecord")}
-            </span>
+            <NotCountedRows label={t("statistics.workloadNotCounted")} rows={s.leftOut} />
           </div>
         )}
       </div>

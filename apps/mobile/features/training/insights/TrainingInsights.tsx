@@ -19,6 +19,7 @@ import { type } from "../type";
 import { CurrentBlockRow } from "./CurrentBlockRow";
 import { ExerciseGroups } from "./ExerciseGroups";
 import { InsightsChart } from "./InsightsChart";
+import { LoadCard } from "./LoadCard";
 import { TrainedMix } from "./TrainedMix";
 import { WorkoutsDone } from "./WorkoutsDone";
 import { WorkloadCard } from "./WorkloadCard";
@@ -49,6 +50,7 @@ export function TrainingInsights({ range }: { range: TrendRange }): React.ReactE
       </Text>
       <InsightsChart points={state.data.points} />
       <WorkloadCard workload={state.data.workload} weeks={weeks} onWeeks={setWeeks} />
+      <LoadCard key={range} load={state.data.load} />
       <TrainedMix
         trained={state.data.trained}
         byFocus={state.data.byFocus}

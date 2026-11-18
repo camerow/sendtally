@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -9,42 +9,12 @@ import {
   type WorkloadVM,
   type WorkloadWeeks,
 } from "@sendtally/features/statistics";
-import { Icon } from "../../../components/Icon";
 import { Segmented } from "../../../components/Segmented";
-import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { type } from "../type";
+import { CardRow } from "./CardRow";
 import { WorkloadChart } from "./WorkloadChart";
 import { WorkloadSheet } from "./WorkloadSheet";
-
-function Row({
-  children,
-  onPress,
-}: {
-  children: React.ReactNode;
-  onPress: () => void;
-}): React.ReactElement {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      style={pressRow({
-        minHeight: 44,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 8,
-        borderTopWidth: 1,
-        borderTopColor: colors.lineOnLight,
-      })}
-    >
-      <Text style={[type.mono, { flex: 1, fontSize: 12.5, color: colors.gunmetal }]}>
-        {children}
-      </Text>
-      <Icon name="chevron" color={colors.textSecondary} size={16} />
-    </Pressable>
-  );
-}
 
 function Weeks({ days }: { days: number }): React.ReactElement {
   return (
@@ -166,7 +136,7 @@ export function WorkloadCard({
           </>
         ) : null}
         <View>
-          <Row onPress={() => setOpen(true)}>
+          <CardRow onPress={() => setOpen(true)}>
             {t("statistics.workloadLast7")} <Text style={type.monoBold}>{w.acute}</Text>
             {average === null ? null : (
               <>
@@ -174,8 +144,10 @@ export function WorkloadCard({
                 <Text style={type.monoBold}>{average}</Text>
               </>
             )}
-          </Row>
-          {w.leftOutLine !== null && <Row onPress={() => setOpen(true)}>{w.leftOutLine}</Row>}
+          </CardRow>
+          {w.leftOutLine !== null && (
+            <CardRow onPress={() => setOpen(true)}>{w.leftOutLine}</CardRow>
+          )}
         </View>
       </View>
       <WorkloadSheet workload={w} visible={open} onClose={() => setOpen(false)} />

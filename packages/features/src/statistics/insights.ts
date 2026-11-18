@@ -20,6 +20,7 @@ import { gripRuns } from "../activities/summary";
 import { kindLabel } from "../activities/format";
 import { TRAINED_KINDS, oneDecimal } from "./overview";
 import { workoutsDone, type WorkoutsDoneVM } from "./workouts";
+import { loadVM, type LoadVM } from "./loadView";
 import { WORKLOAD_WINDOWS, workloadVM, type WorkloadVM, type WorkloadWeeks } from "./workloadView";
 
 /** Where a record opens: a climbing session by fingerprint, anything trained by id. */
@@ -80,6 +81,7 @@ export type TrainingInsightsVM = {
   exercises: ExerciseGroupVM[];
   workouts: WorkoutsDoneVM;
   workload: WorkloadVM;
+  load: LoadVM;
 };
 
 /** A run's minutes that were its fingerboard part: every grip and the rests between them. */
@@ -297,5 +299,6 @@ export function trainingInsightsVM(
     exercises: groups.filter((g) => g.rows.length > 0),
     workouts: workoutsDone(log, within, kinds),
     workload: workloadVM(all, workloadWeeks, now),
+    load: loadVM(all, range, now),
   };
 }

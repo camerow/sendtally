@@ -70,3 +70,12 @@ export {
   type WorkloadVM,
   type WorkloadWeekVM,
 } from "./workloadView";
+export {
+  LOAD_PLOT,
+  loadPlot,
+  loadVM,
+  type LoadBarVM,
+  type LoadPlot,
+  type LoadPlotBar,
+  type LoadVM,
+} from "./loadView";

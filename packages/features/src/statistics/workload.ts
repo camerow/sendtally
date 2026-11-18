@@ -29,7 +29,7 @@ export type Workload = {
 };
 
 /** Past this share of records left out, either window can be off by a whole zone. */
-const LEFT_OUT_LIMIT = 0.25;
+export const LEFT_OUT_LIMIT = 0.25;
 
 /** Under about one a week, the ratio only takes a few values and swings between them. */
 export const MIN_COUNTED = 4;
