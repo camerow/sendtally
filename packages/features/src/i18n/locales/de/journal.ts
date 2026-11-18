@@ -27,10 +27,6 @@ export const journal = {
   "journal.deleteFailed": "Eintrag konnte nicht gelöscht werden. Versuch es nochmal.",
   "journal.needsSomething": "Schreib erst etwas.",
   "journal.emptyTitle": "Noch nichts geschrieben",
-  "journal.emptyBody":
-    "Sessions sagen dir, was du geklettert bist. Einträge sagen dir, warum es so lief - wie du dich gefühlt hast, was du vorhast, was wehtat.",
-  "journal.showEverything": "Alles",
-  "journal.showSessions": "Sessions",
   "journal.showInjuries": "Verletzungen",
   "journal.showTrips": "Trips",
   "journal.showJournal": "Journal",

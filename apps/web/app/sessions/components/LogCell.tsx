@@ -1,19 +1,19 @@
 import React from "react";
 import type { ClimbingSessionVM } from "@sendtally/features/climbs";
 import { TripGroup } from "../../journal/components/TripGroup";
-import { ActivityRow } from "../../sessions/components/ActivityRow";
-import { ClimbingSessionRows } from "../../sessions/components/ClimbingSessionRows";
-import { EntryRow } from "../../sessions/components/EntryRow";
-import { HangRow } from "../../sessions/components/HangRow";
-import { ClimbLogRow } from "./ClimbLogRow";
-import type { ClimbingLogRow } from "./types";
+import { ClimbLogRow } from "../../climbs/components/ClimbLogRow";
+import { ActivityRow } from "./ActivityRow";
+import { BlockDoneRow } from "./BlockDoneRow";
+import { ClimbingSessionRows } from "./ClimbingSessionRows";
+import { EntryRow } from "./EntryRow";
+import { HangRow } from "./HangRow";
+import type { LogRow } from "./types";
 
-/** One row of the climbing log. */
-export function ClimbingLogCell({
+export function LogCell({
   item,
   nested,
 }: {
-  item: ClimbingLogRow;
+  item: LogRow;
   nested: ReadonlyMap<string, ClimbingSessionVM>;
 }): React.ReactElement | null {
   switch (item.type) {
@@ -36,7 +36,7 @@ export function ClimbingLogCell({
     case "activity":
       return <ActivityRow activity={item.activity} blockTag={item.blockTag} />;
     case "block":
-      return null;
+      return <BlockDoneRow recap={item.recap} />;
     case "entry":
       return item.inside.length > 0 ? (
         <TripGroup item={item} climbing={nested} />

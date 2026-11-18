@@ -64,7 +64,6 @@ export const sessions = {
   "sessions.discardSession": "Discard session",
   "sessions.saving": "Saving…",
   "sessions.topSend": "top {grade}",
-  "sessions.onlyWorkout": "Only {name}",
   "sessions.example": "Example",
   "sessions.exampleEvening": "Evening session",
   "sessions.exampleEveningMeta": "1h 50m · 6 sent · top V5",

@@ -68,7 +68,7 @@ describe("Workouts done", () => {
     render(<WorkoutsDone groups={groups} picked={null} onClear={() => {}} />);
     press("Max hangs, 14 times");
     expect(link("Sat, Nov 1")?.getAttribute("href")).toBe("/app/activity/max-1");
-    expect(link("All 14 in Log")?.getAttribute("href")).toBe("/app?segment=training&workout=max");
+    expect(link("All 14 in Log")?.getAttribute("href")).toBe("/app?workout=max");
   });
 
   it("names what the list is narrowed to, with a way to clear it", () => {

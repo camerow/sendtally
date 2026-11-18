@@ -1037,6 +1037,11 @@
   cursor: pointer;
 }
 
+.chip--upper {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .chip:hover {
   border-color: rgba(64, 63, 76, 0.32);
 }

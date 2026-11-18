@@ -4,6 +4,7 @@ import { useLoaderData } from "react-router";
 import type {
   ConnectionStatus,
   Activity,
+  HangHistoryPart,
   HangHistoryRow,
   JournalEntry,
   SessionRow,
@@ -22,6 +23,7 @@ type LoaderData = {
   status: ConnectionStatus | null;
   sessions: SessionRow[];
   hangSessions: HangHistoryRow[];
+  hangParts: HangHistoryPart[];
   activities: Activity[];
   entries: JournalEntry[];
 };
@@ -47,18 +49,21 @@ export async function loader(args: LoaderFunctionArgs): Promise<LoaderData> {
     status,
     sessions: sessions.sessions,
     hangSessions: sessions.hangSessions,
+    hangParts: sessions.hangParts,
     activities: sessions.activities,
     entries: entries.entries,
   };
 }
 
 export default function Log(): React.ReactElement {
-  const { status, sessions, hangSessions, activities, entries } = useLoaderData<typeof loader>();
+  const { status, sessions, hangSessions, hangParts, activities, entries } =
+    useLoaderData<typeof loader>();
   return (
     <LogPage
       status={status}
       sessions={sessions}
       hangSessions={hangSessions}
+      hangParts={hangParts}
       activities={activities}
       entries={entries}
     />

@@ -25,10 +25,7 @@ function Sessions({ row }: { row: WorkoutDoneVM }): React.ReactElement {
           <span className="workout-session-rpe">{s.rpe}</span>
         </Link>
       ))}
-      <Link
-        to={`/app?${new URLSearchParams({ segment: "training", workout: row.key })}`}
-        className="workout-all"
-      >
+      <Link to={`/app?${new URLSearchParams({ workout: row.key })}`} className="workout-all">
         {t("statistics.allInLog", { n: row.total })}
         <Icon name="chevron" size={12} />
       </Link>
