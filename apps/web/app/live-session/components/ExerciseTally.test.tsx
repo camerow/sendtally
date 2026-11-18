@@ -7,6 +7,7 @@ import type * as T_activities from "@sendtally/features/activities";
 import type * as T_logSession from "@sendtally/features/log-session";
 import type * as T_statistics from "@sendtally/features/statistics";
 import type { WorkoutRun } from "@sendtally/features/workouts";
+import { ToastProvider } from "../../components/Toast";
 import { liveRunOf } from "../../lib/useLiveRun";
 import { SetsPage } from "../../training/players/SetsPage";
 import { TallyPage } from "./TallyPage";
@@ -94,13 +95,15 @@ async function mount(): Promise<void> {
   await act(async () =>
     root.render(
       <QueryClientProvider client={client}>
-        <MemoryRouter initialEntries={["/app/plan", "/app/workout/sets"]} initialIndex={1}>
-          <Routes>
-            <Route path="/app/workout/sets" element={<SetsPage run={run} end={false} />} />
-            <Route path="/app/workout/tally" element={<TallyPage exercise />} />
-            <Route path="*" element={<Where />} />
-          </Routes>
-        </MemoryRouter>
+        <ToastProvider>
+          <MemoryRouter initialEntries={["/app/plan", "/app/workout/sets"]} initialIndex={1}>
+            <Routes>
+              <Route path="/app/workout/sets" element={<SetsPage run={run} end={false} />} />
+              <Route path="/app/workout/tally" element={<TallyPage exercise />} />
+              <Route path="*" element={<Where />} />
+            </Routes>
+          </MemoryRouter>
+        </ToastProvider>
       </QueryClientProvider>
     )
   );

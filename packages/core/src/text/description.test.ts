@@ -108,6 +108,11 @@ describe("foldAt", () => {
     expect(foldAt([9])).toEqual({ units: 1, lastLines: 5 });
   });
 
+  it("folds at fewer lines when asked, as a running workout's description does", () => {
+    expect(foldAt([2, 1, 2], 3)).toEqual({ units: 2, lastLines: null });
+    expect(foldAt([1, 1], 3)).toBeNull();
+  });
+
   it("ends on a whole unit when the fold falls between two", () => {
     expect(foldAt([3, 2, 1])).toEqual({ units: 2, lastLines: null });
   });

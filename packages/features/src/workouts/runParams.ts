@@ -97,7 +97,7 @@ const isItem = (v: unknown): v is SessionItem => {
 const parseItems = (text: string): SessionItem[] | null => {
   try {
     const items: unknown = JSON.parse(text);
-    return Array.isArray(items) && items.length > 0 && items.every(isItem) ? items : null;
+    return Array.isArray(items) && items.every(isItem) ? items : null;
   } catch {
     return null;
   }

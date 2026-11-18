@@ -1,8 +1,9 @@
 import React from "react";
 import type { SetDone, WeightUnit } from "@sendtally/core/hang";
-import { setChip, setText } from "@sendtally/features/activities";
+import { setChip } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { holdShort } from "@sendtally/features/workouts";
+import { Icon } from "../../components/Icon";
 import { RpeField } from "../log/RpeField";
 import { SetDoneFields } from "../log/SetDoneFields";
 
@@ -24,6 +25,10 @@ export type SetRowProps = {
   rpe?: { target: number | undefined };
   onChange: (set: SetDone) => void;
   onToggle: () => void;
+  /** Makes it the current set, as a click anywhere on it does. */
+  onFocus?: () => void;
+  /** − beside the tick, on the current set: takes the set out. */
+  onRemove?: () => void;
 };
 
 /** One set: its number, what it asks and did last time, what was done, and its tick. */
@@ -42,33 +47,27 @@ export function SetRow({
   rpe,
   onChange,
   onToggle,
+  onFocus,
+  onRemove,
 }: SetRowProps): React.ReactElement {
-  const last =
-    previous === undefined ? "" : rpe ? setChip(previous, unit) : setText(previous, unit);
+  const last = previous === undefined ? "" : setChip(previous, unit);
   return (
-    <div className={current ? "set-row set-row--current" : "set-row"}>
+    <div className={current ? "set-row set-row--current" : "set-row"} onClick={onFocus}>
       <span className="set-col-n">{formatNumber(n)}</span>
       <span className="set-col-target">
         <span>{setChip(target, unit, repsMax) || "-"}</span>
-        {last !== "" && (
-          <span className="set-previous">{t("activities.previousSet", { set: last })}</span>
-        )}
       </span>
       <span className="set-col-done">
-        {ticked || current ? (
-          <SetDoneFields
-            set={done}
-            lifting={lifting}
-            unit={unit}
-            unitless={rpe !== undefined}
-            label={label}
-            go={ticked ? undefined : go}
-            holdShort={holdShort(target, done, ticked)}
-            onChange={onChange}
-          />
-        ) : (
-          <span className="set-pending">-</span>
-        )}
+        <SetDoneFields
+          set={done}
+          lifting={lifting}
+          unit={unit}
+          unitless={rpe !== undefined}
+          label={label}
+          go={ticked ? undefined : go}
+          holdShort={holdShort(target, done, ticked)}
+          onChange={onChange}
+        />
       </span>
       {rpe !== undefined && (
         <span className="set-col-rpe">
@@ -78,6 +77,21 @@ export function SetRow({
       <label className="set-tick">
         <input type="checkbox" checked={ticked} onChange={onToggle} aria-label={label} />
       </label>
+      {current && onRemove !== undefined ? (
+        <button
+          type="button"
+          className="set-remove set-remove--run"
+          aria-label={t("activities.removeSet", { n })}
+          onClick={onRemove}
+        >
+          <Icon name="minusCircle" size={24} strokeWidth={1.5} />
+        </button>
+      ) : (
+        <span className="set-remove" />
+      )}
+      {last !== "" && (
+        <span className="set-previous">{t("activities.previousSet", { set: last })}</span>
+      )}
     </div>
   );
 }

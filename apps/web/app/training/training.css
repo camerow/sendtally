@@ -353,6 +353,10 @@
   vertical-align: -1px;
 }
 
+.desc--fade > :nth-last-child(2) {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+}
+
 .desc-more {
   align-self: flex-start;
   height: 32px;

@@ -19,6 +19,7 @@ export {
   addSet,
   changeSet,
   cleanDone,
+  foldedLine,
   keptSets,
   offWithout,
   removeSet,

@@ -40,6 +40,27 @@ export function setText(set: SetDone, unit: WeightUnit, repsMax?: number): strin
     .join(" · ");
 }
 
+/** A finished exercise on one line, its sets with the top set's reps or time and load: "5 × 5 · 60 kg". */
+export function foldedLine(sets: readonly SetDone[], unit: WeightUnit): string {
+  const top = sets.reduce<SetDone | undefined>(
+    (best, s) => (best === undefined || (s.weightKg ?? 0) > (best.weightKg ?? 0) ? s : best),
+    undefined
+  );
+  const work = top?.reps ?? (top?.onS === undefined ? undefined : setSeconds(top.onS));
+  const load =
+    top?.weightKg === undefined
+      ? undefined
+      : t("hang.loadPlain", { value: weightValue(top.weightKg, unit), unit });
+  return [
+    work === undefined
+      ? t("activities.setCount", { count: sets.length })
+      : `${formatNumber(sets.length)} × ${typeof work === "number" ? formatNumber(work) : work}`,
+    load,
+  ]
+    .filter((p) => p !== undefined)
+    .join(" · ");
+}
+
 /** A set as a chip under its exercise, whose unit the card states once: "5 × 180", "8", "60s". */
 export function setChip(set: SetDone, unit: WeightUnit, repsMax?: number): string {
   if (set.climbs !== undefined) return climbingSetText(set);

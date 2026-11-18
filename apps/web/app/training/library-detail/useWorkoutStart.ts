@@ -6,7 +6,6 @@ import { t } from "@sendtally/features/i18n";
 import { useExercises } from "@sendtally/features/statistics";
 import { planLinkParams } from "@sendtally/features/training";
 import {
-  activityFormParams,
   playerRoute,
   useLiveRun,
   workoutStart,
@@ -16,7 +15,6 @@ import {
 import { useStartLive } from "../../live-session/useStartLiveSession";
 import { LIVE_PATH, runPath } from "../../live-session/startLive";
 import { useAppApi } from "../../lib/useAppApi";
-import { newActivityPath } from "../log/paths";
 import { useLiveRunStore } from "../../lib/useLiveRun";
 
 export type StartAction = { label: string; resume: boolean; onPress: () => void };
@@ -24,8 +22,8 @@ export type StartAction = { label: string; resume: boolean; onPress: () => void 
 /**
  * Start for a workout one of the players runs, or the live session a climbing day with no
  * exercises opens, once whatever else is live is dealt with; Resume while this workout is the
- * run going. A workout with nothing to run opens its review, as on mobile. From the workout's own
- * page, the run takes its place.
+ * run going. A workout with nothing to run still opens its run, with the clock and its description.
+ * From the workout's own page, the run takes its place.
  */
 export function useWorkoutStart(
   workout: LibraryWorkout,
@@ -60,17 +58,6 @@ export function useWorkoutStart(
       label: t("hang.start"),
       resume: false,
       onPress: () => startLive(`${LIVE_PATH}?${params}`, ownPage),
-    };
-  }
-  if (start.open === "form") {
-    const to = newActivityPath({
-      ...activityFormParams(start.run),
-      session: String(planned.session),
-    });
-    return {
-      label: t("hang.start"),
-      resume: false,
-      onPress: () => void navigate(to, { replace: ownPage }),
     };
   }
   const route = playerRoute(workout, start, planned);

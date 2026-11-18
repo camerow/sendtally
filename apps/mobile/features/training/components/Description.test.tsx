@@ -54,6 +54,19 @@ describe("Description", () => {
     expect(screen.queryByText("Three")).toBeNull();
   });
 
+  it("folds at the lines asked, and can start open with Less", async () => {
+    await render(<Description text={"One\n\nTwo\n\nThree"} fold={3} startOpen />);
+    await layOut([
+      ["One", 2],
+      ["Two", 2],
+      ["Three", 1],
+    ]);
+    expect(screen.getByText("Three")).toBeTruthy();
+    await fireEvent.press(screen.getByRole("button", { name: "Less" }));
+    expect(screen.queryByText("Three")).toBeNull();
+    expect(screen.getByText("Two").props.numberOfLines).toBe(1);
+  });
+
   it("has no More when it all fits", async () => {
     await render(<Description text={"One\n\nTwo"} fold />);
     await layOut([

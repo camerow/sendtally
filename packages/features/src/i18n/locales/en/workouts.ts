@@ -140,4 +140,15 @@ export const workouts = {
   "workouts.dose.laps": "Laps",
   "workouts.dose.moves": "Moves",
   "workouts.lapRest": "Rest between laps",
+  "workouts.exerciseOf": "Exercise {n} of {of}",
+  "workouts.addExercise": "Add exercise",
+  "workouts.skipForNow": "Skip for now",
+  "workouts.skippedTapToDo": "Skipped · tap to do it now",
+  "workouts.moveUpShort": "Move up",
+  "workouts.moveDownShort": "Move down",
+  "workouts.removeShort": "Remove",
+  "workouts.removeFromRunBody":
+    "Its sets are left out of this workout's log. The saved workout keeps it.",
+  "workouts.foldExercise": "Fold {name}",
+  "workouts.openExercise": "Open {name}",
 } as const;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  foldedLine,
   addSet,
   withRpe,
   changeSet,
@@ -124,5 +125,20 @@ describe("done", () => {
       addSet([{ item: 0, exercise: "Squat", sets: [{ reps: 5, rpe: 8 }] }], 0)[0]?.sets
     ).toEqual([{ reps: 5, rpe: 8 }, { reps: 5 }]);
     expect(removeSet(done, 0, 0).map((d) => d.exercise)).toEqual(["Dips"]);
+  });
+});
+
+describe("a finished exercise folded to one line", () => {
+  it("reads its sets, reps and top load", () => {
+    const sets = [
+      { reps: 5, weightKg: 60 },
+      { reps: 5, weightKg: 62.5 },
+    ];
+    expect(foldedLine(sets, "kg")).toBe("2 × 5 · 62.5 kg");
+  });
+
+  it("reads timed sets by their time, and bare sets by their count", () => {
+    expect(foldedLine([{ onS: 45 }, { onS: 45 }, { onS: 45 }], "kg")).toBe("3 × 45s");
+    expect(foldedLine([{}], "kg")).toBe("1 set");
   });
 });
