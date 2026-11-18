@@ -22,3 +22,4 @@ export function localStore(key: string): DraftStorage {
 
 export const climbKindStorage = localStore("sendtally:climb-kind");
 export const sessionDraftStorage = localStore("sendtally:session-draft:new");
+export const workloadWeeksStorage = localStore("sendtally:workload-weeks");

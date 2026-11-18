@@ -2,8 +2,15 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { WORKLOAD_TINTS, workloadZoneLabel, type WorkloadVM } from "@sendtally/features/statistics";
+import {
+  WORKLOAD_TINTS,
+  WORKLOAD_WINDOWS,
+  workloadZoneLabel,
+  type WorkloadVM,
+  type WorkloadWeeks,
+} from "@sendtally/features/statistics";
 import { Icon } from "../../../components/Icon";
+import { Segmented } from "../../../components/Segmented";
 import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { type } from "../type";
@@ -67,7 +74,15 @@ function Weeks({ days }: { days: number }): React.ReactElement {
 }
 
 /** This week's load against the last four: the ratio and its zone in words, the line, and the loads behind it. */
-export function WorkloadCard({ workload: w }: { workload: WorkloadVM }): React.ReactElement {
+export function WorkloadCard({
+  workload: w,
+  weeks,
+  onWeeks,
+}: {
+  workload: WorkloadVM;
+  weeks: WorkloadWeeks;
+  onWeeks: (weeks: WorkloadWeeks) => void;
+}): React.ReactElement {
   const [open, setOpen] = React.useState(false);
   const average = w.chronic;
 
@@ -136,7 +151,19 @@ export function WorkloadCard({ workload: w }: { workload: WorkloadVM }): React.R
         {w.state === "early" ? (
           <Weeks days={w.daysLogged} />
         ) : w.points.length > 0 ? (
-          <WorkloadChart points={w.points} from={w.from} />
+          <>
+            <Segmented
+              soft
+              label={t("statistics.workloadTitle")}
+              segments={WORKLOAD_WINDOWS.map((n) => ({
+                key: String(n),
+                label: t("common.weekCount", { count: n }),
+                on: n === weeks,
+                onPress: () => onWeeks(n),
+              }))}
+            />
+            <WorkloadChart points={w.points} from={w.from} weeks={weeks} />
+          </>
         ) : null}
         <View>
           <Row onPress={() => setOpen(true)}>

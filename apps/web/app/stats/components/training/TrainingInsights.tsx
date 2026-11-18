@@ -5,9 +5,11 @@ import {
   mixRows,
   pickedWorkouts,
   useTrainingInsights,
+  useWorkloadWeeks,
   type TrainedBy,
 } from "@sendtally/features/statistics";
 import type { TrendRange } from "@sendtally/features/trends";
+import { workloadWeeksStorage } from "../../../lib/localStorages";
 import { useAppApi } from "../../../lib/useAppApi";
 import { DashedPanel } from "../../../training/components/DashedPanel";
 import { useHangData } from "../../../training/data/HangDataContext";
@@ -21,7 +23,8 @@ import { WorkloadCard } from "./WorkloadCard";
 /** How hard and how often, what was trained, the block running, and every exercise's trend. */
 export function TrainingInsights({ range }: { range: TrendRange }): React.ReactElement {
   const { model } = useHangData();
-  const state = useTrainingInsights(useAppApi(), range, TRAINED_KINDS, model.gripName);
+  const [weeks, setWeeks] = useWorkloadWeeks(workloadWeeksStorage);
+  const state = useTrainingInsights(useAppApi(), range, TRAINED_KINDS, model.gripName, weeks);
   const [by, setBy] = React.useState<TrainedBy>("category");
   const [pick, setPick] = React.useState<string | null>(null);
 
@@ -34,7 +37,7 @@ export function TrainingInsights({ range }: { range: TrendRange }): React.ReactE
     <div className="stats-grid">
       <p className="stats-summary stats-wide">{state.data.line}</p>
       <InsightsChart points={state.data.points} />
-      <WorkloadCard workload={state.data.workload} />
+      <WorkloadCard workload={state.data.workload} weeks={weeks} onWeeks={setWeeks} />
       <TrainedMix
         trained={state.data.trained}
         byFocus={state.data.byFocus}
