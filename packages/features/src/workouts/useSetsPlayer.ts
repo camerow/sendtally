@@ -1,6 +1,7 @@
 import React from "react";
 import {
   doneAsPrescribed,
+  isChecklist,
   restAfterItem,
   setOf,
   type ItemDone,
@@ -261,7 +262,10 @@ export function useSetsPlayer({
     (fingers === undefined || ("run" in fingers && fingers.run.finished === null));
   const items = [...run.items.slice(0, cards.base), ...cards.added];
   const tallyMeasure = tallyMeasuresOf(exercises ?? [], run.kind, isGrip);
-  const tallyOf = (item: number): TallyMeasure | null => tallyMeasure(items[item]?.exercise ?? "");
+  const tallyOf = (item: number): TallyMeasure | null => {
+    const at = items[item];
+    return at === undefined || isChecklist(at) ? null : tallyMeasure(at.exercise);
+  };
   const live = withDoneSets(items, done);
   const ended = (d: readonly ItemDone[], t: ReadonlySet<string>, item: number): boolean => {
     const after = withDoneSets(items, d);

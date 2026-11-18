@@ -113,6 +113,27 @@ describe("Climbing inside the workout", () => {
     ]);
   });
 
+  it("runs a warm-up checklist in a climbing workout as a checklist, never as climbing", async () => {
+    const warm = {
+      exercise: "Checklist",
+      dose: { sets: 2 },
+      checklist: { lines: ["Jog", "Swing"] },
+    };
+    await renderWithHang(
+      <SetsScreen run={{ ...fours, items: [warm, ...fours.items] }} />,
+      hangData()
+    );
+    expect(screen.getByText("Jog")).toBeTruthy();
+    expect(screen.getByText(/Exercise 1 of 1/)).toBeTruthy();
+    expect(screen.getAllByLabelText("V5")).toHaveLength(1);
+    await log("V5", "Sent");
+    const done = (await finished()) as { exercise: string; checklist?: unknown }[];
+    expect(done.map((d) => [d.exercise, d.checklist !== undefined])).toEqual([
+      ["Checklist", true],
+      ["4x4s", false],
+    ]);
+  });
+
   it("picks up a run left on the old tally with its climbs where they were", async () => {
     let draft = startExercise(
       null,
