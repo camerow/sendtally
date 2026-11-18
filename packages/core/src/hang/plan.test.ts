@@ -20,6 +20,11 @@ import {
   prescription,
   protocolDose,
   sessionItems,
+  workoutKindOfItems,
+  type WorkoutKind,
+  type Item,
+  CHECKLIST_NAME,
+  isChecklist,
   timeUnitsOf,
   turnsOf,
   type DatedBlock,
@@ -418,5 +423,45 @@ describe("rests between exercises", () => {
     expect(gapRests(items, 180)).toEqual([60, 180]);
     expect(restAfterItem(items, 2, 180)).toBe(0);
     expect(gapRests([], 180)).toEqual([]);
+  });
+});
+
+describe("a checklist in a workout", () => {
+  it("runs as one set a line, keeping its lines, and is told by its flag, not its name", () => {
+    const lines = ["Jog 5 min", "Arm circles x20", "Easy boulders x10"];
+    const [run] = sessionItems(
+      [{ exercise: CHECKLIST_NAME, doses: [{ sets: 1 }], checklist: { lines } }],
+      0
+    );
+    expect(run).toEqual({ exercise: "Checklist", dose: { sets: 3 }, checklist: { lines } });
+    const named: { exercise: string; checklist?: unknown } = { exercise: "Checklist" };
+    expect(isChecklist(named)).toBe(false);
+  });
+
+  it("keeps grips alone on the hangboard, and makes them a mix beside a checklist", () => {
+    const grip = { exercise: "half", doses: [{ sets: 6, reps: 6, onS: 7, offS: 3 }] };
+    const list = { exercise: CHECKLIST_NAME, doses: [{ sets: 1 }], checklist: { lines: ["Jog"] } };
+    const kindOf = (e: string): WorkoutKind | undefined => (e === "half" ? "hangboard" : undefined);
+    expect(workoutKindOfItems([grip], kindOf, "hangboard")).toBe("hangboard");
+    expect(workoutKindOfItems([list, grip], kindOf, "hangboard")).toBe("other");
+  });
+
+  it("reads, on a build from before checklists, as one-set exercises named Checklist", () => {
+    const list = (lines: string[]): Item => ({
+      exercise: CHECKLIST_NAME,
+      doses: [{ sets: 1 }],
+      checklist: { lines },
+    });
+    const items = [
+      list(["Jog"]),
+      { exercise: "Squat", doses: [{ sets: 3, reps: 5 }] },
+      list(["Hang"]),
+    ];
+    const older = items.map(({ checklist: _, ...item }) => item);
+    expect(sessionItems(older, 0)).toEqual([
+      { exercise: "Checklist", dose: { sets: 1 } },
+      { exercise: "Squat", dose: { sets: 3, reps: 5 } },
+      { exercise: "Checklist", dose: { sets: 1 } },
+    ]);
   });
 });

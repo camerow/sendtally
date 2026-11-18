@@ -1049,6 +1049,107 @@ describe("exercises", () => {
     expect((await call(userId, "POST", "/v1/exercises/e9/merge", { into: "e1" })).status).toBe(404);
   });
 
+  it("keeps a checklist in a workout and its log, and never makes it a library exercise", async () => {
+    const userId = "user_checklist";
+    const lines = ["Jog 5 min", "Arm circles x20", "Easy boulders x10"];
+    const workout = {
+      ...squatWorkout,
+      kind: "strength",
+      name: "Warm-up and squat",
+      items: [
+        { exercise: "Checklist", doses: [{ sets: 1 }], checklist: { lines } },
+        ...squatWorkout.items,
+      ],
+    };
+    const saved = await json<{ workout: WorkoutRecord }>(
+      await call(userId, "PUT", "/v1/workouts/w1", workout)
+    );
+    expect(saved.workout.items[0]).toMatchObject({ exercise: "Checklist", checklist: { lines } });
+    const done = [
+      { item: 0, exercise: "Checklist", sets: [], checklist: { lines, checked: [0, 2] } },
+      { item: 1, exercise: "Back squat", sets: [{ reps: 5, weightKg: 100 }] },
+    ];
+    await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, workoutId: "w1", done });
+    const logged = await json<{ activities: ActivityRecord[] }>(
+      await call(userId, "GET", "/v1/activities")
+    );
+    expect(logged.activities[0]?.done[0]).toMatchObject({ checklist: { lines, checked: [0, 2] } });
+    const names = (
+      await json<{ exercises: { name: string }[] }>(await call(userId, "GET", "/v1/exercises"))
+    ).exercises.map((e) => e.name);
+    expect(names).toContain("Back squat");
+    expect(names).not.toContain("Checklist");
+    await call(userId, "PUT", "/v1/exercises/e9", { name: "Checklist", kind: "strength" });
+    await call(userId, "PUT", "/v1/exercises/e9", { name: "Checks", kind: "strength" });
+    const after = await json<{ workouts: WorkoutRecord[] }>(
+      await call(userId, "GET", "/v1/workouts")
+    );
+    expect(after.workouts[0]?.items[0]?.exercise).toBe("Checklist");
+    const kept = await json<{ activities: ActivityRecord[] }>(
+      await call(userId, "GET", "/v1/activities")
+    );
+    expect(kept.activities[0]?.done[0]?.exercise).toBe("Checklist");
+  });
+
+  it("reads an older build's log of a checklist as the checklist, nothing ticked, never an exercise", async () => {
+    const userId = "user_checklist_older";
+    const lines = ["Jog", "Hang"];
+    await call(userId, "PUT", "/v1/workouts/w1", {
+      ...squatWorkout,
+      items: [
+        { exercise: "Checklist", doses: [{ sets: 1 }], checklist: { lines } },
+        ...squatWorkout.items,
+      ],
+    });
+    const done = [
+      { item: 0, exercise: "Checklist", sets: [{}] },
+      { item: 1, exercise: "Back squat", sets: [{ reps: 5, weightKg: 100 }] },
+    ];
+    await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, workoutId: "w1", done });
+    const logged = await json<{ activities: ActivityRecord[] }>(
+      await call(userId, "GET", "/v1/activities")
+    );
+    expect(logged.activities[0]?.done[0]).toEqual({
+      item: 0,
+      exercise: "Checklist",
+      sets: [],
+      checklist: { lines, checked: [] },
+    });
+    const names = (
+      await json<{ exercises: { name: string }[] }>(await call(userId, "GET", "/v1/exercises"))
+    ).exercises.map((e) => e.name);
+    expect(names).not.toContain("Checklist");
+  });
+
+  it("leaves a checklist out of the workout's kind, and never runs one on the hangboard", async () => {
+    const userId = "user_checklist_kind";
+    await call(userId, "PUT", "/v1/exercises/e1", { name: "Checklist", kind: "climbing" });
+    await call(userId, "PUT", "/v1/exercises/e2", { name: "Pull-ups", kind: "strength" });
+    const list = { exercise: "Checklist", doses: [{ sets: 1 }], checklist: { lines: ["Jog"] } };
+    const pull = { exercise: "Pull-ups", doses: [{ sets: 3, reps: 6 }] };
+    const kindOf = async (items: unknown[]): Promise<string> =>
+      (
+        await json<{ workout: WorkoutRecord }>(
+          await call(userId, "PUT", "/v1/workouts/w1", { ...squatWorkout, items })
+        )
+      ).workout.kind;
+    expect(await kindOf([list, pull])).toBe("strength");
+    const half = { exercise: "half", doses: [{ sets: 6, reps: 6, onS: 7, offS: 3 }] };
+    expect(await kindOf([list, half])).not.toBe("hangboard");
+    const bad = await call(userId, "PUT", "/v1/activities/a9", {
+      ...activityBody,
+      done: [
+        {
+          item: 0,
+          exercise: "Checklist",
+          sets: [],
+          checklist: { lines: ["Jog"], checked: [0, 3] },
+        },
+      ],
+    });
+    expect(bad.status).toBe(400);
+  });
+
   it("saves how an exercise is measured, starting a new one on its category's measure", async () => {
     const userId = "user_exercises_measure";
     const pigeon = await call(userId, "PUT", "/v1/exercises/e1", {

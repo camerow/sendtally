@@ -85,6 +85,7 @@ import {
   type PlanChange,
   type WeekChange,
   type Workout,
+  isChecklist,
   withItemIds,
 } from "@sendtally/core/hang";
 import type { ActivityInput } from "./activities";
@@ -3074,7 +3075,9 @@ export async function saveActivity(
     ...addExercises(
       d,
       userId,
-      a.done.map((e) => ({ name: e.exercise, kind: a.kind, measure: measureOf(a.kind, e.sets) }))
+      a.done
+        .filter((e) => !isChecklist(e))
+        .map((e) => ({ name: e.exercise, kind: a.kind, measure: measureOf(a.kind, e.sets) }))
     ),
   ]);
   return { activity: only(rows), part: parts[0] ?? null };
@@ -3757,8 +3760,8 @@ async function exerciseInUse(d: DrizzleD1Database, userId: string, name: string)
     d.select({ json: activities.done_json }).from(activities).where(eq(activities.user_id, userId)),
   ]);
   return [...ws, ...as].some((row) =>
-    (JSON.parse(row.json) as { exercise: string }[]).some(
-      (x) => exerciseNameKey(x.exercise) === key
+    (JSON.parse(row.json) as { exercise: string; checklist?: unknown }[]).some(
+      (x) => exerciseNameKey(x.exercise) === key && !isChecklist(x)
     )
   );
 }
@@ -3795,7 +3798,8 @@ async function renameEverywhere(
   then: BatchItem<"sqlite">
 ): Promise<void> {
   const key = exerciseNameKey(from);
-  const hit = (x: { exercise: string }): boolean => exerciseNameKey(x.exercise) === key && !grip(x);
+  const hit = (x: { exercise: string; checklist?: unknown }): boolean =>
+    exerciseNameKey(x.exercise) === key && !grip(x) && !isChecklist(x);
   const renamed = <T extends { exercise: string }>(x: T): T =>
     hit(x) ? { ...x, exercise: name } : x;
   const [ws, as, grips] = await d.batch([

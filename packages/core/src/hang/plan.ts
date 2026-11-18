@@ -117,7 +117,22 @@ export type Item = {
   doses: Dose[];
   /** The rest after this exercise, before the next; none is the workout's rest between exercises. */
   restAfterS?: number;
+  /**
+   * Typed lines ticked off in any order, not an exercise: never in the library, its history or
+   * statistics. Older builds read the item as an exercise of one set, named "Checklist".
+   */
+  checklist?: { lines: string[] };
 };
+
+/** Whether an item or its log is a checklist; read the flag, never the name. */
+export const isChecklist = (x: { checklist?: unknown }): boolean => x.checklist !== undefined;
+
+/** The most lines a checklist holds, and the longest a line can be. */
+export const MAX_CHECKLIST_LINES = 30;
+export const MAX_CHECKLIST_LINE = 120;
+
+/** The name a checklist item carries, which only older builds show. */
+export const CHECKLIST_NAME = "Checklist";
 
 /** An item's id, which week changes follow when items move. One saved before ids is its place. */
 export const itemIdOf = (item: Pick<Item, "id">, index: number): string => item.id ?? String(index);
@@ -140,7 +155,14 @@ export function withItemIds<T extends Pick<Item, "id">>(
 }
 
 /** One exercise as one session runs it: the dose that session takes, and its turn when it alternates. */
-export type SessionItem = { exercise: string; dose: Dose; turn?: number; restAfterS?: number };
+export type SessionItem = {
+  exercise: string;
+  dose: Dose;
+  turn?: number;
+  restAfterS?: number;
+  /** A checklist runs one set a line. */
+  checklist?: { lines: string[] };
+};
 
 /** A library workout of any kind. */
 export type Workout = {
@@ -183,6 +205,23 @@ export function workoutKindOf(
     return kinds.length > 0 ? "hangboard" : kept === "hangboard" ? "other" : kept;
   const count = (k: WorkoutKind): number => voters.filter((x) => x === k).length;
   return voters.reduce((best, k) => (count(k) > count(best) ? k : best), first);
+}
+
+/**
+ * A workout's kind from its items (see `workoutKindOf`), its checklists left out: a line is not an
+ * exercise. A workout holding one never runs on the hangboard timer, so grips beside it make a mix.
+ */
+export function workoutKindOfItems(
+  items: readonly Pick<Item, "exercise" | "checklist">[],
+  kindOf: (exercise: string) => WorkoutKind | undefined,
+  kept: WorkoutKind
+): WorkoutKind {
+  const kind = workoutKindOf(
+    items.filter((i) => !isChecklist(i)).map((i) => i.exercise),
+    kindOf,
+    kept
+  );
+  return kind === "hangboard" && items.some(isChecklist) ? "other" : kind;
 }
 
 /**
@@ -272,6 +311,8 @@ export type ItemDone = {
   dose?: Dose;
   /** A hang session's grip: the rest the timer ran after it, before the next grip; none after the last. */
   restAfterS?: number;
+  /** A checklist's lines and the ones ticked, by place; its sets stay empty. */
+  checklist?: { lines: string[]; checked: number[] };
 };
 
 /**
@@ -298,6 +339,13 @@ export const turnsOf = (items: readonly Pick<Item, "doses">[]): number =>
 
 /** An item as session `n` of the workout runs it. */
 function sessionItem(item: Item, n: number): SessionItem {
+  if (item.checklist !== undefined)
+    return {
+      exercise: item.exercise,
+      dose: { sets: item.checklist.lines.length },
+      ...(item.restAfterS === undefined ? {} : { restAfterS: item.restAfterS }),
+      checklist: item.checklist,
+    };
   const turn = doseIndex(item, n);
   const run: SessionItem = {
     exercise: item.exercise,

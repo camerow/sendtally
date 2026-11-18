@@ -2,6 +2,8 @@ import {
   FOCI,
   foldVariations,
   isCalendarDate,
+  MAX_CHECKLIST_LINE,
+  MAX_CHECKLIST_LINES,
   WORKOUT_KINDS,
   type Block,
   type Dose,
@@ -85,12 +87,18 @@ const namedDose = dose
 
 const itemId = z.string().trim().min(1).max(64);
 
+const checklistLines = z
+  .array(z.string().trim().min(1).max(MAX_CHECKLIST_LINE))
+  .min(1)
+  .max(MAX_CHECKLIST_LINES);
+
 const item = z.object({
   // Older app builds send none; saving gives every item one.
   id: itemId.optional(),
   exercise,
   doses: z.array(namedDose).min(1).max(MAX_DOSES),
   restAfterS: seconds.optional(),
+  checklist: z.object({ lines: checklistLines }).optional(),
 });
 
 const doseIndex = z
@@ -254,6 +262,15 @@ export const doneBody = z
       targetRpe: rpe.optional(),
       dose: dose.optional(),
       restAfterS: seconds.optional(),
+      checklist: z
+        .object({ lines: checklistLines, checked: z.array(z.number().int().min(0)) })
+        // Each ticked line is a line of it, ticked once, so a log never reads "5 of 3".
+        .refine(
+          (c) =>
+            c.checked.every((n) => n < c.lines.length) &&
+            new Set(c.checked).size === c.checked.length
+        )
+        .optional(),
     })
   )
   .max(MAX_ITEMS);
