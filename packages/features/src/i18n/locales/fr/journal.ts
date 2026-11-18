@@ -32,6 +32,7 @@ export const journal = {
   "journal.showEverything": "Tout",
   "journal.showSessions": "Séances",
   "journal.showInjuries": "Blessures",
+  "journal.showTrips": "Voyages",
   "journal.showJournal": "Journal",
   "journal.entryCount_one": "{count} entrée",
   "journal.entryCount_other": "{count} entrées",

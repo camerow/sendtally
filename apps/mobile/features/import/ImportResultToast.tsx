@@ -17,8 +17,7 @@ export function ImportResultToast(): React.ReactElement | null {
       {...(result.imported > 0 && {
         action: {
           label: t("common.view"),
-          onPress: () =>
-            router.push({ pathname: "/(tabs)/sessions", params: { segment: "climbing" } }),
+          onPress: () => router.push("/(tabs)/sessions"),
         },
       })}
       onHide={() =>

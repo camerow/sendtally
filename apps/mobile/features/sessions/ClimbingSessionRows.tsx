@@ -3,12 +3,22 @@ import { View } from "react-native";
 import type { SessionRow as SessionRowData } from "@sendtally/api-client";
 import type { ClimbingSessionVM } from "@sendtally/features/climbs";
 import { sessionDay, sessionTitle } from "@sendtally/features/sessions";
-import { ClimbLogRow } from "../climbs/ClimbLogRow";
-import { SessionRow } from "./SessionRow";
+import { CLIMB_ROW_HEIGHT, ClimbLogRow } from "../climbs/ClimbLogRow";
+import { BLOCK_TAG_HEIGHT, SessionRow, sessionRowHeight } from "./SessionRow";
 import { DayColumn } from "./SessionRowParts";
 
 /** The day column and its gap, so a nested climb lines up under the session's title. */
 const NEST = 46;
+
+export function climbingSessionRowsHeight(
+  session: SessionRowData,
+  vm: ClimbingSessionVM | undefined,
+  blockTag: string | undefined
+): number {
+  const climbs = (vm?.climbs.length ?? 0) * CLIMB_ROW_HEIGHT;
+  if (vm?.named === false) return climbs;
+  return sessionRowHeight(session) + (blockTag === undefined ? 0 : BLOCK_TAG_HEIGHT) + climbs;
+}
 
 export type ClimbingSessionRowsProps = {
   session: SessionRowData;

@@ -18,8 +18,8 @@ import { EntryRow, entryRowHeight } from "./EntryRow";
 import { EntryKindChip } from "./EntryKindChip";
 import { ACTIVITY_ROW_HEIGHT, ActivityRow } from "../sessions/ActivityRow";
 import { HANG_ROW_HEIGHT, HangRow } from "../sessions/HangRow";
-import { BLOCK_TAG_HEIGHT, sessionRowHeight } from "../sessions/SessionRow";
-import { ClimbingSessionRows } from "../sessions/ClimbingSessionRows";
+import { BLOCK_TAG_HEIGHT } from "../sessions/SessionRow";
+import { ClimbingSessionRows, climbingSessionRowsHeight } from "../sessions/ClimbingSessionRows";
 import { ROW_TAGS_HEIGHT, RowTags } from "../sessions/RowTags";
 import { useDisplayScales } from "@sendtally/features/settings";
 
@@ -39,21 +39,32 @@ const TINT = "rgba(204,121,234,0.13)";
 
 const blockLine = (item: LogItem): number => (item.blockTag === undefined ? 0 : BLOCK_TAG_HEIGHT);
 
-const innerHeight = (item: LogItem): number => {
-  if (item.type === "session") return sessionRowHeight(item.session) + blockLine(item);
+const innerHeight = (
+  item: LogItem,
+  climbing: ReadonlyMap<string, ClimbingSessionVM> | undefined
+): number => {
+  if (item.type === "session")
+    return climbingSessionRowsHeight(
+      item.session,
+      climbing?.get(item.session.fingerprint),
+      item.blockTag
+    );
   if (item.type === "activity") return ACTIVITY_ROW_HEIGHT + blockLine(item);
   if (item.type === "hang") return HANG_ROW_HEIGHT + blockLine(item);
   return item.type === "block" ? 0 : entryRowHeight(item.entry);
 };
 
-export function tripGroupHeight(item: TripItem): number {
+export function tripGroupHeight(
+  item: TripItem,
+  climbing?: ReadonlyMap<string, ClimbingSessionVM>
+): number {
   // The margin under the group, the header and its rule, less the last row's dropped hairline.
   return (
     GROUP_MARGIN +
     1 +
     HEADER_HEIGHT +
     (item.entry.tags.length > 0 ? ROW_TAGS_HEIGHT : 0) +
-    item.inside.reduce((sum, inner) => sum + innerHeight(inner), 0) -
+    item.inside.reduce((sum, inner) => sum + innerHeight(inner, climbing), 0) -
     1
   );
 }

@@ -51,7 +51,7 @@ function Sessions({ row }: { row: WorkoutDoneVM }): React.ReactElement {
         onPress={() =>
           router.navigate({
             pathname: "/(tabs)/sessions",
-            params: { segment: "training", workout: row.key },
+            params: { workout: row.key },
           })
         }
         accessibilityRole="link"

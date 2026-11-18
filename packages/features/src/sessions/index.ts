@@ -27,7 +27,7 @@ export {
   logMonths,
   type SessionMonth,
 } from "./months";
-export { monthScopeItems, tagScopeItems, type ScopeItem } from "./scope";
+export { monthKeyScopeItems, monthScopeItems, tagScopeItems, type ScopeItem } from "./scope";
 export {
   MAX_TAG_MATCHES,
   UNTAGGED_KEY,

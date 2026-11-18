@@ -93,4 +93,5 @@ export const common = {
   "common.copied": "Copié",
   "common.weekCount_one": "{count} semaine",
   "common.weekCount_other": "{count} semaines",
+  "common.clearAll": "Tout effacer",
 } as const;
