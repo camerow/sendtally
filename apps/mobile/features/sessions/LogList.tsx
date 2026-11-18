@@ -1,5 +1,5 @@
 import React from "react";
-import { RefreshControl, SectionList, Text, type ViewToken } from "react-native";
+import { RefreshControl, SectionList, Text, View, type ViewToken } from "react-native";
 import type { ClimbingSessionVM } from "@sendtally/features/climbs";
 import type { LogItem, LogView } from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
@@ -50,10 +50,11 @@ function rowHeight(row: LogRow, nested: ReadonlyMap<string, ClimbingSessionVM>):
 /** Every header, row and footer's place in the dated list, worked out once per set of sections. */
 function sectionLayouts(
   sections: readonly Section[],
-  nested: ReadonlyMap<string, ClimbingSessionVM>
+  nested: ReadonlyMap<string, ClimbingSessionVM>,
+  top: number
 ): Layout[] {
   const layouts: Layout[] = [];
-  let offset = 0;
+  let offset = top;
   const add = (length: number): void => {
     layouts.push({ length, offset });
     offset += length;
@@ -120,12 +121,13 @@ export function LogList({
   const list = React.useRef<SectionList<LogRow, Section>>(null);
   const [refreshing, setRefreshing] = React.useState(false);
   const [currentKey, setCurrentKey] = React.useState<string | null>(null);
+  const [headerHeight, setHeaderHeight] = React.useState(0);
   const nested = view?.kind === "dated" ? view.climbing : NO_CLIMBS;
   const flat = view?.kind === "climbs";
   const { sections, scope } = React.useMemo(() => sectionsOf(view), [view]);
   const layouts = React.useMemo(
-    () => (flat ? null : sectionLayouts(sections, nested)),
-    [flat, sections, nested]
+    () => (flat ? null : sectionLayouts(sections, nested, headerHeight)),
+    [flat, sections, nested, headerHeight]
   );
   const itemLayout = React.useMemo(
     () =>
@@ -190,7 +192,9 @@ export function LogList({
         }
         viewabilityConfigCallbackPairs={viewability}
         contentContainerStyle={{ paddingBottom: 140 }}
-        ListHeaderComponent={<>{header}</>}
+        ListHeaderComponent={
+          <View onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}>{header}</View>
+        }
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

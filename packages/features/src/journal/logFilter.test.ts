@@ -53,7 +53,7 @@ const session = (
 });
 
 const logged = (name: string, over: Partial<SessionClimb> = {}): SessionClimb =>
-  ({ name, kind: "attempt", tries: 1, ...over }) as SessionClimb;
+  ({ name, kind: "attempt", tries: 1, grade: { scale: "v", value: 4 }, ...over }) as SessionClimb;
 
 const climb = (
   id: string,
@@ -334,8 +334,8 @@ describe("filterLog", () => {
   });
 
   it("narrows by discipline, keeping only sessions with a climb of it", () => {
-    const v = view({ discipline: "route" });
-    expect(keys(v)).toEqual([]);
+    expect(keys(view({ discipline: "route" }))).toEqual([]);
+    expect(keys(view({ discipline: "boulder" }))).toEqual(["session:evening", "session:trip-day"]);
   });
 
   it("narrows training by category and exercise, lighting Training", () => {

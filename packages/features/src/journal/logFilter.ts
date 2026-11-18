@@ -12,6 +12,7 @@ import {
 } from "../climbs/log";
 import { climbOf } from "../climbs/overview";
 import { disciplineLabel } from "../log-session/types";
+import { disciplineOf } from "../log-session/transforms";
 import { hangGripLabel, hangTitle } from "../sessions/hang";
 import { sessionTitle } from "../sessions/title";
 import { focusLabel } from "../training/focus";
@@ -248,13 +249,19 @@ function matchItem(
   if (!passesWhere(item.session, filter)) return null;
   const full = withClimbs.get(item.session.fingerprint);
   const vm = full === undefined ? undefined : climbingSessionVM(full, ctx.climbs, ctx.scales);
+  const logged = full?.climbs ?? [];
+  if (
+    filter.discipline !== null &&
+    !logged.some((l) => l.grade != null && disciplineOf(l.grade.scale) === filter.discipline)
+  )
+    return null;
   const kept = sessionClimbs(full, ctx.climbs).filter(
     (c) =>
       (filter.discipline === null || c.discipline === filter.discipline) &&
       (found || matchesClimbSearch(c, q, ctx.scales))
   );
+  if (!found && kept.length === 0) return null;
   const narrowed = filter.discipline !== null || !found;
-  if (narrowed && kept.length === 0) return null;
   if (vm === undefined) return { item };
   if (!narrowed) return { item, climbing: vm };
   const ids = new Set(kept.map((c) => c.id));

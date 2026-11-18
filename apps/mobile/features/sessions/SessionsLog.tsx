@@ -196,7 +196,7 @@ export function SessionsLog({ workout = null }: { workout?: string | null }): Re
       ) : (
         <LogList
           view={view}
-          header={header}
+          header={logFilterActive(filter) ? null : header}
           below={
             <ActiveFilters
               pills={pills}
