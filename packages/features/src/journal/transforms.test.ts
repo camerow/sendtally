@@ -313,7 +313,7 @@ describe("logTraining", () => {
 });
 
 describe("groupTrips", () => {
-  const now = new Date("2026-06-10T12:00:00.000Z");
+  const now = new Date("2026-06-10T12:00:00");
   const trip = entry({
     id: "trip",
     kind: "trip",
@@ -483,7 +483,7 @@ describe("openInjuries and daysSince", () => {
   });
 
   it("counts whole days and never goes negative", () => {
-    const now = new Date("2026-06-14T12:00:00.000Z");
+    const now = new Date("2026-06-14T12:00:00");
     expect(daysSince("2026-05-18", now)).toBe(27);
     expect(daysSince("2026-07-01", now)).toBe(0);
   });

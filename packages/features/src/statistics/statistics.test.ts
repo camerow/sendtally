@@ -6,7 +6,7 @@ import { durationLabel } from "../sessions/years";
 import { doneOf, trainingInsightsVM } from "./insights";
 import { TRAINED_KINDS } from "./overview";
 
-const NOW = new Date("2026-10-22T20:00:00Z");
+const NOW = new Date("2026-10-22T20:00:00");
 
 function climbing(
   start: string,
@@ -203,9 +203,8 @@ describe("trainingInsightsVM", () => {
   });
 
   it("draws Load from the same kinds as the rest of the tab", () => {
-    const wallNow = new Date(NOW.getTime() + NOW.getTimezoneOffset() * 60_000);
-    const climbingOnly = trainingInsightsVM(log, "1m", ["climbing"], grip, wallNow).load;
-    const everything = trainingInsightsVM(log, "1m", TRAINED_KINDS, grip, wallNow).load;
+    const climbingOnly = trainingInsightsVM(log, "1m", ["climbing"], grip, NOW).load;
+    const everything = trainingInsightsVM(log, "1m", TRAINED_KINDS, grip, NOW).load;
     const total = (bars: { value: number }[]): number => bars.reduce((n, b) => n + b.value, 0);
     expect(total(climbingOnly.bars)).toBe(7 * 90 + 5 * 90);
     expect(climbingOnly.headline).toBe("360");

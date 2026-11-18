@@ -4,7 +4,7 @@ import type { SessionWithClimbs } from "@sendtally/api-client";
 import { doneOf, type Done } from "./insights";
 import { workloadPlot, workloadVM, workloadWeeksOf } from "./workloadView";
 
-const now = new Date(Date.UTC(2026, 10, 16, 20) + new Date().getTimezoneOffset() * 60_000);
+const now = new Date(2026, 10, 16, 20);
 const today = Date.UTC(2026, 10, 16);
 const rec = (days: number, rpe: number | null = 6, minutes = 60, name = `r${days}`): Done => ({
   ref: { type: "activity", id: name, name },
