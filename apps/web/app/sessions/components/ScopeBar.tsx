@@ -3,7 +3,6 @@ import type { ScopeItem } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 
-/** Whether the field is open is the bar's own; the text is the filter's. */
 export type ScopeSearch = {
   open: boolean;
   text: string;

@@ -17,7 +17,10 @@ export {
   type TripSpan,
 } from "./types";
 export {
+  LOG_CATEGORIES,
+  LOG_DISCIPLINES,
   NO_LOG_FILTER,
+  outcomeChipLabel,
   filterLog,
   logExerciseOptions,
   logFilterActive,
