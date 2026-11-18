@@ -26,7 +26,7 @@ import { climbedKeys, type ClimbPlan } from "./climbRows";
 import type { LiveSession } from "../log-session/useLiveSession";
 import { partPlaces, partPlanned, type FingersPart } from "./fingersPart";
 import type { Hold } from "./holdClock";
-import { exerciseName } from "./library";
+import { itemTitle } from "./checklist";
 import type { LiveRunStore } from "./liveRun";
 import { newDoseFor } from "./doseFields";
 import { runParams, type RunFinish, type WorkoutRun } from "./runParams";
@@ -262,10 +262,12 @@ export function useSetsPlayer({
     (fingers === undefined || ("run" in fingers && fingers.run.finished === null));
   const items = [...run.items.slice(0, cards.base), ...cards.added];
   const tallyMeasure = tallyMeasuresOf(exercises ?? [], run.kind, isGrip);
-  const tallyOf = (item: number): TallyMeasure | null => {
+  const listAt = (item: number): boolean => {
     const at = items[item];
-    return at === undefined || isChecklist(at) ? null : tallyMeasure(at.exercise);
+    return at !== undefined && isChecklist(at);
   };
+  const tallyOf = (item: number): TallyMeasure | null =>
+    listAt(item) ? null : tallyMeasure(items[item]?.exercise ?? "");
   const live = withDoneSets(items, done);
   const ended = (d: readonly ItemDone[], t: ReadonlySet<string>, item: number): boolean => {
     const after = withDoneSets(items, d);
@@ -290,7 +292,10 @@ export function useSetsPlayer({
     (current === null || cards.order.indexOf(places[0]) < cards.order.indexOf(current.item))
       ? places[0]
       : null;
-  const nameOf = (item: number): string => exerciseName(items[item]?.exercise ?? "");
+  const nameOf = (item: number): string => {
+    const at = items[item];
+    return at === undefined ? "" : itemTitle(at);
+  };
   const withFold = (item: number, fold: boolean | null): void =>
     setCards((c) => withCardFold(c, item, fold));
 
@@ -471,7 +476,7 @@ export function useSetsPlayer({
         (focused === null && climbAt !== null && next !== null
           ? (cards.order.find((k) => k === climbAt || k === next.item) ?? -1)
           : (current?.item ?? climbAt ?? -1)),
-      (k) => items[k]?.checklist !== undefined,
+      (k) => listAt(k),
       (k) => inPart(k) && !partOpen
     ),
     rest,

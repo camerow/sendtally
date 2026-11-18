@@ -21,6 +21,7 @@ import {
   type SetAt,
   type WorkoutRun,
   checklistLine,
+  runItems,
 } from "@sendtally/features/workouts";
 import { type MoreMenuItem } from "../../components/MoreMenu";
 import { Sheet } from "../../components/Sheet";
@@ -317,7 +318,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
       )}
       {picking && (
         <ExercisePicker
-          items={items.map((x) => ({ exercise: x.exercise, doses: [x.dose] }))}
+          items={runItems(items)}
           multi
           onPick={(picked) => picked.forEach(player.addExercise)}
           onClose={() => setPicking(false)}

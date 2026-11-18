@@ -24,6 +24,7 @@ import {
   type SetAt,
   type WorkoutRun,
   checklistLine,
+  runItems,
 } from "@sendtally/features/workouts";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { Toast } from "../../../components/Toast";
@@ -437,7 +438,7 @@ export function SetsScreen({
         )}
         {picking && (
           <ExercisePickerSheet
-            items={items.map((x) => ({ exercise: x.exercise, doses: [x.dose] }))}
+            items={runItems(items)}
             multi
             onPick={(picked) => picked.forEach(player.addExercise)}
             onClose={() => setPicking(false)}

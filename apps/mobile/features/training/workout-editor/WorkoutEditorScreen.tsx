@@ -50,7 +50,7 @@ import {
   withRestAfter,
   withoutItem,
 } from "@sendtally/features/workouts";
-import { doseMeasureOf } from "@sendtally/features/workouts";
+import { doseMeasureOf, itemTitle } from "@sendtally/features/workouts";
 import { ChecklistEditor } from "./ChecklistEditor";
 import { ItemEditor } from "./ItemEditor";
 import type { AddFlow } from "@sendtally/features/training";
@@ -178,7 +178,7 @@ function Editor({
             <React.Fragment key={item.id ?? i}>
               {i > 0 && (
                 <GapRest
-                  after={nameOf(state.items[i - 1]?.exercise ?? "")}
+                  after={itemTitle(state.items[i - 1] ?? { exercise: "" }, nameOf)}
                   seconds={restAfterItem(state.items, i - 1, state.exerciseRestS)}
                   onChange={(seconds) => setState((s) => withRestAfter(s, i - 1, seconds))}
                 />

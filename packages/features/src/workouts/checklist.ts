@@ -1,4 +1,10 @@
-import type { SessionItem, WeightUnit, WorkoutKind } from "@sendtally/core/hang";
+import {
+  isChecklist,
+  type Item,
+  type SessionItem,
+  type WeightUnit,
+  type WorkoutKind,
+} from "@sendtally/core/hang";
 import { t } from "../i18n";
 import { doseSummary, exerciseName } from "./library";
 
@@ -10,9 +16,22 @@ export const checklistLine = (done: number, count: number): string =>
 export const checklistTitle = (done: number, count: number): string =>
   t("workouts.checklistProgress", { done, total: count });
 
-/** An item's name as the user reads it: a checklist reads as one, whatever it is stored as. */
-export const itemTitle = (item: Pick<SessionItem, "exercise" | "checklist">): string =>
-  item.checklist === undefined ? exerciseName(item.exercise) : t("workouts.checklist");
+/**
+ * An item's name as the user reads it: a checklist reads as one in their language, whatever it
+ * is stored as, and anything else by `name`.
+ */
+export const itemTitle = (
+  item: Pick<SessionItem, "exercise" | "checklist">,
+  name: (exercise: string) => string = exerciseName
+): string => (isChecklist(item) ? t("workouts.checklist") : name(item.exercise));
+
+/** A run's items as workout items, a checklist kept one, for the exercise picker. */
+export const runItems = (items: readonly SessionItem[]): Item[] =>
+  items.map(({ exercise, dose, checklist }) => ({
+    exercise,
+    doses: [dose],
+    ...(checklist !== undefined && { checklist }),
+  }));
 
 /** What an item asks for: a checklist its lines, "5 lines", an exercise its dose. */
 export const itemDoseText = (

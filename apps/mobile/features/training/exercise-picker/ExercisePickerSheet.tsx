@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import type { Item, WorkoutKind } from "@sendtally/core/hang";
+import { isChecklist, type Item, type WorkoutKind } from "@sendtally/core/hang";
 import { colors, sheetTitleSize } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import {
@@ -58,7 +58,7 @@ export function ExercisePickerSheet({
   const [ticked, setTicked] = React.useState<PickerEntry[]>([]);
   const [choosing, setChoosing] = React.useState(false);
   const world = usePickerWorld(
-    items.map((i) => i.exercise),
+    items.filter((i) => !isChecklist(i)).map((i) => i.exercise),
     "all"
   );
   const { offer, kinds, newKind } = pickerState(category);

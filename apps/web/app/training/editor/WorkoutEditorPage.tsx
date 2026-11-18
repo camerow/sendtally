@@ -28,6 +28,7 @@ import {
   useDerivedKindDraft,
   withEditorIds,
   withExerciseSwapped,
+  itemTitle,
   withItem,
   withItemMoved,
   withRestAfter,
@@ -170,7 +171,7 @@ function Editor({
         <React.Fragment key={item.id ?? i}>
           {i > 0 && (
             <GapRest
-              after={nameOf(state.items[i - 1]?.exercise ?? "")}
+              after={itemTitle(state.items[i - 1] ?? { exercise: "" }, nameOf)}
               seconds={restAfterItem(state.items, i - 1, state.exerciseRestS)}
               onChange={(seconds) => setState((s) => withRestAfter(s, i - 1, seconds))}
             />

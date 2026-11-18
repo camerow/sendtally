@@ -554,6 +554,57 @@ describe("Sets player", () => {
     ];
     expect(JSON.parse(params.done).map((d: { exercise: string }) => d.exercise)).toEqual(["Row"]);
   });
+  it("counts the exercise after a finished fingerboard part while the warm-up checklist is still open", async () => {
+    const warm = { exercise: "Checklist", dose: { sets: 1 }, checklist: { lines: ["Jog"] } };
+    const mix: WorkoutRun = {
+      ...run,
+      title: "Warm-up, fingers and pull",
+      items: [
+        warm,
+        { exercise: "half", dose: { sets: 1, reps: 1, onS: 7, offS: 0 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    };
+    const view = await renderWithHang(<SetsScreen run={mix} />);
+    expect(screen.getByText("Exercise 1 of 2")).toBeTruthy();
+    await view.unmount();
+    const live = liveRun.read();
+    if (live === null || live.state.player !== "sets") throw new Error("no live run");
+    liveRun.writeAsIs({
+      ...live,
+      state: {
+        ...live.state,
+        fingers: {
+          done: [{ item: 1, exercise: "half", sets: [{ reps: 1, onS: 7 }] }],
+          setups: [{ edgeMm: 20, loadKg: 0 }],
+          planned: {
+            items: [
+              {
+                workout: {
+                  name: "Warm-up, fingers and pull",
+                  kind: "hang",
+                  hangS: 7,
+                  restS: 0,
+                  reps: 1,
+                  sets: 1,
+                  setRestS: 0,
+                  id: "w1",
+                  source: "mine",
+                  grip: "half",
+                  timeUnits: { hangS: "s", restS: "s", setRestS: "s" },
+                },
+                dose: { sets: 1, reps: 1, onS: 7, offS: 0 },
+              },
+            ],
+            exerciseRestS: 0,
+          },
+        },
+      },
+    });
+    await renderWithHang(<SetsScreen run={mix} />);
+    expect(screen.getByLabelText("Jog")).toHaveProp("accessibilityState", { checked: false });
+    expect(screen.getByText("Exercise 2 of 2")).toBeTruthy();
+  });
   it("ends the run at its last tick when it sat open over 20 minutes after", async () => {
     await renderWithHang(<SetsScreen run={run} />, hangData());
     await advance(10 * 60_000);
