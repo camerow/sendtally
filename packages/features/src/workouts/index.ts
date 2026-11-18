@@ -39,6 +39,7 @@ export { useWorkouts } from "./useWorkouts";
 export * from "./doseFields";
 export * from "./editorState";
 export * from "./finishedRun";
+export * from "./fingersPart";
 export * from "./holdClock";
 export * from "./restCountdown";
 export * from "./runParams";

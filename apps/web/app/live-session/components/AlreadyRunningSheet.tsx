@@ -3,7 +3,12 @@ import { t } from "@sendtally/features/i18n";
 import { Sheet } from "../../components/Sheet";
 import { useLiveRunStore } from "../../lib/useLiveRun";
 import { useLiveSessionStorage } from "../../lib/useLiveSessionStorage";
-import { askingStore, type Asking } from "@sendtally/features/workouts";
+import {
+  askingStore,
+  discardRunBody,
+  parseLiveRun,
+  type Asking,
+} from "@sendtally/features/workouts";
 
 /**
  * Asks what happens to the session or workout already running before another starts, and starts the
@@ -38,7 +43,7 @@ export function AlreadyRunningSheet(): React.ReactElement | null {
         }}
       >
         <p className="sheet-body">
-          {confirming.running.climbing ? t("tally.discardBody") : t("hang.discardRunBody")}
+          {confirming.running.climbing ? t("tally.discardBody") : discardRunBody(parseLiveRun(run))}
         </p>
       </Sheet>
     );

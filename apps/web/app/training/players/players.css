@@ -459,3 +459,23 @@
   font-size: 12.5px;
   color: var(--text-on-white-secondary);
 }
+
+.player-grip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+}
+
+.player-grip-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--bs-gunmetal);
+}
+
+.player-grip .player-dose {
+  padding-left: 18px;
+}

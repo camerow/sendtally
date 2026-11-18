@@ -10,7 +10,7 @@ import {
   setKeyOf,
   shortOf,
 } from "@sendtally/features/activities";
-import { heldSet } from "@sendtally/features/hang";
+import { heldSet } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { useFieldOrder } from "../../../components/useFieldOrder";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
@@ -41,6 +41,8 @@ export type DoneDetailsProps = {
   onChange: (done: ItemDone[], off: string[]) => void;
   /** A set with values was removed: say so, with Undo putting it back. */
   onRemoved?: (message: string, undo: () => void) => void;
+  /** Inside a card of its own, such as a fingerboard part's: no heading, no card per exercise. */
+  flat?: boolean;
 };
 
 /** Typing in a set records it, so it is ticked. */
@@ -64,6 +66,7 @@ export function DoneDetails({
   setup,
   onChange,
   onRemoved,
+  flat = false,
 }: DoneDetailsProps): React.ReactElement {
   const edit = (next: ItemDone[]): void => onChange(next, [...off]);
   // A hang set's count, then its load, then its RPE, then the next set's.
@@ -108,21 +111,26 @@ export function DoneDetails({
     onChange([...done], off.includes(key) ? off.filter((k) => k !== key) : [...off, key]);
   };
 
+  const Frame = flat ? FlatFrame : SetsFrame;
   return (
-    <SheetSection label={t("activities.sets")}>
+    <Frame>
       {done.map((d, index) => {
         const target = planned[d.item];
         const lifting = d.sets.some((s) => s.weightKg !== undefined) && !hangs;
         return (
           <View
             key={d.item}
-            style={{
-              gap: 4,
-              padding: 14,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: colors.lineOnLightStrong,
-            }}
+            style={
+              flat
+                ? { gap: 4 }
+                : {
+                    gap: 4,
+                    padding: 14,
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: colors.lineOnLightStrong,
+                  }
+            }
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingBottom: 4 }}>
               <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color }} />
@@ -212,6 +220,14 @@ export function DoneDetails({
           </View>
         );
       })}
-    </SheetSection>
+    </Frame>
   );
 }
+
+const SetsFrame = ({ children }: { children: React.ReactNode }): React.ReactElement => (
+  <SheetSection label={t("activities.sets")}>{children}</SheetSection>
+);
+
+const FlatFrame = ({ children }: { children: React.ReactNode }): React.ReactElement => (
+  <View style={{ gap: 14 }}>{children}</View>
+);

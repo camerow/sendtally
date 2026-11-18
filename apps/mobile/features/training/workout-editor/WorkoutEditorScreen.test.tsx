@@ -133,22 +133,24 @@ describe("Workout editor", () => {
     expect(router.back).toHaveBeenCalled();
   });
 
-  it("offers grips only once a grip is in, and everything again once it goes", async () => {
+  it("adds grips and other exercises in one pass, as a mix with its minutes and each row's own dose", async () => {
     await renderWithHang(<WorkoutEditorScreen />, hangData(), world);
     await fireEvent.press(screen.getByText("Add exercises"));
-    expect(screen.getByRole("radio", { name: "Fingers" })).toBeTruthy();
     await fireEvent.press(screen.getByRole("checkbox", { name: "Half crimp" }));
-    expect(screen.queryByRole("radio", { name: "All" })).toBeNull();
-    expect(screen.queryByRole("checkbox", { name: "Back squat" })).toBeNull();
-    await fireEvent.press(screen.getByText("Add 1 exercise"));
+    expect(screen.getByRole("radio", { name: "All" })).toBeTruthy();
+    await fireEvent.press(screen.getByRole("checkbox", { name: "Back squat" }));
+    await fireEvent.press(screen.getByText("Add 2 exercises"));
     await act(async () => undefined);
-    expect(screen.queryByLabelText("Duration")).toBeNull();
+    expect(screen.getByLabelText("Duration")).toBeTruthy();
+    expect(screen.getByLabelText("Hang time")).toBeTruthy();
 
-    await fireEvent.press(screen.getByLabelText("Remove Half crimp"));
-    await pick("Back squat");
     await fireEvent.press(screen.getByText("Save"));
     const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
-    expect(saved).toMatchObject({ kind: "strength", exerciseRestS: 0 });
+    expect(saved.kind).toBe("strength");
+    expect(saved.items.map((i) => [i.exercise, i.doses[0]?.onS !== undefined])).toEqual([
+      ["half", true],
+      ["Back squat", false],
+    ]);
   });
 
   it("adds and removes a third alternate from the exercise's menu sheet", async () => {
@@ -226,7 +228,6 @@ describe("Workout editor", () => {
     expect(screen.getByDisplayValue("Max hangs (copy)")).toBeTruthy();
 
     await fireEvent.press(screen.getByLabelText("Swap exercise"));
-    expect(screen.queryByText("Back squat")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Open hand" }));
     await act(async () => undefined);
     await type("Hang time", "12");

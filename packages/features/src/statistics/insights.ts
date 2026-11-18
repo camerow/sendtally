@@ -185,8 +185,9 @@ function hangTrends(
 }
 
 /**
- * Each group's share of the sessions and its time, leaving out groups with neither. A record is
- * one session under its own group; `minutesIn` gives each group its time.
+ * Each group's sessions and time, its bar its share of the time, leaving out
+ * groups with neither. A record is one session under its own group; `minutesIn` gives each group
+ * its time. With no time logged at all, the bar falls back to the sessions.
  */
 function mix<K>(
   shown: readonly Done[],
@@ -195,15 +196,17 @@ function mix<K>(
   name: (k: K) => string,
   minutesIn: (d: Done, key: K) => number = (d, key) => (keyOf(d) === key ? d.minutes : 0)
 ): (TrainedVM & { key: K })[] {
+  const timeOf = (key: K): number => shown.reduce((n, d) => n + minutesIn(d, key), 0);
+  const total = keys.reduce((n, key) => n + timeOf(key), 0);
   return keys.flatMap((key) => {
     const count = shown.filter((d) => keyOf(d) === key).length;
-    const time = shown.reduce((n, d) => n + minutesIn(d, key), 0);
+    const time = timeOf(key);
     if (count === 0 && time === 0) return [];
     return [
       {
         key,
         name: name(key),
-        share: count / shown.length,
+        share: total > 0 ? time / total : count / shown.length,
         detail:
           time === 0
             ? String(count)
@@ -215,7 +218,7 @@ function mix<K>(
   });
 }
 
-/** A run's time under its kind, but its fingerboard part's under Fingers (Will, 2026-11-16). */
+/** A run's time under its kind, but its fingerboard part's under Fingers. */
 const kindMinutes = (d: Done, kind: WorkoutKind): number =>
   (d.kind === kind ? d.minutes - d.fingers : 0) + (kind === "hangboard" ? d.fingers : 0);
 

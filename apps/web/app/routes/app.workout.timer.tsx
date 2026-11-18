@@ -1,11 +1,12 @@
 import React from "react";
 import { useSearchParams } from "react-router";
 import { readPlanLink, readSession } from "@sendtally/features/training";
-import { TimerPage } from "../training/players/timer/TimerPage";
+import { PartTimerPage, TimerPage } from "../training/players/timer/TimerPage";
 
 export default function Route(): React.ReactElement {
   const [search] = useSearchParams();
   const params = Object.fromEntries(search);
+  if (params.part === "1") return <PartTimerPage workoutId={params.workoutId ?? ""} />;
   return (
     <TimerPage
       workoutId={params.workoutId ?? ""}

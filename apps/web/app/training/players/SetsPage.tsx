@@ -5,6 +5,7 @@ import { useActivities, useWeightUnit } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { useLiveSession } from "@sendtally/features/log-session";
 import { exerciseAbout } from "@sendtally/features/exercises";
+import { useGrips } from "@sendtally/features/hang";
 import { useExercises } from "@sendtally/features/statistics";
 import {
   afterKey,
@@ -14,9 +15,11 @@ import {
   type SetAt,
   type WorkoutRun,
 } from "@sendtally/features/workouts";
+import { useToast } from "../../components/Toast";
 import { useAppApi } from "../../lib/useAppApi";
 import { useExerciseTallyStorage, useLiveRunStore } from "../../lib/useLiveRun";
 import { ClimbingCard } from "./ClimbingCard";
+import { FingersCard } from "./FingersCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
 import { HoldButton } from "./HoldButton";
 import { HoldRow } from "./HoldRow";
@@ -40,14 +43,17 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
   const exercises = useExercises(api).state;
   const mine = exercises.status === "ready" ? exercises.data : null;
   const tally = useLiveSession(useExerciseTallyStorage());
+  const grips = useGrips(api);
+  const toast = useToast();
   const player = useSetsPlayer({
+    isGrip: grips.isGrip,
     run,
     store: useLiveRunStore(),
     tally,
     activities: activities.status === "ready" ? activities.data : null,
     exercises: mine,
   });
-  const { shown, ticked, current, rest, hold, previous, nameOf } = player;
+  const { shown, ticked, current, rest, hold, previous, nameOf, part } = player;
   const finish = useFinishRun(
     run,
     player.finished,
@@ -95,6 +101,31 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
       {run.items.map((item, i) => {
         const d = shown[i];
         if (d === undefined) return null;
+        if (part !== null && part.places.includes(i)) {
+          const last = part.places[part.places.length - 1] ?? i;
+          return (
+            i === part.places[0] && (
+              <React.Fragment key={i}>
+                <FingersCard
+                  part={part}
+                  unit={unit}
+                  gripName={grips.gripName}
+                  onStart={() =>
+                    void navigate(
+                      `/app/workout/timer?${new URLSearchParams({ workoutId: run.workoutId, part: "1" })}`
+                    )
+                  }
+                  onRemoved={(message, undo) =>
+                    toast.show({ message, action: { label: t("tally.undo"), onPress: undo } })
+                  }
+                />
+                {restAt(afterKey(last)) || (
+                  <RestPreview seconds={restAfterItem(run.items, last, run.exerciseRestS)} />
+                )}
+              </React.Fragment>
+            )
+          );
+        }
         const climbing = player.climbing(i);
         const range = player.extra(i);
         const between = restAt(afterKey(i)) || (

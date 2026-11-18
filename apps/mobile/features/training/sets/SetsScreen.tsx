@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import { useActivities, useWeightUnit } from "@sendtally/features/activities";
 import { exerciseAbout, type TallyMeasure } from "@sendtally/features/exercises";
+import { useGrips } from "@sendtally/features/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { useLiveSession } from "@sendtally/features/log-session";
 import { useExercises } from "@sendtally/features/statistics";
@@ -18,6 +19,7 @@ import {
   type WorkoutRun,
 } from "@sendtally/features/workouts";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
+import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
 import { exerciseTallyStorage } from "../../../lib/exerciseTallyStorage";
 import { liveRun } from "../../live-session/liveRun";
@@ -34,6 +36,7 @@ import { FoldedSetsCard } from "./FoldedSetsCard";
 import { SET_COLUMNS } from "./setColumns";
 import { SetsCard } from "./SetsCard";
 import { ExtraSets } from "./ExtraSets";
+import { FingersCard } from "./FingersCard";
 
 /**
  * A lifting workout as a set table on a clock from Start: tick each set as it is done, rest
@@ -55,13 +58,17 @@ export function SetsScreen({
   const mine = exercises.status === "ready" ? exercises.data : null;
   const tally = useLiveSession(exerciseTallyStorage);
   const [keypad, setKeypad] = React.useState(false);
+  const grips = useGrips(api);
+  const [removed, setRemoved] = React.useState<{ message: string; undo: () => void } | null>(null);
   const player = useSetsPlayer({
     run,
     store: liveRun,
     tally,
     activities: activities.status === "ready" ? activities.data : null,
     exercises: mine,
+    isGrip: grips.isGrip,
   });
+  const { part } = player;
   const { shown, ticked, current, rest, hold, previous, nameOf } = player;
 
   const holdRow = (at: SetAt): React.ReactNode =>
@@ -132,6 +139,26 @@ export function SetsScreen({
           {run.items.map((item, i) => {
             const d = shown[i];
             if (d === undefined) return null;
+            if (part !== null && part.places.includes(i))
+              return (
+                i === part.places[0] && (
+                  <React.Fragment key={i}>
+                    <FingersCard
+                      part={part}
+                      unit={unit}
+                      gripName={grips.gripName}
+                      onStart={() =>
+                        router.push({
+                          pathname: "/workout/timer",
+                          params: { workoutId: run.workoutId, gripId: item.exercise, part: "1" },
+                        })
+                      }
+                      onRemoved={(message, undo) => setRemoved({ message, undo })}
+                    />
+                    {restBetween(part.places[part.places.length - 1] ?? i)}
+                  </React.Fragment>
+                )
+              );
             const climbing = player.climbing(i);
             const range = player.extra(i);
             if (climbing !== null)
@@ -194,6 +221,13 @@ export function SetsScreen({
           </View>
         )}
       </KeyboardAvoidingView>
+      {removed !== null && (
+        <Toast
+          message={removed.message}
+          action={{ label: t("tally.undo"), onPress: removed.undo }}
+          onHide={() => setRemoved(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }

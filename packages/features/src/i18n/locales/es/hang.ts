@@ -7,12 +7,15 @@ export const hang = {
   "hang.loadPlain": "{value} {unit}",
   "hang.seconds": "{n} s",
   "hang.minutes": "{n} min",
+  "hang.underTension": "{time} bajo tensión",
   "hang.edgeMm": "{n}\u00A0mm",
 
   "hang.summaryRepeats": "{reps} × {on} on / {off} off",
   "hang.summarySingle": "Suspensión de {on}",
-  "hang.summaryHang": "{core} · {sets} series · {setRest} de descanso",
-  "hang.summaryPull": "{reps} tirones × {sets} series · {setRest} entre series",
+  "hang.partPullSets": "{reps} tirones × {sets} series",
+  "hang.partBetweenSets": "{setRest} entre series",
+  "hang.partSets": "{sets} series",
+  "hang.partRest": "{setRest} de descanso",
   "hang.summaryTimedPull": "Tirón de {on}",
 
   "hang.untitledWorkout": "Entreno sin nombre",

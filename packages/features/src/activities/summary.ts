@@ -3,6 +3,7 @@ import {
   doseProtocol,
   hangKindOf,
   hangSessionItems,
+  heldSet,
   type CalendarDate,
   type HangKind,
   type HangRun as GripRun,
@@ -166,7 +167,7 @@ type HangLog = Pick<HangSession, "protocol" | "pct" | "loadKg"> & {
  */
 export function hangSets({ protocol, pct, loadKg, done = [] }: HangLog): SetDone[] {
   const saved = done.find((d) => d.item === 0)?.sets;
-  if (saved !== undefined && saved.length > 0) return saved;
+  if (saved !== undefined) return saved;
   const held = Math.round((protocol.sets * protocol.reps * pct) / 100);
   return Array.from({ length: protocol.sets }, (_, s) => ({
     reps: Math.max(0, Math.min(protocol.reps, held - s * protocol.reps)),
@@ -197,13 +198,13 @@ export type HangGripGrid = HangGrid & {
 
 type HangRun = HangLog & Pick<HangSession, "gripId" | "edgeMm">;
 
-/** Every grip a session ran that kept a set, in the order it ran; the first always. */
+/** Every grip a session ran that held a hang, in the order it ran: a grip that held none trained nothing. */
 export function hangGrids(session: HangRun): HangGripGrid[] {
   const done = session.done ?? [];
   return hangSessionItems({ ...session, done }).flatMap(({ exercise, dose }, item) => {
     const first = item === 0;
     const sets = first ? hangSets(session) : (done.find((d) => d.item === item)?.sets ?? []);
-    if (sets.length === 0) return [];
+    if (!sets.some(heldSet)) return [];
     return [
       {
         ...gridOf(sets, dose.reps ?? 1, session.loadKg),
@@ -217,16 +218,17 @@ export function hangGrids(session: HangRun): HangGripGrid[] {
 }
 
 /**
- * Every grip a session ran, each as a session of that grip alone, for what follows a grip over
- * time: the first is the session itself; a later grip runs the dose it saved, at its edge and top
- * load, complete when it held every hang it asked.
+ * Every grip a session ran that held a hang, each as a session of that grip alone, for what
+ * follows a grip over time: the first is the session itself; a later grip runs the dose it saved,
+ * at its edge and top load, complete when it held every hang it asked. A grip that held none
+ * trained nothing, so its history, best and statistics leave it out.
  */
 export function gripRuns<T extends GripRun>(session: T): T[] {
   const { done } = session;
   return hangSessionItems(session).flatMap(({ exercise, dose }, item): T[] => {
-    if (item === 0) return [session];
+    if (item === 0) return hangSets(session).some(heldSet) ? [session] : [];
     const sets = done.find((d) => d.item === item)?.sets ?? [];
-    if (sets.length === 0) return [];
+    if (!sets.some(heldSet)) return [];
     const grid = gridOf(sets, dose.reps ?? 1, session.loadKg);
     return [
       {

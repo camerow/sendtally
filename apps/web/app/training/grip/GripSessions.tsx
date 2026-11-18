@@ -4,34 +4,40 @@ import type { GripSessionVM } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { SectionHeading } from "../../components/detail/SectionHeading";
 import { activityPath } from "../log/paths";
+import { DayColumn } from "../../sessions/components/DayColumn";
 
-/** Every session on the grip, newest first: load, day and setup, completion, Best on a best. */
+/**
+ * Every session on the grip, newest first, read like the log: its day, this grip's hangs with Best
+ * on a best, the edge and time under tension, and the added weight rightmost.
+ */
 export function GripSessions({ rows }: { rows: readonly GripSessionVM[] }): React.ReactElement {
   return (
     <section className="detail-section">
       <SectionHeading
         title={t("hang.history", { count: t("hang.sessionCount", { count: rows.length }) })}
       />
-      {rows.map((s) => (
+      {rows.map((s, i) => (
         <Link
-          key={s.id}
+          key={`${s.id}:${i}`}
           to={activityPath(s.id)}
-          className="grip-session"
+          className="log-row log-row--divided log-row--link grip-session"
           aria-label={[
-            s.load,
+            `${s.weekday} ${s.day}`,
+            s.title,
             s.meta,
-            s.completion,
+            s.load,
             ...(s.best ? [t("statistics.best")] : []),
           ].join(", ")}
         >
-          <span className="grip-session-main">
-            <span className="grip-session-load">
-              {s.load}
+          <DayColumn weekday={s.weekday} day={s.day} />
+          <span className="log-row-main">
+            <span className="log-row-title">
+              <span className="log-row-title-text">{s.title}</span>
               {s.best && <span className="best-badge">{t("statistics.best")}</span>}
             </span>
-            <span className="grip-session-meta">{s.meta}</span>
+            {s.meta !== "" && <span className="log-row-meta">{s.meta}</span>}
           </span>
-          <span className="grip-session-pct">{s.completion}</span>
+          <span className="grip-session-load">{s.load}</span>
         </Link>
       ))}
     </section>

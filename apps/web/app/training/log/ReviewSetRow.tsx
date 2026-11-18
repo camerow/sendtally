@@ -90,14 +90,16 @@ export function ReviewSetRow({
           <input type="checkbox" checked={on} onChange={onToggle} aria-label={label} />
         </label>
       )}
-      <button
-        type="button"
-        className="set-remove"
-        aria-label={t("activities.removeSet", { n })}
-        onClick={onRemove}
-      >
-        <Icon name="x" size={16} strokeWidth={2} />
-      </button>
+      {!hangs && (
+        <button
+          type="button"
+          className="set-remove"
+          aria-label={t("activities.removeSet", { n })}
+          onClick={onRemove}
+        >
+          <Icon name="x" size={16} strokeWidth={2} />
+        </button>
+      )}
     </div>
   );
 }

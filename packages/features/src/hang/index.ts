@@ -10,6 +10,7 @@ export {
 } from "./model";
 export { builtInGripName, effortWord, gripDescription, gripName } from "./names";
 export { useHang, type HangFeature } from "./useHang";
+export { useGrips, type GripsKnown } from "./useGrips";
 export { useHangActions, type HangActions } from "./useHangActions";
 export * from "./progress";
 export * from "./timerText";

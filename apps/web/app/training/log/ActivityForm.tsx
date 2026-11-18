@@ -20,7 +20,7 @@ import {
 } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { KIND_LOOK } from "@sendtally/features/training";
-import { useWorkoutActions } from "@sendtally/features/workouts";
+import { discardRunBody, useWorkoutActions, type PartForm } from "@sendtally/features/workouts";
 import { NumberField } from "../../components/NumberField";
 import { useToast } from "../../components/Toast";
 import { DetailFrame } from "../../components/detail/DetailFrame";
@@ -33,6 +33,7 @@ import { useHangData } from "../data/HangDataContext";
 import { workoutPath } from "../library/useLibrary";
 import { DoneDetails } from "./DoneDetails";
 import { activityPath } from "./paths";
+import { PartSets } from "./PartSets";
 import { EffortField } from "./EffortField";
 import { FocusField } from "./FocusField";
 import { KindChips } from "./KindChips";
@@ -50,6 +51,9 @@ export type ActivityFormProps = {
   live?: boolean;
   /** A hangboard workout, which saves as a hang session with its setup and no notes or times. */
   hang?: { setup: React.ReactNode; loadKg: number; save: (draft: ActivityDraft) => void };
+  /** A mix's fingerboard part, its grips inline in hang mode; it saves with the activity. */
+  part?: PartForm;
+  gripName?: (id: string) => string;
 };
 
 /** What was done as a workout to run again: each item's first set, as many times as it was done. */
@@ -70,6 +74,8 @@ export function ActivityForm({
   live = false,
   planned = [],
   hang,
+  part,
+  gripName = (id) => id,
 }: ActivityFormProps): React.ReactElement {
   const api = useAppApi();
   const navigate = useNavigate();
@@ -88,6 +94,7 @@ export function ActivityForm({
   const unit = useWeightUnit(api);
   const [draft, setDraft] = React.useState(initial);
   const update = (patch: Partial<ActivityDraft>): void => setDraft((d) => ({ ...d, ...patch }));
+  const [grips, setGrips] = React.useState(() => part && { done: part.done, setup: part.setup });
   const items = itemsOf(draft.done);
   const name = draft.title.trim() || kindLabel(draft.kind);
   const look = hang === undefined ? draft.kind : "hangboard";
@@ -128,6 +135,11 @@ export function ActivityForm({
         message: justLoggedText({ id, name: draft.title.trim() || kindLabel(draft.kind) }),
         action: { label: t("common.view"), onPress: () => void navigate(activityPath(id)) },
       });
+    const fingerboard = part && grips && part.body(grips.done, grips.setup);
+    void actions.saveActivity({
+      ...activityFromDraft(id, draft),
+      ...(fingerboard !== undefined && { fingerboard }),
+    });
     leave();
   };
   const saveAsWorkout = (): void => {
@@ -232,6 +244,26 @@ export function ActivityForm({
       )}
       <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
       <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />
+      {part !== undefined && grips !== undefined && (
+        <div className="form-section">
+          <span className="train-label" style={{ color: KIND_LOOK.hangboard.ink }}>
+            {t("workouts.fingerboard")}
+          </span>
+          <PartSets
+            done={grips.done}
+            planned={part.planned}
+            setup={grips.setup}
+            kind={part.kind}
+            unit={unit}
+            gripName={gripName}
+            onSetup={(setup) => setGrips({ ...grips, setup })}
+            onChange={(done) => setGrips({ ...grips, done })}
+            onRemoved={(message, undo) =>
+              toast.show({ message, action: { label: t("tally.undo"), onPress: undo } })
+            }
+          />
+        </div>
+      )}
       {draft.done.length > 0 && (
         <DoneDetails
           done={draft.done}
@@ -282,7 +314,7 @@ export function ActivityForm({
           },
         }}
       >
-        <p className="sheet-body">{t("hang.discardRunBody")}</p>
+        <p className="sheet-body">{discardRunBody(liveRun.read())}</p>
       </Sheet>
     </DetailFrame>
   );

@@ -20,7 +20,6 @@ export {
   exerciseKindIn,
   isGripOf,
   pickerEntries,
-  pickerOffer,
   pickerState,
   type PickerOffer,
   type PickerWorld,

@@ -30,15 +30,13 @@ function Sessions({ row }: { row: WorkoutDoneVM }): React.ReactElement {
           key={s.id}
           onPress={() => openSession(s.id)}
           accessibilityRole="button"
-          accessibilityLabel={[s.dateLabel, s.duration, s.rpe].filter(Boolean).join(", ")}
+          accessibilityLabel={[s.dateLabel, s.detail, s.rpe].filter(Boolean).join(", ")}
           style={pressRow({ minHeight: 44, flexDirection: "row", alignItems: "center", gap: 10 })}
         >
           <Text style={[type.bodyBold, { flex: 1, fontSize: 14, color: colors.gunmetal }]}>
             {s.dateLabel}
           </Text>
-          <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-            {s.duration}
-          </Text>
+          <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{s.detail}</Text>
           <Text
             style={[
               type.monoBold,

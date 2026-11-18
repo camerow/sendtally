@@ -64,13 +64,13 @@ export function SetDoneFields({
     signed: true,
   } as const;
   return (
-    <span className="set-fields">
+    <span className={hangs ? "set-fields set-fields--hangs" : "set-fields"}>
       {reps && (
         <NumberField
           compact
           label={`${label} · ${hangs ? t("plan.colHangs") : t("workouts.dose.reps")}`}
           short={short}
-          value={set.reps ?? null}
+          value={hangs && set.reps === 0 ? null : (set.reps ?? null)}
           onChange={(n) => onChange({ ...set, reps: n })}
           mode={{ kind: "number", step: 1, max: 1000 }}
         />

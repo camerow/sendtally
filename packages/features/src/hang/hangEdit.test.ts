@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import type { HangRun } from "@sendtally/core/hang";
+import { gripRuns, hangSets, hangTotals } from "../activities/summary";
 import { hangEditResult, hangEditSets } from "./hangEdit";
 
 const sets = (edgeMm: number): { reps: number; onS: number; edgeMm: number; weightKg: number }[] =>
@@ -24,6 +26,20 @@ const session = {
   ],
 };
 
+const logged = (s: Pick<HangRun, "pct" | "done">): HangRun => ({
+  ...session,
+  ...s,
+  id: "s1",
+  workoutId: null,
+  date: "2026-11-17",
+  edgeMm: 20,
+  misses: 0,
+  rpe: null,
+  membershipId: null,
+  week: null,
+  focus: null,
+});
+
 describe("hangEditResult", () => {
   it("saves an untouched edit as it was", () => {
     const result = hangEditResult(session, hangEditSets(session), "half", {
@@ -47,14 +63,55 @@ describe("hangEditResult", () => {
     expect(result.done.map((d) => d.exercise)).toEqual(["half", "open", "pinch"]);
   });
 
-  it("drops a grip whose every set the person removed", () => {
-    const result = hangEditResult(
-      session,
-      { ...hangEditSets(session), off: ["1:0", "1:1"] },
-      "half",
-      { edgeMm: 20, loadKg: 0 }
+  it("keeps a grip edited down to no held sets, with its dose, so its percentage holds on the next edit", () => {
+    const setup = { edgeMm: 20, loadKg: 0 };
+    const edited = hangEditSets(session);
+    const zeroed = edited.done.map((d) =>
+      d.item === 1 ? { ...d, sets: d.sets.map((s) => ({ ...s, reps: 0 })) } : d
     );
-    expect(result.done.map((d) => d.exercise)).toEqual(["half", "pinch"]);
+    const result = hangEditResult(session, { done: zeroed, off: [] }, "half", setup);
+    expect(result.pct).toBe(67);
+    expect(result.done.map((d) => [d.exercise, d.sets.length])).toEqual([
+      ["half", 2],
+      ["open", 0],
+      ["pinch", 2],
+    ]);
+    expect(result.done[1]?.dose).toMatchObject({
+      sets: 2,
+      reps: 5,
+      onS: 10,
+      edgeMm: 18,
+      weightKg: 0,
+    });
+    const saved = { ...session, pct: result.pct, done: result.done };
+    expect(gripRuns(logged(saved)).map((r) => r.gripId)).toEqual(["half", "pinch"]);
+    const reopened = hangEditSets(saved);
+    expect(reopened.done[1]?.sets).toEqual([
+      { reps: 0, edgeMm: 18, weightKg: 0 },
+      { reps: 0, edgeMm: 18, weightKg: 0 },
+    ]);
+    expect(hangEditResult(saved, reopened, "half", setup)).toMatchObject({
+      pct: 67,
+      done: result.done,
+    });
+  });
+
+  it("leaves a first grip that held nothing out of its history and totals, its percentage whole", () => {
+    const setup = { edgeMm: 20, loadKg: 0 };
+    const zeroed = hangEditSets(session).done.map((d) =>
+      d.item === 0 ? { ...d, sets: d.sets.map((s) => ({ ...s, reps: 0 })) } : d
+    );
+    const result = hangEditResult(session, { done: zeroed, off: [] }, "half", setup);
+    expect(result.pct).toBe(67);
+    const saved = { ...session, pct: result.pct, done: result.done };
+    expect(gripRuns(logged(saved)).map((r) => r.gripId)).toEqual(["open", "pinch"]);
+    expect(hangTotals(logged(saved))).toMatchObject({ held: 20, total: 20 });
+    // Builds before this one read a first grip's saved sets when it has any: one set of no hangs reads as none held.
+    expect(hangSets(saved)).toHaveLength(1);
+    expect(hangSets(saved)[0]?.reps).toBe(0);
+    const reopened = hangEditSets(saved);
+    expect(reopened.done[0]?.sets).toHaveLength(2);
+    expect(hangEditResult(saved, reopened, "half", setup).pct).toBe(67);
   });
 
   it("reads a later grip against the dose it ran, so a set left out of the run stays unheld", () => {

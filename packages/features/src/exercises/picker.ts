@@ -22,7 +22,7 @@ export type PickerWorld = {
   uses: ReadonlyMap<string, number>;
   /** What the workout's items name: exercise names, or grip ids. */
   inWorkout: readonly string[];
-  /** Grips play in the hang timer and log as hang sessions, so a workout holds only grips or none. */
+  /** Grips only for a grip's own pickers; a workout's picker offers everything. */
   offer: PickerOffer;
 };
 
@@ -37,19 +37,6 @@ export const isGripOf =
   (exercise: string): boolean =>
     isBuiltInGrip(exercise) || world.grips.some((g) => g.id === exercise);
 
-/**
- * What a workout can add next, read off what it holds and what is ticked: grips once a grip is
- * in, everything else once anything else is, and both while it holds nothing.
- */
-export function pickerOffer(
-  world: Pick<PickerWorld, "grips">,
-  exercises: readonly string[]
-): PickerOffer {
-  const [first] = exercises;
-  if (first === undefined) return "all";
-  return isGripOf(world)(first) ? "grips" : "exercises";
-}
-
 /** The category an item's exercise is in, or undefined for a name the library does not know. */
 export function exerciseKindIn(
   world: Pick<PickerWorld, "grips" | "mine">
@@ -59,24 +46,16 @@ export function exerciseKindIn(
 }
 
 /**
- * What a picker shows for the workout's items and what is ticked: what it offers, the
- * categories it can show and make in, and the category New makes in from the one in view,
- * "choose" when it has to ask.
+ * What a picker shows: grips and every other exercise side by side in every category, and the
+ * category New makes in from the one in view, "choose" when it has to ask.
  */
-export function pickerState(
-  world: Pick<PickerWorld, "grips">,
-  items: readonly string[],
-  ticked: readonly PickerEntry[],
+export const pickerState = (
   category: WorkoutKind | "all"
-): { offer: PickerOffer; kinds: readonly WorkoutKind[]; newKind: WorkoutKind | "choose" } {
-  const offer = pickerOffer(world, [
-    ...items,
-    ...ticked.map((e) => ("grip" in e.source ? e.source.grip.id : e.name)),
-  ]);
-  const kinds = offer === "all" ? WORKOUT_KINDS : WORKOUT_KINDS.filter((k) => k !== "hangboard");
-  const newKind = category !== "all" ? category : offer === "grips" ? "hangboard" : "choose";
-  return { offer, kinds, newKind };
-}
+): { offer: PickerOffer; kinds: readonly WorkoutKind[]; newKind: WorkoutKind | "choose" } => ({
+  offer: "all",
+  kinds: WORKOUT_KINDS,
+  newKind: category === "all" ? "choose" : category,
+});
 
 /** Everything the workout can add, built-ins the user has not made their own included. */
 function allEntries(world: PickerWorld): PickerEntry[] {

@@ -24,7 +24,7 @@ import { climbingDoseLine } from "../activities/climbing";
 import { tallyMeasuresOf } from "../exercises/measure";
 import { weightValue } from "../activities/done";
 import { ACTIVITY_KINDS, kindLabel } from "../activities/format";
-import { countText, humanDuration, protocolSummary } from "../hang/format";
+import { countText, humanDuration, protocolParts, protocolSummary } from "../hang/format";
 import { builtInGripName } from "../hang/names";
 import { formatNumber, t } from "../i18n";
 import { durationLabel } from "../sessions/years";
@@ -136,7 +136,7 @@ export function doseSummary(
   const edge = dose.edgeMm ? t("hang.edgeMm", { n: dose.edgeMm }) : null;
   if (kind === "hangboard") {
     const p = doseProtocol("", dose);
-    return [protocolSummary(p, timeUnitsOf(p)), edge, weight].filter((x) => x !== null).join(" · ");
+    return separated([...protocolParts(p, timeUnitsOf(p)), edge, weight]);
   }
   const work = [
     dose.reps === undefined ? null : countText(dose.reps, dose.repsMax),
@@ -149,6 +149,13 @@ export function doseSummary(
       : `${countText(dose.sets, dose.setsMax)} × ${eachSide ? t("workouts.aSide", { value: done }) : done}`;
   return [main, weight, edge].filter((x) => x !== null).join(" · ");
 }
+
+/** Parts joined by " · ", a line breaking only after a separator so a value keeps its unit. */
+const separated = (parts: readonly (string | null)[]): string =>
+  parts
+    .filter((x) => x !== null)
+    .map((x) => x.replaceAll(" ", "\u00A0"))
+    .join("\u00A0· ");
 
 /** "RPE 8": the effort an exercise aims for, when it sets one. */
 export const exerciseTarget = ({ targetRpe }: Pick<Dose, "targetRpe">): string | undefined =>

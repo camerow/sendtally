@@ -8,7 +8,7 @@ import {
   setKeyOf,
   shortOf,
 } from "@sendtally/features/activities";
-import { heldSet } from "@sendtally/features/hang";
+import { heldSet } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
@@ -34,6 +34,8 @@ export type DoneDetailsProps = {
   onChange: (done: ItemDone[], off: string[]) => void;
   /** A set with values was removed: say so, with Undo putting it back. */
   onRemoved?: (message: string, undo: () => void) => void;
+  /** Inside a card of its own, such as a fingerboard part's: no heading, no card per exercise. */
+  flat?: boolean;
 };
 
 const offWithoutKey = (off: readonly string[], item: number, set: number): string[] =>
@@ -56,6 +58,7 @@ export function DoneDetails({
   setup,
   onChange,
   onRemoved,
+  flat = false,
 }: DoneDetailsProps): React.ReactElement {
   const [lastOf, setLastOf] = React.useState<ItemDone | null>(null);
   const removed = (d: ItemDone, set: number): void => {
@@ -73,13 +76,13 @@ export function DoneDetails({
   };
 
   return (
-    <div className="form-section">
-      <span className="train-label">{t("activities.sets")}</span>
+    <div className={flat ? "done-flat" : "form-section"}>
+      {!flat && <span className="train-label">{t("activities.sets")}</span>}
       {done.map((d, index) => {
         const target = planned[d.item];
         const lifting = d.sets.some((s) => s.weightKg !== undefined) && !hangs;
         return (
-          <div key={d.item} className="done-card">
+          <div key={d.item} className={flat ? "done-card done-card--flat" : "done-card"}>
             <div className="done-card-head">
               <span className="done-card-mark" style={{ background: color }} />
               <span className="done-card-name">{d.exercise}</span>
@@ -100,7 +103,7 @@ export function DoneDetails({
               </span>
               <span className="set-col-rpe">RPE</span>
               {!hangs && <span className="set-tick" />}
-              <span className="set-remove" />
+              {!hangs && <span className="set-remove" />}
             </div>
             {d.sets.map((set, i) => (
               <ReviewSetRow

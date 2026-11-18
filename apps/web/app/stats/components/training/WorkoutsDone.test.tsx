@@ -13,8 +13,8 @@ const row = (key: string, name: string, total: number): WorkoutDoneVM => ({
   kind: "hangboard",
   meta: `${total} times`,
   sessions: [
-    { id: `${key}-1`, dateLabel: "Sat, Nov 1", duration: "38m", rpe: "RPE 8" },
-    { id: `${key}-2`, dateLabel: "Wed, Oct 29", duration: null, rpe: null },
+    { id: `${key}-1`, dateLabel: "Sat, Nov 1", detail: "38m", rpe: "RPE 8" },
+    { id: `${key}-2`, dateLabel: "Wed, Oct 29", detail: null, rpe: null },
   ],
   total,
 });

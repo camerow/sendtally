@@ -1,8 +1,11 @@
-import { doseProtocol, protocolDose, type Dose, type SessionItem } from "./plan";
+import { doseProtocol, protocolDose, type Dose, type SessionItem, type SetDone } from "./plan";
 import { totalSeconds } from "./protocol";
 import type { HangSession } from "./types";
 
 type Logged = Pick<HangSession, "gripId" | "protocol" | "done">;
+
+/** A hang set counts when it held anything: a hang or more, or a lone hang's cut seconds. */
+export const heldSet = (s: SetDone): boolean => (s.reps ?? 1) > 0 && (s.onS ?? 1) > 0;
 
 /**
  * Each grip a hang session ran, indexed by item. The first reads against its saved protocol and

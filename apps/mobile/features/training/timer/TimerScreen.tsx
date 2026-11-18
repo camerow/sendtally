@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import type { HangSetup, PlanLink } from "@sendtally/core/hang";
+import type { HangPhase, HangSetup, PlanLink, Run } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { blockTagOf, usePlan } from "@sendtally/features/training";
@@ -21,14 +21,22 @@ import { TimerRing } from "./TimerRing";
 import { useTimer } from "./useTimer";
 import { useTimerSounds } from "./useTimerSounds";
 import { liveRun } from "../../live-session/liveRun";
+import { leaveLiveScreen } from "../../../components/MinimiseButton";
+import { useGrips } from "@sendtally/features/hang";
 import {
   ON_DARK,
   ON_DARK_LINE,
   ON_DARK_SOFT,
   forToday,
+  partPlaces,
+  partPlanned,
+  partRows,
+  readWorkoutRun,
   resumedTimer,
   timerView,
   useHangTimerPlayer,
+  type DoneParams,
+  type FingersPart,
   type ForToday,
   type ResumedTimer,
 } from "@sendtally/features/workouts";
@@ -42,6 +50,8 @@ function Timer({
   session,
   resumed,
   end,
+  onFinish,
+  write,
 }: {
   planned: PlannedRun;
   today: ForToday;
@@ -53,6 +63,9 @@ function Timer({
   resumed: ResumedTimer | null;
   /** Ends the run as it opens, for its review. */
   end: boolean;
+  onFinish: (review: DoneParams) => void;
+  /** Keeps the run in a mix's live run, for its fingerboard part. */
+  write?: (run: Run<HangPhase>, setups: HangSetup[]) => void;
 }): React.ReactElement {
   const { model } = useHangData();
   const [changing, setChanging] = React.useState(false);
@@ -68,7 +81,8 @@ function Timer({
     store: liveRun,
     playSound,
     end,
-    onFinish: (review) => router.replace(donePath(review)),
+    onFinish,
+    ...(write !== undefined && { write }),
   });
   const timer = useTimer(player);
   const { run, secondsLeft, progress } = timer;
@@ -186,6 +200,52 @@ export function TimerScreen({
       session={session}
       resumed={resumed}
       end={end}
+      onFinish={(review) => router.replace(donePath(review))}
+    />
+  );
+}
+
+/**
+ * A mix's fingerboard part in the hang timer: its grips in order, kept in the workout's live run.
+ * Minimise goes back to the workout view; End or the last hang hands the sets it held back there
+ * as editable rows, with no review of its own.
+ */
+export function PartTimerScreen({ workoutId }: { workoutId: string }): React.ReactElement | null {
+  const { model } = useHangData();
+  const { isGrip } = useGrips(useApi());
+  const [live] = React.useState(() => liveRun.resumed("/workout/sets", workoutId));
+  const run = live === null ? null : readWorkoutRun(live.params);
+  const state = live?.state.player === "sets" ? live.state : undefined;
+  const fingers = state?.fingers;
+  const resumed = fingers !== undefined && "run" in fingers ? fingers : null;
+  const [setups, setSetups] = React.useState<HangSetup[] | null>(resumed?.setups ?? null);
+  if (run === null || state === undefined) return null;
+  const planned = partPlanned(run, partPlaces(run.items, isGrip));
+  if (planned === null) return null;
+  const forRun = forToday(planned, planned.items[0].workout.grip, model, null);
+  const keep = (part: FingersPart): void => {
+    const now = liveRun.resumed("/workout/sets", workoutId);
+    if (now?.state.player === "sets")
+      liveRun.writeAsIs({ ...now, state: { ...now.state, fingers: part } });
+  };
+  return (
+    <Timer
+      planned={planned}
+      today={forRun}
+      setups={setups ?? forRun.entries.map((e) => e.planned)}
+      onSetups={setSetups}
+      link={run.link}
+      session={0}
+      resumed={resumed}
+      end={false}
+      write={(timerRun, now) => {
+        if (timerRun.finished === null) keep({ run: timerRun, setups: now, planned });
+      }}
+      onFinish={({ run: done }) => {
+        if (done !== null)
+          keep({ done: partRows(planned, done, model), setups: done.setups, planned });
+        leaveLiveScreen();
+      }}
     />
   );
 }

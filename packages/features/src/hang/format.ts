@@ -100,17 +100,25 @@ function timeText(seconds: number, unit: TimeUnit): string {
   return unit === "min" ? clock(seconds, true) : t("hang.seconds", { n: seconds });
 }
 
-/** "6 × 7s on / 3s off · 6 sets · 3:00 rest" */
-export function protocolSummary(p: Protocol, units: TimeUnits): string {
+/** A protocol's parts in order, "6 × 7s on / 3s off", "3 sets", "2:00 rest", which a summary joins. */
+export function protocolParts(p: Protocol, units: TimeUnits): string[] {
   const setRest = timeText(p.setRestS, units.setRestS);
-  if (!isTimed(p)) return t("hang.summaryPull", { reps: p.reps, sets: p.sets, setRest });
+  if (!isTimed(p))
+    return [
+      t("hang.partPullSets", { reps: p.reps, sets: p.sets }),
+      t("hang.partBetweenSets", { setRest }),
+    ];
   const on = timeText(p.hangS, units.hangS);
   const core =
     p.reps > 1
       ? t("hang.summaryRepeats", { reps: p.reps, on, off: timeText(p.restS, units.restS) })
       : t(p.kind === "hang" ? "hang.summarySingle" : "hang.summaryTimedPull", { on });
-  return t("hang.summaryHang", { core, sets: p.sets, setRest });
+  return [core, t("hang.partSets", { sets: p.sets }), t("hang.partRest", { setRest })];
 }
+
+/** "6 × 7s on / 3s off · 6 sets · 3:00 rest" */
+export const protocolSummary = (p: Protocol, units: TimeUnits): string =>
+  protocolParts(p, units).join(" · ");
 
 export function daysList(days: readonly number[]): string {
   return days.map(weekdayShort).join(", ");

@@ -10,7 +10,7 @@ import { useLiveHold } from "../hold/useLiveHold";
 import { SetsScreen } from "./SetsScreen";
 
 jest.mock("expo-router", () => ({
-  router: { replace: jest.fn(), back: jest.fn(), canGoBack: () => true },
+  router: { replace: jest.fn(), push: jest.fn(), back: jest.fn(), canGoBack: () => true },
 }));
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("../../../lib/liveRunStorage");
@@ -332,5 +332,78 @@ describe("Sets player", () => {
     });
     expect(screen.getByLabelText("Rest, 0:18 left")).toBeTruthy();
     await root.unmount();
+  });
+
+  it("runs a mix's grips as one fingerboard part: Start opens the timer, its ended rows edit in place, Finish logs the rest", async () => {
+    const mix: WorkoutRun = {
+      ...run,
+      title: "Fingers and pull",
+      items: [
+        { exercise: "half", dose: { sets: 2, reps: 3, onS: 7, offS: 3 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    };
+    const view = await renderWithHang(<SetsScreen run={mix} />);
+    expect(screen.getByText("Fingerboard")).toBeTruthy();
+    expect(screen.getByText("Half crimp")).toBeTruthy();
+    expect(screen.queryByLabelText("Half crimp, set 1")).toBeNull();
+    await fireEvent.press(screen.getByText("Start"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/workout/timer",
+      params: { workoutId: "w1", gripId: "half", part: "1" },
+    });
+    await view.unmount();
+
+    const live = liveRun.read();
+    if (live === null || live.state.player !== "sets") throw new Error("no live run");
+    const planned = {
+      items: [
+        {
+          workout: {
+            name: "Fingers and pull",
+            kind: "hang" as const,
+            hangS: 7,
+            restS: 3,
+            reps: 3,
+            sets: 2,
+            setRestS: 0,
+            id: "w1",
+            source: "mine" as const,
+            grip: "half",
+            timeUnits: { hangS: "s" as const, restS: "s" as const, setRestS: "s" as const },
+          },
+          dose: mix.items[0]?.dose,
+        },
+      ] as const,
+      exerciseRestS: 120,
+    };
+    liveRun.writeAsIs({
+      ...live,
+      state: {
+        ...live.state,
+        fingers: {
+          done: [
+            {
+              item: 0,
+              exercise: "half",
+              sets: [
+                { reps: 3, onS: 7 },
+                { reps: 0, onS: 7 },
+              ],
+            },
+          ],
+          setups: [{ edgeMm: 20, loadKg: 0 }],
+          planned: { ...planned, items: [...planned.items] },
+        },
+      },
+    });
+    await renderWithHang(<SetsScreen run={mix} />);
+    expect(screen.getByText("3 of 6 hangs")).toBeTruthy();
+    expect(screen.getByLabelText("Half crimp, set 1 · Hangs")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Finish"));
+    const [[{ params }]] = (router.replace as jest.Mock).mock.calls.slice(-1) as [
+      [{ params: { done: string } }],
+    ];
+    expect(JSON.parse(params.done).map((d: { exercise: string }) => d.exercise)).toEqual(["Row"]);
   });
 });

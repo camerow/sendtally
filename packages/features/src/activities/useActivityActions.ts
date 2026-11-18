@@ -21,8 +21,9 @@ const upsert = <T extends { id: string }>(list: readonly T[], item: T): T[] =>
 
 // A new activity shows as posting when the server is about to post it, so the
 // screen polls for the outcome instead of offering a second post meanwhile.
+// Its fingerboard part is no field of the activity; it lands with the hangboard data.
 const record = (
-  activity: Activity,
+  { fingerboard: _, ...activity }: Activity,
   previous: ActivityRecord | undefined,
   status: ConnectionStatus | undefined
 ): ActivityRecord => ({
@@ -83,9 +84,16 @@ export function useActivityActions(
             const status = client.getQueryData(queries.status(api).queryKey);
             return upsert(list, record(activity, previous, status)).sort(byNewest);
           },
-          () => {
+          async () => {
             const { id, ...input } = activity;
-            return api.saveActivity(id, input);
+            const saved = await api.saveActivity(id, input);
+            if (input.fingerboard !== undefined)
+              await Promise.all(
+                [queries.hang(api), queries.sessions(api), queries.sessionsWithClimbs(api)].map(
+                  (q) => client.invalidateQueries({ queryKey: q.queryKey })
+                )
+              );
+            return saved;
           }
         ),
       deleteActivity: (id) =>

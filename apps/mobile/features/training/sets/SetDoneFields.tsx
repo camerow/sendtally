@@ -87,7 +87,7 @@ export function SetDoneFields({
           {...(hangs && column !== undefined ? column : slot("reps"))}
           {...named(hangs ? t("plan.colHangs") : t("workouts.dose.reps"))}
           short={short}
-          value={set.reps ?? null}
+          value={hangs && set.reps === 0 ? null : (set.reps ?? null)}
           onChange={(n) => onChange({ ...set, reps: n })}
           step={1}
           max={1000}
@@ -134,6 +134,9 @@ export function SetDoneFields({
 }
 
 /** A hang set's added load: "+10 lb", "−5 lb" assisted, "BW" at none. */
+/** Fits "+102.5 lb", so every grip's loads line up in one column. */
+const LOAD_WIDTH = 88;
+
 function LoadValue({
   slot,
   kg,
@@ -157,6 +160,7 @@ function LoadValue({
       label={label}
       accessibilityLabel={accessibilityLabel}
       compact
+      width={LOAD_WIDTH}
       mode={{
         kind: "number",
         unit,

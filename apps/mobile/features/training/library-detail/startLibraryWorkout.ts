@@ -26,10 +26,11 @@ export function startLibraryWorkout(
   planned: PlannedItems,
   eachSide: (exercise: string) => boolean,
   tally?: (exercise: string) => TallyMeasure | null,
+  isGrip?: (exercise: string) => boolean,
   go: typeof router.push = router.push
 ): void {
   const { link, session } = planned;
-  const start = workoutStart(w, date, planned, eachSide, tally);
+  const start = workoutStart(w, date, planned, eachSide, tally, isGrip);
   switch (start.open) {
     case "timer":
       return startWorkout(w.name, w.id, start.gripId, session, link, go);

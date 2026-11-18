@@ -91,7 +91,7 @@ export function hangReviewDraft(
 export function hangSessionOf(
   { params, planned, grips, prescribed, setups }: HangReview,
   setup: HangSetup,
-  draft: ActivityDraft,
+  draft: Pick<ActivityDraft, "date" | "rpe" | "membershipId" | "week" | "focus" | "done" | "off">,
   id: string
 ): HangSession {
   const { items } = planned;

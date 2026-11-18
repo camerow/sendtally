@@ -25,7 +25,7 @@ import {
 import { shortDate, timeOfDay } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { durationLabel } from "@sendtally/features/sessions";
-import { useWorkoutActions } from "@sendtally/features/workouts";
+import { discardRunBody, useWorkoutActions, type PartForm } from "@sendtally/features/workouts";
 import { DateTimeField } from "../../../components/DateTimeField";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { Toast } from "../../../components/Toast";
@@ -43,6 +43,7 @@ import { Title } from "../components/Title";
 import { KIND_LOOK } from "@sendtally/features/training";
 import { liveRun } from "../../live-session/liveRun";
 import { DoneDetails } from "./DoneDetails";
+import { PartSets } from "./PartSets";
 import { ReadRow } from "./ReadRow";
 import { KindChips } from "./KindChips";
 
@@ -64,6 +65,9 @@ export type ActivityFormProps = {
   planned?: readonly SessionItem[];
   /** A hangboard workout, which saves as a hang session with its setup and no notes or times. */
   hang?: { setup: React.ReactNode; loadKg: number; save: (draft: ActivityDraft) => void };
+  /** A mix's fingerboard part, its grips inline in hang mode; it saves with the activity. */
+  part?: PartForm;
+  gripName?: (id: string) => string;
 };
 
 const input = {
@@ -99,12 +103,15 @@ export function ActivityForm({
   live = false,
   planned = [],
   hang,
+  part,
+  gripName = (id) => id,
 }: ActivityFormProps): React.ReactElement {
   const api = useApi();
   const actions = useActivityActions(api, reportFailure);
   const [draft, setDraft] = React.useState(initial);
   const [removed, setRemoved] = React.useState<{ message: string; undo: () => void } | null>(null);
   const update = (patch: Partial<ActivityDraft>): void => setDraft((d) => ({ ...d, ...patch }));
+  const [grips, setGrips] = React.useState(() => part && { done: part.done, setup: part.setup });
   const unit = useWeightUnit(api);
   const workouts = useWorkoutActions(api, reportFailure);
   const items = itemsOf(draft.done);
@@ -133,7 +140,11 @@ export function ActivityForm({
       return;
     }
     setSaving(true);
-    const saved = await actions.saveActivity(activityFromDraft(id, draft));
+    const fingerboard = part && grips && part.body(grips.done, grips.setup);
+    const saved = await actions.saveActivity({
+      ...activityFromDraft(id, draft),
+      ...(fingerboard !== undefined && { fingerboard }),
+    });
     setSaving(false);
     if (!saved) return;
     if (live) liveRun.clear();
@@ -144,7 +155,7 @@ export function ActivityForm({
   const discard = (): void =>
     confirmDestructive({
       title: t("hang.discardRunTitle"),
-      body: t("hang.discardRunBody"),
+      body: discardRunBody(liveRun.read()),
       action: t("hang.discard"),
       onConfirm: () => {
         router.back();
@@ -294,6 +305,23 @@ export function ActivityForm({
         <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
 
         {!timed && <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />}
+
+        {part !== undefined && grips !== undefined && (
+          <View style={{ gap: 8 }}>
+            <Label color={KIND_LOOK.hangboard.ink}>{t("workouts.fingerboard")}</Label>
+            <PartSets
+              done={grips.done}
+              planned={part.planned}
+              setup={grips.setup}
+              kind={part.kind}
+              unit={unit}
+              gripName={gripName}
+              onSetup={(setup) => setGrips({ ...grips, setup })}
+              onChange={(done) => setGrips({ ...grips, done })}
+              onRemoved={(message, undo) => setRemoved({ message, undo })}
+            />
+          </View>
+        )}
 
         {draft.done.length > 0 && (
           <DoneDetails

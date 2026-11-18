@@ -1,5 +1,7 @@
 import {
   byDate,
+  clock,
+  isPullSetup,
   gripSeries,
   milestones,
   newBestBy,
@@ -16,6 +18,9 @@ import {
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { formatNumber, t } from "../i18n";
+import { hangSets } from "../activities/summary";
+import { hangAt } from "../sessions/hang";
+import { sessionDay } from "../sessions/meta";
 import { dayMonth, gripSetupLabel, loadLabel } from "./format";
 
 const complete = (s: Pick<HangRun, "pct">): boolean => s.pct >= 100;
@@ -93,13 +98,32 @@ export function milestoneRows(
 export type GripSessionVM = {
   /** What the row opens: the session, or a fingerboard part's activity. */
   id: string;
-  load: string;
-  /** "Sep 25 · 20 mm · 10s × 6" */
+  /** The log's day column: "17" over "Tue". */
+  day: number;
+  weekday: string;
+  /** "16 of 18 hangs": this grip's alone in that session. */
+  title: string;
+  /** "20 mm · 1:52 under tension"; a pull has no edge. */
   meta: string;
-  completion: string;
+  load: string;
   /** It beat the best before it on its setup. */
   best: boolean;
 };
+
+/**
+ * A grip's hangs in one session, and its seconds under tension: each set's hangs held times its
+ * hang length, or a lone hang's cut seconds where the set stored them. Hangs cut short in a set of
+ * several store no seconds of their own, so only its full hangs count. Its total is the dose it
+ * planned, which a series entry carries as its protocol: a set that held nothing is never saved.
+ */
+export function gripHeld(s: HangRun): { held: number; total: number; seconds: number } {
+  const sets = hangSets(s);
+  return {
+    held: sets.reduce((n, x) => n + (x.reps ?? 1), 0),
+    total: s.protocol.reps * s.protocol.sets,
+    seconds: sets.reduce((n, x) => n + (x.reps ?? 1) * (x.onS ?? s.protocol.hangS), 0),
+  };
+}
 
 /** Every session in a grip's series newest first, each marked when it set a best. */
 export function gripSessionRows(
@@ -107,13 +131,20 @@ export function gripSessionRows(
   all: readonly HangRun[],
   unit: WeightUnit
 ): GripSessionVM[] {
-  return [...series].reverse().map((s) => ({
-    id: s.activityId ?? s.id,
-    load: loadLabel(s.protocol.kind, s.loadKg, unit),
-    meta: `${dayMonth(s.date)} · ${gripSetupLabel(setupOf(s))} × ${s.protocol.reps * s.protocol.sets}`,
-    completion: `${s.pct}%`,
-    best: newBestBy(all, s) !== null,
-  }));
+  return [...series].reverse().map((s) => {
+    const { held, total, seconds } = gripHeld(s);
+    return {
+      id: s.activityId ?? s.id,
+      ...sessionDay({ start_at: hangAt(s) }),
+      title: t("summary.hangsOf", { held, total }),
+      meta: [
+        ...(isPullSetup(setupOf(s)) ? [] : [t("hang.edgeMm", { n: s.edgeMm })]),
+        ...(seconds > 0 ? [t("hang.underTension", { time: clock(seconds, true) })] : []),
+      ].join(" · "),
+      load: loadLabel(s.protocol.kind, s.loadKg, unit),
+      best: newBestBy(all, s) !== null,
+    };
+  });
 }
 
 export type GripCompareVM = {
