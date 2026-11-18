@@ -69,9 +69,32 @@ describe("starting a workout with no exercises", () => {
   });
 });
 
+describe("starting a workout with a checklist", () => {
+  const warmUp = { ...climbing, id: "w-warm", kind: "other" } as LibraryWorkout;
+  const list = { exercise: "Checklist", dose: { sets: 2 }, checklist: { lines: ["Jog", "Hang"] } };
+  const plank = { exercise: "Plank", dose: { sets: 2, onS: 45 } };
+
+  it("runs it in the workout view, alone or beside timed exercises", () => {
+    for (const items of [[list], [list, plank]]) {
+      const start = workoutStart(
+        warmUp,
+        "2026-10-30",
+        { link: PLAN, session: 0, items },
+        () => false
+      );
+      expect(start.open).toBe("sets");
+    }
+  });
+});
+
 describe("the player a start opens", () => {
   const hangboard = { ...climbing, id: "rep73", kind: "hangboard" } as LibraryWorkout;
   const half = { exercise: "half", dose: { sets: 6 } };
+
+  it("still opens a hangboard workout with nothing added in the hang timer", () => {
+    const run = { link: PLAN, session: 0, items: [half] };
+    expect(workoutStart(hangboard, "2026-10-30", run, () => false).open).toBe("timer");
+  });
 
   it("opens a hangboard workout in the timer on its first grip, as this session", () => {
     const run = { link: PLAN, session: 2, items: [half] };

@@ -797,3 +797,8 @@
 .climb-row .set-tick input[aria-disabled="true"] {
   cursor: default;
 }
+
+.player-card .check-row:last-child,
+.done-card .check-row:last-child {
+  border-bottom: none;
+}

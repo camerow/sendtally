@@ -400,6 +400,17 @@ describe("libraryLine", () => {
       /^1 exercise · \d+m$/
     );
   });
+  it("leaves a checklist out of the exercise count, and names it when it is all there is", () => {
+    const one = { ...base, kind: "strength" as const, name: "Warm-up", minutes: 12 };
+    const list = {
+      exercise: "Checklist",
+      doses: [{ sets: 1 }],
+      checklist: { lines: ["Jog", "Hang"] },
+    };
+    const pullUps = { exercise: "Pull-ups", doses: [{ sets: 3, reps: 8 }] };
+    expect(libraryLine({ ...one, items: [list, pullUps] }, "kg")).toBe("1 exercise · 3 × 8");
+    expect(libraryLine({ ...one, items: [list] }, "kg")).toBe("Checklist · 12m");
+  });
   it("gives a workout with no exercises only how long it takes, if anything", () => {
     const climbing = { ...base, kind: "climbing" as const, name: "Climbing", items: [] };
     expect(libraryLine({ ...climbing, minutes: 90 }, "kg")).toBe("1h 30m");

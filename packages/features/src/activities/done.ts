@@ -3,6 +3,7 @@ import {
   clock,
   toUnit,
   type Dose,
+  type Item,
   type ItemDone,
   type SessionItem,
   type SetDone,
@@ -10,6 +11,7 @@ import {
 } from "@sendtally/core/hang";
 import { formatNumber, t } from "../i18n";
 import { countText } from "../hang/format";
+import { checklistTitle } from "../workouts/checklist";
 import { climbingSetText } from "./climbing";
 
 /** A set's time: "45s", or "20:00" past a minute. */
@@ -22,15 +24,31 @@ const MAX_SUGGESTIONS = 5;
 export const weightValue = (kg: number, unit: WeightUnit): string =>
   formatNumber(toUnit(kg, unit)).replace("-", "−");
 
-/** "3 exercises · 9 sets", or null when nothing was done. */
+/** "Checklist · 4 of 5" over every checklist the run held, or null when it held none. */
+export function checklistsLine(done: readonly ItemDone[]): string | null {
+  const lists = done.flatMap((d) => (d.checklist === undefined ? [] : [d.checklist]));
+  if (lists.length === 0) return null;
+  const ticked = lists.reduce((n, c) => n + c.checked.length, 0);
+  return checklistTitle(
+    ticked,
+    lists.reduce((n, c) => n + c.lines.length, 0)
+  );
+}
+
+/** "Checklist · 4 of 5 · 3 exercises · 9 sets", or null when nothing was done. */
 export function doneSummary(done: readonly ItemDone[]): string | null {
   const items = done.filter((d) => d.sets.length > 0);
-  if (items.length === 0) return null;
   const sets = items.reduce((n, d) => n + d.sets.length, 0);
-  return [
-    t("activities.exerciseCount", { count: items.length }),
-    t("activities.setCount", { count: sets }),
-  ].join(" · ");
+  const counts =
+    items.length === 0
+      ? []
+      : [
+          t("activities.exerciseCount", { count: items.length }),
+          t("activities.setCount", { count: sets }),
+        ];
+  const list = checklistsLine(done);
+  const parts = [...(list === null ? [] : [list]), ...counts];
+  return parts.length === 0 ? null : parts.join(" · ");
 }
 
 /** "5 × 100 kg · 30s", leaving out what the set does not have; a climbing set reads its climbs. */
@@ -84,11 +102,33 @@ export function setChip(set: SetDone, unit: WeightUnit, repsMax?: number): strin
 /** One set of one item, as the review ticks it off: "0:2". */
 export const setKeyOf = (item: number, set: number): string => `${item}:${set}`;
 
-/** What saves: the sets left ticked. An item with every set off goes; one that had none stays. */
+/**
+ * What saves: the sets left ticked. An item with every set off goes; one that had none stays. A
+ * checklist saves with a line ticked.
+ */
 export const keptSets = (done: readonly ItemDone[], off: readonly string[]): ItemDone[] =>
   done
     .map((d) => ({ ...d, sets: d.sets.filter((_, set) => !off.includes(setKeyOf(d.item, set))) }))
-    .filter((d, i) => d.sets.length > 0 || done[i]?.sets.length === 0);
+    .filter((d, i) =>
+      d.checklist !== undefined
+        ? d.checklist.checked.length > 0
+        : d.sets.length > 0 || done[i]?.sets.length === 0
+    );
+
+/** A checklist's line ticked or unticked in the review. */
+export const withLineToggled = (
+  done: readonly ItemDone[],
+  item: number,
+  line: number
+): ItemDone[] =>
+  done.map((d) => {
+    if (d.item !== item || d.checklist === undefined) return d;
+    const { checked } = d.checklist;
+    const next = checked.includes(line)
+      ? checked.filter((n) => n !== line)
+      : [...checked, line].sort((a, b) => a - b);
+    return { ...d, checklist: { ...d.checklist, checked: next } };
+  });
 
 /** What an exercise's sets are: sets of reps, a hangboard's hangs, or a circuit's laps of moves. */
 export type SetsOf = "sets" | "hangs" | "laps";
@@ -169,6 +209,7 @@ export function exerciseNames(activities: readonly Pick<Activity, "done">[]): st
   const seen = new Map<string, string>();
   for (const a of activities) {
     for (const d of a.done) {
+      if (d.checklist !== undefined) continue;
       const key = d.exercise.toLowerCase();
       if (!seen.has(key)) seen.set(key, d.exercise);
     }
@@ -225,3 +266,19 @@ export function plannedDoses(
   }
   return doses;
 }
+
+/**
+ * What was done as a workout to run again: a checklist whole, and each exercise's first set as
+ * many times as it was done.
+ */
+export const workoutItemsOfDone = (done: readonly ItemDone[]): Item[] =>
+  done.flatMap((d): Item[] => {
+    if (d.checklist !== undefined)
+      return [
+        { exercise: d.exercise, doses: [{ sets: 1 }], checklist: { lines: d.checklist.lines } },
+      ];
+    const [first] = d.sets;
+    return first === undefined
+      ? []
+      : [{ exercise: d.exercise, doses: [{ ...first, sets: d.sets.length }] }];
+  });

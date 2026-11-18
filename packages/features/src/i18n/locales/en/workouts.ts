@@ -160,4 +160,13 @@ export const workouts = {
   "workouts.atGym": "At {gym}",
   "workouts.endSet": "End set {set}",
   "workouts.climbNow": "Climb this now",
+  "workouts.checklist": "Checklist",
+  "workouts.checklistProgress": "Checklist · {done} of {total}",
+  "workouts.addChecklist": "Add checklist",
+  "workouts.checklistLineHint": "Type a line, return adds the next",
+  "workouts.checklistOf": "{done} of {total}",
+  "workouts.checklistLine": "Line {n}",
+  "workouts.checklistLines_one": "{count} line",
+  "workouts.checklistLines_other": "{count} lines",
+  "workouts.inThisWorkout": "In this workout",
 } as const;

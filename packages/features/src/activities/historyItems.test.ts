@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
 import type { HangSettings, SetClimb } from "@sendtally/core/hang";
 import { exerciseSeries } from "../statistics";
-import { exerciseItems, hangItem } from "./historyItems";
+import { activityItem, exerciseItems, hangItem } from "./historyItems";
 
 const climb = (grade: string, sent = true): SetClimb => ({ grade, scale: "v", tries: 1, sent });
 
@@ -88,5 +88,25 @@ describe("hangItem", () => {
     const item = hangItem(session([{ item: 0, exercise: "half", sets: [set(6)] }]), model);
     expect(item.name).toBe("Half crimp");
     expect(item.meta).toBe("+5 kg · 6 of 6 hangs");
+  });
+});
+
+describe("a workout's History row", () => {
+  it("carries a checklist's count after the time, as the log row does", () => {
+    const list = {
+      item: 0,
+      exercise: "Checklist",
+      sets: [],
+      checklist: { lines: ["a", "b", "c", "d"], checked: [0, 1, 3] },
+    };
+    const activity = {
+      id: "a",
+      title: "Warm-up",
+      date: "2026-11-17",
+      minutes: 1,
+      rpe: 5,
+      done: [list],
+    } as unknown as ActivityRecord;
+    expect(activityItem(activity, "kg").meta).toBe("1 min · Checklist · 3 of 4");
   });
 });

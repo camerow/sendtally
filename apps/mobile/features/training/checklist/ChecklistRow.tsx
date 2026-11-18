@@ -7,8 +7,11 @@ import { type } from "../type";
 
 export type ChecklistRowProps = {
   name: string;
-  dose: string;
+  /** Under the name; a typed line has none. */
+  dose?: string;
   ticked: boolean;
+  /** The last line in a card, whose edge already closes it: no divider. */
+  last?: boolean;
   /** ▶ on the right, for a timed line. */
   go?: React.ReactNode;
   onToggle: () => void;
@@ -22,6 +25,7 @@ export function ChecklistRow({
   name,
   dose,
   ticked,
+  last = false,
   go,
   onToggle,
 }: ChecklistRowProps): React.ReactElement {
@@ -31,7 +35,7 @@ export function ChecklistRow({
         flexDirection: "row",
         alignItems: "center",
         gap: 10,
-        borderBottomWidth: 1,
+        borderBottomWidth: last ? 0 : 1,
         borderBottomColor: colors.lineOnLight,
       }}
     >
@@ -39,7 +43,7 @@ export function ChecklistRow({
         onPress={onToggle}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: ticked }}
-        accessibilityLabel={`${name}, ${dose}`}
+        accessibilityLabel={dose === undefined ? name : `${name}, ${dose}`}
         style={pressRow({
           flex: 1,
           flexDirection: "row",
@@ -62,7 +66,9 @@ export function ChecklistRow({
           >
             {name}
           </Text>
-          <Text style={[type.mono, { fontSize: 12.5, color: colors.textSecondary }]}>{dose}</Text>
+          {dose !== undefined && (
+            <Text style={[type.mono, { fontSize: 12.5, color: colors.textSecondary }]}>{dose}</Text>
+          )}
         </View>
       </Pressable>
       {go}

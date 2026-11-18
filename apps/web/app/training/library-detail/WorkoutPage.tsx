@@ -11,6 +11,7 @@ import {
   workoutMinutes,
   type LibraryWorkout,
   type WorkoutUse,
+  bodyHeading,
 } from "@sendtally/features/workouts";
 import { MoreMenu } from "../../components/MoreMenu";
 import { DetailFrame } from "../../components/detail/DetailFrame";
@@ -98,7 +99,7 @@ function Detail({
       <LibraryIntro workout={workout} use={use} />
       {workout.items.length > 0 && (
         <section className="detail-section">
-          <SectionHeading title={t("workouts.exercises")} />
+          <SectionHeading title={bodyHeading(workout.items)} />
           {next === undefined ? (
             <BodyPreview
               workout={workout}

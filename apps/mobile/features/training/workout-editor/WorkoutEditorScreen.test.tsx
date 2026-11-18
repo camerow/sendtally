@@ -76,6 +76,61 @@ async function type(label: string, digits: string, index = 0): Promise<void> {
 }
 
 describe("Workout editor", () => {
+  it("holds a warm-up and a cool-down checklist in one workout", async () => {
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
+    await fireEvent.press(screen.getByText("Add checklist"));
+    await fireEvent.changeText(screen.getByLabelText("Line 1"), "Jog");
+    await pick("Back squat");
+    await fireEvent.press(screen.getByText("Add checklist"));
+    await fireEvent.changeText(screen.getAllByLabelText("Line 1")[1]!, "Stretch");
+    await fireEvent.press(screen.getByText("Save"));
+    const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
+    expect(saved.items.map((i) => i.checklist?.lines ?? i.exercise)).toEqual([
+      ["Jog"],
+      "Back squat",
+      ["Stretch"],
+    ]);
+  });
+
+  it("keeps every character typed or pasted when return follows before a render", async () => {
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
+    await fireEvent.press(screen.getByText("Add checklist"));
+    const line = screen.getByLabelText("Line 1");
+    await act(async () => {
+      line.props.onChangeText("Arm circles");
+      line.props.onChangeText("Arm circles x20");
+      line.props.onSubmitEditing();
+    });
+    expect(screen.getByLabelText("Line 1").props.value).toBe("Arm circles x20");
+    expect(screen.getByLabelText("Line 2").props.value).toBe("");
+    await fireEvent.changeText(screen.getByLabelText("Line 2"), "Hang");
+    await fireEvent(screen.getByLabelText("Line 1"), "submitEditing");
+    expect(screen.getByLabelText("Line 2").props).toMatchObject({ value: "", autoFocus: true });
+    expect(screen.getByLabelText("Line 3").props).toMatchObject({
+      value: "Hang",
+      autoFocus: false,
+    });
+  });
+
+  it("types a checklist's lines in place, return adding the next, and saves the typed ones", async () => {
+    jest.mocked(randomUUID).mockReturnValueOnce("c1").mockReturnValue("w-new");
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
+    await pick("Back squat");
+    await fireEvent.press(screen.getByText("Add checklist"));
+    await fireEvent.changeText(screen.getByLabelText("Line 1"), "Jog 5 min");
+    await fireEvent(screen.getByLabelText("Line 1"), "submitEditing");
+    await fireEvent.changeText(screen.getByLabelText("Line 2"), "Arm circles x20");
+    await fireEvent(screen.getByLabelText("Line 2"), "submitEditing");
+    expect(screen.getByLabelText("Line 3")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Save"));
+    const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
+    expect(saved.kind).toBe("strength");
+    expect(saved.items[1]).toMatchObject({
+      exercise: "Checklist",
+      checklist: { lines: ["Jog 5 min", "Arm circles x20"] },
+    });
+  });
+
   it("starts on General and saves the focus picked, saying what it means", async () => {
     await renderWithHang(<WorkoutEditorScreen kind="climbing" />, hangData(), world);
     await fireEvent.press(screen.getByRole("button", { name: "Focus, General" }));

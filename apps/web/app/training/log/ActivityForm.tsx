@@ -4,12 +4,7 @@ import { useExercises } from "@sendtally/features/statistics";
 import React from "react";
 import { useNavigate } from "react-router";
 import type { ActivityRecord } from "@sendtally/api-client";
-import {
-  defaultExerciseRestS,
-  type ItemDone,
-  type SessionItem,
-  type SetDone,
-} from "@sendtally/core/hang";
+import { defaultExerciseRestS, type SessionItem, type SetDone } from "@sendtally/core/hang";
 import {
   activityFromDraft,
   justLoggedText,
@@ -21,6 +16,7 @@ import {
   useWeightUnit,
   type ActivityDraft,
   plannedDoses,
+  workoutItemsOfDone,
 } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { KIND_LOOK } from "@sendtally/features/training";
@@ -68,12 +64,6 @@ export type ActivityFormProps = {
   gripName?: (id: string) => string;
 };
 
-/** What was done as a workout to run again: each item's first set, as many times as it was done. */
-const itemsOf = (done: readonly ItemDone[]) =>
-  done
-    .filter((d) => d.sets.length > 0)
-    .map((d) => ({ exercise: d.exercise, dose: { ...d.sets[0], sets: d.sets.length } }));
-
 /**
  * Log or edit one activity: kind, title, when, how long, how hard, its focus, and a row per
  * set to tick. Save sits at the foot of the column.
@@ -109,7 +99,7 @@ export function ActivityForm({
   const [draft, setDraft] = React.useState(initial);
   const update = (patch: Partial<ActivityDraft>): void => setDraft((d) => ({ ...d, ...patch }));
   const [grips, setGrips] = React.useState(() => part && { done: part.done, setup: part.setup });
-  const items = itemsOf(draft.done);
+  const items = workoutItemsOfDone(draft.done);
   const exercises = useExercises(api).state;
   const measureOf = tallyMeasuresOf(
     exercises.status === "ready" ? exercises.data : [],
@@ -172,7 +162,7 @@ export function ActivityForm({
       description: "",
       minutes: draft.minutes,
       targetRpe: draft.rpe,
-      items: items.map(({ exercise, dose }) => ({ exercise, doses: [dose] })),
+      items,
       exerciseRestS: defaultExerciseRestS(draft.kind),
       focus: draft.focus,
     });

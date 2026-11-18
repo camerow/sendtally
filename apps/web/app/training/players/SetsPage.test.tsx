@@ -271,6 +271,52 @@ describe("Sets player", () => {
     expect(where.searchParams.get("off")).toBe(JSON.stringify(["1:0", "1:1"]));
   });
 
+  it("ticks a checklist's typed lines in any order and logs which were ticked", () => {
+    const lines = ["Jog 5 min", "Arm circles x20", "Easy boulders x10"];
+    mount({
+      ...run,
+      items: [{ exercise: "Checklist", dose: { sets: 3 }, checklist: { lines } }, run.items[1]!],
+    });
+    expect(texts(".player-card-name")[0]).toBe("Checklist");
+    act(() => (byLabel("Easy boulders x10") as HTMLInputElement).click());
+    act(() => (byLabel("Jog 5 min") as HTMLInputElement).click());
+    expect((byLabel("Jog 5 min") as HTMLInputElement).checked).toBe(true);
+    act(() => button("Finish").click());
+    const where = new URL(`http://x${document.querySelector("[data-testid=where]")?.textContent}`);
+    expect((JSON.parse(where.searchParams.get("done") ?? "[]") as unknown[])[0]).toEqual({
+      item: 0,
+      exercise: "Checklist",
+      sets: [],
+      checklist: { lines, checked: [0, 2] },
+    });
+  });
+
+  it("runs a warm-up and a cool-down checklist around two exercises, counting the exercises only", () => {
+    const warm = { exercise: "Checklist", dose: { sets: 1 }, checklist: { lines: ["Jog"] } };
+    const cool = { exercise: "Checklist", dose: { sets: 1 }, checklist: { lines: ["Stretch"] } };
+    mount({ ...run, items: [warm, run.items[1]!, run.items[2]!, cool] });
+    expect(container.textContent).toContain("Exercise 1 of 2");
+    act(() => (byLabel("Jog") as HTMLInputElement).click());
+    act(() => (byLabel("Stretch") as HTMLInputElement).click());
+    act(() => button("Finish").click());
+    const where = new URL(`http://x${document.querySelector("[data-testid=where]")?.textContent}`);
+    const done = JSON.parse(where.searchParams.get("done") ?? "[]") as {
+      checklist?: { checked: number[] };
+    }[];
+    expect(done.flatMap((d) => (d.checklist === undefined ? [] : [d.checklist.checked]))).toEqual([
+      [0],
+      [0],
+    ]);
+  });
+
+  it("shows no exercise counter on a run that is only a checklist", () => {
+    mount({
+      ...run,
+      items: [{ exercise: "Checklist", dose: { sets: 1 }, checklist: { lines: ["Jog"] } }],
+    });
+    expect(container.textContent).not.toMatch(/Exercise \d/);
+  });
+
   it("shows an exercise's own target under its name, and none where it sets none", () => {
     mount({
       ...run,

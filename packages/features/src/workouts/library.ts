@@ -229,7 +229,8 @@ export function libraryLine(
   unit: WeightUnit,
   exercises: MeasuredExercises = []
 ): string | null {
-  const items = sessionItems(w.items, 0);
+  const all = sessionItems(w.items, 0);
+  const items = all.filter((i) => i.checklist === undefined);
   const [only] = items;
   const minutes = workoutMinutes(w);
   const dose =
@@ -239,7 +240,10 @@ export function libraryLine(
         ? bodySummary(w, exercises)
         : doseSummary(w.kind, only.dose, unit);
   const tail = dose ?? (minutes === null ? null : durationLabel(minutes));
-  if (only === undefined) return tail;
+  if (only === undefined)
+    return all.length === 0
+      ? tail
+      : [t("workouts.checklist"), tail].filter((p) => p !== null).join(" · ");
   const count = t("activities.exerciseCount", { count: items.length });
   return tail === null ? count : `${count} · ${tail}`;
 }

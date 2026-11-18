@@ -1,7 +1,7 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { Alert, KeyboardAvoidingView, Platform } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   gripMeasureOf,
@@ -43,13 +43,15 @@ import {
   withExerciseSwapped,
   withItem,
   withItemsAdded,
+  withChecklistAdded,
   useDerivedKindDraft,
   withEditorIds,
   withItemMoved,
   withRestAfter,
   withoutItem,
 } from "@sendtally/features/workouts";
-import { doseMeasureOf } from "@sendtally/features/workouts";
+import { doseMeasureOf, itemTitle } from "@sendtally/features/workouts";
+import { ChecklistEditor } from "./ChecklistEditor";
 import { ItemEditor } from "./ItemEditor";
 import type { AddFlow } from "@sendtally/features/training";
 import { useAddTo } from "../planning/useAddTo";
@@ -176,34 +178,64 @@ function Editor({
             <React.Fragment key={item.id ?? i}>
               {i > 0 && (
                 <GapRest
-                  after={nameOf(state.items[i - 1]?.exercise ?? "")}
+                  after={itemTitle(state.items[i - 1] ?? { exercise: "" }, nameOf)}
                   seconds={restAfterItem(state.items, i - 1, state.exerciseRestS)}
                   onChange={(seconds) => setState((s) => withRestAfter(s, i - 1, seconds))}
                 />
               )}
-              <ItemEditor
-                kind={isGrip(item.exercise) ? "hangboard" : state.kind}
-                item={item}
-                name={nameOf(item.exercise)}
-                measure={measureOf(item)}
-                unit={model.settings.units}
-                onChange={(next) => setState((s) => withItem(s, i, next))}
-                onRemove={() => setState((s) => withoutItem(s, i))}
-                onSwap={() => setPicking({ swap: i })}
-                {...(i > 0 && { onMoveUp: () => setState((s) => withItemMoved(s, i, i - 1)) })}
-                {...(i < state.items.length - 1 && {
-                  onMoveDown: () => setState((s) => withItemMoved(s, i, i + 1)),
-                })}
-              />
+              {item.checklist !== undefined ? (
+                <ChecklistEditor
+                  item={item}
+                  onChange={(update) =>
+                    setState((s) => {
+                      const now = s.items[i];
+                      return now === undefined ? s : withItem(s, i, update(now));
+                    })
+                  }
+                  onRemove={() => setState((s) => withoutItem(s, i))}
+                  {...(i > 0 && { onMoveUp: () => setState((s) => withItemMoved(s, i, i - 1)) })}
+                  {...(i < state.items.length - 1 && {
+                    onMoveDown: () => setState((s) => withItemMoved(s, i, i + 1)),
+                  })}
+                />
+              ) : (
+                <ItemEditor
+                  kind={isGrip(item.exercise) ? "hangboard" : state.kind}
+                  item={item}
+                  name={nameOf(item.exercise)}
+                  measure={measureOf(item)}
+                  unit={model.settings.units}
+                  onChange={(next) => setState((s) => withItem(s, i, next))}
+                  onRemove={() => setState((s) => withoutItem(s, i))}
+                  onSwap={() => setPicking({ swap: i })}
+                  {...(i > 0 && { onMoveUp: () => setState((s) => withItemMoved(s, i, i - 1)) })}
+                  {...(i < state.items.length - 1 && {
+                    onMoveDown: () => setState((s) => withItemMoved(s, i, i + 1)),
+                  })}
+                />
+              )}
             </React.Fragment>
           ))}
-          <Button
-            label={t("workouts.addExercises")}
-            onPress={() => setPicking("add")}
-            variant="outline"
-            icon="plus"
-            height={48}
-          />
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <Button
+                label={t("workouts.addExercises")}
+                onPress={() => setPicking("add")}
+                variant="outline"
+                icon="plus"
+                height={48}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                label={t("workouts.addChecklist")}
+                onPress={() => setState((s) => withChecklistAdded(s, randomUUID))}
+                variant="outline"
+                icon="plus"
+                height={48}
+              />
+            </View>
+          </View>
           {state.kind === "hangboard" ? (
             <HangboardTiming minutes={workoutMinutes(state)} />
           ) : (

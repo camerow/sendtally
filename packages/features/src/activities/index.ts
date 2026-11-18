@@ -26,6 +26,8 @@ export {
   removeSet,
   setKeyOf,
   exerciseCountText,
+  withLineToggled,
+  workoutItemsOfDone,
   setsCountText,
   shortOf,
   type SetsOf,

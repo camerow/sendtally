@@ -15,7 +15,8 @@ import type { TallyMeasure } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import {
   doseSummary,
-  exerciseName,
+  itemDoseText,
+  itemTitle,
   letterName,
   turnName,
   withTarget,
@@ -101,9 +102,13 @@ export function BodyPreview({
             </div>
           )}
           <PreviewRow
-            title={exerciseName(item.exercise)}
-            detail={doseText(item.exercise, item.dose)}
-            note={withTarget(item.dose, noteOf(i))}
+            title={itemTitle(item)}
+            detail={
+              item.checklist === undefined
+                ? doseText(item.exercise, item.dose)
+                : itemDoseText(workout.kind, item, unit)
+            }
+            note={item.checklist?.lines.join(" · ") ?? withTarget(item.dose, noteOf(i))}
             rest={workout.kind === "hangboard" ? undefined : restOf(item.dose.setRestS)}
           />
         </React.Fragment>

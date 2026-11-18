@@ -170,6 +170,57 @@ describe("WorkoutEditorPage", () => {
     expect(at.path).toBe("/app/train");
   });
 
+  it("keeps every character typed or pasted when Enter follows before a render, and focuses the line put in", () => {
+    mount(<WorkoutEditorPage id="legs" />);
+    click(
+      [...container.querySelectorAll("button")].find((b) =>
+        b.textContent?.includes("Add checklist")
+      )
+    );
+    const line = (n: number): HTMLInputElement =>
+      container.querySelector<HTMLInputElement>(`[aria-label="Line ${n}"]`)!;
+    const enter = (el: HTMLInputElement, isComposing = false): void => {
+      el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, isComposing }));
+    };
+    act(() => {
+      const el = line(1);
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(
+        el,
+        "Arm circles x20"
+      );
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      enter(el);
+    });
+    expect(line(1).value).toBe("Arm circles x20");
+    type(line(2), "Hang");
+    act(() => enter(line(1)));
+    expect(document.activeElement).toBe(line(2));
+    expect([line(2).value, line(3).value]).toEqual(["", "Hang"]);
+    act(() => enter(line(3), true));
+    expect(container.querySelector('[aria-label="Line 4"]')).toBeNull();
+  });
+
+  it("types a checklist's lines in place, Enter adding the next, and saves the typed ones", () => {
+    mount(<WorkoutEditorPage id="legs" />);
+    const add = [...container.querySelectorAll("button")].find((b) =>
+      b.textContent?.includes("Add checklist")
+    );
+    click(add);
+    const line = (n: number): HTMLInputElement =>
+      container.querySelector<HTMLInputElement>(`[aria-label="Line ${n}"]`)!;
+    type(line(1), "Jog 5 min");
+    act(() => {
+      line(1).dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    });
+    expect(document.activeElement).toBe(line(2));
+    type(line(2), "Arm circles x20");
+    click(container.querySelector(".editor-bar-save"));
+    expect(saved().items.at(-1)).toMatchObject({
+      exercise: "Checklist",
+      checklist: { lines: ["Jog 5 min", "Arm circles x20"] },
+    });
+  });
+
   it("edits each rest between exercises on its own, the workout's rest where one sets none", () => {
     mount(<WorkoutEditorPage id="push" />);
     const labels = (): string[] =>

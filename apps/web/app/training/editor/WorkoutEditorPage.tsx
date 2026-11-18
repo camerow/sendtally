@@ -28,10 +28,12 @@ import {
   useDerivedKindDraft,
   withEditorIds,
   withExerciseSwapped,
+  itemTitle,
   withItem,
   withItemMoved,
   withRestAfter,
   withItemsAdded,
+  withChecklistAdded,
   withoutItem,
   workoutMinutes,
   type WorkoutDraft,
@@ -49,6 +51,7 @@ import { LoadState } from "../data/LoadState";
 import { WORKOUTS_VIEW, useLibrary, workoutPath } from "../library/useLibrary";
 import { FocusField } from "../log/FocusField";
 import { ExercisePicker } from "./ExercisePicker";
+import { ChecklistEditor } from "./ChecklistEditor";
 import { ItemEditor } from "./ItemEditor";
 import { TargetEffort } from "./TargetEffort";
 
@@ -168,34 +171,60 @@ function Editor({
         <React.Fragment key={item.id ?? i}>
           {i > 0 && (
             <GapRest
-              after={nameOf(state.items[i - 1]?.exercise ?? "")}
+              after={itemTitle(state.items[i - 1] ?? { exercise: "" }, nameOf)}
               seconds={restAfterItem(state.items, i - 1, state.exerciseRestS)}
               onChange={(seconds) => setState((s) => withRestAfter(s, i - 1, seconds))}
             />
           )}
-          <ItemEditor
-            kind={isGrip(item.exercise) ? "hangboard" : state.kind}
-            item={item}
-            name={nameOf(item.exercise)}
-            measure={measureOf(item)}
-            unit={model.settings.units}
-            onChange={(next) => setState((s) => withItem(s, i, next))}
-            onRemove={() => setState((s) => withoutItem(s, i))}
-            onSwap={() => setPicking({ swap: i })}
-            {...(i > 0 && { onMoveUp: () => setState((s) => withItemMoved(s, i, i - 1)) })}
-            {...(i < state.items.length - 1 && {
-              onMoveDown: () => setState((s) => withItemMoved(s, i, i + 1)),
-            })}
-          />
+          {item.checklist !== undefined ? (
+            <ChecklistEditor
+              item={item}
+              onChange={(update) =>
+                setState((s) => {
+                  const now = s.items[i];
+                  return now === undefined ? s : withItem(s, i, update(now));
+                })
+              }
+              onRemove={() => setState((s) => withoutItem(s, i))}
+              {...(i > 0 && { onMoveUp: () => setState((s) => withItemMoved(s, i, i - 1)) })}
+              {...(i < state.items.length - 1 && {
+                onMoveDown: () => setState((s) => withItemMoved(s, i, i + 1)),
+              })}
+            />
+          ) : (
+            <ItemEditor
+              kind={isGrip(item.exercise) ? "hangboard" : state.kind}
+              item={item}
+              name={nameOf(item.exercise)}
+              measure={measureOf(item)}
+              unit={model.settings.units}
+              onChange={(next) => setState((s) => withItem(s, i, next))}
+              onRemove={() => setState((s) => withoutItem(s, i))}
+              onSwap={() => setPicking({ swap: i })}
+              {...(i > 0 && { onMoveUp: () => setState((s) => withItemMoved(s, i, i - 1)) })}
+              {...(i < state.items.length - 1 && {
+                onMoveDown: () => setState((s) => withItemMoved(s, i, i + 1)),
+              })}
+            />
+          )}
         </React.Fragment>
       ))}
-      <button
-        type="button"
-        className="outline-button outline-button--wide"
-        onClick={() => setPicking("add")}
-      >
-        + {t("workouts.addExercises")}
-      </button>
+      <div className="editor-add-row">
+        <button
+          type="button"
+          className="outline-button outline-button--wide"
+          onClick={() => setPicking("add")}
+        >
+          + {t("workouts.addExercises")}
+        </button>
+        <button
+          type="button"
+          className="outline-button outline-button--wide"
+          onClick={() => setState((s) => withChecklistAdded(s, newId))}
+        >
+          + {t("workouts.addChecklist")}
+        </button>
+      </div>
       {state.kind === "hangboard" ? (
         <div className="total-time">
           <span className="train-label">{t("workouts.totalTime")}</span>

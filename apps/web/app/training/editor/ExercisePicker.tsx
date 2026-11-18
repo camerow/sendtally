@@ -1,5 +1,5 @@
 import React from "react";
-import type { Item, WorkoutKind } from "@sendtally/core/hang";
+import { isChecklist, type Item, type WorkoutKind } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import {
   entryNamed,
@@ -60,7 +60,7 @@ export function ExercisePicker({
   const world = usePickerWorld(
     useAppApi(),
     model,
-    items.map((i) => i.exercise),
+    items.filter((i) => !isChecklist(i)).map((i) => i.exercise),
     "all"
   );
   const { offer, kinds, newKind } = pickerState(category);

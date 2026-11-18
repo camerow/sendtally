@@ -20,6 +20,8 @@ import {
   useSetsPlayer,
   type SetAt,
   type WorkoutRun,
+  checklistLine,
+  runItems,
 } from "@sendtally/features/workouts";
 import { type MoreMenuItem } from "../../components/MoreMenu";
 import { Sheet } from "../../components/Sheet";
@@ -33,6 +35,7 @@ import { ClimbCard } from "../climbing/ClimbCard";
 import { LapsCard } from "../climbing/LapsCard";
 import { useWorkoutTally } from "../climbing/useWorkoutTally";
 import { FingersCard } from "./FingersCard";
+import { ChecklistCard } from "./ChecklistCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
 import { HoldButton } from "./HoldButton";
 import { HoldRow } from "./HoldRow";
@@ -191,6 +194,35 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
           (restAt(afterKey(i)) || (
             <RestPreview seconds={restAfterItem(items, i, run.exerciseRestS)} />
           ));
+        const lines = player.checklist(i);
+        const tickedLine = (set: number): boolean => ticked.has(setKey({ item: i, set }));
+        if (lines !== null)
+          return (
+            <React.Fragment key={i}>
+              {player.folded(i) ? (
+                <FoldedSetsCard
+                  name={t("workouts.checklist")}
+                  line={
+                    skipped
+                      ? t("workouts.skippedTapToDo")
+                      : checklistLine(lines.filter((_, n) => tickedLine(n)).length, lines.length)
+                  }
+                  done={!skipped && lines.every((_, n) => tickedLine(n))}
+                  onOpen={() => player.open(i)}
+                />
+              ) : (
+                <ChecklistCard
+                  item={item}
+                  lines={lines}
+                  ticked={tickedLine}
+                  onToggle={(set) => player.toggle({ item: i, set })}
+                  onFold={() => player.fold(i)}
+                  menu={menu(i, at)}
+                />
+              )}
+              {between}
+            </React.Fragment>
+          );
         return (
           <React.Fragment key={i}>
             {climbItem !== null && player.folded(i) ? (
@@ -286,7 +318,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
       )}
       {picking && (
         <ExercisePicker
-          items={items.map((x) => ({ exercise: x.exercise, doses: [x.dose] }))}
+          items={runItems(items)}
           multi
           onPick={(picked) => picked.forEach(player.addExercise)}
           onClose={() => setPicking(false)}

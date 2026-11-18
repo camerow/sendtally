@@ -161,4 +161,13 @@ export const workouts = {
   "workouts.atGym": "À {gym}",
   "workouts.endSet": "Terminer la série {set}",
   "workouts.climbNow": "Grimper maintenant",
+  "workouts.checklist": "Liste",
+  "workouts.checklistProgress": "Liste · {done} sur {total}",
+  "workouts.addChecklist": "Ajouter une liste",
+  "workouts.checklistLineHint": "Tapez une ligne, Entrée ajoute la suivante",
+  "workouts.checklistOf": "{done} sur {total}",
+  "workouts.checklistLine": "Ligne {n}",
+  "workouts.checklistLines_one": "{count} ligne",
+  "workouts.checklistLines_other": "{count} lignes",
+  "workouts.inThisWorkout": "Dans cette séance",
 } as const;

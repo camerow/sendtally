@@ -380,6 +380,39 @@ describe("Log activity", () => {
     expect(screen.queryByText("Add set")).toBeNull();
   });
 
+  it("puts each checklist above the Sets heading, the exercises under it", async () => {
+    const done = [
+      { item: 0, exercise: "Checklist", sets: [], checklist: { lines: ["Jog"], checked: [0] } },
+      { item: 1, exercise: "Back squat", sets: [{ reps: 5 }] },
+      { item: 2, exercise: "Checklist", sets: [], checklist: { lines: ["Stretch"], checked: [] } },
+    ];
+    const initial = newActivityDraft(
+      { kind: "strength", workoutId: "w6", done: JSON.stringify(done), off: "[]" },
+      "2026-11-18"
+    );
+    await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet live />);
+    expect(readingOrder("Checklist · 1 of 1", "Checklist · 0 of 1", "Sets", "Back squat")).toEqual([
+      "Checklist · 1 of 1",
+      "Checklist · 0 of 1",
+      "Sets",
+      "Back squat",
+    ]);
+  });
+
+  it("reviews a checklist as lines ticked of its count, a tap ticking one", async () => {
+    const lines = ["Jog 5 min", "Arm circles x20", "Easy boulders x10"];
+    const done = [{ item: 0, exercise: "Checklist", sets: [], checklist: { lines, checked: [0] } }];
+    const initial = newActivityDraft(
+      { kind: "strength", workoutId: "w6", done: JSON.stringify(done), off: "[]" },
+      "2026-11-18"
+    );
+    await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet live />);
+    expect(screen.getByText("Checklist · 1 of 3")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Easy boulders x10"));
+    expect(screen.getByText("Checklist · 2 of 3")).toBeTruthy();
+    expect(screen.queryByText("Add set")).toBeNull();
+  });
+
   it("says an exercise with nothing ticked was not started, its planned sets there to tick", async () => {
     const done = [{ item: 0, exercise: "Volume climbing", sets: [{ onS: 600 }, { onS: 600 }] }];
     const initial = newActivityDraft(

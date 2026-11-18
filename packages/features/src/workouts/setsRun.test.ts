@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { afterKey, holdShort, itemDone, restAfterTick, setKey, withDoneSets } from "./setsRun";
+import {
+  afterKey,
+  exercisePosition,
+  holdShort,
+  itemDone,
+  restAfterTick,
+  setKey,
+  withDoneSets,
+} from "./setsRun";
 
 const items = [
   { exercise: "Back squat", dose: { sets: 2, reps: 5, setRestS: 120 } },
@@ -72,5 +80,23 @@ describe("set ranges", () => {
 
   it("leaves an item with no sets added past its minimum as it is", () => {
     expect(withDoneSets([bench], [])).toEqual([bench]);
+  });
+});
+
+describe("the exercise counter beside a checklist", () => {
+  const list = (k: number): boolean => k === 0;
+  it("counts exercises only, and says nothing for a checklist alone", () => {
+    expect(exercisePosition([0, 1, 2], 1, list)).toEqual({ at: 1, of: 2 });
+    expect(exercisePosition([0, 1, 2], 2, list)).toEqual({ at: 2, of: 2 });
+    expect(exercisePosition([0, 1, 2], 0, list)).toEqual({ at: 1, of: 2 });
+    expect(exercisePosition([1, 2, 0], 0, list)).toEqual({ at: 2, of: 2 });
+    expect(exercisePosition([0], 0, list)).toBeNull();
+    expect(exercisePosition([], -1, list)).toBeNull();
+  });
+
+  it("reads past an exercise already behind it from a checklist, still counting it", () => {
+    const list = (k: number): boolean => k === 0;
+    const behind = (k: number): boolean => k === 1 || k === 2;
+    expect(exercisePosition([0, 1, 2, 3], 0, list, behind)).toEqual({ at: 3, of: 3 });
   });
 });

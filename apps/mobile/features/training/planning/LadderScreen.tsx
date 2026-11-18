@@ -62,6 +62,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
   const library = useRunWorkout(view?.workout.id ?? null);
   if (view === null) return null;
   const { membership: m, block, workout: w, turns, items, current, ended, done, lines } = view;
+  const loads = items.flatMap((it, i) => (it.checklist === undefined ? [{ it, i }] : []));
   const look = KIND_LOOK[w.kind];
   const changesOf = (index: number): Partial<Dose>[] => view.changes[index] ?? [];
   const mine = library?.source === "mine";
@@ -171,10 +172,10 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
         />
       )}
       <View style={{ gap: 10 }}>
-        {items.length === 1 ? (
+        {loads.length === 1 ? (
           <>
             <Label color={colors.gunmetal}>{t("plan.weeklyLoad")}</Label>
-            {loadOf(0)}
+            {loadOf(loads[0]?.i ?? 0)}
           </>
         ) : (
           <>
@@ -188,12 +189,12 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
               <Label color={colors.gunmetal}>{t("plan.weeklyLoad")}</Label>
               <Button
                 label={t("plan.openAll")}
-                onPress={() => setOpen(items.map((_, i) => i))}
+                onPress={() => setOpen(loads.map((l) => l.i))}
                 variant="link"
                 height={36}
               />
             </View>
-            {items.map((it, i) => (
+            {loads.map(({ it, i }) => (
               <LoadSection
                 key={`${turn}:${i}`}
                 name={exerciseName(it.exercise, model.gripName)}
