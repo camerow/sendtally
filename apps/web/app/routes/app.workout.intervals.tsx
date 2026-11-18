@@ -8,7 +8,7 @@ export default function Route(): React.ReactElement {
   const [params] = useSearchParams();
   const workout = readIntervalsParams(Object.fromEntries(params));
   return workout === null ? (
-    <Navigate to="/app" replace />
+    <Navigate to="/app/plan" replace />
   ) : (
     <OwnerKnown>
       <IntervalsPage workout={workout} end={params.get("end") === "1"} />
