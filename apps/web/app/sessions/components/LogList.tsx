@@ -62,7 +62,7 @@ function useCurrentSection(keys: readonly string[]): string | null {
     window.addEventListener("scroll", update, { passive: true });
     return () => window.removeEventListener("scroll", update);
   }, [keys]);
-  return current;
+  return current ?? keys.find((k) => k !== "pinned") ?? null;
 }
 
 export function LogList({

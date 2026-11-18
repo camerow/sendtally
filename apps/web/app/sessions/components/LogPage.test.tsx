@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import type { Activity, ClimbSummary, SessionRow, SessionWithClimbs } from "@sendtally/api-client";
 import type * as Climbs from "@sendtally/features/climbs";
@@ -178,6 +179,22 @@ describe("LogPage", () => {
     expect(text()).toContain("Crimp ladder");
     expect(text()).toContain("Leg day");
     expect(container.querySelector('[role="radiogroup"]')).toBeNull();
+  });
+
+  it("lights the newest month in the server's first paint", () => {
+    const html = renderToString(
+      <MemoryRouter initialEntries={["/app"]}>
+        <LogPage
+          status={null}
+          sessions={[evening]}
+          hangSessions={[]}
+          hangParts={[]}
+          activities={[legDay]}
+          entries={[]}
+        />
+      </MemoryRouter>
+    );
+    expect(html).toMatch(/aria-pressed="true"[^>]*aria-label="Jump to Nov"/);
   });
 
   it("searches from the bar, keeping the dated list, a session showing only the climb found", () => {
