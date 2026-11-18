@@ -27,7 +27,7 @@ import { ACTIVITY_KINDS, kindLabel } from "../activities/format";
 import { countText, humanDuration, protocolParts, protocolSummary } from "../hang/format";
 import { builtInGripName } from "../hang/names";
 import { formatNumber, t } from "../i18n";
-import { durationLabel } from "../sessions/years";
+import { durationLabel } from "../sessions/duration";
 import { builtInWorkouts } from "./builtIns";
 import type { LibraryShelf, LibraryWorkout, WorkoutDraft, WorkoutUse } from "./types";
 

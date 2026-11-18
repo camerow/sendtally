@@ -7,7 +7,8 @@ import {
 } from "@sendtally/core/hang";
 import { dayMonth, shortDate } from "../hang/format";
 import { t } from "../i18n";
-import { blockKicker, blockName } from "./blockText";
+import { blockKicker } from "./blockText";
+import { blockName } from "./blockName";
 
 /** Where a membership stands: its block's week, when it starts, or ongoing. */
 export function membershipTag(m: Membership, block: Block | null, today: CalendarDate): string {

@@ -49,9 +49,7 @@ export {
   countLabel,
   logCountLabel,
   logTotalsLabel,
-  durationLabel,
   elapsedClock,
-  sessionMinutes,
   sessionTotals,
   logYearGroups,
   sessionsIn,
@@ -59,3 +57,4 @@ export {
   type SessionGroupTotals,
   type SessionYear,
 } from "./years";
+export { durationLabel, minutesOf, sessionMinutes } from "./duration";

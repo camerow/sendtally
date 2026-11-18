@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activityFromDraft, draftFromActivity, newActivityDraft, minutesOf } from "./draft";
+import { activityFromDraft, draftFromActivity, newActivityDraft } from "./draft";
 
 describe("activity drafts", () => {
   it("takes what the route knows and ignores a kind it does not", () => {
@@ -57,13 +57,6 @@ describe("activity drafts", () => {
     expect(draft.off).toEqual(["1:0"]);
     expect(activityFromDraft("a1", draft).done).toEqual([done[0]]);
     expect(newActivityDraft({ off: "[" }, "2026-10-22").off).toEqual([]);
-  });
-
-  it("keeps a length typed in seconds as whole minutes, one to a day", () => {
-    expect(minutesOf(45 * 60)).toBe(45);
-    expect(minutesOf(90)).toBe(2);
-    expect(minutesOf(0)).toBe(1);
-    expect(minutesOf(86399)).toBe(1440);
   });
 
   it("reads a prefilled length, falling back to an hour", () => {

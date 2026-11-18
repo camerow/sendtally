@@ -10,7 +10,7 @@ import {
 } from "@sendtally/core/hang";
 import { kindLabel } from "../activities/format";
 import type { OccurrenceStatus, WorkoutLookup } from "./plan";
-import { durationLabel } from "../sessions/years";
+import { durationLabel } from "../sessions/duration";
 import { humanDuration, loadLabel } from "../hang/format";
 import type { HangModel } from "../hang/model";
 import { t } from "../i18n";

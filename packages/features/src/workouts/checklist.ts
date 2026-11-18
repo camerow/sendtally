@@ -13,9 +13,6 @@ export const checklistLine = (done: number, count: number): string =>
   t("workouts.checklistOf", { done, total: count });
 
 /** "Checklist · 4 of 5", where a review or history row names it. */
-export const checklistTitle = (done: number, count: number): string =>
-  t("workouts.checklistProgress", { done, total: count });
-
 /**
  * An item's name as the user reads it: a checklist reads as one in their language, whatever it
  * is stored as, and anything else by `name`.

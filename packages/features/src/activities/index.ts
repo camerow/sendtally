@@ -10,7 +10,6 @@ export { useActivityActions, type ActivityActions } from "./useActivityActions";
 export {
   activityFromDraft,
   draftFromActivity,
-  minutesOf,
   newActivityDraft,
   type ActivityDraft,
   type ActivityPrefill,

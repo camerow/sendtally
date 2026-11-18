@@ -4,7 +4,7 @@ import { hangAt } from "../sessions/hang";
 import { climbKey } from "../climbs/transforms";
 import { circuitLabel } from "../gyms/transforms";
 import { isUnscored } from "../sessions/meta";
-import { sessionMinutes } from "../sessions/years";
+import { sessionMinutes } from "../sessions/duration";
 import { UNTAGGED_KEY } from "../sessions/tags";
 import { gradeFormatter, type GradeScales } from "../sessions/grades";
 import { isRefined } from "./filter";

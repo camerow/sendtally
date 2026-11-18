@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { DatedBlock } from "@sendtally/core/hang";
-import { blockDateRange, blockName, blockTag } from "./blockText";
+import { blockDateRange, blockTag } from "./blockText";
+import { blockName } from "./blockName";
 
 const block: DatedBlock = {
   id: "b1",

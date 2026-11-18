@@ -1,14 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { isChecklist } from "@sendtally/core/hang";
 import { setLocale } from "../i18n";
-import {
-  bodyHeading,
-  checklistLine,
-  checklistTitle,
-  itemDoseText,
-  itemTitle,
-  runItems,
-} from "./checklist";
+import { bodyHeading, checklistLine, itemDoseText, itemTitle, runItems } from "./checklist";
+import { checklistTitle } from "./checklistTitle";
 
 afterEach(() => setLocale("en"));
 

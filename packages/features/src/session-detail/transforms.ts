@@ -18,7 +18,7 @@ import {
   type GradeScales,
 } from "../sessions/grades";
 import { isUnscored } from "../sessions/meta";
-import { durationLabel, hasStart, sessionMinutes } from "../sessions/years";
+import { durationLabel, hasStart, sessionMinutes } from "../sessions/duration";
 import type {
   ClimbFilter,
   ClimbResult,

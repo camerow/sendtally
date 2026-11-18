@@ -9,7 +9,6 @@ import {
   activityFromDraft,
   justLoggedText,
   kindLabel,
-  minutesOf,
   previousSets,
   useActivities,
   useActivityActions,
@@ -19,6 +18,7 @@ import {
   workoutItemsOfDone,
 } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
+import { minutesOf } from "@sendtally/features/sessions";
 import { KIND_LOOK } from "@sendtally/features/training";
 import {
   discardRunBody,

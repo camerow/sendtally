@@ -9,7 +9,7 @@ import {
 } from "@sendtally/core/hang";
 import { gripSetupLabel } from "../hang/format";
 import { formatNumber, t } from "../i18n";
-import { durationLabel, sessionMinutes } from "../sessions/years";
+import { durationLabel, sessionMinutes } from "../sessions/duration";
 import { focusLabel } from "../training/focus";
 import { isUnscored } from "../sessions/meta";
 import { hangTitle } from "../sessions/hang";

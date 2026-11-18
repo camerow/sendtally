@@ -121,13 +121,13 @@ export {
 } from "./planGridRows";
 export {
   blockDateRange,
-  blockName,
   blockKicker,
   blockTag,
   currentBlockLine,
   doneOfShort,
   effortText,
 } from "./blockText";
+export { blockName } from "./blockName";
 export { occurrenceMeta, occurrenceTag } from "./occurrenceText";
 export { loggedRowText, type LoggedRowText } from "./loggedRowText";
 export { KIND_LOOK, type KindLook, type MarkShape } from "./kindLook";

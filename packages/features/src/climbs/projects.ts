@@ -6,7 +6,7 @@ import { utcDate } from "../log-session/transforms";
 import { disciplineLabel } from "../log-session/types";
 import { isUnscored, sessionDay } from "../sessions/meta";
 import { sessionTitle } from "../sessions/title";
-import { durationLabel, sessionMinutes } from "../sessions/years";
+import { durationLabel, sessionMinutes } from "../sessions/duration";
 import {
   climbKey,
   projectMetaLabel,

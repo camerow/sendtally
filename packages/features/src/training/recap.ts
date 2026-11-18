@@ -23,7 +23,7 @@ import {
 } from "./days";
 import { blockMembers } from "./blocks";
 import type { Occurrence } from "./plan";
-import { blockName } from "./blockText";
+import { blockName } from "./blockName";
 
 export type DoneCount = { done: number; planned: number };
 

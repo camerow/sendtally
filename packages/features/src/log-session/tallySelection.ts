@@ -2,7 +2,7 @@ import { circuitLabel } from "../gyms/transforms";
 import { t } from "../i18n";
 import { withExerciseClimb } from "./exerciseTally";
 import { newTallyClimb, withTallyGo, type TallyChoice, type TallyGo } from "./tally";
-import { durationLabel } from "../sessions/years";
+import { durationLabel } from "../sessions/duration";
 import { vGradeOf } from "./transforms";
 import type { ClimbDraft, LogSessionDraft } from "./types";
 

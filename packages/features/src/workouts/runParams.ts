@@ -12,7 +12,7 @@ import { startTimeOf } from "../activities/intervalsText";
 import { timeOfDay } from "../hang/format";
 import { t } from "../i18n";
 import { today } from "../journal/transforms";
-import { durationLabel } from "../sessions/years";
+import { durationLabel } from "../sessions/duration";
 import { NO_PLAN, planLinkParams, readPlanLink, readSession } from "../training/planLinkParams";
 
 /** A workout run in the sets or checklist player, and what the activity it logs is filed under. */
