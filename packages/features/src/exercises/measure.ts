@@ -22,13 +22,15 @@ export function tallyMeasureOf(
 
 /**
  * How the exercise a workout item names logs on the tally, by name in any case. In a climbing
- * workout, one the library does not know logs climbs.
+ * workout, one the library does not know logs climbs, unless it is a grip, which never does.
  */
 export function tallyMeasuresOf(
   exercises: readonly Pick<Exercise, "name" | "kind" | "measure">[],
-  workoutKind: WorkoutKind
+  workoutKind: WorkoutKind,
+  isGrip: (name: string) => boolean
 ): (name: string) => TallyMeasure | null {
   return (name) => {
+    if (isGrip(name)) return null;
     const e = exercises.find((x) => exerciseKey(x.name) === exerciseKey(name));
     return e === undefined && workoutKind === "climbing" ? "climbs" : tallyMeasureOf(e);
   };

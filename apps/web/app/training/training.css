@@ -2006,7 +2006,14 @@
   }
 
   .set-tick {
+    position: relative;
     width: 32px;
+  }
+
+  .set-tick::before {
+    content: "";
+    position: absolute;
+    inset: 0 -6px;
   }
 
   .set-col-rpe {

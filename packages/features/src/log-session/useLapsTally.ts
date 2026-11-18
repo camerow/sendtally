@@ -11,6 +11,7 @@ import {
   lapLine,
   lapsClimb,
   lapRemovable,
+  lapsPlanned,
   withLapAdded,
   withLapRemoved,
   withLapLogged,
@@ -37,6 +38,8 @@ export type LapsTally = {
   /** The circuit climb the laps log on, which the climb editor opens. */
   circuit: ClimbDraft | undefined;
   rows: LapRow[];
+  /** The laps asked for, or more once + Add lap went past them. */
+  planned: number;
   /** The rest after the last lap: running, waiting for play, or none. */
   rest: { running: Rest; left: number } | { seconds: number } | null;
   /** The lap to go, none once all are done: Start for a time lap not yet going, else what it shows. */
@@ -48,12 +51,14 @@ export type LapsTally = {
   sent: () => void;
   /** Ends the lap where it fell; true when the climber should say how far it got. */
   fell: () => boolean;
+  /** Ends a moves lap as an attempt that got this far. */
+  attemptAt: (moves: number) => void;
   startLap: () => void;
   startRest: () => void;
   moreRest: () => void;
   skipRest: () => void;
   addLap: () => void;
-  /** Takes back a lap + Add lap put on, none once only the planned laps are left. */
+  /** Takes back a lap that holds nothing yet, none once one is left or every lap is done. */
   removeLap: (() => void) | null;
 };
 
@@ -100,6 +105,7 @@ export function useLapsTally(
     clock: lapClockLabel(draft),
     line: lapLine(draft),
     circuit,
+    planned: lapsPlanned(draft),
     rows:
       e === undefined
         ? []
@@ -145,6 +151,7 @@ export function useLapsTally(
       log(FELL_AFTER_START);
       return true;
     },
+    attemptAt: log,
     startLap: () => live.replace(withLapStarted(endRest(draft), new Date())),
     startRest: () => {
       rest.tick(restKey(last), restS);

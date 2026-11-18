@@ -8,6 +8,7 @@ import { formatNumber, t } from "@sendtally/features/i18n";
 import type { FieldSlot } from "../../../components/useFieldOrder";
 import { press } from "../../../lib/press";
 import { CheckBox } from "../components/CheckBox";
+import { AMBER } from "../components/tints";
 import { SET_COLUMNS } from "../sets/setColumns";
 import { RpeField } from "../sets/RpeField";
 import { SetDoneFields } from "../sets/SetDoneFields";
@@ -113,23 +114,29 @@ export function ReviewSetRow({
           {formatNumber(n)}
         </Text>
         <View style={[SET_COLUMNS.target, { gap: 2 }]}>
-          <Text
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.7}
-            style={[
-              type.mono,
-              { fontSize: 14, color: on ? colors.textSecondary : colors.textMuted },
-            ]}
-          >
-            {target === undefined ? "-" : targetText(target, hangs, unit) || "-"}
-          </Text>
+          {done.climbs === undefined ? (
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              style={[
+                type.mono,
+                { fontSize: 14, color: on ? colors.textSecondary : colors.textMuted },
+              ]}
+            >
+              {target === undefined ? "-" : targetText(target, hangs, unit) || "-"}
+            </Text>
+          ) : (
+            <Text style={[type.monoBold, { fontSize: 14, color: colors.textMuted }]}>
+              {setText(done, unit)}
+            </Text>
+          )}
           {on && short !== null && (
-            <Text style={[type.mono, { fontSize: 11, color: "#C27C0E" }]}>{short}</Text>
+            <Text style={[type.mono, { fontSize: 11, color: AMBER }]}>{short}</Text>
           )}
         </View>
         <View style={SET_COLUMNS.done}>
-          {done.climbs === undefined ? (
+          {done.climbs === undefined && (
             <SetDoneFields
               set={done}
               lifting={lifting}
@@ -143,12 +150,6 @@ export function ReviewSetRow({
               defaultLoadKg={defaultLoadKg}
               onChange={onChange}
             />
-          ) : (
-            <Text
-              style={[type.monoBold, { fontSize: 14, color: colors.textMuted, paddingRight: 8 }]}
-            >
-              {setText(done, unit)}
-            </Text>
           )}
         </View>
         {rpe !== undefined && (

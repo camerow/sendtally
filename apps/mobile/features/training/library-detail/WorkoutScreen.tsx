@@ -5,7 +5,7 @@ import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { useActivities } from "@sendtally/features/activities";
 import { tallyMeasuresOf } from "@sendtally/features/exercises";
-import { hangWorkoutOf, setupLabel } from "@sendtally/features/hang";
+import { hangWorkoutOf, setupLabel, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
@@ -60,6 +60,7 @@ type DetailProps = {
 
 function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactElement {
   const api = useApi();
+  const { isGrip } = useGrips(api);
   const { model, today } = useHangData();
   const session = useNextSession(workout.id);
   const exercises = useExercises(api).state;
@@ -170,7 +171,8 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
               session={use?.count ?? 0}
               tally={tallyMeasuresOf(
                 exercises.status === "ready" ? exercises.data : [],
-                workout.kind
+                workout.kind,
+                isGrip
               )}
               openExercise={openExercise}
             />

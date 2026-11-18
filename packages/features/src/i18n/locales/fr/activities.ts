@@ -7,6 +7,8 @@ export const activities = {
   "activities.logWorkout": "Noter la séance",
   "activities.partOf": "{done} sur {of}",
   "activities.sets": "Séries",
+  "activities.notStarted": "Pas commencé",
+  "activities.shortMoves": "{done} sur {of} mouvements",
   "activities.shortHangs": "{done} sur {of} suspensions",
   "activities.shortReps": "{done} sur {of} rép.",
   "activities.kind": "Type",

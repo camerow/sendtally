@@ -4,13 +4,19 @@ import { restAfterItem } from "@sendtally/core/hang";
 import { Alert, KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
-import { foldedLine, useActivities, useWeightUnit } from "@sendtally/features/activities";
-import { exerciseAbout, type TallyMeasure } from "@sendtally/features/exercises";
+import {
+  climbingDoseLine,
+  foldedLine,
+  useActivities,
+  useWeightUnit,
+} from "@sendtally/features/activities";
+import { exerciseAbout } from "@sendtally/features/exercises";
 import { useGrips } from "@sendtally/features/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import { useLiveSession } from "@sendtally/features/log-session";
+import { useLiveSession, withLapBack } from "@sendtally/features/log-session";
 import { useExercises } from "@sendtally/features/statistics";
 import {
+  climbRows,
   afterKey,
   heldSeconds,
   setKey,
@@ -22,7 +28,13 @@ import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
 import { exerciseTallyStorage } from "../../../lib/exerciseTallyStorage";
+import { GymSheet } from "../../live-session/GymSheet";
+import { LiveClimbEditor } from "../../live-session/LiveClimbEditor";
 import { liveRun } from "../../live-session/liveRun";
+import { UndoSnackbar } from "../../live-session/UndoSnackbar";
+import { ClimbCard } from "../climbing/ClimbCard";
+import { LapsCard } from "../climbing/LapsCard";
+import { useWorkoutTally } from "../climbing/useWorkoutTally";
 import { Button } from "../components/Button";
 import { PlayerHeader } from "../components/PlayerHeader";
 import { logRun } from "../data/workoutRunParams";
@@ -33,16 +45,15 @@ import { RestRow } from "../rest/RestRow";
 import { type } from "../type";
 import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
 import type { DetailMenuRow } from "../components/types";
-import { ClimbingCard } from "./ClimbingCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
 import { SET_COLUMNS } from "./setColumns";
 import { SetsCard } from "./SetsCard";
 import { FingersCard } from "./FingersCard";
 
 /**
- * A lifting workout as a set table on a clock from Start: tick each set as it is done, rest
- * in line after it, then log what was done. A climbing exercise is a card instead, whose Start
- * logs it on the session tally; its climbs come back as its sets.
+ * A workout as a set table on a clock from Start: tick each set as it is done, rest in line
+ * after it, then log what was done. A climbing exercise's sets take their climbs in the row, a
+ * grade then Attempt or Sent, on the workout's tally; its climbs come back as its sets.
  */
 export function SetsScreen({
   run,
@@ -72,6 +83,17 @@ export function SetsScreen({
   });
   const { part } = player;
   const { shown, ticked, current, rest, hold, previous, nameOf, items, order } = player;
+  const climbs = useWorkoutTally(tally, rest);
+  const [editing, setEditing] = React.useState<string | null>(null);
+  const [pickingGym, setPickingGym] = React.useState(false);
+  const [lapRemoved, setLapRemoved] = React.useState<{
+    item: number;
+    name: string;
+    lap: number;
+  } | null>(null);
+  const draft = climbs.draft;
+  const editingClimb = draft?.climbs.find((c) => c.key === editing) ?? null;
+  const climbing = items.some((_, i) => player.tallyOf(i) !== null);
 
   const holdRow = (at: SetAt): React.ReactNode =>
     hold.hold?.at === setKey(at) && (
@@ -117,11 +139,16 @@ export function SetsScreen({
     ending.current = false;
     finish();
   });
-  const startClimbing = (item: number, measure: TallyMeasure): void => {
-    player.startClimbing(item, measure);
-    router.push("/workout/tally");
-  };
   const menu = (i: number, at: number): DetailMenuRow[] => [
+    ...(player.canClimbOn(i)
+      ? [
+          {
+            icon: "climb" as const,
+            title: t("workouts.climbNow"),
+            onPress: () => player.climbOn(i),
+          },
+        ]
+      : []),
     { icon: "skip", title: t("workouts.skipForNow"), onPress: () => player.skip(i) },
     ...(at > 0
       ? [
@@ -179,11 +206,16 @@ export function SetsScreen({
               startedAt={player.startedAt}
               position={player.position}
               bare={run.items.length === 0}
+              gym={
+                climbing ? { name: climbs.gym?.name, onPick: () => setPickingGym(true) } : undefined
+              }
             />
             {order.map((i, at) => {
               const item = items[i];
               const d = shown.find((x) => x.item === i);
               if (item === undefined || d === undefined) return null;
+              const climbItem = player.climbing(i);
+              const skipped = player.skipped(i);
               const between = at < order.length - 1 && restBetween(i);
               if (part !== null && part.places.includes(i))
                 return (
@@ -205,19 +237,55 @@ export function SetsScreen({
                     </React.Fragment>
                   )
                 );
-              const climbing = player.climbing(i);
-              if (climbing !== null)
+              if (climbItem !== null) {
+                const about = exerciseAbout(mine, item.exercise, nameOf(i));
+                const card = player.folded(i) ? (
+                  <FoldedSetsCard
+                    name={nameOf(i)}
+                    line={
+                      skipped
+                        ? t("workouts.skippedTapToDo")
+                        : (climbItem.logged ?? climbingDoseLine(item.dose, climbItem.measure))
+                    }
+                    done={!skipped && climbItem.logged !== null}
+                    onOpen={() => player.open(i)}
+                  />
+                ) : climbItem.measure === "laps" ? (
+                  <LapsCard
+                    item={i}
+                    at={item}
+                    logged={player.climbedSets(i)}
+                    planned={player.lapsPlanned(i)}
+                    draft={draft}
+                    live={tally}
+                    rest={rest}
+                    now={climbs.now}
+                    about={about}
+                    onFold={() => player.fold(i)}
+                    menu={menu(i, at)}
+                    onLapRemoved={(lap) => setLapRemoved({ item: i, name: nameOf(i), lap })}
+                  />
+                ) : (
+                  <ClimbCard
+                    item={item}
+                    plan={player.climbPlan(i)}
+                    rows={climbRows(draft, i, player.climbPlan(i), climbs.now)}
+                    tally={player.climbAt === i ? climbs : null}
+                    restUnder={(set) => restAt(setKey({ item: i, set }))}
+                    about={about}
+                    onFold={() => player.fold(i)}
+                    menu={menu(i, at)}
+                    onFlip={climbs.flip}
+                    onEdit={setEditing}
+                  />
+                );
                 return (
                   <React.Fragment key={i}>
-                    <ClimbingCard
-                      item={item}
-                      {...climbing}
-                      onStart={() => startClimbing(i, climbing.measure)}
-                    />
+                    {card}
                     {between}
                   </React.Fragment>
                 );
-              const skipped = player.skipped(i);
+              }
               return (
                 <React.Fragment key={i}>
                   {player.folded(i) ? (
@@ -267,6 +335,28 @@ export function SetsScreen({
               />
             )}
           </KeypadScrollView>
+          {climbs.snack !== null && (
+            <UndoSnackbar
+              id={climbs.snack.id}
+              message={climbs.snack.message}
+              bottom={12}
+              onUndo={climbs.undo}
+              onExpire={climbs.clearSnack}
+            />
+          )}
+          {lapRemoved !== null && (
+            <Toast
+              message={`${lapRemoved.name} · ${t("tally.lapRemoved", { lap: lapRemoved.lap })}`}
+              action={{
+                label: t("tally.undo"),
+                onPress: () => {
+                  if (draft !== null) tally.replace(withLapBack(draft, lapRemoved.item));
+                },
+              }}
+              onHide={() => setLapRemoved(null)}
+              bottom={12}
+            />
+          )}
           {player.removed !== null && (
             <Toast
               message={`${player.removed.exercise} · ${t("activities.setRemoved", { n: player.removed.set })}`}
@@ -284,6 +374,33 @@ export function SetsScreen({
             />
           )}
         </View>
+        <LiveClimbEditor
+          climb={editingClimb}
+          index={editingClimb === null || draft === null ? 0 : draft.climbs.indexOf(editingClimb)}
+          count={draft?.climbs.length ?? 0}
+          prefs={climbs.scales}
+          vocabulary={climbs.vocabulary}
+          gyms={climbs.circuitGym === null ? [] : [climbs.circuitGym]}
+          onChange={(c) => tally.updateClimb(c.key, () => c, climbs.gyms)}
+          onRemove={() => {
+            if (editing !== null && draft !== null)
+              tally.replace({ ...draft, climbs: draft.climbs.filter((c) => c.key !== editing) });
+            setEditing(null);
+          }}
+          onClose={() => setEditing(null)}
+        />
+        {climbing && (
+          <GymSheet
+            visible={pickingGym}
+            gyms={climbs.gyms}
+            gymId={draft?.gymId}
+            onPick={(gymId) => {
+              climbs.pickGym(gymId);
+              setPickingGym(false);
+            }}
+            onClose={() => setPickingGym(false)}
+          />
+        )}
         {picking && (
           <ExercisePickerSheet
             items={items.map((x) => ({ exercise: x.exercise, doses: [x.dose] }))}

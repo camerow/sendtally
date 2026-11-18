@@ -152,4 +152,13 @@ export const workouts = {
     "Ses séries ne figurent pas dans le journal de cette séance. L'entraînement enregistré le garde.",
   "workouts.foldExercise": "Replier {name}",
   "workouts.openExercise": "Ouvrir {name}",
+  "workouts.climbsPerSet": "Voies · {n} par série",
+  "workouts.climbsColumn": "Voies",
+  "workouts.onTheWallFor": "Sur le mur · {time}",
+  "workouts.movesPerLap": "Mouvements · {n} par tour",
+  "workouts.timePerLap": "Temps · {time} par tour",
+  "workouts.colLap": "Tour",
+  "workouts.atGym": "À {gym}",
+  "workouts.endSet": "Terminer la série {set}",
+  "workouts.climbNow": "Grimper maintenant",
 } as const;

@@ -43,6 +43,7 @@ export * from "./fingersPart";
 export * from "./holdClock";
 export * from "./restCountdown";
 export * from "./runParams";
+export * from "./climbRows";
 export * from "./runCards";
 export * from "./setsRun";
 export { usePrescribed } from "./usePrescribed";

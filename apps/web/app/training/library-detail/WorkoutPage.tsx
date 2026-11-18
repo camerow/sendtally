@@ -3,7 +3,7 @@ import { libraryPictures } from "@sendtally/features/library";
 import { Link } from "react-router";
 import { activityItem, hangItem, ofWorkout, useActivities } from "@sendtally/features/activities";
 import { tallyMeasuresOf } from "@sendtally/features/exercises";
-import { hangWorkoutOf, setupLabel } from "@sendtally/features/hang";
+import { hangWorkoutOf, setupLabel, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { useExercises } from "@sendtally/features/statistics";
 import {
@@ -42,6 +42,7 @@ function Detail({
   use: WorkoutUse | undefined;
 }): React.ReactElement {
   const api = useAppApi();
+  const { isGrip } = useGrips(api);
   const { model, today } = useHangData();
   const session = use?.count ?? 0;
   const exercises = useExercises(api).state;
@@ -105,7 +106,8 @@ function Detail({
               session={session}
               tally={tallyMeasuresOf(
                 exercises.status === "ready" ? exercises.data : [],
-                workout.kind
+                workout.kind,
+                isGrip
               )}
             />
           ) : (

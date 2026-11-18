@@ -1,4 +1,5 @@
 import React from "react";
+import { OwnerKnown } from "../lib/OwnerKnown";
 import { Navigate, useSearchParams } from "react-router";
 import { readIntervalsParams } from "@sendtally/features/workouts";
 import { IntervalsPage } from "../training/players/timer/IntervalsPage";
@@ -9,6 +10,8 @@ export default function Route(): React.ReactElement {
   return workout === null ? (
     <Navigate to="/app" replace />
   ) : (
-    <IntervalsPage workout={workout} end={params.get("end") === "1"} />
+    <OwnerKnown>
+      <IntervalsPage workout={workout} end={params.get("end") === "1"} />
+    </OwnerKnown>
   );
 }

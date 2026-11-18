@@ -37,7 +37,7 @@ export function StartButton({
   const { isGrip } = useGrips(api);
   const mine = exercises.status === "ready" ? exercises.data : [];
   const eachSide = eachSideOf(mine);
-  const tally = tallyMeasuresOf(mine, workout.kind);
+  const tally = tallyMeasuresOf(mine, workout.kind, isGrip);
   const run = usePlannedItems(workout, planned);
   return (
     <Button

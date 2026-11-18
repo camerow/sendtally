@@ -71,8 +71,6 @@ export type ExerciseTally = {
   onS?: number;
   /** Set for a circuit: each set is a lap of this many moves or seconds. */
   lap?: { unit: EnduranceUnit; target: number };
-  /** The laps the workout asked for, kept once + Add lap goes past them. */
-  plannedSets?: number;
   /** The rest taken after each lap, by lap. */
   rests?: number[];
   restS: number;
@@ -126,6 +124,8 @@ export type LogSessionDraft = {
   exercise?: ExerciseTally;
   /** The time each set of a timed exercise spent on the wall, kept once the set ends. */
   wallTimes?: WallTime[];
+  /** Each circuit item's laps once + Add lap or − changed them, kept when the tally moves on. */
+  lapsPlanned?: Record<number, number>;
 };
 
 /** How long one set of a timed exercise was on the wall. */

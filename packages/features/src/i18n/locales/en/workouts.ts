@@ -151,4 +151,13 @@ export const workouts = {
     "Its sets are left out of this workout's log. The saved workout keeps it.",
   "workouts.foldExercise": "Fold {name}",
   "workouts.openExercise": "Open {name}",
+  "workouts.climbsPerSet": "Climbs · {n} per set",
+  "workouts.climbsColumn": "Climbs",
+  "workouts.onTheWallFor": "On the wall · {time}",
+  "workouts.movesPerLap": "Moves · {n} a lap",
+  "workouts.timePerLap": "Time · {time} a lap",
+  "workouts.colLap": "Lap",
+  "workouts.atGym": "At {gym}",
+  "workouts.endSet": "End set {set}",
+  "workouts.climbNow": "Climb this now",
 } as const;

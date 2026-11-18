@@ -18,6 +18,8 @@ export type RunState =
       /** A mix's fingerboard part, and its grips' places in `done`, which are no sets to tick. */
       fingers?: FingersPart;
       grips?: number[];
+      /** A climbing card's sets climbed so far, which its rows end on their own, by set key. */
+      climbed?: string[];
     }
   | { player: "checklist"; ticked: number[]; count: number };
 
@@ -153,10 +155,11 @@ export function liveRunSummary({ state }: LiveRun): string {
   }
   const order = state.cards?.order ?? state.done.map((d) => d.item);
   const grips = state.grips ?? [];
+  const over = [...state.ticked, ...(state.climbed ?? [])];
   for (const d of order.flatMap((key) =>
     state.done.filter((x) => x.item === key && !grips.includes(x.item))
   )) {
-    const set = d.sets.findIndex((_, s) => !state.ticked.includes(`${d.item}:${s}`));
+    const set = d.sets.findIndex((_, s) => !over.includes(`${d.item}:${s}`));
     if (set !== -1)
       return `${exerciseName(d.exercise)} · ${t("hang.setOf", { set: set + 1, sets: d.sets.length })}`;
   }

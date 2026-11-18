@@ -1,18 +1,16 @@
 import React from "react";
 import {
-  clock,
   type ItemDone,
   type SessionItem,
   type SetDone,
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { exerciseName, exerciseTargetLine, setKey, type SetAt } from "@sendtally/features/workouts";
-import { Icon } from "../../components/Icon";
-import { MoreMenu, type MoreMenuItem } from "../../components/MoreMenu";
-import { LetterBadge } from "../components/LetterBadge";
-import { AboutButton, type About } from "./AboutButton";
+import { exerciseName, setKey, type SetAt } from "@sendtally/features/workouts";
+import type { MoreMenuItem } from "../../components/MoreMenu";
+import type { About } from "./AboutButton";
 import { RestPreview } from "./RestPreview";
+import { ExerciseCardHead } from "./ExerciseCardHead";
 import { SetRow } from "./SetRow";
 
 export type SetsCardProps = {
@@ -68,40 +66,11 @@ export function SetsCard({
   menu,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
-  const { name: doseName, setRestS = 0, targetRpe } = item.dose;
+  const { setRestS = 0, targetRpe } = item.dose;
   const rated = targetRpe !== undefined;
   return (
     <section className="player-card">
-      <div className="player-card-head">
-        <span className="player-card-title">
-          <button
-            type="button"
-            className="player-card-fold"
-            aria-label={t("workouts.foldExercise", { name })}
-            aria-expanded="true"
-            onClick={onFold}
-          >
-            <h2 className="player-card-name">{name}</h2>
-            <span className="player-chevron player-chevron--up">
-              <Icon name="chevron" size={16} strokeWidth={2} />
-            </span>
-          </button>
-          <AboutButton about={about} label={t("workouts.aboutExercise")} />
-        </span>
-        {item.turn !== undefined && (
-          <span className="player-card-turn">
-            <LetterBadge dose={item.turn} />
-            {doseName !== undefined && <span className="player-card-meta">{doseName}</span>}
-          </span>
-        )}
-        {setRestS > 0 && (
-          <span className="player-card-meta">{t("plan.chipRest", { value: clock(setRestS) })}</span>
-        )}
-        <MoreMenu label={t("workouts.exerciseMore")} items={menu} />
-      </div>
-      {rated && (
-        <span className="player-card-meta player-card-aim">{exerciseTargetLine(item.dose)}</span>
-      )}
+      <ExerciseCardHead item={item} about={about} onFold={onFold} menu={menu} />
       <div className="set-row set-row--head" aria-hidden="true">
         <span className="set-col-n train-label">{t("activities.colSet")}</span>
         <span className="set-col-target train-label">{t("activities.colTarget")}</span>

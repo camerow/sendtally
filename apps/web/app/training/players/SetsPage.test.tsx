@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
@@ -22,7 +23,16 @@ vi.mock("@sendtally/features/hang", async (actual) => ({
   useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),
 }));
 vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
-vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
+vi.mock("../../lib/useAppApi", () => ({
+  useAppApi: () => ({
+    gyms: () => new Promise(() => undefined),
+    climbs: () => new Promise(() => undefined),
+    sessions: () => new Promise(() => undefined),
+  }),
+}));
+vi.mock("@sendtally/features/settings", () => ({
+  useGradeScalePrefs: () => ({ scales: { boulder: "v", route: "yds" }, ready: true }),
+}));
 vi.mock("../library/useLibrary", async (actual) => ({
   ...(await actual<typeof T_useLibrary>()),
   useLibrary: () => ({
@@ -92,14 +102,16 @@ function Where(): React.ReactElement {
 function mount(shown: WorkoutRun = run): void {
   act(() =>
     root.render(
-      <ToastProvider>
-        <MemoryRouter initialEntries={["/app/plan", "/app/workout/sets"]} initialIndex={1}>
-          <Routes>
-            <Route path="/app/workout/sets" element={<SetsPage run={shown} end={false} />} />
-            <Route path="*" element={<Where />} />
-          </Routes>
-        </MemoryRouter>
-      </ToastProvider>
+      <QueryClientProvider client={new QueryClient()}>
+        <ToastProvider>
+          <MemoryRouter initialEntries={["/app/plan", "/app/workout/sets"]} initialIndex={1}>
+            <Routes>
+              <Route path="/app/workout/sets" element={<SetsPage run={shown} end={false} />} />
+              <Route path="*" element={<Where />} />
+            </Routes>
+          </MemoryRouter>
+        </ToastProvider>
+      </QueryClientProvider>
     )
   );
 }

@@ -209,7 +209,7 @@ export function bodySummary(
   if (w.kind === "climbing" && items.length === 1)
     return climbingDoseLine(
       only.dose,
-      tallyMeasuresOf(exercises, w.kind)(only.exercise) === "laps"
+      tallyMeasuresOf(exercises, w.kind, isBuiltInGrip)(only.exercise) === "laps"
         ? "laps"
         : only.dose.onS === undefined
           ? "climbs"

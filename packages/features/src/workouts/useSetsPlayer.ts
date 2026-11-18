@@ -1,6 +1,7 @@
 import React from "react";
 import {
   doneAsPrescribed,
+  restAfterItem,
   setOf,
   type ItemDone,
   type SessionItem,
@@ -18,8 +19,9 @@ import { addSet, changeSet, previousSets } from "../activities/done";
 import { tallyMeasuresOf } from "../exercises/measure";
 import type { TallyMeasure } from "../exercises/types";
 import { eachSideOf } from "../exercises/sides";
-import { lapSets } from "../log-session/exerciseLaps";
-import { exerciseSets, startExercise } from "../log-session/exerciseTally";
+import { allLapsDone, lapSets, lapsPlannedFor } from "../log-session/exerciseLaps";
+import { allSetsDone, exerciseSets, nextSet, startExercise } from "../log-session/exerciseTally";
+import { climbedKeys, type ClimbPlan } from "./climbRows";
 import type { LiveSession } from "../log-session/useLiveSession";
 import { partPlaces, partPlanned, type FingersPart } from "./fingersPart";
 import type { Hold } from "./holdClock";
@@ -43,6 +45,7 @@ import {
 import type { Picked } from "./types";
 import { useLatest } from "./useLatest";
 import {
+  afterKey,
   allSets,
   isLifting,
   itemDone,
@@ -54,6 +57,9 @@ import {
 } from "./setsRun";
 import { useHold, useLiveRun, useRest, type HoldClock, type RestClock } from "./useLiveRun";
 import type { PlannedRun } from "./usePlannedRun";
+
+/** Where the exercise tally before inline climbing kept its rest; a run resumed from it moves the rest under its set. */
+const OLD_TALLY_REST = "tally";
 
 /** A set just removed, which Undo puts back. */
 export type RemovedSet = { exercise: string; set: number };
@@ -88,8 +94,6 @@ export type ClimbingItem = {
   lastTime: string | null;
   /** What this run logged on it so far, once it has. */
   logged: string | null;
-  /** Its tally is still running, minimised. */
-  live: boolean;
 };
 
 export type SetsPlayer = {
@@ -108,7 +112,7 @@ export type SetsPlayer = {
   rest: RestClock;
   hold: HoldClock;
   tallyOf: (item: number) => TallyMeasure | null;
-  /** A climbing item's card: how it is measured, last time, what this run logged, and whether its tally is live. */
+  /** A climbing item's card: how it is measured, last time, and what this run logged. */
   climbing: (item: number) => ClimbingItem | null;
   /** What a set asks: a lifting set takes last time's weight where the workout sets none. */
   target: (at: SetAt) => SetDone;
@@ -146,8 +150,16 @@ export type SetsPlayer = {
   endHold: (h: Hold, seconds: number | null) => void;
   /** The sets a climbing item logged on the tally. */
   climbedSets: (item: number) => SetDone[];
-  /** Puts a climbing item on the tally; the caller then opens it. */
-  startClimbing: (item: number, measure: TallyMeasure) => void;
+  /** The climbing card the tally is on, whose current set takes the grades picked. */
+  climbAt: number | null;
+  /** What a climbing item asks of each set, for its rows. */
+  climbPlan: (item: number) => ClimbPlan;
+  /** The laps a circuit item asks for now, after any + Add lap or −. */
+  lapsPlanned: (item: number) => number;
+  /** Moves the tally onto a climbing card, from its menu. */
+  climbOn: (item: number) => void;
+  /** Whether a climbing card can take the tally: not on it already, and climbing still to do. */
+  canClimbOn: (item: number) => boolean;
   /** What the run did, and the sets it left unticked, for its review. */
   finished: () => RunFinish;
   /** Whether what it needs to finish has loaded. */
@@ -175,7 +187,16 @@ export function useSetsPlayer({
       ? { ...live.state, startedAt: live.startedAt, lastTickAt: live.lastTickAt }
       : null;
   });
-  const climbs = tally.stored?.draft.climbs ?? [];
+  const [staleAt] = React.useState(() =>
+    resumed === null ? (tally.stored?.savedAt.getTime() ?? null) : null
+  );
+  const stale = staleAt !== null && tally.stored?.savedAt.getTime() === staleAt;
+  const draft = stale ? null : (tally.stored?.draft ?? null);
+  const climbs = draft?.climbs ?? [];
+  const discardTally = tally.discard;
+  React.useEffect(() => {
+    if (stale) discardTally();
+  }, [stale, discardTally]);
   const [startedAt] = React.useState(() => resumed?.startedAt ?? Date.now());
   const [done, setDone] = React.useState<ItemDone[]>(
     () => resumed?.done ?? doneAsPrescribed(run.items)
@@ -189,7 +210,8 @@ export function useSetsPlayer({
   const [removed, setRemoved] = React.useState<
     (RemovedSet & { at: SetAt; value: SetDone; wasTicked: boolean }) | null
   >(null);
-  const lastTickAt = ticked.size === 0 ? undefined : tickedAt;
+  const logged = climbs.length + climbs.reduce((n, c) => n + (c.endurance?.laps.length ?? 0), 0);
+  const lastTickAt = ticked.size === 0 && logged === 0 ? undefined : tickedAt;
   const lastRemoved = useLatest(removed);
   const latest = useLatest({ done, ticked });
   const rest = useRest(store);
@@ -206,6 +228,7 @@ export function useSetsPlayer({
     stored.state.player === "sets"
       ? stored.state.fingers
       : undefined;
+  const climbed = React.useMemo(() => climbedKeys(draft), [draft]);
   React.useEffect(() => {
     // The part is the timer's while it runs, so this keeps whatever the store holds of it.
     const live = store.resumed("/workout/sets", run.workoutId)?.state;
@@ -224,16 +247,17 @@ export function useSetsPlayer({
         cards,
         ...(part && { fingers: part }),
         ...(places.length > 0 && { grips: places }),
+        ...(climbed.length > 0 && { climbed }),
       },
     });
-  }, [store, run, startedAt, lastTickAt, done, ticked, cards, places]);
+  }, [store, run, startedAt, lastTickAt, done, ticked, cards, places, climbed]);
   const planned = partPlanned(run, places);
   const inPart = (item: number): boolean => places.includes(item);
   const partOpen =
     places.length > 0 &&
     (fingers === undefined || ("run" in fingers && fingers.run.finished === null));
   const items = [...run.items.slice(0, cards.base), ...cards.added];
-  const tallyMeasure = tallyMeasuresOf(exercises ?? [], run.kind);
+  const tallyMeasure = tallyMeasuresOf(exercises ?? [], run.kind, isGrip);
   const tallyOf = (item: number): TallyMeasure | null => tallyMeasure(items[item]?.exercise ?? "");
   const live = withDoneSets(items, done);
   const ended = (d: readonly ItemDone[], t: ReadonlySet<string>, item: number): boolean => {
@@ -296,9 +320,8 @@ export function useSetsPlayer({
   };
   const hold = useHold(store, (h) => endHold(h, h.targetS));
   const climbedSets = (item: number): SetDone[] => {
-    const draft = tally.stored?.draft;
     if (tallyOf(item) === "laps") return lapSets(climbs, item);
-    if (draft === undefined) return [];
+    if (draft === null) return [];
     const plannedS = tallyOf(item) === "wallTime" ? items[item]?.dose.onS : undefined;
     return exerciseSets(draft, item, plannedS, new Date());
   };
@@ -315,6 +338,100 @@ export function useSetsPlayer({
       ? targetS
       : null;
   };
+  const climbPlan = (item: number): ClimbPlan => {
+    const dose = items[item]?.dose ?? { sets: 0 };
+    const measure = tallyOf(item);
+    return {
+      sets: dose.sets,
+      ...(measure === "climbs" && dose.reps !== undefined ? { climbs: dose.reps } : {}),
+      ...(measure === "wallTime" ? { onS: dose.onS ?? 0 } : {}),
+    };
+  };
+  const climbDone = (item: number): boolean => {
+    const sets = items[item]?.dose.sets ?? 0;
+    const ex = draft?.exercise?.item === item ? draft.exercise : undefined;
+    if (tallyOf(item) === "laps")
+      return ex !== undefined && draft !== null
+        ? allLapsDone(draft)
+        : draft !== null && lapSets(climbs, item).length >= lapsPlannedFor(draft, item, sets);
+    return ex !== undefined ? allSetsDone(ex) : nextSet(climbs, item) > sets;
+  };
+  const doneOf = (item: number): boolean =>
+    tallyOf(item) === null
+      ? (live[item]?.dose.sets ?? 0) > 0 && itemDone(live, ticked, item)
+      : climbDone(item);
+  const [chosen, setChosen] = React.useState<number | null>(null);
+  const climbable = (k: number | null): k is number =>
+    k !== null &&
+    cards.order.includes(k) &&
+    tallyOf(k) !== null &&
+    !cards.shut.includes(k) &&
+    !cards.skipped.includes(k);
+  const climbAt =
+    (climbable(chosen) && (cards.open.includes(chosen) || !climbDone(chosen))
+      ? chosen
+      : cards.order.find((k) => climbable(k) && !climbDone(k))) ?? null;
+  const begin = useLatest((item: number): void => {
+    const at = items[item];
+    const measure = tallyOf(item);
+    if (at === undefined || measure === null) return;
+    const { climbs: perSet, onS } = climbPlan(item);
+    tally.replace(
+      startExercise(
+        draft,
+        {
+          item,
+          name: nameOf(item),
+          sets: draft === null ? at.dose.sets : lapsPlannedFor(draft, item, at.dose.sets),
+          ...(perSet === undefined ? {} : { climbs: perSet }),
+          ...(onS === undefined ? {} : { onS }),
+          ...(measure === "laps" ? { lap: lapPlanOf(at.dose) } : {}),
+          restS: at.dose.setRestS ?? 0,
+        },
+        new Date()
+      )
+    );
+  });
+  const on = draft?.exercise;
+  const onClimbAt =
+    on !== undefined &&
+    on.item === climbAt &&
+    (on.lap !== undefined) === (tallyOf(climbAt) === "laps");
+  const restAt = rest.rest?.at;
+  React.useEffect(() => {
+    if (restAt !== OLD_TALLY_REST || on === undefined) return;
+    const running = store.read()?.rest;
+    if (running !== undefined)
+      store.writeRest({ ...running, at: setKey({ item: on.item, set: Math.max(0, on.set - 2) }) });
+  }, [restAt, on, store]);
+  const known = exercises !== null;
+  React.useEffect(() => {
+    if (known && climbAt !== null && !onClimbAt) begin.current(climbAt);
+  }, [known, climbAt, onClimbAt, begin]);
+  const climbsEnded = cards.order.filter((k) => tallyOf(k) !== null && climbDone(k));
+  const settleClimbs = useLatest((): void => {
+    const fresh = climbsEnded.filter((k) => !cards.ended.includes(k));
+    const undone = cards.ended.filter((k) => tallyOf(k) !== null && !climbsEnded.includes(k));
+    if (fresh.length === 0 && undone.length === 0) return;
+    setCards((c) =>
+      undone.reduce(
+        (x, k) => withCardEnded(x, k, false),
+        fresh.reduce((x, k) => withCardEnded(x, k, true), c)
+      )
+    );
+    const last = fresh.at(-1);
+    const next = cards.order.find((k) => k !== last && !doneOf(k) && !fresh.includes(k));
+    if (last !== undefined && next !== undefined)
+      rest.tick(afterKey(last), restAfterItem(items, last, run.exerciseRestS), nameOf(next));
+  });
+  const endedKey = climbsEnded.join(",");
+  React.useEffect(() => settleClimbs.current(), [endedKey, settleClimbs]);
+  const loggedBefore = React.useRef(logged);
+  React.useEffect(() => {
+    if (logged > loggedBefore.current) setLastTickAt(Date.now());
+    loggedBefore.current = logged;
+  }, [logged]);
+
   const climbing = (item: number): ClimbingItem | null => {
     const measure = tallyOf(item);
     const at = items[item];
@@ -331,7 +448,6 @@ export function useSetsPlayer({
             : measure === "wallTime"
               ? wallLine(logged)
               : climbsLine(logged),
-      live: tally.stored?.draft.exercise?.item === item,
     };
   };
 
@@ -346,7 +462,16 @@ export function useSetsPlayer({
       cards.order.length === 0
         ? null
         : {
-            at: Math.max(0, cards.order.indexOf(partFirst ?? current?.item ?? -1)) + 1,
+            at:
+              Math.max(
+                0,
+                cards.order.indexOf(
+                  partFirst ??
+                    (focused === null && climbAt !== null && next !== null
+                      ? (cards.order.find((k) => k === climbAt || k === next.item) ?? -1)
+                      : (current?.item ?? climbAt ?? -1))
+                )
+              ) + 1,
             of: cards.order.length,
           },
     rest,
@@ -370,9 +495,7 @@ export function useSetsPlayer({
     sided,
     folded: (item) =>
       cards.shut.includes(item) ||
-      (!cards.open.includes(item) &&
-        (cards.skipped.includes(item) ||
-          ((live[item]?.dose.sets ?? 0) > 0 && itemDone(live, ticked, item)))),
+      (!cards.open.includes(item) && (cards.skipped.includes(item) || doneOf(item))),
     skipped: (item) => cards.skipped.includes(item),
     addSet: (item) => {
       setDone((all) =>
@@ -416,6 +539,7 @@ export function useSetsPlayer({
     open: (item) => {
       setCards((c) => ({ ...c, skipped: c.skipped.filter((k) => k !== item) }));
       withFold(item, false);
+      if (tallyOf(item) !== null) setChosen(item);
     },
     fold: (item) => withFold(item, true),
     focus: setFocused,
@@ -438,37 +562,26 @@ export function useSetsPlayer({
     change,
     endHold,
     climbedSets,
-    startClimbing: (item, measure) => {
-      const at = items[item];
-      if (at === undefined) return;
-      if (tally.stored?.draft.exercise?.item !== item)
-        tally.replace(
-          startExercise(
-            tally.stored?.draft ?? null,
-            {
-              item,
-              name: nameOf(item),
-              sets: at.dose.sets,
-              ...(measure === "climbs" && at.dose.reps !== undefined
-                ? { climbs: at.dose.reps }
-                : {}),
-              ...(measure === "wallTime" ? { onS: at.dose.onS ?? 0 } : {}),
-              ...(measure === "laps" ? { lap: lapPlanOf(at.dose) } : {}),
-              restS: at.dose.setRestS ?? 0,
-            },
-            new Date()
-          )
-        );
-      rest.skip();
+    climbAt,
+    climbPlan,
+    lapsPlanned: (item) => {
+      const asked = items[item]?.dose.sets ?? 0;
+      return draft === null ? asked : lapsPlannedFor(draft, item, asked);
     },
+    climbOn: setChosen,
+    canClimbOn: (item) => tallyOf(item) !== null && climbAt !== item && !climbDone(item),
     finished: () => {
       rest.skip();
       hold.stop();
-      const ran = shown.flatMap((d) =>
-        inPart(d.item) ? [] : [tallyOf(d.item) === null ? d : { ...d, sets: climbedSets(d.item) }]
-      );
-      const climbed = ran.flatMap((d) =>
-        tallyOf(d.item) === null ? [] : d.sets.map((_, set) => setKey({ item: d.item, set }))
+      const climbedOf = (d: ItemDone): SetDone[] | null => {
+        if (tallyOf(d.item) === null) return null;
+        const sets = climbedSets(d.item);
+        return sets.length === 0 ? null : sets;
+      };
+      const each = shown.flatMap((d) => (inPart(d.item) ? [] : [{ d, sets: climbedOf(d) }]));
+      const ran = each.map(({ d, sets }) => ({ ...d, sets: sets ?? d.sets }));
+      const climbed = each.flatMap(({ d, sets }) =>
+        sets === null ? [] : sets.map((_, set) => setKey({ item: d.item, set }))
       );
       return { ...finishedInOrder(cards, ran, new Set([...ticked, ...climbed])), lastTickAt };
     },

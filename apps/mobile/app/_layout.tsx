@@ -81,13 +81,7 @@ const SIGNED_IN_SCREENS = [
   "plan/day",
 ];
 
-const LIVE_SCREENS = [
-  "session/live",
-  "workout/timer",
-  "workout/intervals",
-  "workout/sets",
-  "workout/tally",
-];
+const LIVE_SCREENS = ["session/live", "workout/timer", "workout/intervals", "workout/sets"];
 
 function InteractiveMarker(): React.ReactElement | null {
   const { isLoaded } = useAuth();

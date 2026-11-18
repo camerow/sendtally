@@ -1,4 +1,5 @@
 import React from "react";
+import { OwnerKnown } from "../lib/OwnerKnown";
 import { Navigate, useSearchParams } from "react-router";
 import { readWorkoutRun } from "@sendtally/features/workouts";
 import { ChecklistPage } from "../training/players/ChecklistPage";
@@ -9,6 +10,8 @@ export default function Route(): React.ReactElement {
   return run === null ? (
     <Navigate to="/app" replace />
   ) : (
-    <ChecklistPage run={run} end={params.get("end") === "1"} />
+    <OwnerKnown>
+      <ChecklistPage run={run} end={params.get("end") === "1"} />
+    </OwnerKnown>
   );
 }

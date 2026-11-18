@@ -90,12 +90,37 @@ export const keptSets = (done: readonly ItemDone[], off: readonly string[]): Ite
     .map((d) => ({ ...d, sets: d.sets.filter((_, set) => !off.includes(setKeyOf(d.item, set))) }))
     .filter((d, i) => d.sets.length > 0 || done[i]?.sets.length === 0);
 
-/** How far a set fell short of its dose, "4 of 6 hangs", "6 of 8 reps" or "0:30 of 0:45"; null when it did not. */
-export function shortOf(set: SetDone, dose: SetDone | undefined, hangs = false): string | null {
-  if (dose?.reps !== undefined && set.reps !== undefined && set.reps < dose.reps) {
-    const counts = { done: formatNumber(set.reps), of: formatNumber(dose.reps) };
-    return hangs ? t("activities.shortHangs", counts) : t("activities.shortReps", counts);
-  }
+/** What an exercise's sets are: sets of reps, a hangboard's hangs, or a circuit's laps of moves. */
+export type SetsOf = "sets" | "hangs" | "laps";
+
+/** An exercise's count in the review: its sets or laps, or "Not started" when none is ticked. */
+export const exerciseCountText = (
+  d: Pick<ItemDone, "item" | "sets">,
+  off: readonly string[],
+  of: SetsOf
+): string =>
+  d.sets.every((_, s) => off.includes(setKeyOf(d.item, s)))
+    ? t("activities.notStarted")
+    : setsCountText(d.sets.length, of);
+
+/** "2 sets", or "2 laps" for a circuit. */
+export const setsCountText = (count: number, of: SetsOf = "sets"): string =>
+  of === "laps" ? t("tally.lapCount", { count }) : t("activities.setCount", { count });
+
+const SHORT = {
+  sets: "activities.shortReps",
+  hangs: "activities.shortHangs",
+  laps: "activities.shortMoves",
+} as const;
+
+/** How far a set fell short of its dose, "4 of 6 hangs", "6 of 8 reps", "8 of 40 moves" or "0:30 of 0:45"; null when it did not. */
+export function shortOf(
+  set: SetDone,
+  dose: SetDone | undefined,
+  of: SetsOf = "sets"
+): string | null {
+  if (dose?.reps !== undefined && set.reps !== undefined && set.reps < dose.reps)
+    return t(SHORT[of], { done: formatNumber(set.reps), of: formatNumber(dose.reps) });
   if (dose?.onS !== undefined && set.onS !== undefined && set.onS < dose.onS)
     return t("activities.partOf", { done: clock(set.onS, true), of: clock(dose.onS, true) });
   return null;
