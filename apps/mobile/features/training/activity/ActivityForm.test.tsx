@@ -6,6 +6,7 @@ import React from "react";
 import type { ActivityRecord } from "@sendtally/api-client";
 import type * as Activities from "@sendtally/features/activities";
 import { activityFromDraft, justLogged, newActivityDraft } from "@sendtally/features/activities";
+import { readingOrder } from "../data/renderWithHang";
 import { ActivityForm } from "./ActivityForm";
 
 let mockPrevious: Partial<ActivityRecord>[] = [];
@@ -298,6 +299,48 @@ describe("Log activity", () => {
       />
     );
     expect(screen.getByText("6 of 8 reps")).toBeTruthy();
+  });
+
+  it("says under the measured duration that a run left open ended at its last set", async () => {
+    const initial = newActivityDraft(
+      { kind: "strength", workoutId: "w3", minutes: "47", startTime: "17:55" },
+      "2026-11-16"
+    );
+    await render(
+      <ActivityForm
+        id="a1"
+        initial={initial}
+        logged={null}
+        timed
+        kindSet
+        live
+        idleEnd={{ minutes: 47, line: "Ended at your last set, 6:42 PM · left open 2h 23m after" }}
+      />
+    );
+    expect(
+      readingOrder("Duration, 47m", "Ended at your last set, 6:42 PM · left open 2h 23m after")
+    ).toEqual(["Duration, 47m", "Ended at your last set, 6:42 PM · left open 2h 23m after"]);
+  });
+
+  it("drops that line once the duration is not the one the run was cut to", async () => {
+    const initial = newActivityDraft(
+      { kind: "strength", workoutId: "w3", minutes: "47", startTime: "17:55" },
+      "2026-11-16"
+    );
+    await render(
+      <ActivityForm
+        id="a1"
+        initial={{ ...initial, minutes: 50 }}
+        logged={null}
+        timed
+        kindSet
+        live
+        idleEnd={{ minutes: 47, line: "Ended at your last set, 6:42 PM · left open 2h 23m after" }}
+      />
+    );
+    expect(
+      screen.queryByText("Ended at your last set, 6:42 PM · left open 2h 23m after")
+    ).toBeNull();
   });
 
   it("reviews a run: a set short of its dose in amber, and Discard ends the run once confirmed", async () => {

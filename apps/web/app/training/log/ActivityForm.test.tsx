@@ -8,6 +8,7 @@ import type * as Workouts from "@sendtally/features/workouts";
 import { ToastProvider } from "../../components/Toast";
 import { liveRunOf } from "../../lib/useLiveRun";
 import { WithHang } from "../data/testHang";
+import type { IdleEnd } from "@sendtally/features/workouts";
 import { ActivityForm } from "./ActivityForm";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -67,13 +68,20 @@ afterEach(() => {
   container.remove();
 });
 
-const mount = (live = false): void =>
+const mount = (live = false, idleEnd: IdleEnd | null = null): void =>
   act(() =>
     root.render(
       <ToastProvider>
         <MemoryRouter>
           <WithHang>
-            <ActivityForm id="a1" initial={review} logged={null} kindSet live={live} />
+            <ActivityForm
+              id="a1"
+              initial={review}
+              logged={null}
+              kindSet
+              live={live}
+              idleEnd={idleEnd}
+            />
           </WithHang>
         </MemoryRouter>
       </ToastProvider>
@@ -87,6 +95,18 @@ const saved = (): ActivityDraft["done"] =>
   (writes.saveActivity.mock.calls[0] as unknown as [{ done: ActivityDraft["done"] }])[0].done;
 
 describe("ActivityForm", () => {
+  it("says under the duration that a run left open ended at its last set", () => {
+    mount(true, { minutes: 50, line: "Ended at your last set, 6:42 PM · left open 2h 23m after" });
+    const line = container.querySelector(".form-idle-note");
+    expect(line?.textContent).toBe("Ended at your last set, 6:42 PM · left open 2h 23m after");
+    expect(line?.previousElementSibling?.textContent).toContain("Duration");
+    const field = container.querySelector<HTMLInputElement>(".number-field input")!;
+    act(() => {
+      field.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
+    });
+    expect(container.querySelector(".form-idle-note")).toBeNull();
+  });
+
   it("reviews a workout with every set ticked, and saves what stays ticked", () => {
     mount();
     expect(container.querySelector("h1")?.textContent).toBe("Gym, legs");

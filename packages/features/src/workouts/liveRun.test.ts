@@ -37,6 +37,13 @@ describe("a live run", () => {
     expect(parseLiveRun(JSON.stringify({ ...stored, pathname: "/elsewhere" }))).toBeNull();
   });
 
+  it("keeps its last tick only when it is a time", () => {
+    const stored = live({ player: "timer", run });
+    expect(parseLiveRun(JSON.stringify({ ...stored, lastTickAt: 5 }))?.lastTickAt).toBe(5);
+    expect(parseLiveRun(JSON.stringify({ ...stored, lastTickAt: "5" }))).toEqual(stored);
+    expect(parseLiveRun(JSON.stringify({ ...stored, lastTickAt: null }))).toEqual(stored);
+  });
+
   it("says where each player is", () => {
     expect(liveRunSummary(live({ player: "timer", run }))).toBe("Set 1 of 5 · Hang");
     expect(liveRunSummary(live({ player: "timer", run, laps: true }))).toBe("Lap 1 of 5 · Climb");

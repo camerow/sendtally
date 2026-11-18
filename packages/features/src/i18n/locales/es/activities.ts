@@ -39,6 +39,7 @@ export const activities = {
   "activities.tapWhenDone": "Toca Listo cuando termines las repeticiones",
   "activities.colSet": "Serie",
   "activities.colTarget": "Objetivo",
+  "activities.endedAtLastSet": "Terminó en tu última serie, {time} · abierto {idle} más",
   "activities.previousSet": "Último {set}",
   "activities.colDone": "Hecho",
   "activities.colDoneUnit": "Hecho · {unit}",

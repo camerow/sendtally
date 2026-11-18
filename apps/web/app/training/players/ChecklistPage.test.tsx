@@ -114,4 +114,25 @@ describe("Checklist player", () => {
     mount(true);
     expect(where().pathname).toBe("/app/activity/new");
   });
+
+  it("ends the run at its last tick when it sat open over 20 minutes after", () => {
+    mount();
+    act(() => {
+      vi.advanceTimersByTime(5 * 60_000);
+    });
+    act(() => box("Cat cow").click());
+    act(() => {
+      vi.advanceTimersByTime(60 * 60_000);
+    });
+    act(() =>
+      Array.from(container.querySelectorAll("button"))
+        .find((b) => b.textContent === "Done for today")!
+        .click()
+    );
+    expect(["minutes", "endTime", "idle"].map((k) => where().searchParams.get(k))).toEqual([
+      "5",
+      "07:35",
+      "60",
+    ]);
+  });
 });

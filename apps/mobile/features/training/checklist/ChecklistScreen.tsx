@@ -48,8 +48,8 @@ export function ChecklistScreen({
   const { startedAt, ticked, rest, hold, toggle, endHold } = player;
 
   const finish = (): void => {
-    const { done, off } = player.finished();
-    logRun(run, done, startedAt, off);
+    const { done, off, lastTickAt } = player.finished();
+    logRun(run, done, startedAt, off, lastTickAt);
   };
   const ending = React.useRef(end);
   React.useEffect(() => {

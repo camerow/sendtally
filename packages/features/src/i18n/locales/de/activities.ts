@@ -39,6 +39,8 @@ export const activities = {
   "activities.tapWhenDone": "Tippe auf Fertig, wenn die Wiederholungen sitzen",
   "activities.colSet": "Satz",
   "activities.colTarget": "Ziel",
+  "activities.endedAtLastSet":
+    "Endet mit deinem letzten Satz, {time} · danach {idle} offen gelassen",
   "activities.previousSet": "Zuletzt {set}",
   "activities.colDone": "Gemacht",
   "activities.colDoneUnit": "Gemacht · {unit}",

@@ -38,6 +38,8 @@ export type LiveRun = {
   pathname: PlayerPath;
   params: Record<string, string>;
   startedAt: number;
+  /** When a set or line was last ticked, where the review ends a run left open. */
+  lastTickAt?: number;
   state: RunState;
   /** The rest counting down between sets or items, kept while the player is minimised. */
   rest?: Rest;
@@ -65,7 +67,9 @@ export function parseLiveRun(raw: string | null): LiveRun | null {
       typeof params === "object" &&
       typeof startedAt === "number" &&
       typeof state?.player === "string";
-    return valid ? (run as LiveRun) : null;
+    if (!valid) return null;
+    const { lastTickAt, ...rest } = run as LiveRun;
+    return Number.isFinite(lastTickAt) ? { ...rest, lastTickAt } : rest;
   } catch {
     return null;
   }

@@ -35,10 +35,11 @@ export function logRun(
   r: RunFiling,
   done: readonly ItemDone[],
   startedAt: number,
-  off: readonly string[] = []
+  off: readonly string[] = [],
+  lastTickAt?: number
 ): void {
   router.replace({
     pathname: "/activity/new",
-    params: finishedRunParams(r, done, startedAt, Date.now(), off),
+    params: finishedRunParams(r, done, startedAt, Date.now(), off, lastTickAt),
   });
 }

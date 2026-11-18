@@ -6,7 +6,7 @@ import {
 } from "@sendtally/features/activities";
 import { readPlanLink, readSession } from "@sendtally/features/training";
 import { useGrips } from "@sendtally/features/hang";
-import { livePartForm, partEnded, usePrescribed } from "@sendtally/features/workouts";
+import { idleEnd, livePartForm, partEnded, usePrescribed } from "@sendtally/features/workouts";
 import { useAppApi } from "../../lib/useAppApi";
 import { useLiveRunStore } from "../../lib/useLiveRun";
 import { useHangData } from "../data/HangDataContext";
@@ -52,6 +52,7 @@ export function NewActivityPage({
       logged={null}
       kindSet={params.kind !== undefined}
       live={params.live === "1"}
+      idleEnd={idleEnd(params)}
       planned={prescribed}
       {...(part !== undefined && { part, gripName: model.gripName })}
     />

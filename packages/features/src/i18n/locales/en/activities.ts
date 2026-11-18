@@ -39,6 +39,7 @@ export const activities = {
   "activities.tapWhenDone": "Tap Done when the reps are in",
   "activities.colSet": "Set",
   "activities.colTarget": "Target",
+  "activities.endedAtLastSet": "Ended at your last set, {time} · left open {idle} after",
   "activities.previousSet": "Last {set}",
   "activities.colDone": "Done",
   "activities.colDoneUnit": "Done · {unit}",

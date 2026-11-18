@@ -1,9 +1,9 @@
 import React from "react";
-import { doneAsPrescribed, restAfterItem, type ItemDone } from "@sendtally/core/hang";
+import { doneAsPrescribed, restAfterItem } from "@sendtally/core/hang";
 import type { Hold } from "./holdClock";
 import { exerciseName } from "./library";
 import type { LiveRunStore } from "./liveRun";
-import { runParams, type WorkoutRun } from "./runParams";
+import { runParams, type RunFinish, type WorkoutRun } from "./runParams";
 import { afterKey, allSets, setKey } from "./setsRun";
 import { useHold, useRest, type HoldClock, type RestClock } from "./useLiveRun";
 
@@ -19,7 +19,7 @@ export type ChecklistPlayer = {
   /** Ends a line's hold; a timed line ticks itself once it is done, Done in the count-in only cancels. */
   endHold: (h: Hold, seconds: number | null) => void;
   /** What the run did and the lines it left unticked, for its review. */
-  finished: () => { done: ItemDone[]; off: string[] };
+  finished: () => RunFinish;
 };
 
 /**
@@ -34,10 +34,14 @@ export function useChecklistPlayer(
 ): ChecklistPlayer {
   const [resumed] = React.useState(() => {
     const live = store.resumed("/workout/checklist", run.workoutId);
-    return live?.state.player === "checklist" ? { ...live.state, startedAt: live.startedAt } : null;
+    return live?.state.player === "checklist"
+      ? { ...live.state, startedAt: live.startedAt, lastTickAt: live.lastTickAt }
+      : null;
   });
   const [startedAt] = React.useState(() => resumed?.startedAt ?? Date.now());
   const [ticked, setTicked] = React.useState<ReadonlySet<number>>(() => new Set(resumed?.ticked));
+  const [tickedAt, setLastTickAt] = React.useState(resumed?.lastTickAt);
+  const lastTickAt = ticked.size === 0 ? undefined : tickedAt;
   React.useEffect(() => {
     store.write({
       title: run.title,
@@ -45,15 +49,17 @@ export function useChecklistPlayer(
       pathname: "/workout/checklist",
       params: runParams(run),
       startedAt,
+      lastTickAt,
       state: { player: "checklist", ticked: [...ticked], count: run.items.length },
     });
-  }, [store, run, startedAt, ticked]);
+  }, [store, run, startedAt, lastTickAt, ticked]);
   const rest = useRest(store);
   const toggle = (i: number): void => {
     const next = new Set(ticked);
     const ticking = !next.delete(i);
     if (ticking) next.add(i);
     setTicked(next);
+    if (ticking) setLastTickAt(Date.now());
     const following = run.items.findIndex((_, j) => j > i && !next.has(j));
     const name = run.items[following]?.exercise;
     if (!ticking || name === undefined) rest.skip();
@@ -96,6 +102,7 @@ export function useChecklistPlayer(
         off: allSets(run.items)
           .filter((at) => !ticked.has(at.item))
           .map(setKey),
+        lastTickAt,
       };
     },
   };

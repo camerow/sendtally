@@ -1,7 +1,7 @@
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { Alert, KeyboardAvoidingView, Platform, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { TextInput } from "../../../components/TextInput";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
@@ -26,7 +26,13 @@ import {
 import { shortDate, timeOfDay } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { durationLabel } from "@sendtally/features/sessions";
-import { discardRunBody, useWorkoutActions, type PartForm } from "@sendtally/features/workouts";
+import {
+  discardRunBody,
+  idleNote,
+  useWorkoutActions,
+  type IdleEnd,
+  type PartForm,
+} from "@sendtally/features/workouts";
 import { DateTimeField } from "../../../components/DateTimeField";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { Toast } from "../../../components/Toast";
@@ -45,6 +51,8 @@ import { KIND_LOOK } from "@sendtally/features/training";
 import { liveRun } from "../../live-session/liveRun";
 import { DoneDetails } from "./DoneDetails";
 import { PartSets } from "./PartSets";
+import { AMBER } from "../components/tints";
+import { type } from "../type";
 import { ReadRow } from "./ReadRow";
 import { KindChips } from "./KindChips";
 
@@ -62,6 +70,8 @@ export type ActivityFormProps = {
   kindSet?: boolean;
   /** It reviews the workout running live, which saving or discarding ends. */
   live?: boolean;
+  /** Where the review cut a run left open, said in amber under the duration until it is changed. */
+  idleEnd?: IdleEnd | null;
   /** What the workout prescribes, which a set short of its dose reads against. */
   planned?: readonly SessionItem[];
   /** A hangboard workout, which saves as a hang session with its setup and no notes or times. */
@@ -103,6 +113,7 @@ export function ActivityForm({
   kindSet = false,
   live = false,
   planned = [],
+  idleEnd = null,
   hang,
   part,
   gripName = (id) => id,
@@ -116,6 +127,7 @@ export function ActivityForm({
   const unit = useWeightUnit(api);
   const workouts = useWorkoutActions(api, reportFailure);
   const items = itemsOf(draft.done);
+  const note = idleNote(idleEnd, draft.minutes);
 
   const saveAsWorkout = (): void => {
     if (items.length === 0) return;
@@ -292,6 +304,11 @@ export function ActivityForm({
                   onEdit={() => setOpened("duration")}
                 />
               ))}
+            {note !== null && (
+              <Text style={[type.mono, { fontSize: 12, color: AMBER, paddingVertical: 8 }]}>
+                {note}
+              </Text>
+            )}
           </View>
         ) : (
           <>

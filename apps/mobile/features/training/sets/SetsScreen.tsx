@@ -107,8 +107,8 @@ export function SetsScreen({
       <RestPreview seconds={restAfterItem(items, item, run.exerciseRestS)} />
     );
   const finish = (): void => {
-    const { done, off } = player.finished();
-    logRun(run, done, player.startedAt, off);
+    const { done, off, lastTickAt } = player.finished();
+    logRun(run, done, player.startedAt, off, lastTickAt);
   };
   const ending = React.useRef(end);
   const loaded = exercises.status !== "loading" && activities.status !== "loading";

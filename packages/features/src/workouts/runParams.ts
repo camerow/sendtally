@@ -9,7 +9,10 @@ import type {
 } from "@sendtally/core/hang";
 import { ACTIVITY_KINDS } from "../activities/format";
 import { startTimeOf } from "../activities/intervalsText";
+import { timeOfDay } from "../hang/format";
+import { t } from "../i18n";
 import { today } from "../journal/transforms";
+import { durationLabel } from "../sessions/years";
 import { NO_PLAN, planLinkParams, readPlanLink, readSession } from "../training/planLinkParams";
 
 /** A workout run in the sets or checklist player, and what the activity it logs is filed under. */
@@ -50,6 +53,9 @@ export type DoneParams = {
   /** Null when it is logged without the timer, every set as planned. */
   run: TimerRun | null;
 };
+
+/** What a player hands its review: what was done, the sets left unticked, and when it last ticked one. */
+export type RunFinish = { done: ItemDone[]; off: string[]; lastTickAt?: number };
 
 /** What the activity a run logs is filed under. */
 export type RunFiling = Pick<WorkoutRun, "kind" | "title" | "link"> & { workoutId: string | null };
@@ -143,24 +149,51 @@ export function activityFormParams(
   };
 }
 
+/** How long a run may sit after its last tick before the review ends it there. */
+const IDLE_MS = 20 * 60_000;
+
 /**
  * A finished run's review, timed by the player's clock from its start, marked live so the
- * review knows it came straight from a player.
+ * review knows it came straight from a player. A run left idle over 20 minutes after its last
+ * tick ends at that tick, and says so.
  */
 export function finishedRunParams(
   r: RunFiling,
   done: readonly ItemDone[],
   startedAt: number,
   now: number,
-  off: readonly string[] = []
+  off: readonly string[] = [],
+  lastTickAt?: number
 ): Record<string, string> {
-  const minutes = Math.max(1, Math.round((now - startedAt) / 60_000));
+  const idle = lastTickAt !== undefined && now - lastTickAt > IDLE_MS;
+  const end = idle ? lastTickAt : now;
+  const minutes = Math.max(1, Math.round((end - startedAt) / 60_000));
   const date = today(new Date(startedAt));
   return {
     ...activityFormParams({ ...r, date, minutes }, done, startTimeOf(startedAt), off),
+    ...(idle && {
+      endTime: startTimeOf(end),
+      idle: String(Math.round((now - end) / 60_000)),
+    }),
     live: "1",
   };
 }
+
+/** Where the review cut a run left open: the minutes it ended on, and the line that says so. */
+export type IdleEnd = { minutes: number; line: string };
+
+/** The cut a finished run's review params carry, or null when the clock ran to Finish. */
+export function idleEnd(p: RawParams): IdleEnd | null {
+  const idle = count(str(p.idle));
+  const minutes = count(str(p.minutes));
+  if (idle === null || minutes === null || str(p.endTime) === "") return null;
+  const time = timeOfDay(str(p.endTime));
+  return { minutes, line: t("activities.endedAtLastSet", { time, idle: durationLabel(idle) }) };
+}
+
+/** The cut's line while the duration is still the one it cut to; gone once the climber changes it. */
+export const idleNote = (end: IdleEnd | null, minutes: number): string | null =>
+  end !== null && end.minutes === minutes ? end.line : null;
 
 export const intervalsParams = (r: IntervalsRun): Record<string, string> => ({
   kind: r.kind,
