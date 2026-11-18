@@ -153,8 +153,7 @@ export default function SignIn(): React.ReactElement | null {
                     borderWidth: 1,
                     borderColor: "rgba(64,63,76,0.18)",
                     borderRadius: radius.control,
-                    paddingVertical: 13,
-                    minHeight: 48,
+                    height: 48,
                     opacity: busy ? disabledOpacity : 1,
                   }}
                 >
