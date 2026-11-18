@@ -29,10 +29,10 @@ import { OptionRow } from "../../components/OptionRow";
 import { SelectRow } from "../../components/SelectRow";
 import { Sheet } from "../../components/Sheet";
 import { press } from "../../lib/press";
-import { primaryButton, primaryButtonLabel } from "../../lib/styles";
 import { GradePicker } from "../climbs/GradePicker";
 import { CategoryMark } from "../training/library/CategoryMark";
 import { DayMark } from "../training/today/DayMark";
+import { Button } from "../training/components/Button";
 import { EffortStrip } from "./EffortStrip";
 
 const STATUS_LABELS: Record<ClimbStatusFilter, MessageKey> = {
@@ -195,15 +195,11 @@ export function FilterSheet({
       onClose={onClose}
       closeLabel={t("common.closeFilters")}
       footer={
-        <Pressable
+        <Button
+          label={t("sessions.showCount", { label: shown.toLowerCase() })}
           onPress={() => onApply(draft)}
-          accessibilityRole="button"
-          style={press({ ...primaryButton })}
-        >
-          <Text style={primaryButtonLabel}>
-            {t("sessions.showCount", { label: shown.toLowerCase() })}
-          </Text>
-        </Pressable>
+          variant="primary"
+        />
       }
     >
       <View style={{ gap: 18, paddingTop: 2, paddingHorizontal: 18, paddingBottom: 18 }}>
