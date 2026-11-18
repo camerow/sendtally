@@ -21,6 +21,8 @@ import {
   protocolDose,
   sessionItems,
   workoutKindOfItems,
+  withGroupsSettled,
+  joinsGroup,
   type WorkoutKind,
   type Item,
   CHECKLIST_NAME,
@@ -463,5 +465,109 @@ describe("a checklist in a workout", () => {
       { exercise: "Squat", dose: { sets: 3, reps: 5 } },
       { exercise: "Checklist", dose: { sets: 1 } },
     ]);
+  });
+});
+
+describe("a superset in a workout", () => {
+  const g = (id: string, rounds = 3, restBetweenS = 30, restRoundS = 120) => ({
+    id,
+    rounds,
+    restBetweenS,
+    restRoundS,
+  });
+  const ex = (exercise: string, sets = 3, group?: ReturnType<typeof g>): Item => ({
+    exercise,
+    doses: [{ sets, reps: 8 }],
+    ...(group === undefined ? {} : { group }),
+  });
+  const grip = (e: string): WorkoutKind | undefined =>
+    e === "half" ? "hangboard" : e === "4x4s" ? "climbing" : "strength";
+  const shapes: Item[][] = [
+    [ex("A"), ex("B")],
+    [ex("A", 3, g("s")), ex("B", 5, g("s", 4, 0, 60))],
+    [ex("A", 3, g("s")), ex("X"), ex("B", 3, g("s"))],
+    [ex("A", 3, g("s"))],
+    [ex("half", 3, g("s")), ex("B", 3, g("s"))],
+    [
+      {
+        exercise: CHECKLIST_NAME,
+        doses: [{ sets: 1 }],
+        checklist: { lines: ["Jog"] },
+        group: g("s"),
+      },
+      ex("B", 3, g("s")),
+      ex("C", 3, g("s")),
+    ],
+    [ex("A", 3, g("s")), ex("B", 3, g("s")), ex("C", 3, g("t")), ex("D", 3, g("t"))],
+  ];
+
+  it("never changes a workout with no group, and settles in one pass", () => {
+    const plain = shapes[0]!;
+    expect(withGroupsSettled(plain, grip)).toBe(plain);
+    for (const shape of shapes) {
+      const once = withGroupsSettled(shape, grip);
+      expect(withGroupsSettled(once, grip)).toEqual(once);
+    }
+  });
+
+  it("gives every member the first member's rounds and rests, and drops a group with one member left", () => {
+    const [a, b] = withGroupsSettled(shapes[1]!, grip);
+    expect(b?.group).toEqual(a?.group);
+    expect(b?.doses[0]?.sets).toBe(3);
+    expect(withGroupsSettled(shapes[2]!, grip).map((i) => i.group?.id)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ]);
+    expect(withGroupsSettled(shapes[3]!, grip)[0]?.group).toBeUndefined();
+  });
+
+  it("never lets a grip or a checklist into a group", () => {
+    expect(withGroupsSettled(shapes[4]!, grip).map((i) => i.group?.id)).toEqual([
+      undefined,
+      undefined,
+    ]);
+    expect(withGroupsSettled(shapes[5]!, grip).map((i) => i.group?.id)).toEqual([
+      undefined,
+      "s",
+      "s",
+    ]);
+  });
+
+  it("never lets a climbing exercise into a group, and says so in one rule", () => {
+    const climbs = withGroupsSettled(
+      [ex("4x4s", 3, g("s")), ex("B", 3, g("s")), ex("C", 3, g("s"))],
+      grip
+    );
+    expect(climbs.map((i) => i.group?.id)).toEqual([undefined, "s", "s"]);
+    expect(joinsGroup({ exercise: "B" }, grip)).toBe(true);
+    expect(joinsGroup({ exercise: "4x4s" }, grip)).toBe(false);
+    expect(joinsGroup({ exercise: "half" }, grip)).toBe(false);
+    expect(joinsGroup({ exercise: "B", checklist: { lines: ["Jog"] } }, grip)).toBe(false);
+  });
+
+  it("holds at most eight members, the rest playing on their own", () => {
+    const ten = Array.from({ length: 10 }, (_, n) => ex(`M${n}`, 3, g("s")));
+    expect(withGroupsSettled(ten, grip).map((i) => i.group?.id)).toEqual([
+      ...Array.from({ length: 8 }, () => "s"),
+      undefined,
+      undefined,
+    ]);
+  });
+
+  it("drops a member's set range that its rounds pass, so no range runs backwards", () => {
+    const ranged: Item = {
+      exercise: "A",
+      doses: [{ sets: 3, setsMax: 4, reps: 8 }],
+      group: g("s", 5),
+    };
+    const [a] = withGroupsSettled([ranged, ex("B", 3, g("s", 5))], grip);
+    expect(a?.doses[0]).toEqual({ sets: 5, reps: 8 });
+    expect(sessionItems([ranged], 0)[0]?.dose).toEqual({ sets: 5, reps: 8 });
+  });
+
+  it("runs a member with its group, a set a round", () => {
+    const [run] = sessionItems([ex("A", 3, g("s", 4))], 0);
+    expect(run).toEqual({ exercise: "A", dose: { sets: 4, reps: 8 }, group: g("s", 4) });
   });
 });

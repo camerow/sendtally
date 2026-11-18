@@ -3,6 +3,7 @@ import {
   exerciseKinds,
   gripsTogether,
   isBuiltInGrip,
+  withGroupsSettled,
   workoutKindOfItems,
   type Workout,
   type WorkoutKind,
@@ -23,7 +24,9 @@ export async function withDerivedKind(
 ): Promise<{ workout: Omit<FocusOptional<Workout>, "id">; isGrip: (exercise: string) => boolean }> {
   const fallback = body.kind ?? saved ?? "other";
   const { isGrip, kindIn } = await kindLookup(db, userId);
-  const items = gripsTogether(body.items, isGrip);
+  const items = withGroupsSettled(gripsTogether(body.items, isGrip), (e) =>
+    isGrip(e) ? "hangboard" : kindIn(e)
+  );
   const kind = workoutKindOfItems(items, kindIn, fallback);
   const exerciseRestS = body.exerciseRestS ?? defaultExerciseRestS(kind);
   return { workout: { ...body, items, kind, exerciseRestS }, isGrip };

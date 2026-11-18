@@ -122,7 +122,15 @@ export type Item = {
    * statistics. Older builds read the item as an exercise of one set, named "Checklist".
    */
   checklist?: { lines: string[] };
+  /**
+   * A superset: neighbouring items done in rotation, one set each a round. Every member carries
+   * the same group, and its sets are the rounds. Older builds read the members as plain items.
+   */
+  group?: ItemGroup;
 };
+
+/** A superset's rounds, the rest between its members, and the rest after each round. */
+export type ItemGroup = { id: string; rounds: number; restBetweenS: number; restRoundS: number };
 
 /** Whether an item or its log is a checklist; read the flag, never the name. */
 export const isChecklist = (x: { checklist?: unknown }): boolean => x.checklist !== undefined;
@@ -162,6 +170,8 @@ export type SessionItem = {
   restAfterS?: number;
   /** A checklist runs one set a line. */
   checklist?: { lines: string[] };
+  /** A superset member runs one set a round. */
+  group?: ItemGroup;
 };
 
 /** A library workout of any kind. */
@@ -205,6 +215,63 @@ export function workoutKindOf(
     return kinds.length > 0 ? "hangboard" : kept === "hangboard" ? "other" : kept;
   const count = (k: WorkoutKind): number => voters.filter((x) => x === k).length;
   return voters.reduce((best, k) => (count(k) > count(best) ? k : best), first);
+}
+
+const ungrouped = <T extends Pick<Item, "group">>({ group: _, ...item }: T): T => item as T;
+
+/**
+ * Whether an item can be in a superset: an exercise done in sets, never a checklist, a grip (the
+ * fingerboard part runs on its own timer) or climbing (it runs on the climbing tally). The one rule
+ * the editor, its picker and the server share.
+ */
+export const joinsGroup = (
+  item: Pick<Item, "exercise" | "checklist">,
+  kindOf: (exercise: string) => WorkoutKind | undefined
+): boolean => {
+  const kind = kindOf(item.exercise);
+  return !isChecklist(item) && kind !== "hangboard" && kind !== "climbing";
+};
+
+/** The most exercises a superset holds; past it, members play on their own. */
+export const MAX_GROUP_MEMBERS = 8;
+
+/** A member's dose: its sets are the rounds, so a set range has no place in it. */
+const asRounds = ({ setsMax: _, ...dose }: Dose, rounds: number): Dose => ({
+  ...dose,
+  sets: rounds,
+});
+
+/**
+ * Supersets as they can run: a group is one run of two or more neighbours that `joinsGroup`; every member takes the first member's rounds and rests, and its sets are the rounds.
+ * Anything else loses its group, so an older build that reorders or edits a member still saves.
+ * A workout with no group comes back as it was, and settling twice changes nothing.
+ */
+export function withGroupsSettled<T extends Item>(
+  items: readonly T[],
+  kindOf: (exercise: string) => WorkoutKind | undefined
+): T[] {
+  if (items.every((i) => i.group === undefined)) return items as T[];
+  const joins = (i: T): boolean => i.group !== undefined && joinsGroup(i, kindOf);
+  const runs: { id: string; from: number; to: number }[] = [];
+  items.forEach((item, at) => {
+    if (!joins(item) || item.group === undefined) return;
+    const last = runs[runs.length - 1];
+    if (last !== undefined && last.id === item.group.id && last.to === at - 1) last.to = at;
+    else runs.push({ id: item.group.id, from: at, to: at });
+  });
+  const kept = runs
+    .filter((r, n) => r.to > r.from && runs.findIndex((x) => x.id === r.id) === n)
+    .map((r) => ({ ...r, to: Math.min(r.to, r.from + MAX_GROUP_MEMBERS - 1) }));
+  return items.map((item, at) => {
+    const run = kept.find((r) => at >= r.from && at <= r.to);
+    const group = run === undefined ? undefined : items[run.from]?.group;
+    if (group === undefined) return item.group === undefined ? item : ungrouped(item);
+    return {
+      ...item,
+      group,
+      doses: item.doses.map((d) => asRounds(d, group.rounds)),
+    };
+  });
 }
 
 /**
@@ -313,6 +380,8 @@ export type ItemDone = {
   restAfterS?: number;
   /** A checklist's lines and the ones ticked, by place; its sets stay empty. */
   checklist?: { lines: string[]; checked: number[] };
+  /** The superset it ran in, kept on the log so a later edit of the workout never regroups it. */
+  group?: { id: string; rounds: number };
 };
 
 /**
@@ -349,8 +418,12 @@ function sessionItem(item: Item, n: number): SessionItem {
   const turn = doseIndex(item, n);
   const run: SessionItem = {
     exercise: item.exercise,
-    dose: item.doses[turn] ?? { sets: 1 },
+    dose:
+      item.group === undefined
+        ? (item.doses[turn] ?? { sets: 1 })
+        : asRounds(item.doses[turn] ?? { sets: 1 }, item.group.rounds),
     ...(item.restAfterS === undefined ? {} : { restAfterS: item.restAfterS }),
+    ...(item.group === undefined ? {} : { group: item.group }),
   };
   return item.doses.length > 1 ? { ...run, turn } : run;
 }
