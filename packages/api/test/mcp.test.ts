@@ -694,6 +694,32 @@ describe("connector", () => {
       expect(library.exercises.filter((e) => e.name.toLowerCase() === "checklist")).toHaveLength(1);
     });
 
+    it("saves and reads a superset through the connector", async () => {
+      const user = "user_save_workout_superset";
+      const group = { id: "pp", rounds: 3, restBetweenS: 0, restRoundS: 90 };
+      const items = [
+        { exercise: "Pull-ups", doses: [{ sets: 3, reps: 6 }], group },
+        { exercise: "Dips", doses: [{ sets: 3, reps: 10 }], group },
+      ];
+      const body = {
+        kind: "strength",
+        name: "Pull and push",
+        description: "",
+        minutes: 30,
+        targetRpe: 7,
+      };
+      const saved = await toolJson<{ workout: { items: unknown[] } }>(user, "save_workout", {
+        ...body,
+        items,
+      });
+      expect(saved.workout.items).toEqual(items);
+      const library = await toolJson<{ workouts: Array<{ name: string; items: unknown[] }> }>(
+        user,
+        "get_training_library"
+      );
+      expect(library.workouts.find((w) => w.name === "Pull and push")?.items).toEqual(items);
+    });
+
     it("writes and reads descriptions on exercises and blocks", async () => {
       const user = "user_connector_descriptions";
       const text = "Hold it still.\n- Shoulders down";

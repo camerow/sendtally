@@ -1150,6 +1150,56 @@ describe("exercises", () => {
     expect(bad.status).toBe(400);
   });
 
+  it("saves a superset settled, keeps an older build's save that broke it, and keeps the group on the log", async () => {
+    const userId = "user_superset";
+    const group = { id: "s1", rounds: 3, restBetweenS: 30, restRoundS: 120 };
+    const pull = { exercise: "Pull-ups", doses: [{ sets: 3, reps: 6 }], group };
+    const push = {
+      exercise: "Push-ups",
+      doses: [{ sets: 5, reps: 15 }],
+      group: { ...group, rounds: 9 },
+    };
+    const saved = await json<{ workout: WorkoutRecord }>(
+      await call(userId, "PUT", "/v1/workouts/w1", { ...squatWorkout, items: [pull, push] })
+    );
+    expect(saved.workout.items.map((i) => [i.group, i.doses[0]?.sets])).toEqual([
+      [group, 3],
+      [group, 3],
+    ]);
+    const plank = { exercise: "Plank", doses: [{ sets: 3, onS: 45 }] };
+    const older = await call(userId, "PUT", "/v1/workouts/w1", {
+      ...squatWorkout,
+      items: [pull, plank, push],
+    });
+    expect(older.status).toBe(200);
+    const after = (await json<{ workout: WorkoutRecord }>(older)).workout.items;
+    expect(after.map((i) => i.group)).toEqual([undefined, undefined, undefined]);
+    await call(userId, "PUT", "/v1/exercises/c1", { name: "Limit boulders", kind: "climbing" });
+    await call(userId, "PUT", "/v1/exercises/c2", { name: "ARC", kind: "climbing" });
+    const climbing = await json<{ workout: WorkoutRecord }>(
+      await call(userId, "PUT", "/v1/workouts/w2", {
+        ...squatWorkout,
+        items: [
+          { exercise: "Limit boulders", doses: [{ sets: 4, reps: 4 }], group },
+          { exercise: "ARC", doses: [{ sets: 3, onS: 600 }], group },
+        ],
+      })
+    );
+    expect(climbing.workout.items.map((i) => i.group)).toEqual([undefined, undefined]);
+    const done = [
+      { item: 0, exercise: "Pull-ups", sets: [{ reps: 6 }], group: { id: "s1", rounds: 3 } },
+      { item: 1, exercise: "Push-ups", sets: [{ reps: 15 }], group: { id: "s1", rounds: 3 } },
+    ];
+    await call(userId, "PUT", "/v1/activities/a1", { ...activityBody, workoutId: "w1", done });
+    const logged = await json<{ activities: ActivityRecord[] }>(
+      await call(userId, "GET", "/v1/activities")
+    );
+    expect(logged.activities[0]?.done.map((d) => d.group)).toEqual([
+      { id: "s1", rounds: 3 },
+      { id: "s1", rounds: 3 },
+    ]);
+  });
+
   it("saves how an exercise is measured, starting a new one on its category's measure", async () => {
     const userId = "user_exercises_measure";
     const pigeon = await call(userId, "PUT", "/v1/exercises/e1", {

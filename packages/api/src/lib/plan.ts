@@ -99,6 +99,14 @@ const item = z.object({
   doses: z.array(namedDose).min(1).max(MAX_DOSES),
   restAfterS: seconds.optional(),
   checklist: z.object({ lines: checklistLines }).optional(),
+  group: z
+    .object({
+      id: itemId,
+      rounds: z.number().int().min(1).max(100),
+      restBetweenS: seconds,
+      restRoundS: seconds,
+    })
+    .optional(),
 });
 
 const doseIndex = z
@@ -271,6 +279,7 @@ export const doneBody = z
             new Set(c.checked).size === c.checked.length
         )
         .optional(),
+      group: z.object({ id: itemId, rounds: z.number().int().min(1).max(100) }).optional(),
     })
   )
   .max(MAX_ITEMS);
