@@ -6,6 +6,8 @@ import {
   offWithout,
   removeSet,
   setKeyOf,
+  exerciseCountText,
+  type SetsOf,
   shortOf,
 } from "@sendtally/features/activities";
 import { heldSet } from "@sendtally/core/hang";
@@ -29,6 +31,8 @@ export type DoneDetailsProps = {
   hangLoadKg?: number;
   /** Each exercise's sets as the workout's last run did them, which a lift's target borrows. */
   previous?: (exercise: string) => readonly SetDone[];
+  /** Whether an exercise is a circuit, whose sets are laps of moves. */
+  laps?: (exercise: string) => boolean;
   /** Beside the first exercise's name, such as a hangboard run's edge and weight. */
   setup?: React.ReactNode;
   onChange: (done: ItemDone[], off: string[]) => void;
@@ -55,6 +59,7 @@ export function DoneDetails({
   hangs = false,
   hangLoadKg = 0,
   previous = () => [],
+  laps = () => false,
   setup,
   onChange,
   onRemoved,
@@ -80,19 +85,20 @@ export function DoneDetails({
       {!flat && <span className="train-label">{t("activities.sets")}</span>}
       {done.map((d, index) => {
         const target = planned[d.item];
+        const of: SetsOf = hangs ? "hangs" : laps(d.exercise) ? "laps" : "sets";
         const lifting = d.sets.some((s) => s.weightKg !== undefined) && !hangs;
         return (
           <div key={d.item} className={flat ? "done-card done-card--flat" : "done-card"}>
             <div className="done-card-head">
               <span className="done-card-mark" style={{ background: color }} />
               <span className="done-card-name">{d.exercise}</span>
-              <span className="done-card-count">
-                {t("activities.setCount", { count: d.sets.length })}
-              </span>
+              <span className="done-card-count">{exerciseCountText(d, off, of)}</span>
             </div>
             {index === 0 && setup}
             <div className="set-row set-row--head train-label train-label--small">
-              <span className="set-col-n">{t("activities.colSet")}</span>
+              <span className="set-col-n">
+                {of === "laps" ? t("workouts.colLap") : t("activities.colSet")}
+              </span>
               <span className="set-col-target">{t("activities.colTarget")}</span>
               <span className="set-col-done">
                 {hangs
@@ -119,7 +125,7 @@ export function DoneDetails({
                 lifting={lifting}
                 unit={unit}
                 on={!off.includes(setKeyOf(d.item, i)) && (!hangs || heldSet(set))}
-                short={shortOf(set, target, hangs)}
+                short={shortOf(set, target, of)}
                 label={t("activities.setOf", { exercise: d.exercise, n: i + 1 })}
                 defaultLoadKg={hangLoadKg}
                 rpe={{ target: d.targetRpe }}
@@ -138,7 +144,7 @@ export function DoneDetails({
                 onClick={() => onChange(addSet(done, d.item), [...off])}
               >
                 <Icon name="plus" size={16} strokeWidth={2.2} />
-                {t("activities.addSet")}
+                {of === "laps" ? t("tally.addLap") : t("activities.addSet")}
               </button>
               {d.sets.length > 1 && (
                 <button
@@ -147,7 +153,7 @@ export function DoneDetails({
                   aria-label={t("activities.removeLastSetFrom", { exercise: d.exercise })}
                   onClick={() => remove(d, d.sets.length - 1)}
                 >
-                  − {t("activities.removeLastSet")}
+                  − {of === "laps" ? t("tally.removeLap") : t("activities.removeLastSet")}
                 </button>
               )}
             </div>

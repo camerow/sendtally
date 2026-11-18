@@ -1,3 +1,5 @@
+import { tallyMeasuresOf } from "@sendtally/features/exercises";
+import { useExercises } from "@sendtally/features/statistics";
 import React from "react";
 import { useNavigate } from "react-router";
 import type { ActivityRecord } from "@sendtally/api-client";
@@ -106,6 +108,8 @@ export function ActivityForm({
   const update = (patch: Partial<ActivityDraft>): void => setDraft((d) => ({ ...d, ...patch }));
   const [grips, setGrips] = React.useState(() => part && { done: part.done, setup: part.setup });
   const items = itemsOf(draft.done);
+  const exercises = useExercises(api).state;
+  const measureOf = tallyMeasuresOf(exercises.status === "ready" ? exercises.data : [], draft.kind);
   const note = idleNote(idleEnd, draft.minutes);
   const name = draft.title.trim() || kindLabel(draft.kind);
   const look = hang === undefined ? draft.kind : "hangboard";
@@ -285,6 +289,7 @@ export function ActivityForm({
           color={KIND_LOOK[look].ink}
           hangs={hang !== undefined}
           previous={previous}
+          laps={(exercise) => measureOf(exercise) === "laps"}
           setup={hang?.setup}
           {...(hang !== undefined && { hangLoadKg: hang.loadKg })}
           onRemoved={(message, undo) =>

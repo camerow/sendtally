@@ -56,6 +56,16 @@ describe("a live run", () => {
         })
       )
     ).toBe("Ring row · Set 2 of 2");
+    expect(
+      liveRunSummary(
+        live({
+          player: "sets",
+          done: [{ item: 0, exercise: "4x4s", sets: [{}, {}, {}, {}] }],
+          ticked: [],
+          climbed: ["0:0"],
+        })
+      )
+    ).toBe("4x4s · Set 2 of 4");
     expect(liveRunSummary(live({ player: "checklist", ticked: [0], count: 3 }))).toBe(
       "1 of 3 done"
     );

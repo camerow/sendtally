@@ -227,7 +227,7 @@ describe("A finished workout's summary", () => {
     expect(screen.getByText("4 climbs · 3 sent · top V4")).toBeTruthy();
     expect(screen.getAllByLabelText("V4, Attempted")).toHaveLength(1);
     expect(screen.getByText("+3 laps vs last")).toBeTruthy();
-    expect(screen.getByText("20:00 · 18 laps")).toBeTruthy();
+    expect(screen.getByText("20:00 · 18 climbs")).toBeTruthy();
     expect(screen.getByText("20:00 on the wall · Green circuit")).toBeTruthy();
     expect(screen.getByText("3 of 4 sent")).toBeTruthy();
   });

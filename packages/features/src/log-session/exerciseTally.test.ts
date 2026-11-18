@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
-  exerciseLine,
+  allSetsDone,
   exerciseSets,
   nextSet,
-  setGroups,
+  setClimbs,
   setOver,
   startExercise,
   wallLeft,
+  withClimbFlipped,
   withExerciseClimb,
   withExerciseDone,
   withSetEnded,
@@ -39,21 +40,21 @@ function climb(draft: LogSessionDraft, grade: string, go: TallyGo = "sent"): Log
 describe("exercise tally", () => {
   it("ends a set on its last climb, rests, and runs out of sets", () => {
     let draft = startExercise(null, fourByFours, NOW);
-    expect(exerciseLine(draft, false)).toBe("4x4s · Set 1 of 4 · 0 of 4 climbs");
+    expect(draft.exercise).toMatchObject({ set: 1 });
     draft = climb(climb(climb(draft, "V4"), "V3", "fell"), "V3");
     expect(setOver(draft, NOW)).toBe(false);
-    expect(exerciseLine(draft, false)).toBe("4x4s · Set 1 of 4 · 3 of 4 climbs");
+    expect(setClimbs(draft, draft.exercise!)).toHaveLength(3);
     draft = climb(draft, "V4");
     expect(setOver(draft, NOW)).toBe(true);
 
     const ended = withSetEnded(draft, NOW);
     expect(ended.restS).toBe(240);
-    expect(exerciseLine(ended.draft, true)).toBe("4x4s · Set 2 of 4 next");
+    expect(ended.draft.exercise).toMatchObject({ set: 2 });
     expect(ended.draft.climbs.map((c) => c.set)).toEqual([1, 1, 1, 1]);
 
     const last = withSetEnded({ ...ended.draft, exercise: { ...fourByFours, set: 4 } }, NOW);
     expect(last.restS).toBe(0);
-    expect(exerciseLine(last.draft, false)).toBe("4x4s · All sets done");
+    expect(allSetsDone(last.draft.exercise!)).toBe(true);
     expect(setOver(last.draft, NOW)).toBe(false);
   });
 
@@ -81,7 +82,7 @@ describe("exercise tally", () => {
     expect(withWallStarted(draft, at(30))).toBe(draft);
     expect(wallLeft(draft.exercise!, at(348))).toBe(852);
     draft = climb(climb(draft, "V1"), "V1");
-    expect(exerciseLine(draft, false)).toBe("ARC · Set 1 of 2 · 2 laps");
+    expect(setClimbs(draft, draft.exercise!)).toHaveLength(2);
     expect(setOver(draft, at(1199))).toBe(false);
     expect(setOver(draft, at(1200))).toBe(true);
 
@@ -91,23 +92,21 @@ describe("exercise tally", () => {
     expect(ended.draft.exercise?.setStartedAt).toBeUndefined();
   });
 
+  it("flips a logged climb between sent and attempt, and its tries with it", () => {
+    const draft = climb(startExercise(null, fourByFours, NOW), "V5");
+    const key = draft.climbs[0]!.key;
+    const attempt = withClimbFlipped(draft, key);
+    expect(attempt.climbs[0]).toMatchObject({ kind: "attempt" });
+    expect(withClimbFlipped(attempt, key).climbs[0]).toMatchObject({ kind: "send", tries: 1 });
+    expect(withClimbFlipped(draft, "nope")).toBe(draft);
+  });
+
   it("runs a set with no climb count until Done", () => {
     const limit = { item: 2, name: "Limit bouldering", sets: 1, restS: 0 };
     let draft = startExercise(null, limit, NOW);
     for (const grade of ["V6", "V7", "V6", "V7", "V6"]) draft = climb(draft, grade, "fell");
     expect(setOver(draft, at(3600))).toBe(false);
-    expect(exerciseLine(draft, false)).toBe("Limit bouldering · Set 1 of 1 · 5 climbs");
-  });
-
-  it("groups the exercise's climbs by set, the current set first and each newest first", () => {
-    let draft = startExercise(null, fourByFours, NOW);
-    for (const grade of ["V4", "V3", "V4", "V2"]) draft = climb(draft, grade);
-    draft = climb(withSetEnded(draft, NOW).draft, "V4");
-    draft = climb(draft, "V3");
-    const groups = setGroups(draft);
-    expect(groups.map((g) => g.label)).toEqual(["Set 2", "Set 1 · 4 of 4 climbs"]);
-    expect(groups[0]?.climbs.map((c) => c.grade)).toEqual(["V3", "V4"]);
-    expect(groups[1]?.climbs.map((c) => c.grade)).toEqual(["V2", "V4", "V3", "V4"]);
+    expect(setClimbs(draft, draft.exercise!)).toHaveLength(5);
   });
 
   it("hands each item's climbs back as the sets they went in", () => {

@@ -10,6 +10,8 @@ import {
   keptSets,
   offWithout,
   plannedDoses,
+  exerciseCountText,
+  setsCountText,
   shortOf,
   previousSets,
   removeSet,
@@ -98,8 +100,12 @@ describe("done", () => {
   });
 
   it("reads a set short of its dose as how much of it was done", () => {
-    expect(shortOf({ reps: 4, onS: 10 }, { reps: 6, onS: 10 }, true)).toBe("4 of 6 hangs");
+    expect(shortOf({ reps: 4, onS: 10 }, { reps: 6, onS: 10 }, "hangs")).toBe("4 of 6 hangs");
     expect(shortOf({ reps: 6 }, { reps: 8 })).toBe("6 of 8 reps");
+    expect(shortOf({ reps: 8 }, { reps: 40 }, "laps")).toBe("8 of 40 moves");
+    expect(setsCountText(2)).toBe("2 sets");
+    expect(setsCountText(2, "laps")).toBe("2 laps");
+    expect(setsCountText(1, "laps")).toBe("1 lap");
     expect(shortOf({ onS: 30 }, { onS: 45 })).toBe("0:30 of 0:45");
     expect(shortOf({ reps: 8 }, { reps: 8 })).toBeNull();
     expect(shortOf({ reps: 4 }, undefined)).toBeNull();
@@ -154,5 +160,15 @@ describe("what each logged exercise was asked", () => {
     expect(plannedDoses(planned, done)).toEqual([{ sets: 3, reps: 8 }]);
     const inPlace = [{ item: 1, exercise: "Pull-ups", sets: [] }];
     expect(plannedDoses(planned, inPlace)[1]).toEqual({ sets: 3, reps: 8 });
+  });
+});
+
+describe("an exercise's count in the review", () => {
+  it("counts its sets, or says it was not started when none is ticked", () => {
+    const d = { item: 1, exercise: "Volume climbing", sets: [{ onS: 600 }, { onS: 600 }] };
+    expect(exerciseCountText(d, [], "sets")).toBe("2 sets");
+    expect(exerciseCountText(d, ["1:0"], "sets")).toBe("2 sets");
+    expect(exerciseCountText(d, ["1:0", "1:1"], "sets")).toBe("Not started");
+    expect(exerciseCountText({ ...d, sets: [] }, [], "laps")).toBe("Not started");
   });
 });

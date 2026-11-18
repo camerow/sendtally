@@ -10,6 +10,8 @@ export type GradeChipsProps = {
   active: string | null;
   /** The chip the row opens at, so the user's range is in view; a pick never scrolls it. */
   startIndex: number;
+  /** Space before the first chip and after the last: the screen's gutter, or none inside a card. */
+  inset?: number;
   /** Grey chips on white, for a form; the tally's own are on its dark ground. */
   light?: boolean;
   onPick: (key: string) => void;
@@ -23,6 +25,7 @@ export function GradeChips({
   active,
   startIndex,
   light = false,
+  inset = 18,
   onPick,
 }: GradeChipsProps): React.ReactElement {
   const scroller = React.useRef<ScrollView>(null);
@@ -37,7 +40,7 @@ export function GradeChips({
       horizontal
       showsHorizontalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ gap: GAP, paddingHorizontal: 18 }}
+      contentContainerStyle={{ gap: GAP, paddingHorizontal: inset }}
     >
       {chips.map((chip) => {
         const on = chip.key === active;

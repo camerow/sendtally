@@ -41,6 +41,7 @@ jest.mock("@gorhom/bottom-sheet", () => {
 });
 // Players and timers play their tones through one stable player that makes no sound.
 const mockPlayer = { seekTo: () => Promise.resolve(), play: () => undefined };
+jest.mock("./lib/exerciseTallyStorage");
 jest.mock("expo-audio", () => ({
   useAudioPlayer: () => mockPlayer,
   setAudioModeAsync: () => Promise.resolve(),

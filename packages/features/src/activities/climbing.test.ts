@@ -38,8 +38,8 @@ describe("climbing sets", () => {
       { onS: 1200, climbs: Array.from({ length: 18 }, () => green) },
       { onS: 1200, climbs: Array.from({ length: 16 }, () => green) },
     ];
-    expect(wallChip(sets[0]!)).toBe("20:00 · 18 laps");
-    expect(setChip(sets[1]!, "kg")).toBe("20:00 · 16 laps");
+    expect(wallChip(sets[0]!)).toBe("20:00 · 18 climbs");
+    expect(setChip(sets[1]!, "kg")).toBe("20:00 · 16 climbs");
     expect(wallLine(sets)).toBe("40:00 on the wall · Green circuit");
     expect(climbingLastTime(sets, "wallTime")).toBe("Last time: 40:00 on the wall · Green circuit");
     expect(climbingLastTime([{ reps: 4 }], "climbs")).toBeNull();

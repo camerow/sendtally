@@ -52,7 +52,6 @@ export default [
         route("workout/done", "routes/app.workout.done.tsx"),
         route("workout/sets", "routes/app.workout.sets.tsx"),
         route("workout/checklist", "routes/app.workout.checklist.tsx"),
-        route("workout/tally", "routes/app.workout.tally.tsx"),
         route("workout/timer", "routes/app.workout.timer.tsx"),
         route("workout/intervals", "routes/app.workout.intervals.tsx"),
       ]),

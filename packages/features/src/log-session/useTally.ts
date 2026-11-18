@@ -1,24 +1,15 @@
 import React from "react";
 import type { PlanLink } from "@sendtally/api-client";
+import { setKeyOf } from "../activities/done";
 import { gymOfDraft, liveGymOfDraft } from "../gyms/draft";
 import { CIRCUIT_HEX, circuitLabel } from "../gyms/transforms";
 import type { Gym } from "../gyms/types";
 import { t } from "../i18n";
-import { elapsedClock } from "../sessions/years";
 import type { RestClock } from "../workouts/useLiveRun";
 import { readClimbKind } from "./climbKind";
 import type { DraftStorage } from "./draftStore";
-import {
-  exerciseLine,
-  setGroups,
-  setOver,
-  wallLeft,
-  withExerciseDone,
-  withSetEnded,
-  withWallStarted,
-  type TallySetGroup,
-} from "./exerciseTally";
-import { tallyDraft, tallyElapsedSeconds, type TallyChoice, type TallyGo } from "./tally";
+import { setOver, withClimbFlipped, withSetEnded, withWallStarted } from "./exerciseTally";
+import { tallyDraft, type TallyChoice, type TallyGo } from "./tally";
 import { tallyStep, type TallySelection, type TallyUndo } from "./tallySelection";
 import { gradeOptions } from "./transforms";
 import {
@@ -26,6 +17,7 @@ import {
   type Discipline,
   type GradePrefs,
   type GradeScale,
+  type ClimbDraft,
   type LogSessionDraft,
 } from "./types";
 import type { LiveSession } from "./useLiveSession";
@@ -80,14 +72,14 @@ export type Tally = {
   clearSnack: () => void;
   pickGym: (gymId: string | undefined) => void;
   pickSegment: (s: TallySegment) => void;
-  /** The climbs, newest first, or set by set for an exercise. */
-  groups: TallySetGroup[];
-  /** An exercise's clock: its rest in gold, a time set counting down, or the time since Start. */
-  clock: { time: string; resting: boolean; line: string };
+  /** The session's climbs, newest first. */
+  climbs: ClimbDraft[];
   /** Ticks each second for an exercise, whose sets end on time. */
   now: Date;
-  /** Hands an exercise's climbs back to its player. */
-  done: () => void;
+  /** A logged climb pressed the wrong way, sent or attempt, turned the other way. */
+  flip: (key: string) => void;
+  /** Ends the set being climbed now, for a set with no climb count or time to end it. */
+  endSet: () => void;
 };
 
 /**
@@ -137,21 +129,29 @@ export function useTally({
     if (draft === null) live.start(tallyDraft(new Date(), { gymId, plan, name }));
   }, [settled, draft, live, plan, name, gyms, lastGymId, exercise]);
 
+  const onExercise = draft?.exercise !== undefined;
   React.useEffect(() => {
-    if (!exercise) return;
+    if (!onExercise) return;
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
-  }, [exercise]);
+  }, [onExercise]);
 
-  /** A set over ends, and its rest starts. */
-  const settle = React.useCallback(
+  /** A set ends, and its rest starts under it. */
+  const end = React.useCallback(
     (next: LogSessionDraft, at: Date): LogSessionDraft => {
-      if (!setOver(next, at)) return next;
       const ended = withSetEnded(next, at);
-      if (ended.restS > 0) rest.tick("tally", ended.restS);
+      const ex = next.exercise;
+      if (ended.restS > 0 && ex !== undefined)
+        rest.tick(setKeyOf(ex.item, ex.set - 1), ended.restS);
       return ended.draft;
     },
     [rest]
+  );
+  /** A set over ends, and its rest starts. */
+  const settle = React.useCallback(
+    (next: LogSessionDraft, at: Date): LogSessionDraft =>
+      setOver(next, at) ? end(next, at) : next,
+    [end]
   );
   const pending = selection?.kind === "pending";
   React.useEffect(() => {
@@ -176,8 +176,6 @@ export function useTally({
     const circuit = circuitGym.circuits.find((c) => c.id === chip);
     return circuit === undefined ? null : { kind: "circuit", gym: circuitGym, circuit };
   };
-  const resting = rest.rest !== null;
-  const left = draft?.exercise === undefined ? null : wallLeft(draft.exercise, now);
 
   return {
     draft,
@@ -235,26 +233,13 @@ export function useTally({
       }
       setSelection(null);
     },
-    groups:
-      draft === null
-        ? []
-        : exercise
-          ? setGroups(draft)
-          : [{ set: 0, label: "", climbs: [...draft.climbs].reverse() }],
-    clock: {
-      time: resting
-        ? t("tally.restClock", { time: elapsedClock(rest.left) })
-        : left === null
-          ? elapsedClock(draft === null ? 0 : tallyElapsedSeconds(draft, now))
-          : t("tally.timeLeft", { time: elapsedClock(left) }),
-      resting,
-      line: draft === null ? "" : exerciseLine(draft, resting),
-    },
+    climbs: draft === null ? [] : [...draft.climbs].reverse(),
     now,
-    done: () => {
-      if (draft === null) return;
-      rest.skip();
-      live.replace(withExerciseDone(draft, new Date()));
+    flip: (key) => {
+      if (draft !== null) live.replace(withClimbFlipped(draft, key));
+    },
+    endSet: () => {
+      if (draft?.exercise !== undefined) live.replace(end(draft, new Date()));
     },
   };
 }

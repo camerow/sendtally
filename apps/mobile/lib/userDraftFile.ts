@@ -14,8 +14,10 @@ export function setDraftOwner(userId: string | null): void {
 
 export const draftOwner = (): string | null => owner;
 
-export function onDraftOwnerChange(listener: () => void): void {
+/** Calls `listener` whenever the account changes; the returned function stops it. */
+export function onDraftOwnerChange(listener: () => void): () => void {
   ownerListeners.add(listener);
+  return () => ownerListeners.delete(listener);
 }
 
 /** A draft in a file of the signed-in account's own, so another account on this phone never opens it. */

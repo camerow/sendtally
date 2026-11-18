@@ -856,6 +856,15 @@
   background: var(--surface-soft);
 }
 
+.outline-button:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: default;
+}
+
+.outline-button:disabled:hover {
+  background: var(--bs-white);
+}
+
 .outline-button--wide {
   width: 100%;
   height: 48px;

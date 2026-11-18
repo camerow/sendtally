@@ -1,3 +1,5 @@
+import { tallyMeasuresOf } from "@sendtally/features/exercises";
+import { useExercises } from "@sendtally/features/statistics";
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
@@ -207,6 +209,8 @@ export function ActivityForm({
     </SheetSection>
   );
   const activities = useActivities(api).state;
+  const exercises = useExercises(api).state;
+  const measureOf = tallyMeasuresOf(exercises.status === "ready" ? exercises.data : [], draft.kind);
   // A lift reads against what the last run lifted wherever the workout sets no weight, as the player does.
   const previous = (exercise: string): SetDone[] =>
     draft.kind === "strength" && draft.workoutId !== null && activities.status === "ready"
@@ -350,6 +354,7 @@ export function ActivityForm({
             color={KIND_LOOK[look].ink}
             hangs={hang !== undefined}
             previous={previous}
+            laps={(exercise) => measureOf(exercise) === "laps"}
             setup={hang?.setup}
             {...(hang !== undefined && { hangLoadKg: hang.loadKg })}
             onRemoved={(message, undo) => setRemoved({ message, undo })}

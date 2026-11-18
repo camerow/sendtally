@@ -1,13 +1,9 @@
 import type { SetClimb, SetDone } from "@sendtally/core/hang";
-import { t } from "../i18n";
 import { tallyDraft } from "./tally";
 import type { ClimbDraft, ExerciseTally, LogSessionDraft, WallTime } from "./types";
 
 /** What an exercise's tally is started from: everything but where it has got to. */
 export type ExerciseTallyStart = Omit<ExerciseTally, "set" | "setStartedAt">;
-
-/** A set to show on the tally: its climbs newest first, under a header. */
-export type TallySetGroup = { set: number; label: string; climbs: ClimbDraft[] };
 
 const setOf = (c: ClimbDraft): number => c.set ?? 1;
 
@@ -67,6 +63,14 @@ export function withExerciseClimb(draft: LogSessionDraft, key: string): LogSessi
   return { ...draft, climbs: draft.climbs.map((c) => (c.key === key ? { ...c, ...tag } : c)) };
 }
 
+/** A logged climb pressed the wrong way: a send becomes an attempt, an attempt a send. */
+export function withClimbFlipped(draft: LogSessionDraft, key: string): LogSessionDraft {
+  if (!draft.climbs.some((c) => c.key === key)) return draft;
+  const flip = (c: ClimbDraft): ClimbDraft =>
+    c.key === key ? { ...c, kind: c.kind === "send" ? "attempt" : "send" } : c;
+  return { ...draft, climbs: draft.climbs.map(flip) };
+}
+
 /** Whether the set being climbed is over: its last climb logged, or its time on the wall up. */
 export function setOver(draft: LogSessionDraft, now: Date): boolean {
   const ex = draft.exercise;
@@ -114,46 +118,6 @@ export const withExerciseDone = (draft: LogSessionDraft, now: Date): LogSessionD
   const wallTimes = wallTimesAt(draft, now);
   return wallTimes === undefined ? rest : { ...rest, wallTimes };
 };
-
-/** "4x4s · Set 2 of 4 · 2 of 4 climbs", "ARC · Set 1 of 2 · 9 laps", or the set next while resting. */
-export function exerciseLine(draft: LogSessionDraft, resting: boolean): string {
-  const ex = draft.exercise;
-  if (ex === undefined) return "";
-  if (allSetsDone(ex)) return `${ex.name} · ${t("tally.allSetsDone")}`;
-  const set = { set: ex.set, sets: ex.sets };
-  if (resting) return `${ex.name} · ${t("tally.setNext", set)}`;
-  const n = setClimbs(draft, ex).length;
-  const count =
-    ex.onS !== undefined
-      ? t("tally.lapCount", { count: n })
-      : ex.climbs !== undefined
-        ? t("tally.climbsOfSet", { n, of: ex.climbs })
-        : t("common.climbCount", { count: n });
-  return [ex.name, t("tally.setOf", set), count].join(" · ");
-}
-
-/** The exercise's climbs by set, the set being climbed first and each newest first. */
-export function setGroups(draft: LogSessionDraft): TallySetGroup[] {
-  const ex = draft.exercise;
-  if (ex === undefined) return [];
-  const mine = climbsOfItem(draft.climbs, ex.item);
-  const last = Math.max(climbingSet(ex), ...mine.map(setOf));
-  return Array.from({ length: last }, (_, i) => last - i).flatMap((set) => {
-    const climbs = mine.filter((c) => setOf(c) === set).reverse();
-    const current = set === climbingSet(ex) && !allSetsDone(ex);
-    if (climbs.length === 0 && !current) return [];
-    const full = !current && ex.climbs !== undefined;
-    return [
-      {
-        set,
-        climbs,
-        label: full
-          ? `${t("tally.setLabel", { set })} · ${t("tally.climbsOfSet", { n: climbs.length, of: ex.climbs ?? 0 })}`
-          : t("tally.setLabel", { set }),
-      },
-    ];
-  });
-}
 
 /** A tally climb as a set keeps it. */
 export const setClimbOf = (c: ClimbDraft): SetClimb => ({

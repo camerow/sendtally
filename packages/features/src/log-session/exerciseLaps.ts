@@ -1,4 +1,4 @@
-import type { SetDone } from "@sendtally/core/hang";
+import { clock, type SetDone } from "@sendtally/core/hang";
 import { t } from "../i18n";
 import { enduranceAmountLabel, type Endurance, type EnduranceUnit } from "./endurance";
 import { newClimb, nextClimbKey } from "./transforms";
@@ -54,28 +54,39 @@ export function withLapLogged(draft: LogSessionDraft, done: number): LogSessionD
   return { ...draft, climbs, exercise };
 }
 
-/** + Add lap: one more than the exercise asks for. */
-export function withLapAdded(draft: LogSessionDraft): LogSessionDraft {
+/** The laps a circuit item asks for now: as changed during the run, else as the workout asks. */
+export const lapsPlannedFor = (draft: LogSessionDraft, item: number, asked: number): number =>
+  draft.lapsPlanned?.[item] ?? asked;
+
+/** The exercise's circuit asking for `sets` laps, remembered for its item. */
+function withLaps(draft: LogSessionDraft, sets: number): LogSessionDraft {
   const ex = draft.exercise;
   if (ex === undefined) return draft;
-  const exercise = { ...ex, sets: lapsPlanned(draft) + 1, plannedSets: ex.plannedSets ?? ex.sets };
-  return { ...draft, exercise };
+  const lapsPlanned = { ...draft.lapsPlanned, [ex.item]: sets };
+  return { ...draft, lapsPlanned, exercise: { ...ex, sets } };
 }
 
-/** Remove lap: the last lap goes while it is one added past the plan and holds nothing yet. */
-export function lapRemovable(draft: LogSessionDraft): boolean {
-  const ex = draft.exercise;
-  if (ex === undefined) return false;
-  const last = lapsPlanned(draft) - 1;
-  const addedPastPlan = last >= (ex.plannedSets ?? ex.sets);
-  return addedPastPlan && lapsDone(draft)[last] === undefined;
+/** + Add lap: one more than the exercise asks for. */
+export const withLapAdded = (draft: LogSessionDraft): LogSessionDraft =>
+  withLaps(draft, lapsPlanned(draft) + 1);
+
+/** Undo of a lap's −: the item asks for one lap more, whether or not the tally is still on it. */
+export function withLapBack(draft: LogSessionDraft, item: number): LogSessionDraft {
+  if (draft.exercise?.item === item) return withLapAdded(draft);
+  const laps = draft.lapsPlanned?.[item];
+  return laps === undefined
+    ? draft
+    : { ...draft, lapsPlanned: { ...draft.lapsPlanned, [item]: laps + 1 } };
 }
 
-export function withLapRemoved(draft: LogSessionDraft): LogSessionDraft {
-  const ex = draft.exercise;
-  if (ex === undefined || !lapRemovable(draft)) return draft;
-  return { ...draft, exercise: { ...ex, sets: lapsPlanned(draft) - 1 } };
-}
+/** A lap's −: a lap that holds nothing yet goes, down to one. */
+export const lapRemovable = (draft: LogSessionDraft): boolean =>
+  draft.exercise !== undefined &&
+  lapsPlanned(draft) > 1 &&
+  lapsDone(draft).length < lapsPlanned(draft);
+
+export const withLapRemoved = (draft: LogSessionDraft): LogSessionDraft =>
+  lapRemovable(draft) ? withLaps(draft, lapsPlanned(draft) - 1) : draft;
 
 /** A time lap's clock starts. */
 export function withLapStarted(draft: LogSessionDraft, now: Date): LogSessionDraft {
@@ -118,4 +129,20 @@ export function lapSets(climbs: readonly ClimbDraft[], item: number): SetDone[] 
   const e = lapsClimb(climbs, item)?.endurance;
   if (e === undefined) return [];
   return e.laps.map((done) => (e.unit === "moves" ? { reps: done } : { onS: done }));
+}
+
+/** A lap logged on a card the tally is not on: how full its bar is, whether it went clean, and "8/40". */
+export type LapShown = { share: number; clean: boolean; value: string };
+
+export function lapRowsOf(logged: readonly SetDone[], plan: LapPlan): LapShown[] {
+  const text = (v: number): string => (plan.unit === "moves" ? String(v) : clock(v));
+  return logged.map((s) => {
+    const v = s.reps ?? s.onS ?? 0;
+    const clean = v >= plan.target;
+    return {
+      share: Math.min(1, v / plan.target),
+      clean,
+      value: clean ? text(v) : `${text(v)}/${text(plan.target)}`,
+    };
+  });
 }

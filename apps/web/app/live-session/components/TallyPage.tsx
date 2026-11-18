@@ -22,10 +22,8 @@ import { Sheet } from "../../components/Sheet";
 import { climbKindStorage } from "../../lib/localStorages";
 import { useAppApi } from "../../lib/useAppApi";
 import { useGoBack } from "../../lib/useGoBack";
-import { useExerciseTallyStorage, useLiveRunStore } from "../../lib/useLiveRun";
+import { useLiveRunStore } from "../../lib/useLiveRun";
 import { useLiveSessionStorage } from "../../lib/useLiveSessionStorage";
-import { ExerciseClock } from "./ExerciseClock";
-import { LapsTally } from "./LapsTally";
 import { FinishSheet } from "./FinishSheet";
 import { GymSheet } from "./GymSheet";
 import { LiveClimbEditor } from "./LiveClimbEditor";
@@ -33,23 +31,13 @@ import { TallyRow } from "./TallyRow";
 import { UndoSnackbar } from "./UndoSnackbar";
 import { readPlanLink } from "@sendtally/features/training";
 
-export type TallyPageProps = {
-  /**
-   * Logs the workout exercise the player started it on, back into the player: its sets end on
-   * their last climb or their time, and rest; Done hands the climbs back, asking no effort.
-   */
-  exercise?: boolean;
-};
-
 /** The gym session as it happens: a grade starts a climb, then Fell or Sent for each go. */
-export function TallyPage({ exercise = false }: TallyPageProps): React.ReactElement | null {
+export function TallyPage(): React.ReactElement | null {
   const api = useAppApi();
   const navigate = useNavigate();
   const leave = useGoBack("/app");
   const [params] = useSearchParams();
-  const sessionStorage = useLiveSessionStorage();
-  const exerciseStorage = useExerciseTallyStorage();
-  const storage = exercise ? exerciseStorage : sessionStorage;
+  const storage = useLiveSessionStorage();
   const live = useLiveSession(storage);
   const rest = useRest(useLiveRunStore());
   const localSessions = useLocalSessions(api, () => crypto.randomUUID());
@@ -64,7 +52,7 @@ export function TallyPage({ exercise = false }: TallyPageProps): React.ReactElem
   const tally = useTally({
     live,
     rest,
-    exercise,
+    exercise: false,
     gyms: gyms.gyms,
     settled: sessions.status !== "loading" && gyms.state.status !== "loading",
     lastGymId:
@@ -91,32 +79,13 @@ export function TallyPage({ exercise = false }: TallyPageProps): React.ReactElem
       <Icon name="chevron" size={20} strokeWidth={2.2} />
     </button>
   );
-  if (draft === null || (exercise && draft.exercise === undefined))
+  if (draft === null)
     return (
       <div className="tally">
         <div className="tally-column">
           <div className="tally-head">{minimise}</div>
         </div>
       </div>
-    );
-
-  const done = (): void => {
-    tally.done();
-    leave();
-  };
-  if (exercise && draft.exercise?.lap !== undefined)
-    return (
-      <LapsTally
-        draft={draft}
-        live={live}
-        rest={rest}
-        now={tally.now}
-        gymName={gym?.name ?? t("gyms.noGym")}
-        prefs={scales}
-        vocabulary={vocabulary}
-        gyms={circuitGym === null ? [] : [circuitGym]}
-        onDone={done}
-      />
     );
 
   const save = (rpe: number | null): void => {
@@ -147,44 +116,26 @@ export function TallyPage({ exercise = false }: TallyPageProps): React.ReactElem
               <Icon name="chevron" size={14} strokeWidth={2.2} />
             </span>
           </button>
-          <button
-            type="button"
-            className="tally-finish"
-            onClick={exercise ? done : () => setFinishing(true)}
-          >
-            {exercise ? t("common.done") : t("tally.finish")}
+          <button type="button" className="tally-finish" onClick={() => setFinishing(true)}>
+            {t("tally.finish")}
           </button>
         </div>
-        {exercise ? (
-          <ExerciseClock clock={tally.clock} rest={rest} />
-        ) : (
-          <div className="tally-clock">
-            <LiveClock elapsed={(at) => tallyElapsedSeconds(draft, at)} className="tally-time" />
-            <span className="tally-summary">{tallySummary(draft)}</span>
-          </div>
-        )}
+        <div className="tally-clock">
+          <LiveClock elapsed={(at) => tallyElapsedSeconds(draft, at)} className="tally-time" />
+          <span className="tally-summary">{tallySummary(draft)}</span>
+        </div>
         <div className="tally-list">
-          {tally.groups.every((g) => g.climbs.length === 0) ? (
+          {tally.climbs.length === 0 ? (
             <p className="tally-empty">{t("tally.pickGrade")}</p>
           ) : (
-            tally.groups.map((group) => (
-              <React.Fragment key={group.set}>
-                {group.label !== "" && <span className="tally-set-label">{group.label}</span>}
-                {group.climbs.length === 0 && group.label !== "" && (
-                  <p className="tally-set-empty">
-                    {t("tally.pickGradeForSet", { set: group.set })}
-                  </p>
-                )}
-                {group.climbs.map((climb) => (
-                  <TallyRow
-                    key={climb.key}
-                    climb={climb}
-                    selected={selection?.kind === "row" && selection.key === climb.key}
-                    onPress={() => tally.toggleRow(climb.key)}
-                    onEdit={() => setEditing(climb.key)}
-                  />
-                ))}
-              </React.Fragment>
+            tally.climbs.map((climb) => (
+              <TallyRow
+                key={climb.key}
+                climb={climb}
+                selected={selection?.kind === "row" && selection.key === climb.key}
+                onPress={() => tally.toggleRow(climb.key)}
+                onEdit={() => setEditing(climb.key)}
+              />
             ))
           )}
           {snack !== null && (

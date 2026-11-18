@@ -9,6 +9,8 @@ export type PlayerFrameProps = {
   startedAt: number;
   /** Where the run is: "Exercise 2 of 3". */
   position?: { at: number; of: number } | null;
+  /** Where a workout with climbing in it is climbed, which picks another. */
+  gym?: { name: string | undefined; onPick: () => void } | undefined;
   /** The button that ends the run, sticky at the foot. */
   footer: React.ReactNode;
   children: React.ReactNode;
@@ -19,6 +21,7 @@ export function PlayerFrame({
   run,
   startedAt,
   position = null,
+  gym,
   footer,
   children,
 }: PlayerFrameProps): React.ReactElement {
@@ -35,6 +38,7 @@ export function PlayerFrame({
         workoutId={run.workoutId}
         position={position}
         bare={run.items.length === 0}
+        gym={gym}
       />
       <div className="player-rows">{children}</div>
     </DetailFrame>

@@ -60,11 +60,15 @@ export function ReviewSetRow({
     <div className={on ? "set-row" : "set-row set-row--off"} data-testid="review-set">
       <span className="set-col-n">{formatNumber(n)}</span>
       <span className="set-col-target">
-        <span>{target === undefined ? "-" : targetText(target, hangs, unit) || "-"}</span>
+        {done.climbs === undefined ? (
+          <span>{target === undefined ? "-" : targetText(target, hangs, unit) || "-"}</span>
+        ) : (
+          <span className="set-climbs">{setText(done, unit)}</span>
+        )}
         {on && short !== null && <span className="set-short">{short}</span>}
       </span>
       <span className="set-col-done">
-        {done.climbs === undefined ? (
+        {done.climbs === undefined && (
           <SetDoneFields
             set={done}
             lifting={lifting}
@@ -76,8 +80,6 @@ export function ReviewSetRow({
             defaultLoadKg={defaultLoadKg}
             onChange={onChange}
           />
-        ) : (
-          <span className="set-climbs">{setText(done, unit)}</span>
         )}
       </span>
       {rpe !== undefined && (

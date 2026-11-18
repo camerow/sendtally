@@ -35,6 +35,14 @@ jest.mock("@sendtally/features/workouts", () => ({
   useWorkoutActions: () => mockWorkouts,
 }));
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
+jest.mock("@sendtally/features/statistics", () => ({
+  useExercises: () => ({
+    state: {
+      status: "ready",
+      data: [{ name: "Circuit laps", kind: "climbing", measure: "laps", eachSide: false }],
+    },
+  }),
+}));
 jest.mock("@sendtally/features/activities", () => {
   const actual = jest.requireActual<typeof Activities>("@sendtally/features/activities");
   return {
@@ -341,6 +349,52 @@ describe("Log activity", () => {
     expect(
       screen.queryByText("Ended at your last set, 6:42 PM · left open 2h 23m after")
     ).toBeNull();
+  });
+
+  it("reads a circuit's sets as laps of moves", async () => {
+    const done = [{ item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 8 }] }];
+    const initial = newActivityDraft(
+      { kind: "climbing", workoutId: "w4", done: JSON.stringify(done) },
+      "2026-11-17"
+    );
+    await render(
+      <ActivityForm
+        id="a1"
+        initial={initial}
+        logged={null}
+        timed
+        kindSet
+        live
+        planned={[{ exercise: "Circuit laps", dose: { sets: 3, reps: 40 } }]}
+      />
+    );
+    expect(screen.getByText("2 laps")).toBeTruthy();
+    expect(screen.getByText("8 of 40 moves")).toBeTruthy();
+    expect(screen.getByText("Lap")).toBeTruthy();
+    expect(screen.getByText("Add lap")).toBeTruthy();
+    expect(screen.getByText("Remove lap")).toBeTruthy();
+    expect(screen.queryByText("Add set")).toBeNull();
+  });
+
+  it("says an exercise with nothing ticked was not started, its planned sets there to tick", async () => {
+    const done = [{ item: 0, exercise: "Volume climbing", sets: [{ onS: 600 }, { onS: 600 }] }];
+    const initial = newActivityDraft(
+      { kind: "climbing", workoutId: "w6", done: JSON.stringify(done), off: '["0:0","0:1"]' },
+      "2026-11-18"
+    );
+    await render(
+      <ActivityForm
+        id="a1"
+        initial={initial}
+        logged={null}
+        timed
+        kindSet
+        live
+        planned={[{ exercise: "Volume climbing", dose: { sets: 2, onS: 600 } }]}
+      />
+    );
+    expect(screen.getByText("Not started")).toBeTruthy();
+    expect(screen.getAllByText("10:00")).toHaveLength(2);
   });
 
   it("reviews a run: a set short of its dose in amber, and Discard ends the run once confirmed", async () => {

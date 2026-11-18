@@ -73,7 +73,6 @@ const FOCUSED_ROUTES = [
   "/app/workout/checklist",
   "/app/workout/timer",
   "/app/workout/intervals",
-  "/app/workout/tally",
 ];
 
 /** Pages that are the live thing itself, where the live bar would only point back at them; so is a live run's review. */
@@ -83,7 +82,6 @@ const LIVE_ROUTES = [
   "/app/workout/checklist",
   "/app/workout/timer",
   "/app/workout/intervals",
-  "/app/workout/tally",
 ];
 
 function Shell({ children }: { children: React.ReactNode }): React.ReactElement {

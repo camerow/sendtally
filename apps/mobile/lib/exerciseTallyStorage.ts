@@ -1,18 +1,8 @@
-import { draftStorage } from "@sendtally/features/log-session";
-
-let held: string | null = null;
+import { userDraftFile } from "./userDraftFile";
 
 /**
- * The tally a workout's climbing exercises are logged on. It lives as long as the player that
- * runs the workout, which keeps nothing on disk either, and apart from the live session's file
- * so neither overwrites the other.
+ * The tally a workout's climbing exercises are logged on, kept on disk with the live run so an
+ * app kill or an update keeps the climbs, and apart from the live session's file so neither
+ * overwrites the other.
  */
-export const exerciseTallyStorage = draftStorage({
-  read: () => held,
-  write: (value) => {
-    held = value;
-  },
-  remove: () => {
-    held = null;
-  },
-});
+export const exerciseTallyStorage = userDraftFile("workout-tally");

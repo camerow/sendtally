@@ -52,11 +52,11 @@ export function climbsLine(sets: readonly SetDone[]): string {
   ].join(" · ");
 }
 
-/** "20:00 · 18 laps": one set of time on the wall. */
+/** "20:00 · 18 climbs": one set of time on the wall. */
 export const wallChip = (set: SetDone): string =>
   [
     ...(set.onS === undefined ? [] : [clock(set.onS, true)]),
-    t("tally.lapCount", { count: set.climbs?.length ?? 0 }),
+    t("common.climbCount", { count: set.climbs?.length ?? 0 }),
   ].join(" · ");
 
 /** "40:00 on the wall · Green circuit": the time over every set, and the circuits climbed. */
@@ -69,7 +69,7 @@ export function wallLine(sets: readonly SetDone[]): string {
   ].join(" · ");
 }
 
-/** What a climbing set reads as anywhere a set shows: "20:00 · 18 laps", or "4 climbs · 3 sent". */
+/** What a climbing set reads as anywhere a set shows: "20:00 · 18 climbs", or "4 climbs · 3 sent". */
 export const climbingSetText = (set: SetDone): string =>
   set.onS !== undefined ? wallChip(set) : climbsLine([set]);
 

@@ -563,3 +563,237 @@
     visibility: hidden;
   }
 }
+
+.player-gym {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.player-gym svg {
+  transform: rotate(90deg);
+}
+
+.climb-row {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.climb-row--head {
+  min-height: 0;
+  padding: 4px;
+}
+
+.climb-row--current {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-soft);
+}
+
+.climb-row--current > :not(.climb-fill) {
+  position: relative;
+}
+
+.climb-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--bs-fern);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.climb-col-set,
+.climb-set {
+  width: 30px;
+  flex: none;
+}
+
+.climb-set {
+  font-weight: 600;
+  color: var(--bs-gunmetal);
+}
+
+.climb-row--waiting .climb-set {
+  color: rgba(64, 63, 76, 0.55);
+}
+
+.climb-chips {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.climb-chip {
+  position: relative;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border: 1.5px solid var(--line-on-light-strong);
+  border-radius: 8px;
+  background: var(--bs-white);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--bs-gunmetal);
+  cursor: pointer;
+}
+
+.climb-chip::after {
+  content: "";
+  position: absolute;
+  inset: -7px 0;
+}
+
+.climb-chip--sent {
+  border-color: transparent;
+  background: var(--line-on-light);
+}
+
+.climb-chip--sent svg {
+  color: var(--bs-fern);
+}
+
+.climb-chip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  box-shadow: 0 0 0 1px var(--line-on-light-strong);
+}
+
+.climb-note {
+  flex: none;
+  font-size: 13px;
+  color: var(--text-on-white-secondary);
+}
+
+.climb-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0 6px;
+}
+
+.climb-picker-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.climb-picker-top .segmented {
+  width: auto;
+  flex: none;
+}
+
+.climb-type {
+  width: 96px;
+  height: 36px;
+  font-family: var(--font-mono);
+}
+
+.climb-goes {
+  display: flex;
+  gap: 8px;
+}
+
+.climb-goes > button {
+  flex: 1;
+  height: 44px;
+  min-height: 0;
+  margin: 0;
+}
+
+.lap-bar {
+  flex: 1;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: rgba(64, 63, 76, 0.14);
+}
+
+.lap-fill {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: var(--bs-fern);
+}
+
+.lap-fill--short {
+  background: var(--warning-amber);
+}
+
+.lap-value {
+  min-width: 48px;
+  text-align: right;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.lap-now {
+  flex: 1;
+}
+
+.lap-step {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.lap-step-button {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line-on-light-strong);
+  border-radius: var(--radius-control);
+  background: var(--bs-white);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--bs-gunmetal);
+  cursor: pointer;
+}
+
+.lap-step-button::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+}
+
+.lap-step-value {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.lap-go {
+  height: 44px;
+  min-height: 0;
+  width: auto;
+  margin: 0;
+  padding: 0 12px;
+}
+
+.lap-start {
+  margin-left: auto;
+}
+
+.climb-row .set-tick input[aria-disabled="true"] {
+  cursor: default;
+}

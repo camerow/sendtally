@@ -1,7 +1,6 @@
 import React from "react";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import {
-  clock,
   type ItemDone,
   type SessionItem,
   type SetDone,
@@ -9,19 +8,15 @@ import {
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { exerciseName, exerciseTargetLine } from "@sendtally/features/workouts";
-import { Icon } from "../../../components/Icon";
+import { exerciseName } from "@sendtally/features/workouts";
 import { useFieldOrder } from "../../../components/useFieldOrder";
-import { press } from "../../../lib/press";
-import { AboutButton, type About } from "../components/AboutButton";
+import type { About } from "../components/AboutButton";
 import { Button } from "../components/Button";
-import { DetailMenu } from "../components/DetailMenu";
 import type { DetailMenuRow } from "../components/types";
 import { Label } from "../components/Label";
-import { LetterBadge } from "../components/LetterBadge";
 import { RestPreview } from "../rest/RestPreview";
-import { type } from "../type";
 import { SET_COLUMNS } from "./setColumns";
+import { ExerciseCardHead } from "./ExerciseCardHead";
 import { SetRow } from "./SetRow";
 import { setKey, type SetAt } from "@sendtally/features/workouts";
 
@@ -79,7 +74,7 @@ export function SetsCard({
 }: SetsCardProps): React.ReactElement {
   const tight = useWindowDimensions().width < 360;
   const name = exerciseName(item.exercise);
-  const { name: doseName, setRestS, targetRpe } = item.dose;
+  const { setRestS, targetRpe } = item.dose;
   const rated = targetRpe !== undefined;
   const tickedSets = done.sets.flatMap((_, i) =>
     ticked.has(setKey({ item: done.item, set: i })) ? [String(i)] : []
@@ -96,72 +91,7 @@ export function SetsCard({
         borderColor: colors.lineOnLightStrong,
       }}
     >
-      <View style={{ gap: 2, paddingBottom: 4 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Pressable
-              onPress={onFold}
-              accessibilityRole="button"
-              accessibilityLabel={t("workouts.foldExercise", { name })}
-              accessibilityState={{ expanded: true }}
-              hitSlop={{ top: 12, bottom: 12 }}
-              style={press({
-                flexShrink: 1,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-              })}
-            >
-              <Text
-                style={[type.bodyBold, { flexShrink: 1, fontSize: 17, color: colors.gunmetal }]}
-              >
-                {name}
-              </Text>
-              <View style={{ transform: [{ rotate: "-90deg" }] }}>
-                <Icon name="chevron" size={16} strokeWidth={2} color={colors.textMuted} />
-              </View>
-            </Pressable>
-            <AboutButton
-              about={about}
-              label={t("workouts.aboutExercise")}
-              color={colors.textMuted}
-            />
-          </View>
-          {item.turn !== undefined && (
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "center" }}
-            >
-              <LetterBadge dose={item.turn} size={22} />
-              {doseName !== undefined && (
-                <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
-                  {doseName}
-                </Text>
-              )}
-            </View>
-          )}
-          {setRestS !== undefined && setRestS > 0 && (
-            <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
-              {t("plan.chipRest", { value: clock(setRestS) })}
-            </Text>
-          )}
-          <View style={{ alignSelf: "center", marginVertical: -8 }}>
-            <DetailMenu
-              rows={menu}
-              button={{
-                label: t("workouts.exerciseMore"),
-                color: colors.textSecondary,
-                size: 36,
-                iconSize: 20,
-              }}
-            />
-          </View>
-        </View>
-        {rated && (
-          <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
-            {exerciseTargetLine(item.dose)}
-          </Text>
-        )}
-      </View>
+      <ExerciseCardHead item={item} about={about} onFold={onFold} menu={menu} />
       <View style={SET_COLUMNS.row}>
         <Label small color={colors.textSecondary} style={SET_COLUMNS.set}>
           {t("activities.colSet")}

@@ -24,6 +24,14 @@ const writes = vi.hoisted(() => ({
   deleteWorkout: vi.fn(async () => undefined),
 }));
 
+vi.mock("@sendtally/features/statistics", () => ({
+  useExercises: () => ({
+    state: {
+      status: "ready",
+      data: [{ name: "Circuit laps", kind: "climbing", measure: "laps", eachSide: false }],
+    },
+  }),
+}));
 vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
 vi.mock("@sendtally/features/activities", async (actual) => ({

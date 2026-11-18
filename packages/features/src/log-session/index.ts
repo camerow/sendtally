@@ -126,10 +126,8 @@ export {
 } from "./types";
 export {
   allSetsDone,
-  exerciseLine,
   exerciseSets,
   nextSet,
-  setGroups,
   setOver,
   startExercise,
   wallLeft,
@@ -138,7 +136,6 @@ export {
   withSetEnded,
   withWallStarted,
   type ExerciseTallyStart,
-  type TallySetGroup,
 } from "./exerciseTally";
 export {
   allLapsDone,
@@ -149,7 +146,12 @@ export {
   lapsDone,
   lapSets,
   lapsPlanned,
+  lapsPlannedFor,
+  lapRowsOf,
+  type LapShown,
   withLapAdded,
+  withLapBack,
+  withLapRemoved,
   withLapLogged,
   withLapRest,
   withLapStarted,

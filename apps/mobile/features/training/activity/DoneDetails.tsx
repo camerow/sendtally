@@ -8,6 +8,8 @@ import {
   offWithout,
   removeSet,
   setKeyOf,
+  exerciseCountText,
+  type SetsOf,
   shortOf,
 } from "@sendtally/features/activities";
 import { heldSet } from "@sendtally/core/hang";
@@ -36,6 +38,8 @@ export type DoneDetailsProps = {
   hangLoadKg?: number;
   /** Each exercise's sets as the workout's last run did them, which a lift's target borrows. */
   previous?: (exercise: string) => readonly SetDone[];
+  /** Whether an exercise is a circuit, whose sets are laps of moves. */
+  laps?: (exercise: string) => boolean;
   /** Beside the first exercise's name, such as a hangboard run's edge and weight. */
   setup?: React.ReactNode;
   onChange: (done: ItemDone[], off: string[]) => void;
@@ -63,6 +67,7 @@ export function DoneDetails({
   hangs = false,
   hangLoadKg = 0,
   previous = () => [],
+  laps = () => false,
   setup,
   onChange,
   onRemoved,
@@ -116,6 +121,7 @@ export function DoneDetails({
     <Frame>
       {done.map((d, index) => {
         const target = planned[d.item];
+        const of: SetsOf = hangs ? "hangs" : laps(d.exercise) ? "laps" : "sets";
         const lifting = d.sets.some((s) => s.weightKg !== undefined) && !hangs;
         return (
           <View
@@ -138,13 +144,13 @@ export function DoneDetails({
                 {d.exercise}
               </Text>
               <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-                {t("activities.setCount", { count: d.sets.length })}
+                {exerciseCountText(d, off, of)}
               </Text>
             </View>
             {index === 0 && setup}
             <View style={SET_COLUMNS.row}>
               <Label small color={colors.textSecondary} style={SET_COLUMNS.set}>
-                {t("activities.colSet")}
+                {of === "laps" ? t("workouts.colLap") : t("activities.colSet")}
               </Label>
               <Label small color={colors.textSecondary} style={SET_COLUMNS.target}>
                 {t("activities.colTarget")}
@@ -180,7 +186,7 @@ export function DoneDetails({
                   lifting={lifting}
                   unit={unit}
                   on={on}
-                  short={shortOf(set, target, hangs)}
+                  short={shortOf(set, target, of)}
                   label={t("activities.setOf", { exercise: d.exercise, n: i + 1 })}
                   slot={hangs ? counts.slot(setKeyOf(d.item, i)) : undefined}
                   loadSlot={hangs ? counts.slot(`${setKeyOf(d.item, i)}:load`) : undefined}
@@ -199,7 +205,7 @@ export function DoneDetails({
             })}
             <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
               <Button
-                label={t("activities.addSet")}
+                label={of === "laps" ? t("tally.addLap") : t("activities.addSet")}
                 accessibilityLabel={t("activities.addSetTo", { exercise: d.exercise })}
                 onPress={() => edit(addSet(done, d.item))}
                 variant="outline"
@@ -208,7 +214,7 @@ export function DoneDetails({
               />
               {d.sets.length > 1 && (
                 <Button
-                  label={t("activities.removeLastSet")}
+                  label={of === "laps" ? t("tally.removeLap") : t("activities.removeLastSet")}
                   accessibilityLabel={t("activities.removeLastSetFrom", { exercise: d.exercise })}
                   onPress={() => remove(d, d.sets.length - 1)}
                   variant="outline"

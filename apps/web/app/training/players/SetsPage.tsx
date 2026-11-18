@@ -1,14 +1,20 @@
 import React from "react";
-import { restAfterItem } from "@sendtally/core/hang";
 import { useNavigate } from "react-router";
-import { foldedLine, useActivities, useWeightUnit } from "@sendtally/features/activities";
+import { restAfterItem } from "@sendtally/core/hang";
+import {
+  climbingDoseLine,
+  foldedLine,
+  useActivities,
+  useWeightUnit,
+} from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import { useLiveSession } from "@sendtally/features/log-session";
+import { useLiveSession, withLapBack } from "@sendtally/features/log-session";
 import { exerciseAbout } from "@sendtally/features/exercises";
 import { useGrips } from "@sendtally/features/hang";
 import { useExercises } from "@sendtally/features/statistics";
 import {
   afterKey,
+  climbRows,
   heldSeconds,
   setKey,
   useSetsPlayer,
@@ -21,7 +27,11 @@ import { useToast } from "../../components/Toast";
 import { useAppApi } from "../../lib/useAppApi";
 import { ExercisePicker } from "../editor/ExercisePicker";
 import { useExerciseTallyStorage, useLiveRunStore } from "../../lib/useLiveRun";
-import { ClimbingCard } from "./ClimbingCard";
+import { GymSheet } from "../../live-session/components/GymSheet";
+import { LiveClimbEditor } from "../../live-session/components/LiveClimbEditor";
+import { ClimbCard } from "../climbing/ClimbCard";
+import { LapsCard } from "../climbing/LapsCard";
+import { useWorkoutTally } from "../climbing/useWorkoutTally";
 import { FingersCard } from "./FingersCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
 import { HoldButton } from "./HoldButton";
@@ -33,13 +43,13 @@ import { SetsCard } from "./SetsCard";
 import { useFinishRun } from "./useFinishRun";
 
 /**
- * A lifting workout as a set table on a clock from Start: tick each set as it is done, rest
- * in line after it, then log what was done. A climbing exercise is a card instead, whose Start
- * logs it on the workout tally; its climbs come back as its sets.
+ * A workout as a set table on a clock from Start: tick each set as it is done, rest in line
+ * after it, then log what was done. A climbing exercise's sets take their climbs in the row, a
+ * grade then Attempt or Sent, on the workout's tally; its climbs come back as its sets.
  */
 export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React.ReactElement {
-  const api = useAppApi();
   const navigate = useNavigate();
+  const api = useAppApi();
   const unit = useWeightUnit(api);
   const activities = useActivities(api).state;
   const exercises = useExercises(api).state;
@@ -56,6 +66,28 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
     exercises: mine,
   });
   const { shown, ticked, current, rest, hold, previous, nameOf, items, order, part } = player;
+  const climbs = useWorkoutTally(tally, rest);
+  const draft = climbs.draft;
+  const climbing = items.some((_, i) => player.tallyOf(i) !== null);
+  const [editing, setEditing] = React.useState<string | null>(null);
+  const [pickingGym, setPickingGym] = React.useState(false);
+  const editingClimb = draft?.climbs.find((c) => c.key === editing) ?? null;
+  const undo = React.useRef(climbs.undo);
+  const lapBack = React.useRef((_item: number) => {});
+  React.useEffect(() => {
+    undo.current = climbs.undo;
+    lapBack.current = (item) => {
+      if (draft !== null) tally.replace(withLapBack(draft, item));
+    };
+  });
+  const snack = climbs.snack;
+  React.useEffect(() => {
+    if (snack !== null)
+      toast.show({
+        message: snack.message,
+        action: { label: t("tally.undo"), onPress: () => undo.current() },
+      });
+  }, [snack, toast]);
   const [picking, setPicking] = React.useState(false);
   const [removing, setRemoving] = React.useState<number | null>(null);
   const removeSet = (at: SetAt): void => {
@@ -66,6 +98,9 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
     });
   };
   const menu = (i: number, at: number): MoreMenuItem[] => [
+    ...(player.canClimbOn(i)
+      ? [{ label: t("workouts.climbNow"), onSelect: () => player.climbOn(i) }]
+      : []),
     { label: t("workouts.skipForNow"), onSelect: () => player.skip(i) },
     ...(at > 0 ? [{ label: t("workouts.moveUpShort"), onSelect: () => player.move(i, -1) }] : []),
     ...(at < order.length - 1
@@ -112,6 +147,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
       run={run}
       startedAt={player.startedAt}
       position={player.position}
+      gym={climbing ? { name: climbs.gym?.name, onPick: () => setPickingGym(true) } : undefined}
       footer={
         <button type="button" className="detail-primary" onClick={finish}>
           {t("activities.finish")}
@@ -148,7 +184,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
             )
           );
         }
-        const climbing = player.climbing(i);
+        const climbItem = player.climbing(i);
         const skipped = player.skipped(i);
         const between =
           at < order.length - 1 &&
@@ -157,14 +193,49 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
           ));
         return (
           <React.Fragment key={i}>
-            {climbing !== null ? (
-              <ClimbingCard
+            {climbItem !== null && player.folded(i) ? (
+              <FoldedSetsCard
+                name={nameOf(i)}
+                line={
+                  skipped
+                    ? t("workouts.skippedTapToDo")
+                    : (climbItem.logged ?? climbingDoseLine(item.dose, climbItem.measure))
+                }
+                done={!skipped && climbItem.logged !== null}
+                onOpen={() => player.open(i)}
+              />
+            ) : climbItem?.measure === "laps" ? (
+              <LapsCard
+                item={i}
+                at={item}
+                logged={player.climbedSets(i)}
+                planned={player.lapsPlanned(i)}
+                draft={draft}
+                live={tally}
+                rest={rest}
+                now={climbs.now}
+                about={exerciseAbout(mine, item.exercise, nameOf(i))}
+                onFold={() => player.fold(i)}
+                menu={menu(i, at)}
+                onLapRemoved={(lap) =>
+                  toast.show({
+                    message: `${nameOf(i)} · ${t("tally.lapRemoved", { lap })}`,
+                    action: { label: t("tally.undo"), onPress: () => lapBack.current(i) },
+                  })
+                }
+              />
+            ) : climbItem !== null ? (
+              <ClimbCard
                 item={item}
-                {...climbing}
-                onStart={() => {
-                  player.startClimbing(i, climbing.measure);
-                  void navigate("/app/workout/tally");
-                }}
+                plan={player.climbPlan(i)}
+                rows={climbRows(draft, i, player.climbPlan(i), climbs.now)}
+                tally={player.climbAt === i ? climbs : null}
+                restUnder={(set) => restAt(setKey({ item: i, set }))}
+                about={exerciseAbout(mine, item.exercise, nameOf(i))}
+                onFold={() => player.fold(i)}
+                menu={menu(i, at)}
+                onFlip={climbs.flip}
+                onEdit={setEditing}
               />
             ) : player.folded(i) ? (
               <FoldedSetsCard
@@ -236,6 +307,33 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
       >
         <p className="sheet-body">{t("workouts.removeFromRunBody")}</p>
       </Sheet>
+      <LiveClimbEditor
+        climb={editingClimb}
+        index={editingClimb === null || draft === null ? 0 : draft.climbs.indexOf(editingClimb)}
+        count={draft?.climbs.length ?? 0}
+        prefs={climbs.scales}
+        vocabulary={climbs.vocabulary}
+        gyms={climbs.circuitGym === null ? [] : [climbs.circuitGym]}
+        onChange={(c) => tally.updateClimb(c.key, () => c, climbs.gyms)}
+        onRemove={() => {
+          if (editing !== null && draft !== null)
+            tally.replace({ ...draft, climbs: draft.climbs.filter((c) => c.key !== editing) });
+          setEditing(null);
+        }}
+        onClose={() => setEditing(null)}
+      />
+      {climbing && (
+        <GymSheet
+          open={pickingGym}
+          gyms={climbs.gyms}
+          gymId={draft?.gymId}
+          onPick={(gymId) => {
+            climbs.pickGym(gymId);
+            setPickingGym(false);
+          }}
+          onClose={() => setPickingGym(false)}
+        />
+      )}
     </PlayerFrame>
   );
 }
