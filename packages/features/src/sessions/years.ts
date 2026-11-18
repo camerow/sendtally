@@ -104,11 +104,11 @@ export function countLabel(count: number): string {
 
 /** What was logged: a finished block's row is not something logged. */
 const logged = (items: LogItem[]): LogItem[] =>
-  flatLog(items).filter((item) => item.type !== "block");
+  flatLog(items).filter((item) => item.type !== "block" && !(item.type === "entry" && item.frame));
 
 /** Journal entries only: a hangboard session counts as a session. */
 const entryCount = (items: LogItem[]): number =>
-  flatLog(items).filter((item) => item.type === "entry").length;
+  flatLog(items).filter((item) => item.type === "entry" && item.frame !== true).length;
 
 /** The untitled sessions climbs added on their own are filed in, which count as those climbs. */
 const holdersIn = (items: LogItem[]): SessionRow[] => sessionsIn(items).filter(isClimbHolder);

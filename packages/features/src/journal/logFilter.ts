@@ -19,7 +19,7 @@ import { focusLabel } from "../training/focus";
 import { bucketsFor } from "../trends/buckets";
 import { isYearRange, trendRangeLabel } from "../trends/types";
 import { exerciseKey } from "../statistics/exercises";
-import { entryTitle, flatLog, groupTrips, logItemWorkout } from "./transforms";
+import { entryTitle, groupTrips, logItemWorkout } from "./transforms";
 import { logCountLabel } from "../sessions/years";
 import type { LogContext, LogFilter, LogItem, LogPill, LogRowType, LogView } from "./types";
 
@@ -295,8 +295,14 @@ export function filterLog(
     }
     const inside = item.inside.flatMap(keep);
     if (!showsType(filter, "trip")) return inside;
-    const own = matchItem(item, filter, ctx, withClimbs, now) !== null;
-    return own || inside.length > 0 ? [{ ...item, inside }] : [];
+    const own =
+      matchItem(item, filter, ctx, withClimbs, now) !== null &&
+      (!logFilterActive(filter) ||
+        filter.show.includes("trip") ||
+        filter.search.trim() !== "" ||
+        filter.tags.length > 0);
+    if (own) return [{ ...item, inside }];
+    return inside.length > 0 ? [{ ...item, inside, frame: true }] : [];
   });
   function keepAll(item: LogItem): void {
     if (item.type !== "session") return;
@@ -498,7 +504,7 @@ export function logOutcomeCounts(
 }
 
 export function logViewCountLabel(view: LogView): string {
-  if (view.kind === "dated") return logCountLabel(flatLog(view.items));
+  if (view.kind === "dated") return logCountLabel(view.items);
   const count = view.log.groups.reduce((n, g) => n + g.rows.length, 0);
   return t("common.climbCount", { count });
 }

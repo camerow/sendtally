@@ -9,7 +9,13 @@ import type {
   SessionWithClimbs,
 } from "@sendtally/api-client";
 import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
-import { NO_LOG_FILTER, filterLog, logFilterPills, updateLogFilter } from "./logFilter";
+import {
+  NO_LOG_FILTER,
+  filterLog,
+  logFilterPills,
+  logViewCountLabel,
+  updateLogFilter,
+} from "./logFilter";
 import { logItems } from "./transforms";
 import type { LogContext, LogFilter, LogItem, LogView } from "./types";
 
@@ -390,6 +396,16 @@ describe("filterLog", () => {
     expect(v.kind === "climbs" && v.log.groups.flatMap((g) => g.rows.map((r) => r.name))).toEqual([
       "The Prow",
     ]);
+  });
+
+  it("keeps a trip as the frame of rows that pass without counting it", () => {
+    const framed = view({ when: "1y", setting: "outdoor", show: ["climbing", "trip"] });
+    expect(keys(framed)).toEqual(["entry:trip", "  session:trip-day"]);
+    expect(logViewCountLabel(framed)).toBe("1 session · 1 entry");
+    const frame = view({ effort: { lo: 7, hi: 7 }, when: "1y" });
+    expect(keys(frame)).toContain("entry:trip");
+    expect(logViewCountLabel(frame)).toBe("3 sessions");
+    expect(logViewCountLabel(view({ search: "pine ridge" }))).toBe("1 session · 1 entry");
   });
 
   it("says nothing matches with an empty list", () => {

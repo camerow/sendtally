@@ -37,7 +37,8 @@ export type LogItem = { key: string; at: string; tags: SessionTag[]; blockTag?: 
   | { type: "session"; session: SessionRow }
   | { type: "hang"; hang: HangHistoryRow }
   | { type: "activity"; activity: Activity }
-  | { type: "entry"; entry: JournalEntry; inside: LogItem[] }
+  /** `frame`: a trip kept only to hold rows that pass a filter, drawn but never counted. */
+  | { type: "entry"; entry: JournalEntry; inside: LogItem[]; frame?: true }
   | { type: "block"; recap: BlockRecap }
 );
 
