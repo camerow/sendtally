@@ -50,7 +50,7 @@ export function ChecklistEditor({
         </Text>
         {onMoveUp !== undefined && (
           <IconButton
-            icon="up"
+            icon="moveUp"
             label={t("workouts.moveUp", { name })}
             onPress={onMoveUp}
             {...icon}
@@ -58,7 +58,7 @@ export function ChecklistEditor({
         )}
         {onMoveDown !== undefined && (
           <IconButton
-            icon="down"
+            icon="moveDown"
             label={t("workouts.moveDown", { name })}
             onPress={onMoveDown}
             {...icon}

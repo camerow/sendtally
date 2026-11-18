@@ -432,6 +432,131 @@ describe("Sets player", () => {
     expect(byLabel("Open Plank, 1 × 30s")).not.toBeNull();
   });
 
+  describe("a superset", () => {
+    const group = { id: "s1", rounds: 2, restBetweenS: 0, restRoundS: 120 };
+    const superset = {
+      ...run,
+      items: [
+        { exercise: "Pull-ups", dose: { sets: 2, reps: 6 }, group },
+        { exercise: "Push-ups", dose: { sets: 2, reps: 15 }, group },
+        { exercise: "Plank", dose: { sets: 1, onS: 45 } },
+      ],
+    };
+    const logged = (): { where: URL; done: { exercise: string; group?: unknown }[] } => {
+      act(() => button("Finish").click());
+      const where = new URL(
+        `http://x${document.querySelector("[data-testid=where]")?.textContent}`
+      );
+      return { where, done: JSON.parse(where.searchParams.get("done") ?? "[]") };
+    };
+
+    it("runs round by round as one exercise, resting only after a round when the rest between is none", () => {
+      mount(superset);
+      expect(container.textContent).toContain("Superset · Round 1 of 2");
+      expect(container.textContent).toContain("Exercise 1 of 2");
+      act(() => (byLabel("Pull-ups, set 1") as HTMLInputElement).click());
+      expect(container.querySelector(".player-row")).toBeNull();
+      expect(container.textContent).toContain("Next: Push-ups");
+      act(() => (byLabel("Push-ups, set 1") as HTMLInputElement).click());
+      expect(container.textContent).toContain("Superset · Round 2 of 2");
+      expect(container.querySelector(".player-row")).not.toBeNull();
+    });
+
+    it("adds a round to every member, and takes a round from every member with one Undo", () => {
+      mount(superset);
+      act(() => button("+ Add round").click());
+      expect(byLabel("Push-ups, set 3")).not.toBeNull();
+      act(() => byLabel("Pull-ups, set 3")?.closest<HTMLElement>(".set-row")?.click());
+      act(() => (byLabel("Remove set 3") as HTMLButtonElement).click());
+      expect(byLabel("Pull-ups, set 3")).toBeNull();
+      expect(byLabel("Push-ups, set 3")).toBeNull();
+      act(() => button("Undo").click());
+      expect(byLabel("Pull-ups, set 3")).not.toBeNull();
+      expect(byLabel("Push-ups, set 3")).not.toBeNull();
+    });
+
+    it("plays the member left as a plain exercise once the other is skipped", () => {
+      mount(superset);
+      act(() => (byLabel("More for this exercise") as HTMLButtonElement).click());
+      act(() => button("Skip Push-ups for now").click());
+      expect(container.textContent).not.toContain("Superset");
+      expect(texts(".player-card-name")[0]).toBe("Pull-ups");
+    });
+
+    it("moves the superset whole from its menu", () => {
+      mount(superset);
+      act(() => (byLabel("More for this exercise") as HTMLButtonElement).click());
+      act(() => button("Move down").click());
+      const text = container.textContent ?? "";
+      expect(text.indexOf("Plank")).toBeLessThan(text.indexOf("Superset · Round 1 of 2"));
+    });
+
+    it("never hides a card when one member is skipped, first or middle", () => {
+      const three = {
+        ...superset,
+        items: [
+          superset.items[0]!,
+          superset.items[1]!,
+          { exercise: "Rows", dose: { sets: 2, reps: 10 }, group },
+          superset.items[2]!,
+        ],
+      };
+      const shown = (): string[] =>
+        ["Pull-ups", "Push-ups", "Rows", "Plank"].filter(
+          (name) => byLabel(`${name}, set 1`) !== null || container.textContent?.includes(name)
+        );
+      for (const skip of ["Push-ups", "Pull-ups"]) {
+        mount(three);
+        act(() => (byLabel("More for this exercise") as HTMLButtonElement).click());
+        act(() => button(`Skip ${skip} for now`).click());
+        expect(shown()).toEqual(["Pull-ups", "Push-ups", "Rows", "Plank"]);
+        for (const name of ["Pull-ups", "Push-ups", "Rows"]) {
+          expect(
+            byLabel(`${name}, set 1`) ?? container.querySelector(".player-card--folded")
+          ).not.toBeNull();
+        }
+        act(() => root.unmount());
+        root = createRoot(container);
+        localStorage.clear();
+      }
+    });
+
+    it("logs a half-done round as the sets done, each member with its superset", () => {
+      mount(superset);
+      act(() => (byLabel("Pull-ups, set 1") as HTMLInputElement).click());
+      act(() => (byLabel("Push-ups, set 1") as HTMLInputElement).click());
+      act(() => (byLabel("Pull-ups, set 2") as HTMLInputElement).click());
+      const { where, done } = logged();
+      expect(done.slice(0, 2).map((d) => d.group)).toEqual([
+        { id: "s1", rounds: 2 },
+        { id: "s1", rounds: 2 },
+      ]);
+      expect(where.searchParams.get("off")).toBe(JSON.stringify(["1:1", "2:0"]));
+    });
+
+    it("resumes a run reloaded mid-superset on the round it was on, its rest still running", () => {
+      mount(superset);
+      act(() => (byLabel("Pull-ups, set 1") as HTMLInputElement).click());
+      act(() => (byLabel("Push-ups, set 1") as HTMLInputElement).click());
+      advance(30_000);
+      act(() => root.unmount());
+      root = createRoot(container);
+      mount(superset);
+      expect(container.textContent).toContain("Superset · Round 2 of 2");
+      expect(byLabel("Rest, 1:30 left")).not.toBeNull();
+      expect((byLabel("Pull-ups, set 1") as HTMLInputElement).checked).toBe(true);
+    });
+
+    it("ends the run at its last tick in a superset when it sat open over 20 minutes after", () => {
+      mount(superset);
+      advance(10 * 60_000);
+      act(() => (byLabel("Pull-ups, set 1") as HTMLInputElement).click());
+      advance(2 * 60 * 60_000);
+      const { where } = logged();
+      expect(["minutes", "idle"].map((k) => where.searchParams.get(k))).toEqual(["10", "120"]);
+    });
+  });
+
   it("ends the run at its last tick when it sat open over 20 minutes after, across a minimise", () => {
     mount();
     advance(10 * 60_000);

@@ -30,10 +30,17 @@ import {
   withExerciseSwapped,
   itemTitle,
   withItem,
-  withItemMoved,
   withRestAfter,
   withItemsAdded,
   withChecklistAdded,
+  withAddedToGroup,
+  withGroupSet,
+  withMemberOut,
+  withSupersetWithNext,
+  withEditorMoved,
+  canAddToGroup,
+  canSupersetWithNext,
+  withUngrouped,
   withoutItem,
   workoutMinutes,
   type WorkoutDraft,
@@ -53,6 +60,7 @@ import { FocusField } from "../log/FocusField";
 import { ExercisePicker } from "./ExercisePicker";
 import { ChecklistEditor } from "./ChecklistEditor";
 import { ItemEditor } from "./ItemEditor";
+import { SupersetEditor } from "./SupersetEditor";
 import { TargetEffort } from "./TargetEffort";
 
 const MAX_MINUTES = 600;
@@ -108,9 +116,12 @@ function Editor({
   const [untouched] = React.useState(initial);
   const world = usePickerWorld(api, model, [], "all");
   const isGrip = isGripOf(world);
-  const { state, setState, remember } = useDerivedKindDraft(untouched, exerciseKindIn(world));
+  const kindIn = exerciseKindIn(world);
+  const { state, setState, remember } = useDerivedKindDraft(untouched, kindIn);
   const guard = useDiscardGuard(state !== untouched);
-  const [picking, setPicking] = React.useState<{ swap: number } | "add" | null>(null);
+  const [picking, setPicking] = React.useState<{ swap: number } | { group: string } | "add" | null>(
+    null
+  );
   const descriptionId = React.useId();
   const estimate = estimatedMinutes(state);
   const exerciseNamed = (name: string) =>
@@ -126,6 +137,49 @@ function Editor({
     const own = exerciseNamed(exercise);
     return own === undefined ? exercise : exerciseLabel(own);
   };
+  const itemCard = (
+    item: Item,
+    i: number,
+    inGroup?: { first: number; last: number; letter: number }
+  ): React.ReactElement => {
+    const up = inGroup === undefined ? i > 0 : i > inGroup.first;
+    const down = inGroup === undefined ? i < state.items.length - 1 : i < inGroup.last;
+    return item.checklist !== undefined ? (
+      <ChecklistEditor
+        item={item}
+        onChange={(update) =>
+          setState((s) => {
+            const now = s.items[i];
+            return now === undefined ? s : withItem(s, i, update(now));
+          })
+        }
+        onRemove={() => setState((s) => withoutItem(s, i))}
+        {...(up && { onMoveUp: () => setState((s) => withEditorMoved(s, i, -1, kindIn)) })}
+        {...(down && {
+          onMoveDown: () => setState((s) => withEditorMoved(s, i, 1, kindIn)),
+        })}
+      />
+    ) : (
+      <ItemEditor
+        kind={isGrip(item.exercise) ? "hangboard" : state.kind}
+        item={item}
+        name={nameOf(item.exercise)}
+        measure={measureOf(item)}
+        unit={model.settings.units}
+        onChange={(next) => setState((s) => withItem(s, i, next))}
+        onRemove={() =>
+          setState((s) => (inGroup === undefined ? withoutItem(s, i) : withMemberOut(s, i, kindIn)))
+        }
+        member={inGroup?.letter}
+        onSwap={() => setPicking({ swap: i })}
+        {...(up && { onMoveUp: () => setState((s) => withEditorMoved(s, i, -1, kindIn)) })}
+        {...(down && {
+          onMoveDown: () => setState((s) => withEditorMoved(s, i, 1, kindIn)),
+        })}
+      />
+    );
+  };
+
   const save = (): void => {
     const saved = id ?? newId();
     guard.release();
@@ -167,48 +221,64 @@ function Editor({
         />
       </div>
       <FocusField value={state.focus} onChange={(focus) => setState((s) => ({ ...s, focus }))} />
-      {state.items.map((item, i) => (
-        <React.Fragment key={item.id ?? i}>
-          {i > 0 && (
-            <GapRest
-              after={itemTitle(state.items[i - 1] ?? { exercise: "" }, nameOf)}
-              seconds={restAfterItem(state.items, i - 1, state.exerciseRestS)}
-              onChange={(seconds) => setState((s) => withRestAfter(s, i - 1, seconds))}
-            />
-          )}
-          {item.checklist !== undefined ? (
-            <ChecklistEditor
-              item={item}
-              onChange={(update) =>
-                setState((s) => {
-                  const now = s.items[i];
-                  return now === undefined ? s : withItem(s, i, update(now));
-                })
-              }
-              onRemove={() => setState((s) => withoutItem(s, i))}
-              {...(i > 0 && { onMoveUp: () => setState((s) => withItemMoved(s, i, i - 1)) })}
-              {...(i < state.items.length - 1 && {
-                onMoveDown: () => setState((s) => withItemMoved(s, i, i + 1)),
-              })}
-            />
-          ) : (
-            <ItemEditor
-              kind={isGrip(item.exercise) ? "hangboard" : state.kind}
-              item={item}
-              name={nameOf(item.exercise)}
-              measure={measureOf(item)}
-              unit={model.settings.units}
-              onChange={(next) => setState((s) => withItem(s, i, next))}
-              onRemove={() => setState((s) => withoutItem(s, i))}
-              onSwap={() => setPicking({ swap: i })}
-              {...(i > 0 && { onMoveUp: () => setState((s) => withItemMoved(s, i, i - 1)) })}
-              {...(i < state.items.length - 1 && {
-                onMoveDown: () => setState((s) => withItemMoved(s, i, i + 1)),
-              })}
-            />
-          )}
-        </React.Fragment>
-      ))}
+      {state.items.map((item, i) => {
+        const g = item.group;
+        if (g !== undefined && state.items[i - 1]?.group?.id === g.id) return null;
+        const members =
+          g === undefined ? [] : state.items.flatMap((m, at) => (m.group?.id === g.id ? [at] : []));
+        const last = members[members.length - 1] ?? i;
+        const offer = canSupersetWithNext(state, last, kindIn);
+        return (
+          <React.Fragment key={item.id ?? i}>
+            {i > 0 && (
+              <GapRest
+                after={itemTitle(state.items[i - 1] ?? { exercise: "" }, nameOf)}
+                seconds={restAfterItem(state.items, i - 1, state.exerciseRestS)}
+                onChange={(seconds) => setState((s) => withRestAfter(s, i - 1, seconds))}
+              />
+            )}
+            {g === undefined ? (
+              itemCard(item, i)
+            ) : (
+              <SupersetEditor
+                group={g}
+                onChange={(change) => setState((s) => withGroupSet(s, g.id, change, kindIn))}
+                onUngroup={() => setState((s) => withUngrouped(s, g.id))}
+                onAdd={canAddToGroup(state, g.id) ? () => setPicking({ group: g.id }) : undefined}
+                {...((members[0] ?? 0) > 0 && {
+                  onMoveUp: () =>
+                    setState((s) => withEditorMoved(s, members[0] ?? 0, -1, kindIn, true)),
+                })}
+                {...(last < state.items.length - 1 && {
+                  onMoveDown: () => setState((s) => withEditorMoved(s, last, 1, kindIn, true)),
+                })}
+              >
+                {members.map((at) => {
+                  const m = state.items[at];
+                  return m === undefined ? null : (
+                    <React.Fragment key={m.id ?? at}>
+                      {itemCard(m, at, {
+                        first: members[0] ?? at,
+                        last,
+                        letter: members.indexOf(at),
+                      })}
+                    </React.Fragment>
+                  );
+                })}
+              </SupersetEditor>
+            )}
+            {offer && (
+              <button
+                type="button"
+                className="text-button superset-offer"
+                onClick={() => setState((s) => withSupersetWithNext(s, last, newId, kindIn))}
+              >
+                {t("workouts.supersetWithNext")}
+              </button>
+            )}
+          </React.Fragment>
+        );
+      })}
       <div className="editor-add-row">
         <button
           type="button"
@@ -248,18 +318,21 @@ function Editor({
       {picking !== null && (
         <ExercisePicker
           items={state.items}
-          multi={picking === "add"}
+          multi={picking === "add" || "group" in picking}
+          superset={picking !== "add" && "group" in picking}
           onPick={(list) => {
             remember(list);
             setState((s) =>
               picking === "add"
                 ? withItemsAdded(s, list, newId, isGrip)
-                : withExerciseSwapped(
-                    s,
-                    picking.swap,
-                    list[0] ?? { exercise: "", kind: s.kind },
-                    isGrip
-                  )
+                : "group" in picking
+                  ? withAddedToGroup(s, picking.group, list, newId, kindIn)
+                  : withExerciseSwapped(
+                      s,
+                      picking.swap,
+                      list[0] ?? { exercise: "", kind: s.kind },
+                      isGrip
+                    )
             );
           }}
           onClose={() => setPicking(null)}

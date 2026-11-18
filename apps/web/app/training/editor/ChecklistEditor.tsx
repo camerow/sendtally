@@ -48,10 +48,14 @@ export function ChecklistEditor({
       <div className="item-editor-head">
         <span className="item-editor-name">{name}</span>
         {onMoveUp !== undefined && (
-          <IconButton icon="up" label={t("workouts.moveUp", { name })} onClick={onMoveUp} />
+          <IconButton icon="moveUp" label={t("workouts.moveUp", { name })} onClick={onMoveUp} />
         )}
         {onMoveDown !== undefined && (
-          <IconButton icon="down" label={t("workouts.moveDown", { name })} onClick={onMoveDown} />
+          <IconButton
+            icon="moveDown"
+            label={t("workouts.moveDown", { name })}
+            onClick={onMoveDown}
+          />
         )}
         <IconButton
           icon="remove"

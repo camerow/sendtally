@@ -17,6 +17,7 @@ import { t } from "@sendtally/features/i18n";
 import {
   doseSummary,
   itemDoseText,
+  supersetHeadAt,
   itemTitle,
   letterName,
   turnName,
@@ -58,7 +59,7 @@ export function BodyPreview({
   const restOf = (seconds: number | undefined): string | undefined =>
     seconds === undefined || seconds === 0
       ? undefined
-      : t("plan.chipRest", { value: clock(seconds) });
+      : t("plan.chipRest", { value: clock(seconds, true) });
   const doseText = (exercise: string, dose: Dose): string => {
     const measure = tally(exercise);
     return measure === null
@@ -77,6 +78,13 @@ export function BodyPreview({
           letter: letterName(next, dose.name),
           dose: doseText(item.exercise, dose),
         });
+  };
+  // Between members the superset's own rest; else the rest after the exercise before.
+  const gapBefore = (i: number): number => {
+    const g = items[i]?.group;
+    return g !== undefined && items[i - 1]?.group?.id === g.id
+      ? g.restBetweenS
+      : restAfterItem(items, i - 1, workout.exerciseRestS);
   };
   return (
     <View style={{ gap: 4 }}>
@@ -103,24 +111,33 @@ export function BodyPreview({
           <IntervalsBar intervals={intervalsOf(items)} height={14} />
         </View>
       )}
-      {items.map((item, i) => (
-        <React.Fragment key={i}>
-          {i > 0 && restAfterItem(items, i - 1, workout.exerciseRestS) > 0 && (
-            <RestDivider label={restOf(restAfterItem(items, i - 1, workout.exerciseRestS)) ?? ""} />
-          )}
-          <PreviewRow
-            title={itemTitle(item)}
-            detail={
-              item.checklist === undefined
-                ? doseText(item.exercise, item.dose)
-                : itemDoseText(workout.kind, item, unit)
-            }
-            note={item.checklist?.lines.join(" · ") ?? withTarget(item.dose, noteOf(i))}
-            rest={workout.kind === "hangboard" ? undefined : restOf(item.dose.setRestS)}
-            onPress={item.checklist === undefined ? openExercise?.(item.exercise) : undefined}
-          />
-        </React.Fragment>
-      ))}
+      {items.map((item, i) => {
+        const head = supersetHeadAt(items, i);
+        const gap = gapBefore(i);
+        return (
+          <React.Fragment key={i}>
+            {head !== null && (
+              <Text
+                style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal, paddingTop: 8 }]}
+              >
+                {head}
+              </Text>
+            )}
+            {i > 0 && gap > 0 && <RestDivider label={restOf(gap) ?? ""} />}
+            <PreviewRow
+              title={itemTitle(item)}
+              detail={
+                item.checklist === undefined
+                  ? doseText(item.exercise, item.dose)
+                  : itemDoseText(workout.kind, item, unit)
+              }
+              note={item.checklist?.lines.join(" · ") ?? withTarget(item.dose, noteOf(i))}
+              rest={workout.kind === "hangboard" ? undefined : restOf(item.dose.setRestS)}
+              onPress={item.checklist === undefined ? openExercise?.(item.exercise) : undefined}
+            />
+          </React.Fragment>
+        );
+      })}
     </View>
   );
 }

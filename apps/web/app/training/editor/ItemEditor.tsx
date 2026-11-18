@@ -39,6 +39,11 @@ export type ItemEditorProps = {
   onMoveUp?: () => void;
   /** Absent for the last item. */
   onMoveDown?: () => void;
+  /**
+   * A superset member, by its letter's place (A is 0): its sets are the superset's rounds, so they are not asked, and its − takes
+   * it out of the superset, saying so, rather than out of the workout.
+   */
+  member?: number;
 };
 
 function IconButton({
@@ -74,9 +79,16 @@ export function ItemEditor({
   onMoveUp,
   onMoveDown,
   preview = false,
+  member,
 }: ItemEditorProps): React.ReactElement {
   const alternating = item.doses.length > 1;
-  const fields = doseFieldsFor(kind, measure, item.doses[0]);
+  const fields = doseFieldsFor(kind, measure, item.doses[0]).filter(
+    (f) => member === undefined || f.key !== "sets"
+  );
+  const removeLabel =
+    member !== undefined
+      ? t("workouts.outOfSuperset", { name })
+      : t("workouts.removeExercise", { name });
   const laps = measure === "laps";
   const lapUnit = item.doses[0]?.onS === undefined ? "moves" : "seconds";
   const menu = [
@@ -97,29 +109,30 @@ export function ItemEditor({
           },
         ]
       : []),
-    { label: t("workouts.removeExercise", { name }), onSelect: onRemove, destructive: true },
+    { label: removeLabel, onSelect: onRemove, destructive: member === undefined },
   ];
 
   return (
     <div className="item-editor" aria-hidden={preview || undefined} inert={preview || undefined}>
       <div className="item-editor-head">
+        {member !== undefined && <LetterBadge dose={member} plain />}
         <span className="item-editor-name">{name}</span>
         {onMoveUp !== undefined && (
-          <IconButton icon="up" label={t("workouts.moveUp", { name })} onClick={onMoveUp} />
+          <IconButton icon="moveUp" label={t("workouts.moveUp", { name })} onClick={onMoveUp} />
         )}
         {onMoveDown !== undefined && (
-          <IconButton icon="down" label={t("workouts.moveDown", { name })} onClick={onMoveDown} />
+          <IconButton
+            icon="moveDown"
+            label={t("workouts.moveDown", { name })}
+            onClick={onMoveDown}
+          />
         )}
         {preview ? null : alternating ? (
           <MoreMenu label={t("workouts.exerciseMore")} items={menu} />
         ) : (
           <>
             <IconButton icon="restart" label={t("workouts.swapExercise")} onClick={onSwap} />
-            <IconButton
-              icon="remove"
-              label={t("workouts.removeExercise", { name })}
-              onClick={onRemove}
-            />
+            <IconButton icon="remove" label={removeLabel} onClick={onRemove} />
           </>
         )}
       </div>
@@ -175,19 +188,23 @@ export function ItemEditor({
           </div>
         </div>
       ))}
-      <div className="item-editor-foot">
-        <SwitchField
-          label={t("workouts.alternates")}
-          checked={alternating}
-          onChange={(on) => onChange(withAlternates(item, on))}
-        />
-      </div>
-      <NumberField
-        label={laps ? t("workouts.lapRest") : t("hang.fieldSetRest")}
-        value={item.doses[0]?.setRestS ?? 0}
-        mode={{ kind: "time", max: 3600 }}
-        onChange={(seconds) => onChange(withSetRest(item, seconds))}
-      />
+      {member === undefined && (
+        <>
+          <div className="item-editor-foot">
+            <SwitchField
+              label={t("workouts.alternates")}
+              checked={alternating}
+              onChange={(on) => onChange(withAlternates(item, on))}
+            />
+          </div>
+          <NumberField
+            label={laps ? t("workouts.lapRest") : t("hang.fieldSetRest")}
+            value={item.doses[0]?.setRestS ?? 0}
+            mode={{ kind: "time", max: 3600 }}
+            onChange={(seconds) => onChange(withSetRest(item, seconds))}
+          />
+        </>
+      )}
     </div>
   );
 }

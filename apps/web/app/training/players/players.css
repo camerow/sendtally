@@ -802,3 +802,11 @@
 .done-card .check-row:last-child {
   border-bottom: none;
 }
+
+.superset-round {
+  padding-top: 6px;
+}
+
+.superset-round--first {
+  padding-top: 0;
+}

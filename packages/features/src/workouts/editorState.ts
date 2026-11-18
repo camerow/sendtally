@@ -1,5 +1,9 @@
 import {
   CHECKLIST_NAME,
+  MAX_GROUP_MEMBERS,
+  joinsGroup,
+  withGroupsSettled,
+  type ItemGroup,
   MAX_CHECKLIST_LINE,
   MAX_CHECKLIST_LINES,
   defaultExerciseRestS,
@@ -15,6 +19,7 @@ import { t } from "../i18n";
 import type { EnduranceUnit } from "../log-session";
 import type { Picked, WorkoutDraft } from "./types";
 import { fingersMeasure, newDoseFor, type DoseMeasure } from "./doseFields";
+import { unitMovedOrder } from "./unitMove";
 
 export const MAX_DOSES = 10;
 
@@ -231,4 +236,142 @@ export function draftOfEditor(s: WorkoutDraft): WorkoutDraft {
         return kept === null || kept.exercise === "" ? [] : [kept];
       }),
   };
+}
+
+const DEFAULT_REST_BETWEEN_S = 30;
+const DEFAULT_REST_ROUND_S = 120;
+/** How an exercise is filed, which says whether it can be in a superset (see `joinsGroup`). */
+type KindOf = (exercise: string) => WorkoutKind | undefined;
+
+const settled = (s: WorkoutDraft, items: Item[], kindOf: KindOf): WorkoutDraft => ({
+  ...s,
+  items: withGroupsSettled(items, kindOf),
+});
+
+/**
+ * Whether the gap below the item at `at` offers "Superset with next": the item ends its superset,
+ * or has none, and it and the next can both be in one. The server keeps what this offers.
+ */
+export function canSupersetWithNext(s: WorkoutDraft, at: number, kindOf: KindOf): boolean {
+  const item = s.items[at];
+  const next = s.items[at + 1];
+  if (item === undefined || next === undefined || next.group !== undefined) return false;
+  if (item.group !== undefined && !canAddToGroup(s, item.group.id)) return false;
+  return joinsGroup(item, kindOf) && joinsGroup(next, kindOf);
+}
+
+const membersOf = (s: WorkoutDraft, id: string): number[] =>
+  s.items.flatMap((x, i) => (x.group?.id === id ? [i] : []));
+
+/** Whether a superset has room for one more member. */
+export const canAddToGroup = (s: WorkoutDraft, id: string): boolean =>
+  membersOf(s, id).length < MAX_GROUP_MEMBERS;
+
+/**
+ * The item at `at` one place up or down: a plain card past the whole superset beside it, a
+ * superset (`whole`) as one block, a member only within its superset; the same draft when it
+ * cannot move.
+ */
+export function withEditorMoved(
+  s: WorkoutDraft,
+  at: number,
+  by: -1 | 1,
+  kindOf: KindOf,
+  whole = false
+): WorkoutDraft {
+  const item = s.items[at];
+  if (item === undefined) return s;
+  const unitOf = (i: number): number[] => {
+    const id = s.items[i]?.group?.id;
+    return id === undefined ? [i] : membersOf(s, id);
+  };
+  if (item.group !== undefined && !whole) {
+    const to = at + by;
+    return s.items[to]?.group?.id === item.group.id ? withItemMoved(s, at, to) : s;
+  }
+  const order = s.items.map((_, i) => i);
+  const moved = unitMovedOrder(order, unitOf(at), by, unitOf);
+  if (moved === order) return s;
+  return settled(
+    s,
+    moved.flatMap((i) => s.items[i] ?? []),
+    kindOf
+  );
+}
+const ungrouped = ({ group: _, ...item }: Item): Item => item;
+
+/**
+ * The exercise at `at` in a superset with the next: a new one at its sets as rounds, or the next
+ * joining the superset it is the last of.
+ */
+export function withSupersetWithNext(
+  s: WorkoutDraft,
+  at: number,
+  newId: () => string,
+  kindOf: KindOf
+): WorkoutDraft {
+  const item = s.items[at];
+  const next = s.items[at + 1];
+  if (item === undefined || next === undefined) return s;
+  const group: ItemGroup = item.group ?? {
+    id: newId(),
+    rounds: item.doses[0]?.sets ?? 1,
+    restBetweenS: DEFAULT_REST_BETWEEN_S,
+    restRoundS: s.exerciseRestS > 0 ? s.exerciseRestS : DEFAULT_REST_ROUND_S,
+  };
+  return settled(
+    s,
+    s.items.map((x, i) => (i === at || i === at + 1 ? { ...x, group } : x)),
+    kindOf
+  );
+}
+
+/** A superset's rounds or rests, the same on every member. */
+export const withGroupSet = (
+  s: WorkoutDraft,
+  id: string,
+  change: Partial<Omit<ItemGroup, "id">>,
+  kindOf: KindOf
+): WorkoutDraft =>
+  settled(
+    s,
+    s.items.map((x) => (x.group?.id === id ? { ...x, group: { ...x.group, ...change } } : x)),
+    kindOf
+  );
+
+/** A member out of its superset, just below it; one left on its own is no superset. */
+export function withMemberOut(s: WorkoutDraft, at: number, kindOf: KindOf): WorkoutDraft {
+  const item = s.items[at];
+  const id = item?.group?.id;
+  if (item === undefined || id === undefined) return s;
+  const rest = s.items.filter((_, i) => i !== at);
+  const last = rest.reduce((n, x, i) => (x.group?.id === id ? i : n), -1);
+  return settled(s, [...rest.slice(0, last + 1), ungrouped(item), ...rest.slice(last + 1)], kindOf);
+}
+
+/** Every member of a superset as an exercise of its own, where it is. */
+export const withUngrouped = (s: WorkoutDraft, id: string): WorkoutDraft => ({
+  ...s,
+  items: s.items.map((x) => (x.group?.id === id ? ungrouped(x) : x)),
+});
+
+/** Picked exercises at the end of a superset, at its rounds. */
+export function withAddedToGroup(
+  s: WorkoutDraft,
+  id: string,
+  picked: readonly Picked[],
+  newId: () => string,
+  kindOf: KindOf
+): WorkoutDraft {
+  const last = s.items.reduce((n, x, i) => (x.group?.id === id ? i : n), -1);
+  const group = s.items[last]?.group;
+  if (group === undefined) return s;
+  const room = Math.max(0, MAX_GROUP_MEMBERS - membersOf(s, id).length);
+  const added = withItemsAdded({ ...s, items: [] }, picked.slice(0, room), newId).items.map(
+    (x) => ({
+      ...x,
+      group,
+    })
+  );
+  return settled(s, [...s.items.slice(0, last + 1), ...added, ...s.items.slice(last + 1)], kindOf);
 }

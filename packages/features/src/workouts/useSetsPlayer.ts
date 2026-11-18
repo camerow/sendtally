@@ -36,7 +36,7 @@ import {
   withCardAdded,
   withCardEnded,
   withCardFold,
-  withCardMoved,
+  withUnitMoved,
   withCardRemoved,
   withCardSkipped,
   withoutSet,
@@ -57,6 +57,14 @@ import {
   withPrevious,
   type SetAt,
 } from "./setsRun";
+import {
+  restAfterGroupTick,
+  runGroupsOf,
+  supersetMembers,
+  withRunGroups,
+  type RunGroup,
+} from "./groups";
+import { unitMovedOrder } from "./unitMove";
 import { useHold, useLiveRun, useRest, type HoldClock, type RestClock } from "./useLiveRun";
 import type { PlannedRun } from "./usePlannedRun";
 
@@ -143,6 +151,8 @@ export type SetsPlayer = {
   focus: (at: SetAt) => void;
   skip: (item: number) => void;
   move: (item: number, by: -1 | 1) => void;
+  /** Whether a card, or the superset it is in, has a place to move to that way. */
+  canMove: (item: number, by: -1 | 1) => boolean;
   remove: (item: number) => void;
   /** An exercise added to this run only, at the end, with the dose the editor would give it. */
   addExercise: (picked: Picked) => void;
@@ -164,6 +174,10 @@ export type SetsPlayer = {
   canClimbOn: (item: number) => boolean;
   /** A checklist's typed lines, one set each; null for an exercise. */
   checklist: (item: number) => string[] | null;
+  /** The supersets as the cards stand now: neighbours sharing a group. */
+  groups: RunGroup[];
+  /** The items with each one's sets as many as it has now. */
+  live: SessionItem[];
   /** What the run did, and the sets it left unticked, for its review. */
   finished: () => RunFinish;
   /** Whether what it needs to finish has loaded. */
@@ -212,7 +226,7 @@ export function useSetsPlayer({
   );
   const [focused, setFocused] = React.useState<SetAt | null>(null);
   const [removed, setRemoved] = React.useState<
-    (RemovedSet & { at: SetAt; value: SetDone; wasTicked: boolean }) | null
+    (RemovedSet & { parts: { at: SetAt; value: SetDone; wasTicked: boolean }[] }) | null
   >(null);
   const logged = climbs.length + climbs.reduce((n, c) => n + (c.endurance?.laps.length ?? 0), 0);
   const lastTickAt = ticked.size === 0 && logged === 0 ? undefined : tickedAt;
@@ -273,9 +287,22 @@ export function useSetsPlayer({
     const after = withDoneSets(items, d);
     return (after[item]?.dose.sets ?? 0) > 0 && itemDone(after, t, item);
   };
-  const sets = cards.order.flatMap((key) =>
-    allSets(live).filter((at) => at.item === key && tallyOf(key) === null && !inPart(key))
-  );
+  const groups = runGroupsOf(cards.order, live, (k) => tallyOf(k) === null);
+  const groupOf = (item: number): RunGroup | undefined =>
+    groups.find((g) => g.members.includes(item));
+  const unitOf = (item: number): number[] => groupOf(item)?.members ?? [item];
+  // A superset goes round by round: A1 B1 C1, then A2 B2 C2.
+  const roundOrder = (g: RunGroup): SetAt[] => {
+    const rounds = Math.max(...g.members.map((m) => live[m]?.dose.sets ?? 0));
+    return Array.from({ length: rounds }, (_, set) =>
+      g.members.flatMap((item) => (set < (live[item]?.dose.sets ?? 0) ? [{ item, set }] : []))
+    ).flat();
+  };
+  const sets = cards.order.flatMap((key) => {
+    const g = groupOf(key);
+    if (g !== undefined) return g.members[0] === key ? roundOrder(g) : [];
+    return allSets(live).filter((at) => at.item === key && tallyOf(key) === null && !inPart(key));
+  });
   const previous = (exercise: string): SetDone[] =>
     activities === null || run.workoutId === null
       ? []
@@ -309,7 +336,12 @@ export function useSetsPlayer({
     const finished = sets.every((s) => s.item !== at.item || after.has(setKey(s)));
     setFocused(ticking && finished ? null : at);
     setCards((c) => withCardEnded(withCardFold(c, at.item, null), at.item, finished));
-    const restAfter = ticking ? restAfterTick(live, after, at, run.exerciseRestS) : null;
+    const inGroup = groupOf(at.item);
+    const restAfter = !ticking
+      ? null
+      : inGroup === undefined
+        ? restAfterTick(live, after, at, run.exerciseRestS)
+        : restAfterGroupTick(live, after, at, inGroup, run.exerciseRestS);
     if (restAfter === null) rest.skip();
     else
       rest.tick(
@@ -476,7 +508,7 @@ export function useSetsPlayer({
         (focused === null && climbAt !== null && next !== null
           ? (cards.order.find((k) => k === climbAt || k === next.item) ?? -1)
           : (current?.item ?? climbAt ?? -1)),
-      (k) => listAt(k),
+      (k) => (listAt(k) ? null : (groupOf(k)?.id ?? String(k))),
       (k) => inPart(k) && !partOpen
     ),
     rest,
@@ -502,30 +534,44 @@ export function useSetsPlayer({
       cards.shut.includes(item) ||
       (!cards.open.includes(item) && (cards.skipped.includes(item) || doneOf(item))),
     skipped: (item) => cards.skipped.includes(item),
+    // In a superset a set is a round: it is added to every member, and goes from every member.
     addSet: (item) => {
+      const members = groupOf(item)?.members ?? [item];
       setDone((all) =>
-        all.some((d) => d.item === item && d.sets.length > 0)
-          ? addSet(all, item)
-          : all.map((d) =>
-              d.item === item ? { ...d, sets: [setOf(items[item]?.dose ?? { sets: 1 })] } : d
-            )
+        members.reduce(
+          (acc, m) =>
+            acc.some((d) => d.item === m && d.sets.length > 0)
+              ? addSet(acc, m)
+              : acc.map((d) =>
+                  d.item === m ? { ...d, sets: [setOf(items[m]?.dose ?? { sets: 1 })] } : d
+                ),
+          all
+        )
       );
-      withFold(item, false);
+      for (const m of members) withFold(m, false);
     },
     removeSet: (at) => {
-      const value = done.find((d) => d.item === at.item)?.sets[at.set];
-      if (value === undefined) return;
-      const out = withoutSet(done, ticked, at);
+      const members = groupOf(at.item)?.members ?? [at.item];
+      const parts = members.flatMap((item) => {
+        const value = done.find((d) => d.item === item)?.sets[at.set];
+        const set = { item, set: at.set };
+        return value === undefined ? [] : [{ at: set, value, wasTicked: ticked.has(setKey(set)) }];
+      });
+      if (parts.length === 0) return;
+      const out = parts.reduce((acc, p) => withoutSet(acc.done, acc.ticked, p.at), {
+        done,
+        ticked: new Set(ticked),
+      });
       setRemoved({
-        exercise: nameOf(at.item),
+        exercise: supersetMembers(members.map((m) => nameOf(m))),
         set: at.set + 1,
-        at,
-        value,
-        wasTicked: ticked.has(setKey(at)),
+        parts,
       });
       setDone(out.done);
       setTicked(out.ticked);
-      setCards((c) => withCardEnded(c, at.item, ended(out.done, out.ticked, at.item)));
+      setCards((c) =>
+        members.reduce((x, m) => withCardEnded(x, m, ended(out.done, out.ticked, m)), c)
+      );
       setFocused(null);
       rest.skip();
     },
@@ -534,10 +580,18 @@ export function useSetsPlayer({
       const was = lastRemoved.current;
       if (was === null) return;
       const now = latest.current;
-      const back = withSetBack(now.done, now.ticked, was.at, was.value, was.wasTicked);
+      const back = was.parts.reduce(
+        (acc, p) => withSetBack(acc.done, acc.ticked, p.at, p.value, p.wasTicked),
+        { done: now.done, ticked: new Set(now.ticked) }
+      );
       setDone(back.done);
       setTicked(back.ticked);
-      setCards((c) => withCardEnded(c, was.at.item, ended(back.done, back.ticked, was.at.item)));
+      setCards((c) =>
+        was.parts.reduce(
+          (x, p) => withCardEnded(x, p.at.item, ended(back.done, back.ticked, p.at.item)),
+          c
+        )
+      );
       setRemoved(null);
     },
     dismissRemoved: () => setRemoved(null),
@@ -552,7 +606,8 @@ export function useSetsPlayer({
       setCards((c) => withCardSkipped(c, item));
       withFold(item, null);
     },
-    move: (item, by) => setCards((c) => withCardMoved(c, item, by)),
+    move: (item, by) => setCards((c) => withUnitMoved(c, unitOf(item), by, unitOf)),
+    canMove: (item, by) => unitMovedOrder(cards.order, unitOf(item), by, unitOf) !== cards.order,
     remove: (item) => {
       setCards((c) => withCardRemoved(c, item));
       if (focused?.item === item) setFocused(null);
@@ -576,6 +631,8 @@ export function useSetsPlayer({
     climbOn: setChosen,
     canClimbOn: (item) => tallyOf(item) !== null && climbAt !== item && !climbDone(item),
     checklist: (item) => items[item]?.checklist?.lines ?? null,
+    groups,
+    live,
     finished: () => {
       rest.skip();
       hold.stop();
@@ -603,7 +660,10 @@ export function useSetsPlayer({
       const climbed = each.flatMap(({ d, sets }) =>
         sets === null ? [] : sets.map((_, set) => setKey({ item: d.item, set }))
       );
-      return { ...finishedInOrder(cards, ran, new Set([...ticked, ...climbed])), lastTickAt };
+      return {
+        ...finishedInOrder(cards, withRunGroups(ran, groups), new Set([...ticked, ...climbed])),
+        lastTickAt,
+      };
     },
     loaded: activities !== null && exercises !== null,
     part:

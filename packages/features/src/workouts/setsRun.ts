@@ -82,21 +82,21 @@ export const holdShort = (target: SetDone, done: SetDone, ticked: boolean): bool
   ticked && target.onS !== undefined && (done.onS ?? 0) < target.onS;
 
 /**
- * "Exercise 2 of 3" over the cards in their order, counting exercises only: on a checklist it
- * reads the next exercise after it not already behind the run. None when the run holds no
- * exercise.
+ * "Exercise 2 of 3" over the cards in their order, counting each exercise once, a superset as
+ * one, and a checklist (null) not at all: on a checklist it reads the next exercise after it not
+ * already behind the run. None when the run holds no exercise.
  */
 export function exercisePosition(
   order: readonly number[],
   on: number,
-  isChecklist: (item: number) => boolean,
+  unitOf: (item: number) => string | null,
   behind: (item: number) => boolean = () => false
 ): { at: number; of: number } | null {
-  const exercises = order.filter((k) => !isChecklist(k));
-  if (exercises.length === 0) return null;
+  const units = [...new Set(order.flatMap((k) => unitOf(k) ?? []))];
+  if (units.length === 0) return null;
   const from = Math.max(0, order.indexOf(on));
-  const after = order.slice(from).filter((k) => !isChecklist(k));
-  const shown =
-    (isChecklist(on) ? after.find((k) => !behind(k)) : after[0]) ?? exercises[exercises.length - 1];
-  return { at: Math.max(0, exercises.indexOf(shown ?? -1)) + 1, of: exercises.length };
+  const after = order.slice(from).filter((k) => unitOf(k) !== null);
+  const at = unitOf(on) === null ? after.find((k) => !behind(k)) : after[0];
+  const shown = (at === undefined ? null : unitOf(at)) ?? units[units.length - 1];
+  return { at: Math.max(0, units.indexOf(shown ?? "")) + 1, of: units.length };
 }

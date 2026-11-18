@@ -31,7 +31,7 @@ export function BlockOrder({ members, workout, onMove }: BlockOrderProps): React
               disabled={i === 0}
               onClick={() => onMove(m.id, -1)}
             >
-              <Icon name="up" size={18} strokeWidth={2} />
+              <Icon name="moveUp" size={18} strokeWidth={2} />
             </button>
             <button
               type="button"
@@ -40,7 +40,7 @@ export function BlockOrder({ members, workout, onMove }: BlockOrderProps): React
               disabled={i === members.length - 1}
               onClick={() => onMove(m.id, 1)}
             >
-              <Icon name="down" size={18} strokeWidth={2} />
+              <Icon name="moveDown" size={18} strokeWidth={2} />
             </button>
           </div>
         );

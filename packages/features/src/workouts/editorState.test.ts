@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { restAfterItem, type WorkoutKind } from "@sendtally/core/hang";
+import { restAfterItem, type Item, type WorkoutKind } from "@sendtally/core/hang";
 import type { WorkoutDraft } from "./types";
 import {
   draftOfEditor,
@@ -18,6 +18,14 @@ import {
   withChecklistLines,
   withLineAfter,
   withLineTyped,
+  withAddedToGroup,
+  withGroupSet,
+  withMemberOut,
+  withSupersetWithNext,
+  canSupersetWithNext,
+  canAddToGroup,
+  withEditorMoved,
+  withUngrouped,
 } from "./editorState";
 
 const squat = { exercise: "Back squat", doses: [{ sets: 5, reps: 5 }] };
@@ -224,5 +232,130 @@ describe("typing a checklist's lines", () => {
     const full = { ...list, checklist: { lines: Array.from({ length: 30 }, (_, i) => `L${i}`) } };
     expect(withLineAfter(full, 29)).toBe(full);
     expect(withLineTyped(list, 0, "x".repeat(130)).checklist?.lines[0]).toHaveLength(120);
+  });
+});
+
+describe("a superset in the editor", () => {
+  const pull = { id: "p", exercise: "Pull-ups", doses: [{ sets: 3, reps: 6 }] };
+  const push = { id: "q", exercise: "Push-ups", doses: [{ sets: 4, reps: 15 }] };
+  const plank = { id: "r", exercise: "Plank", doses: [{ sets: 3, onS: 45 }] };
+  const three: WorkoutDraft = { ...legs, items: [pull, push, plank] };
+  const kindOf = (e: string): WorkoutKind | undefined =>
+    e === "half" ? "hangboard" : e === "ARC" ? "climbing" : "strength";
+  const grouped = withSupersetWithNext(three, 0, () => "g1", kindOf);
+
+  it("joins an exercise with the next, at its sets as rounds, and the gap below the group adds one more", () => {
+    expect(grouped.items.map((i) => i.group?.id)).toEqual(["g1", "g1", undefined]);
+    expect(grouped.items[1]?.doses[0]?.sets).toBe(3);
+    expect(grouped.items[0]?.group).toMatchObject({ rounds: 3, restBetweenS: 30, restRoundS: 180 });
+    expect(
+      withSupersetWithNext(grouped, 1, () => "g2", kindOf).items.map((i) => i.group?.id)
+    ).toEqual(["g1", "g1", "g1"]);
+  });
+
+  it("rests two minutes after each round when the workout rests none between exercises", () => {
+    const none = withSupersetWithNext({ ...three, exerciseRestS: 0 }, 0, () => "g1", kindOf);
+    expect(none.items[0]?.group?.restRoundS).toBe(120);
+  });
+
+  it("offers a superset with the next only where both can be in one", () => {
+    const arc = { id: "a", exercise: "ARC", doses: [{ sets: 3, onS: 600 }] };
+    const half = { id: "h", exercise: "half", doses: [{ sets: 6, onS: 7, offS: 3 }] };
+    const mixed: WorkoutDraft = { ...legs, items: [pull, push, arc, plank, half] };
+    expect([0, 1, 2, 3, 4].map((at) => canSupersetWithNext(mixed, at, kindOf))).toEqual([
+      true,
+      false,
+      false,
+      false,
+      false,
+    ]);
+    expect(canSupersetWithNext(grouped, 0, kindOf)).toBe(false);
+    expect(canSupersetWithNext(grouped, 1, kindOf)).toBe(true);
+  });
+
+  it("sets rounds and rests for every member", () => {
+    const set = withGroupSet(grouped, "g1", { rounds: 5, restBetweenS: 0 }, kindOf);
+    expect(
+      set.items.slice(0, 2).map((i) => [i.group?.rounds, i.group?.restBetweenS, i.doses[0]?.sets])
+    ).toEqual([
+      [5, 0, 5],
+      [5, 0, 5],
+    ]);
+  });
+
+  it("takes a member out to just below the group, and ends the group at one left", () => {
+    const all = withSupersetWithNext(grouped, 1, () => "g2", kindOf);
+    const out = withMemberOut(all, 0, kindOf);
+    expect(out.items.map((i) => [i.exercise, i.group?.id])).toEqual([
+      ["Push-ups", "g1"],
+      ["Plank", "g1"],
+      ["Pull-ups", undefined],
+    ]);
+    expect(withMemberOut(grouped, 0, kindOf).items.every((i) => i.group === undefined)).toBe(true);
+  });
+
+  it("ungroups, keeping every exercise where it is", () => {
+    expect(withUngrouped(grouped, "g1").items).toEqual(
+      grouped.items.map(({ group: _, ...i }) => i)
+    );
+  });
+
+  it("adds picked exercises to the end of the group", () => {
+    const added = withAddedToGroup(
+      grouped,
+      "g1",
+      [{ exercise: "Dips", kind: "strength" }],
+      () => "d",
+      kindOf
+    );
+    expect(added.items.map((i) => [i.exercise, i.group?.id])).toEqual([
+      ["Pull-ups", "g1"],
+      ["Push-ups", "g1"],
+      ["Dips", "g1"],
+      ["Plank", undefined],
+    ]);
+  });
+});
+
+describe("moving around a superset in the editor", () => {
+  const ex = (id: string, group?: string): Item => ({
+    id,
+    exercise: id,
+    doses: [{ sets: 3, reps: 8 }],
+    ...(group === undefined
+      ? {}
+      : { group: { id: group, rounds: 3, restBetweenS: 30, restRoundS: 120 } }),
+  });
+  const kindOf = (): WorkoutKind => "strength";
+  const s: WorkoutDraft = { ...legs, items: [ex("P"), ex("A", "g"), ex("B", "g"), ex("Q")] };
+  const ids = (d: WorkoutDraft): string[] => d.items.map((i) => i.id ?? "");
+
+  it("moves a plain card past the whole superset, never into it", () => {
+    expect(ids(withEditorMoved(s, 0, 1, kindOf))).toEqual(["A", "B", "P", "Q"]);
+    expect(ids(withEditorMoved(s, 3, -1, kindOf))).toEqual(["P", "Q", "A", "B"]);
+  });
+
+  it("moves a superset whole, and a member only within its superset", () => {
+    expect(ids(withEditorMoved(s, 1, -1, kindOf, true))).toEqual(["A", "B", "P", "Q"]);
+    expect(ids(withEditorMoved(s, 2, 1, kindOf, true))).toEqual(["P", "Q", "A", "B"]);
+    expect(ids(withEditorMoved(s, 1, 1, kindOf))).toEqual(["P", "B", "A", "Q"]);
+    expect(withEditorMoved(s, 1, -1, kindOf)).toBe(s);
+  });
+
+  it("holds at most eight members in a superset", () => {
+    const eight: WorkoutDraft = {
+      ...legs,
+      items: Array.from({ length: 8 }, (_, n) => ex(`M${n}`, "g")).concat([ex("Z")]),
+    };
+    expect(canSupersetWithNext(eight, 7, kindOf)).toBe(false);
+    expect(canAddToGroup(eight, "g")).toBe(false);
+    const added = withAddedToGroup(
+      eight,
+      "g",
+      [{ exercise: "Dips", kind: "strength" }],
+      () => "d",
+      kindOf
+    );
+    expect(added.items.filter((i) => i.group?.id === "g")).toHaveLength(8);
   });
 });

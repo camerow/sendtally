@@ -9,6 +9,10 @@ import { SetDoneFields } from "../log/SetDoneFields";
 
 export type SetRowProps = {
   n: number;
+  /** In place of the set's number: a superset member's letter and round, "B2". */
+  tag?: string;
+  /** Before its target: a superset member's exercise. */
+  name?: string;
   target: SetDone;
   /** The top of a rep range the target runs to. */
   repsMax?: number;
@@ -34,6 +38,8 @@ export type SetRowProps = {
 /** One set: its number, what it asks and did last time, what was done, and its tick. */
 export function SetRow({
   n,
+  tag,
+  name,
   target,
   repsMax,
   done,
@@ -53,9 +59,9 @@ export function SetRow({
   const last = previous === undefined ? "" : setChip(previous, unit);
   return (
     <div className={current ? "set-row set-row--current" : "set-row"} onClick={onFocus}>
-      <span className="set-col-n">{formatNumber(n)}</span>
+      <span className="set-col-n">{tag ?? formatNumber(n)}</span>
       <span className="set-col-target">
-        <span>{setChip(target, unit, repsMax) || "-"}</span>
+        <span>{[name, setChip(target, unit, repsMax) || "-"].filter(Boolean).join(" ")}</span>
       </span>
       <span className="set-col-done">
         <SetDoneFields

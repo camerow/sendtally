@@ -33,7 +33,9 @@ export type IconName =
   | "merge"
   | "import"
   | "external"
-  | "arrowUpRight";
+  | "arrowUpRight"
+  | "moveUp"
+  | "moveDown";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   sessions: (
@@ -55,6 +57,8 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   chevron: <Path d="M9 6l6 6-6 6" />,
   up: <Path d="M12 19V5M6 11l6-6 6 6" />,
   down: <Path d="M12 5v14M6 13l6 6 6-6" />,
+  moveUp: <Path d="M12 19V5M6 11l6-6 6 6" />,
+  moveDown: <Path d="M12 5v14M6 13l6 6 6-6" />,
   skip: <Path d="M6 6l7 6-7 6zM17 6v12" />,
   check: <Path d="M5 12.5l4.5 4.5L19 7" />,
   lock: (

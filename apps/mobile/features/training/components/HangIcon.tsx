@@ -3,6 +3,8 @@ import Svg, { Path } from "react-native-svg";
 
 export type HangIconName =
   | "back"
+  | "moveUp"
+  | "moveDown"
   | "forward"
   | "down"
   | "up"
@@ -25,6 +27,8 @@ const PATHS: Record<Exclude<HangIconName, "play">, string> = {
   back: "M15 5l-7 7 7 7",
   forward: "M9 5l7 7-7 7",
   down: "M6 9l6 6 6-6",
+  moveUp: "M12 19V5M6 11l6-6 6 6",
+  moveDown: "M12 5v14M6 13l6 6 6-6",
   up: "M6 15l6-6 6 6",
   plus: "M12 5v14M5 12h14",
   minus: "M5 12h14",

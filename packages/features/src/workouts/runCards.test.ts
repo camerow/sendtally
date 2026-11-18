@@ -6,6 +6,7 @@ import {
   withCardEnded,
   withCardFold,
   withCardMoved,
+  withUnitMoved,
   withCardRemoved,
   withCardSkipped,
   withoutSet,
@@ -116,5 +117,17 @@ describe("a finished run", () => {
       [2, "Barbell row"],
     ]);
     expect(out.off).toEqual([]);
+  });
+});
+
+describe("moving a superset in the run", () => {
+  const unitOf = (k: number): number[] => (k === 1 || k === 2 ? [1, 2] : [k]);
+  it("moves a superset whole, and a card past a superset jumps all of it", () => {
+    const cards = cardsOf(4);
+    expect(withUnitMoved(cards, [1, 2], 1, unitOf).order).toEqual([0, 3, 1, 2]);
+    expect(withUnitMoved(cards, [1, 2], -1, unitOf).order).toEqual([1, 2, 0, 3]);
+    expect(withUnitMoved(cards, [3], -1, unitOf).order).toEqual([0, 3, 1, 2]);
+    expect(withUnitMoved(cards, [0], 1, unitOf).order).toEqual([1, 2, 0, 3]);
+    expect(withUnitMoved(cards, [0], -1, unitOf)).toBe(cards);
   });
 });

@@ -12,6 +12,7 @@ import {
   shortOf,
 } from "@sendtally/features/activities";
 import { heldSet } from "@sendtally/core/hang";
+import { supersetHeadAt } from "@sendtally/features/workouts";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
@@ -103,80 +104,84 @@ export function DoneDetails({
             const target = planned[d.item];
             const of: SetsOf = hangs ? "hangs" : laps(d.exercise) ? "laps" : "sets";
             const lifting = d.sets.some((s) => s.weightKg !== undefined) && !hangs;
+            const head = supersetHeadAt(exercises, index);
             return (
-              <div key={d.item} className={flat ? "done-card done-card--flat" : "done-card"}>
-                <div className="done-card-head">
-                  <span className="done-card-mark" style={{ background: color }} />
-                  <span className="done-card-name">{d.exercise}</span>
-                  <span className="done-card-count">{exerciseCountText(d, off, of)}</span>
-                </div>
-                {index === 0 && setup}
-                <div className="set-row set-row--head train-label train-label--small">
-                  <span className="set-col-n">
-                    {of === "laps" ? t("workouts.colLap") : t("activities.colSet")}
-                  </span>
-                  <span className="set-col-target">{t("activities.colTarget")}</span>
-                  <span className="set-col-done">
-                    {hangs
-                      ? t("activities.colHangsLoad")
-                      : lifting
-                        ? t("activities.colDoneUnit", { unit })
-                        : t("activities.colDone")}
-                  </span>
-                  <span className="set-col-rpe">RPE</span>
-                  {!hangs && <span className="set-tick" />}
-                  {!hangs && <span className="set-remove" />}
-                </div>
-                {d.sets.map((set, i) => (
-                  <ReviewSetRow
-                    key={i}
-                    n={i + 1}
-                    target={
-                      target === undefined || target.onS !== undefined
-                        ? target
-                        : {
-                            ...target,
-                            weightKg: target.weightKg ?? previous(d.exercise)[i]?.weightKg,
-                          }
-                    }
-                    done={set}
-                    hangs={hangs}
-                    lifting={lifting}
-                    unit={unit}
-                    on={!off.includes(setKeyOf(d.item, i)) && (!hangs || heldSet(set))}
-                    short={shortOf(set, target, of)}
-                    label={t("activities.setOf", { exercise: d.exercise, n: i + 1 })}
-                    defaultLoadKg={hangLoadKg}
-                    rpe={{ target: d.targetRpe }}
-                    onChange={(value) =>
-                      onChange(changeSet(done, d.item, i, value), offWithoutKey(off, d.item, i))
-                    }
-                    onToggle={hangs ? undefined : () => toggle(d.item, i)}
-                    onRemove={() => remove(d, i)}
-                  />
-                ))}
-                <div className="done-card-actions">
-                  <button
-                    type="button"
-                    className="outline-button"
-                    aria-label={t("activities.addSetTo", { exercise: d.exercise })}
-                    onClick={() => onChange(addSet(done, d.item), [...off])}
-                  >
-                    <Icon name="plus" size={16} strokeWidth={2.2} />
-                    {of === "laps" ? t("tally.addLap") : t("activities.addSet")}
-                  </button>
-                  {d.sets.length > 1 && (
+              <React.Fragment key={d.item}>
+                {head !== null && <span className="done-superset-head">{head}</span>}
+                <div className={flat ? "done-card done-card--flat" : "done-card"}>
+                  <div className="done-card-head">
+                    <span className="done-card-mark" style={{ background: color }} />
+                    <span className="done-card-name">{d.exercise}</span>
+                    <span className="done-card-count">{exerciseCountText(d, off, of)}</span>
+                  </div>
+                  {index === 0 && setup}
+                  <div className="set-row set-row--head train-label train-label--small">
+                    <span className="set-col-n">
+                      {of === "laps" ? t("workouts.colLap") : t("activities.colSet")}
+                    </span>
+                    <span className="set-col-target">{t("activities.colTarget")}</span>
+                    <span className="set-col-done">
+                      {hangs
+                        ? t("activities.colHangsLoad")
+                        : lifting
+                          ? t("activities.colDoneUnit", { unit })
+                          : t("activities.colDone")}
+                    </span>
+                    <span className="set-col-rpe">RPE</span>
+                    {!hangs && <span className="set-tick" />}
+                    {!hangs && <span className="set-remove" />}
+                  </div>
+                  {d.sets.map((set, i) => (
+                    <ReviewSetRow
+                      key={i}
+                      n={i + 1}
+                      target={
+                        target === undefined || target.onS !== undefined
+                          ? target
+                          : {
+                              ...target,
+                              weightKg: target.weightKg ?? previous(d.exercise)[i]?.weightKg,
+                            }
+                      }
+                      done={set}
+                      hangs={hangs}
+                      lifting={lifting}
+                      unit={unit}
+                      on={!off.includes(setKeyOf(d.item, i)) && (!hangs || heldSet(set))}
+                      short={shortOf(set, target, of)}
+                      label={t("activities.setOf", { exercise: d.exercise, n: i + 1 })}
+                      defaultLoadKg={hangLoadKg}
+                      rpe={{ target: d.targetRpe }}
+                      onChange={(value) =>
+                        onChange(changeSet(done, d.item, i, value), offWithoutKey(off, d.item, i))
+                      }
+                      onToggle={hangs ? undefined : () => toggle(d.item, i)}
+                      onRemove={() => remove(d, i)}
+                    />
+                  ))}
+                  <div className="done-card-actions">
                     <button
                       type="button"
                       className="outline-button"
-                      aria-label={t("activities.removeLastSetFrom", { exercise: d.exercise })}
-                      onClick={() => remove(d, d.sets.length - 1)}
+                      aria-label={t("activities.addSetTo", { exercise: d.exercise })}
+                      onClick={() => onChange(addSet(done, d.item), [...off])}
                     >
-                      − {of === "laps" ? t("tally.removeLap") : t("activities.removeLastSet")}
+                      <Icon name="plus" size={16} strokeWidth={2.2} />
+                      {of === "laps" ? t("tally.addLap") : t("activities.addSet")}
                     </button>
-                  )}
+                    {d.sets.length > 1 && (
+                      <button
+                        type="button"
+                        className="outline-button"
+                        aria-label={t("activities.removeLastSetFrom", { exercise: d.exercise })}
+                        onClick={() => remove(d, d.sets.length - 1)}
+                      >
+                        − {of === "laps" ? t("tally.removeLap") : t("activities.removeLastSet")}
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </React.Fragment>
             );
           })}
           <Sheet

@@ -22,6 +22,10 @@ import {
   type WorkoutRun,
   checklistLine,
   runItems,
+  supersetMembers,
+  supersetName,
+  supersetRoundsTitle,
+  type RunGroup,
 } from "@sendtally/features/workouts";
 import { type MoreMenuItem } from "../../components/MoreMenu";
 import { Sheet } from "../../components/Sheet";
@@ -36,6 +40,7 @@ import { LapsCard } from "../climbing/LapsCard";
 import { useWorkoutTally } from "../climbing/useWorkoutTally";
 import { FingersCard } from "./FingersCard";
 import { ChecklistCard } from "./ChecklistCard";
+import { SupersetCard } from "./SupersetCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
 import { HoldButton } from "./HoldButton";
 import { HoldRow } from "./HoldRow";
@@ -96,17 +101,41 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
   const removeSet = (at: SetAt): void => {
     player.removeSet(at);
     toast.show({
-      message: `${nameOf(at.item)} · ${t("activities.setRemoved", { n: at.set + 1 })}`,
+      message: `${supersetMembers(
+        (player.groups.find((g) => g.members.includes(at.item))?.members ?? [at.item]).map((m) =>
+          nameOf(m)
+        )
+      )} · ${t("activities.setRemoved", { n: at.set + 1 })}`,
       action: { label: t("tally.undo"), onPress: player.undoRemove },
     });
   };
-  const menu = (i: number, at: number): MoreMenuItem[] => [
+  // A superset's menu works on one member: the one left after it goes plays as a plain exercise.
+  const groupMenu = (g: RunGroup): MoreMenuItem[] => [
+    ...(player.canMove(g.members[0] ?? -1, -1)
+      ? [{ label: t("workouts.moveUpShort"), onSelect: () => player.move(g.members[0] ?? -1, -1) }]
+      : []),
+    ...(player.canMove(g.members[0] ?? -1, 1)
+      ? [{ label: t("workouts.moveDownShort"), onSelect: () => player.move(g.members[0] ?? -1, 1) }]
+      : []),
+    ...g.members.map((m) => ({
+      label: t("workouts.skipMemberForNow", { name: nameOf(m) }),
+      onSelect: () => player.skip(m),
+    })),
+    ...g.members.map((m) => ({
+      label: t("workouts.removeExercise", { name: nameOf(m) }),
+      destructive: true,
+      onSelect: () => setRemoving(m),
+    })),
+  ];
+  const menu = (i: number): MoreMenuItem[] => [
     ...(player.canClimbOn(i)
       ? [{ label: t("workouts.climbNow"), onSelect: () => player.climbOn(i) }]
       : []),
     { label: t("workouts.skipForNow"), onSelect: () => player.skip(i) },
-    ...(at > 0 ? [{ label: t("workouts.moveUpShort"), onSelect: () => player.move(i, -1) }] : []),
-    ...(at < order.length - 1
+    ...(player.canMove(i, -1)
+      ? [{ label: t("workouts.moveUpShort"), onSelect: () => player.move(i, -1) }]
+      : []),
+    ...(player.canMove(i, 1)
       ? [{ label: t("workouts.moveDownShort"), onSelect: () => player.move(i, 1) }]
       : []),
     { label: t("workouts.removeShort"), destructive: true, onSelect: () => setRemoving(i) },
@@ -187,6 +216,56 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
             )
           );
         }
+        const g = player.groups.find((x) => x.members.includes(i));
+        if (g !== undefined) {
+          if (g.members[0] !== i) return null;
+          const last = g.members[g.members.length - 1] ?? i;
+          const names = g.members.map((m) => nameOf(m));
+          const allDone = g.members.every((m) =>
+            (shown.find((x) => x.item === m)?.sets ?? []).every((_, set) =>
+              ticked.has(setKey({ item: m, set }))
+            )
+          );
+          return (
+            <React.Fragment key={i}>
+              {g.members.every((m) => player.folded(m)) ? (
+                <FoldedSetsCard
+                  name={supersetName(names)}
+                  line={supersetRoundsTitle(
+                    Math.max(...g.members.map((m) => player.live[m]?.dose.sets ?? 0))
+                  )}
+                  done={allDone}
+                  onOpen={() => g.members.forEach((m) => player.open(m))}
+                />
+              ) : (
+                <SupersetCard
+                  group={g}
+                  items={player.live}
+                  done={shown}
+                  target={(a) => player.target(a)}
+                  lifting={player.lifting}
+                  ticked={ticked}
+                  current={current}
+                  unit={unit}
+                  onChange={(a, value) => player.change(a.item, a.set, value)}
+                  onToggle={player.toggle}
+                  holdRow={holdRow}
+                  go={go}
+                  restUnder={(a) => restAt(setKey(a))}
+                  onFocus={player.focus}
+                  onRemoveSet={removeSet}
+                  onAddRound={() => player.addSet(i)}
+                  onFold={() => g.members.forEach((m) => player.fold(m))}
+                  menu={groupMenu(g)}
+                />
+              )}
+              {order.indexOf(last) < order.length - 1 &&
+                (restAt(afterKey(last)) || (
+                  <RestPreview seconds={restAfterItem(items, last, run.exerciseRestS)} />
+                ))}
+            </React.Fragment>
+          );
+        }
         const climbItem = player.climbing(i);
         const skipped = player.skipped(i);
         const between =
@@ -217,7 +296,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                   ticked={tickedLine}
                   onToggle={(set) => player.toggle({ item: i, set })}
                   onFold={() => player.fold(i)}
-                  menu={menu(i, at)}
+                  menu={menu(i)}
                 />
               )}
               {between}
@@ -248,7 +327,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                 now={climbs.now}
                 about={exerciseAbout(mine, item.exercise, nameOf(i))}
                 onFold={() => player.fold(i)}
-                menu={menu(i, at)}
+                menu={menu(i)}
                 onLapRemoved={(lap) =>
                   toast.show({
                     message: `${nameOf(i)} · ${t("tally.lapRemoved", { lap })}`,
@@ -265,7 +344,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                 restUnder={(set) => restAt(setKey({ item: i, set }))}
                 about={exerciseAbout(mine, item.exercise, nameOf(i))}
                 onFold={() => player.fold(i)}
-                menu={menu(i, at)}
+                menu={menu(i)}
                 onFlip={climbs.flip}
                 onEdit={setEditing}
               />
@@ -300,7 +379,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                 onRemoveSet={(set) => removeSet({ item: i, set })}
                 onAddSet={() => player.addSet(i)}
                 onFold={() => player.fold(i)}
-                menu={menu(i, at)}
+                menu={menu(i)}
               />
             )}
             {between}

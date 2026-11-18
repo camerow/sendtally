@@ -127,3 +127,16 @@ describe("pickerState", () => {
     expect(pickerState("mobility").newKind).toBe("mobility");
   });
 });
+
+describe("picking for a superset", () => {
+  it("lists only what can be in one: no grips, no climbing, by the rule the server keeps", () => {
+    const all = { ...world, offer: "all" as const };
+    const listed = names({ category: "all", text: "", superset: true }, all);
+    expect(listed).toContain("Back squat");
+    expect(listed).not.toContain("Half crimp");
+    expect(listed).not.toContain("4x4s");
+    expect(listed).not.toContain("ARC");
+    expect(listed).not.toContain("30 on, 30 off");
+    expect(pickerState("all", true).kinds).not.toContain("climbing");
+  });
+});

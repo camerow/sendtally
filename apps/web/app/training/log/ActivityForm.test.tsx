@@ -146,6 +146,23 @@ describe("ActivityForm", () => {
     expect(saved()[0]?.checklist).toEqual({ lines, checked: [0, 2] });
   });
 
+  it("groups a superset's members under one header, from the log itself", () => {
+    const group = { id: "s1", rounds: 2 };
+    mount(false, null, {
+      ...review,
+      done: [
+        { item: 0, exercise: "Pull-ups", sets: [{ reps: 6 }, { reps: 6 }], group },
+        { item: 1, exercise: "Push-ups", sets: [{ reps: 15 }, { reps: 15 }], group },
+        { item: 2, exercise: "Plank", sets: [{ onS: 45 }] },
+      ],
+    });
+    const heads = [...container.querySelectorAll(".done-superset-head")].map((e) => e.textContent);
+    expect(heads).toEqual(["Superset · 2 rounds"]);
+    const text = container.textContent ?? "";
+    expect(text.indexOf("Superset · 2 rounds")).toBeLessThan(text.indexOf("Pull-ups"));
+    expect(text.indexOf("Push-ups")).toBeLessThan(text.indexOf("Plank"));
+  });
+
   it("puts each checklist above the Sets heading, the exercises under it", () => {
     mount(false, null, {
       ...review,

@@ -2088,3 +2088,68 @@
   flex: 1;
   min-width: 0;
 }
+
+.done-superset-head {
+  padding-top: 4px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--bs-gunmetal);
+}
+
+.superset-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1.5px solid var(--line-on-light-strong);
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.superset-rounds {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.superset-rounds .train-label {
+  flex: 1;
+}
+
+.superset-step {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line-on-light-strong);
+  border-radius: 22px;
+  background: var(--bs-white);
+  font: inherit;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--bs-gunmetal);
+  cursor: pointer;
+}
+
+.superset-rests {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.superset-editor .item-editor {
+  background: var(--bs-white);
+}
+
+.superset-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.superset-foot .text-button {
+  align-self: auto;
+}
+
+.superset-offer {
+  align-self: flex-start;
+  margin-top: -8px;
+}

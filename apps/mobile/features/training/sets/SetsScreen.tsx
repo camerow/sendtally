@@ -25,6 +25,9 @@ import {
   type WorkoutRun,
   checklistLine,
   runItems,
+  supersetName,
+  supersetRoundsTitle,
+  type RunGroup,
 } from "@sendtally/features/workouts";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { Toast } from "../../../components/Toast";
@@ -48,6 +51,7 @@ import { type } from "../type";
 import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
 import type { DetailMenuRow } from "../components/types";
 import { ChecklistCard } from "./ChecklistCard";
+import { SupersetCard } from "./SupersetCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
 import { SET_COLUMNS } from "./setColumns";
 import { SetsCard } from "./SetsCard";
@@ -142,7 +146,52 @@ export function SetsScreen({
     ending.current = false;
     finish();
   });
-  const menu = (i: number, at: number): DetailMenuRow[] => [
+  const removeRow = (i: number, title: string): DetailMenuRow => ({
+    icon: "trash",
+    title,
+    danger: true,
+    onPress: () =>
+      Alert.alert(
+        t("workouts.removeExercise", { name: nameOf(i) }),
+        t("workouts.removeFromRunBody"),
+        [
+          { text: t("common.cancel"), style: "cancel" },
+          {
+            text: t("workouts.removeShort"),
+            style: "destructive",
+            onPress: () => player.remove(i),
+          },
+        ]
+      ),
+  });
+  // A superset's menu works on one member: the one left after it goes plays as a plain exercise.
+  const groupMenu = (g: RunGroup): DetailMenuRow[] => [
+    ...(player.canMove(g.members[0] ?? -1, -1)
+      ? [
+          {
+            icon: "moveUp" as const,
+            title: t("workouts.moveUpShort"),
+            onPress: () => player.move(g.members[0] ?? -1, -1),
+          },
+        ]
+      : []),
+    ...(player.canMove(g.members[0] ?? -1, 1)
+      ? [
+          {
+            icon: "moveDown" as const,
+            title: t("workouts.moveDownShort"),
+            onPress: () => player.move(g.members[0] ?? -1, 1),
+          },
+        ]
+      : []),
+    ...g.members.map((m): DetailMenuRow => ({
+      icon: "skip",
+      title: t("workouts.skipMemberForNow", { name: nameOf(m) }),
+      onPress: () => player.skip(m),
+    })),
+    ...g.members.map((m) => removeRow(m, t("workouts.removeExercise", { name: nameOf(m) }))),
+  ];
+  const menu = (i: number): DetailMenuRow[] => [
     ...(player.canClimbOn(i)
       ? [
           {
@@ -153,19 +202,19 @@ export function SetsScreen({
         ]
       : []),
     { icon: "skip", title: t("workouts.skipForNow"), onPress: () => player.skip(i) },
-    ...(at > 0
+    ...(player.canMove(i, -1)
       ? [
           {
-            icon: "up" as const,
+            icon: "moveUp" as const,
             title: t("workouts.moveUpShort"),
             onPress: () => player.move(i, -1),
           },
         ]
       : []),
-    ...(at < order.length - 1
+    ...(player.canMove(i, 1)
       ? [
           {
-            icon: "down" as const,
+            icon: "moveDown" as const,
             title: t("workouts.moveDownShort"),
             onPress: () => player.move(i, 1),
           },
@@ -217,6 +266,53 @@ export function SetsScreen({
               const item = items[i];
               const d = shown.find((x) => x.item === i);
               if (item === undefined || d === undefined) return null;
+              const g = player.groups.find((x) => x.members.includes(i));
+              if (g !== undefined) {
+                if (g.members[0] !== i) return null;
+                const last = g.members[g.members.length - 1] ?? i;
+                const names = g.members.map((m) => nameOf(m));
+                const allDone = g.members.every((m) =>
+                  (shown.find((x) => x.item === m)?.sets ?? []).every((_, set) =>
+                    ticked.has(setKey({ item: m, set }))
+                  )
+                );
+                return (
+                  <React.Fragment key={i}>
+                    {g.members.every((m) => player.folded(m)) ? (
+                      <FoldedSetsCard
+                        name={supersetName(names)}
+                        line={supersetRoundsTitle(
+                          Math.max(...g.members.map((m) => player.live[m]?.dose.sets ?? 0))
+                        )}
+                        done={allDone}
+                        onOpen={() => g.members.forEach((m) => player.open(m))}
+                      />
+                    ) : (
+                      <SupersetCard
+                        group={g}
+                        items={player.live}
+                        done={shown}
+                        target={(set) => player.target(set)}
+                        lifting={player.lifting}
+                        ticked={ticked}
+                        current={current}
+                        unit={unit}
+                        onChange={(a, value) => player.change(a.item, a.set, value)}
+                        onToggle={player.toggle}
+                        holdRow={holdRow}
+                        go={go}
+                        restUnder={(a) => restAt(setKey(a))}
+                        onFocus={player.focus}
+                        onRemoveSet={player.removeSet}
+                        onAddRound={() => player.addSet(i)}
+                        onFold={() => g.members.forEach((m) => player.fold(m))}
+                        menu={groupMenu(g)}
+                      />
+                    )}
+                    {order.indexOf(last) < order.length - 1 && restBetween(last)}
+                  </React.Fragment>
+                );
+              }
               const climbItem = player.climbing(i);
               const skipped = player.skipped(i);
               const between = at < order.length - 1 && restBetween(i);
@@ -265,7 +361,7 @@ export function SetsScreen({
                     now={climbs.now}
                     about={about}
                     onFold={() => player.fold(i)}
-                    menu={menu(i, at)}
+                    menu={menu(i)}
                     onLapRemoved={(lap) => setLapRemoved({ item: i, name: nameOf(i), lap })}
                   />
                 ) : (
@@ -277,7 +373,7 @@ export function SetsScreen({
                     restUnder={(set) => restAt(setKey({ item: i, set }))}
                     about={about}
                     onFold={() => player.fold(i)}
-                    menu={menu(i, at)}
+                    menu={menu(i)}
                     onFlip={climbs.flip}
                     onEdit={setEditing}
                   />
@@ -315,7 +411,7 @@ export function SetsScreen({
                         ticked={tickedLine}
                         onToggle={(set) => player.toggle({ item: i, set })}
                         onFold={() => player.fold(i)}
-                        menu={menu(i, at)}
+                        menu={menu(i)}
                       />
                     )}
                     {between}
@@ -354,7 +450,7 @@ export function SetsScreen({
                       onRemoveSet={(set) => player.removeSet({ item: i, set })}
                       onAddSet={() => player.addSet(i)}
                       onFold={() => player.fold(i)}
-                      menu={menu(i, at)}
+                      menu={menu(i)}
                     />
                   )}
                   {between}
