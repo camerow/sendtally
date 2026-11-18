@@ -18,11 +18,11 @@ jest.mock("expo-router/tabs", () => ({ BottomTabBar: () => null }));
 jest.mock("../features/live-session/LiveBar", () => ({ LiveBar: () => null }));
 
 describe("Tabs", () => {
-  it("are Log, Plan, Train and Stats, in that order", async () => {
+  it("are Plan, Log, Train and Stats, in that order", async () => {
     await render(<TabsLayout />);
     expect(screen.getAllByText(/: /).map((n) => n.props.children)).toEqual([
-      "sessions: Log",
       "today: Plan",
+      "sessions: Log",
       "train: Train",
       "stats: Stats",
     ]);
