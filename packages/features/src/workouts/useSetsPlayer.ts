@@ -1,5 +1,11 @@
 import React from "react";
-import { doneAsPrescribed, setOf, type ItemDone, type SetDone } from "@sendtally/core/hang";
+import {
+  doneAsPrescribed,
+  setOf,
+  type ItemDone,
+  type SessionItem,
+  type SetDone,
+} from "@sendtally/core/hang";
 import type { Activity, Exercise } from "@sendtally/api-client";
 import {
   climbingLastTime,
@@ -19,7 +25,23 @@ import { partPlaces, partPlanned, type FingersPart } from "./fingersPart";
 import type { Hold } from "./holdClock";
 import { exerciseName } from "./library";
 import type { LiveRunStore } from "./liveRun";
+import { newDoseFor } from "./doseFields";
 import { runParams, type WorkoutRun } from "./runParams";
+import {
+  cardsFrom,
+  finishedInOrder,
+  withCardAdded,
+  withCardEnded,
+  withCardFold,
+  withCardMoved,
+  withCardRemoved,
+  withCardSkipped,
+  withoutSet,
+  withSetBack,
+  type RunCards,
+} from "./runCards";
+import type { Picked } from "./types";
+import { useLatest } from "./useLatest";
 import {
   allSets,
   isLifting,
@@ -32,6 +54,9 @@ import {
 } from "./setsRun";
 import { useHold, useLiveRun, useRest, type HoldClock, type RestClock } from "./useLiveRun";
 import type { PlannedRun } from "./usePlannedRun";
+
+/** A set just removed, which Undo puts back. */
+export type RemovedSet = { exercise: string; set: number };
 
 export type SetsPlayerInputs = {
   run: WorkoutRun;
@@ -72,8 +97,14 @@ export type SetsPlayer = {
   /** What each item has done so far, last time's sets filled in where nothing was typed. */
   shown: ItemDone[];
   ticked: ReadonlySet<string>;
-  /** The first set not ticked yet, the one a hold can start on. */
+  /** The set last tapped, ticked or edited, else the first not ticked yet. */
   current: SetAt | null;
+  /** The cards in the order they run, each keyed by its item. */
+  order: readonly number[];
+  /** Every item the run has by key: the workout's, then any added during it. */
+  items: readonly SessionItem[];
+  /** "Exercise 2 of 3": where the current set's card sits, of how many. */
+  position: { at: number; of: number } | null;
   rest: RestClock;
   hold: HoldClock;
   tallyOf: (item: number) => TallyMeasure | null;
@@ -88,13 +119,27 @@ export type SetsPlayer = {
   lifting: (item: number) => boolean;
   nameOf: (item: number) => string;
   sided: (exercise: string) => boolean;
-  /** A finished card folds until it is opened again, unless it may add a set. */
+  /** A finished card folds until it is opened again; an open one folds from its title. */
   folded: (item: number) => boolean;
-  /** An item with a set range: the sets it has and its top, and whether it may add one now. */
-  extra: (item: number) => { sets: number; max: number; canAdd: boolean } | null;
-  /** One more set like the last, which ends the rest to the next exercise and rests between sets. */
+  /** Skipped for now, at the end until it is opened. */
+  skipped: (item: number) => boolean;
+  /** One more set like the last. */
   addSet: (item: number) => void;
+  /** Takes a set out; Undo puts it back. */
+  removeSet: (at: SetAt) => void;
+  removed: RemovedSet | null;
+  undoRemove: () => void;
+  /** The Undo for the set last removed has gone. */
+  dismissRemoved: () => void;
   open: (item: number) => void;
+  fold: (item: number) => void;
+  /** Marks a set as the one being worked on, for its fill and its −. */
+  focus: (at: SetAt) => void;
+  skip: (item: number) => void;
+  move: (item: number, by: -1 | 1) => void;
+  remove: (item: number) => void;
+  /** An exercise added to this run only, at the end, with the dose the editor would give it. */
+  addExercise: (picked: Picked) => void;
   toggle: (at: SetAt) => void;
   change: (item: number, set: number, value: SetDone) => void;
   /** Ends the hold, recording what it counted on its set, which ticks itself. */
@@ -134,7 +179,15 @@ export function useSetsPlayer({
     () => resumed?.done ?? doneAsPrescribed(run.items)
   );
   const [ticked, setTicked] = React.useState<ReadonlySet<string>>(() => new Set(resumed?.ticked));
-  const [opened, setOpened] = React.useState<ReadonlySet<number>>(new Set());
+  const [cards, setCards] = React.useState<RunCards>(() =>
+    cardsFrom(resumed?.cards, run.items.length)
+  );
+  const [focused, setFocused] = React.useState<SetAt | null>(null);
+  const [removed, setRemoved] = React.useState<
+    (RemovedSet & { at: SetAt; value: SetDone; wasTicked: boolean }) | null
+  >(null);
+  const lastRemoved = useLatest(removed);
+  const latest = useLatest({ done, ticked });
   const rest = useRest(store);
   // Kept by value: grips load after the run opens, and a new list each render would write each render.
   const placesKey = partPlaces(run.items, isGrip).join(",");
@@ -163,40 +216,70 @@ export function useSetsPlayer({
         player: "sets",
         done,
         ticked: [...ticked],
+        cards,
         ...(part && { fingers: part }),
         ...(places.length > 0 && { grips: places }),
       },
     });
-  }, [store, run, startedAt, done, ticked, places]);
+  }, [store, run, startedAt, done, ticked, cards, places]);
   const planned = partPlanned(run, places);
   const inPart = (item: number): boolean => places.includes(item);
+  const partOpen =
+    places.length > 0 &&
+    (fingers === undefined || ("run" in fingers && fingers.run.finished === null));
+  const items = [...run.items.slice(0, cards.base), ...cards.added];
   const tallyMeasure = tallyMeasuresOf(exercises ?? [], run.kind);
-  const tallyOf = (item: number): TallyMeasure | null =>
-    tallyMeasure(run.items[item]?.exercise ?? "");
-  const live = withDoneSets(run.items, done);
-  const sets = allSets(live).filter((at) => tallyOf(at.item) === null && !inPart(at.item));
+  const tallyOf = (item: number): TallyMeasure | null => tallyMeasure(items[item]?.exercise ?? "");
+  const live = withDoneSets(items, done);
+  const ended = (d: readonly ItemDone[], t: ReadonlySet<string>, item: number): boolean => {
+    const after = withDoneSets(items, d);
+    return (after[item]?.dose.sets ?? 0) > 0 && itemDone(after, t, item);
+  };
+  const sets = cards.order.flatMap((key) =>
+    allSets(live).filter((at) => at.item === key && tallyOf(key) === null && !inPart(key))
+  );
   const previous = (exercise: string): SetDone[] =>
     activities === null || run.workoutId === null
       ? []
       : previousSets(activities, run.workoutId, exercise);
-  const lifting = (item: number): boolean => isLifting(run.kind, run.items[item]);
+  const lifting = (item: number): boolean => isLifting(run.kind, items[item]);
   const shown = withPrevious(done, lifting, previous);
-  const current = sets.find((at) => !ticked.has(setKey(at))) ?? null;
-  const nameOf = (item: number): string => exerciseName(run.items[item]?.exercise ?? "");
+  const next = sets.find((at) => !ticked.has(setKey(at))) ?? null;
+  const current = sets.find((at) => at.item === focused?.item && at.set === focused.set) ?? next;
+  /** The fingerboard part while it is still to do and comes before the set being worked on. */
+  const partFirst =
+    partOpen &&
+    focused === null &&
+    places[0] !== undefined &&
+    (current === null || cards.order.indexOf(places[0]) < cards.order.indexOf(current.item))
+      ? places[0]
+      : null;
+  const nameOf = (item: number): string => exerciseName(items[item]?.exercise ?? "");
+  const withFold = (item: number, fold: boolean | null): void =>
+    setCards((c) => withCardFold(c, item, fold));
 
   const toggle = (at: SetAt): void => {
     const key = setKey(at);
-    const next = new Set(ticked);
-    const ticking = !next.delete(key);
-    if (ticking) next.add(key);
-    setTicked(next);
-    setOpened((was) => new Set([...was].filter((i) => i !== at.item)));
-    const after = ticking ? restAfterTick(live, next, at, run.exerciseRestS) : null;
-    if (after === null) rest.skip();
-    else rest.tick(after.at, after.seconds, after.next === null ? undefined : nameOf(after.next));
+    const after = new Set(ticked);
+    const ticking = !after.delete(key);
+    if (ticking) after.add(key);
+    setTicked(after);
+    const finished = sets.every((s) => s.item !== at.item || after.has(setKey(s)));
+    setFocused(ticking && finished ? null : at);
+    setCards((c) => withCardEnded(withCardFold(c, at.item, null), at.item, finished));
+    const restAfter = ticking ? restAfterTick(live, after, at, run.exerciseRestS) : null;
+    if (restAfter === null) rest.skip();
+    else
+      rest.tick(
+        restAfter.at,
+        restAfter.seconds,
+        restAfter.next === null ? undefined : nameOf(restAfter.next)
+      );
   };
-  const change = (item: number, set: number, value: SetDone): void =>
+  const change = (item: number, set: number, value: SetDone): void => {
     setDone((all) => changeSet(all, item, set, value));
+    setFocused({ item, set });
+  };
   const endHold = (h: Hold, seconds: number | null): void => {
     store.writeHold(null);
     const at = sets.find((x) => setKey(x) === h.at);
@@ -210,22 +293,17 @@ export function useSetsPlayer({
     const draft = tally.stored?.draft;
     if (tallyOf(item) === "laps") return lapSets(climbs, item);
     if (draft === undefined) return [];
-    const plannedS = tallyOf(item) === "wallTime" ? run.items[item]?.dose.onS : undefined;
+    const plannedS = tallyOf(item) === "wallTime" ? items[item]?.dose.onS : undefined;
     return exerciseSets(draft, item, plannedS, new Date());
   };
 
-  const extra = (item: number): { sets: number; max: number; canAdd: boolean } | null => {
-    const min = run.items[item]?.dose.sets ?? 0;
-    const max = run.items[item]?.dose.setsMax ?? 0;
-    const sets = live[item]?.dose.sets ?? min;
-    return max <= min ? null : { sets, max, canAdd: sets < max && itemDone(live, ticked, item) };
-  };
   const sided = eachSideOf(exercises ?? []);
+  const holdAt = current !== null && !ticked.has(setKey(current)) ? current : next;
   const holdTarget = (at: SetAt): number | null => {
-    const targetS = run.items[at.item]?.dose.onS;
+    const targetS = items[at.item]?.dose.onS;
     return hold.hold === null &&
-      current?.item === at.item &&
-      current.set === at.set &&
+      holdAt?.item === at.item &&
+      holdAt.set === at.set &&
       targetS !== undefined &&
       targetS > 0
       ? targetS
@@ -233,7 +311,7 @@ export function useSetsPlayer({
   };
   const climbing = (item: number): ClimbingItem | null => {
     const measure = tallyOf(item);
-    const at = run.items[item];
+    const at = items[item];
     if (measure === null || at === undefined) return null;
     const logged = climbedSets(item);
     return {
@@ -256,43 +334,106 @@ export function useSetsPlayer({
     shown,
     ticked,
     current,
+    order: cards.order,
+    items,
+    position:
+      cards.order.length === 0
+        ? null
+        : {
+            at: Math.max(0, cards.order.indexOf(partFirst ?? current?.item ?? -1)) + 1,
+            of: cards.order.length,
+          },
     rest,
     hold,
     tallyOf,
     climbing,
     target: ({ item, set }) => {
-      const target = setOf(run.items[item]?.dose ?? { sets: 0 });
-      const last = previous(run.items[item]?.exercise ?? "")[set];
+      const target = setOf(items[item]?.dose ?? { sets: 0 });
+      const last = previous(items[item]?.exercise ?? "")[set];
       return lifting(item) ? { ...target, weightKg: target.weightKg ?? last?.weightKg } : target;
     },
     holdTarget,
     startHold: (at) => {
       const targetS = holdTarget(at);
       if (targetS !== null)
-        hold.start(setKey(at), nameOf(at.item), targetS, sided(run.items[at.item]?.exercise ?? ""));
+        hold.start(setKey(at), nameOf(at.item), targetS, sided(items[at.item]?.exercise ?? ""));
     },
     previous,
     lifting,
     nameOf,
     sided,
     folded: (item) =>
-      itemDone(live, ticked, item) && !opened.has(item) && extra(item)?.canAdd !== true,
-    extra,
+      cards.shut.includes(item) ||
+      (!cards.open.includes(item) &&
+        (cards.skipped.includes(item) ||
+          ((live[item]?.dose.sets ?? 0) > 0 && itemDone(live, ticked, item)))),
+    skipped: (item) => cards.skipped.includes(item),
     addSet: (item) => {
-      const range = extra(item);
-      if (range?.canAdd !== true) return;
-      setDone((all) => addSet(all, item));
-      const restS = run.items[item]?.dose.setRestS ?? 0;
-      if (restS > 0) rest.tick(setKey({ item, set: range.sets - 1 }), restS);
-      else rest.skip();
+      setDone((all) =>
+        all.some((d) => d.item === item && d.sets.length > 0)
+          ? addSet(all, item)
+          : all.map((d) =>
+              d.item === item ? { ...d, sets: [setOf(items[item]?.dose ?? { sets: 1 })] } : d
+            )
+      );
+      withFold(item, false);
     },
-    open: (item) => setOpened((was) => new Set([...was, item])),
+    removeSet: (at) => {
+      const value = done.find((d) => d.item === at.item)?.sets[at.set];
+      if (value === undefined) return;
+      const out = withoutSet(done, ticked, at);
+      setRemoved({
+        exercise: nameOf(at.item),
+        set: at.set + 1,
+        at,
+        value,
+        wasTicked: ticked.has(setKey(at)),
+      });
+      setDone(out.done);
+      setTicked(out.ticked);
+      setCards((c) => withCardEnded(c, at.item, ended(out.done, out.ticked, at.item)));
+      setFocused(null);
+      rest.skip();
+    },
+    removed: removed && { exercise: removed.exercise, set: removed.set },
+    undoRemove: () => {
+      const was = lastRemoved.current;
+      if (was === null) return;
+      const now = latest.current;
+      const back = withSetBack(now.done, now.ticked, was.at, was.value, was.wasTicked);
+      setDone(back.done);
+      setTicked(back.ticked);
+      setCards((c) => withCardEnded(c, was.at.item, ended(back.done, back.ticked, was.at.item)));
+      setRemoved(null);
+    },
+    dismissRemoved: () => setRemoved(null),
+    open: (item) => {
+      setCards((c) => ({ ...c, skipped: c.skipped.filter((k) => k !== item) }));
+      withFold(item, false);
+    },
+    fold: (item) => withFold(item, true),
+    focus: setFocused,
+    skip: (item) => {
+      setCards((c) => withCardSkipped(c, item));
+      withFold(item, null);
+    },
+    move: (item, by) => setCards((c) => withCardMoved(c, item, by)),
+    remove: (item) => {
+      setCards((c) => withCardRemoved(c, item));
+      if (focused?.item === item) setFocused(null);
+    },
+    addExercise: ({ exercise, kind, measure, dose }) => {
+      const key = cards.base + cards.added.length;
+      const item = { exercise, dose: dose ?? newDoseFor(kind, measure) };
+      setCards((c) => withCardAdded(c, item));
+      setDone((all) => [...all, ...doneAsPrescribed([item]).map((d) => ({ ...d, item: key }))]);
+    },
     toggle,
     change,
     endHold,
     climbedSets,
     startClimbing: (item, measure) => {
-      const at = run.items[item];
+      const at = items[item];
       if (at === undefined) return;
       if (tally.stored?.draft.exercise?.item !== item)
         tally.replace(
@@ -317,12 +458,13 @@ export function useSetsPlayer({
     finished: () => {
       rest.skip();
       hold.stop();
-      return {
-        done: shown.flatMap((d) =>
-          inPart(d.item) ? [] : [tallyOf(d.item) === null ? d : { ...d, sets: climbedSets(d.item) }]
-        ),
-        off: sets.map(setKey).filter((key) => !ticked.has(key)),
-      };
+      const ran = shown.flatMap((d) =>
+        inPart(d.item) ? [] : [tallyOf(d.item) === null ? d : { ...d, sets: climbedSets(d.item) }]
+      );
+      const climbed = ran.flatMap((d) =>
+        tallyOf(d.item) === null ? [] : d.sets.map((_, set) => setKey({ item: d.item, set }))
+      );
+      return finishedInOrder(cards, ran, new Set([...ticked, ...climbed]));
     },
     loaded: activities !== null && exercises !== null,
     part:

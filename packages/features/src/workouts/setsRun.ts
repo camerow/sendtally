@@ -11,14 +11,14 @@ export const setKey = ({ item, set }: SetAt): string => setKeyOf(item, set);
 export const allSets = (items: readonly SessionItem[]): SetAt[] =>
   items.flatMap((it, item) => Array.from({ length: it.dose.sets }, (_, set) => ({ item, set })));
 
-/** The items with each one's sets as many as it has so far, extras added past its minimum too. */
+/** The items with each one's sets as many as it has so far, added or removed during the run. */
 export const withDoneSets = (
   items: readonly SessionItem[],
   done: readonly Pick<ItemDone, "item" | "sets">[]
 ): SessionItem[] =>
   items.map((it, i) => {
     const n = done.find((d) => d.item === i)?.sets.length ?? it.dose.sets;
-    return n > it.dose.sets ? { ...it, dose: { ...it.dose, sets: n } } : it;
+    return n === it.dose.sets ? it : { ...it, dose: { ...it.dose, sets: n } };
   });
 
 /** Whether every set of an item is ticked. */

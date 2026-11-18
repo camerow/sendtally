@@ -69,6 +69,17 @@ describe("Description", () => {
     expect(texts()).toHaveLength(2);
   });
 
+  it("folds at the lines asked with a fade, and can start open with Less", () => {
+    layOut();
+    mount(<Description text={"2: One\n\n2: Two\n\n1: Three"} fold={3} startOpen />);
+    expect(texts()).toHaveLength(3);
+    const less = container.querySelector<HTMLButtonElement>(".desc-more")!;
+    expect(less.textContent).toBe("Less");
+    act(() => less.click());
+    expect(texts()).toEqual(["2: One", "2: Two"]);
+    expect(container.querySelector(".desc")?.classList.contains("desc--fade")).toBe(true);
+  });
+
   it("has no More when it all fits, nor in a sheet", () => {
     layOut();
     mount(<Description text={"2: One\n\n3: Two"} fold />);

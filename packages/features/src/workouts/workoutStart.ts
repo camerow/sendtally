@@ -36,7 +36,6 @@ export const unplannedItems = (w: LibraryWorkout, session: number): PlannedItems
 export type WorkoutStart =
   | { open: "timer"; gripId: string }
   | { open: "liveSession" }
-  | { open: "form"; run: Omit<WorkoutRun, "exerciseRestS" | "items"> }
   | { open: "intervals"; run: IntervalsRun }
   | { open: "sets" | "checklist"; run: WorkoutRun };
 
@@ -51,7 +50,8 @@ const playerOf = (items: readonly SessionItem[]): "sets" | "checklist" =>
  * the tally or with reps or weight in the sets player, anything else as a checklist. A mix of
  * grips and other exercises always opens the sets player, where its grips are one fingerboard
  * part. A climbing workout with no items opens the live session, and any other workout with
- * none the activity form. An exercise done on each side plays twice in the intervals player.
+ * none the sets player with no cards, its description the body. An exercise done on each side
+ * plays twice in the intervals player.
  */
 export function workoutStart(
   w: LibraryWorkout,
@@ -67,7 +67,8 @@ export function workoutStart(
     return { open: "timer", gripId: first.exercise };
   if (kind === null || (kind === "climbing" && first === undefined)) return { open: "liveSession" };
   const run = { kind, title: w.name, date, workoutId: w.id, link, minutes: w.minutes };
-  if (first === undefined) return { open: "form", run };
+  if (first === undefined)
+    return { open: "sets", run: { ...run, exerciseRestS: w.exerciseRestS, items: [] } };
   if (items.some((i) => isGrip(i.exercise)))
     return { open: "sets", run: { ...run, exerciseRestS: w.exerciseRestS, items: [...items] } };
   const onTally = items.some((i) => tally(i.exercise) !== null);

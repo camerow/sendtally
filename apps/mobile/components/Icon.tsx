@@ -8,7 +8,11 @@ export type IconName =
   | "climbs"
   | "funnel"
   | "plus"
+  | "minusCircle"
   | "chevron"
+  | "up"
+  | "down"
+  | "skip"
   | "check"
   | "trash"
   | "lock"
@@ -42,7 +46,16 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   climbs: <Path d="M3 19l6.5-11 4 6.5 2.5-3.5L21 19z" />,
   funnel: <Path d="M4 5h16l-6.2 7.2V18.5l-3.6 1.8v-8.1z" />,
   plus: <Path d="M12 5v14M5 12h14" />,
+  minusCircle: (
+    <>
+      <Circle cx={12} cy={12} r={10} />
+      <Path d="M7 12h10" />
+    </>
+  ),
   chevron: <Path d="M9 6l6 6-6 6" />,
+  up: <Path d="M12 19V5M6 11l6-6 6 6" />,
+  down: <Path d="M12 5v14M6 13l6 6 6-6" />,
+  skip: <Path d="M6 6l7 6-7 6zM17 6v12" />,
   check: <Path d="M5 12.5l4.5 4.5L19 7" />,
   lock: (
     <>

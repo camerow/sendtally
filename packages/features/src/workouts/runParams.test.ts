@@ -53,8 +53,12 @@ describe("workout run params", () => {
     expect(readWorkoutRun(runParams(run))).toEqual(run);
   });
 
+  it("reads a workout with no exercises yet as a run, to add them as it goes", () => {
+    expect(readWorkoutRun(runParams({ ...run, items: [] }))?.items).toEqual([]);
+  });
+
   it("reads no run without items or a workout", () => {
-    expect(readWorkoutRun({ ...runParams(run), items: "[]" })).toBeNull();
+    expect(readWorkoutRun({ ...runParams(run), items: "" })).toBeNull();
     expect(readWorkoutRun({ ...runParams(run), workoutId: "" })).toBeNull();
   });
 });

@@ -21,6 +21,7 @@ import {
   useActivityActions,
   useWeightUnit,
   type ActivityDraft,
+  plannedDoses,
 } from "@sendtally/features/activities";
 import { shortDate, timeOfDay } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -164,7 +165,7 @@ export function ActivityForm({
     });
   const name = draft.title.trim() || kindLabel(draft.kind);
   const look = hang === undefined ? draft.kind : "hangboard";
-  const doses = planned.map((p) => p.dose);
+  const doses = plannedDoses(planned, draft.done);
   const reviewing = logged === null && draft.workoutId !== null;
   const [opened, setOpened] = React.useState<"date" | "start" | "duration" | null>(null);
   const dateField = (

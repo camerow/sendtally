@@ -36,8 +36,6 @@ export function startLibraryWorkout(
       return startWorkout(w.name, w.id, start.gripId, session, link, go);
     case "liveSession":
       return startLiveSession(link.membershipId === null ? undefined : link, w.name, go);
-    case "form":
-      return go(activityFormPath(start.run));
     case "intervals":
       return startIntervals(start.run, go);
     default: {

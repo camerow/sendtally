@@ -58,6 +58,17 @@ describe("starting a climbing workout", () => {
   });
 });
 
+describe("starting a workout with no exercises", () => {
+  it("opens the workout view with no cards, its description the body", () => {
+    const warmUp = { ...climbing, id: "w-warm", kind: "other" } as LibraryWorkout;
+    const run = { link: PLAN, session: 0, items: [] };
+    const start = workoutStart(warmUp, "2026-10-30", run, () => false);
+    expect(start.open).toBe("sets");
+    expect(start.open === "sets" && start.run.items).toEqual([]);
+    expect(playerRoute(warmUp, start, run)?.pathname).toBe("/workout/sets");
+  });
+});
+
 describe("the player a start opens", () => {
   const hangboard = { ...climbing, id: "rep73", kind: "hangboard" } as LibraryWorkout;
   const half = { exercise: "half", dose: { sets: 6 } };

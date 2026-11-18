@@ -204,10 +204,10 @@ describe("WorkoutPage", () => {
     expect(at.action).toBe("REPLACE");
   });
 
-  it("left empty, still starts, into its review as mobile does", () => {
+  it("left empty, still starts, into its run as mobile does", () => {
     mount("empty");
     click(button("Start"));
-    expect(at.path).toBe("/app/activity/new");
+    expect(at.path).toBe("/app/workout/sets");
     expect(at.action).toBe("REPLACE");
   });
 

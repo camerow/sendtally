@@ -5,11 +5,11 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import type * as T_activities from "@sendtally/features/activities";
 import type * as T_statistics from "@sendtally/features/statistics";
 import type { WorkoutRun } from "@sendtally/features/workouts";
+import { ToastProvider } from "../../components/Toast";
 import { liveRunOf } from "../../lib/useLiveRun";
 import { SetsPage } from "./SetsPage";
 import type * as T_useLibrary from "../library/useLibrary";
 import type * as T_hang from "@sendtally/features/hang";
-import type * as T_toast from "../../components/Toast";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -17,10 +17,6 @@ HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogEleme
   this.setAttribute("open", "");
 };
 
-vi.mock("../../components/Toast", async (actual) => ({
-  ...(await actual<typeof T_toast>()),
-  useToast: () => ({ show: vi.fn() }),
-}));
 vi.mock("@sendtally/features/hang", async (actual) => ({
   ...(await actual<typeof T_hang>()),
   useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),
@@ -96,12 +92,14 @@ function Where(): React.ReactElement {
 function mount(shown: WorkoutRun = run): void {
   act(() =>
     root.render(
-      <MemoryRouter initialEntries={["/app/plan", "/app/workout/sets"]} initialIndex={1}>
-        <Routes>
-          <Route path="/app/workout/sets" element={<SetsPage run={shown} end={false} />} />
-          <Route path="*" element={<Where />} />
-        </Routes>
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={["/app/plan", "/app/workout/sets"]} initialIndex={1}>
+          <Routes>
+            <Route path="/app/workout/sets" element={<SetsPage run={shown} end={false} />} />
+            <Route path="*" element={<Where />} />
+          </Routes>
+        </MemoryRouter>
+      </ToastProvider>
     )
   );
 }
@@ -116,6 +114,18 @@ const button = (text: string): HTMLButtonElement =>
   )!;
 const texts = (selector: string): string[] =>
   Array.from(container.querySelectorAll(selector)).map((e) => e.textContent ?? "");
+const loggedOrder = (): string[] => {
+  act(() => button("Finish").click());
+  const where = new URL(`http://x${document.querySelector("[data-testid=where]")?.textContent}`);
+  return (JSON.parse(where.searchParams.get("done") ?? "[]") as { exercise: string }[]).map(
+    (d) => d.exercise
+  );
+};
+const removeSecondSquat = (): void => {
+  act(() => (byLabel("Back squat, set 1") as HTMLInputElement).click());
+  act(() => byLabel("Back squat, set 2")?.closest<HTMLElement>(".set-row")?.click());
+  act(() => (byLabel("Remove set 2") as HTMLButtonElement).click());
+};
 const advance = (ms: number): void =>
   act(() => {
     vi.advanceTimersByTime(ms);
@@ -138,22 +148,115 @@ afterEach(() => {
 });
 
 describe("Sets player", () => {
-  it("offers optional sets once the minimum is ticked, up to the top of the range", () => {
-    mount({
-      ...run,
-      items: [
-        { exercise: "Bench press", dose: { sets: 1, setsMax: 2, reps: 8, repsMax: 12 } },
-        { exercise: "Row", dose: { sets: 1, reps: 8 } },
-      ],
+  it("adds a set to any exercise, and takes the current one out with Undo", () => {
+    mount();
+    act(() => (byLabel("Add a set to Row") as HTMLButtonElement).click());
+    expect(byLabel("Row, set 2")).not.toBeNull();
+    act(() => (byLabel("Back squat, set 2") as HTMLInputElement).click());
+    expect(document.querySelectorAll('[aria-label^="Remove set"]')).toHaveLength(1);
+    act(() => (byLabel("Remove set 2") as HTMLButtonElement).click());
+    expect(byLabel("Back squat, set 2")).toBeNull();
+    expect(document.body.textContent).toContain("Back squat · Set 2 removed");
+    act(() => button("Undo").click());
+    expect((byLabel("Back squat, set 2") as HTMLInputElement).checked).toBe(true);
+  });
+
+  it("makes a set current on a tap in its row, not on a press that may start a scroll", () => {
+    mount();
+    const reps = byLabel("Back squat, set 2 · Reps") as HTMLElement;
+    act(() => {
+      reps.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
     });
-    expect(container.textContent).toContain("8-12");
-    expect(byLabel("Add a set to Bench press")).toBeNull();
-    act(() => (byLabel("Bench press, set 1") as HTMLInputElement).click());
-    expect(byLabel("Rest, 2:00 left")).not.toBeNull();
-    act(() => (byLabel("Add a set to Bench press") as HTMLButtonElement).click());
-    expect(byLabel("Bench press, set 2")).not.toBeNull();
-    expect(byLabel("Add a set to Bench press")).toBeNull();
-    expect(byLabel("Rest, 2:00 left")).toBeNull();
+    expect(byLabel("Remove set 2")).toBeNull();
+    act(() => reps.click());
+    expect(byLabel("Remove set 2")).not.toBeNull();
+  });
+
+  it("says whether an exercise card is open", () => {
+    mount();
+    expect(byLabel("Fold Back squat")?.getAttribute("aria-expanded")).toBe("true");
+    act(() => (byLabel("Fold Back squat") as HTMLButtonElement).click());
+    expect(
+      document.querySelector('[aria-label^="Open Back squat, "]')?.getAttribute("aria-expanded")
+    ).toBe("false");
+  });
+
+  it("puts a removed set back on Undo without losing a tick made since", () => {
+    mount();
+    act(() => (byLabel("Back squat, set 2") as HTMLInputElement).click());
+    act(() => (byLabel("Remove set 2") as HTMLButtonElement).click());
+    act(() => (byLabel("Row, set 1") as HTMLInputElement).click());
+    act(() => button("Undo").click());
+    expect((byLabel("Back squat, set 2") as HTMLInputElement).checked).toBe(true);
+    expect(document.querySelector('[aria-label^="Open Row, "]')).not.toBeNull();
+  });
+
+  it("keeps a card folded by hand when minimised and opened again", () => {
+    mount();
+    act(() => (byLabel("Fold Back squat") as HTMLButtonElement).click());
+    act(() => root.unmount());
+    root = createRoot(container);
+    mount();
+    expect(byLabel("Back squat, set 1")).toBeNull();
+    expect(byLabel("Fold Back squat")).toBeNull();
+  });
+
+  it("logs exercises in the order they were finished", () => {
+    mount();
+    act(() => (byLabel("Row, set 1") as HTMLInputElement).click());
+    act(() => (byLabel("Back squat, set 1") as HTMLInputElement).click());
+    act(() => (byLabel("Back squat, set 2") as HTMLInputElement).click());
+    act(() => button("Finish").click());
+    const where = new URL(`http://x${document.querySelector("[data-testid=where]")?.textContent}`);
+    expect(
+      (JSON.parse(where.searchParams.get("done") ?? "[]") as { exercise: string }[]).map(
+        (d) => d.exercise
+      )
+    ).toEqual(["Row", "Back squat", "Plank"]);
+  });
+
+  it("ends an exercise when its last unticked set is removed, in the order it ended", () => {
+    mount();
+    act(() => (byLabel("Row, set 1") as HTMLInputElement).click());
+    removeSecondSquat();
+    expect(loggedOrder()).toEqual(["Row", "Back squat", "Plank"]);
+  });
+
+  it("takes back that end when the removed set comes back on Undo", () => {
+    mount();
+    removeSecondSquat();
+    act(() => button("Undo").click());
+    act(() => (byLabel("Row, set 1") as HTMLInputElement).click());
+    act(() => (byLabel("Back squat, set 2") as HTMLInputElement).click());
+    expect(loggedOrder()).toEqual(["Row", "Back squat", "Plank"]);
+  });
+
+  it("skips an exercise to the end, moves and removes one, and logs them in that order", () => {
+    mount();
+    const more = (): HTMLButtonElement[] =>
+      Array.from(
+        document.querySelectorAll<HTMLButtonElement>('[aria-label="More for this exercise"]')
+      );
+    act(() => more()[0]!.click());
+    act(() => button("Skip for now").click());
+    expect(texts(".player-card-name")).toEqual(["Row", "Plank", "Back squat"]);
+    expect(byLabel("Open Back squat, Skipped · tap to do it now")).not.toBeNull();
+    act(() => more()[1]!.click());
+    act(() => button("Move up").click());
+    expect(texts(".player-card-name")).toEqual(["Plank", "Row", "Back squat"]);
+    act(() => more()[0]!.click());
+    act(() => button("Remove").click());
+    act(() => button("Remove").click());
+    expect(texts(".player-card-name")).toEqual(["Row", "Back squat"]);
+    act(() => (byLabel("Row, set 1") as HTMLInputElement).click());
+    act(() => button("Finish").click());
+    const where = new URL(`http://x${document.querySelector("[data-testid=where]")?.textContent}`);
+    expect(
+      (JSON.parse(where.searchParams.get("done") ?? "[]") as { exercise: string }[]).map(
+        (d) => d.exercise
+      )
+    ).toEqual(["Row", "Back squat"]);
+    expect(where.searchParams.get("off")).toBe(JSON.stringify(["1:0", "1:1"]));
   });
 
   it("shows an exercise's own target under its name, and none where it sets none", () => {
@@ -201,13 +304,15 @@ describe("Sets player", () => {
   it("shows each set's target and last time, with the rests still to come", () => {
     mount();
     expect(container.querySelector(".player-title")?.textContent).toBe("Lower body A");
-    expect(container.querySelector(".player-target")?.textContent).toBe("Target effort 8");
-    expect(texts(".set-previous")).toEqual(["Last 5 × 97.5 kg", "Last 8 × 60 kg"]);
-    expect(texts(".rest-preview")).toEqual(["Rest 1:30", "Rest 2:00", "Rest 2:00"]);
-    act(() => (byLabel("About this workout") as HTMLButtonElement).click());
-    expect(document.querySelector("dialog .sheet-body")?.textContent).toBe(
-      "Heavy squats, then rows."
+    expect(container.querySelector(".player-target")?.textContent).toBe(
+      "Exercise 1 of 3 · Target effort 8"
     );
+    expect(texts(".desc-text")).toEqual(["Heavy squats, then rows."]);
+    expect(byLabel("About this workout")).toBeNull();
+    expect(texts(".set-previous")).toEqual(["Last 5 × 97.5", "Last 8 × 60"]);
+    expect(document.querySelectorAll(".set-col-target .set-previous")).toHaveLength(0);
+    expect(document.querySelectorAll(".set-row > .set-previous")).toHaveLength(2);
+    expect(texts(".rest-preview")).toEqual(["Rest 1:30", "Rest 2:00", "Rest 2:00"]);
   });
 
   it("rests in line after a tick, folds a finished exercise, and finishes to its review", () => {
@@ -219,13 +324,19 @@ describe("Sets player", () => {
     act(() => button("Skip").click());
     expect(byLabel("Rest, 1:00 left")).toBeNull();
     act(() => (byLabel("Back squat, set 2") as HTMLInputElement).click());
-    expect(byLabel("Back squat, 2 of 2 sets")).not.toBeNull();
+    const folded = "Open Back squat, 2 × 5 · 100 kg";
+    expect(byLabel(folded)).not.toBeNull();
+    expect(container.querySelector(".player-target")?.textContent).toBe(
+      "Exercise 2 of 3 · Target effort 8"
+    );
     expect(container.querySelector(".player-row-next [aria-hidden]")?.textContent).toBe("Row");
     expect(container.querySelector(".player-row-next .visually-hidden")?.textContent).toBe(
       "Next: Row"
     );
-    act(() => (byLabel("Back squat, 2 of 2 sets") as HTMLButtonElement).click());
+    act(() => (byLabel(folded) as HTMLButtonElement).click());
     expect(byLabel("Back squat, set 1")).not.toBeNull();
+    act(() => (byLabel("Fold Back squat") as HTMLButtonElement).click());
+    expect(byLabel("Back squat, set 1")).toBeNull();
 
     act(() => button("Finish").click());
     const where = new URL(`http://x${document.querySelector("[data-testid=where]")?.textContent}`);
@@ -260,6 +371,6 @@ describe("Sets player", () => {
     );
     advance(21_000);
     expect(container.querySelector(".player-row--hold")).toBeNull();
-    expect(byLabel("Plank, 1 of 1 set")).not.toBeNull();
+    expect(byLabel("Open Plank, 1 × 30s")).not.toBeNull();
   });
 });

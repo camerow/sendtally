@@ -1,5 +1,13 @@
 import type { Activity } from "@sendtally/api-client";
-import { clock, toUnit, type ItemDone, type SetDone, type WeightUnit } from "@sendtally/core/hang";
+import {
+  clock,
+  toUnit,
+  type Dose,
+  type ItemDone,
+  type SessionItem,
+  type SetDone,
+  type WeightUnit,
+} from "@sendtally/core/hang";
 import { formatNumber, t } from "../i18n";
 import { countText } from "../hang/format";
 import { climbingSetText } from "./climbing";
@@ -37,6 +45,27 @@ export function setText(set: SetDone, unit: WeightUnit, repsMax?: number): strin
     .join(" × ");
   return [work, set.onS === undefined ? "" : setSeconds(set.onS)]
     .filter((p) => p !== "")
+    .join(" · ");
+}
+
+/** A finished exercise on one line, its sets with the top set's reps or time and load: "5 × 5 · 60 kg". */
+export function foldedLine(sets: readonly SetDone[], unit: WeightUnit): string {
+  const top = sets.reduce<SetDone | undefined>(
+    (best, s) => (best === undefined || (s.weightKg ?? 0) > (best.weightKg ?? 0) ? s : best),
+    undefined
+  );
+  const work = top?.reps ?? (top?.onS === undefined ? undefined : setSeconds(top.onS));
+  const load =
+    top?.weightKg === undefined
+      ? undefined
+      : t("hang.loadPlain", { value: weightValue(top.weightKg, unit), unit });
+  return [
+    work === undefined
+      ? t("activities.setCount", { count: sets.length })
+      : `${formatNumber(sets.length)} × ${typeof work === "number" ? formatNumber(work) : work}`,
+    load,
+  ]
+    .filter((p) => p !== undefined)
     .join(" · ");
 }
 
@@ -151,4 +180,23 @@ export function offWithout(off: readonly string[], item: number, set: number): s
     if (i !== item || s === undefined || s < set) return [key];
     return s === set ? [] : [setKeyOf(item, s - 1)];
   });
+}
+
+/**
+ * What each logged exercise was asked, by its place in `done`: the workout's item at that place
+ * when it is the same exercise, else the first that is, since a run logs in the order its
+ * exercises ended and leaves a fingerboard part out; by place alone when none is (a hangboard
+ * review names its sets by grip).
+ */
+export function plannedDoses(
+  planned: readonly SessionItem[],
+  done: readonly Pick<ItemDone, "item" | "exercise">[]
+): (Dose | undefined)[] {
+  const doses: (Dose | undefined)[] = [];
+  for (const d of done) {
+    const same = planned[d.item]?.exercise === d.exercise ? planned[d.item] : undefined;
+    doses[d.item] = (same ?? planned.find((p) => p.exercise === d.exercise) ?? planned[d.item])
+      ?.dose;
+  }
+  return doses;
 }

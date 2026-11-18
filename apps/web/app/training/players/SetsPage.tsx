@@ -1,7 +1,7 @@
 import React from "react";
 import { restAfterItem } from "@sendtally/core/hang";
 import { useNavigate } from "react-router";
-import { useActivities, useWeightUnit } from "@sendtally/features/activities";
+import { foldedLine, useActivities, useWeightUnit } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { useLiveSession } from "@sendtally/features/log-session";
 import { exerciseAbout } from "@sendtally/features/exercises";
@@ -15,8 +15,11 @@ import {
   type SetAt,
   type WorkoutRun,
 } from "@sendtally/features/workouts";
+import { type MoreMenuItem } from "../../components/MoreMenu";
+import { Sheet } from "../../components/Sheet";
 import { useToast } from "../../components/Toast";
 import { useAppApi } from "../../lib/useAppApi";
+import { ExercisePicker } from "../editor/ExercisePicker";
 import { useExerciseTallyStorage, useLiveRunStore } from "../../lib/useLiveRun";
 import { ClimbingCard } from "./ClimbingCard";
 import { FingersCard } from "./FingersCard";
@@ -27,7 +30,6 @@ import { PlayerFrame } from "./PlayerFrame";
 import { RestPreview } from "./RestPreview";
 import { RestRow } from "./RestRow";
 import { SetsCard } from "./SetsCard";
-import { ExtraSets } from "./ExtraSets";
 import { useFinishRun } from "./useFinishRun";
 
 /**
@@ -53,7 +55,24 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
     activities: activities.status === "ready" ? activities.data : null,
     exercises: mine,
   });
-  const { shown, ticked, current, rest, hold, previous, nameOf, part } = player;
+  const { shown, ticked, current, rest, hold, previous, nameOf, items, order, part } = player;
+  const [picking, setPicking] = React.useState(false);
+  const [removing, setRemoving] = React.useState<number | null>(null);
+  const removeSet = (at: SetAt): void => {
+    player.removeSet(at);
+    toast.show({
+      message: `${nameOf(at.item)} · ${t("activities.setRemoved", { n: at.set + 1 })}`,
+      action: { label: t("tally.undo"), onPress: player.undoRemove },
+    });
+  };
+  const menu = (i: number, at: number): MoreMenuItem[] => [
+    { label: t("workouts.skipForNow"), onSelect: () => player.skip(i) },
+    ...(at > 0 ? [{ label: t("workouts.moveUpShort"), onSelect: () => player.move(i, -1) }] : []),
+    ...(at < order.length - 1
+      ? [{ label: t("workouts.moveDownShort"), onSelect: () => player.move(i, 1) }]
+      : []),
+    { label: t("workouts.removeShort"), destructive: true, onSelect: () => setRemoving(i) },
+  ];
   const finish = useFinishRun(
     run,
     player.finished,
@@ -92,15 +111,17 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
     <PlayerFrame
       run={run}
       startedAt={player.startedAt}
+      position={player.position}
       footer={
         <button type="button" className="detail-primary" onClick={finish}>
           {t("activities.finish")}
         </button>
       }
     >
-      {run.items.map((item, i) => {
-        const d = shown[i];
-        if (d === undefined) return null;
+      {order.map((i, at) => {
+        const item = items[i];
+        const d = shown.find((x) => x.item === i);
+        if (item === undefined || d === undefined) return null;
         if (part !== null && part.places.includes(i)) {
           const last = part.places[part.places.length - 1] ?? i;
           return (
@@ -119,18 +140,21 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                     toast.show({ message, action: { label: t("tally.undo"), onPress: undo } })
                   }
                 />
-                {restAt(afterKey(last)) || (
-                  <RestPreview seconds={restAfterItem(run.items, last, run.exerciseRestS)} />
-                )}
+                {at < order.length - 1 &&
+                  (restAt(afterKey(last)) || (
+                    <RestPreview seconds={restAfterItem(items, last, run.exerciseRestS)} />
+                  ))}
               </React.Fragment>
             )
           );
         }
         const climbing = player.climbing(i);
-        const range = player.extra(i);
-        const between = restAt(afterKey(i)) || (
-          <RestPreview seconds={restAfterItem(run.items, i, run.exerciseRestS)} />
-        );
+        const skipped = player.skipped(i);
+        const between =
+          at < order.length - 1 &&
+          (restAt(afterKey(i)) || (
+            <RestPreview seconds={restAfterItem(items, i, run.exerciseRestS)} />
+          ));
         return (
           <React.Fragment key={i}>
             {climbing !== null ? (
@@ -143,7 +167,16 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                 }}
               />
             ) : player.folded(i) ? (
-              <FoldedSetsCard name={nameOf(i)} sets={d.sets.length} onOpen={() => player.open(i)} />
+              <FoldedSetsCard
+                name={nameOf(i)}
+                line={skipped ? t("workouts.skippedTapToDo") : foldedLine(d.sets, unit)}
+                done={
+                  !skipped &&
+                  d.sets.length > 0 &&
+                  d.sets.every((_, set) => ticked.has(setKey({ item: i, set })))
+                }
+                onOpen={() => player.open(i)}
+              />
             ) : (
               <SetsCard
                 item={item}
@@ -159,18 +192,50 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                 holdRow={(set) => holdRow({ item: i, set })}
                 go={(set) => go({ item: i, set })}
                 restUnder={(set) => restAt(setKey({ item: i, set }))}
-                footer={
-                  range !== null && (
-                    <ExtraSets {...range} exercise={nameOf(i)} onAdd={() => player.addSet(i)} />
-                  )
-                }
                 about={exerciseAbout(mine, item.exercise, nameOf(i))}
+                onFocus={(set) => player.focus({ item: i, set })}
+                onRemoveSet={(set) => removeSet({ item: i, set })}
+                onAddSet={() => player.addSet(i)}
+                onFold={() => player.fold(i)}
+                menu={menu(i, at)}
               />
             )}
-            {climbing === null && between}
+            {between}
           </React.Fragment>
         );
       })}
+      {run.items.length > 0 && (
+        <button
+          type="button"
+          className="outline-button player-add-exercise"
+          onClick={() => setPicking(true)}
+        >
+          + {t("workouts.addExercise")}
+        </button>
+      )}
+      {picking && (
+        <ExercisePicker
+          items={items.map((x) => ({ exercise: x.exercise, doses: [x.dose] }))}
+          multi
+          onPick={(picked) => picked.forEach(player.addExercise)}
+          onClose={() => setPicking(false)}
+        />
+      )}
+      <Sheet
+        open={removing !== null}
+        title={t("workouts.removeExercise", { name: removing === null ? "" : nameOf(removing) })}
+        onClose={() => setRemoving(null)}
+        action={{
+          label: t("workouts.removeShort"),
+          danger: true,
+          onPress: () => {
+            if (removing !== null) player.remove(removing);
+            setRemoving(null);
+          },
+        }}
+      >
+        <p className="sheet-body">{t("workouts.removeFromRunBody")}</p>
+      </Sheet>
     </PlayerFrame>
   );
 }

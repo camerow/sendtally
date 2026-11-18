@@ -277,6 +277,29 @@ describe("Log activity", () => {
     );
   });
 
+  it("reads each exercise against its own dose when the run logged them out of the workout's order", async () => {
+    const done = [{ item: 0, exercise: "Pull-ups", sets: [{ reps: 6 }] }];
+    const initial = newActivityDraft(
+      { kind: "strength", workoutId: "w5", done: JSON.stringify(done) },
+      "2026-11-18"
+    );
+    await render(
+      <ActivityForm
+        id="a1"
+        initial={initial}
+        logged={null}
+        timed
+        kindSet
+        live
+        planned={[
+          { exercise: "half", dose: { sets: 3, reps: 6, onS: 7 } },
+          { exercise: "Pull-ups", dose: { sets: 3, reps: 8 } },
+        ]}
+      />
+    );
+    expect(screen.getByText("6 of 8 reps")).toBeTruthy();
+  });
+
   it("reviews a run: a set short of its dose in amber, and Discard ends the run once confirmed", async () => {
     jest.clearAllMocks();
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
