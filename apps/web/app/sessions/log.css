@@ -598,6 +598,10 @@
   color: var(--bs-gunmetal);
 }
 
+.scope-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
 .scope-search input::placeholder {
   color: var(--text-on-white-secondary);
 }
@@ -655,9 +659,20 @@
 }
 
 .log-filters {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 18px;
+  margin: 0 -24px;
+  padding: 2px 24px 4px;
+}
+
+.sheet-head:has(.filter-clear--head) {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
 }
 
 .filter-field {

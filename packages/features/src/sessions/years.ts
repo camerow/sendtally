@@ -108,7 +108,7 @@ const logged = (items: LogItem[]): LogItem[] =>
 
 /** Journal entries only: a hangboard session counts as a session. */
 const entryCount = (items: LogItem[]): number =>
-  flatLog(items).filter((item) => item.type === "entry" && item.frame !== true).length;
+  logged(items).filter((item) => item.type === "entry").length;
 
 /** The untitled sessions climbs added on their own are filed in, which count as those climbs. */
 const holdersIn = (items: LogItem[]): SessionRow[] => sessionsIn(items).filter(isClimbHolder);
