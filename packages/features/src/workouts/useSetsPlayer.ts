@@ -26,7 +26,7 @@ import type { Hold } from "./holdClock";
 import { exerciseName } from "./library";
 import type { LiveRunStore } from "./liveRun";
 import { newDoseFor } from "./doseFields";
-import { runParams, type WorkoutRun } from "./runParams";
+import { runParams, type RunFinish, type WorkoutRun } from "./runParams";
 import {
   cardsFrom,
   finishedInOrder,
@@ -149,7 +149,7 @@ export type SetsPlayer = {
   /** Puts a climbing item on the tally; the caller then opens it. */
   startClimbing: (item: number, measure: TallyMeasure) => void;
   /** What the run did, and the sets it left unticked, for its review. */
-  finished: () => { done: ItemDone[]; off: string[] };
+  finished: () => RunFinish;
   /** Whether what it needs to finish has loaded. */
   loaded: boolean;
   /** Its fingerboard part, when it has grips. */
@@ -171,7 +171,9 @@ export function useSetsPlayer({
 }: SetsPlayerInputs): SetsPlayer {
   const [resumed] = React.useState(() => {
     const live = store.resumed("/workout/sets", run.workoutId);
-    return live?.state.player === "sets" ? { ...live.state, startedAt: live.startedAt } : null;
+    return live?.state.player === "sets"
+      ? { ...live.state, startedAt: live.startedAt, lastTickAt: live.lastTickAt }
+      : null;
   });
   const climbs = tally.stored?.draft.climbs ?? [];
   const [startedAt] = React.useState(() => resumed?.startedAt ?? Date.now());
@@ -179,6 +181,7 @@ export function useSetsPlayer({
     () => resumed?.done ?? doneAsPrescribed(run.items)
   );
   const [ticked, setTicked] = React.useState<ReadonlySet<string>>(() => new Set(resumed?.ticked));
+  const [tickedAt, setLastTickAt] = React.useState(resumed?.lastTickAt);
   const [cards, setCards] = React.useState<RunCards>(() =>
     cardsFrom(resumed?.cards, run.items.length)
   );
@@ -186,6 +189,7 @@ export function useSetsPlayer({
   const [removed, setRemoved] = React.useState<
     (RemovedSet & { at: SetAt; value: SetDone; wasTicked: boolean }) | null
   >(null);
+  const lastTickAt = ticked.size === 0 ? undefined : tickedAt;
   const lastRemoved = useLatest(removed);
   const latest = useLatest({ done, ticked });
   const rest = useRest(store);
@@ -212,6 +216,7 @@ export function useSetsPlayer({
       pathname: "/workout/sets",
       params: runParams(run),
       startedAt,
+      lastTickAt,
       state: {
         player: "sets",
         done,
@@ -221,7 +226,7 @@ export function useSetsPlayer({
         ...(places.length > 0 && { grips: places }),
       },
     });
-  }, [store, run, startedAt, done, ticked, cards, places]);
+  }, [store, run, startedAt, lastTickAt, done, ticked, cards, places]);
   const planned = partPlanned(run, places);
   const inPart = (item: number): boolean => places.includes(item);
   const partOpen =
@@ -264,6 +269,7 @@ export function useSetsPlayer({
     const ticking = !after.delete(key);
     if (ticking) after.add(key);
     setTicked(after);
+    if (ticking) setLastTickAt(() => Date.now());
     const finished = sets.every((s) => s.item !== at.item || after.has(setKey(s)));
     setFocused(ticking && finished ? null : at);
     setCards((c) => withCardEnded(withCardFold(c, at.item, null), at.item, finished));
@@ -464,7 +470,7 @@ export function useSetsPlayer({
       const climbed = ran.flatMap((d) =>
         tallyOf(d.item) === null ? [] : d.sets.map((_, set) => setKey({ item: d.item, set }))
       );
-      return finishedInOrder(cards, ran, new Set([...ticked, ...climbed]));
+      return { ...finishedInOrder(cards, ran, new Set([...ticked, ...climbed])), lastTickAt };
     },
     loaded: activities !== null && exercises !== null,
     part:

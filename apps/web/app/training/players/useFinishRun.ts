@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router";
-import type { ItemDone } from "@sendtally/core/hang";
-import { finishedRunParams, type RunFiling } from "@sendtally/features/workouts";
+import { finishedRunParams, type RunFiling, type RunFinish } from "@sendtally/features/workouts";
 import { newActivityPath } from "../log/paths";
 
 /**
@@ -10,15 +9,15 @@ import { newActivityPath } from "../log/paths";
  */
 export function useFinishRun(
   run: RunFiling,
-  finished: () => { done: ItemDone[]; off: string[] },
+  finished: () => RunFinish,
   startedAt: number,
   end: boolean,
   ready: boolean
 ): () => void {
   const navigate = useNavigate();
   const finish = (): void => {
-    const { done, off } = finished();
-    const params = finishedRunParams(run, done, startedAt, Date.now(), off);
+    const { done, off, lastTickAt } = finished();
+    const params = finishedRunParams(run, done, startedAt, Date.now(), off, lastTickAt);
     void navigate(newActivityPath(params), { replace: true });
   };
   const ending = React.useRef(end);

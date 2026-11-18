@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
@@ -33,6 +33,8 @@ const run: WorkoutRun = {
 };
 
 describe("Checklist player", () => {
+  beforeEach(() => liveRunStorage.remove());
+
   it("ticks lines off, rests before the next, and logs the ticked ones on the clock, the rest unticked", async () => {
     jest.useFakeTimers({ now: new Date(2026, 9, 22, 7) });
     await renderWithHang(<ChecklistScreen run={run} />);
@@ -84,7 +86,6 @@ describe("Checklist player", () => {
 
   it("runs a timed line in place, each side in turn, and ticks it at the target", async () => {
     jest.useFakeTimers({ now: new Date(2026, 9, 22, 7) });
-    liveRunStorage.remove();
     const timed: WorkoutRun = {
       ...run,
       items: [
@@ -111,6 +112,40 @@ describe("Checklist player", () => {
     });
     expect(screen.getByLabelText(/^Pigeon, /).props.accessibilityState).toEqual({ checked: true });
     expect(screen.queryByTestId("rest-next")?.props.children).toBe("Cat-cow");
+    jest.useRealTimers();
+  });
+
+  it("ends the run at its last tick when it sat open over 20 minutes after", async () => {
+    jest.useFakeTimers({ now: new Date(2026, 9, 22, 7) });
+    await renderWithHang(<ChecklistScreen run={run} />);
+    await act(async () => {
+      jest.advanceTimersByTime(5 * 60_000);
+    });
+    await fireEvent.press(screen.getByLabelText("Cat-cow, 2 sets"));
+    await act(async () => {
+      jest.advanceTimersByTime(60 * 60_000);
+    });
+    await fireEvent.press(screen.getByText("Done for today"));
+    const { params } = (router.replace as jest.Mock).mock.calls.at(-1)![0] as {
+      params: Record<string, string>;
+    };
+    expect([params.minutes, params.endTime, params.idle]).toEqual(["5", "07:05", "60"]);
+    jest.useRealTimers();
+  });
+
+  it("keeps the whole clock when the only tick is taken back", async () => {
+    jest.useFakeTimers({ now: new Date(2026, 9, 22, 7) });
+    await renderWithHang(<ChecklistScreen run={run} />);
+    await fireEvent.press(screen.getByLabelText("Cat-cow, 2 sets"));
+    await fireEvent.press(screen.getByLabelText("Cat-cow, 2 sets"));
+    await act(async () => {
+      jest.advanceTimersByTime(60 * 60_000);
+    });
+    await fireEvent.press(screen.getByText("Done for today"));
+    const { params } = (router.replace as jest.Mock).mock.calls.at(-1)![0] as {
+      params: Record<string, string>;
+    };
+    expect([params.minutes, params.endTime, params.idle]).toEqual(["60", undefined, undefined]);
     jest.useRealTimers();
   });
 });

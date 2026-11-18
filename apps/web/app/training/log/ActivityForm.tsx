@@ -21,7 +21,13 @@ import {
 } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { KIND_LOOK } from "@sendtally/features/training";
-import { discardRunBody, useWorkoutActions, type PartForm } from "@sendtally/features/workouts";
+import {
+  discardRunBody,
+  idleNote,
+  useWorkoutActions,
+  type IdleEnd,
+  type PartForm,
+} from "@sendtally/features/workouts";
 import { NumberField } from "../../components/NumberField";
 import { useToast } from "../../components/Toast";
 import { DetailFrame } from "../../components/detail/DetailFrame";
@@ -46,6 +52,8 @@ export type ActivityFormProps = {
   logged: ActivityRecord | null;
   /** It came with a kind, from a workout; a logged activity always has one. */
   kindSet?: boolean;
+  /** Where the review cut a run left open, said in amber under the duration until it is changed. */
+  idleEnd?: IdleEnd | null;
   /** What the workout prescribes, which a set short of its dose reads against. */
   planned?: readonly SessionItem[];
   /** It reviews the workout running live, which saving or discarding ends. */
@@ -74,6 +82,7 @@ export function ActivityForm({
   kindSet = false,
   live = false,
   planned = [],
+  idleEnd = null,
   hang,
   part,
   gripName = (id) => id,
@@ -97,6 +106,7 @@ export function ActivityForm({
   const update = (patch: Partial<ActivityDraft>): void => setDraft((d) => ({ ...d, ...patch }));
   const [grips, setGrips] = React.useState(() => part && { done: part.done, setup: part.setup });
   const items = itemsOf(draft.done);
+  const note = idleNote(idleEnd, draft.minutes);
   const name = draft.title.trim() || kindLabel(draft.kind);
   const look = hang === undefined ? draft.kind : "hangboard";
   const reviewing = logged === null && draft.workoutId !== null;
@@ -241,6 +251,7 @@ export function ActivityForm({
             mode={{ kind: "time", min: 60 }}
             onChange={(seconds) => update({ minutes: minutesOf(seconds) })}
           />
+          {note !== null && <p className="form-idle-note">{note}</p>}
         </div>
       )}
       <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   doneParams,
+  finishedRunParams,
+  idleEnd,
+  idleNote,
   intervalsParams,
   readDoneParams,
   readIntervalsParams,
@@ -75,5 +78,46 @@ describe("hangboard review params", () => {
   it("carries a review through its params and back", () => {
     expect(readDoneParams(doneParams(review))).toEqual(review);
     expect(readDoneParams(doneParams({ ...review, run: null }))).toEqual({ ...review, run: null });
+  });
+});
+
+describe("a finished run's review", () => {
+  const filing = {
+    kind: "strength" as const,
+    title: "5x5 strength",
+    workoutId: "w1",
+    link: { membershipId: null, week: null, focus: null },
+  };
+  const startedAt = new Date(2026, 10, 16, 17, 55).getTime();
+  const lastTickAt = startedAt + 47 * 60_000;
+
+  it("ends the duration at the last tick when the run sat idle over 20 minutes after it", () => {
+    const params = finishedRunParams(
+      filing,
+      [],
+      startedAt,
+      lastTickAt + 143 * 60_000,
+      [],
+      lastTickAt
+    );
+    expect(params).toMatchObject({
+      minutes: "47",
+      startTime: "17:55",
+      endTime: "18:42",
+      idle: "143",
+    });
+    const end = idleEnd(params);
+    expect(idleNote(end, 47)).toBe("Ended at your last set, 6:42 PM · left open 2h 23m after");
+    expect(idleNote(end, 50)).toBeNull();
+  });
+
+  it("keeps the clock when the last tick was 20 minutes ago or less, or there was none", () => {
+    const soon = finishedRunParams(filing, [], startedAt, lastTickAt + 20 * 60_000, [], lastTickAt);
+    expect(soon.minutes).toBe("67");
+    expect(idleEnd(soon)).toBeNull();
+    const none = finishedRunParams(filing, [], startedAt, lastTickAt + 143 * 60_000);
+    expect(none.minutes).toBe("190");
+    expect(idleEnd(none)).toBeNull();
+    expect(idleNote(null, 190)).toBeNull();
   });
 });

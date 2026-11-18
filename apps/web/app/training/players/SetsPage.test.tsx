@@ -373,4 +373,36 @@ describe("Sets player", () => {
     expect(container.querySelector(".player-row--hold")).toBeNull();
     expect(byLabel("Open Plank, 1 × 30s")).not.toBeNull();
   });
+
+  it("ends the run at its last tick when it sat open over 20 minutes after, across a minimise", () => {
+    mount();
+    advance(10 * 60_000);
+    act(() => (byLabel("Row, set 1") as HTMLInputElement).click());
+    act(() => root.unmount());
+    root = createRoot(container);
+    mount();
+    advance(2 * 60 * 60_000);
+    act(() => button("Finish").click());
+    const where = new URL(`http://x${document.querySelector("[data-testid=where]")?.textContent}`);
+    expect(["minutes", "endTime", "idle"].map((k) => where.searchParams.get(k))).toEqual([
+      "10",
+      "18:15",
+      "120",
+    ]);
+  });
+
+  it("keeps the whole clock when the only tick is taken back", () => {
+    mount();
+    advance(10 * 60_000);
+    act(() => (byLabel("Back squat, set 1") as HTMLInputElement).click());
+    act(() => (byLabel("Back squat, set 1") as HTMLInputElement).click());
+    advance(2 * 60 * 60_000);
+    act(() => button("Finish").click());
+    const where = new URL(`http://x${document.querySelector("[data-testid=where]")?.textContent}`);
+    expect(["minutes", "endTime", "idle"].map((k) => where.searchParams.get(k))).toEqual([
+      "130",
+      null,
+      null,
+    ]);
+  });
 });

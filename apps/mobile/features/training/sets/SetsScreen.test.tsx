@@ -501,4 +501,15 @@ describe("Sets player", () => {
     ];
     expect(JSON.parse(params.done).map((d: { exercise: string }) => d.exercise)).toEqual(["Row"]);
   });
+  it("ends the run at its last tick when it sat open over 20 minutes after", async () => {
+    await renderWithHang(<SetsScreen run={run} />, hangData());
+    await advance(10 * 60_000);
+    await fireEvent.press(screen.getByLabelText("Row, set 1"));
+    await advance(2 * 60 * 60_000);
+    await fireEvent.press(screen.getByText("Finish"));
+    const { params } = (router.replace as jest.Mock).mock.calls.at(-1)![0] as {
+      params: Record<string, string>;
+    };
+    expect([params.minutes, params.endTime, params.idle]).toEqual(["10", "18:15", "120"]);
+  });
 });

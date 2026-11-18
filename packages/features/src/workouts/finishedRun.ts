@@ -14,11 +14,12 @@ export type HeldRun = {
     | { player: "checklist"; ticked: number[]; count: number };
   rest?: Rest;
   hold?: Hold;
+  lastTickAt?: number;
 };
 
 /**
  * The live run with its hold recorded while no player is open: the set or line ticked with
- * what it held, and the rest that tick starts, from `now`. Every other field of the run is kept.
+ * what it held at `now`, its last tick, and the rest that tick starts. Every other field is kept.
  */
 export const finishedRun = <R extends HeldRun>(live: R, held: number, now: number): R =>
   finished(live, held, now) as R;
@@ -44,14 +45,14 @@ function finished(live: HeldRun, held: number, now: number): HeldRun {
         ? { ...d, sets: d.sets.map((s, i) => (i === at.set ? { ...s, onS: held } : s)) }
         : d
     );
-    const next = { ...rest, state: { ...state, done, ticked: [...ticked] } };
+    const next = { ...rest, lastTickAt: now, state: { ...state, done, ticked: [...ticked] } };
     const after = restAfterTick(items, ticked, at, run.exerciseRestS);
     return after === null ? next : withRest(next, after.at, after.seconds, after.next);
   }
   if (state.player === "checklist") {
     const i = Number(hold.at);
     const ticked = [...new Set([...state.ticked, i])];
-    const next = { ...rest, state: { ...state, ticked } };
+    const next = { ...rest, lastTickAt: now, state: { ...state, ticked } };
     const following = run.items.findIndex((_, j) => j > i && !ticked.includes(j));
     return following === -1
       ? next
