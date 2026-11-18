@@ -84,7 +84,7 @@ describe("set ranges", () => {
 });
 
 describe("the exercise counter beside a checklist", () => {
-  const list = (k: number): boolean => k === 0;
+  const list = (k: number): string | null => (k === 0 ? null : String(k));
   it("counts exercises only, and says nothing for a checklist alone", () => {
     expect(exercisePosition([0, 1, 2], 1, list)).toEqual({ at: 1, of: 2 });
     expect(exercisePosition([0, 1, 2], 2, list)).toEqual({ at: 2, of: 2 });
@@ -95,7 +95,7 @@ describe("the exercise counter beside a checklist", () => {
   });
 
   it("reads past an exercise already behind it from a checklist, still counting it", () => {
-    const list = (k: number): boolean => k === 0;
+    const list = (k: number): string | null => (k === 0 ? null : String(k));
     const behind = (k: number): boolean => k === 1 || k === 2;
     expect(exercisePosition([0, 1, 2, 3], 0, list, behind)).toEqual({ at: 3, of: 3 });
   });

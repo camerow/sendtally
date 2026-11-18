@@ -221,6 +221,72 @@ describe("WorkoutEditorPage", () => {
     });
   });
 
+  it("makes a superset from the gap below an exercise, sets its rounds, and takes a member out", () => {
+    mount(<WorkoutEditorPage id="push" />);
+    click(
+      [...container.querySelectorAll("button")].find((b) => b.textContent === "Superset with next")
+    );
+    const group = container.querySelector(".superset-editor")!;
+    expect([...group.querySelectorAll(".letter-badge")].map((b) => b.textContent)).toEqual([
+      "A",
+      "B",
+    ]);
+    expect([...group.querySelectorAll(".letter-badge")].map((b) => b.className)).toEqual([
+      "letter-badge letter-badge--0",
+      "letter-badge letter-badge--0",
+    ]);
+    expect(group.querySelector('[aria-label="Move Bench press down"]')).not.toBeNull();
+    expect(group.querySelector('[aria-label="Move Bench press up"]')).toBeNull();
+    expect(group.querySelector('[aria-label="Move Dips down"]')).toBeNull();
+    expect([...group.querySelectorAll(".superset-foot button")].map((b) => b.textContent)).toEqual([
+      "+ Add to superset",
+      "Ungroup",
+    ]);
+    click([...group.querySelectorAll("button")].find((b) => b.textContent === "+ Add to superset"));
+    const listed = [...document.querySelectorAll('[role="checkbox"]')].map(
+      (b) => b.getAttribute("aria-label") ?? b.textContent
+    );
+    expect(listed.some((n) => n?.includes("4x4s") || n?.includes("ARC"))).toBe(false);
+    expect(listed.some((n) => n?.includes("Back squat"))).toBe(true);
+    act(() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })));
+    click(container.querySelector('[aria-label="More rounds"]'));
+    const rounds = container.querySelector<HTMLInputElement>(".superset-rounds input")!;
+    expect(container.querySelector(`label[for="${rounds.id}"]`)?.textContent).toBe("Rounds");
+    click(container.querySelector(".editor-bar-save"));
+    const items = saved().items;
+    expect(
+      items.slice(0, 2).every((i) => i.group !== undefined && i.group.rounds === i.doses[0]?.sets)
+    ).toBe(true);
+  });
+
+  it("moves a plain exercise past a whole superset, and the superset whole", () => {
+    mount(<WorkoutEditorPage id="push" />);
+    click(
+      [...container.querySelectorAll("button")].find((b) => b.textContent === "Superset with next")
+    );
+    click(container.querySelector('[aria-label="Move Face pull up"]'));
+    expect(container.querySelectorAll(".superset-editor")).toHaveLength(1);
+    const names = (): string[] =>
+      [...container.querySelectorAll(".item-editor-name")].map((e) => e.textContent ?? "");
+    expect(names()).toEqual(["Face pull", "Superset", "Bench press", "Dips"]);
+    click(container.querySelector('[aria-label="Move Superset up"]'));
+    click(container.querySelector(".editor-bar-save"));
+    expect(saved().items.map((i) => [i.exercise, i.group !== undefined])).toEqual([
+      ["Bench press", true],
+      ["Dips", true],
+      ["Face pull", false],
+    ]);
+  });
+
+  it("ends a superset when a member is taken out and one is left", () => {
+    mount(<WorkoutEditorPage id="push" />);
+    click(
+      [...container.querySelectorAll("button")].find((b) => b.textContent === "Superset with next")
+    );
+    click(container.querySelector('[aria-label^="Take "][aria-label$=" out of the superset"]'));
+    expect(container.querySelector(".superset-editor")).toBeNull();
+  });
+
   it("edits each rest between exercises on its own, the workout's rest where one sets none", () => {
     mount(<WorkoutEditorPage id="push" />);
     const labels = (): string[] =>

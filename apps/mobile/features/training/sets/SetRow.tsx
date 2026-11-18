@@ -16,6 +16,10 @@ import { SetDoneFields } from "./SetDoneFields";
 
 export type SetRowProps = {
   n: number;
+  /** In place of the set's number: a superset member's letter and round, "B2". */
+  tag?: string;
+  /** Before its target: a superset member's exercise. */
+  name?: string;
   target: SetDone;
   /** The top of a rep range the target runs to. */
   repsMax?: number;
@@ -52,6 +56,8 @@ const LAST_LINE = {
 /** One set: its number, what it asks and did last time, what was done, and its tick. */
 export function SetRow({
   n,
+  tag,
+  name,
   target,
   repsMax,
   done,
@@ -81,7 +87,7 @@ export function SetRow({
     >
       <View style={[SET_COLUMNS.row, { minHeight: 48 }]}>
         <Text style={[type.monoBold, SET_COLUMNS.set, { fontSize: 14, color: colors.gunmetal }]}>
-          {formatNumber(n)}
+          {tag ?? formatNumber(n)}
         </Text>
         <View style={SET_COLUMNS.target}>
           {width >= 360 && (
@@ -91,7 +97,7 @@ export function SetRow({
               minimumFontScale={0.7}
               style={[type.mono, { fontSize: 14, color: colors.textSecondary }]}
             >
-              {setChip(target, unit, repsMax) || "-"}
+              {[name, setChip(target, unit, repsMax) || "-"].filter(Boolean).join(" ")}
             </Text>
           )}
         </View>

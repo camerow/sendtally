@@ -14,6 +14,7 @@ import {
   shortOf,
 } from "@sendtally/features/activities";
 import { heldSet } from "@sendtally/core/hang";
+import { supersetHeadAt } from "@sendtally/features/workouts";
 import { t } from "@sendtally/features/i18n";
 import { useFieldOrder } from "../../../components/useFieldOrder";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
@@ -139,113 +140,124 @@ export function DoneDetails({
             const target = planned[d.item];
             const of: SetsOf = hangs ? "hangs" : laps(d.exercise) ? "laps" : "sets";
             const lifting = d.sets.some((s) => s.weightKg !== undefined) && !hangs;
+            const head = supersetHeadAt(exercises, index);
             return (
-              <View
-                key={d.item}
-                style={
-                  flat
-                    ? { gap: 4 }
-                    : {
-                        gap: 4,
-                        padding: 14,
-                        borderRadius: 16,
-                        borderWidth: 1,
-                        borderColor: colors.lineOnLightStrong,
-                      }
-                }
-              >
+              <React.Fragment key={d.item}>
+                {head !== null && (
+                  <Text
+                    style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal, paddingTop: 4 }]}
+                  >
+                    {head}
+                  </Text>
+                )}
                 <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingBottom: 4 }}
+                  style={
+                    flat
+                      ? { gap: 4 }
+                      : {
+                          gap: 4,
+                          padding: 14,
+                          borderRadius: 16,
+                          borderWidth: 1,
+                          borderColor: colors.lineOnLightStrong,
+                        }
+                  }
                 >
                   <View
-                    style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color }}
-                  />
-                  <Text style={[type.bodyBold, { flex: 1, fontSize: 17, color: colors.gunmetal }]}>
-                    {d.exercise}
-                  </Text>
-                  <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-                    {exerciseCountText(d, off, of)}
-                  </Text>
-                </View>
-                {index === 0 && setup}
-                <View style={SET_COLUMNS.row}>
-                  <Label small color={colors.textSecondary} style={SET_COLUMNS.set}>
-                    {of === "laps" ? t("workouts.colLap") : t("activities.colSet")}
-                  </Label>
-                  <Label small color={colors.textSecondary} style={SET_COLUMNS.target}>
-                    {t("activities.colTarget")}
-                  </Label>
-                  <Label small color={colors.textSecondary} style={SET_COLUMNS.done}>
-                    {hangs
-                      ? t("activities.colHangsLoad")
-                      : lifting
-                        ? t("activities.colDoneUnit", { unit })
-                        : t("activities.colDone")}
-                  </Label>
-                  <Label small color={colors.textSecondary} style={SET_COLUMNS.rpe}>
-                    RPE
-                  </Label>
-                  {!hangs && <View style={SET_COLUMNS.tick} />}
-                </View>
-                {d.sets.map((set, i) => {
-                  const on = !off.includes(setKeyOf(d.item, i)) && (!hangs || heldSet(set));
-                  return (
-                    <ReviewSetRow
-                      key={i}
-                      n={i + 1}
-                      target={
-                        target === undefined || target.onS !== undefined
-                          ? target
-                          : {
-                              ...target,
-                              weightKg: target.weightKg ?? previous(d.exercise)[i]?.weightKg,
-                            }
-                      }
-                      done={set}
-                      hangs={hangs}
-                      lifting={lifting}
-                      unit={unit}
-                      on={on}
-                      short={shortOf(set, target, of)}
-                      label={t("activities.setOf", { exercise: d.exercise, n: i + 1 })}
-                      slot={hangs ? counts.slot(setKeyOf(d.item, i)) : undefined}
-                      loadSlot={hangs ? counts.slot(`${setKeyOf(d.item, i)}:load`) : undefined}
-                      defaultLoadKg={hangLoadKg}
-                      rpe={{
-                        slot: (hangs ? counts : rpes).slot(`${setKeyOf(d.item, i)}:rpe`),
-                        target: d.targetRpe,
-                      }}
-                      onChange={(value) =>
-                        onChange(changeSet(done, d.item, i, value), offWithoutKey(off, d.item, i))
-                      }
-                      onToggle={hangs ? undefined : () => toggle(d.item, i)}
-                      onRemove={() => remove(d, i)}
+                    style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingBottom: 4 }}
+                  >
+                    <View
+                      style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color }}
                     />
-                  );
-                })}
-                <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
-                  <Button
-                    label={of === "laps" ? t("tally.addLap") : t("activities.addSet")}
-                    accessibilityLabel={t("activities.addSetTo", { exercise: d.exercise })}
-                    onPress={() => edit(addSet(done, d.item))}
-                    variant="outline"
-                    icon="plus"
-                    height={40}
-                  />
-                  {d.sets.length > 1 && (
+                    <Text
+                      style={[type.bodyBold, { flex: 1, fontSize: 17, color: colors.gunmetal }]}
+                    >
+                      {d.exercise}
+                    </Text>
+                    <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
+                      {exerciseCountText(d, off, of)}
+                    </Text>
+                  </View>
+                  {index === 0 && setup}
+                  <View style={SET_COLUMNS.row}>
+                    <Label small color={colors.textSecondary} style={SET_COLUMNS.set}>
+                      {of === "laps" ? t("workouts.colLap") : t("activities.colSet")}
+                    </Label>
+                    <Label small color={colors.textSecondary} style={SET_COLUMNS.target}>
+                      {t("activities.colTarget")}
+                    </Label>
+                    <Label small color={colors.textSecondary} style={SET_COLUMNS.done}>
+                      {hangs
+                        ? t("activities.colHangsLoad")
+                        : lifting
+                          ? t("activities.colDoneUnit", { unit })
+                          : t("activities.colDone")}
+                    </Label>
+                    <Label small color={colors.textSecondary} style={SET_COLUMNS.rpe}>
+                      RPE
+                    </Label>
+                    {!hangs && <View style={SET_COLUMNS.tick} />}
+                  </View>
+                  {d.sets.map((set, i) => {
+                    const on = !off.includes(setKeyOf(d.item, i)) && (!hangs || heldSet(set));
+                    return (
+                      <ReviewSetRow
+                        key={i}
+                        n={i + 1}
+                        target={
+                          target === undefined || target.onS !== undefined
+                            ? target
+                            : {
+                                ...target,
+                                weightKg: target.weightKg ?? previous(d.exercise)[i]?.weightKg,
+                              }
+                        }
+                        done={set}
+                        hangs={hangs}
+                        lifting={lifting}
+                        unit={unit}
+                        on={on}
+                        short={shortOf(set, target, of)}
+                        label={t("activities.setOf", { exercise: d.exercise, n: i + 1 })}
+                        slot={hangs ? counts.slot(setKeyOf(d.item, i)) : undefined}
+                        loadSlot={hangs ? counts.slot(`${setKeyOf(d.item, i)}:load`) : undefined}
+                        defaultLoadKg={hangLoadKg}
+                        rpe={{
+                          slot: (hangs ? counts : rpes).slot(`${setKeyOf(d.item, i)}:rpe`),
+                          target: d.targetRpe,
+                        }}
+                        onChange={(value) =>
+                          onChange(changeSet(done, d.item, i, value), offWithoutKey(off, d.item, i))
+                        }
+                        onToggle={hangs ? undefined : () => toggle(d.item, i)}
+                        onRemove={() => remove(d, i)}
+                      />
+                    );
+                  })}
+                  <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
                     <Button
-                      label={of === "laps" ? t("tally.removeLap") : t("activities.removeLastSet")}
-                      accessibilityLabel={t("activities.removeLastSetFrom", {
-                        exercise: d.exercise,
-                      })}
-                      onPress={() => remove(d, d.sets.length - 1)}
+                      label={of === "laps" ? t("tally.addLap") : t("activities.addSet")}
+                      accessibilityLabel={t("activities.addSetTo", { exercise: d.exercise })}
+                      onPress={() => edit(addSet(done, d.item))}
                       variant="outline"
-                      icon="minus"
+                      icon="plus"
                       height={40}
                     />
-                  )}
+                    {d.sets.length > 1 && (
+                      <Button
+                        label={of === "laps" ? t("tally.removeLap") : t("activities.removeLastSet")}
+                        accessibilityLabel={t("activities.removeLastSetFrom", {
+                          exercise: d.exercise,
+                        })}
+                        onPress={() => remove(d, d.sets.length - 1)}
+                        variant="outline"
+                        icon="minus"
+                        height={40}
+                      />
+                    )}
+                  </View>
                 </View>
-              </View>
+              </React.Fragment>
             );
           })}
         </Frame>

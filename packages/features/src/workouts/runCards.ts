@@ -1,3 +1,4 @@
+import { unitMovedOrder } from "./unitMove";
 import type { ItemDone, SessionItem, SetDone } from "@sendtally/core/hang";
 import { setKeyOf } from "../activities/done";
 import type { SetAt } from "./setsRun";
@@ -43,6 +44,17 @@ export function withCardMoved(cards: RunCards, key: number, by: -1 | 1): RunCard
   const order = [...cards.order];
   [order[from], order[to]] = [order[to] ?? key, key];
   return { ...cards, order };
+}
+
+/** A card, or a superset's cards together, one place up or down (see `unitMovedOrder`). */
+export function withUnitMoved(
+  cards: RunCards,
+  members: readonly number[],
+  by: -1 | 1,
+  unitOf: (key: number) => readonly number[]
+): RunCards {
+  const order = unitMovedOrder(cards.order, members, by, unitOf);
+  return order === cards.order ? cards : { ...cards, order: [...order] };
 }
 
 /** Skipped for now: to the end, where it stays once it is done after all. */

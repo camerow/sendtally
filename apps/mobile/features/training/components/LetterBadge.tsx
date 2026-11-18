@@ -15,10 +15,15 @@ const LOOKS = [
 const letterLook = (dose: number): { backgroundColor: string; color: string } =>
   LOOKS[dose % LOOKS.length] ?? LOOKS[0];
 
-export type LetterBadgeProps = { dose: number; size: number };
+export type LetterBadgeProps = {
+  dose: number;
+  size: number;
+  /** One colour for every letter, where the letter names a place, not a dose taking turns. */
+  plain?: boolean;
+};
 
-export function LetterBadge({ dose, size }: LetterBadgeProps): React.ReactElement {
-  const { backgroundColor, color } = letterLook(dose);
+export function LetterBadge({ dose, size, plain = false }: LetterBadgeProps): React.ReactElement {
+  const { backgroundColor, color } = letterLook(plain ? 0 : dose);
   return (
     <Text
       style={[

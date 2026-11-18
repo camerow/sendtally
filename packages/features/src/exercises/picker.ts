@@ -3,6 +3,7 @@ import {
   WORKOUT_KINDS,
   exerciseKinds,
   isBuiltInGrip,
+  joinsGroup,
   type Grip,
   type WorkoutKind,
 } from "@sendtally/core/hang";
@@ -50,12 +51,16 @@ export function exerciseKindIn(
  * category New makes in from the one in view, "choose" when it has to ask.
  */
 export const pickerState = (
-  category: WorkoutKind | "all"
+  category: WorkoutKind | "all",
+  superset = false
 ): { offer: PickerOffer; kinds: readonly WorkoutKind[]; newKind: WorkoutKind | "choose" } => ({
   offer: "all",
-  kinds: WORKOUT_KINDS,
+  kinds: WORKOUT_KINDS.filter((k) => !superset || kindJoins(k)),
   newKind: category === "all" ? "choose" : category,
 });
+
+/** Whether exercises of a category can be in a superset, by `joinsGroup`'s rule. */
+const kindJoins = (kind: WorkoutKind): boolean => joinsGroup({ exercise: "" }, () => kind);
 
 /** Everything the workout can add, built-ins the user has not made their own included. */
 function allEntries(world: PickerWorld): PickerEntry[] {
@@ -105,6 +110,7 @@ function allEntries(world: PickerWorld): PickerEntry[] {
 export function pickerEntries(world: PickerWorld, filter: PickerFilter): PickerEntry[] {
   const words = fold(filter.text).split(/\s+/).filter(Boolean);
   return allEntries(world)
+    .filter((e) => filter.superset !== true || kindJoins(e.kind))
     .filter((e) => filter.category === "all" || e.kind === filter.category)
     .filter((e) => words.every((w) => fold(e.name).includes(w)))
     .sort((a, b) => b.uses - a.uses || a.name.localeCompare(b.name));

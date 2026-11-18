@@ -31,6 +31,8 @@ export type IconName =
   | "pencil"
   | "climb"
   | "up"
+  | "moveUp"
+  | "moveDown"
   | "down"
   | "restart"
   | "remove"
@@ -85,6 +87,8 @@ const SHAPES: Record<IconName, React.ReactElement> = {
   external: <path d="M14 5h5v5M19 5l-8 8M17 14v5H5V7h5" />,
   arrowUpRight: <path d="M7 17 17 7M8 7h9v9" />,
   up: <path d="M6 15l6-6 6 6" />,
+  moveUp: <path d="M12 19V5M6 11l6-6 6 6" />,
+  moveDown: <path d="M12 5v14M6 13l6 6 6-6" />,
   down: <path d="M6 9l6 6 6-6" />,
   restart: <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v4h4" />,
   remove: <path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M8 12h8" />,

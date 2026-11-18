@@ -48,7 +48,7 @@ export function BlockOrder({ members, workout, onMove }: BlockOrderProps): React
               {name}
             </Text>
             <IconButton
-              icon="up"
+              icon="moveUp"
               label={t("workouts.moveUp", { name })}
               onPress={() => onMove(m.id, -1)}
               color={colors.textSecondary}
@@ -57,7 +57,7 @@ export function BlockOrder({ members, workout, onMove }: BlockOrderProps): React
               disabled={i === 0}
             />
             <IconButton
-              icon="down"
+              icon="moveDown"
               label={t("workouts.moveDown", { name })}
               onPress={() => onMove(m.id, 1)}
               color={colors.textSecondary}

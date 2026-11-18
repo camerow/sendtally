@@ -32,6 +32,8 @@ export type ExercisePickerProps = {
   items: readonly Item[];
   /** Tick several and add them; otherwise a press picks one, to swap. */
   multi: boolean;
+  /** Picking for a superset: only what can be in one. */
+  superset?: boolean;
   onPick: (picked: Picked[]) => void;
   onClose: () => void;
 };
@@ -47,6 +49,7 @@ type Category = WorkoutKind | "all";
 export function ExercisePicker({
   items,
   multi,
+  superset = false,
   onPick,
   onClose,
 }: ExercisePickerProps): React.ReactElement {
@@ -63,8 +66,8 @@ export function ExercisePicker({
     items.filter((i) => !isChecklist(i)).map((i) => i.exercise),
     "all"
   );
-  const { offer, kinds, newKind } = pickerState(category);
-  const entries = pickerEntries({ ...world, offer }, { category, text });
+  const { offer, kinds, newKind } = pickerState(category, superset);
+  const entries = pickerEntries({ ...world, offer }, { category, text, superset });
   const typed = text.trim();
 
   const finish = async (): Promise<void> => {

@@ -43,6 +43,11 @@ export type ItemEditorProps = {
   onMoveUp?: () => void;
   /** Absent for the last item. */
   onMoveDown?: () => void;
+  /**
+   * A superset member, by its letter's place (A is 0): its sets are the superset's rounds, so they are not asked, and its − takes
+   * it out of the superset, saying so, rather than out of the workout.
+   */
+  member?: number;
 };
 
 /**
@@ -62,11 +67,14 @@ export function ItemEditor({
   onMoveUp,
   onMoveDown,
   preview = false,
+  member,
 }: ItemEditorProps): React.ReactElement {
   const alternating = item.doses.length > 1;
   const next = letterOf(item.doses.length);
   const last = letterOf(item.doses.length - 1);
-  const fields = doseFieldsFor(kind, measure, item.doses[0]);
+  const fields = doseFieldsFor(kind, measure, item.doses[0]).filter(
+    (f) => member === undefined || f.key !== "sets"
+  );
   const laps = measure === "laps";
   const { slot } = useFieldOrder([
     ...item.doses.flatMap((_, d) => fields.map((f) => `${d}.${f.key}`)),
@@ -98,7 +106,10 @@ export function ItemEditor({
       : []),
     {
       icon: "trash",
-      title: t("workouts.removeExercise", { name }),
+      title:
+        member !== undefined
+          ? t("workouts.outOfSuperset", { name })
+          : t("workouts.removeExercise", { name }),
       danger: true,
       onPress: onRemove,
     },
@@ -113,15 +124,17 @@ export function ItemEditor({
         borderRadius: 14,
         borderWidth: 1,
         borderColor: colors.lineOnLightStrong,
+        backgroundColor: member !== undefined ? colors.white : undefined,
       }}
     >
       <View style={{ minHeight: 36, flexDirection: "row", alignItems: "center", gap: 6 }}>
+        {member !== undefined && <LetterBadge dose={member} size={26} plain />}
         <Text style={[type.bodyBold, { flex: 1, fontSize: 16, color: colors.gunmetal }]}>
           {name}
         </Text>
         {onMoveUp !== undefined && (
           <IconButton
-            icon="up"
+            icon="moveUp"
             label={t("workouts.moveUp", { name })}
             onPress={onMoveUp}
             color={colors.textSecondary}
@@ -131,7 +144,7 @@ export function ItemEditor({
         )}
         {onMoveDown !== undefined && (
           <IconButton
-            icon="down"
+            icon="moveDown"
             label={t("workouts.moveDown", { name })}
             onPress={onMoveDown}
             color={colors.textSecondary}
@@ -161,7 +174,11 @@ export function ItemEditor({
             />
             <IconButton
               icon="remove"
-              label={t("workouts.removeExercise", { name })}
+              label={
+                member !== undefined
+                  ? t("workouts.outOfSuperset", { name })
+                  : t("workouts.removeExercise", { name })
+              }
               onPress={onRemove}
               color={colors.textSecondary}
               size={36}
@@ -216,34 +233,38 @@ export function ItemEditor({
           </View>
         </View>
       ))}
-      <View
-        style={{
-          minHeight: 44,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingTop: 8,
-          borderTopWidth: 1,
-          borderTopColor: colors.lineOnLightSoft,
-        }}
-      >
-        <Text style={[type.body, { fontSize: 14, color: colors.gunmetal }]}>
-          {t("workouts.alternates")}
-        </Text>
-        <Switch
-          checked={alternating}
-          onChange={(on) => onChange(withAlternates(item, on))}
-          disabled={false}
-          label={`${t("workouts.alternates")}: ${name}`}
-        />
-      </View>
-      <TimeField
-        {...slot("setRest")}
-        label={laps ? t("workouts.lapRest") : t("hang.fieldSetRest")}
-        value={item.doses[0]?.setRestS ?? 0}
-        max={3600}
-        onChange={(seconds) => onChange(withSetRest(item, seconds))}
-      />
+      {member === undefined && (
+        <>
+          <View
+            style={{
+              minHeight: 44,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingTop: 8,
+              borderTopWidth: 1,
+              borderTopColor: colors.lineOnLightSoft,
+            }}
+          >
+            <Text style={[type.body, { fontSize: 14, color: colors.gunmetal }]}>
+              {t("workouts.alternates")}
+            </Text>
+            <Switch
+              checked={alternating}
+              onChange={(on) => onChange(withAlternates(item, on))}
+              disabled={false}
+              label={`${t("workouts.alternates")}: ${name}`}
+            />
+          </View>
+          <TimeField
+            {...slot("setRest")}
+            label={laps ? t("workouts.lapRest") : t("hang.fieldSetRest")}
+            value={item.doses[0]?.setRestS ?? 0}
+            max={3600}
+            onChange={(seconds) => onChange(withSetRest(item, seconds))}
+          />
+        </>
+      )}
     </View>
   );
 }

@@ -3,10 +3,10 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { Alert } from "react-native";
+import { Alert, StyleSheet } from "react-native";
 import type { WorkoutRecord } from "@sendtally/api-client";
 import type * as Workouts from "@sendtally/features/workouts";
-import { aHang, anExercise, hangData, renderWithHang } from "../data/renderWithHang";
+import { aHang, anExercise, hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
 import { ExerciseEditorScreen } from "../exercises/ExerciseEditorScreen";
 import { WorkoutEditorScreen } from "./WorkoutEditorScreen";
 
@@ -76,6 +76,84 @@ async function type(label: string, digits: string, index = 0): Promise<void> {
 }
 
 describe("Workout editor", () => {
+  it("makes a superset from the gap below an exercise, sets its rounds, and takes a member out", async () => {
+    let n = 0;
+    jest.mocked(randomUUID).mockImplementation(() => `id-${n++}`);
+    const dips = anExercise("e2", "Dips", "strength");
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), {
+      exercises: [squat, dips],
+    });
+    await pick("Back squat", "Dips");
+    await fireEvent.press(screen.getByText("Superset with next"));
+    expect(screen.getByText("Superset")).toBeTruthy();
+    expect(screen.getByLabelText("Move Back squat down")).toBeTruthy();
+    expect(screen.queryByLabelText("Move Back squat up")).toBeNull();
+    expect(screen.queryByLabelText("Move Dips down")).toBeNull();
+    const badge = (letter: string): unknown =>
+      StyleSheet.flatten(screen.getByText(letter).props.style).backgroundColor;
+    expect(badge("B")).toBe(badge("A"));
+    expect(readingOrder("A", "Back squat", "B", "Dips", "Add to superset", "Ungroup")).toEqual([
+      "A",
+      "Back squat",
+      "B",
+      "Dips",
+      "Add to superset",
+      "Ungroup",
+    ]);
+    await fireEvent.press(screen.getByText("Add to superset"));
+    expect(screen.queryByRole("checkbox", { name: "4x4s" })).toBeNull();
+    expect(screen.queryByRole("checkbox", { name: "ARC" })).toBeNull();
+    await fireEvent.press(screen.getByText("Cancel", { exact: true }));
+    await fireEvent.press(screen.getByLabelText("More rounds"));
+    await fireEvent.press(screen.getByText("Save"));
+    const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
+    expect(saved.items.map((i) => [i.exercise, i.group?.rounds, i.doses[0]?.sets])).toEqual([
+      ["Back squat", 4, 4],
+      ["Dips", 4, 4],
+    ]);
+  });
+
+  it("moves a plain exercise past a whole superset, and the superset whole", async () => {
+    let n = 0;
+    jest.mocked(randomUUID).mockImplementation(() => `id-${n++}`);
+    const dips = anExercise("e2", "Dips", "strength");
+    const row = anExercise("e3", "Row", "strength");
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), {
+      exercises: [squat, dips, row],
+    });
+    await pick("Back squat", "Dips", "Row");
+    await fireEvent.press(screen.getAllByText("Superset with next")[0]!);
+    await fireEvent.press(screen.getByLabelText("Move Row up"));
+    expect(readingOrder("Row", "Superset", "Back squat", "Dips")).toEqual([
+      "Row",
+      "Superset",
+      "Back squat",
+      "Dips",
+    ]);
+    await fireEvent.press(screen.getByLabelText("Move Superset up"));
+    await fireEvent.press(screen.getByText("Save"));
+    const [, saved] = mockWorkouts.saveWorkout.mock.calls[0] as [string, Workouts.WorkoutDraft];
+    expect(saved.items.map((i) => [i.exercise, i.group !== undefined])).toEqual([
+      ["Back squat", true],
+      ["Dips", true],
+      ["Row", false],
+    ]);
+  });
+
+  it("takes a member out of a superset, which ends it with one left", async () => {
+    let n = 0;
+    jest.mocked(randomUUID).mockImplementation(() => `id-${n++}`);
+    const dips = anExercise("e2", "Dips", "strength");
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), {
+      exercises: [squat, dips],
+    });
+    await pick("Back squat", "Dips");
+    await fireEvent.press(screen.getByText("Superset with next"));
+    await fireEvent.press(screen.getByLabelText("Take Back squat out of the superset"));
+    expect(screen.queryByText("Superset")).toBeNull();
+    expect(screen.getByText("Superset with next")).toBeTruthy();
+  });
+
   it("holds a warm-up and a cool-down checklist in one workout", async () => {
     await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
     await fireEvent.press(screen.getByText("Add checklist"));

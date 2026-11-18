@@ -380,6 +380,27 @@ describe("Log activity", () => {
     expect(screen.queryByText("Add set")).toBeNull();
   });
 
+  it("groups a superset's members under one header, from the log itself", async () => {
+    const group = { id: "s1", rounds: 2 };
+    const done = [
+      { item: 0, exercise: "Pull-ups", sets: [{ reps: 6 }, { reps: 6 }], group },
+      { item: 1, exercise: "Push-ups", sets: [{ reps: 15 }, { reps: 15 }], group },
+      { item: 2, exercise: "Plank", sets: [{ onS: 45 }] },
+    ];
+    const initial = newActivityDraft(
+      { kind: "strength", workoutId: "w6", done: JSON.stringify(done), off: "[]" },
+      "2026-11-18"
+    );
+    await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet live />);
+    expect(readingOrder("Superset · 2 rounds", "Pull-ups", "Push-ups", "Plank")).toEqual([
+      "Superset · 2 rounds",
+      "Pull-ups",
+      "Push-ups",
+      "Plank",
+    ]);
+    expect(screen.getAllByText("Superset · 2 rounds")).toHaveLength(1);
+  });
+
   it("puts each checklist above the Sets heading, the exercises under it", async () => {
     const done = [
       { item: 0, exercise: "Checklist", sets: [], checklist: { lines: ["Jog"], checked: [0] } },

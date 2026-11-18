@@ -39,7 +39,12 @@ export type PickerEntry = {
 };
 
 /** Which entries a picker shows: a category or all of them, and what was typed. */
-export type PickerFilter = { category: WorkoutKind | "all"; text: string };
+export type PickerFilter = {
+  category: WorkoutKind | "all";
+  text: string;
+  /** Picking for a superset: only what can be in one (see `joinsGroup`). */
+  superset?: boolean;
+};
 
 /** What the exercise editor asks for. A Fingers exercise takes a grip's measure. */
 export type ExerciseForm = {
