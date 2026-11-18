@@ -27,10 +27,6 @@ export const journal = {
   "journal.deleteFailed": "Could not delete this entry. Try again.",
   "journal.needsSomething": "Write something first.",
   "journal.emptyTitle": "Nothing written yet",
-  "journal.emptyBody":
-    "Sessions tell you what you climbed. Entries tell you why it went the way it did - how you felt, what you are chasing, what hurt.",
-  "journal.showEverything": "Everything",
-  "journal.showSessions": "Sessions",
   "journal.showInjuries": "Injuries",
   "journal.showTrips": "Trips",
   "journal.showJournal": "Journal",

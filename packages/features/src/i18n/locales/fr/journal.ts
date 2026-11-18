@@ -27,10 +27,6 @@ export const journal = {
   "journal.deleteFailed": "Impossible de supprimer cette entrée. Réessaie.",
   "journal.needsSomething": "Écris d'abord quelque chose.",
   "journal.emptyTitle": "Rien d'écrit pour l'instant",
-  "journal.emptyBody":
-    "Les séances disent ce que tu as grimpé. Les entrées disent pourquoi ça s'est passé comme ça - ce que tu as ressenti, ce que tu vises, ce qui a fait mal.",
-  "journal.showEverything": "Tout",
-  "journal.showSessions": "Séances",
   "journal.showInjuries": "Blessures",
   "journal.showTrips": "Voyages",
   "journal.showJournal": "Journal",

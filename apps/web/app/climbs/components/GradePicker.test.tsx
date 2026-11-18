@@ -3,13 +3,9 @@ import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { gradeFilterLabel, type GradeFilter } from "@sendtally/features/climbs";
-import { GradeFilterSheet } from "./GradeFilterSheet";
+import { GradePicker } from "./GradePicker";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-
-HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
-  this.setAttribute("open", "");
-};
 
 const climb = (id: string, value: number): ClimbSummary =>
   ({ id, grade: { scale: "v", value }, discipline: "boulder" }) as ClimbSummary;
@@ -23,16 +19,14 @@ let seen: Array<GradeFilter | null>;
 function Harness(): React.ReactElement {
   const [value, setValue] = React.useState<GradeFilter | null>(null);
   return (
-    <GradeFilterSheet
-      open
+    <GradePicker
+      scale="v"
       value={value}
-      scales={{ boulder: "v", route: "yds" }}
       climbs={CLIMBS}
       onChange={(next) => {
         seen.push(next);
         setValue(next);
       }}
-      onClose={() => {}}
     />
   );
 }
@@ -57,7 +51,7 @@ const byText = (text: string): HTMLButtonElement =>
     (b) => b.textContent === text
   )!;
 
-describe("GradeFilterSheet", () => {
+describe("GradePicker", () => {
   it("picks one grade with a click and closes a range with a second", () => {
     act(() => byLabel("V6, 2 climbs").click());
     expect(seen.at(-1)).toEqual({ scale: "v", from: "V6", to: "V6" });

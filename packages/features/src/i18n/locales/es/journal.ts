@@ -27,10 +27,6 @@ export const journal = {
   "journal.deleteFailed": "No se pudo eliminar esta entrada. Inténtalo otra vez.",
   "journal.needsSomething": "Escribe algo primero.",
   "journal.emptyTitle": "Todavía no has escrito nada",
-  "journal.emptyBody":
-    "Las sesiones cuentan qué escalaste. Las entradas cuentan por qué salió así: cómo te sentiste, qué buscas, qué te dolió.",
-  "journal.showEverything": "Todo",
-  "journal.showSessions": "Sesiones",
   "journal.showInjuries": "Lesiones",
   "journal.showTrips": "Viajes",
   "journal.showJournal": "Diario",

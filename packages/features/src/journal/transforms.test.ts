@@ -14,12 +14,7 @@ import {
   groupTrips,
   linkedSessions,
   logItems,
-  logScopeItems,
   logTraining,
-  logSegmentItems,
-  logWorkoutItems,
-  logWorkoutName,
-  trainingLogItems,
   openInjuries,
   overlappingTrip,
   sessionsInSpan,
@@ -143,11 +138,6 @@ describe("hang sessions in the log", () => {
       [hang]
     );
     expect(items.map((i) => i.key)).toEqual(["session:b", "hang:h1", "entry:e1", "session:a"]);
-    expect(logScopeItems(items, "sessions").map((i) => i.key)).toEqual([
-      "session:b",
-      "hang:h1",
-      "session:a",
-    ]);
     expect(logCountLabel(items)).toBe("3 sessions · 1 entry");
   });
 
@@ -188,7 +178,6 @@ describe("other training in the log", () => {
       [activity, { ...activity, id: "a2", startTime: null, date: "2026-05-29" }]
     );
     expect(items.map((i) => i.key)).toEqual(["activity:a2", "activity:a1", "session:a"]);
-    expect(logScopeItems(items, "sessions")).toHaveLength(3);
     expect(logCountLabel(items)).toBe("3 sessions");
     const trip = entry({
       id: "t1",
@@ -200,22 +189,6 @@ describe("other training in the log", () => {
     expect(grouped?.type === "entry" ? grouped.inside.map((i) => i.key) : []).toEqual([
       "activity:a1",
     ]);
-  });
-
-  it("splits into climbing and training, with entries in both and trips only in climbing", () => {
-    const trip = entry({
-      id: "t1",
-      kind: "trip",
-      occurred_at: "2026-05-27",
-      ends_at: "2026-05-29",
-    });
-    const items = logItems([session("a", "2026-05-28T12:00:00.000Z")], [trip], [], [activity]);
-    const inside = (segment: "climbing" | "training"): string[] =>
-      groupTrips(logSegmentItems(items, segment)).flatMap((i) =>
-        i.type === "entry" ? [i.key, ...i.inside.map((x) => x.key)] : [i.key]
-      );
-    expect(inside("climbing")).toEqual(["entry:t1", "session:a"]);
-    expect(inside("training")).toEqual(["activity:a1"]);
   });
 });
 
@@ -269,16 +242,7 @@ describe("blocks in the log", () => {
     expect(logCountLabel(items)).toBe("2 sessions");
   });
 
-  it("shows in the training log only", () => {
-    const items = logItems([linked], [], [], [], training);
-    expect(logSegmentItems(items, "climbing").map((i) => i.key)).toEqual(["session:a"]);
-    expect(logSegmentItems(items, "training").map((i) => i.key)).toEqual(["block:b1"]);
-  });
-
-  it("shows with sessions but not in the journal, and stays out of trips", () => {
-    const items = logItems([linked], [], [], [], training);
-    expect(logScopeItems(items, "sessions").map((i) => i.key)).toContain("block:b1");
-    expect(logScopeItems(items, "journal")).toHaveLength(0);
+  it("stays out of trips", () => {
     const trip = entry({
       id: "t1",
       kind: "trip",
@@ -511,39 +475,6 @@ describe("linkedSessions", () => {
   });
 });
 
-describe("logScopeItems", () => {
-  const items = logItems(
-    [session("a", "2026-05-22T09:00:00.000Z")],
-    [
-      entry({ id: "note", kind: "journal", fingerprints: ["a"] }),
-      entry({ id: "free", kind: "journal" }),
-      entry({ id: "hurt", kind: "injury", fingerprints: ["a"] }),
-    ]
-  );
-
-  it("shows everything, a note on a session included", () => {
-    expect(logScopeItems(items, "all").map((i) => i.key)).toEqual([
-      "entry:note",
-      "entry:free",
-      "entry:hurt",
-      "session:a",
-    ]);
-  });
-
-  it("picks one kind of entry", () => {
-    expect(logScopeItems(items, "injuries").map((i) => i.key)).toEqual(["entry:hurt"]);
-  });
-
-  it("shows each half on its own", () => {
-    expect(logScopeItems(items, "sessions").map((i) => i.key)).toEqual(["session:a"]);
-    expect(logScopeItems(items, "journal").map((i) => i.key)).toEqual([
-      "entry:note",
-      "entry:free",
-      "entry:hurt",
-    ]);
-  });
-});
-
 describe("sessionsNearPoints", () => {
   it("counts the week up to each point", () => {
     const sessions = [
@@ -575,57 +506,6 @@ describe("bodyPlaceholder", () => {
     expect(bodyPlaceholder(emptyEntryDraft("journal", "2026-05-30"))).toBe(
       "Reflect on your climbing"
     );
-  });
-});
-
-describe("logWorkoutItems", () => {
-  const lift = (id: string, over: Partial<Activity> = {}): Activity => ({
-    id,
-    kind: "strength",
-    title: "Leg day",
-    date: "2026-05-28",
-    startTime: null,
-    minutes: 50,
-    rpe: 7,
-    notes: null,
-    workoutId: "legs",
-    membershipId: null,
-    week: null,
-    focus: null,
-    done: [],
-    ...over,
-  });
-  const items = logItems(
-    [session("a", "2026-05-22T09:00:00.000Z")],
-    [entry({ id: "note", kind: "journal" })],
-    [],
-    [
-      lift("a1"),
-      lift("a2", { title: "Arm day", workoutId: "arms" }),
-      lift("a3", { workoutId: null, title: "Pull and core " }),
-      lift("a4", { workoutId: null, title: "pull and core" }),
-    ]
-  );
-
-  it("keeps only that workout's sessions, by library id", () => {
-    expect(logWorkoutItems(items, "legs").map((i) => i.key)).toEqual(["activity:a1"]);
-  });
-
-  it("knows one logged without the library by its title", () => {
-    expect(logWorkoutItems(items, "title:pull and core")).toHaveLength(2);
-  });
-
-  it("narrows the Training log by scope, then by workout", () => {
-    expect(trainingLogItems(items, "journal", null).map((i) => i.key)).toEqual(["entry:note"]);
-    expect(trainingLogItems(items, "all", "legs").map((i) => i.key)).toEqual(["activity:a1"]);
-    expect(trainingLogItems(items, "journal", "legs")).toEqual([]);
-  });
-
-  it("names the workout a key narrows to, from its rows", () => {
-    expect(logWorkoutName(items, "arms")).toBe("Arm day");
-    expect(logWorkoutName(items, "title:pull and core")).toBe("Pull and core");
-    expect(logWorkoutName(items, "gone")).toBeNull();
-    expect(logWorkoutName(items, null)).toBeNull();
   });
 });
 

@@ -65,29 +65,6 @@ export function today(now: Date = new Date()): string {
   return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
 }
 
-/** What the Training log can be narrowed to. */
-export type LogScope = "all" | "sessions" | "journal" | "injuries";
-
-export const LOG_SCOPES: LogScope[] = ["all", "sessions", "journal", "injuries"];
-
-const SCOPE_LABELS: Record<LogScope, MessageKey> = {
-  all: "journal.showEverything",
-  sessions: "journal.showSessions",
-  journal: "journal.showJournal",
-  injuries: "journal.showInjuries",
-};
-
-export function logScopeLabel(scope: LogScope): string {
-  return t(SCOPE_LABELS[scope]);
-}
-
-export function logScopeItems(items: LogItem[], scope: LogScope): LogItem[] {
-  if (scope === "all") return items;
-  if (scope === "sessions") return items.filter((i) => i.type !== "entry");
-  if (scope === "journal") return items.filter((i) => i.type === "entry");
-  return items.filter((i) => i.type === "entry" && i.entry.kind === "injury");
-}
-
 /** A logged workout's name and key, which Stats links to the log by; nothing for the rest. */
 export function logItemWorkout(item: LogItem): { key: string; name: string } | null {
   if (item.type === "hang") {
@@ -98,38 +75,6 @@ export function logItemWorkout(item: LogItem): { key: string; name: string } | n
     return { key: workoutKeyOf(item.activity), name: item.activity.title.trim() };
   }
   return null;
-}
-
-/** Only the sessions of one workout, by its key. */
-export const logWorkoutItems = (items: LogItem[], key: string): LogItem[] =>
-  items.filter((i) => logItemWorkout(i)?.key === key);
-
-/** The Training log's rows under its scope, and only one workout's when a key is given. */
-export function trainingLogItems(
-  items: LogItem[],
-  scope: LogScope,
-  workout: string | null
-): LogItem[] {
-  const scoped = logScopeItems(items, scope);
-  return workout === null ? scoped : logWorkoutItems(scoped, workout);
-}
-
-/** The name of the workout a key narrows the log to, from the rows that carry it. */
-export function logWorkoutName(items: readonly LogItem[], key: string | null): string | null {
-  if (key === null) return null;
-  return items.map(logItemWorkout).find((w) => w?.key === key)?.name ?? null;
-}
-
-/** The two halves of the log, and of Stats. */
-export type LogSegment = "climbing" | "training";
-
-/** Climbing sessions in one half, the rest of the training and its blocks in the other; entries in both but trips, which are climbing's. */
-export function logSegmentItems(items: LogItem[], segment: LogSegment): LogItem[] {
-  return items.filter((i) =>
-    i.type === "entry"
-      ? segment === "climbing" || i.entry.kind !== "trip"
-      : (i.type === "session") === (segment === "climbing")
-  );
 }
 
 /** The plan the log tags sessions with, and the blocks over by `day` that it marks done. */

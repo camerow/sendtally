@@ -17,7 +17,10 @@ export {
   type TripSpan,
 } from "./types";
 export {
+  LOG_CATEGORIES,
+  LOG_DISCIPLINES,
   NO_LOG_FILTER,
+  outcomeChipLabel,
   filterLog,
   logExerciseOptions,
   logFilterActive,
@@ -60,17 +63,7 @@ export {
   linkedSessions,
   logItems,
   logTraining,
-  logItemWorkout,
-  logScopeItems,
-  logWorkoutItems,
-  logWorkoutName,
-  trainingLogItems,
-  logScopeLabel,
-  logSegmentItems,
-  LOG_SCOPES,
   sessionsNearPoints,
-  type LogScope,
-  type LogSegment,
   openInjuries,
   sessionsInSpan,
   severitySeries,
@@ -94,3 +87,4 @@ export {
 } from "./trips";
 export { useEntryDetail, useLogRows, type EntryDetailData, type LogRows } from "./useEntryDetail";
 export { useEntryComposer, type EntryComposer } from "./useEntryComposer";
+export { logFilterFromParams, writeLogFilterParams } from "./logFilterParams";

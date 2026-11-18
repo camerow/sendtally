@@ -13,7 +13,7 @@ import {
   logTraining,
   logWorkoutOptions,
   today,
-  updateLogFilter,
+  logFilterFromParams,
   type LogContext,
   type LogFilter,
   type LogOption,
@@ -41,7 +41,7 @@ import { useSetupDismissed } from "../../lib/setupPrompt";
 import { useGyms } from "@sendtally/features/gyms";
 import { useTrainingLog } from "@sendtally/features/training";
 
-export function SessionsLog({ workout = null }: { workout?: string | null }): React.ReactElement {
+export function SessionsLog({ link = null }: { link?: string | null }): React.ReactElement {
   const api = useApi();
   const log = useQueryPair(queries.sessions(api), queries.entries(api));
   const [sessionLog, entries] = log.state.status === "ready" ? log.state.data : [null, null];
@@ -118,13 +118,13 @@ export function SessionsLog({ workout = null }: { workout?: string | null }): Re
   const [searching, setSearching] = React.useState(false);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   const [linked, setLinked] = React.useState<string | null>(null);
-  if (workout !== linked) {
-    setLinked(workout);
-    if (workout !== null) setFilter(updateLogFilter(NO_LOG_FILTER, { workout }));
+  if (link !== linked) {
+    setLinked(link);
+    if (link !== null) setFilter(logFilterFromParams(new URLSearchParams(link)));
   }
   React.useEffect(() => {
-    if (workout !== null) router.setParams({ workout: undefined });
-  }, [workout]);
+    if (link !== null) router.setParams({ workout: undefined, status: undefined });
+  }, [link]);
   const view = React.useMemo(
     () => (items === null ? null : filterLog(items, filter, ctx)),
     [items, filter, ctx]

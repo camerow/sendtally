@@ -357,6 +357,10 @@ describe("filterLog", () => {
     expect(keys(view({ foci: ["power_endurance"] }))).toEqual(["session:4x4"]);
   });
 
+  it("knows a workout logged without the library by its title", () => {
+    expect(keys(view({ workout: "title:hips and shoulders" }))).toEqual(["activity:hips"]);
+  });
+
   it("shows a session found by one climb with only that climb", () => {
     const v = view({ search: "crimp" });
     expect(keys(v)).toEqual(["session:evening", "activity:core", "hang:repeaters"]);

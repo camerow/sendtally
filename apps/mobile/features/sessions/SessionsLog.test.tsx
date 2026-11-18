@@ -231,10 +231,16 @@ describe("Log", () => {
   });
 
   it("lands from a Stats link with its workout as a pill", async () => {
-    await render(<SessionsLog workout="title:leg day" />);
+    await render(<SessionsLog link="workout=title%3Aleg+day" />);
     expect(screen.getByLabelText("Leg day, Clear")).toBeTruthy();
     expect(screen.queryByLabelText(/^Tuesday night session, /)).toBeNull();
     expect(screen.queryByText("Clear all")).toBeNull();
+  });
+
+  it("opens a web Projects link as the Projects outcome", async () => {
+    await render(<SessionsLog link="status=projects" />);
+    expect(screen.getByLabelText("Projects, Clear")).toBeTruthy();
+    expect(screen.queryByLabelText(/^Tuesday night session, /)).toBeNull();
   });
 
   it("holds every way to log, climbing and training, behind one Log button", async () => {

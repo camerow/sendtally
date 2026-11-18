@@ -64,7 +64,6 @@ export const sessions = {
   "sessions.discardSession": "Session verwerfen",
   "sessions.saving": "Speichern…",
   "sessions.topSend": "top {grade}",
-  "sessions.onlyWorkout": "Nur {name}",
   "sessions.example": "Beispiel",
   "sessions.exampleEvening": "Abend-Session",
   "sessions.exampleEveningMeta": "1h 50m · 6 geschafft · top V5",

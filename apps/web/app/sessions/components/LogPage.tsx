@@ -3,43 +3,61 @@ import { useSearchParams } from "react-router";
 import type {
   Activity,
   ConnectionStatus,
+  HangHistoryPart,
   HangHistoryRow,
   JournalEntry,
   SessionRow,
 } from "@sendtally/api-client";
 import { useGyms } from "@sendtally/features/gyms";
 import { t } from "@sendtally/features/i18n";
+import { useClimbs } from "@sendtally/features/climbs";
 import {
+  NO_LOG_FILTER,
+  filterLog,
+  logExerciseOptions,
+  logFilterActive,
+  logFilterFromParams,
+  logFilterPills,
   logItems,
-  logSegmentItems,
+  logPlaceOptions,
   logTraining,
+  logWorkoutOptions,
   today,
-  type LogSegment,
+  writeLogFilterParams,
+  type LogContext,
+  type LogFilter,
+  type LogOption,
 } from "@sendtally/features/journal";
+import { sessionTagOptions } from "@sendtally/features/sessions";
+import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { useTrainingLog } from "@sendtally/features/training";
-import { ClimbingLog } from "../../climbs/components/ClimbingLog";
+import { statsYears } from "@sendtally/features/trends";
+import { ClimbingEmpty } from "../../climbs/components/ClimbingEmpty";
 import { AccountButton } from "../../components/AccountButton";
-import { Segmented } from "../../components/Segmented";
 import { useAppApi } from "../../lib/useAppApi";
 import { useDismissed } from "../../lib/useDismissed";
 import { useQueryUpdate } from "../useQueryUpdate";
+import { ActiveFilters } from "./ActiveFilters";
+import { FilterSheet, type FilterChoices } from "./FilterSheet";
+import { LogList } from "./LogList";
 import { LogMenu } from "./LogMenu";
 import { SetupStack, type SetupCard } from "./SetupStack";
-import { TrainingLog } from "./TrainingLog";
 
 export type LogPageProps = {
   status: ConnectionStatus | null;
   sessions: SessionRow[];
   hangSessions: HangHistoryRow[];
+  hangParts: HangHistoryPart[];
   activities: Activity[];
   entries: JournalEntry[];
 };
 
-/** The Log page in two halves, Climbing and Training, each in the URL; Training narrows to one workout by `?workout=`. */
+/** The filter lives in the link, so a filtered Log can be shared; search stays on the page. */
 export function LogPage({
   status,
   sessions,
   hangSessions,
+  hangParts,
   activities,
   entries,
 }: LogPageProps): React.ReactElement {
@@ -74,59 +92,116 @@ export function LogPage({
   }
   const [params] = useSearchParams();
   const updateQuery = useQueryUpdate();
-  const workout = params.get("workout");
-  const segment: LogSegment =
-    params.get("segment") === "training" || workout !== null ? "training" : "climbing";
+  const [search, setSearch] = React.useState("");
+  const [searching, setSearching] = React.useState(false);
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const filter = React.useMemo(
+    () => ({ ...logFilterFromParams(params), search }),
+    [params, search]
+  );
+  const setFilter = (next: LogFilter): void => {
+    setSearch(next.search);
+    updateQuery((p) => writeLogFilterParams(p, next));
+  };
   const { log: trainingLog } = useTrainingLog(api);
   const training = React.useMemo(() => logTraining(trainingLog, today()), [trainingLog]);
-  const all = React.useMemo(
+  const items = React.useMemo(
     () => logItems(sessions, entries, hangSessions, activities, training),
     [sessions, entries, hangSessions, activities, training]
   );
-  const items = React.useMemo(() => logSegmentItems(all, segment), [all, segment]);
-  const empty = items.length === 0 && (segment === "climbing" || workout === null);
+  const climbs = useClimbs(api);
+  const { scales } = useGradeScalePrefs(api);
+  const climbData = climbs.state.status === "ready" ? climbs.state.data : null;
+  const ctx = React.useMemo(
+    (): LogContext => ({
+      climbs: climbData?.climbs ?? [],
+      sessions: climbData?.sessions ?? [],
+      hangParts,
+      memberships: trainingLog.plan.memberships,
+      places: new Map([
+        ...(climbData?.climbs ?? []).flatMap((c) =>
+          c.area === null ? [] : [[c.area.id, c.area.name] as const]
+        ),
+        ...gyms.gyms.map((g) => [g.id, g.name] as const),
+      ]),
+      scales,
+    }),
+    [climbData, hangParts, trainingLog.plan.memberships, gyms.gyms, scales]
+  );
+  const view = React.useMemo(() => filterLog(items, filter, ctx), [items, filter, ctx]);
+  const choices = React.useMemo(
+    (): FilterChoices => ({
+      years: statsYears({ sessions, hangSessions, activities }),
+      tags: sessionTagOptions(items),
+      places: logPlaceOptions(items, ctx),
+      exercises: logExerciseOptions(items, ctx),
+      blocks: trainingLog.plan.blocks.map((b) => ({ key: b.id, name: b.name })),
+      workouts: logWorkoutOptions(items, ctx, (id) => trainingLog.workout(id)?.name ?? null),
+    }),
+    [sessions, hangSessions, activities, items, ctx, trainingLog]
+  );
+  const pills = React.useMemo(() => {
+    const named = (options: readonly LogOption[], key: string): string =>
+      options.find((o) => o.key === key)?.name ?? key;
+    return logFilterPills(filter, {
+      tag: (slug) => choices.tags.find((tag) => tag.slug === slug)?.name ?? slug,
+      place: (key) => named(choices.places, key),
+      exercise: (key) => named(choices.exercises, key),
+      block: (key) => named(choices.blocks, key),
+      workout: (key) => named(choices.workouts, key),
+    });
+  }, [filter, choices]);
+  const fresh = items.length === 0;
 
   return (
     <div className="log-page">
       <div className="log-page-head">
         <h1 className="log-page-title">{t("journal.log")}</h1>
-        {!empty && <LogMenu variant="header" />}
+        {!fresh && <LogMenu variant="header" />}
         <AccountButton />
       </div>
-      <div className="log-segments">
-        <Segmented
-          label={t("journal.log")}
-          options={[
-            { value: "climbing", label: t("statistics.climbing") },
-            { value: "training", label: t("statistics.training") },
-          ]}
-          value={segment}
-          onChange={(next) =>
-            updateQuery((p) => {
-              p.delete("workout");
-              p.delete("status");
-              if (next === "climbing") p.delete("segment");
-              else p.set("segment", next);
-            })
-          }
-        />
-      </div>
-      {workout === null && <SetupStack cards={setupCards} total={2} />}
-      {segment === "climbing" ? (
-        <ClimbingLog items={items} />
+      {!logFilterActive(filter) && <SetupStack cards={setupCards} total={2} />}
+      {fresh ? (
+        <ClimbingEmpty />
       ) : (
-        <TrainingLog
-          items={items}
-          workout={workout}
-          onClearWorkout={() =>
-            updateQuery((p) => {
-              p.delete("workout");
-              p.set("segment", "training");
-            })
+        <LogList
+          view={view}
+          below={
+            <ActiveFilters
+              pills={pills}
+              onDrop={(pill) => setFilter({ ...pill.without, search })}
+              onClearAll={() => setFilter({ ...NO_LOG_FILTER, search })}
+            />
           }
+          empty={<p className="climbing-empty log-nothing">{t("sessions.nothingMatches")}</p>}
+          filtersActive={logFilterActive({ ...filter, search: "" })}
+          onOpenFilters={() => setFiltersOpen(true)}
+          search={{
+            open: searching,
+            text: search,
+            onOpen: () => setSearching(true),
+            onChangeText: setSearch,
+            onCancel: () => {
+              setSearching(false);
+              setSearch("");
+            },
+          }}
         />
       )}
-      {!empty && <LogMenu variant="fab" />}
+      <FilterSheet
+        open={filtersOpen}
+        items={items}
+        ctx={ctx}
+        choices={choices}
+        filter={filter}
+        onApply={(next) => {
+          setFilter(next);
+          setFiltersOpen(false);
+          window.scrollTo({ top: 0 });
+        }}
+        onClose={() => setFiltersOpen(false)}
+      />
+      {!fresh && <LogMenu variant="fab" />}
     </div>
   );
 }

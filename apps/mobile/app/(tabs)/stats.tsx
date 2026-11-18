@@ -6,12 +6,11 @@ import { t } from "@sendtally/features/i18n";
 import { AccountButton } from "../../components/AccountButton";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { StatsScreen } from "../../features/stats/StatsScreen";
-import { statsSegmentStorage } from "../../lib/statsSegmentStorage";
-import { useSegmentParam } from "../../lib/storedSegment";
+import { useStatsSegmentParam } from "../../features/stats/statsSegment";
 
 export default function Stats(): React.ReactElement {
   const { segment } = useLocalSearchParams<{ segment?: string }>();
-  useSegmentParam(statsSegmentStorage, segment);
+  useStatsSegmentParam(segment);
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScreenHeader title={t("statistics.tab")} right={<AccountButton />} />

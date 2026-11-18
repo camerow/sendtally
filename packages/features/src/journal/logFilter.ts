@@ -508,3 +508,26 @@ export function logViewCountLabel(view: LogView): string {
   const count = view.log.groups.reduce((n, g) => n + g.rows.length, 0);
   return t("common.climbCount", { count });
 }
+
+const STATUS_LABELS = {
+  all: "climbs.statusAll",
+  projects: "climbs.statusProjects",
+  sent: "climbs.statusSent",
+  notYet: "climbs.statusNotYet",
+} as const;
+
+export const outcomeChipLabel = (outcome: LogFilter["outcome"], n: number): string =>
+  t(STATUS_LABELS[outcome], { n });
+
+export const LOG_CATEGORIES: readonly WorkoutKind[] = [
+  "climbing",
+  "hangboard",
+  "strength",
+  "mobility",
+  "other",
+];
+
+export const LOG_DISCIPLINES: readonly NonNullable<LogFilter["discipline"]>[] = [
+  "boulder",
+  "route",
+];

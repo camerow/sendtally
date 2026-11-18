@@ -1,11 +1,13 @@
 import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import type { Discipline } from "@sendtally/core";
 import { FOCI, type WorkoutKind } from "@sendtally/core/hang";
-import { CLIMB_STATUSES, type ClimbStatusFilter } from "@sendtally/features/climbs";
-import { t, type MessageKey } from "@sendtally/features/i18n";
+import { CLIMB_STATUSES } from "@sendtally/features/climbs";
+import { t } from "@sendtally/features/i18n";
 import {
+  LOG_CATEGORIES,
+  LOG_DISCIPLINES,
   LOG_ROW_TYPES,
+  outcomeChipLabel,
   filterLog,
   logOutcomeCounts,
   logRowTypeLabel,
@@ -34,23 +36,6 @@ import { CategoryMark } from "../training/library/CategoryMark";
 import { DayMark } from "../training/today/DayMark";
 import { Button } from "../training/components/Button";
 import { EffortStrip } from "./EffortStrip";
-
-const STATUS_LABELS: Record<ClimbStatusFilter, MessageKey> = {
-  all: "climbs.statusAll",
-  projects: "climbs.statusProjects",
-  sent: "climbs.statusSent",
-  notYet: "climbs.statusNotYet",
-};
-
-const CATEGORIES: readonly WorkoutKind[] = [
-  "climbing",
-  "hangboard",
-  "strength",
-  "mobility",
-  "other",
-];
-
-const DISCIPLINES: readonly Discipline[] = ["boulder", "route"];
 
 const label = {
   fontFamily: fonts.monoMedium,
@@ -289,7 +274,7 @@ export function FilterSheet({
             <GroupHeading title={t("statistics.climbing")} kind="climbing" />
             <Field title={t("climbs.discipline")}>
               <Chips>
-                {DISCIPLINES.map((d) => (
+                {LOG_DISCIPLINES.map((d) => (
                   <Chip
                     key={d}
                     label={disciplineLabel(d)}
@@ -317,7 +302,7 @@ export function FilterSheet({
                 {CLIMB_STATUSES.map((s) => (
                   <Chip
                     key={s}
-                    label={t(STATUS_LABELS[s], { n: counts?.[s] ?? 0 })}
+                    label={outcomeChipLabel(s, counts?.[s] ?? 0)}
                     uppercase={false}
                     active={draft.outcome === s}
                     onPress={() => set({ outcome: s })}
@@ -354,7 +339,7 @@ export function FilterSheet({
             <GroupHeading title={t("statistics.training")} kind="strength" />
             <Field title={t("workouts.category")}>
               <Chips>
-                {CATEGORIES.map((kind) => (
+                {LOG_CATEGORIES.map((kind) => (
                   <Chip
                     key={kind}
                     label={kindLabel(kind)}
