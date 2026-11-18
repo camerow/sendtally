@@ -84,12 +84,13 @@ export const FOLD_LINES = 5;
  * the last one keeps when it crosses the fold. None when it all fits.
  */
 export function foldAt(
-  lines: readonly number[]
+  lines: readonly number[],
+  max = FOLD_LINES
 ): { units: number; lastLines: number | null } | null {
   let used = 0;
   for (const [i, n] of lines.entries()) {
-    if (used + n > FOLD_LINES) {
-      const left = FOLD_LINES - used;
+    if (used + n > max) {
+      const left = max - used;
       return left === 0 ? { units: i, lastLines: null } : { units: i + 1, lastLines: left };
     }
     used += n;

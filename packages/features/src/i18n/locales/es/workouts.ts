@@ -141,4 +141,15 @@ export const workouts = {
   "workouts.dose.laps": "Vueltas",
   "workouts.dose.moves": "Movimientos",
   "workouts.lapRest": "Descanso entre vueltas",
+  "workouts.exerciseOf": "Ejercicio {n} de {of}",
+  "workouts.addExercise": "Añadir ejercicio",
+  "workouts.skipForNow": "Saltar por ahora",
+  "workouts.skippedTapToDo": "Saltado · toca para hacerlo ahora",
+  "workouts.moveUpShort": "Subir",
+  "workouts.moveDownShort": "Bajar",
+  "workouts.removeShort": "Quitar",
+  "workouts.removeFromRunBody":
+    "Sus series quedan fuera del registro de este entrenamiento. El entrenamiento guardado lo conserva.",
+  "workouts.foldExercise": "Contraer {name}",
+  "workouts.openExercise": "Abrir {name}",
 } as const;

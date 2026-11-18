@@ -8,6 +8,8 @@ import {
 } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { exerciseName, exerciseTargetLine, setKey, type SetAt } from "@sendtally/features/workouts";
+import { Icon } from "../../components/Icon";
+import { MoreMenu, type MoreMenuItem } from "../../components/MoreMenu";
 import { LetterBadge } from "../components/LetterBadge";
 import { AboutButton, type About } from "./AboutButton";
 import { RestPreview } from "./RestPreview";
@@ -32,10 +34,15 @@ export type SetsCardProps = {
   go: (set: number) => React.ReactNode;
   /** What shows under a set: the rest its tick started, if it is running. */
   restUnder: (set: number) => React.ReactNode;
-  /** Under the sets, such as one more to add. */
-  footer?: React.ReactNode;
   /** The exercise's description behind an info button beside its name; none without one. */
   about?: About | undefined;
+  onFocus: (set: number) => void;
+  onRemoveSet: (set: number) => void;
+  onAddSet: () => void;
+  /** Its title folds it. */
+  onFold: () => void;
+  /** Its ··· menu: skip, move, remove. */
+  menu: readonly MoreMenuItem[];
 };
 
 /** One exercise of the workout as a table of its sets, with its dose's letter when it alternates. */
@@ -53,8 +60,12 @@ export function SetsCard({
   holdRow,
   go,
   restUnder,
-  footer,
   about,
+  onFocus,
+  onRemoveSet,
+  onAddSet,
+  onFold,
+  menu,
 }: SetsCardProps): React.ReactElement {
   const name = exerciseName(item.exercise);
   const { name: doseName, setRestS = 0, targetRpe } = item.dose;
@@ -63,7 +74,18 @@ export function SetsCard({
     <section className="player-card">
       <div className="player-card-head">
         <span className="player-card-title">
-          <h2 className="player-card-name">{name}</h2>
+          <button
+            type="button"
+            className="player-card-fold"
+            aria-label={t("workouts.foldExercise", { name })}
+            aria-expanded="true"
+            onClick={onFold}
+          >
+            <h2 className="player-card-name">{name}</h2>
+            <span className="player-chevron player-chevron--up">
+              <Icon name="chevron" size={16} strokeWidth={2} />
+            </span>
+          </button>
           <AboutButton about={about} label={t("workouts.aboutExercise")} />
         </span>
         {item.turn !== undefined && (
@@ -75,6 +97,7 @@ export function SetsCard({
         {setRestS > 0 && (
           <span className="player-card-meta">{t("plan.chipRest", { value: clock(setRestS) })}</span>
         )}
+        <MoreMenu label={t("workouts.exerciseMore")} items={menu} />
       </div>
       {rated && (
         <span className="player-card-meta player-card-aim">{exerciseTargetLine(item.dose)}</span>
@@ -87,6 +110,7 @@ export function SetsCard({
         </span>
         {rated && <span className="set-col-rpe train-label">RPE</span>}
         <span className="set-tick" />
+        <span className="set-remove" />
       </div>
       {done.sets.map((set, i) => (
         <React.Fragment key={i}>
@@ -104,6 +128,8 @@ export function SetsCard({
               label={t("activities.setOf", { exercise: name, n: i + 1 })}
               onChange={(value) => onChange(i, value)}
               onToggle={() => onToggle(i)}
+              onFocus={() => onFocus(i)}
+              onRemove={() => onRemoveSet(i)}
               go={go(i) || undefined}
               {...(rated && { rpe: { target: targetRpe } })}
             />
@@ -112,7 +138,14 @@ export function SetsCard({
             (i < done.sets.length - 1 && setRestS > 0 && <RestPreview seconds={setRestS} />)}
         </React.Fragment>
       ))}
-      {footer}
+      <button
+        type="button"
+        className="outline-button player-add-set"
+        aria-label={t("activities.addSetTo", { exercise: name })}
+        onClick={onAddSet}
+      >
+        + {t("activities.addSet")}
+      </button>
     </section>
   );
 }

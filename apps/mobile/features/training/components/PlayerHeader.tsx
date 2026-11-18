@@ -1,6 +1,5 @@
 import React from "react";
-import { workoutAbout } from "@sendtally/features/exercises";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import type { ActivityKind } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
@@ -12,8 +11,7 @@ import { Label } from "./Label";
 import { Title } from "./Title";
 import { t } from "@sendtally/features/i18n";
 import { useRunWorkout } from "../library/useLibrary";
-import { AboutButton } from "./AboutButton";
-import { WorkoutNotes } from "./WorkoutNotes";
+import { Description } from "./Description";
 
 export type PlayerHeaderProps = {
   kind: ActivityKind;
@@ -21,19 +19,30 @@ export type PlayerHeaderProps = {
   workoutId: string;
   /** When the player started, which its clock counts from. */
   startedAt: number;
+  /** Where the run is: "Exercise 2 of 3". */
+  position?: { at: number; of: number } | null;
+  /** The workout has no exercises, so its description is the body and opens unfolded. */
+  bare?: boolean;
 };
 
 /**
- * Minimise and the clock from Start, then the workout's kind, its name with its description
- * behind an info button, and its target effort: the top of the sets and checklist players.
+ * Minimise and the clock from Start, then the workout's kind, its name, where the run is and
+ * its target effort, and its description folded to three lines: the top of the sets and
+ * checklist players.
  */
 export function PlayerHeader({
   kind,
   title,
   workoutId,
   startedAt,
+  position = null,
+  bare = false,
 }: PlayerHeaderProps): React.ReactElement {
   const workout = useRunWorkout(workoutId);
+  const line = [
+    position !== null && t("workouts.exerciseOf", { n: position.at, of: position.of }),
+    workout?.targetRpe != null && t("plan.targetValue", { n: workout.targetRpe }),
+  ].filter((part) => part !== false);
   return (
     <View style={{ gap: 8 }}>
       <View style={[LIVE_HEADER, { marginHorizontal: -18, justifyContent: "space-between" }]}>
@@ -48,18 +57,16 @@ export function PlayerHeader({
       </View>
       <View style={{ gap: 4 }}>
         <Label color={KIND_LOOK[kind].ink}>{kindLabel(kind)}</Label>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <Title size={32} style={{ flexShrink: 1 }}>
-            {title}
-          </Title>
-          <AboutButton
-            about={workout && workoutAbout(workout)}
-            label={t("workouts.about")}
-            color={colors.textMuted}
-          />
-        </View>
-        <WorkoutNotes workoutId={workoutId} />
+        <Title size={32}>{title}</Title>
+        {line.length > 0 && (
+          <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
+            {line.join(" · ")}
+          </Text>
+        )}
       </View>
+      {workout !== undefined && (
+        <Description key={workoutId} text={workout.description} fold={3} startOpen={bare} />
+      )}
     </View>
   );
 }

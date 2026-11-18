@@ -5,6 +5,7 @@ import { exerciseName } from "./library";
 import type { FingersPart } from "./fingersPart";
 import { COUNT_IN_S, SWITCH_S, type Hold } from "./holdClock";
 import type { Rest } from "./restCountdown";
+import type { RunCards } from "./runCards";
 
 /** Where a player is: the timer's run, or the sets and items ticked so far. */
 export type RunState =
@@ -13,6 +14,7 @@ export type RunState =
       player: "sets";
       done: ItemDone[];
       ticked: string[];
+      cards?: RunCards;
       /** A mix's fingerboard part, and its grips' places in `done`, which are no sets to tick. */
       fingers?: FingersPart;
       grips?: number[];
@@ -145,7 +147,11 @@ export function liveRunSummary({ state }: LiveRun): string {
     const { set } = currentPhase(state.fingers.run);
     return `${t("workouts.fingerboard")} · ${t("hang.setOf", { set, sets: state.fingers.run.sets })}`;
   }
-  for (const d of state.done.filter((x) => !(state.grips ?? []).includes(x.item))) {
+  const order = state.cards?.order ?? state.done.map((d) => d.item);
+  const grips = state.grips ?? [];
+  for (const d of order.flatMap((key) =>
+    state.done.filter((x) => x.item === key && !grips.includes(x.item))
+  )) {
     const set = d.sets.findIndex((_, s) => !state.ticked.includes(`${d.item}:${s}`));
     if (set !== -1)
       return `${exerciseName(d.exercise)} · ${t("hang.setOf", { set: set + 1, sets: d.sets.length })}`;

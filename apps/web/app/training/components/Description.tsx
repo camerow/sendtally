@@ -11,8 +11,13 @@ import { Icon } from "../../components/Icon";
 
 export type DescriptionProps = {
   text: string;
-  /** Folds past five lines behind More, as detail pages do; a sheet shows it whole. */
-  fold?: boolean;
+  /**
+   * Folds past five lines behind More, as detail pages do; a sheet shows it whole. Folded past
+   * as many lines as given, it fades out at the fold, as a running workout's does.
+   */
+  fold?: boolean | number;
+  /** Opens unfolded, with Less to fold it. */
+  startOpen?: boolean;
 };
 
 /** The line height every description is set in, which its lines are counted by. */
@@ -74,11 +79,16 @@ function Unit({ unit, clamp, textRef }: UnitProps): React.ReactElement {
  * shows whole paragraphs and items until five lines are used, clamping the one that crosses,
  * with More to open it in place. Lines are counted once, as first laid out.
  */
-export function Description({ text, fold = false }: DescriptionProps): React.ReactElement | null {
+export function Description({
+  text,
+  fold: folds = false,
+  startOpen = false,
+}: DescriptionProps): React.ReactElement | null {
   const units = React.useMemo(() => descriptionUnits(text), [text]);
   const texts = React.useRef<(HTMLElement | null)[]>([]);
   const [lines, setLines] = React.useState<{ of: typeof units; counts: number[] } | null>(null);
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(startOpen);
+  const fold = folds !== false;
   React.useLayoutEffect(() => {
     if (!fold) return;
     const counts = units.map((_, i) =>
@@ -87,11 +97,14 @@ export function Description({ text, fold = false }: DescriptionProps): React.Rea
     setLines({ of: units, counts });
   }, [fold, units]);
   if (units.length === 0) return null;
-  const cut = fold && lines?.of === units ? foldAt(lines.counts) : null;
+  const cut =
+    fold && lines?.of === units
+      ? foldAt(lines.counts, typeof folds === "number" ? folds : undefined)
+      : null;
   const shut = cut !== null && !open;
   const shown = shut ? cut.units : units.length;
   return (
-    <div className="desc">
+    <div className={shut && typeof folds === "number" ? "desc desc--fade" : "desc"}>
       {units.slice(0, shown).map((unit, i) => (
         <Unit
           key={i}

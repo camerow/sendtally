@@ -65,6 +65,11 @@ describe("set ranges", () => {
     expect(itemDone([live!], new Set(["0:0", "0:1", "0:2"]), 0)).toBe(false);
   });
 
+  it("counts fewer sets once some are removed", () => {
+    const [live] = withDoneSets([bench], [{ ...four, sets: [{ reps: 8 }] }]);
+    expect(live?.dose.sets).toBe(1);
+  });
+
   it("leaves an item with no sets added past its minimum as it is", () => {
     expect(withDoneSets([bench], [])).toEqual([bench]);
   });

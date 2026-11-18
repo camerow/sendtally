@@ -1,5 +1,6 @@
 import React from "react";
 import { Linking, Pressable, Text, View, type TextLayoutEvent } from "react-native";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import {
   descriptionUnits,
   FOLD_LINES,
@@ -16,8 +17,13 @@ import { type } from "../type";
 
 export type DescriptionProps = {
   text: string;
-  /** Folds past five lines behind More, as detail screens do; a sheet shows it whole. */
-  fold?: boolean;
+  /**
+   * Folds past five lines behind More, as detail screens do; a sheet shows it whole. Folded
+   * past as many lines as given, it fades out at the fold, as a running workout's does.
+   */
+  fold?: boolean | number;
+  /** Opens unfolded, with Less to fold it. */
+  startOpen?: boolean;
 };
 
 const BODY = [type.body, { fontSize: 15, lineHeight: 22, color: colors.textSecondary }];
@@ -88,22 +94,51 @@ function Unit({ unit, numberOfLines, onTextLayout }: UnitProps): React.ReactElem
   );
 }
 
+/** The foot of a folded description fading into the page, so it reads as more below. */
+function Fade(): React.ReactElement {
+  return (
+    <View pointerEvents="none" style={{ marginTop: -38, height: 30 }}>
+      <Svg width="100%" height="100%">
+        <Defs>
+          <LinearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={colors.white} stopOpacity={0} />
+            <Stop offset="1" stopColor={colors.white} stopOpacity={1} />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill="url(#fade)" />
+      </Svg>
+    </View>
+  );
+}
+
 /**
  * A description as typed, with its paragraphs, bullets, numbered steps and links. Folded, it
  * shows whole paragraphs and items until five lines are used, cutting the one that crosses,
  * with More to open it in place; it measures from a hidden copy laid out at the same width.
  */
-export function Description({ text, fold = false }: DescriptionProps): React.ReactElement | null {
+export function Description({
+  text,
+  fold: folds = false,
+  startOpen = false,
+}: DescriptionProps): React.ReactElement | null {
   const units = React.useMemo(() => descriptionUnits(text), [text]);
   const [lines, setLines] = React.useState<readonly (number | undefined)[]>([]);
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(startOpen);
+  const fold = folds !== false;
+  const max = folds === true ? FOLD_LINES : folds || FOLD_LINES;
   if (units.length === 0) return null;
   const counts = units.map((_, i) => lines[i]);
   const measured = counts.every((n) => n !== undefined);
-  const cut = fold && measured ? foldAt(counts.map((n) => n ?? 0)) : null;
+  const cut =
+    fold && measured
+      ? foldAt(
+          counts.map((n) => n ?? 0),
+          max
+        )
+      : null;
   const shut = fold && !open && (cut !== null || !measured);
   const shown = !shut ? units.length : (cut?.units ?? 1);
-  const lastLines = !shut ? undefined : measured ? (cut?.lastLines ?? undefined) : FOLD_LINES;
+  const lastLines = !shut ? undefined : measured ? (cut?.lastLines ?? undefined) : max;
   const measure = (i: number) => (e: TextLayoutEvent) => {
     const n = e.nativeEvent.lines.length;
     setLines((was) => (was[i] === n ? was : Object.assign([...was], { [i]: n })));
@@ -130,6 +165,7 @@ export function Description({ text, fold = false }: DescriptionProps): React.Rea
           {...(i === shown - 1 && lastLines !== undefined && { numberOfLines: lastLines })}
         />
       ))}
+      {shut && typeof folds === "number" && <Fade />}
       {fold && cut !== null && (
         <Pressable
           onPress={() => setOpen((o) => !o)}

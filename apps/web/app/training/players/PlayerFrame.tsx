@@ -7,6 +7,8 @@ import { PlayerHeader } from "./PlayerHeader";
 export type PlayerFrameProps = {
   run: WorkoutRun;
   startedAt: number;
+  /** Where the run is: "Exercise 2 of 3". */
+  position?: { at: number; of: number } | null;
   /** The button that ends the run, sticky at the foot. */
   footer: React.ReactNode;
   children: React.ReactNode;
@@ -16,6 +18,7 @@ export type PlayerFrameProps = {
 export function PlayerFrame({
   run,
   startedAt,
+  position = null,
   footer,
   children,
 }: PlayerFrameProps): React.ReactElement {
@@ -26,7 +29,13 @@ export function PlayerFrame({
       action={<PlayerClock startedAt={startedAt} />}
       footer={footer}
     >
-      <PlayerHeader kind={run.kind} title={run.title} workoutId={run.workoutId} />
+      <PlayerHeader
+        kind={run.kind}
+        title={run.title}
+        workoutId={run.workoutId}
+        position={position}
+        bare={run.items.length === 0}
+      />
       <div className="player-rows">{children}</div>
     </DetailFrame>
   );
