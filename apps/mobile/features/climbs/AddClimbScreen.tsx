@@ -1,14 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { ClimbSummary } from "@sendtally/api-client";
 import {
@@ -42,14 +34,13 @@ import {
   type ClimbDraft,
 } from "@sendtally/features/log-session";
 import { useGradeScalePrefs } from "@sendtally/features/settings";
-import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
+import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { DateTimeField } from "../../components/DateTimeField";
 import { GradeChips } from "../../components/GradeChips";
 import { Segmented } from "../../components/Segmented";
 import { Switch } from "../../components/Switch";
 import { TextInput } from "../../components/TextInput";
 import { useApi } from "../../lib/api";
-import { press } from "../../lib/press";
 import { Button } from "../training/components/Button";
 import { ResultFields } from "../log-session/ResultFields";
 import { SuggestField } from "./SuggestField";
@@ -386,24 +377,13 @@ export function AddClimbScreen(): React.ReactElement {
             backgroundColor: colors.white,
           }}
         >
-          <Pressable
+          <Button
+            label={saving ? t("common.saving") : t("common.save")}
             onPress={submit}
+            variant="primary"
+            height={50}
             disabled={!valid || saving}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !valid || saving }}
-            style={press({
-              minHeight: 50,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: radius.control,
-              backgroundColor: colors.azureInk,
-              opacity: !valid || saving ? disabledOpacity : 1,
-            })}
-          >
-            <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-              {saving ? t("common.saving") : t("common.save")}
-            </Text>
-          </Pressable>
+          />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

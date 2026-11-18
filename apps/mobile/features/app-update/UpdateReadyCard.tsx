@@ -1,9 +1,10 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
+import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { press } from "../../lib/press";
+import { Button } from "../training/components/Button";
 
 export function UpdateReadyCard({
   liveSession,
@@ -73,24 +74,13 @@ export function UpdateReadyCard({
           {liveSession ? t("appUpdate.readyBodyLive") : t("appUpdate.readyBody")}
         </Text>
       </View>
-      <Pressable
+      <Button
+        label={t("appUpdate.restart")}
         onPress={onRestart}
+        variant="primary"
+        height={44}
         disabled={restarting}
-        accessibilityRole="button"
-        style={press({
-          minHeight: 44,
-          paddingHorizontal: 14,
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: radius.control,
-          backgroundColor: colors.azureInk,
-          opacity: restarting ? disabledOpacity : 1,
-        })}
-      >
-        <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.white }}>
-          {t("appUpdate.restart")}
-        </Text>
-      </Pressable>
+      />
       <Pressable
         onPress={onDismiss}
         accessibilityRole="button"

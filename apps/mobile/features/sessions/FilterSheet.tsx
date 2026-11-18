@@ -9,10 +9,11 @@ import {
   type LogScope,
 } from "@sendtally/features/journal";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { colors, fonts } from "@sendtally/design/tokens";
 import { Chip } from "../../components/Chip";
 import { Sheet } from "../../components/Sheet";
 import { press } from "../../lib/press";
+import { Button } from "../training/components/Button";
 
 export type SessionFilters = { scope: LogScope };
 
@@ -102,22 +103,12 @@ export function FilterSheet({
             ))}
           </View>
         </View>
-        <Pressable
+        <Button
+          label={t("sessions.showCount", { label: logCountLabel(count).toLowerCase() })}
           onPress={() => onApply(draft)}
-          accessibilityRole="button"
-          style={press({
-            height: 48,
-            marginTop: 4,
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: radius.control,
-            backgroundColor: colors.azureInk,
-          })}
-        >
-          <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-            {t("sessions.showCount", { label: logCountLabel(count).toLowerCase() })}
-          </Text>
-        </Pressable>
+          variant="primary"
+          style={{ marginTop: 4 }}
+        />
       </View>
     </Sheet>
   );

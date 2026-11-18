@@ -11,6 +11,7 @@ import { Logo } from "../components/Logo";
 import { logConversion } from "../features/analytics/conversions";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
 import { press } from "../lib/press";
+import { Button } from "../features/training/components/Button";
 
 export default function SignIn(): React.ReactElement | null {
   const params = useLocalSearchParams<{ intent?: string }>();
@@ -198,23 +199,12 @@ export default function SignIn(): React.ReactElement | null {
                 {error}
               </Text>
             )}
-            <Pressable
+            <Button
+              label={copy.submitLabel}
               onPress={() => void flow.submit()}
+              variant="primary"
               disabled={busy}
-              style={{
-                backgroundColor: colors.azureInk,
-                borderRadius: radius.control,
-                paddingVertical: 14,
-                minHeight: 48,
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: busy ? disabledOpacity : 1,
-              }}
-            >
-              <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 16, color: colors.white }}>
-                {copy.submitLabel}
-              </Text>
-            </Pressable>
+            />
             {phase.name !== "email" && (
               <View style={{ flexDirection: "row", gap: 22 }}>
                 <Pressable
