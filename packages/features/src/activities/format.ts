@@ -1,7 +1,7 @@
 import type { Activity, ActivityKind } from "@sendtally/api-client";
 import type { WorkoutKind } from "@sendtally/core/hang";
 import { t, type MessageKey } from "../i18n";
-import { durationLabel } from "../sessions/years";
+import { durationLabel } from "../sessions/duration";
 import { doneSummary } from "./done";
 
 export const ACTIVITY_KINDS = [

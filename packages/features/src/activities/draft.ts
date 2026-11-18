@@ -8,6 +8,7 @@ import {
 import { readFocus } from "../training/focus";
 import { cleanDone, keptSets } from "./done";
 import { ACTIVITY_KINDS, kindLabel } from "./format";
+import { clampMinutes } from "../sessions/duration";
 
 /** The activity form's state. Strings where the form edits text, `""` for an empty start time. */
 export type ActivityDraft = {
@@ -47,11 +48,6 @@ export type ActivityPrefill = {
 };
 
 const DEFAULT_MINUTES = 60;
-
-const clampMinutes = (n: number): number => Math.min(1440, Math.max(1, Math.round(n)));
-
-/** A length typed in seconds as the whole minutes an activity keeps, one to a day. */
-export const minutesOf = (seconds: number): number => clampMinutes(seconds / 60);
 
 const minutesParam = (text: string | undefined): number | null => {
   const n = Number(text);

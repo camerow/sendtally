@@ -11,7 +11,7 @@ import {
 } from "@sendtally/core/hang";
 import { formatNumber, t } from "../i18n";
 import { countText } from "../hang/format";
-import { checklistTitle } from "../workouts/checklist";
+import { checklistTitle } from "../workouts/checklistTitle";
 import { climbingSetText } from "./climbing";
 
 /** A set's time: "45s", or "20:00" past a minute. */

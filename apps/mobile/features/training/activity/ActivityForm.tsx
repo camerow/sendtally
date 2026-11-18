@@ -15,7 +15,6 @@ import {
   previousSets,
   useActivities,
   kindLabel,
-  minutesOf,
   useActivityActions,
   useWeightUnit,
   type ActivityDraft,
@@ -24,7 +23,7 @@ import {
 } from "@sendtally/features/activities";
 import { shortDate, timeOfDay } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { durationLabel } from "@sendtally/features/sessions";
+import { durationLabel, minutesOf } from "@sendtally/features/sessions";
 import {
   discardRunBody,
   idleNote,

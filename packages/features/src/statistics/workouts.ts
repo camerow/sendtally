@@ -11,7 +11,7 @@ import { kindLabel } from "../activities/format";
 import { hangTotals } from "../activities/summary";
 import { shortDate } from "../hang/format";
 import { t } from "../i18n";
-import { durationLabel } from "../sessions/years";
+import { durationLabel } from "../sessions/duration";
 import { hangTitle } from "../sessions/hang";
 import { focusLabel } from "../training/focus";
 import { TRAINED_KINDS } from "./overview";

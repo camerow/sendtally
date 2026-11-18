@@ -2,15 +2,14 @@ import { describe, expect, it } from "vitest";
 import type { SessionRow } from "@sendtally/api-client";
 import {
   countLabel,
-  durationLabel,
   logCountLabel,
   logTotalsLabel,
   elapsedClock,
-  sessionMinutes,
   sessionTotals,
   logYearGroups,
   totalsLabel,
 } from "./years";
+import { durationLabel, sessionMinutes } from "./duration";
 import { logItems } from "../journal/transforms";
 import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
 

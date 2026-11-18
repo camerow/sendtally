@@ -8,7 +8,7 @@ import {
   type CalendarDate,
 } from "@sendtally/core/hang";
 import { t } from "../i18n";
-import { blockName } from "./blockText";
+import { blockName } from "./blockName";
 
 /** A block over one week row: which block, and which of its weeks the row is. */
 export type Band = { block: Block; week: number };

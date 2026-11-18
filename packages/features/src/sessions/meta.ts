@@ -1,7 +1,7 @@
 import type { SessionRow } from "@sendtally/api-client";
 import { formatDate, t } from "../i18n";
 import { sessionGradeLabel, type GradeScales } from "./grades";
-import { durationLabel, sessionMinutes } from "./years";
+import { durationLabel, sessionMinutes } from "./duration";
 
 export function climbCountLabel(count: number): string {
   return t("common.climbCount", { count });

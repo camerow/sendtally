@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Activity as Logged, HangHistoryRow, SessionWithClimbs } from "@sendtally/api-client";
 import { isLockedRange, shownRange } from "../trends/types";
 import { hangSessionSeconds } from "@sendtally/core/hang";
-import { durationLabel } from "../sessions/years";
+import { durationLabel } from "../sessions/duration";
 import { doneOf, trainingInsightsVM } from "./insights";
 import { TRAINED_KINDS } from "./overview";
 

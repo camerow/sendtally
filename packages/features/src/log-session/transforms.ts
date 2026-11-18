@@ -19,8 +19,13 @@ import type {
 import { t } from "../i18n";
 import { isUnscored } from "../sessions/meta";
 import { sameTagName } from "../sessions/tags";
-import { minutesOf as wholeMinutes } from "../activities/draft";
-import { durationLabel, hasEnd, hasStart, sessionMinutes } from "../sessions/years";
+import {
+  durationLabel,
+  hasEnd,
+  hasStart,
+  minutesOf as wholeMinutes,
+  sessionMinutes,
+} from "../sessions/duration";
 import {
   DEFAULT_GRADE_PREFS,
   GRADE_SCALE_OPTIONS,

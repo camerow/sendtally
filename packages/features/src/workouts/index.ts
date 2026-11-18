@@ -66,14 +66,8 @@ export * from "./holdRow";
 export * from "./startLive";
 export * from "./useTimerPlayers";
 export * from "./hangReview";
-export {
-  bodyHeading,
-  checklistLine,
-  checklistTitle,
-  itemDoseText,
-  itemTitle,
-  runItems,
-} from "./checklist";
+export { bodyHeading, checklistLine, itemDoseText, itemTitle, runItems } from "./checklist";
+export { checklistTitle } from "./checklistTitle";
 export { useLineKeys } from "./useLineKeys";
 export {
   memberSetLabel,
