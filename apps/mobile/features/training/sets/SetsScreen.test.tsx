@@ -439,6 +439,7 @@ describe("Sets player", () => {
     };
     const view = await renderWithHang(<SetsScreen run={mix} />);
     expect(screen.getByText("Fingerboard")).toBeTruthy();
+    expect(screen.getByText("Exercise 1 of 2")).toBeTruthy();
     expect(screen.getByText("Half crimp")).toBeTruthy();
     expect(screen.queryByLabelText("Half crimp, set 1")).toBeNull();
     await fireEvent.press(screen.getByText("Start"));

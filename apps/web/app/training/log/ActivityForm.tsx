@@ -17,6 +17,7 @@ import {
   useActivityActions,
   useWeightUnit,
   type ActivityDraft,
+  plannedDoses,
 } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { KIND_LOOK } from "@sendtally/features/training";
@@ -268,7 +269,7 @@ export function ActivityForm({
         <DoneDetails
           done={draft.done}
           off={draft.off}
-          planned={planned.map((p) => p.dose)}
+          planned={plannedDoses(planned, draft.done)}
           unit={unit}
           color={KIND_LOOK[look].ink}
           hangs={hang !== undefined}

@@ -22,6 +22,7 @@ export {
   foldedLine,
   keptSets,
   offWithout,
+  plannedDoses,
   removeSet,
   setKeyOf,
   shortOf,

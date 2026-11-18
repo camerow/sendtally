@@ -224,6 +224,9 @@ export function useSetsPlayer({
   }, [store, run, startedAt, done, ticked, cards, places]);
   const planned = partPlanned(run, places);
   const inPart = (item: number): boolean => places.includes(item);
+  const partOpen =
+    places.length > 0 &&
+    (fingers === undefined || ("run" in fingers && fingers.run.finished === null));
   const items = [...run.items.slice(0, cards.base), ...cards.added];
   const tallyMeasure = tallyMeasuresOf(exercises ?? [], run.kind);
   const tallyOf = (item: number): TallyMeasure | null => tallyMeasure(items[item]?.exercise ?? "");
@@ -243,6 +246,14 @@ export function useSetsPlayer({
   const shown = withPrevious(done, lifting, previous);
   const next = sets.find((at) => !ticked.has(setKey(at))) ?? null;
   const current = sets.find((at) => at.item === focused?.item && at.set === focused.set) ?? next;
+  /** The fingerboard part while it is still to do and comes before the set being worked on. */
+  const partFirst =
+    partOpen &&
+    focused === null &&
+    places[0] !== undefined &&
+    (current === null || cards.order.indexOf(places[0]) < cards.order.indexOf(current.item))
+      ? places[0]
+      : null;
   const nameOf = (item: number): string => exerciseName(items[item]?.exercise ?? "");
   const withFold = (item: number, fold: boolean | null): void =>
     setCards((c) => withCardFold(c, item, fold));
@@ -329,7 +340,7 @@ export function useSetsPlayer({
       cards.order.length === 0
         ? null
         : {
-            at: Math.max(0, cards.order.indexOf(current?.item ?? -1)) + 1,
+            at: Math.max(0, cards.order.indexOf(partFirst ?? current?.item ?? -1)) + 1,
             of: cards.order.length,
           },
     rest,

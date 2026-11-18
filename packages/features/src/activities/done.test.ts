@@ -9,6 +9,7 @@ import {
   exerciseNames,
   keptSets,
   offWithout,
+  plannedDoses,
   shortOf,
   previousSets,
   removeSet,
@@ -140,5 +141,18 @@ describe("a finished exercise folded to one line", () => {
   it("reads timed sets by their time, and bare sets by their count", () => {
     expect(foldedLine([{ onS: 45 }, { onS: 45 }, { onS: 45 }], "kg")).toBe("3 × 45s");
     expect(foldedLine([{}], "kg")).toBe("1 set");
+  });
+});
+
+describe("what each logged exercise was asked", () => {
+  it("finds its dose by the exercise, not its place, once a run reorders or leaves items out", () => {
+    const planned = [
+      { exercise: "half", dose: { sets: 3, reps: 6, onS: 7 } },
+      { exercise: "Pull-ups", dose: { sets: 3, reps: 8 } },
+    ];
+    const done = [{ item: 0, exercise: "Pull-ups", sets: [{ reps: 8 }] }];
+    expect(plannedDoses(planned, done)).toEqual([{ sets: 3, reps: 8 }]);
+    const inPlace = [{ item: 1, exercise: "Pull-ups", sets: [] }];
+    expect(plannedDoses(planned, inPlace)[1]).toEqual({ sets: 3, reps: 8 });
   });
 });

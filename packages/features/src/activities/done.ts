@@ -1,5 +1,13 @@
 import type { Activity } from "@sendtally/api-client";
-import { clock, toUnit, type ItemDone, type SetDone, type WeightUnit } from "@sendtally/core/hang";
+import {
+  clock,
+  toUnit,
+  type Dose,
+  type ItemDone,
+  type SessionItem,
+  type SetDone,
+  type WeightUnit,
+} from "@sendtally/core/hang";
 import { formatNumber, t } from "../i18n";
 import { countText } from "../hang/format";
 import { climbingSetText } from "./climbing";
@@ -172,4 +180,23 @@ export function offWithout(off: readonly string[], item: number, set: number): s
     if (i !== item || s === undefined || s < set) return [key];
     return s === set ? [] : [setKeyOf(item, s - 1)];
   });
+}
+
+/**
+ * What each logged exercise was asked, by its place in `done`: the workout's item at that place
+ * when it is the same exercise, else the first that is, since a run logs in the order its
+ * exercises ended and leaves a fingerboard part out; by place alone when none is (a hangboard
+ * review names its sets by grip).
+ */
+export function plannedDoses(
+  planned: readonly SessionItem[],
+  done: readonly Pick<ItemDone, "item" | "exercise">[]
+): (Dose | undefined)[] {
+  const doses: (Dose | undefined)[] = [];
+  for (const d of done) {
+    const same = planned[d.item]?.exercise === d.exercise ? planned[d.item] : undefined;
+    doses[d.item] = (same ?? planned.find((p) => p.exercise === d.exercise) ?? planned[d.item])
+      ?.dose;
+  }
+  return doses;
 }
