@@ -657,21 +657,13 @@ export function LogSessionForm({
               {t("common.discard")}
             </Text>
           </Pressable>
-          <Pressable
+          <Button
+            label={editing === undefined ? t("common.done") : t("logSession.saveChanges")}
             onPress={save}
-            style={{
-              flex: 2,
-              minHeight: 50,
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: radius.control,
-              backgroundColor: colors.azureInk,
-            }}
-          >
-            <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-              {editing === undefined ? t("common.done") : t("logSession.saveChanges")}
-            </Text>
-          </Pressable>
+            variant="primary"
+            height={50}
+            style={{ flex: 2, paddingHorizontal: 0 }}
+          />
         </View>
         {autosave.savedAt !== null && (
           <Text

@@ -8,6 +8,7 @@ import { formatDate, getLocale, t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Sheet } from "./Sheet";
 import { press, tap } from "../lib/press";
+import { Button } from "../features/training/components/Button";
 
 export type DateTimeFieldProps = {
   mode: "date" | "time";
@@ -162,21 +163,7 @@ export function DateTimeField({
               accentColor={colors.azureInk}
               style={{ alignSelf: "center" }}
             />
-            <Pressable
-              onPress={done}
-              accessibilityRole="button"
-              style={press({
-                minHeight: 50,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: radius.control,
-                backgroundColor: colors.azureInk,
-              })}
-            >
-              <Text style={{ fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.white }}>
-                {t("common.done")}
-              </Text>
-            </Pressable>
+            <Button label={t("common.done")} onPress={done} variant="primary" height={50} />
           </View>
         </Sheet>
       )}
