@@ -54,7 +54,7 @@ describe("Workouts done", () => {
     await fireEvent.press(screen.getByText("All 14 in Log"));
     expect(router.navigate).toHaveBeenLastCalledWith({
       pathname: "/(tabs)/sessions",
-      params: { segment: "training", workout: "max" },
+      params: { workout: "max" },
     });
   });
 

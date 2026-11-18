@@ -7,6 +7,7 @@ import {
   climbingSessionVM,
   gradeFilterLabel,
   matchesClimbSearch,
+  type ClimbLogVM,
   type ClimbingSessionVM,
 } from "../climbs/log";
 import { climbOf } from "../climbs/overview";
@@ -17,7 +18,8 @@ import { focusLabel } from "../training/focus";
 import { bucketsFor } from "../trends/buckets";
 import { isYearRange, trendRangeLabel } from "../trends/types";
 import { exerciseKey } from "../statistics/exercises";
-import { entryTitle, groupTrips, logItemWorkout } from "./transforms";
+import { entryTitle, flatLog, groupTrips, logItemWorkout } from "./transforms";
+import { logCountLabel } from "../sessions/years";
 import type { LogContext, LogFilter, LogItem, LogPill, LogRowType, LogView } from "./types";
 
 export const NO_LOG_FILTER: LogFilter = {
@@ -192,7 +194,7 @@ function passesTraining(item: LogItem, filter: LogFilter, ctx: LogContext): bool
 
 function passesWhere(session: SessionRow, filter: LogFilter): boolean {
   if (filter.setting !== null && session.location !== filter.setting) return false;
-  return filter.place === null || placeOf(session) === filter.place.id;
+  return filter.place === null || placeOf(session) === filter.place;
 }
 
 const includes = (text: string | null | undefined, q: string): boolean =>
@@ -416,9 +418,7 @@ export function logFilterPills(filter: LogFilter, names: LogNames): LogPill[] {
             setting: null,
           }),
         ]),
-    ...(filter.place === null
-      ? []
-      : [pill("place", names.place(filter.place.id), { place: null })]),
+    ...(filter.place === null ? [] : [pill("place", names.place(filter.place), { place: null })]),
     ...filter.categories.map((kind) =>
       pill(`category:${kind}`, kindLabel(kind), { categories: without(filter.categories, kind) })
     ),
@@ -486,4 +486,22 @@ export function logPlaceOptions(items: readonly LogItem[], ctx: LogContext): Log
       return key === null || name === undefined ? [] : [{ key, name }];
     })
   );
+}
+
+/** How many climbs each outcome holds under everything else the filter sets. */
+export function logOutcomeCounts(
+  items: readonly LogItem[],
+  filter: LogFilter,
+  ctx: LogContext,
+  now: Date = new Date()
+): ClimbLogVM["counts"] {
+  const withClimbs = new Map(ctx.sessions.map((s) => [s.fingerprint, s]));
+  return flatClimbs(items, { ...filter, outcome: "all" }, ctx, withClimbs, now).counts;
+}
+
+/** What the sheet's button says it will show. */
+export function logViewCountLabel(view: LogView): string {
+  if (view.kind === "dated") return logCountLabel(flatLog(view.items));
+  const count = view.log.groups.reduce((n, g) => n + g.rows.length, 0);
+  return t("common.climbCount", { count });
 }

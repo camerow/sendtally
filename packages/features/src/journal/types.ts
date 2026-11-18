@@ -69,9 +69,6 @@ export const LOG_ROW_TYPES = ["climbing", "training", "journal", "trip", "injury
 
 export type LogRowType = (typeof LOG_ROW_TYPES)[number];
 
-/** A gym or a crag, the one place the Where filter can name. */
-export type LogPlace = { kind: "gym" | "area"; id: string };
-
 /** An effort range on the 1-10 scale, both ends inclusive. */
 export type EffortRange = { lo: number; hi: number };
 
@@ -85,7 +82,8 @@ export type LogFilter = {
   grade: GradeFilter | null;
   outcome: ClimbStatusFilter;
   setting: "indoor" | "outdoor" | null;
-  place: LogPlace | null;
+  /** A gym or crag id. */
+  place: string | null;
   categories: readonly WorkoutKind[];
   exercise: string | null;
   block: string | null;

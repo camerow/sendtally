@@ -1,8 +1,10 @@
 import React from "react";
 import { Pressable, ScrollView, Text, View, type LayoutChangeEvent } from "react-native";
+import { TextInput } from "../../components/TextInput";
+import { Icon } from "../../components/Icon";
 import type { ScopeItem } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
-import { colors, fonts } from "@sendtally/design/tokens";
+import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { FILTER_BAR_HEIGHT, FilterButton } from "../../components/FilterButton";
 import { press } from "../../lib/press";
 
@@ -54,13 +56,77 @@ function ScopeChip({
   );
 }
 
+/** The bar's search: whether the field is open is the bar's own, the text is the filter's. */
+export type ScopeSearch = {
+  open: boolean;
+  text: string;
+  onOpen: () => void;
+  onChangeText: (text: string) => void;
+  onCancel: () => void;
+};
+
 export type ScopeBarProps = {
   items: ScopeItem[];
   currentKey: string | null;
   onSelect: (sectionKey: string) => void;
   filtersActive: boolean;
   onOpenFilters: () => void;
+  search: ScopeSearch;
 };
+
+const barFrame = {
+  height: SCOPE_BAR_HEIGHT,
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: colors.white,
+  borderBottomWidth: 1,
+  borderBottomColor: colors.lineOnLightSoft,
+} as const;
+
+function SearchField({ search }: { search: ScopeSearch }): React.ReactElement {
+  return (
+    <View style={{ ...barFrame, gap: 10, paddingHorizontal: 18 }}>
+      <View
+        style={{
+          flex: 1,
+          height: 36,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+          paddingHorizontal: 10,
+          borderRadius: radius.control,
+          backgroundColor: colors.surfaceSoft,
+        }}
+      >
+        <Icon name="search" color={colors.textSecondary} size={16} strokeWidth={2} />
+        <TextInput
+          value={search.text}
+          onChangeText={search.onChangeText}
+          autoFocus
+          autoCorrect={false}
+          autoCapitalize="none"
+          returnKeyType="search"
+          placeholder={t("sessions.searchLog")}
+          placeholderTextColor={colors.textFaint}
+          accessibilityLabel={t("sessions.searchLog")}
+          style={{
+            flex: 1,
+            height: 36,
+            paddingVertical: 0,
+            fontFamily: fonts.sans,
+            fontSize: 15,
+            color: colors.gunmetal,
+          }}
+        />
+      </View>
+      <Pressable onPress={search.onCancel} accessibilityRole="button" hitSlop={8} style={press({})}>
+        <Text style={{ fontFamily: fonts.sansMedium, fontSize: 15, color: colors.gunmetal }}>
+          {t("common.cancel")}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
 
 export function ScopeBar({
   items,
@@ -68,6 +134,7 @@ export function ScopeBar({
   onSelect,
   filtersActive,
   onOpenFilters,
+  search,
 }: ScopeBarProps): React.ReactElement {
   const strip = React.useRef<ScrollView>(null);
   const positions = React.useRef(new Map<string, number>());
@@ -78,17 +145,9 @@ export function ScopeBar({
     if (x !== undefined) strip.current?.scrollTo({ x: Math.max(0, x - 80), animated: true });
   }, [currentKey]);
 
+  if (search.open) return <SearchField search={search} />;
   return (
-    <View
-      style={{
-        height: SCOPE_BAR_HEIGHT,
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: colors.white,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.lineOnLightSoft,
-      }}
-    >
+    <View style={barFrame}>
       <ScrollView
         ref={strip}
         horizontal
@@ -106,7 +165,7 @@ export function ScopeBar({
           />
         ))}
       </ScrollView>
-      <FilterButton active={filtersActive} onPress={onOpenFilters} />
+      <FilterButton active={filtersActive} onPress={onOpenFilters} onSearch={search.onOpen} />
     </View>
   );
 }

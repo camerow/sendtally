@@ -330,10 +330,7 @@ describe("filterLog", () => {
 
   it("narrows climbing by where, lighting Climbing", () => {
     expect(keys(view({ setting: "outdoor" }))).toEqual(["session:trip-day"]);
-    expect(keys(view({ place: { kind: "gym", id: "riverside" } }))).toEqual([
-      "session:evening",
-      "session:4x4",
-    ]);
+    expect(keys(view({ place: "riverside" }))).toEqual(["session:evening", "session:4x4"]);
   });
 
   it("narrows by discipline, keeping only sessions with a climb of it", () => {
@@ -423,7 +420,7 @@ describe("logFilterPills", () => {
     const filter = updateLogFilter(NO_LOG_FILTER, {
       grade: { scale: "v", from: "V4", to: "V6" },
       outcome: "sent",
-      place: { kind: "gym", id: "riverside" },
+      place: "riverside",
     });
     const pills = logFilterPills(filter, names);
     expect(pills.map((p) => p.label)).toEqual(["Climbing", "V4 to V6", "Sent", "Riverside"]);

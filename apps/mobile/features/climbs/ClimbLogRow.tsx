@@ -8,6 +8,9 @@ import { pressRow } from "../../lib/press";
 import { ClimbPill } from "./ClimbPill";
 import { GradeBadge } from "./GradeBadge";
 
+/** A climb row's height, under a session or on its own. */
+export const CLIMB_ROW_HEIGHT = 60;
+
 export type ClimbLogRowProps = {
   /** A row with no climb (`id` null) has no page: it reads as text, its name muted. */
   row: Omit<ClimbLogRowVM, "id" | "pill"> & {
@@ -53,7 +56,7 @@ export function ClimbLogRow({
         .filter((part) => part !== undefined && part !== "")
         .join(", ")}
       style={pressRow({
-        minHeight: 60,
+        minHeight: CLIMB_ROW_HEIGHT,
         flexDirection: "row",
         alignItems: "center",
         gap: 12,

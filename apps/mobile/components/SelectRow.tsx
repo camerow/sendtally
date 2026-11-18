@@ -11,6 +11,8 @@ export type SelectRowProps = {
   value: string;
   leading?: React.ReactNode;
   valueFont?: string;
+  /** The value is the "any" choice, so it reads as a placeholder. */
+  muted?: boolean;
   style?: ViewStyle;
   children: (close: () => void) => React.ReactNode;
 };
@@ -24,6 +26,7 @@ export function SelectRow({
   value,
   leading,
   valueFont = fonts.sansMedium,
+  muted = false,
   style,
   children,
 }: SelectRowProps): React.ReactElement {
@@ -54,7 +57,7 @@ export function SelectRow({
             style={{
               fontFamily: valueFont,
               fontSize: 15,
-              color: colors.gunmetal,
+              color: muted ? colors.textMuted : colors.gunmetal,
             }}
           >
             {value}

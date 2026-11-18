@@ -15,6 +15,8 @@ export type ChipProps = {
   /** Members-only: drawn dashed with a lock, still pressable so the press can explain itself. */
   locked?: boolean;
   icon?: IconName;
+  /** A mark before the label, such as a kind's. */
+  leading?: React.ReactNode;
   onPress: () => void;
 };
 
@@ -44,6 +46,7 @@ export function Chip({
   uppercase = true,
   locked = false,
   icon,
+  leading,
   onPress,
 }: ChipProps): React.ReactElement {
   const dashedBorder = dashed || locked;
@@ -79,6 +82,7 @@ export function Chip({
       })}
     >
       {locked && <Lock color={textColor} />}
+      {leading}
       {icon !== undefined && <Icon name={icon} color={textColor} size={14} strokeWidth={2} />}
       <Text
         style={{

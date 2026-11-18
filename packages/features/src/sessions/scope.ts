@@ -11,18 +11,21 @@ export type ScopeItem = {
 };
 
 export function monthScopeItems(years: SessionYear[]): ScopeItem[] {
-  return years.flatMap((year): ScopeItem[] => {
-    const first = year.months[0];
-    if (first === undefined) return [];
-    return [
-      { key: `year-${year.year}`, label: year.label, sectionKey: first.key, kind: "year" },
-      ...year.months.map((month): ScopeItem => ({
-        key: month.key,
-        label: monthShortName(month.month),
-        sectionKey: month.key,
-        kind: "month",
-      })),
-    ];
+  return monthKeyScopeItems(years.flatMap((year) => year.months.map((month) => month.key)));
+}
+
+/** A year chip then its months, for month keys ("2026-11") newest first. */
+export function monthKeyScopeItems(keys: readonly string[]): ScopeItem[] {
+  return keys.flatMap((key, i): ScopeItem[] => {
+    const month: ScopeItem = {
+      key,
+      label: monthShortName(Number(key.slice(5, 7))),
+      sectionKey: key,
+      kind: "month",
+    };
+    const year = key.slice(0, 4);
+    if (keys[i - 1]?.slice(0, 4) === year) return [month];
+    return [{ key: `year-${year}`, label: year, sectionKey: key, kind: "year" }, month];
   });
 }
 

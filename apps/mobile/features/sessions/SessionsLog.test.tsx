@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import React from "react";
 import type * as LogSession from "@sendtally/features/log-session";
-import { logSegmentStorage } from "../../lib/logSegmentStorage";
 import { SessionsLog } from "./SessionsLog";
 
 const mockSession = (fingerprint: string, name: string, start: string): object => ({
@@ -56,20 +55,32 @@ const mockSummary = (id: string, name: string, at: string, sent: boolean): objec
 const mockNamed = mockSession("s1", "Tuesday night session", "2026-10-21T18:00:00.000Z");
 const mockBare = { ...mockSession("s2", "", "2026-10-12T10:00:00.000Z"), rpe_source: "none" };
 
-jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
+jest.mock("expo-router", () => ({ router: { push: jest.fn(), setParams: jest.fn() } }));
 jest.mock("../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("../../lib/review", () => ({ maybeAskForReview: () => undefined }));
 jest.mock("../../lib/setupPrompt", () => ({
   useSetupDismissed: () => ({ dismissed: true, dismiss: () => undefined }),
 }));
-jest.mock("../climbs/GradeFilterSheet", () => ({ GradeFilterSheet: () => null }));
 jest.mock("../live-session/startLiveSession", () => ({ startLiveSession: () => undefined }));
 jest.mock("../settings/useStravaConnect", () => ({
   useStravaConnect: () => ({ connect: () => undefined, busy: false, error: null }),
 }));
 jest.mock("../../components/Sheet", () => ({
-  Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
-    visible ? children : null,
+  Sheet: ({
+    visible,
+    children,
+    footer,
+  }: {
+    visible: boolean;
+    children: React.ReactNode;
+    footer?: React.ReactNode;
+  }) =>
+    visible ? (
+      <>
+        {children}
+        {footer}
+      </>
+    ) : null,
 }));
 function mockMemoryStorage(): unknown {
   let value: string | null = null;
@@ -83,7 +94,6 @@ function mockMemoryStorage(): unknown {
     },
   });
 }
-jest.mock("../../lib/logSegmentStorage", () => ({ logSegmentStorage: mockMemoryStorage() }));
 jest.mock("../../lib/liveSessionStorage", () => ({ liveSessionStorage: mockMemoryStorage() }));
 let mockScales = { boulder: "v", route: "yds" };
 jest.mock("@sendtally/features/settings", () => ({
@@ -94,7 +104,9 @@ jest.mock("@sendtally/features/settings", () => ({
 jest.mock("@sendtally/features/gyms", () => ({ useGyms: () => ({ ready: false, gyms: [] }) }));
 jest.mock("@sendtally/features/training", () => ({
   ...jest.requireActual<object>("@sendtally/features/training"),
-  useTrainingLog: () => ({ log: { plan: { blocks: [], memberships: [] } } }),
+  useTrainingLog: () => ({
+    log: { plan: { blocks: [], memberships: [] }, workout: () => undefined },
+  }),
 }));
 jest.mock("@sendtally/features/query", () => ({
   ...jest.requireActual<object>("@sendtally/features/query"),
@@ -156,17 +168,17 @@ jest.mock("@sendtally/features/climbs", () => ({
 
 describe("Log", () => {
   beforeEach(() => {
-    logSegmentStorage.remove();
     mockScales = { boulder: "v", route: "yds" };
   });
 
-  it("opens on Climbing: a named session with its climbs under it, a lone climb on its day", async () => {
+  it("lists climbing and training in one list, each row as before", async () => {
     await render(<SessionsLog />);
     expect(screen.getByLabelText(/^Tuesday night session, /)).toBeTruthy();
     expect(screen.getByLabelText("V4, Pocket Rocket, 1 try, Flash")).toBeTruthy();
     expect(screen.getByLabelText("V4, Brad Pit, Boulder, 3 tries")).toBeTruthy();
+    expect(screen.getByText("Leg day")).toBeTruthy();
     expect(screen.queryByText("Logged session")).toBeNull();
-    expect(screen.queryByText("Leg day")).toBeNull();
+    expect(screen.queryByText("Climbing")).toBeNull();
   });
 
   it("shows every grade in the scale picked in settings", async () => {
@@ -178,26 +190,51 @@ describe("Log", () => {
     expect(screen.queryByText("V4")).toBeNull();
   });
 
-  it("turns into the flat climbs list once searched", async () => {
+  it("searches from the bar, keeping the dated list, and Cancel puts it back", async () => {
     await render(<SessionsLog />);
-    await fireEvent.changeText(screen.getByLabelText("Search climbs, areas or grades"), "brad");
+    await fireEvent.press(screen.getByLabelText("Search the Log"));
+    await fireEvent.changeText(screen.getByLabelText("Search the Log"), "brad");
+    expect(screen.getByLabelText("V4, Brad Pit, Boulder, 3 tries")).toBeTruthy();
     expect(screen.queryByLabelText(/^Tuesday night session, /)).toBeNull();
-    expect(screen.queryByText("Pocket Rocket")).toBeNull();
-    expect(screen.getByText("Brad Pit")).toBeTruthy();
+    expect(screen.queryByText("Leg day")).toBeNull();
+    await fireEvent.press(screen.getByText("Cancel"));
+    expect(screen.getByText("Leg day")).toBeTruthy();
   });
 
-  it("switches to Training and remembers it on the device", async () => {
+  it("says nothing matches, once", async () => {
     await render(<SessionsLog />);
-    await fireEvent.press(screen.getByText("Training"));
-    expect(screen.getByText("Leg day")).toBeTruthy();
-    expect(screen.queryByLabelText(/^Tuesday night session, /)).toBeNull();
-    expect(logSegmentStorage.read()).toBe("training");
+    await fireEvent.press(screen.getByLabelText("Search the Log"));
+    await fireEvent.changeText(screen.getByLabelText("Search the Log"), "nothing like it");
+    expect(screen.getByText("Nothing matches.")).toBeTruthy();
   });
 
-  it("opens on the segment last shown", async () => {
-    logSegmentStorage.write("training");
+  it("narrows by type from the sheet, with a pill to drop it", async () => {
     await render(<SessionsLog />);
+    await fireEvent.press(screen.getByLabelText("Filters"));
+    await fireEvent.press(screen.getAllByText("Training")[0]!);
+    await fireEvent.press(screen.getByText("Show 1 session"));
     expect(screen.getByText("Leg day")).toBeTruthy();
+    expect(screen.queryByLabelText(/^Tuesday night session, /)).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Training, Clear"));
+    expect(screen.getByLabelText(/^Tuesday night session, /)).toBeTruthy();
+  });
+
+  it("lists one row per climb once an outcome is set", async () => {
+    await render(<SessionsLog />);
+    await fireEvent.press(screen.getByLabelText("Filters"));
+    await fireEvent.press(screen.getByText("Sent 1"));
+    await fireEvent.press(screen.getByText("Show 1 climb"));
+    expect(screen.getByText("Pocket Rocket")).toBeTruthy();
+    expect(screen.queryByText("Brad Pit")).toBeNull();
+    expect(screen.queryByLabelText(/^Tuesday night session, /)).toBeNull();
+    expect(screen.getByLabelText("Climbing, Clear")).toBeTruthy();
+  });
+
+  it("lands from a Stats link with its workout as a pill", async () => {
+    await render(<SessionsLog workout="title:leg day" />);
+    expect(screen.getByLabelText("Leg day, Clear")).toBeTruthy();
+    expect(screen.queryByLabelText(/^Tuesday night session, /)).toBeNull();
+    expect(screen.queryByText("Clear all")).toBeNull();
   });
 
   it("holds every way to log, climbing and training, behind one Log button", async () => {
