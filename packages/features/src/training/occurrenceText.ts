@@ -3,7 +3,7 @@ import { weekdayShort } from "../hang/format";
 import { t } from "../i18n";
 import { kindLabel } from "../activities/format";
 import type { Occurrence } from "./plan";
-import { doseSummary } from "../workouts/library";
+import { itemDoseText } from "../workouts/checklist";
 import { blockTag } from "./blockText";
 
 /** "Hangboard · week 2 of 6" in a block, else the label alone. */
@@ -18,7 +18,7 @@ export function occurrenceMeta(o: Occurrence, unit: WeightUnit): string {
   const turns = turnsOf(w.items);
   const label = turns > 1 ? letterOf(o.session % turns) : "";
   const [first] = o.items;
-  const dose = first === undefined ? kindLabel(w.kind) : doseSummary(w.kind, first.dose, unit);
+  const dose = first === undefined ? kindLabel(w.kind) : itemDoseText(w.kind, first, unit);
   const moved =
     o.movedFrom === null ? "" : t("plan.movedFrom", { day: weekdayShort(weekday(o.movedFrom)) });
   return [moved, label, dose].filter((p) => p !== "").join(" · ");

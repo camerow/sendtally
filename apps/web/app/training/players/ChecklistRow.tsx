@@ -2,7 +2,8 @@ import React from "react";
 
 export type ChecklistRowProps = {
   name: string;
-  dose: string;
+  /** Under the name; a typed line has none. */
+  dose?: string;
   ticked: boolean;
   /** ▶ on the right, for a timed line. */
   go?: React.ReactNode;
@@ -26,7 +27,7 @@ export function ChecklistRow({
         <input type="checkbox" checked={ticked} onChange={onToggle} />
         <span className="check-row-text">
           <span className="check-row-name">{name}</span>
-          <span className="check-row-dose">{dose}</span>
+          {dose !== undefined && <span className="check-row-dose">{dose}</span>}
         </span>
       </label>
       {go}

@@ -69,6 +69,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
   if (view === null) return <DetailFrame backTo={BACK_TO} />;
 
   const { membership: m, block, workout: w, turns, items, current, ended, done, lines } = view;
+  const loads = items.flatMap((it, i) => (it.checklist === undefined ? [{ it, i }] : []));
   const look = KIND_LOOK[w.kind];
   const changesOf = (index: number): Partial<Dose>[] => view.changes[index] ?? [];
   const mine = workoutOf(w.id)?.source === "mine";
@@ -175,19 +176,19 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
       <section className="ladder-load">
         <div className="ladder-load-head">
           <h2 className="plan-label">{t("plan.weeklyLoad")}</h2>
-          {items.length > 1 && (
+          {loads.length > 1 && (
             <button
               type="button"
               className="ladder-open-all"
-              onClick={() => setOpen(items.map((_, i) => i))}
+              onClick={() => setOpen(loads.map((l) => l.i))}
             >
               {t("plan.openAll")}
             </button>
           )}
         </div>
-        {items.length === 1
-          ? loadOf(0)
-          : items.map((it, i) => (
+        {loads.length === 1
+          ? loadOf(loads[0]?.i ?? 0)
+          : loads.map(({ it, i }) => (
               <LoadSection
                 key={`${turn}:${i}`}
                 name={exerciseName(it.exercise, model.gripName)}

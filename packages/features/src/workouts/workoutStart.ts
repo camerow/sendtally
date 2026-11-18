@@ -40,18 +40,20 @@ export type WorkoutStart =
   | { open: "sets" | "checklist"; run: WorkoutRun };
 
 const playerOf = (items: readonly SessionItem[]): "sets" | "checklist" =>
-  items.some((i) => i.dose.reps !== undefined || i.dose.weightKg !== undefined)
+  items.some(
+    (i) => i.checklist !== undefined || i.dose.reps !== undefined || i.dose.weightKg !== undefined
+  )
     ? "sets"
     : "checklist";
 
 /**
  * The player a workout's items call for: hangboard in the timer, all timed in the
  * intervals player (climbing measured in time too, as laps), any exercise logged in climbs on
- * the tally or with reps or weight in the sets player, anything else as a checklist. A mix of
- * grips and other exercises always opens the sets player, where its grips are one fingerboard
- * part. A climbing workout with no items opens the live session, and any other workout with
- * none the sets player with no cards, its description the body. An exercise done on each side
- * plays twice in the intervals player.
+ * the tally, with reps or weight, or beside a typed checklist in the sets player, anything else
+ * in the checklist player. A mix of grips and other exercises always opens the sets player,
+ * where its grips are one fingerboard part. A climbing workout with no items opens the live
+ * session, and any other workout with none the sets player with no cards, its description the
+ * body. An exercise done on each side plays twice in the intervals player.
  */
 export function workoutStart(
   w: LibraryWorkout,

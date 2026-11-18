@@ -23,6 +23,7 @@ import {
   useSetsPlayer,
   type SetAt,
   type WorkoutRun,
+  checklistLine,
 } from "@sendtally/features/workouts";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { Toast } from "../../../components/Toast";
@@ -45,6 +46,7 @@ import { RestRow } from "../rest/RestRow";
 import { type } from "../type";
 import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
 import type { DetailMenuRow } from "../components/types";
+import { ChecklistCard } from "./ChecklistCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
 import { SET_COLUMNS } from "./setColumns";
 import { SetsCard } from "./SetsCard";
@@ -286,6 +288,38 @@ export function SetsScreen({
                   </React.Fragment>
                 );
               }
+              const lines = player.checklist(i);
+              const tickedLine = (set: number): boolean => ticked.has(setKey({ item: i, set }));
+              if (lines !== null)
+                return (
+                  <React.Fragment key={i}>
+                    {player.folded(i) ? (
+                      <FoldedSetsCard
+                        name={t("workouts.checklist")}
+                        line={
+                          skipped
+                            ? t("workouts.skippedTapToDo")
+                            : checklistLine(
+                                lines.filter((_, n) => tickedLine(n)).length,
+                                lines.length
+                              )
+                        }
+                        done={!skipped && lines.every((_, n) => tickedLine(n))}
+                        onOpen={() => player.open(i)}
+                      />
+                    ) : (
+                      <ChecklistCard
+                        item={item}
+                        lines={lines}
+                        ticked={tickedLine}
+                        onToggle={(set) => player.toggle({ item: i, set })}
+                        onFold={() => player.fold(i)}
+                        menu={menu(i, at)}
+                      />
+                    )}
+                    {between}
+                  </React.Fragment>
+                );
               return (
                 <React.Fragment key={i}>
                   {player.folded(i) ? (

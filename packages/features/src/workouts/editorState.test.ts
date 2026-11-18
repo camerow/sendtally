@@ -14,6 +14,10 @@ import {
   withItemMoved,
   withRestAfter,
   withSetRest,
+  withChecklistAdded,
+  withChecklistLines,
+  withLineAfter,
+  withLineTyped,
 } from "./editorState";
 
 const squat = { exercise: "Back squat", doses: [{ sets: 5, reps: 5 }] };
@@ -178,5 +182,47 @@ describe("workout editor state", () => {
       { sets: 3, setRestS: 120 },
     ]);
     expect(withSetRest(ab, 0).doses).toEqual([{ sets: 5 }, { sets: 3 }]);
+  });
+});
+
+describe("a checklist in the editor", () => {
+  it("adds a checklist with one line to type, edits its lines, and saves only typed ones", () => {
+    const added = withChecklistAdded(legs, () => "c1");
+    expect(added.items[1]).toEqual({
+      id: "c1",
+      exercise: "Checklist",
+      doses: [{ sets: 1 }],
+      checklist: { lines: [""] },
+    });
+    const typed = {
+      ...added,
+      items: [added.items[0]!, withChecklistLines(added.items[1]!, ["Jog ", "", " Arm circles"])],
+    };
+    expect(draftOfEditor(typed).items[1]?.checklist).toEqual({ lines: ["Jog", "Arm circles"] });
+    expect(draftOfEditor(added).items).toHaveLength(1);
+  });
+
+  it("leaves the workout's kind to its exercises", () => {
+    const added = withChecklistAdded(legs, () => "c1");
+    expect(withDerivedKind(added, (e) => (e === "Checklist" ? "climbing" : "strength")).kind).toBe(
+      "strength"
+    );
+  });
+});
+
+describe("typing a checklist's lines", () => {
+  const list = {
+    exercise: "Checklist",
+    doses: [{ sets: 1 }],
+    checklist: { lines: ["Jog", "Hang"] },
+  };
+  it("types into one line and opens the next under it, from the item as it is now", () => {
+    const typed = withLineTyped(list, 0, "Jog 5 min");
+    expect(withLineAfter(typed, 0).checklist?.lines).toEqual(["Jog 5 min", "", "Hang"]);
+  });
+  it("stops at 30 lines, and a line at 120 characters", () => {
+    const full = { ...list, checklist: { lines: Array.from({ length: 30 }, (_, i) => `L${i}`) } };
+    expect(withLineAfter(full, 29)).toBe(full);
+    expect(withLineTyped(list, 0, "x".repeat(130)).checklist?.lines[0]).toHaveLength(120);
   });
 });

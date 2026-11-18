@@ -2057,3 +2057,34 @@
 .category-row--plain:hover {
   background: none;
 }
+
+.checklist-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checklist-line-n {
+  width: 22px;
+  flex: none;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-on-white-secondary);
+}
+
+.checklist-line .form-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+}
+
+.editor-add-row {
+  display: flex;
+  gap: 10px;
+}
+
+.editor-add-row > .outline-button {
+  flex: 1;
+  min-width: 0;
+}

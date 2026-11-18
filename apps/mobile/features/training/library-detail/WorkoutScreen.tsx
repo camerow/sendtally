@@ -15,7 +15,12 @@ import {
   plannedItems,
   blockName,
 } from "@sendtally/features/training";
-import { workoutMinutes, type LibraryWorkout, type WorkoutUse } from "@sendtally/features/workouts";
+import {
+  bodyHeading,
+  workoutMinutes,
+  type LibraryWorkout,
+  type WorkoutUse,
+} from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
@@ -163,7 +168,7 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
       />
       {workout.items.length > 0 && (
         <View style={{ gap: 8 }}>
-          <Label color={colors.gunmetal}>{t("workouts.exercises")}</Label>
+          <Label color={colors.gunmetal}>{bodyHeading(workout.items)}</Label>
           {next === undefined ? (
             <BodyPreview
               workout={workout}

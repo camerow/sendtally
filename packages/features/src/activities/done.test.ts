@@ -11,6 +11,8 @@ import {
   offWithout,
   plannedDoses,
   exerciseCountText,
+  withLineToggled,
+  workoutItemsOfDone,
   setsCountText,
   shortOf,
   previousSets,
@@ -170,5 +172,41 @@ describe("an exercise's count in the review", () => {
     expect(exerciseCountText(d, ["1:0"], "sets")).toBe("2 sets");
     expect(exerciseCountText(d, ["1:0", "1:1"], "sets")).toBe("Not started");
     expect(exerciseCountText({ ...d, sets: [] }, [], "laps")).toBe("Not started");
+  });
+});
+
+describe("a checklist in the review", () => {
+  const lines = ["Jog", "Arm circles", "Easy boulders"];
+  const list = { item: 0, exercise: "Checklist", sets: [], checklist: { lines, checked: [0] } };
+  it("ticks or unticks a line, and saves only with a line ticked", () => {
+    const two = withLineToggled([list], 0, 2);
+    expect(two[0]?.checklist?.checked).toEqual([0, 2]);
+    const none = withLineToggled([list], 0, 0);
+    expect(none[0]?.checklist?.checked).toEqual([]);
+    expect(keptSets(two, [])).toHaveLength(1);
+    expect(keptSets(none, [])).toEqual([]);
+  });
+  it("says how much of a checklist was ticked in the log row, beside the exercises", () => {
+    const squat = { item: 1, exercise: "Back squat", sets: [{ reps: 5 }, { reps: 5 }] };
+    expect(doneSummary([list, squat])).toBe("Checklist · 1 of 3 · 1 exercise · 2 sets");
+    expect(doneSummary([list])).toBe("Checklist · 1 of 3");
+    const cool = {
+      item: 2,
+      exercise: "Checklist",
+      sets: [],
+      checklist: { lines: ["Hang", "Stretch"], checked: [0, 1] },
+    };
+    expect(doneSummary([list, squat, cool])).toBe("Checklist · 3 of 5 · 1 exercise · 2 sets");
+  });
+  it("runs again as a workout with its checklist whole, beside each exercise's first set", () => {
+    const squat = { item: 1, exercise: "Back squat", sets: [{ reps: 5 }, { reps: 5 }] };
+    expect(workoutItemsOfDone([list, squat, { item: 2, exercise: "Row", sets: [] }])).toEqual([
+      { exercise: "Checklist", doses: [{ sets: 1 }], checklist: { lines } },
+      { exercise: "Back squat", doses: [{ reps: 5, sets: 2 }] },
+    ]);
+  });
+  it("never offers a checklist as an exercise name", () => {
+    const squat = { item: 1, exercise: "Back squat", sets: [{ reps: 5 }] };
+    expect(exerciseNames([{ done: [list, squat] }])).toEqual(["Back squat"]);
   });
 });

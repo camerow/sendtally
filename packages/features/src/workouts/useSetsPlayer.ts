@@ -47,6 +47,7 @@ import { useLatest } from "./useLatest";
 import {
   afterKey,
   allSets,
+  exercisePosition,
   isLifting,
   itemDone,
   restAfterTick,
@@ -160,6 +161,8 @@ export type SetsPlayer = {
   climbOn: (item: number) => void;
   /** Whether a climbing card can take the tally: not on it already, and climbing still to do. */
   canClimbOn: (item: number) => boolean;
+  /** A checklist's typed lines, one set each; null for an exercise. */
+  checklist: (item: number) => string[] | null;
   /** What the run did, and the sets it left unticked, for its review. */
   finished: () => RunFinish;
   /** Whether what it needs to finish has loaded. */
@@ -458,22 +461,14 @@ export function useSetsPlayer({
     current,
     order: cards.order,
     items,
-    position:
-      cards.order.length === 0
-        ? null
-        : {
-            at:
-              Math.max(
-                0,
-                cards.order.indexOf(
-                  partFirst ??
-                    (focused === null && climbAt !== null && next !== null
-                      ? (cards.order.find((k) => k === climbAt || k === next.item) ?? -1)
-                      : (current?.item ?? climbAt ?? -1))
-                )
-              ) + 1,
-            of: cards.order.length,
-          },
+    position: exercisePosition(
+      cards.order,
+      partFirst ??
+        (focused === null && climbAt !== null && next !== null
+          ? (cards.order.find((k) => k === climbAt || k === next.item) ?? -1)
+          : (current?.item ?? climbAt ?? -1)),
+      (k) => items[k]?.checklist !== undefined
+    ),
     rest,
     hold,
     tallyOf,
@@ -570,6 +565,7 @@ export function useSetsPlayer({
     },
     climbOn: setChosen,
     canClimbOn: (item) => tallyOf(item) !== null && climbAt !== item && !climbDone(item),
+    checklist: (item) => items[item]?.checklist?.lines ?? null,
     finished: () => {
       rest.skip();
       hold.stop();
@@ -578,8 +574,22 @@ export function useSetsPlayer({
         const sets = climbedSets(d.item);
         return sets.length === 0 ? null : sets;
       };
+      const checked = (d: ItemDone, lines: string[]): ItemDone => ({
+        item: d.item,
+        exercise: d.exercise,
+        sets: [],
+        checklist: {
+          lines,
+          checked: lines.flatMap((_, set) =>
+            ticked.has(setKey({ item: d.item, set })) ? [set] : []
+          ),
+        },
+      });
       const each = shown.flatMap((d) => (inPart(d.item) ? [] : [{ d, sets: climbedOf(d) }]));
-      const ran = each.map(({ d, sets }) => ({ ...d, sets: sets ?? d.sets }));
+      const ran = each.map(({ d, sets }) => {
+        const lines = items[d.item]?.checklist?.lines;
+        return lines === undefined ? { ...d, sets: sets ?? d.sets } : checked(d, lines);
+      });
       const climbed = each.flatMap(({ d, sets }) =>
         sets === null ? [] : sets.map((_, set) => setKey({ item: d.item, set }))
       );

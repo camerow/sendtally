@@ -288,6 +288,59 @@ describe("Sets player", () => {
     expect(screen.getByLabelText("Open Back squat, 2 × 5 · 100 kg")).toBeTruthy();
   });
 
+  it("ticks a checklist's typed lines in any order and logs which were ticked", async () => {
+    const lines = ["Jog 5 min", "Arm circles x20", "Easy boulders x10"];
+    const warm: WorkoutRun = {
+      ...run,
+      items: [{ exercise: "Checklist", dose: { sets: 3 }, checklist: { lines } }, run.items[1]!],
+    };
+    await renderWithHang(<SetsScreen run={warm} />, hangData());
+    expect(screen.getByText("Checklist")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Easy boulders x10"));
+    await fireEvent.press(screen.getByLabelText("Jog 5 min"));
+    expect(screen.getByLabelText("Jog 5 min").props.accessibilityState).toMatchObject({
+      checked: true,
+    });
+    expect(screen.queryByLabelText("Checklist, set 1")).toBeNull();
+    await fireEvent.press(screen.getByText("Finish"));
+    const { params } = (router.replace as jest.Mock).mock.calls.at(-1)![0] as {
+      params: { done: string };
+    };
+    expect(JSON.parse(params.done)[0]).toEqual({
+      item: 0,
+      exercise: "Checklist",
+      sets: [],
+      checklist: { lines, checked: [0, 2] },
+    });
+  });
+
+  it("runs a warm-up and a cool-down checklist around two exercises, counting the exercises only", async () => {
+    const warm = { exercise: "Checklist", dose: { sets: 1 }, checklist: { lines: ["Jog"] } };
+    const cool = { exercise: "Checklist", dose: { sets: 1 }, checklist: { lines: ["Stretch"] } };
+    await renderWithHang(
+      <SetsScreen run={{ ...run, items: [warm, run.items[1]!, run.items[2]!, cool] }} />,
+      hangData()
+    );
+    expect(screen.getByText("Exercise 1 of 2")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Jog"));
+    await fireEvent.press(screen.getByLabelText("Stretch"));
+    await fireEvent.press(screen.getByText("Finish"));
+    const { params } = (router.replace as jest.Mock).mock.calls.at(-1)![0] as {
+      params: { done: string };
+    };
+    const done = JSON.parse(params.done) as { checklist?: { checked: number[] } }[];
+    expect(done.filter((d) => d.checklist !== undefined).map((d) => d.checklist?.checked)).toEqual([
+      [0],
+      [0],
+    ]);
+  });
+
+  it("shows no exercise counter on a run that is only a checklist", async () => {
+    const warm = { exercise: "Checklist", dose: { sets: 1 }, checklist: { lines: ["Jog"] } };
+    await renderWithHang(<SetsScreen run={{ ...run, items: [warm] }} />, hangData());
+    expect(screen.queryByText(/^Exercise \d/)).toBeNull();
+  });
+
   it("skips an exercise to the end and logs exercises in the order they ended in", async () => {
     await renderWithHang(<SetsScreen run={run} />, hangData());
     await fireEvent.press(screen.getAllByLabelText("More for this exercise")[0]!);

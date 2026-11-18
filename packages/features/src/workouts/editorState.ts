@@ -1,9 +1,12 @@
 import {
+  CHECKLIST_NAME,
+  MAX_CHECKLIST_LINE,
+  MAX_CHECKLIST_LINES,
   defaultExerciseRestS,
   gripMeasureOf,
   gripsTogether,
   withItemIds,
-  workoutKindOf,
+  workoutKindOfItems,
   type Dose,
   type Item,
   type WorkoutKind,
@@ -62,11 +65,7 @@ export function withDerivedKind(
   s: WorkoutDraft,
   kindIn: (exercise: string) => WorkoutKind | undefined
 ): WorkoutDraft {
-  const kind = workoutKindOf(
-    s.items.map((i) => i.exercise),
-    kindIn,
-    s.kind
-  );
+  const kind = workoutKindOfItems(s.items, kindIn, s.kind);
   if (kind === s.kind) return s;
   const rest = s.exerciseRestS === defaultExerciseRestS(s.kind);
   return { ...s, kind, exerciseRestS: rest ? defaultExerciseRestS(kind) : s.exerciseRestS };
@@ -91,6 +90,45 @@ export const withExerciseSwapped = (
         : { ...x, exercise }
   ),
 });
+
+/** A checklist at the end, its first line ready to type. */
+export const withChecklistAdded = (s: WorkoutDraft, newId: () => string): WorkoutDraft => ({
+  ...s,
+  items: [
+    ...s.items,
+    { id: newId(), exercise: CHECKLIST_NAME, doses: [{ sets: 1 }], checklist: { lines: [""] } },
+  ],
+});
+
+/** A checklist's lines as typed; saving trims them and drops blank ones. */
+export const withChecklistLines = (item: Item, lines: readonly string[]): Item => ({
+  ...item,
+  checklist: { lines: [...lines] },
+});
+
+const linesOf = (item: Item): string[] => item.checklist?.lines ?? [""];
+
+/** A line as typed, cut at the longest a line can be. */
+export const withLineTyped = (item: Item, at: number, text: string): Item =>
+  withChecklistLines(
+    item,
+    linesOf(item).map((l, n) => (n === at ? text.slice(0, MAX_CHECKLIST_LINE) : l))
+  );
+
+/** A blank line under the one at `at`, while the checklist has room for one. */
+export const withLineAfter = (item: Item, at: number): Item => {
+  const lines = linesOf(item);
+  return lines.length >= MAX_CHECKLIST_LINES
+    ? item
+    : withChecklistLines(item, [...lines.slice(0, at + 1), "", ...lines.slice(at + 1)]);
+};
+
+/** A checklist's typed lines trimmed, blank ones gone; null when none is left. */
+const savedChecklist = (item: Item): Item | null => {
+  if (item.checklist === undefined) return item;
+  const lines = item.checklist.lines.map((l) => l.trim()).filter((l) => l !== "");
+  return lines.length === 0 ? null : { ...item, checklist: { lines } };
+};
 
 export const withItem = (s: WorkoutDraft, at: number, item: Item): WorkoutDraft => ({
   ...s,
@@ -188,6 +226,9 @@ export function draftOfEditor(s: WorkoutDraft): WorkoutDraft {
     description: s.description.trim(),
     items: s.items
       .map((i) => ({ ...i, exercise: i.exercise.trim(), doses: i.doses.map(savedName) }))
-      .filter((i) => i.exercise !== ""),
+      .flatMap((i) => {
+        const kept = savedChecklist(i);
+        return kept === null || kept.exercise === "" ? [] : [kept];
+      }),
   };
 }

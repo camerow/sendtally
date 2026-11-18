@@ -9,6 +9,7 @@ import {
 } from "@sendtally/core";
 import {
   daysBetween,
+  isChecklist,
   type CalendarDate,
   type ExerciseProgress,
   type SetDone,
@@ -95,7 +96,9 @@ export function workoutsUsing<W extends Pick<Workout, "kind" | "items">>(
 ): W[] {
   const key = exerciseKey(name);
   return workouts.filter(
-    (w) => w.kind !== "hangboard" && w.items.some((i) => exerciseKey(i.exercise) === key)
+    (w) =>
+      w.kind !== "hangboard" &&
+      w.items.some((i) => !isChecklist(i) && exerciseKey(i.exercise) === key)
   );
 }
 

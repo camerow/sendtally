@@ -81,7 +81,7 @@ afterEach(() => {
   container.remove();
 });
 
-const mount = (live = false, idleEnd: IdleEnd | null = null): void =>
+const mount = (live = false, idleEnd: IdleEnd | null = null, initial = review): void =>
   act(() =>
     root.render(
       <ToastProvider>
@@ -89,7 +89,7 @@ const mount = (live = false, idleEnd: IdleEnd | null = null): void =>
           <WithHang>
             <ActivityForm
               id="a1"
-              initial={review}
+              initial={initial}
               logged={null}
               kindSet
               live={live}
@@ -128,6 +128,43 @@ describe("ActivityForm", () => {
     save();
     expect(writes.saveActivity).toHaveBeenCalledOnce();
     expect(saved()[0]?.sets).toHaveLength(2);
+  });
+
+  it("reviews a checklist as lines ticked of its count, saving the lines ticked", () => {
+    const lines = ["Jog 5 min", "Arm circles x20", "Easy boulders x10"];
+    mount(false, null, {
+      ...review,
+      done: [{ item: 0, exercise: "Checklist", sets: [], checklist: { lines, checked: [0] } }],
+    });
+    expect(container.textContent).toContain("Checklist · 1 of 3");
+    const line = [...container.querySelectorAll("label")].find((l) =>
+      l.textContent?.includes("Easy boulders x10")
+    );
+    click(line?.querySelector("input"));
+    expect(container.textContent).toContain("Checklist · 2 of 3");
+    save();
+    expect(saved()[0]?.checklist).toEqual({ lines, checked: [0, 2] });
+  });
+
+  it("puts each checklist above the Sets heading, the exercises under it", () => {
+    mount(false, null, {
+      ...review,
+      done: [
+        { item: 0, exercise: "Checklist", sets: [], checklist: { lines: ["Jog"], checked: [0] } },
+        { item: 1, exercise: "Back squat", sets: [{ reps: 5 }] },
+        {
+          item: 2,
+          exercise: "Checklist",
+          sets: [],
+          checklist: { lines: ["Stretch"], checked: [] },
+        },
+      ],
+    });
+    const text = container.textContent ?? "";
+    const at = (s: string): number => text.indexOf(s);
+    expect(at("Checklist · 1 of 1")).toBeLessThan(at("Checklist · 0 of 1"));
+    expect(at("Checklist · 0 of 1")).toBeLessThan(at("Sets"));
+    expect(at("Sets")).toBeLessThan(at("Back squat"));
   });
 
   it("ends the live run it reviews when saved, and only after asking when discarded", async () => {

@@ -80,3 +80,19 @@ export const withPrevious = (
 /** A ticked set held for less than it asked. */
 export const holdShort = (target: SetDone, done: SetDone, ticked: boolean): boolean =>
   ticked && target.onS !== undefined && (done.onS ?? 0) < target.onS;
+
+/**
+ * "Exercise 2 of 3" over the cards in their order, counting exercises only: on a checklist it
+ * reads the exercise after it. None when the run holds no exercise.
+ */
+export function exercisePosition(
+  order: readonly number[],
+  on: number,
+  isChecklist: (item: number) => boolean
+): { at: number; of: number } | null {
+  const exercises = order.filter((k) => !isChecklist(k));
+  if (exercises.length === 0) return null;
+  const from = Math.max(0, order.indexOf(on));
+  const shown = order.slice(from).find((k) => !isChecklist(k)) ?? exercises[exercises.length - 1];
+  return { at: Math.max(0, exercises.indexOf(shown ?? -1)) + 1, of: exercises.length };
+}

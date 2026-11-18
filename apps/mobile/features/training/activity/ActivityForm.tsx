@@ -8,12 +8,7 @@ import { Alert, KeyboardAvoidingView, Platform, Text, View } from "react-native"
 import { TextInput } from "../../../components/TextInput";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import {
-  defaultExerciseRestS,
-  type ItemDone,
-  type SessionItem,
-  type SetDone,
-} from "@sendtally/core/hang";
+import { defaultExerciseRestS, type SessionItem, type SetDone } from "@sendtally/core/hang";
 import {
   activityFromDraft,
   justLogged,
@@ -25,6 +20,7 @@ import {
   useWeightUnit,
   type ActivityDraft,
   plannedDoses,
+  workoutItemsOfDone,
 } from "@sendtally/features/activities";
 import { shortDate, timeOfDay } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -98,12 +94,6 @@ const input = {
 
 const reportFailure = (): void => Alert.alert(t("activities.saveFailed"));
 
-/** What was done as a workout to run again: each item's first set, as many times as it was done. */
-const itemsOf = (done: readonly ItemDone[]) =>
-  done
-    .filter((d) => d.sets.length > 0)
-    .map((d) => ({ exercise: d.exercise, dose: { ...d.sets[0], sets: d.sets.length } }));
-
 /**
  * Log or edit one activity: kind, title, when, how long, how hard, its focus, and a chip per set
  * to tick. A workout's review says how the run went first. Save sits in the header.
@@ -130,7 +120,7 @@ export function ActivityForm({
   const [grips, setGrips] = React.useState(() => part && { done: part.done, setup: part.setup });
   const unit = useWeightUnit(api);
   const workouts = useWorkoutActions(api, reportFailure);
-  const items = itemsOf(draft.done);
+  const items = workoutItemsOfDone(draft.done);
   const note = idleNote(idleEnd, draft.minutes);
 
   const saveAsWorkout = (): void => {
@@ -142,7 +132,7 @@ export function ActivityForm({
       description: "",
       minutes: draft.minutes,
       targetRpe: draft.rpe,
-      items: items.map(({ exercise, dose }) => ({ exercise, doses: [dose] })),
+      items,
       exerciseRestS: defaultExerciseRestS(draft.kind),
       focus: draft.focus,
     });

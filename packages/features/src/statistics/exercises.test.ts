@@ -27,6 +27,23 @@ const item = (exercise: string, sets: SetDone[]): ItemDone => ({ item: 0, exerci
 
 const squat = (sets: SetDone[], name = "Squat"): ItemDone => item(name, sets);
 
+describe("a checklist in statistics", () => {
+  const list: ItemDone = {
+    item: 0,
+    exercise: "Checklist",
+    sets: [],
+    checklist: { lines: ["Jog"], checked: [0] },
+  };
+  it("never becomes an exercise, nor a workout using one named like it", () => {
+    expect(exerciseSeries([logged("a", "2026-10-01", [list])])).toEqual([]);
+    const warm = {
+      kind: "strength" as const,
+      items: [{ exercise: "Checklist", doses: [{ sets: 1 }], checklist: { lines: ["Jog"] } }],
+    };
+    expect(workoutsUsing([warm], "Checklist")).toEqual([]);
+  });
+});
+
 describe("exerciseSeries", () => {
   it("matches names trimmed and case-insensitively, oldest session first, newest spelling", () => {
     const [series] = exerciseSeries([

@@ -1,7 +1,7 @@
 import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
 import type { CalendarDate, WeightUnit } from "@sendtally/core/hang";
 import { climbsLine, isClimbingSets, wallLine } from "./climbing";
-import { setText } from "./done";
+import { checklistsLine, setText } from "./done";
 import { bestSet, hangGrids, hangTotals } from "./summary";
 import { dayMonth, loadLabel } from "../hang/format";
 import type { HangModel } from "../hang/model";
@@ -20,7 +20,7 @@ export function ofWorkout<T extends { workoutId: string | null; date: CalendarDa
 const named = (name: string, current: boolean): string =>
   current ? t("summary.thisSession", { name }) : name;
 
-/** A finished workout: its first exercise's best set and how long it took. */
+/** A finished workout: its first exercise's best set, how long it took, and its checklist ticked. */
 export function activityItem(a: ActivityRecord, unit: WeightUnit, currentId?: string): HistoryItem {
   const first = a.done.find((d) => d.sets.length > 0);
   const best = first === undefined ? undefined : bestSet(first.sets);
@@ -31,7 +31,9 @@ export function activityItem(a: ActivityRecord, unit: WeightUnit, currentId?: st
     id: a.id,
     date: dayMonth(a.date),
     name: named(a.title, current),
-    meta: [...lead, t("hang.minutes", { n: a.minutes })].join(" · "),
+    meta: [...lead, t("hang.minutes", { n: a.minutes }), checklistsLine(a.done)]
+      .filter((p) => p !== null)
+      .join(" · "),
     rpe: a.rpe,
     current,
   };
