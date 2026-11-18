@@ -6,7 +6,15 @@ import type {
   Plan,
   SessionRow,
   SessionTag,
+  ClimbSummary,
+  HangHistoryPart,
+  SessionWithClimbs,
 } from "@sendtally/api-client";
+import type { Discipline } from "@sendtally/core";
+import type { Focus, Membership, WorkoutKind } from "@sendtally/core/hang";
+import type { ClimbLogVM, ClimbStatusFilter, ClimbingSessionVM, GradeFilter } from "../climbs/log";
+import type { GradeScales } from "../sessions/grades";
+import type { TrendRange } from "../trends/types";
 import type { BlockRecap } from "../training/recap";
 
 export type { EntryKind, JournalEntry };
@@ -55,3 +63,51 @@ export type EntryDraft = {
   parentId: string;
   severity: number | null;
 };
+
+/** The kinds of row the Log's Show filter picks between; none picked is every one. */
+export const LOG_ROW_TYPES = ["climbing", "training", "journal", "trip", "injury"] as const;
+
+export type LogRowType = (typeof LOG_ROW_TYPES)[number];
+
+/** A gym or a crag, the one place the Where filter can name. */
+export type LogPlace = { kind: "gym" | "area"; id: string };
+
+/** An effort range on the 1-10 scale, both ends inclusive. */
+export type EffortRange = { lo: number; hi: number };
+
+/** Everything the Log can be narrowed by. Empty lists and nulls narrow nothing. */
+export type LogFilter = {
+  show: readonly LogRowType[];
+  when: TrendRange;
+  effort: EffortRange | null;
+  tags: readonly string[];
+  discipline: Discipline | null;
+  grade: GradeFilter | null;
+  outcome: ClimbStatusFilter;
+  setting: "indoor" | "outdoor" | null;
+  place: LogPlace | null;
+  categories: readonly WorkoutKind[];
+  exercise: string | null;
+  block: string | null;
+  workout: string | null;
+  foci: readonly Focus[];
+  search: string;
+};
+
+/** What the Log reads besides its rows to match them: the climbs in each session, the parts, the plan and the names of places. */
+export type LogContext = {
+  climbs: readonly ClimbSummary[];
+  sessions: readonly SessionWithClimbs[];
+  hangParts: readonly HangHistoryPart[];
+  memberships: readonly Pick<Membership, "id" | "workoutId" | "blockId">[];
+  places: ReadonlyMap<string, string>;
+  scales: GradeScales;
+};
+
+/** The dated list, each session carrying only the climbs that pass, or one row per climb once a grade or outcome is set. */
+export type LogView =
+  | { kind: "dated"; items: LogItem[]; climbing: ReadonlyMap<string, ClimbingSessionVM> }
+  | { kind: "climbs"; log: ClimbLogVM };
+
+/** One active filter under the bar, and the filter left once it is dropped. */
+export type LogPill = { key: string; label: string; without: LogFilter };
