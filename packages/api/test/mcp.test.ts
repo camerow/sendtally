@@ -663,6 +663,37 @@ describe("connector", () => {
       expect((await read())?.items).toEqual(items);
     });
 
+    it("saves and reads a checklist of typed lines, never as an exercise", async () => {
+      const user = "user_save_workout_checklist";
+      await toolJson(user, "save_exercise", { name: "checklist", kind: "mobility" });
+      const items = [
+        {
+          exercise: "Checklist",
+          doses: [{ sets: 1 }],
+          checklist: { lines: ["Jog 5 min", "Arm circles x20"] },
+        },
+        { exercise: "Face pull", doses: [{ sets: 3, reps: 15 }] },
+      ];
+      const body = {
+        kind: "strength",
+        name: "Warm and pull",
+        description: "",
+        minutes: 30,
+        targetRpe: 6,
+      };
+      const saved = await toolJson<{ workout: { items: unknown[] } }>(user, "save_workout", {
+        ...body,
+        items,
+      });
+      expect(saved.workout.items).toEqual(items);
+      const library = await toolJson<{
+        exercises: Array<{ name: string }>;
+        workouts: Array<{ name: string; items: unknown[] }>;
+      }>(user, "get_training_library");
+      expect(library.workouts.find((w) => w.name === "Warm and pull")?.items).toEqual(items);
+      expect(library.exercises.filter((e) => e.name.toLowerCase() === "checklist")).toHaveLength(1);
+    });
+
     it("writes and reads descriptions on exercises and blocks", async () => {
       const user = "user_connector_descriptions";
       const text = "Hold it still.\n- Shoulders down";

@@ -3,7 +3,7 @@ import {
   exerciseKinds,
   gripsTogether,
   isBuiltInGrip,
-  workoutKindOf,
+  workoutKindOfItems,
   type Workout,
   type WorkoutKind,
 } from "@sendtally/core/hang";
@@ -24,11 +24,7 @@ export async function withDerivedKind(
   const fallback = body.kind ?? saved ?? "other";
   const { isGrip, kindIn } = await kindLookup(db, userId);
   const items = gripsTogether(body.items, isGrip);
-  const kind = workoutKindOf(
-    items.map((i) => i.exercise),
-    kindIn,
-    fallback
-  );
+  const kind = workoutKindOfItems(items, kindIn, fallback);
   const exerciseRestS = body.exerciseRestS ?? defaultExerciseRestS(kind);
   return { workout: { ...body, items, kind, exerciseRestS }, isGrip };
 }

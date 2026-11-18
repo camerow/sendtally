@@ -4,6 +4,7 @@ import type { PlanChange } from "@sendtally/core/hang";
 import { z } from "zod";
 import { type AppEnv, invalidBody, postAfterResponse } from "./context";
 import { activitiesQuery, activityBody, activityOf } from "./lib/activities";
+import { maybeOlderChecklist, withWorkoutChecklists } from "./lib/checklists";
 import { hangPartOf } from "./lib/hang";
 import {
   exerciseBody,
@@ -55,7 +56,15 @@ export const activities = new Hono<AppEnv>()
       const userId = c.get("userId");
       await repo.ensureUser(c.env.DB, userId);
       const existing = await repo.getActivity(c.env.DB, userId, id);
-      const body = c.req.valid("json");
+      const sent = c.req.valid("json");
+      const ran =
+        sent.workoutId !== null && sent.done.some(maybeOlderChecklist)
+          ? await repo.getWorkout(c.env.DB, userId, sent.workoutId)
+          : undefined;
+      const body =
+        ran === undefined
+          ? sent
+          : { ...sent, done: withWorkoutChecklists(sent.done, workoutOf(ran).items) };
       const { activity, part } = await repo.saveActivity(c.env.DB, userId, id, body);
       if (existing === null || existing.strava_activity_id !== null) {
         postAfterResponse(c, id, () => syncActivityToStrava(c.env, userId, id));

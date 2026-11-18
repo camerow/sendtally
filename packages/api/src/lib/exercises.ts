@@ -2,6 +2,7 @@ import {
   EXERCISE_KINDS,
   EXERCISE_MEASURES,
   EXERCISE_PROGRESS,
+  isChecklist,
   measureOf,
   type ExerciseKind,
   type ExerciseMeasure,
@@ -58,7 +59,7 @@ export function workoutExercises(
   const kind = exerciseKindOf(w.kind);
   if (kind === null) return [];
   return w.items
-    .filter((i) => !isGrip(i.exercise))
+    .filter((i) => !isGrip(i.exercise) && !isChecklist(i))
     .map((i) => ({
       name: i.exercise.trim(),
       kind,
