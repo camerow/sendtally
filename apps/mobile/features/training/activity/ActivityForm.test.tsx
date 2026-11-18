@@ -35,6 +35,10 @@ jest.mock("@sendtally/features/workouts", () => ({
   useWorkoutActions: () => mockWorkouts,
 }));
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
+jest.mock("@sendtally/features/hang", () => ({
+  ...jest.requireActual<object>("@sendtally/features/hang"),
+  useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),
+}));
 jest.mock("@sendtally/features/statistics", () => ({
   useExercises: () => ({
     state: {

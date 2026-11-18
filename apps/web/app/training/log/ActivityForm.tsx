@@ -1,3 +1,4 @@
+import { useGrips } from "@sendtally/features/hang";
 import { tallyMeasuresOf } from "@sendtally/features/exercises";
 import { useExercises } from "@sendtally/features/statistics";
 import React from "react";
@@ -90,6 +91,7 @@ export function ActivityForm({
   gripName = (id) => id,
 }: ActivityFormProps): React.ReactElement {
   const api = useAppApi();
+  const { isGrip } = useGrips(api);
   const navigate = useNavigate();
   const back = useGoBack("/app");
   const toast = useToast();
@@ -109,7 +111,11 @@ export function ActivityForm({
   const [grips, setGrips] = React.useState(() => part && { done: part.done, setup: part.setup });
   const items = itemsOf(draft.done);
   const exercises = useExercises(api).state;
-  const measureOf = tallyMeasuresOf(exercises.status === "ready" ? exercises.data : [], draft.kind);
+  const measureOf = tallyMeasuresOf(
+    exercises.status === "ready" ? exercises.data : [],
+    draft.kind,
+    isGrip
+  );
   const note = idleNote(idleEnd, draft.minutes);
   const name = draft.title.trim() || kindLabel(draft.kind);
   const look = hang === undefined ? draft.kind : "hangboard";

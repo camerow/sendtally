@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router";
 import type { ActivityDraft } from "@sendtally/features/activities";
 import type * as Activities from "@sendtally/features/activities";
 import type * as Workouts from "@sendtally/features/workouts";
+import type * as T_hang from "@sendtally/features/hang";
 import { ToastProvider } from "../../components/Toast";
 import { liveRunOf } from "../../lib/useLiveRun";
 import { WithHang } from "../data/testHang";
@@ -31,6 +32,10 @@ vi.mock("@sendtally/features/statistics", () => ({
       data: [{ name: "Circuit laps", kind: "climbing", measure: "laps", eachSide: false }],
     },
   }),
+}));
+vi.mock("@sendtally/features/hang", async (actual) => ({
+  ...(await actual<typeof T_hang>()),
+  useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),
 }));
 vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));

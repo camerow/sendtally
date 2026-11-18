@@ -45,7 +45,7 @@ export function useWorkoutStart(
     date,
     planned,
     eachSideOf(exercises.data),
-    tallyMeasuresOf(exercises.data, workout.kind),
+    tallyMeasuresOf(exercises.data, workout.kind, isGrip),
     isGrip
   );
   if (start.open === "liveSession") {

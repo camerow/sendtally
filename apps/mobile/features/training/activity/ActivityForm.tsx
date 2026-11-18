@@ -1,3 +1,4 @@
+import { useGrips } from "@sendtally/features/hang";
 import { tallyMeasuresOf } from "@sendtally/features/exercises";
 import { useExercises } from "@sendtally/features/statistics";
 import { randomUUID } from "expo-crypto";
@@ -121,6 +122,7 @@ export function ActivityForm({
   gripName = (id) => id,
 }: ActivityFormProps): React.ReactElement {
   const api = useApi();
+  const { isGrip } = useGrips(api);
   const actions = useActivityActions(api, reportFailure);
   const [draft, setDraft] = React.useState(initial);
   const [removed, setRemoved] = React.useState<{ message: string; undo: () => void } | null>(null);
@@ -210,7 +212,11 @@ export function ActivityForm({
   );
   const activities = useActivities(api).state;
   const exercises = useExercises(api).state;
-  const measureOf = tallyMeasuresOf(exercises.status === "ready" ? exercises.data : [], draft.kind);
+  const measureOf = tallyMeasuresOf(
+    exercises.status === "ready" ? exercises.data : [],
+    draft.kind,
+    isGrip
+  );
   // A lift reads against what the last run lifted wherever the workout sets no weight, as the player does.
   const previous = (exercise: string): SetDone[] =>
     draft.kind === "strength" && draft.workoutId !== null && activities.status === "ready"

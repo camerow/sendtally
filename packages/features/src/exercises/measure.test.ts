@@ -6,14 +6,22 @@ const library = [
   { name: "Squat", kind: "strength", measure: "repsWeight" },
 ] as const;
 
+const noGrip = (): boolean => false;
+
 describe("tallyMeasuresOf", () => {
   it("reads a known exercise by its measure, in any case", () => {
-    expect(tallyMeasuresOf(library, "climbing")("circuit")).toBe("wallTime");
-    expect(tallyMeasuresOf(library, "strength")("Squat")).toBeNull();
+    expect(tallyMeasuresOf(library, "climbing", noGrip)("circuit")).toBe("wallTime");
+    expect(tallyMeasuresOf(library, "strength", noGrip)("Squat")).toBeNull();
   });
 
   it("logs climbs for an exercise the library does not know, only in a climbing workout", () => {
-    expect(tallyMeasuresOf(library, "climbing")("Hard Boulders")).toBe("climbs");
-    expect(tallyMeasuresOf(library, "strength")("Hard Boulders")).toBeNull();
+    expect(tallyMeasuresOf(library, "climbing", noGrip)("Hard Boulders")).toBe("climbs");
+    expect(tallyMeasuresOf(library, "strength", noGrip)("Hard Boulders")).toBeNull();
+  });
+
+  it("never logs a grip on the tally, though the library does not know it", () => {
+    const isGrip = (name: string): boolean => name === "half";
+    expect(tallyMeasuresOf(library, "climbing", isGrip)("half")).toBeNull();
+    expect(tallyMeasuresOf(library, "climbing", isGrip)("Hard Boulders")).toBe("climbs");
   });
 });
