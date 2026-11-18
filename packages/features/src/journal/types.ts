@@ -92,7 +92,6 @@ export type LogFilter = {
   search: string;
 };
 
-/** What the Log reads besides its rows to match them: the climbs in each session, the parts, the plan and the names of places. */
 export type LogContext = {
   climbs: readonly ClimbSummary[];
   sessions: readonly SessionWithClimbs[];
@@ -107,5 +106,4 @@ export type LogView =
   | { kind: "dated"; items: LogItem[]; climbing: ReadonlyMap<string, ClimbingSessionVM> }
   | { kind: "climbs"; log: ClimbLogVM };
 
-/** One active filter under the bar, and the filter left once it is dropped. */
 export type LogPill = { key: string; label: string; without: LogFilter };

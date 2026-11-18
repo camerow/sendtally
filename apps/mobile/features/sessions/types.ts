@@ -15,5 +15,4 @@ export type LogEmptyAction = Pick<MenuRowProps, "icon" | "title" | "onPress" | "
   key: string;
 };
 
-/** A row of the Log: a log item, or one climb in the per-climb list. */
 export type LogRow = LogItem | { type: "climb"; key: string; row: ClimbLogRowVM };

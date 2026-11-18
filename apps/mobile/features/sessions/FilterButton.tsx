@@ -2,16 +2,15 @@ import React from "react";
 import { Pressable, View } from "react-native";
 import { colors, radius } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { Icon, type IconName } from "./Icon";
-import { press } from "../lib/press";
+import { Icon, type IconName } from "../../components/Icon";
+import { press } from "../../lib/press";
 
 export const FILTER_BAR_HEIGHT = 44;
 
 export type FilterButtonProps = {
   active: boolean;
   onPress: () => void;
-  /** A magnifier before the funnel, when the bar can be searched. */
-  onSearch?: () => void;
+  onSearch: () => void;
 };
 
 function RoundButton({
@@ -56,20 +55,18 @@ export function FilterButton({ active, onPress, onSearch }: FilterButtonProps): 
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
-        paddingLeft: onSearch === undefined ? 4 : 6,
+        paddingLeft: 6,
         paddingRight: 10,
         borderLeftWidth: 1,
         borderLeftColor: colors.lineOnLightSoft,
       }}
     >
-      {onSearch !== undefined && (
-        <RoundButton
-          icon="search"
-          label={t("sessions.searchLog")}
-          active={false}
-          onPress={onSearch}
-        />
-      )}
+      <RoundButton
+        icon="search"
+        label={t("sessions.searchLog")}
+        active={false}
+        onPress={onSearch}
+      />
       <RoundButton icon="funnel" label={t("common.filters")} active={active} onPress={onPress} />
     </View>
   );

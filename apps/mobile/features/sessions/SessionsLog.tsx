@@ -41,7 +41,6 @@ import { useSetupDismissed } from "../../lib/setupPrompt";
 import { useGyms } from "@sendtally/features/gyms";
 import { useTrainingLog } from "@sendtally/features/training";
 
-/** The one Log, newest first, narrowed by search and the filter sheet; a Stats link sets its Workout filter. */
 export function SessionsLog({ workout = null }: { workout?: string | null }): React.ReactElement {
   const api = useApi();
   const log = useQueryPair(queries.sessions(api), queries.entries(api));

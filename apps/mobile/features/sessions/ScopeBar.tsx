@@ -5,10 +5,8 @@ import { Icon } from "../../components/Icon";
 import type { ScopeItem } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { FILTER_BAR_HEIGHT, FilterButton } from "../../components/FilterButton";
+import { FILTER_BAR_HEIGHT, FilterButton } from "./FilterButton";
 import { press } from "../../lib/press";
-
-export const SCOPE_BAR_HEIGHT = FILTER_BAR_HEIGHT;
 
 function ScopeChip({
   item,
@@ -75,7 +73,7 @@ export type ScopeBarProps = {
 };
 
 const barFrame = {
-  height: SCOPE_BAR_HEIGHT,
+  height: FILTER_BAR_HEIGHT,
   flexDirection: "row",
   alignItems: "center",
   backgroundColor: colors.white,

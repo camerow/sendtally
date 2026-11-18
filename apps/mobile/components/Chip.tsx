@@ -15,7 +15,6 @@ export type ChipProps = {
   /** Members-only: drawn dashed with a lock, still pressable so the press can explain itself. */
   locked?: boolean;
   icon?: IconName;
-  /** A mark before the label, such as a kind's. */
   leading?: React.ReactNode;
   onPress: () => void;
 };

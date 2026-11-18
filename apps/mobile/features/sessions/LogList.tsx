@@ -98,7 +98,6 @@ function sectionsOf(view: LogView | null): { sections: Section[]; scope: ScopeIt
 export type LogListProps = {
   view: LogView | null;
   header: React.ReactNode;
-  /** Under the bar: the active filters. */
   below: React.ReactNode;
   empty: React.ReactNode;
   filtersActive: boolean;
@@ -107,7 +106,6 @@ export type LogListProps = {
   onRefresh: () => Promise<void>;
 };
 
-/** The Log by month, newest first, or one row per climb, under the bar that jumps, searches and filters it. */
 export function LogList({
   view,
   header,

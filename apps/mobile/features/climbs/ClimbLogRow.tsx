@@ -8,7 +8,6 @@ import { pressRow } from "../../lib/press";
 import { ClimbPill } from "./ClimbPill";
 import { GradeBadge } from "./GradeBadge";
 
-/** A climb row's height, under a session or on its own. */
 export const CLIMB_ROW_HEIGHT = 60;
 
 export type ClimbLogRowProps = {

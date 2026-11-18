@@ -10,7 +10,6 @@ import { DayColumn } from "./SessionRowParts";
 /** The day column and its gap, so a nested climb lines up under the session's title. */
 const NEST = 46;
 
-/** How tall the rows are: the session's own, unless it is bare, and its climbs under it. */
 export function climbingSessionRowsHeight(
   session: SessionRowData,
   vm: ClimbingSessionVM | undefined,

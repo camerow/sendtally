@@ -61,7 +61,6 @@ const label = {
   color: colors.textMuted,
 } as const;
 
-/** What the sheet offers to pick from, beyond the fixed choices. */
 export type FilterChoices = {
   years: readonly number[];
   tags: readonly TagOption[];
@@ -138,31 +137,28 @@ function Picker({
 }): React.ReactElement {
   const picked = options.find((o) => o.key === value);
   return (
-    <Field title={title}>
-      <SelectRow label={title} value={picked?.name ?? any} muted={picked === undefined}>
-        {(close) =>
-          [{ key: null, name: any }, ...options].map((o) => (
-            <OptionRow
-              key={o.key ?? "any"}
-              label={o.name}
-              mono={false}
-              selected={o.key === (picked?.key ?? null)}
-              onPress={() => {
-                onPick(o.key);
-                close();
-              }}
-            />
-          ))
-        }
-      </SelectRow>
-    </Field>
+    <SelectRow label={title} value={picked?.name ?? any} muted={picked === undefined}>
+      {(close) =>
+        [{ key: null, name: any }, ...options].map((o) => (
+          <OptionRow
+            key={o.key ?? "any"}
+            label={o.name}
+            mono={false}
+            selected={o.key === (picked?.key ?? null)}
+            onPress={() => {
+              onPick(o.key);
+              close();
+            }}
+          />
+        ))
+      }
+    </SelectRow>
   );
 }
 
 const toggled = <T,>(list: readonly T[], value: T): T[] =>
   list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 
-/** Every filter the Log has: shared ones first, then a group per type, then the plan. */
 export function FilterSheet({
   visible,
   items,
@@ -174,13 +170,12 @@ export function FilterSheet({
 }: FilterSheetProps): React.ReactElement {
   const [draft, setDraft] = React.useState<LogFilter>(filter);
 
-  // The sheet stays mounted so the Modal can animate, so opening it is what
-  // resets the draft back to what the screen is actually filtered by.
   const [wasVisible, setWasVisible] = React.useState(visible);
-  if (visible !== wasVisible) {
+  const resetDraftOnOpen = (): void => {
     setWasVisible(visible);
     if (visible) setDraft(filter);
-  }
+  };
+  if (visible !== wasVisible) resetDraftOnOpen();
 
   const set = (patch: Partial<LogFilter>): void => setDraft((d) => updateLogFilter(d, patch));
   const shown = React.useMemo(
@@ -346,29 +341,13 @@ export function FilterSheet({
                     />
                   ))}
                 </Chips>
-                <SelectRow
-                  label={t("climbs.where")}
-                  value={
-                    choices.places.find((p) => p.key === draft.place)?.name ??
-                    t("sessions.anyPlace")
-                  }
-                  muted={draft.place === null}
-                >
-                  {(close) =>
-                    [{ key: null, name: t("sessions.anyPlace") }, ...choices.places].map((p) => (
-                      <OptionRow
-                        key={p.key ?? "any"}
-                        label={p.name}
-                        mono={false}
-                        selected={p.key === draft.place}
-                        onPress={() => {
-                          set({ place: p.key });
-                          close();
-                        }}
-                      />
-                    ))
-                  }
-                </SelectRow>
+                <Picker
+                  title={t("climbs.where")}
+                  any={t("sessions.anyPlace")}
+                  value={draft.place}
+                  options={choices.places}
+                  onPick={(place) => set({ place })}
+                />
               </View>
             </Field>
           </>
@@ -390,31 +369,37 @@ export function FilterSheet({
                 ))}
               </Chips>
             </Field>
-            <Picker
-              title={t("sessions.exercise")}
-              any={t("sessions.anyExercise")}
-              value={draft.exercise}
-              options={choices.exercises}
-              onPick={(exercise) => set({ exercise })}
-            />
+            <Field title={t("sessions.exercise")}>
+              <Picker
+                title={t("sessions.exercise")}
+                any={t("sessions.anyExercise")}
+                value={draft.exercise}
+                options={choices.exercises}
+                onPick={(exercise) => set({ exercise })}
+              />
+            </Field>
           </>
         )}
 
         <GroupHeading title={t("sessions.fromYourPlan")} />
-        <Picker
-          title={t("plan.block")}
-          any={t("sessions.anyBlock")}
-          value={draft.block}
-          options={choices.blocks}
-          onPick={(block) => set({ block })}
-        />
-        <Picker
-          title={t("plan.workout")}
-          any={t("sessions.anyWorkout")}
-          value={draft.workout}
-          options={choices.workouts}
-          onPick={(workout) => set({ workout })}
-        />
+        <Field title={t("plan.block")}>
+          <Picker
+            title={t("plan.block")}
+            any={t("sessions.anyBlock")}
+            value={draft.block}
+            options={choices.blocks}
+            onPick={(block) => set({ block })}
+          />
+        </Field>
+        <Field title={t("plan.workout")}>
+          <Picker
+            title={t("plan.workout")}
+            any={t("sessions.anyWorkout")}
+            value={draft.workout}
+            options={choices.workouts}
+            onPick={(workout) => set({ workout })}
+          />
+        </Field>
         <Field title={t("focus.label")}>
           <Chips>
             {FOCI.map((focus) => (

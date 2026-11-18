@@ -18,9 +18,7 @@ export {
 } from "./types";
 export {
   NO_LOG_FILTER,
-  effortLabel,
   filterLog,
-  isFlatLog,
   logExerciseOptions,
   logFilterActive,
   logFilterPills,
@@ -29,10 +27,8 @@ export {
   logPlaceOptions,
   logRowTypeLabel,
   logWorkoutOptions,
-  outcomeLabel,
   showsType,
   updateLogFilter,
-  type LogNames,
   type LogOption,
 } from "./logFilter";
 export {

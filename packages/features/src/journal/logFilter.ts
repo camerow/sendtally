@@ -61,13 +61,11 @@ const cleared = (filter: LogFilter, keys: readonly (keyof LogFilter)[]): LogFilt
 const groupKeys = (type: LogRowType): readonly (keyof LogFilter)[] =>
   type === "climbing" ? CLIMBING_KEYS : type === "training" ? TRAINING_KEYS : [];
 
-export const isFlatLog = (filter: LogFilter): boolean =>
-  filter.grade !== null || filter.outcome !== "all";
+const isFlatLog = (filter: LogFilter): boolean => filter.grade !== null || filter.outcome !== "all";
 
 export const logFilterActive = (filter: LogFilter): boolean =>
   narrows(filter, Object.keys(NO_LOG_FILTER) as (keyof LogFilter)[]);
 
-/** A type's group shows unless Show is narrowed and leaves it out. */
 export const showsType = (filter: LogFilter, type: LogRowType): boolean =>
   filter.show.length === 0 || filter.show.includes(type);
 
@@ -92,7 +90,7 @@ export function updateLogFilter(filter: LogFilter, patch: Partial<LogFilter>): L
   return lit.length === 0 ? next : { ...next, show: [...next.show, ...lit] };
 }
 
-export function rowTypeOf(item: LogItem): LogRowType {
+function rowTypeOf(item: LogItem): LogRowType {
   if (item.type === "session") return "climbing";
   if (item.type === "entry") return item.entry.kind;
   return "training";
@@ -137,8 +135,7 @@ function categoryOf(item: LogItem): WorkoutKind | null {
   return item.type === "activity" ? item.activity.kind : null;
 }
 
-/** Every exercise a row ran by its name, a workout's fingerboard grips included. */
-export function exercisesOf(item: LogItem, ctx: LogContext): string[] {
+function exercisesOf(item: LogItem, ctx: LogContext): string[] {
   if (item.type === "hang") {
     return [hangGripLabel(item.hang), ...item.hang.done.map((d) => d.exercise)].filter(
       (name): name is string => name !== null
@@ -201,7 +198,6 @@ function passesWhere(session: SessionRow, filter: LogFilter): boolean {
 const includes = (text: string | null | undefined, q: string): boolean =>
   (text ?? "").toLowerCase().includes(q);
 
-/** What a row says of itself, for search: names, places, its block, tags and exercises. */
 function ownText(item: LogItem, ctx: LogContext): string[] {
   const base = [item.blockTag ?? null, ...item.tags.map((tag) => tag.name)];
   if (item.type === "session") {
@@ -374,10 +370,9 @@ const SHOW_LABELS: Record<LogRowType, () => string> = {
 
 export const logRowTypeLabel = (type: LogRowType): string => SHOW_LABELS[type]();
 
-export const effortLabel = ({ lo, hi }: { lo: number; hi: number }): string =>
+const effortLabel = ({ lo, hi }: { lo: number; hi: number }): string =>
   lo === hi ? `RPE ${lo}` : `RPE ${lo}-${hi}`;
 
-/** The names the pills read for what a filter holds by id. */
 export type LogNames = {
   tag: (slug: string) => string;
   place: (id: string) => string;
@@ -448,7 +443,7 @@ const OUTCOME_KEYS = {
   notYet: "sessionDetail.notYet",
 } as const;
 
-export const outcomeLabel = (outcome: Exclude<LogFilter["outcome"], "all">): string =>
+const outcomeLabel = (outcome: Exclude<LogFilter["outcome"], "all">): string =>
   t(OUTCOME_KEYS[outcome]);
 
 export type LogOption = { key: string; name: string };
@@ -458,7 +453,6 @@ const distinct = (options: LogOption[]): LogOption[] =>
     a.name.localeCompare(b.name)
   );
 
-/** Every exercise the rows ran, keyed as the Exercise filter holds it. */
 export function logExerciseOptions(items: readonly LogItem[], ctx: LogContext): LogOption[] {
   return distinct(
     items.flatMap((item) =>
@@ -467,7 +461,6 @@ export function logExerciseOptions(items: readonly LogItem[], ctx: LogContext): 
   );
 }
 
-/** Every workout the rows ran, sessions run from a plan included, named by the rows or `name`. */
 export function logWorkoutOptions(
   items: readonly LogItem[],
   ctx: LogContext,
@@ -483,7 +476,6 @@ export function logWorkoutOptions(
   );
 }
 
-/** The gyms and crags the climbing sessions were at. */
 export function logPlaceOptions(items: readonly LogItem[], ctx: LogContext): LogOption[] {
   return distinct(
     items.flatMap((item) => {
@@ -495,7 +487,6 @@ export function logPlaceOptions(items: readonly LogItem[], ctx: LogContext): Log
   );
 }
 
-/** How many climbs each outcome holds under everything else the filter sets. */
 export function logOutcomeCounts(
   items: readonly LogItem[],
   filter: LogFilter,
@@ -506,7 +497,6 @@ export function logOutcomeCounts(
   return flatClimbs(items, { ...filter, outcome: "all" }, ctx, withClimbs, now).counts;
 }
 
-/** What the sheet's button says it will show. */
 export function logViewCountLabel(view: LogView): string {
   if (view.kind === "dated") return logCountLabel(flatLog(view.items));
   const count = view.log.groups.reduce((n, g) => n + g.rows.length, 0);
