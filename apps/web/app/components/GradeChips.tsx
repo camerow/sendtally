@@ -34,7 +34,7 @@ export function GradeChips({
   return (
     <div
       ref={row}
-      className={dark ? "grade-chips grade-chips--dark" : "grade-chips"}
+      className={dark ? "grade-chips grade-chips--dark chip-row" : "grade-chips chip-row"}
       role="radiogroup"
       aria-label={label}
     >

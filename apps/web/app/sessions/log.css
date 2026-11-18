@@ -86,14 +86,7 @@
 }
 
 .climbing-chips {
-  display: flex;
   gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.climbing-chips::-webkit-scrollbar {
-  display: none;
 }
 
 .climbing-error {
@@ -516,11 +509,6 @@
   .log-page-head .log-menu-wrap--header {
     display: none;
   }
-
-  .climbing-chips {
-    margin: 0 -18px;
-    padding: 0 18px;
-  }
 }
 
 .log-segments {
@@ -539,18 +527,23 @@
   border-bottom: 1px solid var(--line-on-light-soft);
 }
 
-.scope-strip {
+.scope-strip.chip-row {
   flex: 1;
   min-width: 0;
-  display: flex;
+  margin-right: 0;
   align-items: center;
   gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
-.scope-strip::-webkit-scrollbar {
-  display: none;
+@media (max-width: 767px) {
+  .scope-bar {
+    margin-inline: calc(-1 * var(--app-gutter));
+    padding-right: var(--app-gutter);
+  }
+
+  .scope-strip.chip-row {
+    margin-left: 0;
+  }
 }
 
 .scope-chip {

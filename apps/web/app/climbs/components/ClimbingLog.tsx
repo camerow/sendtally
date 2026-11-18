@@ -112,7 +112,7 @@ export function ClimbingLog({ items }: { items: LogItem[] }): React.ReactElement
               spellCheck={false}
             />
           </label>
-          <div className="climbing-chips">
+          <div className="climbing-chips chip-row">
             <FilterChip
               label={grade === null ? t("climbs.anyGrade") : gradeFilterLabel(grade)}
               active={grade !== null}

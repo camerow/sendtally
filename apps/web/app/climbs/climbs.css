@@ -211,16 +211,6 @@
   min-height: 44px;
 }
 
-@media (max-width: 767px) {
-  .add-climb-grade-chips {
-    margin: 0 -18px;
-  }
-
-  .add-climb-grade-chips .grade-chips {
-    padding: 0 18px;
-  }
-}
-
 .grade-badge {
   min-width: 52px;
   height: 36px;
