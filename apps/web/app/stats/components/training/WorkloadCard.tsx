@@ -8,25 +8,10 @@ import {
   type WorkloadVM,
   type WorkloadWeeks,
 } from "@sendtally/features/statistics";
-import { Icon } from "../../../components/Icon";
 import { Segmented } from "../../../components/Segmented";
+import { CardRow } from "./CardRow";
 import { WorkloadChart } from "./WorkloadChart";
 import { WorkloadSheet } from "./WorkloadSheet";
-
-function Row({
-  children,
-  onClick,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-}): React.ReactElement {
-  return (
-    <button type="button" className="workload-row" onClick={onClick}>
-      <span className="workload-mono">{children}</span>
-      <Icon name="chevron" size={16} />
-    </button>
-  );
-}
 
 function Weeks({ days }: { days: number }): React.ReactElement {
   return (
@@ -102,7 +87,7 @@ export function WorkloadCard({
         </>
       ) : null}
       <div>
-        <Row onClick={() => setOpen(true)}>
+        <CardRow onClick={() => setOpen(true)}>
           {t("statistics.workloadLast7")} <b>{w.acute}</b>
           {average === null ? null : (
             <>
@@ -110,8 +95,8 @@ export function WorkloadCard({
               <b>{average}</b>
             </>
           )}
-        </Row>
-        {w.leftOutLine !== null && <Row onClick={() => setOpen(true)}>{w.leftOutLine}</Row>}
+        </CardRow>
+        {w.leftOutLine !== null && <CardRow onClick={() => setOpen(true)}>{w.leftOutLine}</CardRow>}
       </div>
       <WorkloadSheet workload={w} open={open} onClose={() => setOpen(false)} />
     </section>

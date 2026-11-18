@@ -213,13 +213,26 @@ const why = (noEffort: boolean, noTime: boolean): string => t(WHY[missingOf(noEf
 const noEffort = (d: Done): boolean => d.rpe === null;
 const noTime = (d: Done): boolean => d.minutes <= 0;
 
-function leftOutLine(left: readonly Done[]): string | null {
+/** "2 not counted in the last 7 days: no effort or time", under `key` for another window. */
+export function leftOutLine(
+  left: readonly Done[],
+  key: "statistics.workloadLeftOut" | "statistics.loadLeftOut" = "statistics.workloadLeftOut"
+): string | null {
   if (left.length === 0) return null;
   const reason = why(left.some(noEffort), left.some(noTime));
-  return t("statistics.workloadLeftOut", {
-    count: left.length,
-    why: reason.replace(/ /g, "\u00a0"),
-  });
+  return t(key, { count: left.length, why: reason.replace(/ /g, "\u00a0") });
+}
+
+/** The records left out, newest first, each saying what it lacks; dated with its year outside `today`'s. */
+export function leftOutRows(done: readonly Done[], today: number): WorkloadLeftOutVM[] {
+  return done
+    .filter((d) => loadOf(d) === null)
+    .sort((a, b) => b.at - a.at)
+    .map((d) => ({
+      ref: d.ref,
+      missing: missingOf(noEffort(d), noTime(d)),
+      detail: `${shortDay(d.at, yearOfMs(d.at) !== yearOfMs(today))} · ${why(noEffort(d), noTime(d))}`,
+    }));
 }
 
 function tiles(w: Workload, today: number): WorkloadTileVM[] {
@@ -323,11 +336,7 @@ export function workloadVM(done: readonly Done[], weeks: WorkloadWeeks, now: Dat
       })),
       averageAt: w.chronic / top,
       averageLabel: load(w.chronic),
-      leftOut: left.map((d) => ({
-        ref: d.ref,
-        missing: missingOf(noEffort(d), noTime(d)),
-        detail: `${shortDay(d.at)} · ${why(noEffort(d), noTime(d))}`,
-      })),
+      leftOut: leftOutRows(left, today),
     },
   };
 }

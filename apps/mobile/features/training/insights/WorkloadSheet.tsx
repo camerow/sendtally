@@ -1,28 +1,16 @@
-import { router } from "expo-router";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import Svg, { Line } from "react-native-svg";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import type { WorkloadLeftOutVM, WorkloadTileVM, WorkloadVM } from "@sendtally/features/statistics";
+import type { WorkloadTileVM, WorkloadVM } from "@sendtally/features/statistics";
 import { Sheet } from "../../../components/Sheet";
-import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
+import { NotCountedRows } from "./NotCountedRows";
 import { type } from "../type";
 
 const BAR = 82;
 const GUTTER = 44;
-
-function open({ ref, missing }: WorkloadLeftOutVM): void {
-  if (ref.type === "activity") router.push({ pathname: "/activity/[id]", params: { id: ref.id } });
-  else if (missing === "effort")
-    router.push({ pathname: "/session/[fingerprint]", params: { fingerprint: ref.id } });
-  else
-    router.push({
-      pathname: "/session/[fingerprint]/edit",
-      params: { fingerprint: ref.id, field: "duration" },
-    });
-}
 
 function Tile({ label, value, note, counted }: WorkloadTileVM): React.ReactElement {
   return (
@@ -168,39 +156,11 @@ export function WorkloadSheet({
               gap: 2,
             }}
           >
-            <Label color={colors.textSecondary} small>
-              {t("statistics.workloadNotCounted")}
-            </Label>
-            {s.leftOut.map((l) => (
-              <Pressable
-                key={`${l.ref.type}${l.ref.id}`}
-                accessibilityRole="button"
-                onPress={() => {
-                  onClose();
-                  open(l);
-                }}
-                style={pressRow({
-                  minHeight: 44,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 10,
-                })}
-              >
-                <Text
-                  style={[type.body, { flex: 1, fontSize: 14.5, color: colors.gunmetal }]}
-                  numberOfLines={1}
-                >
-                  {l.ref.name}
-                </Text>
-                <Text
-                  style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}
-                >{`${l.detail} ›`}</Text>
-              </Pressable>
-            ))}
-            <Text style={[type.mono, { fontSize: 11.5, color: colors.textSecondary }]}>
-              {t("statistics.workloadOpensRecord")}
-            </Text>
+            <NotCountedRows
+              label={t("statistics.workloadNotCounted")}
+              rows={s.leftOut}
+              onOpen={onClose}
+            />
           </View>
         )}
       </View>

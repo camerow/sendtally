@@ -202,6 +202,24 @@ describe("trainingInsightsVM", () => {
     });
   });
 
+  it("draws Load from the same kinds as the rest of the tab", () => {
+    const climbingOnly = trainingInsightsVM(log, "1m", ["climbing"], grip, NOW).load;
+    const everything = trainingInsightsVM(log, "1m", TRAINED_KINDS, grip, NOW).load;
+    const total = (bars: { value: number }[]): number => bars.reduce((n, b) => n + b.value, 0);
+    expect(total(climbingOnly.bars)).toBe(7 * 90 + 5 * 90);
+    expect(climbingOnly.headline).toBe("540");
+    expect(climbingOnly.leftOutLine?.replace(/\u00a0/g, " ")).toBe(
+      "1 not counted in this range: no effort"
+    );
+    expect(climbingOnly.bars.map((b) => b.readout.split(" · ")[1])).toEqual([
+      "0 sessions",
+      "0 sessions",
+      "1 session",
+      "2 sessions",
+    ]);
+    expect(total(everything.bars)).toBeGreaterThan(total(climbingOnly.bars));
+  });
+
   it("shows climbing alone with training off", () => {
     const vm = trainingInsightsVM(log, "1m", ["climbing"], grip, NOW);
     expect(vm.sessions).toBe(3);
