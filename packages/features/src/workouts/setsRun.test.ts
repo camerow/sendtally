@@ -93,4 +93,10 @@ describe("the exercise counter beside a checklist", () => {
     expect(exercisePosition([0], 0, list)).toBeNull();
     expect(exercisePosition([], -1, list)).toBeNull();
   });
+
+  it("reads past an exercise already behind it from a checklist, still counting it", () => {
+    const list = (k: number): boolean => k === 0;
+    const behind = (k: number): boolean => k === 1 || k === 2;
+    expect(exercisePosition([0, 1, 2, 3], 0, list, behind)).toEqual({ at: 3, of: 3 });
+  });
 });

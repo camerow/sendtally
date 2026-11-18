@@ -83,16 +83,20 @@ export const holdShort = (target: SetDone, done: SetDone, ticked: boolean): bool
 
 /**
  * "Exercise 2 of 3" over the cards in their order, counting exercises only: on a checklist it
- * reads the exercise after it. None when the run holds no exercise.
+ * reads the next exercise after it not already behind the run. None when the run holds no
+ * exercise.
  */
 export function exercisePosition(
   order: readonly number[],
   on: number,
-  isChecklist: (item: number) => boolean
+  isChecklist: (item: number) => boolean,
+  behind: (item: number) => boolean = () => false
 ): { at: number; of: number } | null {
   const exercises = order.filter((k) => !isChecklist(k));
   if (exercises.length === 0) return null;
   const from = Math.max(0, order.indexOf(on));
-  const shown = order.slice(from).find((k) => !isChecklist(k)) ?? exercises[exercises.length - 1];
+  const after = order.slice(from).filter((k) => !isChecklist(k));
+  const shown =
+    (isChecklist(on) ? after.find((k) => !behind(k)) : after[0]) ?? exercises[exercises.length - 1];
   return { at: Math.max(0, exercises.indexOf(shown ?? -1)) + 1, of: exercises.length };
 }

@@ -471,7 +471,8 @@ export function useSetsPlayer({
         (focused === null && climbAt !== null && next !== null
           ? (cards.order.find((k) => k === climbAt || k === next.item) ?? -1)
           : (current?.item ?? climbAt ?? -1)),
-      (k) => items[k]?.checklist !== undefined
+      (k) => items[k]?.checklist !== undefined,
+      (k) => inPart(k) && !partOpen
     ),
     rest,
     hold,
