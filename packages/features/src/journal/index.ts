@@ -94,3 +94,4 @@ export {
 } from "./trips";
 export { useEntryDetail, useLogRows, type EntryDetailData, type LogRows } from "./useEntryDetail";
 export { useEntryComposer, type EntryComposer } from "./useEntryComposer";
+export { logFilterFromParams, writeLogFilterParams } from "./logFilterParams";
