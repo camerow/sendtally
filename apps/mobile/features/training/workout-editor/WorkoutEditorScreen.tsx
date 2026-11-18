@@ -24,6 +24,9 @@ import {
   workoutMinutes,
   type WorkoutDraft,
   type WorkoutLibrary,
+  pickingForSuperset,
+  type EditorPicking,
+  editorBlockAt,
 } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -50,7 +53,6 @@ import {
   withSupersetWithNext,
   withEditorMoved,
   canAddToGroup,
-  canSupersetWithNext,
   withUngrouped,
   useDerivedKindDraft,
   withEditorIds,
@@ -123,9 +125,7 @@ function Editor({
   const estimate = estimatedMinutes(state);
   const [untouched] = React.useState(initial);
   const release = useDiscardGuard(state !== untouched);
-  const [picking, setPicking] = React.useState<{ swap: number } | { group: string } | "add" | null>(
-    null
-  );
+  const [picking, setPicking] = React.useState<EditorPicking | null>(null);
   const exerciseNamed = (name: string) =>
     exercises.status === "ready"
       ? exercises.data.find((e) => exerciseKey(e.name) === exerciseKey(name))
@@ -230,13 +230,9 @@ function Editor({
           />
           {state.items.map((item, i) => {
             const g = item.group;
-            if (g !== undefined && state.items[i - 1]?.group?.id === g.id) return null;
-            const members =
-              g === undefined
-                ? []
-                : state.items.flatMap((m, at) => (m.group?.id === g.id ? [at] : []));
-            const last = members[members.length - 1] ?? i;
-            const offer = canSupersetWithNext(state, last, kindIn);
+            const block = editorBlockAt(state, i, kindIn);
+            if (block === null) return null;
+            const { members, last, offer } = block;
             return (
               <React.Fragment key={item.id ?? i}>
                 {i > 0 && (
@@ -334,7 +330,7 @@ function Editor({
         <ExercisePickerSheet
           items={state.items}
           multi={picking === "add" || "group" in picking}
-          superset={picking !== "add" && "group" in picking}
+          superset={pickingForSuperset(state, picking)}
           onPick={(list) => {
             remember(list);
             setState((s) =>
@@ -346,7 +342,8 @@ function Editor({
                       s,
                       picking.swap,
                       list[0] ?? { exercise: "", kind: s.kind },
-                      isGrip
+                      isGrip,
+                      kindIn
                     )
             );
           }}

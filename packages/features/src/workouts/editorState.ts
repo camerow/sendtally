@@ -84,17 +84,27 @@ export const withExerciseSwapped = (
   s: WorkoutDraft,
   at: number,
   { exercise, kind, measure }: Picked,
-  isGrip: IsGrip = byKind(s)
-): WorkoutDraft => ({
-  ...s,
-  items: s.items.map((x, i) =>
-    i !== at
-      ? x
-      : (kind === "hangboard" ? !isGrip(x.exercise) || !fitsGrip(x, measure) : isGrip(x.exercise))
-        ? { ...x, exercise, doses: [newDoseFor(kind, measure)] }
-        : { ...x, exercise }
-  ),
-});
+  isGrip: IsGrip = byKind(s),
+  kindOf: KindOf = () => undefined
+): WorkoutDraft =>
+  settled(
+    s,
+    s.items.map((x, i) =>
+      i !== at
+        ? x
+        : (kind === "hangboard" ? !isGrip(x.exercise) || !fitsGrip(x, measure) : isGrip(x.exercise))
+          ? { ...x, exercise, doses: [newDoseFor(kind, measure)] }
+          : { ...x, exercise }
+    ),
+    (e) => (e === exercise ? kind : kindOf(e))
+  );
+
+/** What the editor's picker is open for: adding, swapping the item at a place, or a superset. */
+export type EditorPicking = "add" | { swap: number } | { group: string };
+
+/** Whether the picker offers only what can be in a superset: adding to one, or swapping a member. */
+export const pickingForSuperset = (s: WorkoutDraft, picking: EditorPicking): boolean =>
+  picking !== "add" && ("group" in picking || s.items[picking.swap]?.group !== undefined);
 
 /** A checklist at the end, its first line ready to type. */
 export const withChecklistAdded = (s: WorkoutDraft, newId: () => string): WorkoutDraft => ({
@@ -374,4 +384,22 @@ export function withAddedToGroup(
     })
   );
   return settled(s, [...s.items.slice(0, last + 1), ...added, ...s.items.slice(last + 1)], kindOf);
+}
+
+/**
+ * The editor's block that starts at `at`: a superset's members from its first, or the item on
+ * its own; null for a member below the first. `offer` says whether its gap offers "Superset with
+ * next".
+ */
+export function editorBlockAt(
+  s: WorkoutDraft,
+  at: number,
+  kindOf: KindOf
+): { members: number[]; last: number; offer: boolean } | null {
+  const g = s.items[at]?.group;
+  if (g !== undefined && s.items[at - 1]?.group?.id === g.id) return null;
+  const members =
+    g === undefined ? [] : s.items.flatMap((m, i) => (m.group?.id === g.id ? [i] : []));
+  const last = members[members.length - 1] ?? at;
+  return { members, last, offer: canSupersetWithNext(s, last, kindOf) };
 }

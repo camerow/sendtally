@@ -220,24 +220,7 @@ export function SetsScreen({
           },
         ]
       : []),
-    {
-      icon: "trash",
-      title: t("workouts.removeShort"),
-      danger: true,
-      onPress: () =>
-        Alert.alert(
-          t("workouts.removeExercise", { name: nameOf(i) }),
-          t("workouts.removeFromRunBody"),
-          [
-            { text: t("common.cancel"), style: "cancel" },
-            {
-              text: t("workouts.removeShort"),
-              style: "destructive",
-              onPress: () => player.remove(i),
-            },
-          ]
-        ),
-    },
+    removeRow(i, t("workouts.removeShort")),
   ];
 
   return (
@@ -266,6 +249,26 @@ export function SetsScreen({
               const item = items[i];
               const d = shown.find((x) => x.item === i);
               if (item === undefined || d === undefined) return null;
+              if (part !== null && part.places.includes(i))
+                return (
+                  i === part.places[0] && (
+                    <React.Fragment key={i}>
+                      <FingersCard
+                        part={part}
+                        unit={unit}
+                        gripName={grips.gripName}
+                        onStart={() =>
+                          router.push({
+                            pathname: "/workout/timer",
+                            params: { workoutId: run.workoutId, gripId: item.exercise, part: "1" },
+                          })
+                        }
+                        onRemoved={(message, undo) => setRemoved({ message, undo })}
+                      />
+                      {at < order.length - 1 && restBetween(i)}
+                    </React.Fragment>
+                  )
+                );
               const g = player.groups.find((x) => x.members.includes(i));
               if (g !== undefined) {
                 if (g.members[0] !== i) return null;
@@ -316,26 +319,6 @@ export function SetsScreen({
               const climbItem = player.climbing(i);
               const skipped = player.skipped(i);
               const between = at < order.length - 1 && restBetween(i);
-              if (part !== null && part.places.includes(i))
-                return (
-                  i === part.places[0] && (
-                    <React.Fragment key={i}>
-                      <FingersCard
-                        part={part}
-                        unit={unit}
-                        gripName={grips.gripName}
-                        onStart={() =>
-                          router.push({
-                            pathname: "/workout/timer",
-                            params: { workoutId: run.workoutId, gripId: item.exercise, part: "1" },
-                          })
-                        }
-                        onRemoved={(message, undo) => setRemoved({ message, undo })}
-                      />
-                      {between}
-                    </React.Fragment>
-                  )
-                );
               if (climbItem !== null) {
                 const about = exerciseAbout(mine, item.exercise, nameOf(i));
                 const card = player.folded(i) ? (

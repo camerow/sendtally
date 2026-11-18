@@ -26,6 +26,8 @@ import {
   canAddToGroup,
   withEditorMoved,
   withUngrouped,
+  pickingForSuperset,
+  editorBlockAt,
 } from "./editorState";
 
 const squat = { exercise: "Back squat", doses: [{ sets: 5, reps: 5 }] };
@@ -251,6 +253,39 @@ describe("a superset in the editor", () => {
     expect(
       withSupersetWithNext(grouped, 1, () => "g2", kindOf).items.map((i) => i.group?.id)
     ).toEqual(["g1", "g1", "g1"]);
+  });
+
+  it("swaps a member only for what can be in a superset, and a grip swapped in anyway leaves the group", () => {
+    expect(pickingForSuperset(grouped, { swap: 1 })).toBe(true);
+    expect(pickingForSuperset(grouped, { swap: 2 })).toBe(false);
+    expect(pickingForSuperset(grouped, { group: "g1" })).toBe(true);
+    expect(pickingForSuperset(grouped, "add")).toBe(false);
+    const swapped = withExerciseSwapped(
+      grouped,
+      1,
+      { exercise: "half", kind: "hangboard" },
+      (e) => e === "half",
+      kindOf
+    );
+    expect(swapped.items.map((i) => [i.exercise, i.group?.id])).toEqual([
+      ["Pull-ups", undefined],
+      ["half", undefined],
+      ["Plank", undefined],
+    ]);
+    const kept = withExerciseSwapped(
+      grouped,
+      1,
+      { exercise: "Dips", kind: "strength" },
+      () => false,
+      kindOf
+    );
+    expect(kept.items.map((i) => i.group?.id)).toEqual(["g1", "g1", undefined]);
+  });
+
+  it("draws a superset as one block from its first member, and offers the next superset below its last", () => {
+    expect(editorBlockAt(grouped, 0, kindOf)).toEqual({ members: [0, 1], last: 1, offer: true });
+    expect(editorBlockAt(grouped, 1, kindOf)).toBeNull();
+    expect(editorBlockAt(grouped, 2, kindOf)).toEqual({ members: [], last: 2, offer: false });
   });
 
   it("rests two minutes after each round when the workout rests none between exercises", () => {
