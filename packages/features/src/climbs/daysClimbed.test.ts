@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { daysClimbed } from "./daysClimbed";
 
-const NOW = new Date("2026-10-28T12:00:00.000Z");
+const NOW = new Date("2026-10-28T12:00:00");
 
 const at = (start_at: string, location: "indoor" | "outdoor" | null) => ({ start_at, location });
 

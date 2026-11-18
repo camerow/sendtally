@@ -3,7 +3,7 @@ import { DAY_MS } from "../trends/buckets";
 import type { Done } from "./insights";
 import { loadPlot, loadVM } from "./loadView";
 
-const now = new Date(Date.UTC(2026, 10, 16, 20) + new Date().getTimezoneOffset() * 60_000);
+const now = new Date(2026, 10, 16, 20);
 const today = Date.UTC(2026, 10, 16);
 const rec = (days: number, rpe: number | null = 6, minutes = 60, name = `r${days}`): Done => ({
   ref: { type: "activity", id: name, name },
@@ -159,7 +159,7 @@ describe("loadVM edges", () => {
   });
 
   it("reads a month only two days in as the last 7 days, so an even history stays even", () => {
-    const dec2 = new Date(Date.UTC(2026, 11, 2, 20) + new Date().getTimezoneOffset() * 60_000);
+    const dec2 = new Date(2026, 11, 2, 20);
     const even = Array.from({ length: 185 }, (_, i) => ({
       ...rec(0, 6, 60, `e${i}`),
       at: Date.UTC(2026, 11, 2, 18) - i * DAY_MS,
