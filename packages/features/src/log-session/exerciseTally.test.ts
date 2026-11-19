@@ -119,7 +119,10 @@ describe("exercise tally", () => {
       { grade: "V5", scale: "v", tries: 3, sent: true, style: "redpoint" },
       { grade: "V6", scale: "v", tries: 1, sent: false },
     ]);
-    expect(withClimbFlipped(draft, second).climbs[1]).toMatchObject({ kind: "send", style: "flash" });
+    expect(withClimbFlipped(draft, second).climbs[1]).toMatchObject({
+      kind: "send",
+      style: "flash",
+    });
     expect(draft.climbs.map((c) => [c.item, c.set])).toEqual([
       [0, 1],
       [0, 1],

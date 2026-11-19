@@ -82,7 +82,11 @@ export function withSetClimbAdded(draft: LogSessionDraft, choice: TallyChoice): 
 }
 
 /** A climb's attempts, at least one, its send style following them. */
-export function withClimbTries(draft: LogSessionDraft, key: string, tries: number): LogSessionDraft {
+export function withClimbTries(
+  draft: LogSessionDraft,
+  key: string,
+  tries: number
+): LogSessionDraft {
   return { ...draft, climbs: draft.climbs.map((c) => (c.key === key ? withTries(c, tries) : c)) };
 }
 

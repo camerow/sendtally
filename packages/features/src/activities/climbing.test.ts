@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { SetClimb, SetDone } from "@sendtally/core/hang";
-import { climbingDoseLine, climbingLastTime, climbLine, climbsLine, wallChip, wallLine } from "./climbing";
+import {
+  climbingDoseLine,
+  climbingLastTime,
+  climbLine,
+  climbsLine,
+  wallChip,
+  wallLine,
+} from "./climbing";
 import { setChip, setText } from "./done";
 import { exerciseResults, seriesPoint } from "./summary";
 import { exerciseSeries } from "../statistics/exercises";
