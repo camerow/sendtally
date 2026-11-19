@@ -108,7 +108,10 @@ export function hangRunDone(
     off: held.flatMap((sets, item) =>
       sets.flatMap((s, set) => (s === null ? [setKeyOf(item, set)] : []))
     ),
-    setups,
+    setups: setups.map((setup, item) => {
+      const last = loads?.[item]?.at(-1);
+      return last === undefined ? setup : { ...setup, loadKg: last };
+    }),
     startedAt: run.startedAt,
   };
 }

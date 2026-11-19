@@ -169,6 +169,7 @@ describe("set loads", () => {
       loads: secondOnly,
     });
     expect(done.done[0]?.sets.map((s) => s.weightKg)).toEqual([6, 7]);
+    expect(done.setups).toEqual([{ edgeMm: 20, loadKg: 7 }]);
   });
 });
 

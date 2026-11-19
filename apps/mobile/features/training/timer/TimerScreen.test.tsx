@@ -198,7 +198,7 @@ describe("Timer", () => {
     await advance(200);
     const { params, run } = reviewed();
     expect(params).toMatchObject({ membershipId: "m1", week: "1", session: "0" });
-    expect(run.setups).toEqual([{ edgeMm: 15, loadKg: 8 }]);
+    expect(run.setups).toEqual([{ edgeMm: 15, loadKg: 8.5 }]);
     expect(run.done[0]?.sets.map((s) => s.weightKg)).toEqual([8.5, 8.5, 8.5]);
   });
 
