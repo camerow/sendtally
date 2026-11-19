@@ -90,11 +90,6 @@ export function withClimbTries(
   return { ...draft, climbs: draft.climbs.map((c) => (c.key === key ? withTries(c, tries) : c)) };
 }
 
-export const withoutClimb = (draft: LogSessionDraft, key: string): LogSessionDraft => ({
-  ...draft,
-  climbs: draft.climbs.filter((c) => c.key !== key),
-});
-
 /** A climb just logged joins the exercise's item and the set being climbed. */
 export function withExerciseClimb(draft: LogSessionDraft, key: string): LogSessionDraft {
   const ex = draft.exercise;

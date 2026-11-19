@@ -129,6 +129,7 @@ export function ClimbCard({
                 onPress={tally.endSet}
                 variant="link"
                 height={40}
+                style={{ paddingRight: 0 }}
               />
             ) : (
               row.state === "done" && (
