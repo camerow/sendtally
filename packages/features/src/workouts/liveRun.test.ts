@@ -5,6 +5,7 @@ import {
   holdCues,
   liveRunStore,
   liveRunSummary,
+  liveRunWhere,
   parseLiveRun,
   type LiveRun,
   type RunState,
@@ -43,6 +44,22 @@ describe("a live run", () => {
     expect(parseLiveRun(JSON.stringify({ ...stored, lastTickAt: 5 }))?.lastTickAt).toBe(5);
     expect(parseLiveRun(JSON.stringify({ ...stored, lastTickAt: "5" }))).toEqual(stored);
     expect(parseLiveRun(JSON.stringify({ ...stored, lastTickAt: null }))).toEqual(stored);
+  });
+
+  it("splits an exercise's name from its set, so a bar can shorten the name alone", () => {
+    const state: RunState = {
+      player: "sets",
+      done: [{ item: 0, exercise: "Couch stretch, each side", sets: [{ onS: 60 }] }],
+      ticked: [],
+    };
+    expect(liveRunWhere(live(state))).toEqual({
+      name: "Couch stretch, each side",
+      where: "Set 1 of 1",
+    });
+    expect(liveRunWhere(live({ player: "timer", run }))).toEqual({
+      name: null,
+      where: "Set 1 of 5 · Hang",
+    });
   });
 
   it("names a checklist's next open line, not a set", () => {
