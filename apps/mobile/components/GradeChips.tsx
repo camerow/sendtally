@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, ScrollView, Text } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { press } from "../lib/press";
 
@@ -55,7 +55,9 @@ export function GradeChips({
             style={press({
               minWidth: CHIP,
               height: light ? 44 : CHIP,
-              paddingHorizontal: plain ? 10 : 0,
+              flexDirection: "row",
+              gap: 5,
+              paddingHorizontal: plain || light ? 10 : 0,
               borderRadius: light ? 12 : 14,
               alignItems: "center",
               justifyContent: "center",
@@ -68,7 +70,19 @@ export function GradeChips({
               borderColor: on ? colors.gold : plain ? "transparent" : "rgba(255,255,255,0.25)",
             })}
           >
-            {plain && (
+            {light && !plain && (
+              <View
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 5,
+                  backgroundColor: chip.colour,
+                  borderWidth: 1,
+                  borderColor: colors.lineOnLightStrong,
+                }}
+              />
+            )}
+            {(plain || light) && (
               <Text
                 style={{
                   fontFamily: fonts.monoSemiBold,

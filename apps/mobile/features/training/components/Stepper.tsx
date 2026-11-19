@@ -18,7 +18,7 @@ export type StepperProps = {
   | { text: string; label: string }
 );
 
-/** − / number box / + under the box's label, for a number stepped more often than typed. */
+/** − / number box / + under the box's label, for a number stepped more often than typed; compact, the buttons match the box. */
 export function Stepper({
   onStep,
   decreaseLabel,
@@ -27,15 +27,16 @@ export function Stepper({
   ...field
 }: StepperProps): React.ReactElement {
   const ink = surface === "dark" ? ON_DARK : colors.gunmetal;
+  const size = "compact" in field && field.compact === true ? 36 : 46;
   const step = (direction: 1 | -1, a11y: string, glyph: string): React.ReactElement => (
     <Pressable
       onPress={() => onStep(direction)}
       accessibilityRole="button"
       accessibilityLabel={a11y}
       style={press({
-        width: 46,
-        height: 46,
-        borderRadius: 23,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
         borderWidth: 1,
         borderColor: surface === "dark" ? ON_DARK_LINE : colors.lineOnLightStrong,
         backgroundColor: surface === "card" ? colors.white : undefined,
