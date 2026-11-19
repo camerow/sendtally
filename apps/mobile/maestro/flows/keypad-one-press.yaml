@@ -3,7 +3,7 @@ name: keypad-one-press
 # With the keypad open on one set field, one press on another field moves the keypad there, in
 # the same row and in another row. On Android a clear scrim under the keypad sheet used to take
 # that press and only close the keypad. The step key tells the fields apart: reps step by 1,
-# a weight by 5.
+# a weight by 5. Android reads a field as its label and value, so the labels match as prefixes.
 ---
 - runFlow: ../helpers/open-dev-client.yaml
 - runFlow: ../helpers/ensure-signed-in.yaml
@@ -16,11 +16,11 @@ name: keypad-one-press
     direction: DOWN
 - tapOn: ".*5x5 strength.*"
 - tapOn: "Start"
-- tapOn: "Back squat, set 1 · Reps"
+- tapOn: "Back squat, set 1 · Reps.*"
 - assertVisible: "Subtract 1"
-- tapOn: "Back squat, set 1 · Weight"
+- tapOn: "Back squat, set 1 · Weight.*"
 - assertVisible: "Subtract 5"
-- tapOn: "Back squat, set 2 · Reps"
+- tapOn: "Back squat, set 2 · Reps.*"
 - assertVisible: "Subtract 1"
 - tapOn: "Done"
 - tapOn: "Finish"
