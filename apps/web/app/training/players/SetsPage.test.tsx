@@ -388,10 +388,7 @@ describe("Sets player", () => {
     expect(container.querySelector(".player-target")?.textContent).toBe(
       "Exercise 2 of 3 · Target effort 8"
     );
-    expect(container.querySelector(".player-row-next [aria-hidden]")?.textContent).toBe("Row");
-    expect(container.querySelector(".player-row-next .visually-hidden")?.textContent).toBe(
-      "Next: Row"
-    );
+    expect(container.querySelector(".player-row-next")).toBeNull();
     act(() => (byLabel(folded) as HTMLButtonElement).click());
     expect(byLabel("Back squat, set 1")).not.toBeNull();
     act(() => (byLabel("Fold Back squat") as HTMLButtonElement).click());
