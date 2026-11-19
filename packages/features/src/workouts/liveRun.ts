@@ -6,6 +6,7 @@ import type { FingersPart } from "./fingersPart";
 import { COUNT_IN_S, SWITCH_S, type Hold } from "./holdClock";
 import type { Rest } from "./restCountdown";
 import type { RunCards } from "./runCards";
+import { readWorkoutRun } from "./runParams";
 
 /** Where a player is: the timer's run, or the sets and items ticked so far. */
 export type RunState =
@@ -135,8 +136,11 @@ export function liveRunStore(storage: RunStorage, tally: { remove: () => void })
   };
 }
 
-/** Where the run is, for the live bar: "Set 2 of 5 · Hang", "Ring row · Set 1 of 3", "2 of 5 done". */
-export function liveRunSummary({ state }: LiveRun): string {
+/**
+ * Where the run is, for the live bar: "Set 2 of 5 · Hang", "Ring row · Set 1 of 3", a checklist's
+ * next open line, "2 of 5 done".
+ */
+export function liveRunSummary({ state, params }: LiveRun): string {
   if (state.player === "timer") {
     const { set } = currentPhase(state.run);
     const sets = { set, sets: state.run.sets };
@@ -156,10 +160,13 @@ export function liveRunSummary({ state }: LiveRun): string {
   const order = state.cards?.order ?? state.done.map((d) => d.item);
   const grips = state.grips ?? [];
   const over = [...state.ticked, ...(state.climbed ?? [])];
+  const lines = readWorkoutRun(params)?.items;
   for (const d of order.flatMap((key) =>
     state.done.filter((x) => x.item === key && !grips.includes(x.item))
   )) {
     const set = d.sets.findIndex((_, s) => !over.includes(`${d.item}:${s}`));
+    const line = set === -1 ? undefined : lines?.[d.item]?.checklist?.lines[set];
+    if (line !== undefined) return line;
     if (set !== -1)
       return `${exerciseName(d.exercise)} · ${t("hang.setOf", { set: set + 1, sets: d.sets.length })}`;
   }
