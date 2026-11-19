@@ -49,6 +49,7 @@ export const plan = {
   "plan.changesWeeks": "ändert {weeks}",
   "plan.colEdge": "Leiste",
   "plan.colHangs": "Hangs",
+  "plan.colHeld": "Gehalten",
   "plan.colReps": "Wdh.",
   "plan.colRest": "Pause",
   "plan.colSetRest": "Satzpause",

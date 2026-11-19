@@ -20,6 +20,8 @@ export type SetDoneFieldsProps = {
   label: string;
   /** A hangboard set: its hangs typed, its hang time read, as the timer measured it. */
   hangs?: boolean;
+  /** A hangboard set of one hang: its count field is the time held, empty when it did not hold. */
+  oneHang?: boolean;
   /** Fell short of its target: the count it fell short on reads amber. */
   short?: boolean;
   /** In place of the hold field: ▶ to time it. */
@@ -60,6 +62,7 @@ export function SetDoneFields({
   unit,
   label,
   hangs = false,
+  oneHang = false,
   short = false,
   slot: column,
   loadSlot,
@@ -90,7 +93,15 @@ export function SetDoneFields({
           {
             key: "reps",
             mark: "",
-            field: (
+            field: oneHang ? (
+              <TimeField
+                {...(column ?? slot("reps"))}
+                {...named(t("plan.colHeld"))}
+                placeholder="–"
+                value={set.reps === 0 ? 0 : (set.onS ?? 0)}
+                onChange={(onS) => onChange({ ...set, reps: onS > 0 ? 1 : 0, onS })}
+              />
+            ) : (
               <NumberField
                 {...(hangs && column !== undefined ? column : slot("reps"))}
                 {...named(hangs ? t("plan.colHangs") : t("workouts.dose.reps"))}
