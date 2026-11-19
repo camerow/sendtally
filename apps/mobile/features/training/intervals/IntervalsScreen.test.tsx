@@ -20,6 +20,7 @@ const workout: IntervalsRun = {
   date: "2026-10-22",
   workoutId: "w1",
   link: { membershipId: "m1", week: 2, focus: null },
+  session: 0,
   body: {
     rounds: 1,
     steps: [
@@ -100,6 +101,7 @@ describe("Intervals player", () => {
         title: "Hip mobility flow",
         date: "2026-10-22",
         workoutId: "w1",
+        session: "0",
         minutes: "1",
         membershipId: "m1",
         week: "2",

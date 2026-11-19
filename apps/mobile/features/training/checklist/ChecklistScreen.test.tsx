@@ -23,6 +23,7 @@ const run: WorkoutRun = {
   date: "2026-10-22",
   workoutId: "w2",
   link: { membershipId: null, week: null, focus: null },
+  session: 0,
   minutes: 12,
   exerciseRestS: 60,
   items: [
@@ -70,6 +71,7 @@ describe("Checklist player", () => {
         title: "Morning mobility",
         date: "2026-10-22",
         workoutId: "w2",
+        session: "0",
         minutes: "4",
         done: JSON.stringify([
           { item: 0, exercise: "Cat-cow", sets: [{}, {}] },

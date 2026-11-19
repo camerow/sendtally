@@ -8,6 +8,7 @@ const params = runParams({
   date: "2026-11-16",
   workoutId: "w1",
   link: { membershipId: null, week: null, focus: null },
+  session: 0,
   minutes: null,
   exerciseRestS: 0,
   items: [{ exercise: "Plank", dose: { sets: 2, onS: 30 } }],

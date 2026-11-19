@@ -34,6 +34,7 @@ const runOf = (exercise: string, dose: Dose): WorkoutRun => ({
   date: "2026-11-17",
   workoutId: "w1",
   link: { membershipId: null, week: null, focus: null },
+  session: 0,
   minutes: 60,
   exerciseRestS: 0,
   items: [{ exercise, dose }],

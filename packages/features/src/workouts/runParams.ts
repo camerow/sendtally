@@ -22,6 +22,8 @@ export type WorkoutRun = {
   date: CalendarDate;
   workoutId: string;
   link: PlanLink;
+  /** How many sessions of the workout came before this one: which dose each item takes. */
+  session: number;
   /** What the workout says it takes, if it says. */
   minutes: number | null;
   /** The rest between one item and the next; none at zero. */
@@ -37,6 +39,8 @@ export type IntervalsRun = {
   /** The library workout it runs, if any. */
   workoutId: string | null;
   link: PlanLink;
+  /** How many sessions of the workout came before this one: which dose each item takes. */
+  session: number;
   body: Intervals;
 };
 
@@ -58,7 +62,9 @@ export type DoneParams = {
 export type RunFinish = { done: ItemDone[]; off: string[]; lastTickAt?: number };
 
 /** What the activity a run logs is filed under. */
-export type RunFiling = Pick<WorkoutRun, "kind" | "title" | "link"> & { workoutId: string | null };
+export type RunFiling = Pick<WorkoutRun, "kind" | "title" | "link" | "session"> & {
+  workoutId: string | null;
+};
 
 /** Route or search params as a router hands them over. */
 export type RawParams = Partial<Record<string, string | string[]>>;
@@ -92,6 +98,7 @@ export const runParams = (r: WorkoutRun): Record<string, string> => ({
   ...(r.exerciseRestS > 0 ? { exerciseRestS: String(r.exerciseRestS) } : {}),
   ...minutesParam(r.minutes),
   ...planLinkParams(r.link),
+  session: String(r.session),
 });
 
 const isItem = (v: unknown): v is SessionItem => {
@@ -120,6 +127,7 @@ export function readWorkoutRun(p: RawParams): WorkoutRun | null {
     date: str(p.date),
     workoutId: str(p.workoutId),
     link: readPlanLink(p),
+    session: readSession(p),
     minutes: count(str(p.minutes)),
     exerciseRestS: count(str(p.exerciseRestS)) ?? 0,
     items,
@@ -143,6 +151,7 @@ export function activityFormParams(
     ...(r.workoutId === null ? {} : { workoutId: r.workoutId }),
     ...minutesParam(r.minutes),
     ...planLinkParams(r.link),
+    session: String(r.session),
     ...(done === undefined ? {} : { done: JSON.stringify(done) }),
     ...(startTime === undefined ? {} : { startTime }),
     ...(off.length === 0 ? {} : { off: JSON.stringify(off) }),
@@ -202,6 +211,7 @@ export const intervalsParams = (r: IntervalsRun): Record<string, string> => ({
   body: JSON.stringify(r.body),
   ...(r.workoutId === null ? {} : { workoutId: r.workoutId }),
   ...planLinkParams(r.link),
+  session: String(r.session),
 });
 
 const parseBody = (text: string): Intervals | null => {
@@ -221,6 +231,7 @@ export function readIntervalsParams(p: RawParams): IntervalsRun | null {
     date: str(p.date),
     workoutId: str(p.workoutId) || null,
     link: readPlanLink(p),
+    session: readSession(p),
     body,
   };
 }

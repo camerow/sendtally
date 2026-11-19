@@ -20,6 +20,7 @@ const run: WorkoutRun = {
   date: "2026-11-18",
   workoutId: "w1",
   link: { membershipId: null, week: null, focus: null },
+  session: 0,
   minutes: 30,
   exerciseRestS: 90,
   items: [
