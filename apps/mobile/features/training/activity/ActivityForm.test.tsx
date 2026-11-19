@@ -491,6 +491,21 @@ describe("Log activity", () => {
     expect(screen.getByLabelText("Rows, set 1 · RPE")).toBeTruthy();
   });
 
+  it("selects a set by pressing its row, and a press off the rows unselects it", async () => {
+    const done = [{ item: 0, exercise: "Dips", sets: [{ reps: 8 }, { reps: 8 }] }];
+    const initial = newActivityDraft(
+      { kind: "strength", workoutId: "w8", done: JSON.stringify(done), off: "[]" },
+      "2026-11-19"
+    );
+    await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet live />);
+    const row = screen.getAllByTestId("review-set")[0];
+    if (row === undefined) throw new Error("no set row");
+    await fireEvent.press(within(row).getByText("1"));
+    expect(screen.getByLabelText("Remove set 1")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("review-body"));
+    expect(screen.queryByLabelText("Remove set 1")).toBeNull();
+  });
+
   it("asks Focus only of an activity with no workout, and saves Log it with the workout's focus", async () => {
     await render(
       <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={null} />
