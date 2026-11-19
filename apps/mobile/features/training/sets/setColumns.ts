@@ -1,3 +1,4 @@
+import type { SetDone } from "@sendtally/core/hang";
 import type { ViewStyle } from "react-native";
 
 /**
@@ -15,3 +16,7 @@ export const SET_COLUMNS = {
   rpeRead: { width: 58, alignItems: "flex-end" },
   tick: { width: 44, height: 44, alignItems: "flex-end", justifyContent: "center" },
 } satisfies Record<string, ViewStyle>;
+
+/** Sets that are holds and nothing else, whose one column is the hold. */
+export const holdsOnly = (sets: readonly SetDone[]): boolean =>
+  sets.length > 0 && sets.every((s) => s.onS !== undefined && s.reps === undefined);

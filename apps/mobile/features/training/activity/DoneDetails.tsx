@@ -24,8 +24,8 @@ import { ExerciseHead } from "../sets/ExerciseHead";
 import { RpeField } from "../sets/RpeField";
 import { SetDoneFields } from "../sets/SetDoneFields";
 import { SetHeadings } from "../sets/SetHeadings";
-import { holdsOnly } from "../sets/holdsOnly";
 import { SetRow } from "../sets/SetRow";
+import { holdsOnly } from "../sets/setColumns";
 import { type } from "../type";
 
 export type DoneDetailsProps = {
