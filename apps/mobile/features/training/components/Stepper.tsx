@@ -31,6 +31,7 @@ export function Stepper({
   const step = (direction: 1 | -1, a11y: string, glyph: string): React.ReactElement => (
     <Pressable
       onPress={() => onStep(direction)}
+      hitSlop={size === 36 ? 4 : undefined}
       accessibilityRole="button"
       accessibilityLabel={a11y}
       style={press({
