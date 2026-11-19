@@ -5,7 +5,7 @@ import {
   withRpe,
   changeSet,
   cleanDone,
-  doneSummary,
+  checklistsLine,
   exerciseNames,
   keptSets,
   offWithout,
@@ -19,20 +19,10 @@ import {
   removeSet,
   setChip,
   setText,
+  setReadText,
 } from "./done";
 
 describe("done", () => {
-  it("counts the items and sets done, or nothing when none were", () => {
-    expect(
-      doneSummary([
-        { item: 0, exercise: "Squat", sets: [{ reps: 5 }, { reps: 5 }] },
-        { item: 1, exercise: "Plank", sets: [{ onS: 60 }] },
-        { item: 2, exercise: "Dips", sets: [] },
-      ])
-    ).toBe("2 exercises · 3 sets");
-    expect(doneSummary([{ item: 0, exercise: "Dips", sets: [] }])).toBeNull();
-  });
-
   it("describes a set by what it has", () => {
     expect(setText({ reps: 5, weightKg: 100 }, "kg")).toBe("5 × 100 kg");
     expect(setText({ onS: 30 }, "kg")).toBe("30s");
@@ -186,17 +176,17 @@ describe("a checklist in the review", () => {
     expect(keptSets(two, [])).toHaveLength(1);
     expect(keptSets(none, [])).toEqual([]);
   });
-  it("says how much of a checklist was ticked in the log row, beside the exercises", () => {
+  it("says how much of a checklist was ticked", () => {
     const squat = { item: 1, exercise: "Back squat", sets: [{ reps: 5 }, { reps: 5 }] };
-    expect(doneSummary([list, squat])).toBe("Checklist · 1 of 3 · 1 exercise · 2 sets");
-    expect(doneSummary([list])).toBe("Checklist · 1 of 3");
+    expect(checklistsLine([list, squat])).toBe("Checklist · 1 of 3");
+    expect(checklistsLine([squat])).toBeNull();
     const cool = {
       item: 2,
       exercise: "Checklist",
       sets: [],
       checklist: { lines: ["Hang", "Stretch"], checked: [0, 1] },
     };
-    expect(doneSummary([list, squat, cool])).toBe("Checklist · 3 of 5 · 1 exercise · 2 sets");
+    expect(checklistsLine([list, squat, cool])).toBe("Checklist · 3 of 5");
   });
   it("runs again as a workout with its checklist whole, beside each exercise's first set", () => {
     const squat = { item: 1, exercise: "Back squat", sets: [{ reps: 5 }, { reps: 5 }] };
@@ -208,5 +198,13 @@ describe("a checklist in the review", () => {
   it("never offers a checklist as an exercise name", () => {
     const squat = { item: 1, exercise: "Back squat", sets: [{ reps: 5 }] };
     expect(exerciseNames([{ done: [list, squat] }])).toEqual(["Back squat"]);
+  });
+});
+
+describe("a set read on the finished workout", () => {
+  it("gives every number its word", () => {
+    expect(setReadText({ reps: 2, weightKg: 100 }, "kg")).toBe("2 reps × 100 kg");
+    expect(setReadText({ reps: 1 }, "kg")).toBe("1 rep");
+    expect(setReadText({ reps: 5, onS: 45, rpe: 8 }, "kg")).toBe("5 reps · 45s");
   });
 });

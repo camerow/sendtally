@@ -1,31 +1,33 @@
-import { router } from "expo-router";
 import React from "react";
-import { kindLabel } from "@sendtally/features/activities";
+import { Text } from "react-native";
 import type { ActivityRecord, HangPart } from "@sendtally/api-client";
+import type { WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import {
-  exerciseResults,
+  effortTile,
   hangGrids,
-  pastSessions,
+  isClimbingSets,
+  kindLabel,
+  setReadText,
   type ActivityActions,
 } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import { exerciseKey, type ExerciseSeries } from "@sendtally/features/statistics";
+import { useExercises } from "@sendtally/features/statistics";
 import { type TrainingLog, KIND_LOOK } from "@sendtally/features/training";
-import type { WeightUnit } from "@sendtally/core/hang";
-import { Label } from "../components/Label";
-import { HistoryList } from "../history/HistoryList";
-import { activityItem } from "@sendtally/features/activities";
-import { ExerciseResultCard } from "./ExerciseResultCard";
+import { supersetHeadAt } from "@sendtally/features/workouts";
+import { ClimbSetsRead } from "../climbing/ClimbSetsRead";
+import { EffortMark } from "../components/EffortMark";
+import { useApi } from "../../../lib/api";
+import { openExerciseHistory } from "../exercises/openExerciseHistory";
+import { ExerciseBlock } from "../sets/ExerciseBlock";
+import { ExerciseHead } from "../sets/ExerciseHead";
+import { SetRow } from "../sets/SetRow";
+import { type } from "../type";
 import { HangResultCard } from "./HangResultCard";
-import { OverTime } from "./OverTime";
 import { SummaryFrame } from "./SummaryFrame";
-import { effortTile } from "@sendtally/features/activities";
 
 export type ActivitySummaryProps = {
   activity: ActivityRecord;
-  activities: readonly ActivityRecord[];
-  series: readonly ExerciseSeries[];
   log: TrainingLog;
   unit: WeightUnit;
   actions: ActivityActions;
@@ -34,24 +36,20 @@ export type ActivitySummaryProps = {
 };
 
 /**
- * A finished strength, mobility or other workout: its fingerboard part grip by grip, each other
- * exercise, over time, and its past sessions.
+ * A finished strength, mobility or other workout: its length and RPE, its fingerboard part grip
+ * by grip, and each exercise as done, a superset's members under its label.
  */
 export function ActivitySummary({
   activity,
-  activities,
-  series,
   log,
   unit,
   actions,
   part,
 }: ActivitySummaryProps): React.ReactElement {
-  const results = exerciseResults(activity, activities);
+  const exercises = useExercises(useApi()).state;
+  const mine = exercises.status === "ready" ? exercises.data : null;
   const grids = part === undefined ? [] : hangGrids(part.session);
-  const done = results.map((r) => exerciseKey(r.exercise));
-  const trends = done.flatMap((key) => series.filter((s) => s.key === key && s.untracked !== true));
-  const sets =
-    results.reduce((n, r) => n + r.sets.length, 0) + grids.reduce((n, g) => n + g.rows.length, 0);
+  const done = activity.done.filter((d) => d.sets.length > 0);
   const target = activity.workoutId === null ? null : log.workout(activity.workoutId);
   return (
     <SummaryFrame
@@ -61,16 +59,10 @@ export function ActivitySummary({
       tiles={[
         { value: t("hang.minutes", { n: activity.minutes }), label: t("summary.length") },
         effortTile(activity.rpe, target?.targetRpe ?? null),
-        { value: String(sets), label: t("summary.sets") },
       ]}
       target={{ kind: "activity", record: activity }}
       onDelete={() => void actions.deleteActivity(activity.id)}
     >
-      {results.length + grids.length > 0 && (
-        <Label color={colors.textSecondary} style={{ paddingTop: 4 }}>
-          {t("summary.whatYouDid")}
-        </Label>
-      )}
       {grids.map((grid, i) => (
         <HangResultCard
           key={i}
@@ -79,14 +71,50 @@ export function ActivitySummary({
           unit={unit}
         />
       ))}
-      {results.map((r) => (
-        <ExerciseResultCard key={r.exercise} result={r} unit={unit} />
-      ))}
-      <OverTime series={trends} activityId={activity.id} done={activity.done} unit={unit} />
-      <HistoryList
-        items={pastSessions(activity, activities).map((a) => activityItem(a, unit, activity.id))}
-        onOpen={(id) => router.push({ pathname: "/activity/[id]", params: { id } })}
-      />
+      {done.map((d, i) => {
+        const head = supersetHeadAt(done, i);
+        const history = openExerciseHistory(mine, d.exercise);
+        const rated = d.sets.some((set) => set.rpe !== undefined);
+        return (
+          <React.Fragment key={`${d.item}-${d.exercise}`}>
+            {head !== null && (
+              <Text
+                style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal, paddingTop: 4 }]}
+              >
+                {head}
+              </Text>
+            )}
+            <ExerciseBlock
+              head={
+                <ExerciseHead
+                  name={d.exercise}
+                  {...(history !== undefined && { onHistory: history })}
+                />
+              }
+            >
+              {isClimbingSets(d.sets) && d.sets.every((set) => set.onS === undefined) ? (
+                <ClimbSetsRead sets={d.sets} />
+              ) : (
+                d.sets.map((set, n) => (
+                  <SetRow
+                    key={n}
+                    mode="read"
+                    position={String(n + 1)}
+                    label={t("activities.setOf", { exercise: d.exercise, n: n + 1 })}
+                    {...(rated && {
+                      rpe: set.rpe === undefined ? null : <EffortMark rpe={set.rpe} />,
+                    })}
+                  >
+                    <Text style={[type.monoBold, { fontSize: 14, color: colors.gunmetal }]}>
+                      {setReadText(set, unit)}
+                    </Text>
+                  </SetRow>
+                ))
+              )}
+            </ExerciseBlock>
+          </React.Fragment>
+        );
+      })}
     </SummaryFrame>
   );
 }

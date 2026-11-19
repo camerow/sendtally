@@ -1,140 +1,116 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import {
-  clock,
-  doseIndex,
   intervalsOf,
+  letterOf,
   restAfterItem,
-  sessionItems,
-  turnsOf,
-  type Dose,
+  type SessionItem,
   type WeightUnit,
 } from "@sendtally/core/hang";
-import { colors } from "@sendtally/design/tokens";
-import { climbingDoseLine } from "@sendtally/features/activities";
-import type { TallyMeasure } from "@sendtally/features/exercises";
-import { t } from "@sendtally/features/i18n";
 import {
-  doseSummary,
-  itemDoseText,
-  supersetHeadAt,
   itemTitle,
-  letterName,
-  turnName,
-  withTarget,
-  type LibraryWorkout,
+  supersetRoundsTitle,
+  targetText,
+  type TargetKind,
+  type TargetText,
 } from "@sendtally/features/workouts";
 import { IntervalsBar } from "../components/IntervalsBar";
-import { Label } from "../components/Label";
-import { LetterBadge } from "../components/LetterBadge";
-import { type } from "../type";
-import { PreviewRow } from "./PreviewRow";
-import { RestDivider } from "./RestDivider";
+import { RestPreview } from "../rest/RestPreview";
+import { ExerciseBlock } from "../sets/ExerciseBlock";
+import { ExerciseHead } from "../sets/ExerciseHead";
+import { SupersetMembers } from "../sets/SupersetMembers";
 
 export type BodyPreviewProps = {
-  workout: LibraryWorkout;
+  /** This session's items, as Start runs them. */
+  items: readonly SessionItem[];
+  /** The rest between exercises the workout sets. */
+  exerciseRestS: number;
   unit: WeightUnit;
-  /** How many sessions of it are logged: which dose each item takes next. */
-  session: number;
-  /** How an item's exercise logs on the climbing tally, as the player reads its dose. */
-  tally: (exercise: string) => TallyMeasure | null;
-  /** Where tapping an item goes: its exercise, when it has a screen. */
+  /** What an exercise's target is counted in: the workout's kind, or its climbing measure. */
+  kindOf: (exercise: string) => TargetKind;
+  eachSide: (exercise: string) => boolean;
+  /** Opens an exercise's history, when it has a screen. */
   openExercise?: (name: string) => (() => void) | undefined;
 };
 
-/**
- * What the workout's next session holds, read only: each item and what it asks for, the
- * rests where they fall, and, when items alternate, what each takes the session after.
- */
+/** Item indexes as blocks: one exercise, or a superset's neighbouring members. */
+const blocksOf = (items: readonly SessionItem[]): number[][] =>
+  items.reduce<number[][]>((blocks, item, i) => {
+    const last = blocks[blocks.length - 1];
+    const prev = last?.[last.length - 1];
+    if (last !== undefined && prev !== undefined && item.group !== undefined)
+      if (items[prev]?.group?.id === item.group.id) return [...blocks.slice(0, -1), [...last, i]];
+    return [...blocks, [i]];
+  }, []);
+
+/** This session's exercises, each the shared block with its head only, and the rests between. */
 export function BodyPreview({
-  workout,
+  items,
+  exerciseRestS,
   unit,
-  session,
-  tally,
+  kindOf,
+  eachSide,
   openExercise,
 }: BodyPreviewProps): React.ReactElement {
-  const turns = turnsOf(workout.items);
-  const items = sessionItems(workout.items, session);
-  const timed = items.every((item) => item.dose.onS !== undefined);
-  const restOf = (seconds: number | undefined): string | undefined =>
-    seconds === undefined || seconds === 0
-      ? undefined
-      : t("plan.chipRest", { value: clock(seconds, true) });
-  const doseText = (exercise: string, dose: Dose): string => {
-    const measure = tally(exercise);
-    return measure === null
-      ? doseSummary(workout.kind, dose, unit)
-      : climbingDoseLine(dose, measure);
-  };
-  const noteOf = (i: number): string | undefined => {
-    const item = workout.items[i];
-    if (turns === 1 || item === undefined) return undefined;
-    if (item.doses.length === 1) return t("workouts.sameEverySession");
-    const next = doseIndex(item, session + 1);
-    const dose = item.doses[next];
-    return dose === undefined
-      ? undefined
-      : t("workouts.alternatesWith", {
-          letter: letterName(next, dose.name),
-          dose: doseText(item.exercise, dose),
-        });
-  };
-  // Between members the superset's own rest; else the rest after the exercise before.
-  const gapBefore = (i: number): number => {
-    const g = items[i]?.group;
-    return g !== undefined && items[i - 1]?.group?.id === g.id
-      ? g.restBetweenS
-      : restAfterItem(items, i - 1, workout.exerciseRestS);
-  };
+  const target = (item: SessionItem, round = false): TargetText =>
+    item.checklist === undefined
+      ? targetText(item.dose, kindOf(item.exercise), unit, {
+          eachSide: eachSide(item.exercise),
+          round,
+        })
+      : { work: item.checklist.lines.join(" · "), rpe: undefined };
+  const timed = items.length > 0 && items.every((item) => item.dose.onS !== undefined);
+  const history = (item: SessionItem): (() => void) | undefined =>
+    item.checklist === undefined ? openExercise?.(item.exercise) : undefined;
   return (
     <View style={{ gap: 4 }}>
-      {turns > 1 && (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Label color={colors.gunmetal} style={{ flex: 1 }}>
-            {t("workouts.nextSession")}
-          </Label>
-          <LetterBadge dose={session % turns} size={26} />
-          <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
-            {[
-              turnName(workout.items, session),
-              t("workouts.thenLetter", {
-                letter: letterName((session + 1) % turns, turnName(workout.items, session + 1)),
-              }),
-            ]
-              .filter((x) => x !== undefined)
-              .join(" ")}
-          </Text>
-        </View>
-      )}
-      {timed && workout.kind !== "hangboard" && (
+      {timed && (
         <View style={{ flexDirection: "row", paddingVertical: 8 }}>
           <IntervalsBar intervals={intervalsOf(items)} height={14} />
         </View>
       )}
-      {items.map((item, i) => {
-        const head = supersetHeadAt(items, i);
-        const gap = gapBefore(i);
+      {blocksOf(items).map((block, b) => {
+        const first = block[0] ?? 0;
+        const item = items[first];
+        if (item === undefined) return null;
+        const group = block.length > 1 ? item.group : undefined;
         return (
-          <React.Fragment key={i}>
-            {head !== null && (
-              <Text
-                style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal, paddingTop: 8 }]}
-              >
-                {head}
-              </Text>
+          <React.Fragment key={first}>
+            {b > 0 && <RestPreview seconds={restAfterItem(items, first - 1, exerciseRestS)} />}
+            {group === undefined ? (
+              <ExerciseBlock
+                head={
+                  <ExerciseHead
+                    name={itemTitle(item)}
+                    target={target(item)}
+                    {...(history(item) !== undefined && { onHistory: history(item) })}
+                  />
+                }
+              />
+            ) : (
+              <ExerciseBlock head={<ExerciseHead name={supersetRoundsTitle(group.rounds)} />}>
+                {block.map((m, letter) => {
+                  const member = items[m];
+                  if (member === undefined) return null;
+                  const open = history(member);
+                  return (
+                    <React.Fragment key={m}>
+                      {letter > 0 && <RestPreview seconds={group.restBetweenS} />}
+                      <SupersetMembers
+                        members={[
+                          {
+                            letter: letterOf(letter),
+                            name: itemTitle(member),
+                            target: target(member, true),
+                            ...(open !== undefined && { onHistory: open }),
+                          },
+                        ]}
+                      />
+                    </React.Fragment>
+                  );
+                })}
+              </ExerciseBlock>
             )}
-            {i > 0 && gap > 0 && <RestDivider label={restOf(gap) ?? ""} />}
-            <PreviewRow
-              title={itemTitle(item)}
-              detail={
-                item.checklist === undefined
-                  ? doseText(item.exercise, item.dose)
-                  : itemDoseText(workout.kind, item, unit)
-              }
-              note={item.checklist?.lines.join(" · ") ?? withTarget(item.dose, noteOf(i))}
-              rest={workout.kind === "hangboard" ? undefined : restOf(item.dose.setRestS)}
-              onPress={item.checklist === undefined ? openExercise?.(item.exercise) : undefined}
-            />
           </React.Fragment>
         );
       })}

@@ -2,7 +2,6 @@ import type { Activity, ActivityKind } from "@sendtally/api-client";
 import type { WorkoutKind } from "@sendtally/core/hang";
 import { t, type MessageKey } from "../i18n";
 import { durationLabel } from "../sessions/years";
-import { doneSummary } from "./done";
 
 export const ACTIVITY_KINDS = [
   "climbing",
@@ -27,11 +26,9 @@ export function kindLabel(kind: WorkoutKind): string {
 export const activityAt = (a: Pick<Activity, "date" | "startTime">): string =>
   `${a.date}T${a.startTime ?? "12:00"}:00Z`;
 
-/** "Strength · 50m", then what was done when anything was: "3 exercises · 9 sets". */
-export function activityMetaLabel(a: Pick<Activity, "kind" | "minutes" | "done">): string {
-  return [kindLabel(a.kind), durationLabel(a.minutes), doneSummary(a.done)]
-    .filter((part) => part !== null)
-    .join(" · ");
+/** "Strength · 50m": its kind and the time it took. */
+export function activityMetaLabel(a: Pick<Activity, "kind" | "minutes">): string {
+  return [kindLabel(a.kind), durationLabel(a.minutes)].join(" · ");
 }
 
 export function activityEffortLabel(a: Pick<Activity, "rpe">): string | null {
