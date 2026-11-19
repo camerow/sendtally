@@ -20,7 +20,7 @@ export type SetRowProps = {
   mode?: "edit" | "read";
   ticked?: boolean;
   onToggle?: () => void;
-  /** In place of the tick, such as Start lap. */
+  /** In place of the tick, such as Start lap; null for a row with nothing trailing, such as a hang set. */
   trailing?: React.ReactNode;
   /** Names the set for screen readers: its tick and its select. */
   label: string;
@@ -104,7 +104,9 @@ export function SetRow({
           <View style={read ? SET_COLUMNS.rpeRead : SET_COLUMNS.rpe}>{rpe}</View>
         )}
         {!read &&
-          (trailing ?? (
+          (trailing !== undefined ? (
+            trailing
+          ) : (
             <Pressable
               onPress={onToggle}
               accessibilityRole="checkbox"
