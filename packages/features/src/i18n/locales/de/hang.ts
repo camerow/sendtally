@@ -62,6 +62,7 @@ export const hang = {
   "hang.statSets": "Sätze",
   "hang.statHangsASet": "Hangs pro Satz",
   "hang.statOnOff": "An / aus",
+  "hang.statOn": "An",
   "hang.history": "Verlauf · {count}",
   "hang.sessionCount_one": "{count} Session",
   "hang.sessionCount_other": "{count} Sessions",

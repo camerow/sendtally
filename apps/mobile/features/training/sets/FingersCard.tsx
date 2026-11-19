@@ -1,7 +1,6 @@
-import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
-import { protocolDose, type HangSetup, type WeightUnit } from "@sendtally/core/hang";
+import type { HangSetup, WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -9,14 +8,13 @@ import {
   partHangs,
   partSetLine,
   partTotal,
-  targetText,
   type PartInPlayer,
 } from "@sendtally/features/workouts";
 import { PartSets } from "../activity/PartSets";
 import { Button } from "../components/Button";
 import { type } from "../type";
-import { ExerciseBlock } from "./ExerciseBlock";
-import { ExerciseHead } from "./ExerciseHead";
+import { HangDataProvider } from "../data/HangDataProvider";
+import { FingersGrip } from "./FingersGrip";
 
 export type FingersCardProps = {
   part: PartInPlayer;
@@ -68,23 +66,16 @@ export function FingersCard({
         />
       ) : (
         <>
-          {planned.items.map((i, k) => {
-            const dose = i.dose ?? protocolDose(i.workout);
-            return (
-              <ExerciseBlock
+          <HangDataProvider>
+            {planned.items.map((i, k) => (
+              <FingersGrip
                 key={k}
-                head={
-                  <ExerciseHead
-                    name={gripName(i.workout.grip)}
-                    target={targetText(dose, "hangboard", unit)}
-                    onHistory={() =>
-                      router.push({ pathname: "/grip/[id]", params: { id: i.workout.grip } })
-                    }
-                  />
-                }
+                workout={i.workout}
+                dose={i.dose}
+                setup={running ? state.setups[k] : undefined}
               />
-            );
-          })}
+            ))}
+          </HangDataProvider>
           {running && (
             <Text style={[type.monoBold, { fontSize: 13, color: colors.gunmetal }]}>
               {partSetLine(state.run, planned, gripName)}

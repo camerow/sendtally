@@ -190,9 +190,9 @@ describe("Timer", () => {
     expect(screen.getByText("Half crimp · 15\u00A0mm")).toBeTruthy();
     expect(screen.queryByLabelText("Change today’s setup")).toBeNull();
     const load = (): unknown => screen.getByLabelText("Load").props.accessibilityValue;
-    expect(load()).toEqual({ text: "8 kg" });
+    expect(load()).toEqual({ text: "+8 kg" });
     await fireEvent.press(screen.getByLabelText("Increase Load"));
-    expect(load()).toEqual({ text: "8.5 kg" });
+    expect(load()).toEqual({ text: "+8.5 kg" });
     expect(screen.getByText("3 sets ahead")).toBeTruthy();
     await fireEvent.press(screen.getByText("End"));
     await advance(200);

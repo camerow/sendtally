@@ -61,6 +61,7 @@ export const hang = {
   "hang.statSets": "Séries",
   "hang.statHangsASet": "Suspensions par série",
   "hang.statOnOff": "On / off",
+  "hang.statOn": "On",
   "hang.history": "Historique · {count}",
   "hang.sessionCount_one": "{count} séance",
   "hang.sessionCount_other": "{count} séances",
