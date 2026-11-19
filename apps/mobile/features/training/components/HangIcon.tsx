@@ -12,6 +12,7 @@ export type HangIconName =
   | "x"
   | "check"
   | "play"
+  | "pause"
   | "minus"
   | "restart"
   | "skip"
@@ -24,7 +25,12 @@ export type HangIconName =
   | "info"
   | "history";
 
-const PATHS: Record<Exclude<HangIconName, "play">, string> = {
+const FILLED = {
+  play: "M7 5v14l12-7z",
+  pause: "M6.5 5h3.5v14H6.5zM14 5h3.5v14H14z",
+} as const;
+
+const PATHS: Record<Exclude<HangIconName, keyof typeof FILLED>, string> = {
   back: "M15 5l-7 7 7 7",
   forward: "M9 5l7 7-7 7",
   down: "M6 9l6 6 6-6",
@@ -64,8 +70,8 @@ export function HangIcon({
 }: HangIconProps): React.ReactElement {
   return (
     <Svg viewBox="0 0 24 24" width={size} height={size}>
-      {name === "play" ? (
-        <Path d="M7 5v14l12-7z" fill={color} />
+      {name === "play" || name === "pause" ? (
+        <Path d={FILLED[name]} fill={color} />
       ) : (
         <Path
           d={PATHS[name]}
