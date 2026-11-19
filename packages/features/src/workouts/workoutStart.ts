@@ -58,7 +58,7 @@ const playerOf = (items: readonly SessionItem[]): "sets" | "checklist" =>
 export function workoutStart(
   w: LibraryWorkout,
   date: CalendarDate,
-  { link, items }: PlannedItems,
+  { link, session, items }: PlannedItems,
   eachSide: (exercise: string) => boolean,
   tally: (exercise: string) => TallyMeasure | null = () => null,
   isGrip: (exercise: string) => boolean = isBuiltInGrip
@@ -68,7 +68,7 @@ export function workoutStart(
   if (w.kind === "hangboard" && first !== undefined)
     return { open: "timer", gripId: first.exercise };
   if (kind === null || (kind === "climbing" && first === undefined)) return { open: "liveSession" };
-  const run = { kind, title: w.name, date, workoutId: w.id, link, minutes: w.minutes };
+  const run = { kind, title: w.name, date, workoutId: w.id, link, session, minutes: w.minutes };
   if (first === undefined)
     return { open: "sets", run: { ...run, exerciseRestS: w.exerciseRestS, items: [] } };
   if (items.some((i) => isGrip(i.exercise)))

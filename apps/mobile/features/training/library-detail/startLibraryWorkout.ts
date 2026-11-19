@@ -62,13 +62,15 @@ export function logLibraryWorkout(
     router.push({ pathname: "/workout/done", params: timerParams(w.id, grip, session, link) });
     return;
   }
-  const path = activityFormPath({
-    kind,
-    title: w.name,
-    date,
-    workoutId: w.id,
-    link,
-    minutes: w.minutes,
-  });
-  router.push({ ...path, params: { ...path.params, session: String(session) } });
+  router.push(
+    activityFormPath({
+      kind,
+      title: w.name,
+      date,
+      workoutId: w.id,
+      link,
+      session,
+      minutes: w.minutes,
+    })
+  );
 }

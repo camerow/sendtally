@@ -39,6 +39,7 @@ const run: WorkoutRun = {
   date: "2026-10-22",
   workoutId: "w1",
   link: { membershipId: "m1", week: 2, focus: null },
+  session: 0,
   minutes: 45,
   exerciseRestS: 120,
   items: [
@@ -144,6 +145,7 @@ describe("Sets player", () => {
         title: "Lower body A",
         date: "2026-10-22",
         workoutId: "w1",
+        session: "0",
         minutes: "3",
         membershipId: "m1",
         week: "2",

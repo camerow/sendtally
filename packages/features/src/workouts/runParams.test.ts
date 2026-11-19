@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readSession } from "../training/planLinkParams";
 import {
   doneParams,
   finishedRunParams,
@@ -20,6 +21,7 @@ const run: IntervalsRun = {
   date: "2026-10-22",
   workoutId: null,
   link: { membershipId: "m1", week: null, focus: null },
+  session: 1,
   body: {
     rounds: 10,
     steps: [{ label: "Swing", measure: "count", count: 15, loadKg: 24, restAfter: 45 }],
@@ -47,6 +49,7 @@ describe("workout run params", () => {
     date: "2026-10-22",
     workoutId: "w1",
     link: { membershipId: "m1", week: 2, focus: null },
+    session: 1,
     minutes: 50,
     exerciseRestS: 120,
     items: [{ exercise: "Back squat", dose: { sets: 5, reps: 5 } }],
@@ -87,9 +90,14 @@ describe("a finished run's review", () => {
     title: "5x5 strength",
     workoutId: "w1",
     link: { membershipId: null, week: null, focus: null },
+    session: 1,
   };
   const startedAt = new Date(2026, 10, 16, 17, 55).getTime();
   const lastTickAt = startedAt + 47 * 60_000;
+
+  it("reviews the session the run played, not the workout's first", () => {
+    expect(readSession(finishedRunParams(filing, [], startedAt, lastTickAt))).toBe(1);
+  });
 
   it("ends the duration at the last tick when the run sat idle over 20 minutes after it", () => {
     const params = finishedRunParams(

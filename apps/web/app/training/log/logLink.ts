@@ -32,8 +32,15 @@ export function plannedLogLink(
       session,
       run: null,
     });
-  return newActivityPath({
-    ...activityFormParams({ kind, title: w.name, date, workoutId: w.id, link, minutes: w.minutes }),
-    session: String(session),
-  });
+  return newActivityPath(
+    activityFormParams({
+      kind,
+      title: w.name,
+      date,
+      workoutId: w.id,
+      link,
+      session,
+      minutes: w.minutes,
+    })
+  );
 }

@@ -40,6 +40,7 @@ const workout: IntervalsRun = {
   date: "2026-10-22",
   workoutId: "w1",
   link: { membershipId: null, week: null, focus: null },
+  session: 0,
   body: {
     rounds: 2,
     steps: [
