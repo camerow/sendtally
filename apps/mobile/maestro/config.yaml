@@ -6,6 +6,7 @@ executionOrder:
   continueOnFailure: false
   flowsOrder:
     - sign-in
+    - keypad-one-press
     - log-session-sheet
     - draft-survives-leaving
     - cancel-discards-draft
