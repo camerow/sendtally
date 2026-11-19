@@ -60,8 +60,8 @@ import { FingersCard } from "./FingersCard";
 
 /**
  * A workout as a set table on a clock from Start: tick each set as it is done, rest in line
- * after it, then log what was done. A climbing exercise's sets take their climbs in the row, a
- * grade then Attempt or Sent, on the workout's tally; its climbs come back as its sets.
+ * after it, then log what was done. A climbing exercise's sets take a row per climb on the
+ * workout's tally; its climbs come back as its sets.
  */
 export function SetsScreen({
   run,
@@ -350,7 +350,9 @@ export function SetsScreen({
                     live={tally}
                     rest={rest}
                     now={climbs.now}
+                    unit={unit}
                     about={about}
+                    onHistory={openExerciseHistory(mine, item.exercise)}
                     onFold={() => player.fold(i)}
                     menu={menu(i)}
                     onLapRemoved={(lap) => setLapRemoved({ item: i, name: nameOf(i), lap })}
@@ -360,12 +362,13 @@ export function SetsScreen({
                     item={item}
                     plan={player.climbPlan(i)}
                     rows={climbRows(draft, i, player.climbPlan(i), climbs.now)}
+                    unit={unit}
                     tally={player.climbAt === i ? climbs : null}
                     restUnder={(set) => restAt(setKey({ item: i, set }))}
                     about={about}
+                    onHistory={openExerciseHistory(mine, item.exercise)}
                     onFold={() => player.fold(i)}
                     menu={menu(i)}
-                    onFlip={climbs.flip}
                     onEdit={setEditing}
                   />
                 );

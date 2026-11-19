@@ -1,142 +1,174 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
-import { clock, type SessionItem } from "@sendtally/core/hang";
+import { Text, View } from "react-native";
+import type { SessionItem, WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import type { Tally } from "@sendtally/features/log-session";
-import type { ClimbPlan, ClimbRow } from "@sendtally/features/workouts";
+import { setClimbOf, wallLeft, type Tally } from "@sendtally/features/log-session";
+import {
+  exerciseName,
+  targetText,
+  type ClimbPlan,
+  type ClimbRow as ClimbSet,
+} from "@sendtally/features/workouts";
 import type { About } from "../components/AboutButton";
-import { CheckBox } from "../components/CheckBox";
+import { Button } from "../components/Button";
 import { Label } from "../components/Label";
-import { RowFill } from "../components/RowFill";
 import type { DetailMenuRow } from "../components/types";
 import { RestPreview } from "../rest/RestPreview";
+import { ExerciseBlock } from "../sets/ExerciseBlock";
 import { ExerciseHead } from "../sets/ExerciseHead";
-import { exerciseName, exerciseTargetLine } from "@sendtally/features/workouts";
+import { SET_COLUMNS } from "../sets/setColumns";
 import { type } from "../type";
-import { ClimbChip } from "./ClimbChip";
+import { ClimbReadRow } from "./ClimbReadRow";
+import { ClimbRow } from "./ClimbRow";
 import { GradePicker } from "./GradePicker";
+import { WallClock } from "./WallClock";
 
 export type ClimbCardProps = {
   item: SessionItem;
   plan: ClimbPlan;
-  rows: readonly ClimbRow[];
+  rows: readonly ClimbSet[];
+  unit: WeightUnit;
   /** The tally, while it is on this card; its current set takes the grades picked. */
   tally: Tally | null;
   /** The rest a set's end started, under it while it runs. */
   restUnder: (set: number) => React.ReactNode;
   about?: About | undefined;
+  onHistory?: (() => void) | undefined;
   onFold: () => void;
   menu: readonly DetailMenuRow[];
-  onFlip: (key: string) => void;
   onEdit: (key: string) => void;
 };
 
-const column = (plan: ClimbPlan): string =>
-  plan.onS !== undefined
-    ? t("workouts.onTheWallFor", { time: clock(plan.onS) })
-    : plan.climbs !== undefined
-      ? t("workouts.climbsPerSet", { n: plan.climbs })
-      : t("workouts.climbsColumn");
+function Headings(): React.ReactElement {
+  return (
+    <View style={[SET_COLUMNS.row, { minHeight: 20 }]}>
+      <View style={SET_COLUMNS.position} />
+      <Label small color={colors.textSecondary} style={{ width: 60 }}>
+        {t("common.grade")}
+      </Label>
+      <Label small color={colors.textSecondary} style={{ flex: 1, textAlign: "center" }}>
+        {t("climbs.attempts")}
+      </Label>
+      <Label
+        small
+        color={colors.textSecondary}
+        style={{ width: SET_COLUMNS.tick.width, textAlign: "right" }}
+      >
+        {t("common.sent")}
+      </Label>
+    </View>
+  );
+}
 
-/** A climbing exercise as set rows: each set's climbs as chips, and the grades under the one being climbed. */
+/** A climbing exercise: a row per climb in each set, the grades under the set being climbed. */
 export function ClimbCard({
   item,
   plan,
   rows,
+  unit,
   tally,
   restUnder,
   about,
+  onHistory,
   onFold,
   menu,
-  onFlip,
   onEdit,
 }: ClimbCardProps): React.ReactElement {
   const restS = item.dose.setRestS ?? 0;
-  const open = plan.climbs === undefined && plan.onS === undefined;
+  const ex = tally?.draft?.exercise;
+  const left = ex === undefined ? null : wallLeft(ex, tally?.now ?? new Date());
+  const selected = tally?.selection?.kind === "row" ? tally.selection.key : null;
   return (
-    <View
-      style={{
-        gap: 4,
-        padding: 14,
-        paddingTop: 12,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: colors.lineOnLightStrong,
-      }}
+    <ExerciseBlock
+      head={
+        <ExerciseHead
+          name={exerciseName(item.exercise)}
+          target={targetText(item.dose, plan.onS === undefined ? "climbs" : "wallTime", unit)}
+          about={about}
+          {...(onHistory !== undefined && { onHistory })}
+          onFold={onFold}
+          menu={menu}
+        />
+      }
     >
-      <ExerciseHead
-        name={exerciseName(item.exercise)}
-        target={{ work: "", rpe: exerciseTargetLine(item.dose) }}
-        about={about}
-        onFold={onFold}
-        menu={menu}
-      />
-      <View style={{ flexDirection: "row", gap: 8, paddingVertical: 4 }}>
-        <Label small color={colors.textSecondary} style={{ width: 34 }}>
-          {t("activities.colSet")}
-        </Label>
-        <Label small color={colors.textSecondary}>
-          {column(plan)}
-        </Label>
-      </View>
-      {rows.map((row, i) => {
-        const current = tally !== null && row.state === "current";
-        return (
-          <React.Fragment key={row.set}>
-            <View
-              style={{
-                minHeight: 44,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                paddingHorizontal: 4,
-                paddingVertical: 6,
-                borderRadius: 10,
-                overflow: "hidden",
-                backgroundColor: current ? colors.surfaceSoft : undefined,
-              }}
-            >
-              {current && row.fill !== null && (
-                <RowFill share={row.fill} color={colors.fern} opacity={0.35} />
-              )}
-              <Text style={[type.monoBold, { width: 30, fontSize: 14, color: colors.gunmetal }]}>
-                {row.set}
-              </Text>
-              <View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
-                {row.climbs.map((c) => (
-                  <ClimbChip
+      {rows.flatMap((row, i) => {
+        const live = tally !== null && row.state === "current";
+        const clock =
+          live && plan.onS !== undefined && left !== null ? (
+            <View key="wall" style={{ paddingTop: 8 }}>
+              <WallClock
+                targetS={plan.onS}
+                left={left}
+                running={ex?.setStartedAt !== undefined}
+                onToggle={tally.toggleWall}
+              />
+            </View>
+          ) : null;
+        const rest =
+          restUnder(row.set - 1) ||
+          (i < rows.length - 1 && restS > 0 && <RestPreview seconds={restS} />);
+        return [
+          <View
+            key={`label${row.set}`}
+            style={{
+              minHeight: 40,
+              paddingTop: 6,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Label small color={colors.textSecondary}>
+              {t("tally.setLabel", { set: row.set })}
+            </Label>
+            {live ? (
+              <Button
+                label={t("tally.endSet")}
+                accessibilityLabel={t("workouts.endSet", { set: row.set })}
+                onPress={tally.endSet}
+                variant="link"
+                height={40}
+              />
+            ) : (
+              row.state === "done" && (
+                <Text style={[type.body, { fontSize: 13, color: colors.textMuted }]}>
+                  {t("common.done")}
+                </Text>
+              )
+            )}
+          </View>,
+          <View key={`climbs${row.set}`}>
+            {live ? (
+              <>
+                {row.climbs.length > 0 && <Headings />}
+                {row.climbs.map((c, n) => (
+                  <ClimbRow
                     key={c.key}
+                    position={n + 1}
                     climb={c}
-                    onFlip={() => onFlip(c.key)}
+                    selected={selected === c.key}
+                    onSelect={() => tally.toggleRow(c.key)}
+                    onRemove={() => tally.remove(c.key)}
+                    onTries={(tries) => tally.setTries(c.key, tries)}
+                    onFlip={() => tally.flip(c.key)}
                     onEdit={() => onEdit(c.key)}
                   />
                 ))}
-              </View>
-              {row.note !== "" && (
-                <Text style={[type.mono, { fontSize: 13, color: colors.textSecondary }]}>
-                  {row.note}
-                </Text>
-              )}
-              {open && current ? (
-                <Pressable
-                  onPress={tally.endSet}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("workouts.endSet", { set: row.set })}
-                  hitSlop={8}
-                >
-                  <CheckBox checked={false} color={colors.fern} />
-                </Pressable>
-              ) : (
-                <CheckBox checked={row.state === "done"} color={colors.fern} />
-              )}
-            </View>
-            {current && <GradePicker tally={tally} />}
-            {restUnder(row.set - 1) ||
-              (i < rows.length - 1 && restS > 0 && <RestPreview seconds={restS} />)}
-          </React.Fragment>
-        );
+                <GradePicker tally={tally} />
+              </>
+            ) : (
+              row.climbs.map((c, n) => (
+                <ClimbReadRow key={c.key} position={n + 1} climb={setClimbOf(c)} />
+              ))
+            )}
+          </View>,
+          clock,
+          rest === false || rest === null || rest === undefined ? null : (
+            <React.Fragment key={`rest${row.set}`}>{rest}</React.Fragment>
+          ),
+        ];
       })}
-    </View>
+    </ExerciseBlock>
   );
 }

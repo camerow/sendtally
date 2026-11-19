@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SetClimb, SetDone } from "@sendtally/core/hang";
-import { climbingDoseLine, climbingLastTime, climbsLine, wallChip, wallLine } from "./climbing";
+import { climbingDoseLine, climbingLastTime, climbLine, climbsLine, wallChip, wallLine } from "./climbing";
 import { setChip, setText } from "./done";
 import { exerciseResults, seriesPoint } from "./summary";
 import { exerciseSeries } from "../statistics/exercises";
@@ -31,6 +31,11 @@ describe("climbing sets", () => {
     expect(climbsLine(sets)).toBe("8 climbs · 7 sent · top V4");
     expect(climbsLine([{ climbs: [v("V5", false)] }])).toBe("1 climb · 0 sent");
     expect(setText(sets[0]!, "kg")).toBe("4 climbs · 4 sent · top V4");
+  });
+
+  it("reads one climb as its attempts, and sent when it went", () => {
+    expect(climbLine({ grade: "V5", scale: "v", tries: 3, sent: true })).toBe("3 attempts · sent");
+    expect(climbLine({ grade: "V6", scale: "v", tries: 1, sent: false })).toBe("1 attempt");
   });
 
   it("reads time on the wall as time and laps, and names the circuits", () => {

@@ -1,5 +1,6 @@
 import type { SetClimb, SetDone } from "@sendtally/core/hang";
-import { tallyDraft } from "./tally";
+import { newTallyClimb, tallyDraft, type TallyChoice } from "./tally";
+import { withTries } from "./transforms";
 import type { ClimbDraft, ExerciseTally, LogSessionDraft, WallTime } from "./types";
 
 /** What an exercise's tally is started from: everything but where it has got to. */
@@ -40,12 +41,31 @@ export function startExercise(
   };
 }
 
-/** Seconds left on the wall in the set, the whole time before its first grade; null without a time. */
+const wallRunS = (ex: ExerciseTally, now: Date): number => {
+  const started = Date.parse(ex.setStartedAt ?? "");
+  return Number.isNaN(started) ? 0 : Math.floor((now.getTime() - started) / 1000);
+};
+
+/** The set's clock has run, now or before a pause. */
+const wallRan = (ex: ExerciseTally): boolean =>
+  ex.setStartedAt !== undefined || ex.setOnS !== undefined;
+
+/** Seconds left on the wall in the set, the whole time before its clock starts; null without a time. */
 export function wallLeft(ex: ExerciseTally, now: Date): number | null {
   if (ex.onS === undefined) return null;
-  const started = Date.parse(ex.setStartedAt ?? "");
-  if (Number.isNaN(started)) return ex.onS;
-  return Math.min(ex.onS, Math.max(0, ex.onS - Math.floor((now.getTime() - started) / 1000)));
+  const spent = (ex.setOnS ?? 0) + wallRunS(ex, now);
+  return Math.min(ex.onS, Math.max(0, ex.onS - spent));
+}
+
+/** The set's clock started, or paused with its time so far kept. */
+export function withWallToggled(draft: LogSessionDraft, now: Date): LogSessionDraft {
+  const ex = draft.exercise;
+  if (ex?.onS === undefined || allSetsDone(ex)) return draft;
+  if (ex.setStartedAt === undefined)
+    return { ...draft, exercise: { ...ex, setStartedAt: now.toISOString() } };
+  const { setStartedAt: _paused, ...rest } = ex;
+  const spent = ex.onS - (wallLeft(ex, now) ?? 0);
+  return { ...draft, exercise: { ...rest, setOnS: spent } };
 }
 
 /** A grade picked in a time set that has not started starts its clock. */
@@ -55,6 +75,22 @@ export function withWallStarted(draft: LogSessionDraft, now: Date): LogSessionDr
   return { ...draft, exercise: { ...ex, setStartedAt: now.toISOString() } };
 }
 
+/** A grade picked adds a climb at it to the set being climbed, one attempt and not sent yet. */
+export function withSetClimbAdded(draft: LogSessionDraft, choice: TallyChoice): LogSessionDraft {
+  const next = newTallyClimb(draft, choice, "fell");
+  return withExerciseClimb(next.draft, next.key);
+}
+
+/** A climb's attempts, at least one, its send style following them. */
+export function withClimbTries(draft: LogSessionDraft, key: string, tries: number): LogSessionDraft {
+  return { ...draft, climbs: draft.climbs.map((c) => (c.key === key ? withTries(c, tries) : c)) };
+}
+
+export const withoutClimb = (draft: LogSessionDraft, key: string): LogSessionDraft => ({
+  ...draft,
+  climbs: draft.climbs.filter((c) => c.key !== key),
+});
+
 /** A climb just logged joins the exercise's item and the set being climbed. */
 export function withExerciseClimb(draft: LogSessionDraft, key: string): LogSessionDraft {
   const ex = draft.exercise;
@@ -63,12 +99,19 @@ export function withExerciseClimb(draft: LogSessionDraft, key: string): LogSessi
   return { ...draft, climbs: draft.climbs.map((c) => (c.key === key ? { ...c, ...tag } : c)) };
 }
 
-/** A logged climb pressed the wrong way: a send becomes an attempt, an attempt a send. */
+/** A send becomes an attempt and an attempt a send, styled by its tries: flash at one, redpoint above. */
 export function withClimbFlipped(draft: LogSessionDraft, key: string): LogSessionDraft {
   if (!draft.climbs.some((c) => c.key === key)) return draft;
   const flip = (c: ClimbDraft): ClimbDraft =>
-    c.key === key ? { ...c, kind: c.kind === "send" ? "attempt" : "send" } : c;
+    c.key === key ? withTries({ ...c, kind: c.kind === "send" ? "attempt" : "send" }, c.tries) : c;
   return { ...draft, climbs: draft.climbs.map(flip) };
+}
+
+/** Whether the set being climbed has had its time on the wall. */
+export function timeUp(draft: LogSessionDraft, now: Date): boolean {
+  const ex = draft.exercise;
+  if (ex === undefined || allSetsDone(ex) || ex.climbs !== undefined) return false;
+  return wallRan(ex) && wallLeft(ex, now) === 0;
 }
 
 /** Whether the set being climbed is over: its last climb logged, or its time on the wall up. */
@@ -76,15 +119,14 @@ export function setOver(draft: LogSessionDraft, now: Date): boolean {
   const ex = draft.exercise;
   if (ex === undefined || allSetsDone(ex)) return false;
   if (ex.climbs !== undefined) return setClimbs(draft, ex).length >= ex.climbs;
-  return ex.setStartedAt !== undefined && wallLeft(ex, now) === 0;
+  return timeUp(draft, now);
 }
 
 /** Only a set whose clock started gets a time on the wall. */
 function wallTimesAt(draft: LogSessionDraft, now: Date): WallTime[] | undefined {
   const ex = draft.exercise;
   const left = ex === undefined ? null : wallLeft(ex, now);
-  if (ex?.onS === undefined || ex.setStartedAt === undefined || left === null)
-    return draft.wallTimes;
+  if (ex?.onS === undefined || !wallRan(ex) || left === null) return draft.wallTimes;
   return [...(draft.wallTimes ?? []), { item: ex.item, set: ex.set, onS: ex.onS - left }];
 }
 
@@ -95,7 +137,7 @@ export function withSetEnded(
 ): { draft: LogSessionDraft; restS: number } {
   const ex = draft.exercise;
   if (ex === undefined) return { draft, restS: 0 };
-  const { setStartedAt: _ended, ...rest } = ex;
+  const { setStartedAt: _ended, setOnS: _spent, ...rest } = ex;
   const set = ex.set + 1;
   const wallTimes = wallTimesAt(draft, now);
   return {
