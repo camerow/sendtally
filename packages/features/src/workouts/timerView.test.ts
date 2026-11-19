@@ -152,10 +152,13 @@ describe("hangRunDone", () => {
 });
 
 describe("set loads", () => {
-  it("changes the set under way and those to come, and each set logs the load it hung at", () => {
+  it("changes the set under way and those to come, from a hang, a rest between hangs or a set rest, and each set logs the load it hung at", () => {
     const start = startLoads(planned, [{ edgeMm: 20, loadKg: 5 }]);
     expect(start).toEqual([[5, 5]]);
     expect(loadNow(start, hanging)).toBe(5);
+    const between = skip(hanging, at0 + 6_000);
+    expect(between.phases[between.index]).toMatchObject({ kind: "rest", set: 1 });
+    expect(changeLoad(start, between, 6)).toEqual([[6, 6]]);
     const heavier = changeLoad(start, hanging, 6);
     expect(heavier).toEqual([[6, 6]]);
     let resting = hanging;

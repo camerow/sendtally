@@ -95,15 +95,14 @@ export function hangRunDone(
 ): TimerRun {
   const held = setsHeld(run, doses);
   const dose = (item: number): SetDone => setOf(doses[item] ?? { sets: 0 });
-  const load = (item: number, set: number): Pick<SetDone, "weightKg"> => {
-    const kg = loads?.[item]?.[set];
-    return kg === undefined ? {} : { weightKg: kg };
-  };
   return {
     done: held.map((sets, item) => ({
       item,
       exercise: grips[item] ?? "",
-      sets: sets.map((s, set) => ({ ...(s ?? dose(item)), ...load(item, set) })),
+      sets: sets.map((s, set) => {
+        const kg = loads?.[item]?.[set];
+        return kg === undefined ? (s ?? dose(item)) : { ...(s ?? dose(item)), weightKg: kg };
+      }),
     })),
     off: held.flatMap((sets, item) =>
       sets.flatMap((s, set) => (s === null ? [setKeyOf(item, set)] : []))
