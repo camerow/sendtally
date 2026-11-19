@@ -20,7 +20,6 @@ import { GripPickerSheet } from "../grip-picker/GripPickerSheet";
 import { DoneDetails } from "../activity/DoneDetails";
 import { EditorHeader } from "../components/EditorHeader";
 import { SetupPill } from "../done/SetupPill";
-import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
 import { hangCount } from "@sendtally/features/activities";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
@@ -114,7 +113,6 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
           off={sets.off}
           planned={hangSessionItems(session).map((i) => i.dose)}
           unit={unit}
-          color={KIND_LOOK.hangboard.ink}
           hangs
           hangLoadKg={draft.loadKg}
           setup={

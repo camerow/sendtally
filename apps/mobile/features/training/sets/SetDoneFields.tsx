@@ -22,12 +22,8 @@ export type SetDoneFieldsProps = {
   hangs?: boolean;
   /** A hangboard set of one hang: its count field is the time held, empty when it did not hold. */
   oneHang?: boolean;
-  /** Fell short of its target: the count it fell short on reads amber. */
-  short?: boolean;
   /** In place of the hold field: ▶ to time it. */
   go?: React.ReactNode;
-  /** Held less than its target: the hold reads amber. */
-  holdShort?: boolean;
   /** Where a hang count sits in its table's column, so Next walks to the next set. */
   slot?: FieldSlot;
   /** A hang set's load, where Next walks after its count. */
@@ -63,12 +59,10 @@ export function SetDoneFields({
   label,
   hangs = false,
   oneHang = false,
-  short = false,
   slot: column,
   loadSlot,
   defaultLoadKg = 0,
   go,
-  holdShort = false,
   onChange,
 }: SetDoneFieldsProps): React.ReactElement {
   const reps = lifting || hangs || set.reps !== undefined;
@@ -105,7 +99,6 @@ export function SetDoneFields({
               <NumberField
                 {...(hangs && column !== undefined ? column : slot("reps"))}
                 {...named(hangs ? t("plan.colHangs") : t("workouts.dose.reps"))}
-                short={short}
                 value={hangs && set.reps === 0 ? null : (set.reps ?? null)}
                 onChange={(n) => onChange({ ...set, reps: n })}
                 step={1}
@@ -164,7 +157,6 @@ export function SetDoneFields({
                 <TimeField
                   {...slot("hold")}
                   {...named(t("workouts.dose.hold"))}
-                  short={holdShort}
                   value={set.onS ?? 0}
                   onChange={(onS) => onChange({ ...set, onS })}
                 />

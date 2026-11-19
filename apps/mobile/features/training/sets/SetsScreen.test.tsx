@@ -349,7 +349,7 @@ describe("Sets player", () => {
     await renderWithHang(<SetsScreen run={run} />, hangData());
     await fireEvent.press(screen.getAllByLabelText("More for this exercise")[0]!);
     await fireEvent.press(screen.getByText("Skip for now"));
-    const skipped = "Open Back squat, Skipped · tap to do it now";
+    const skipped = "Open Back squat, Skipped";
     expect(readingOrder("Row, set 1", "Plank, set 1", skipped)).toEqual([
       "Row, set 1",
       "Plank, set 1",

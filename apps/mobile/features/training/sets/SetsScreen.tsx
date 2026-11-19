@@ -327,7 +327,7 @@ export function SetsScreen({
                     name={nameOf(i)}
                     line={
                       skipped
-                        ? t("workouts.skippedTapToDo")
+                        ? t("plan.skipped")
                         : (climbItem.logged ?? climbingDoseLine(item.dose, climbItem.measure))
                     }
                     done={!skipped && climbItem.logged !== null}
@@ -379,7 +379,7 @@ export function SetsScreen({
                         name={t("workouts.checklist")}
                         line={
                           skipped
-                            ? t("workouts.skippedTapToDo")
+                            ? t("plan.skipped")
                             : checklistLine(
                                 lines.filter((_, n) => tickedLine(n)).length,
                                 lines.length
@@ -405,7 +405,7 @@ export function SetsScreen({
                   {player.folded(i) ? (
                     <FoldedSetsCard
                       name={nameOf(i)}
-                      line={skipped ? t("workouts.skippedTapToDo") : foldedLine(d.sets, unit)}
+                      line={skipped ? t("plan.skipped") : foldedLine(d.sets, unit)}
                       done={
                         !skipped &&
                         d.sets.length > 0 &&

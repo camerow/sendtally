@@ -8,8 +8,6 @@ export type TimeFieldProps = FieldSlot & {
   compact?: boolean;
   /** A compact box filling its column. */
   fill?: boolean;
-  /** Amber: less than was asked. */
-  short?: boolean;
   accessibilityLabel?: string;
   /** Seconds. */
   value: number;

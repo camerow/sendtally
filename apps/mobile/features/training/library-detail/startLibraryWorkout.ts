@@ -38,10 +38,9 @@ export function startLibraryWorkout(
       return startLiveSession(link.membershipId === null ? undefined : link, w.name, go);
     case "intervals":
       return startIntervals(start.run, go);
-    default: {
+    case "sets": {
       const { run } = start;
-      const player = start.open === "sets" ? "/workout/sets" : "/workout/checklist";
-      return startLive(() => go(runPath(player, run)));
+      return startLive(() => go(runPath(run)));
     }
   }
 }
