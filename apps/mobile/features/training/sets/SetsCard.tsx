@@ -11,8 +11,8 @@ import { ExerciseHead } from "./ExerciseHead";
 import { RpeField } from "./RpeField";
 import { SetDoneFields } from "./SetDoneFields";
 import { SetHeadings } from "./SetHeadings";
-import { holdsOnly } from "./holdsOnly";
 import { SetRow } from "./SetRow";
+import { holdsOnly } from "./setColumns";
 import { useSessionTarget } from "./sessionTarget";
 
 export type SetsCardProps = {

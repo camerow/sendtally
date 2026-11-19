@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@jest/globals";
-import type { LiveRun } from "@sendtally/features/workouts";
+import {
+  readWorkoutRun,
+  runParams,
+  type LiveRun,
+  type WorkoutRun,
+} from "@sendtally/features/workouts";
 import { liveRunHref } from "./liveRun";
 
 const run = (pathname: LiveRun["pathname"]): LiveRun => ({
@@ -21,6 +26,29 @@ describe("opening the live run again", () => {
       pathname: "/workout/sets",
       params: { workoutId: "w1", end: "1" },
     });
+  });
+
+  it("hands the sets player a checklist run's params as the old checklist player wrote them", () => {
+    const workout: WorkoutRun = {
+      kind: "mobility",
+      title: "Hips",
+      date: "2026-11-19",
+      workoutId: "w1",
+      link: { membershipId: null, week: null, focus: null },
+      session: 2,
+      minutes: 20,
+      exerciseRestS: 30,
+      items: [
+        { exercise: "Pigeon", dose: { sets: 1, onS: 60 } },
+        { exercise: "Checklist", dose: { sets: 1 }, checklist: { lines: ["Jog", "Stretch"] } },
+      ],
+    };
+    const params = runParams(workout);
+    expect(liveRunHref({ ...run("/workout/checklist"), params })).toEqual({
+      pathname: "/workout/sets",
+      params,
+    });
+    expect(readWorkoutRun(params)).toEqual(workout);
   });
 
   it("opens any other run where it ran", () => {

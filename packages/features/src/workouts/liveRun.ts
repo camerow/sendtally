@@ -148,28 +148,27 @@ export function liveRunSummary(run: LiveRun): string {
 
 /** The same, split so a bar can shorten the exercise's name and keep "Set 2 of 3" whole. */
 export function liveRunWhere({ state, params }: LiveRun): { name: string | null; where: string } {
-  const at = (
-    where: string,
-    name: string | null = null
-  ): { name: string | null; where: string } => ({
-    name,
-    where,
-  });
   if (state.player === "timer") {
     const { set } = currentPhase(state.run);
     const sets = { set, sets: state.run.sets };
     const where = state.laps === true ? t("tally.lapOf", sets) : t("hang.setOf", sets);
-    return at(`${where} · ${phaseLabel(state.run, state.laps === true)}`);
+    return { name: null, where: `${where} · ${phaseLabel(state.run, state.laps === true)}` };
   }
   if (state.player === "checklist")
-    return at(t("plan.doneOf", { done: state.ticked.length, planned: state.count }));
+    return {
+      name: null,
+      where: t("plan.doneOf", { done: state.ticked.length, planned: state.count }),
+    };
   if (
     state.fingers !== undefined &&
     "run" in state.fingers &&
     state.fingers.run.finished === null
   ) {
     const { set } = currentPhase(state.fingers.run);
-    return at(t("hang.setOf", { set, sets: state.fingers.run.sets }), t("workouts.fingerboard"));
+    return {
+      name: t("workouts.fingerboard"),
+      where: t("hang.setOf", { set, sets: state.fingers.run.sets }),
+    };
   }
   const order = state.cards?.order ?? state.done.map((d) => d.item);
   const grips = state.grips ?? [];
@@ -180,11 +179,14 @@ export function liveRunWhere({ state, params }: LiveRun): { name: string | null;
   )) {
     const set = d.sets.findIndex((_, s) => !over.includes(`${d.item}:${s}`));
     const line = set === -1 ? undefined : lines?.[d.item]?.checklist?.lines[set];
-    if (line !== undefined) return at(line);
+    if (line !== undefined) return { name: null, where: line };
     if (set !== -1)
-      return at(t("hang.setOf", { set: set + 1, sets: d.sets.length }), exerciseName(d.exercise));
+      return {
+        name: exerciseName(d.exercise),
+        where: t("hang.setOf", { set: set + 1, sets: d.sets.length }),
+      };
   }
-  return at(t("tally.allSetsDone"));
+  return { name: null, where: t("tally.allSetsDone") };
 }
 
 export type HoldCue = { at: number; sound: "tick" | "work" | "rest" };
