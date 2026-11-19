@@ -25,7 +25,7 @@ import {
   type WorkoutRun,
   checklistLine,
   runItems,
-  supersetName,
+  supersetMembers,
   supersetRoundsTitle,
   type RunGroup,
 } from "@sendtally/features/workouts";
@@ -305,7 +305,7 @@ export function SetsScreen({
                     <React.Fragment key={i}>
                       {g.members.every((m) => player.folded(m)) ? (
                         <FoldedSetsCard
-                          name={supersetName(names)}
+                          name={supersetMembers(names)}
                           line={supersetRoundsTitle(
                             Math.max(...g.members.map((m) => player.live[m]?.dose.sets ?? 0))
                           )}

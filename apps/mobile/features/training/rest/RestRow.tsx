@@ -15,8 +15,8 @@ export type RestRowProps =
   | { rest: null; seconds: number; onStart: () => void };
 
 /**
- * A rest counting down inline: a gold fill drains with it, and it takes more time or a skip. A
- * row of the set table between sets, between the cards with what is next between exercises.
+ * A rest counting down inline, one height everywhere: a gold fill drains with it, and it takes
+ * more time or a skip. A row of the set table between sets, and between the cards.
  */
 export function RestRow(props: RestRowProps): React.ReactElement {
   if (props.rest === null) return <IdleRest seconds={props.seconds} onStart={props.onStart} />;
@@ -26,13 +26,13 @@ export function RestRow(props: RestRowProps): React.ReactElement {
     <View
       accessibilityLabel={vm.label}
       style={{
-        minHeight: vm.next === null ? 48 : 64,
+        minHeight: 48,
         flexDirection: "row",
         alignItems: "center",
         gap: 4,
         paddingLeft: 12,
         paddingRight: 6,
-        borderRadius: rest.next === null ? 10 : 12,
+        borderRadius: 10,
         overflow: "hidden",
         backgroundColor: colors.surfaceSoft,
       }}
@@ -43,24 +43,8 @@ export function RestRow(props: RestRowProps): React.ReactElement {
           <Text style={[type.bodyBold, { fontSize: 13, color: colors.gunmetal }]}>
             {t("hang.rest")}
           </Text>
-          <Text
-            style={[
-              type.monoBold,
-              { fontSize: rest.next === null ? 20 : 22, color: colors.gunmetal },
-            ]}
-          >
-            {vm.clock}
-          </Text>
+          <Text style={[type.monoBold, { fontSize: 20, color: colors.gunmetal }]}>{vm.clock}</Text>
         </View>
-        {vm.next !== null && (
-          <Text
-            testID="rest-next"
-            accessibilityLabel={vm.nextLabel ?? undefined}
-            style={[type.body, { fontSize: 12.5, color: colors.textSecondary }]}
-          >
-            {vm.next}
-          </Text>
-        )}
       </View>
       <Button label={t("activities.restMore")} onPress={onMore} variant="link" height={40} />
       <Button label={t("activities.restSkip")} onPress={onSkip} variant="link" height={40} />

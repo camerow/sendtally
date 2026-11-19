@@ -340,12 +340,7 @@ export function useSetsPlayer({
         ? restAfterTick(live, after, at, run.exerciseRestS)
         : restAfterGroupTick(live, after, at, inGroup, run.exerciseRestS);
     if (restAfter === null) rest.skip();
-    else
-      rest.tick(
-        restAfter.at,
-        restAfter.seconds,
-        restAfter.next === null ? undefined : nameOf(restAfter.next)
-      );
+    else rest.tick(restAfter.at, restAfter.seconds);
   };
   const change = (item: number, set: number, value: SetDone): void => {
     setDone((all) => changeSet(all, item, set, value));
@@ -455,7 +450,7 @@ export function useSetsPlayer({
     const last = fresh.at(-1);
     const next = cards.order.find((k) => k !== last && !doneOf(k) && !fresh.includes(k));
     if (last !== undefined && next !== undefined)
-      rest.tick(afterKey(last), restAfterItem(items, last, run.exerciseRestS), nameOf(next));
+      rest.tick(afterKey(last), restAfterItem(items, last, run.exerciseRestS));
   });
   const endedKey = climbsEnded.join(",");
   React.useEffect(() => settleClimbs.current(), [endedKey, settleClimbs]);

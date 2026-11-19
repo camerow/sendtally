@@ -122,7 +122,7 @@ describe("Sets player", () => {
     const folded = "Open Back squat, 2 sets × 5 reps · 100 kg";
     expect(screen.getByLabelText(folded)).toBeTruthy();
     expect(screen.getByText("Exercise 2 of 3")).toBeTruthy();
-    expect(screen.queryByTestId("rest-next")?.props.children).toBe("Row");
+    expect(screen.queryByTestId("rest-next")).toBeNull();
     expect(readingOrder(folded, "Rest, 2:00 left", "Row, set 1", "Rest 2:00")).toEqual([
       folded,
       "Rest, 2:00 left",
