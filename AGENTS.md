@@ -142,6 +142,44 @@ Mobile form standard: a focused input always stays visible when the keyboard com
 Wrap the screen's scroll view in `KeyboardAvoidingView` (`behavior="padding"` on iOS) and give the scroll view `keyboardShouldPersistTaps="handled"`; `GymEditor` and `EntryComposer` are the reference.
 Design work (Claude-generated or otherwise) targets the token vocabulary; each platform implements idiomatically.
 
+### Screen design rules
+
+These came out of Will's review of the workout screens on 2026-11-19 and apply to every screen on both apps.
+A design or a build that breaks one is not ready for review.
+
+- **One job per screen.**
+  Write the screen's job as one sentence before designing it, and cut or move behind a button whatever does not serve it.
+  A workout's page says what the workout is and starts it; a live run does the current set; a finished workout shows what was done.
+- **History opens from a History button.**
+  Past sessions and trend charts never sit inline on a detail, run or finished screen.
+  A workout has one history view and an exercise has one, and every screen that shows that workout or exercise opens the same view from a History button.
+- **Show this session, resolved.**
+  A workout that alternates or progresses shows only the sets, reps and load of the session about to be done.
+  Never show the rule that produced them ("Alternates: A is 5 x 2"), the other variant, or the next session.
+- **A number carries its metric and its scale.**
+  "Target RPE 8/10" and "RPE 7", never "Target effort" or "effort · aimed 8".
+  One concept has one word in the plan, the run, the review and the finished workout.
+- **Type weight follows importance.**
+  In any row the name is the strongest text, the values come second, and a position (A1, set 3, round 2) is the quietest.
+  A name gets its own line when the row also holds inputs.
+- **What the user is aiming for gets the emphasis.**
+  The session's target (Target RPE, the sets and reps) sits in the hero or directly beside the input, never in a muted line.
+- **Rows of one kind share one column grid.**
+  Every set row on a screen takes its columns from one definition (`SET_COLUMNS` on mobile), so inputs, ticks and trailing controls line up down the screen across cards and workout kinds.
+- **Say it once.**
+  No line that restates what the order or the layout already shows ("Next: Calf raises"), no tile that counts what is listed below ("16 sets"), no usage counter ("Used once").
+- **Selection is explicit and reversible.**
+  Pressing a row's title selects it and pressing it again unselects it; typing in a field or ticking a set does not select.
+  Remove and other secondary row actions show only on the selected row, and the row's primary control (the tick) holds the trailing edge otherwise.
+- **One press moves between inputs.**
+  With the keypad open, pressing another field moves the keypad to that field.
+- **A log is not graded.**
+  A set that differs from its target is recorded as done, in neutral ink, with no warning colour and no "2 of 5 reps" line.
+  Amber and red are for what blocks a save and for destructive actions.
+- **The same thing looks the same everywhere.**
+  An exercise has one row anatomy in the workout page, the run, the review and the finished workout, and one component per platform draws it for every workout kind.
+  A kind adds fields to the shared row; it does not get a row component of its own.
+
 ## Migration order
 
 5. **Aurora removal (in progress):** delete the board connect flow, cron + queue pipeline, Aurora client, catalogue cron, and the `board_*` tables; drop board-sync copy from the apps and web. Keep `source = "board"` rows readable.
