@@ -321,7 +321,9 @@ export function ActivityForm({
           onChange={(rpe) => update({ rpe })}
         />
 
-        {!timed && <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />}
+        {draft.workoutId === null && (
+          <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />
+        )}
 
         {part !== undefined && grips !== undefined && (
           <View style={{ gap: 8 }}>

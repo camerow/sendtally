@@ -128,7 +128,7 @@ describe("Log activity", () => {
 
   it("reads a timed run's date, start and length, opening one in place to change it", async () => {
     const initial = newActivityDraft(
-      { kind: "mobility", startTime: "07:00", minutes: "4" },
+      { kind: "mobility", workoutId: "w1", startTime: "07:00", minutes: "4" },
       "2026-10-22"
     );
     await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet />);
@@ -489,6 +489,23 @@ describe("Log activity", () => {
     expect(screen.getByLabelText("Pull-ups, set 1 · RPE")).toBeTruthy();
     expect(screen.queryByLabelText("Dips, set 1 · RPE")).toBeNull();
     expect(screen.getByLabelText("Rows, set 1 · RPE")).toBeTruthy();
+  });
+
+  it("asks Focus only of an activity with no workout, and saves Log it with the workout's focus", async () => {
+    await render(
+      <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={null} />
+    );
+    expect(screen.getByText("Focus")).toBeTruthy();
+    const initial = newActivityDraft(
+      { kind: "strength", workoutId: "w3", focus: "recovery" },
+      "2026-10-22"
+    );
+    await render(<ActivityForm id="a1" initial={initial} logged={null} kindSet />);
+    expect(screen.queryByText("Focus")).toBeNull();
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
+      expect.objectContaining({ focus: "recovery" })
+    );
   });
 
   it("leaves Log it at once on Discard, with nothing to confirm", async () => {
