@@ -472,10 +472,11 @@ describe("Log activity", () => {
     alert.mockRestore();
   });
 
-  it("asks a set RPE only of an exercise with a Target RPE, and shows the session's Target RPE by the RPE field", async () => {
+  it("asks a set RPE of an exercise with a Target RPE or a rating already, and shows the session's Target RPE by the RPE field", async () => {
     const done = [
       { item: 0, exercise: "Pull-ups", sets: [{ reps: 5 }], targetRpe: 8 },
       { item: 1, exercise: "Dips", sets: [{ reps: 8 }] },
+      { item: 2, exercise: "Rows", sets: [{ reps: 8, rpe: 7 }] },
     ];
     const initial = newActivityDraft(
       { kind: "strength", workoutId: "w7", done: JSON.stringify(done), off: "[]" },
@@ -487,6 +488,7 @@ describe("Log activity", () => {
     expect(screen.getByText("Target RPE 7/10")).toBeTruthy();
     expect(screen.getByLabelText("Pull-ups, set 1 · RPE")).toBeTruthy();
     expect(screen.queryByLabelText("Dips, set 1 · RPE")).toBeNull();
+    expect(screen.getByLabelText("Rows, set 1 · RPE")).toBeTruthy();
   });
 
   it("leaves Log it at once on Discard, with nothing to confirm", async () => {

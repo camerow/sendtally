@@ -86,7 +86,8 @@ describe("Sets player", () => {
     expect(router.back).toHaveBeenCalled();
     expect(screen.queryByLabelText("About this workout")).toBeNull();
     expect(screen.getByText("Heavy squats, then rows.")).toBeTruthy();
-    expect(screen.getByText("Exercise 1 of 3 · Target effort 8")).toBeTruthy();
+    expect(screen.getByText("Target RPE 8/10")).toBeTruthy();
+    expect(screen.getByText("Exercise 1 of 3")).toBeTruthy();
     expect(screen.getByText("2 sets × 5 reps · 100 kg")).toBeTruthy();
     expect(screen.getByText("1 set × 8 reps")).toBeTruthy();
     expect(screen.getByText("1 set × 0:30")).toBeTruthy();
@@ -120,7 +121,7 @@ describe("Sets player", () => {
     expect(screen.queryByLabelText("Rest, 1:00 left")).toBeNull();
     const folded = "Open Back squat, 2 × 5 · 100 kg";
     expect(screen.getByLabelText(folded)).toBeTruthy();
-    expect(screen.getByText("Exercise 2 of 3 · Target effort 8")).toBeTruthy();
+    expect(screen.getByText("Exercise 2 of 3")).toBeTruthy();
     expect(screen.queryByTestId("rest-next")?.props.children).toBe("Row");
     expect(readingOrder(folded, "Rest, 2:00 left", "Row, set 1", "Rest 2:00")).toEqual([
       folded,

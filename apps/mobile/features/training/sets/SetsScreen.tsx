@@ -418,6 +418,7 @@ export function SetsScreen({
                       item={item}
                       done={d}
                       lifting={player.lifting(i)}
+                      eachSide={player.sided(item.exercise)}
                       ticked={ticked}
                       selected={player.selected}
                       unit={unit}

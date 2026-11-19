@@ -25,6 +25,7 @@ import { RpeField } from "../sets/RpeField";
 import { SET_COLUMNS } from "../sets/setColumns";
 import { SetDoneFields } from "../sets/SetDoneFields";
 import { SetHeadings } from "../sets/SetHeadings";
+import { holdsOnly } from "../sets/holdsOnly";
 import { SetRow } from "../sets/SetRow";
 import { type } from "../type";
 
@@ -77,7 +78,8 @@ export function DoneDetails({
 }: DoneDetailsProps): React.ReactElement {
   const edit = (next: ItemDone[]): void => onChange(next, [...off]);
   const [selected, setSelected] = React.useState<SetAt | null>(null);
-  const rated = (d: ItemDone): boolean => hangs || d.targetRpe !== undefined;
+  const rated = (d: ItemDone): boolean =>
+    hangs || d.targetRpe !== undefined || d.sets.some((s) => s.rpe !== undefined);
   // A hang set's count, then its load, then its RPE, then the next set's.
   const counts = useFieldOrder(
     hangs
@@ -145,7 +147,10 @@ export function DoneDetails({
             const measured = measure(d.exercise);
             const lap = measured === "laps";
             const dose = planned[d.item];
-            const lifting = d.sets.some((s) => s.weightKg !== undefined) && !hangs;
+            const lifting =
+              !hangs &&
+              (d.sets.some((s) => s.weightKg !== undefined) ||
+                (kind === "strength" && d.sets.every((s) => s.onS === undefined)));
             const head = supersetHeadAt(exercises, index);
             const oneHang = hangs && dose?.reps === 1;
             const climbs = !lap && d.sets.some((s) => s.climbs !== undefined);
@@ -161,7 +166,9 @@ export function DoneDetails({
                       ? t("plan.colHeld")
                       : hangs
                         ? t("activities.colHangsLoad")
-                        : t("activities.colDone")
+                        : !lifting && holdsOnly(d.sets)
+                          ? t("workouts.dose.hold")
+                          : t("activities.colDone")
                   }
                   rpe={rated(d)}
                 />
