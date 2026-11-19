@@ -32,7 +32,7 @@ export function LibraryIntro({
         <CategoryMark kind={workout.kind} size={28} />
         <Label color={KIND_LOOK[workout.kind].ink}>{shown ?? kicker}</Label>
       </View>
-      <Title size={38}>{workout.name}</Title>
+      <Title size={34}>{workout.name}</Title>
       {day}
       <Description text={workout.description} fold />
     </View>

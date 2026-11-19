@@ -160,6 +160,11 @@ describe("A finished workout's summary", () => {
     expect(screen.queryByText(/sets|What you did|Last time|Over time|\+2.5 kg/)).toBeNull();
   });
 
+  it("shows its notes under the tiles", async () => {
+    await show("a1", [{ ...today, notes: "Felt slow to warm up." }]);
+    expect(screen.getByText("Felt slow to warm up.")).toBeTruthy();
+  });
+
   it("keeps a rated set's RPE in its own column, beside its values", async () => {
     const rated = {
       ...today,

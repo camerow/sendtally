@@ -36,8 +36,8 @@ export type ActivitySummaryProps = {
 };
 
 /**
- * A finished strength, mobility or other workout: its length and RPE, its fingerboard part grip
- * by grip, and each exercise as done, a superset's members under its label.
+ * A finished strength, mobility or other workout: its length and RPE, its notes, its fingerboard
+ * part grip by grip, and each exercise as done, a superset's members under its label.
  */
 export function ActivitySummary({
   activity,
@@ -63,6 +63,11 @@ export function ActivitySummary({
       target={{ kind: "activity", record: activity }}
       onDelete={() => void actions.deleteActivity(activity.id)}
     >
+      {activity.notes !== null && activity.notes !== "" && (
+        <Text style={[type.body, { fontSize: 15, lineHeight: 22, color: colors.gunmetal }]}>
+          {activity.notes}
+        </Text>
+      )}
       {grids.map((grid, i) => (
         <HangResultCard
           key={i}
