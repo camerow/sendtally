@@ -125,6 +125,7 @@ const finished = async (): Promise<unknown> => {
 };
 
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 10, 17, 18, 0) });
   store.clear();
   tally.remove();
   container = document.createElement("div");
@@ -133,6 +134,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   act(() => root.unmount());
   container.remove();
   store.clear();
