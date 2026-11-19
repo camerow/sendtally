@@ -45,7 +45,7 @@ export function HangResultCard({ grid, gripName, unit }: HangResultCardProps): R
           >
             {row.length === 1 && grid.seconds[s] !== undefined ? (
               <Text style={[type.monoBold, { flex: 1, fontSize: 14, color: colors.gunmetal }]}>
-                {row[0] === true ? clock(grid.seconds[s] ?? 0) : "–"}
+                {row[0] === true ? clock(grid.seconds[s] ?? 0, true) : "–"}
               </Text>
             ) : (
               row.map((held, r) => (
