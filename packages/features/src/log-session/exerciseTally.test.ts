@@ -13,7 +13,6 @@ import {
   withClimbTries,
   withExerciseClimb,
   withExerciseDone,
-  withoutClimb,
   withSetClimbAdded,
   withSetEnded,
   withWallStarted,
@@ -127,7 +126,6 @@ describe("exercise tally", () => {
       [0, 1],
       [0, 1],
     ]);
-    expect(withoutClimb(draft, first).climbs.map((c) => c.grade)).toEqual(["V6"]);
   });
 
   it("runs the clock on the wall only from its own button, pausing with the time so far", () => {

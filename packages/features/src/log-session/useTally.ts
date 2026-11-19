@@ -13,7 +13,6 @@ import {
   timeUp,
   withClimbFlipped,
   withClimbTries,
-  withoutClimb,
   withSetClimbAdded,
   withSetEnded,
   withWallStarted,
@@ -270,7 +269,7 @@ export function useTally({
     remove: (key) => {
       if (draft === null) return;
       setSelection(null);
-      live.replace(withoutClimb(draft, key));
+      live.replace({ ...draft, climbs: draft.climbs.filter((c) => c.key !== key) });
     },
     toggleWall: () => {
       if (draft !== null) live.replace(withWallToggled(draft, new Date()));
