@@ -72,13 +72,14 @@ beforeEach(() => {
 describe("Hangboard workout", () => {
   it("shows the first dose before any session", async () => {
     await renderWithHang(<WorkoutScreen id="fingers-ab" />);
-    expect(screen.getByText("6 × 1")).toBeTruthy();
+    expect(screen.getByLabelText("Sets 6")).toBeTruthy();
+    expect(screen.getByLabelText("Hangs a set 1")).toBeTruthy();
   });
 
   it("shows the dose the next session takes, as Start runs it", async () => {
     await renderWithHang(<WorkoutScreen id="fingers-ab" />, hangData({ sessions: [logged] }));
-    expect(screen.getByText("3 × 6")).toBeTruthy();
-    expect(screen.queryByText("6 × 1")).toBeNull();
+    expect(screen.getByLabelText("Sets 3")).toBeTruthy();
+    expect(screen.getByLabelText("Hangs a set 6")).toBeTruthy();
   });
 
   it("links to its grip's progress once the grip has a session", async () => {
@@ -91,7 +92,7 @@ describe("Hangboard workout", () => {
 
   it("lists its grip as an exercise, with what it last used once it has", async () => {
     await renderWithHang(<WorkoutScreen id="fingers-ab" />);
-    expect(screen.getByText("Half crimp")).toBeTruthy();
+    expect(screen.getAllByText("Half crimp").length).toBeGreaterThan(0);
     expect(screen.queryByText("Grip")).toBeNull();
     expect(screen.queryByText(/^Last used/)).toBeNull();
     await renderWithHang(<WorkoutScreen id="fingers-ab" />, hangData({ sessions: [logged] }));
@@ -235,7 +236,6 @@ describe("Its length", () => {
 
     await renderWithHang(<WorkoutScreen id="max10" />);
     expect(screen.getByText("13m · Not used yet")).toBeTruthy();
-    expect(screen.getByText("13m")).toBeTruthy();
   });
 });
 

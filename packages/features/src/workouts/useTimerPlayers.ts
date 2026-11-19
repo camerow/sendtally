@@ -17,13 +17,13 @@ import { doneOfRun } from "../activities/intervals";
 import type { LiveRunStore, PlayerPath } from "./liveRun";
 import { intervalsParams, timerParams, type DoneParams, type IntervalsRun } from "./runParams";
 import type { Sound } from "./timerCues";
-import { hangRunDone } from "./timerView";
+import { hangRunDone, type SetLoads } from "./timerView";
 import { useHangTimer, type HangTimer } from "./useHangTimer";
 import { useLatest } from "./useLatest";
 import type { PlannedRun } from "./usePlannedRun";
 
-/** Where a timer was when it was minimised or the page closed: its run, and the hang timer's setups. */
-export type ResumedTimer = { run: Run; setups?: HangSetup[] };
+/** Where a timer was when it was minimised or the page closed: its run, and the hang timer's setups and loads. */
+export type ResumedTimer = { run: Run; setups?: HangSetup[]; loads?: SetLoads };
 
 export function resumedTimer(
   store: LiveRunStore,
@@ -54,13 +54,15 @@ export type HangTimerInputs = PlayerInputs & {
   planned: PlannedRun;
   grips: readonly string[];
   setups: HangSetup[];
+  /** Each set's load as the timer's stepper left it; none keeps every set at its setup's. */
+  loads?: SetLoads;
   link: PlanLink;
   session: number;
   resumed: ResumedTimer | null;
   /** The finished run's review. */
   onFinish: (review: DoneParams) => void;
   /** Keeps the run somewhere other than its own live run: a mix's part keeps it in its workout's. */
-  write?: (run: Run<HangPhase>, setups: HangSetup[]) => void;
+  write?: (run: Run<HangPhase>, setups: HangSetup[], loads: SetLoads | undefined) => void;
 };
 
 /** A hangboard workout in the timer, kept in `store` so it outlasts the page, handed to its review once it finishes. */
@@ -68,6 +70,7 @@ export function useHangTimerPlayer({
   planned,
   grips,
   setups,
+  loads,
   link,
   session,
   resumed,
@@ -94,7 +97,7 @@ export function useHangTimerPlayer({
   const keep = useLatest(write);
   React.useEffect(() => {
     if (keep.current !== undefined) {
-      keep.current(run, setups);
+      keep.current(run, setups, loads);
       return;
     }
     store.write({
@@ -103,9 +106,9 @@ export function useHangTimerPlayer({
       pathname: "/workout/timer",
       params: timerParams(workout.id, gripId, session, link),
       startedAt: run.startedAt,
-      state: { player: "timer", run, setups },
+      state: { player: "timer", run, setups, ...(loads !== undefined && { loads }) },
     });
-  }, [store, run, workout, gripId, session, link, setups, keep]);
+  }, [store, run, workout, gripId, session, link, setups, loads, keep]);
 
   useEndOnOpen(end, timer);
 
@@ -119,9 +122,9 @@ export function useHangTimerPlayer({
       gripId,
       link,
       session,
-      run: hangRunDone(run, planned, grips, setups),
+      run: hangRunDone(run, planned, grips, setups, { loads }),
     });
-  }, [run, planned, workout, gripId, grips, setups, link, session, finish]);
+  }, [run, planned, workout, gripId, grips, setups, loads, link, session, finish]);
 
   return timer;
 }

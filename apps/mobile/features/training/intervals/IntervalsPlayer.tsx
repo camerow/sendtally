@@ -1,13 +1,17 @@
 import React from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, Text } from "react-native";
 import type { ItemDone, WeightUnit } from "@sendtally/core/hang";
-import { kindLabel } from "@sendtally/features/activities";
-import { SetArrows } from "../timer/SetArrows";
+import { type } from "../type";
 import { TimerFrame } from "../timer/TimerFrame";
 import { useTimer } from "../timer/useTimer";
 import { useTimerSounds } from "../timer/useTimerSounds";
 import { liveRun } from "../../live-session/liveRun";
-import { intervalsView, useIntervalsPlayer, type IntervalsRun } from "@sendtally/features/workouts";
+import {
+  ON_DARK,
+  intervalsView,
+  useIntervalsPlayer,
+  type IntervalsRun,
+} from "@sendtally/features/workouts";
 import { StepCard } from "./StepCard";
 import { UpNext } from "./UpNext";
 
@@ -19,7 +23,7 @@ export type IntervalsPlayerProps = {
   onFinish: (done: ItemDone[], off: string[], startedAt: number) => void;
 };
 
-/** Plays the steps round by round: the step now, what comes next, and pause, restart and skip. */
+/** Plays the steps round by round: the step now, the steps to come, and the timer's controls. */
 export function IntervalsPlayer({
   workout,
   unit,
@@ -34,20 +38,7 @@ export function IntervalsPlayer({
   const view = intervalsView(run, body, secondsLeft, unit, climbing);
 
   return (
-    <TimerFrame
-      timer={timer}
-      name={workout.title}
-      meta={kindLabel(workout.kind)}
-      workoutId={workout.workoutId}
-      controls={{
-        color: view.look.fill,
-        primary: view.primary,
-        next: null,
-        fail: view.fail,
-        onPrimary: timer.primary,
-        onFail: timer.fail,
-      }}
-    >
+    <TimerFrame timer={timer} controls={{ color: view.look.fill, primary: view.primary }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 18 }}>
         <StepCard
           text={view.step}
@@ -55,7 +46,9 @@ export function IntervalsPlayer({
           accessibilityLabel={view.primary}
           onPress={timer.primary}
         />
-        <SetArrows timer={timer} label={view.round} />
+        <Text style={[type.monoBold, { fontSize: 15, textAlign: "center", color: ON_DARK }]}>
+          {view.round}
+        </Text>
         <UpNext items={view.upNext} />
       </ScrollView>
     </TimerFrame>

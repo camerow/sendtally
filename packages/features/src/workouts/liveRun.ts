@@ -3,6 +3,7 @@ import { phaseLabel } from "../hang/timerText";
 import { t } from "../i18n";
 import { exerciseName } from "./library";
 import type { FingersPart } from "./fingersPart";
+import type { SetLoads } from "./timerView";
 import { COUNT_IN_S, SWITCH_S, type Hold } from "./holdClock";
 import type { Rest } from "./restCountdown";
 import type { RunCards } from "./runCards";
@@ -10,7 +11,7 @@ import { readWorkoutRun } from "./runParams";
 
 /** Where a player is: the timer's run, or the sets and items ticked so far. */
 export type RunState =
-  | { player: "timer"; run: Run; setups?: HangSetup[]; laps?: boolean }
+  | { player: "timer"; run: Run; setups?: HangSetup[]; loads?: SetLoads; laps?: boolean }
   | {
       player: "sets";
       done: ItemDone[];

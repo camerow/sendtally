@@ -60,6 +60,8 @@ export const hang = {
   "hang.statOnEdge": "An der Leiste",
   "hang.statTotalLifts": "Züge gesamt",
   "hang.statSets": "Sätze",
+  "hang.statHangsASet": "Hangs pro Satz",
+  "hang.statOnOff": "An / aus",
   "hang.history": "Verlauf · {count}",
   "hang.sessionCount_one": "{count} Session",
   "hang.sessionCount_other": "{count} Sessions",
