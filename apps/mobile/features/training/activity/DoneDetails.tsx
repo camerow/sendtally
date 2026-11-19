@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import type { ActivityKind } from "@sendtally/api-client";
 import type { Dose, ItemDone, SetDone, WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
@@ -141,7 +141,12 @@ export function DoneDetails({
           )
       )}
       {exercises.length > 0 && (
-        <View style={{ gap: flat ? 14 : 10 }}>
+        <Pressable
+          accessible={false}
+          testID="review-body"
+          onPress={() => setSelected(null)}
+          style={{ gap: flat ? 14 : 10 }}
+        >
           {exercises.map((d, index) => {
             const measured = measure(d.exercise);
             const lap = measured === "laps";
@@ -265,7 +270,7 @@ export function DoneDetails({
               </React.Fragment>
             );
           })}
-        </View>
+        </Pressable>
       )}
     </>
   );
