@@ -1,17 +1,13 @@
-import React from "react";
-import type { ActivityRecord, HangSessionRecord, SendtallyApi } from "@sendtally/api-client";
+import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
 import type { CalendarDate, WeightUnit } from "@sendtally/core/hang";
 import { climbsLine, isClimbingSets, wallLine } from "./climbing";
 import { checklistsLine, setText } from "./done";
 import { bestSet, hangGrids, hangTotals } from "./summary";
 import { dayMonth, loadLabel, shortDate } from "../hang/format";
 import type { HangModel } from "../hang/model";
-import { useHang } from "../hang/useHang";
-import type { QueryState } from "../query";
 import { t } from "../i18n";
 import { exerciseKey, type ExerciseSeries } from "../statistics";
 import type { HistoryItem } from "./types";
-import { useActivities } from "./useActivities";
 
 /** A workout's sessions, newest first. */
 export function ofWorkout<T extends { workoutId: string | null; date: CalendarDate }>(
@@ -122,21 +118,4 @@ export function workoutHistory(
   return dated
     .sort((a, b) => b.date.localeCompare(a.date))
     .map(({ date, item }) => ({ ...item, name: shortDate(date) }));
-}
-
-export function useWorkoutHistory(
-  api: SendtallyApi,
-  workoutId: string,
-  currentId?: string
-): QueryState<HistoryItem[]> {
-  const activities = useActivities(api).state;
-  const hang = useHang(api).state;
-  return React.useMemo(() => {
-    if (activities.status !== "ready") return activities;
-    if (hang.status !== "ready") return hang;
-    return {
-      status: "ready",
-      data: workoutHistory(activities.data, hang.data, workoutId, currentId),
-    };
-  }, [activities, hang, workoutId, currentId]);
 }
