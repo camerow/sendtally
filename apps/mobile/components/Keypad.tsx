@@ -175,7 +175,7 @@ export function Keypad({
 
   const [zeros, typed] =
     mode.kind === "time"
-      ? timeText(entries.time)
+      ? timeText(entries.time, mode)
       : range !== undefined
         ? ["", entries.number.text]
         : ["", entries.number.text.replace(".", decimalMark()).replace("-", "−")];

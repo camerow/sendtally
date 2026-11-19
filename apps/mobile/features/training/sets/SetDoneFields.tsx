@@ -33,6 +33,9 @@ export type SetDoneFieldsProps = {
   onChange: (set: SetDone) => void;
 };
 
+/** A set's hold or time held reads MM:SS, so it stays under an hour. */
+const SET_TIME_MAX = 3599;
+
 function Joiner({ mark }: { mark: string }): React.ReactElement {
   return (
     <View style={SET_COLUMNS.join}>
@@ -92,6 +95,7 @@ export function SetDoneFields({
                 {...(column ?? slot("reps"))}
                 {...named(t("plan.colHeld"))}
                 placeholder="–"
+                max={SET_TIME_MAX}
                 value={set.reps === 0 ? 0 : (set.onS ?? 0)}
                 onChange={(onS) => onChange({ ...set, reps: onS > 0 ? 1 : 0, onS })}
               />
@@ -157,6 +161,7 @@ export function SetDoneFields({
                 <TimeField
                   {...slot("hold")}
                   {...named(t("workouts.dose.hold"))}
+                  max={SET_TIME_MAX}
                   value={set.onS ?? 0}
                   onChange={(onS) => onChange({ ...set, onS })}
                 />

@@ -78,6 +78,16 @@ describe("timeEntry", () => {
     expect(timeText(openTime(7))).toEqual(["00:00:0", "7"]);
     expect(timeText(openTime(0))).toEqual(["00:00:0", "0"]);
     expect(timeText(openTime(1200))).toEqual(["00:", "20:00"]);
+    const hour = { max: 3599 };
+    expect(timeText(openTime(90, hour), hour)).toEqual(["0", "1:30"]);
+    expect(timeText(openTime(45, hour), hour)).toEqual(["00:", "45"]);
+    expect(
+      timeEntry(
+        timeEntry(openTime(0, hour), { type: "digit", digit: "1234" }, hour),
+        { type: "digit", digit: "5" },
+        hour
+      ).digits
+    ).toBe("1234");
   });
 });
 

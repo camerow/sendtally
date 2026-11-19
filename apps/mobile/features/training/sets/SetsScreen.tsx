@@ -51,6 +51,7 @@ import { type } from "../type";
 import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
 import type { DetailMenuRow } from "../components/types";
 import { ChecklistCard } from "./ChecklistCard";
+import { openExerciseHistory } from "../exercises/openExerciseHistory";
 import { SupersetCard } from "./SupersetCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
 import { SET_COLUMNS } from "./setColumns";
@@ -125,7 +126,12 @@ export function SetsScreen({
     const targetS = player.holdTarget(at);
     return (
       targetS !== null && (
-        <HoldButton name={nameOf(at.item)} targetS={targetS} onPress={() => player.startHold(at)} />
+        <HoldButton
+          name={nameOf(at.item)}
+          targetS={targetS}
+          disabled={hold.hold !== null}
+          onPress={() => player.startHold(at)}
+        />
       )
     );
   };
@@ -311,6 +317,7 @@ export function SetsScreen({
                         onAddRound={() => player.addSet(i)}
                         onFold={() => g.members.forEach((m) => player.fold(m))}
                         menu={groupMenu(g)}
+                        onHistory={(m) => openExerciseHistory(mine, items[m]?.exercise ?? "")}
                       />
                     )}
                     {order.indexOf(last) < order.length - 1 && restBetween(last)}
@@ -433,6 +440,7 @@ export function SetsScreen({
                       onAddSet={() => player.addSet(i)}
                       onFold={() => player.fold(i)}
                       menu={menu(i)}
+                      onHistory={openExerciseHistory(mine, item.exercise)}
                     />
                   )}
                   {between}

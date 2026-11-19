@@ -126,7 +126,7 @@ export type SetsPlayer = {
   climbing: (item: number) => ClimbingItem | null;
   /** What a set asks: a lifting set takes last time's weight where the workout sets none. */
   target: (at: SetAt) => SetDone;
-  /** The seconds a hold would run for, when the set is the current one, timed, and nothing holds yet. */
+  /** The seconds an open timed set's hold would run for; its ▶ shows on every one, idle while another holds. */
   holdTarget: (at: SetAt) => number | null;
   startHold: (at: SetAt) => void;
   previous: (exercise: string) => SetDone[];
@@ -369,13 +369,7 @@ export function useSetsPlayer({
   const sided = eachSideOf(exercises ?? []);
   const holdTarget = (at: SetAt): number | null => {
     const targetS = items[at.item]?.dose.onS;
-    return hold.hold === null &&
-      next?.item === at.item &&
-      next.set === at.set &&
-      targetS !== undefined &&
-      targetS > 0
-      ? targetS
-      : null;
+    return !ticked.has(setKey(at)) && targetS !== undefined && targetS > 0 ? targetS : null;
   };
   const climbPlan = (item: number): ClimbPlan => {
     const dose = items[item]?.dose ?? { sets: 0 };
@@ -518,7 +512,7 @@ export function useSetsPlayer({
     holdTarget,
     startHold: (at) => {
       const targetS = holdTarget(at);
-      if (targetS !== null)
+      if (targetS !== null && hold.hold === null)
         hold.start(setKey(at), nameOf(at.item), targetS, sided(items[at.item]?.exercise ?? ""));
     },
     previous,

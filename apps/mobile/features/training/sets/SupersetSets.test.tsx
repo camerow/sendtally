@@ -60,7 +60,8 @@ describe("A superset in the workout view", () => {
     expect(screen.queryAllByText("Rest 0:00")).toEqual([]);
     await tick("Pull-ups, set 1");
     expect(screen.queryByText("+30s")).toBeNull();
-    expect(screen.getByText("Next: Push-ups")).toBeTruthy();
+    expect(screen.queryByText(/^Next:/)).toBeNull();
+    for (const letter of ["A", "B"]) expect(screen.getByText(letter)).toBeTruthy();
     await tick("Push-ups, set 1");
     expect(screen.getByText("Superset · Round 2 of 2")).toBeTruthy();
     expect(screen.getByText("+30s")).toBeTruthy();

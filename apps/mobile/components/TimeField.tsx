@@ -35,7 +35,7 @@ export function TimeField({
       text={
         placeholder !== undefined && value === 0
           ? [placeholder, ""]
-          : timeText(openTime(value, { min, max }))
+          : timeText(openTime(value, { min, max }), { min, max })
       }
     />
   );
