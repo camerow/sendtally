@@ -8,7 +8,7 @@ import { type } from "../type";
 import { SET_COLUMNS } from "./setColumns";
 
 export type SetRowProps = {
-  /** Its place, quietest in the row: "1", "B2", "Lap 3". */
+  /** Its place, quietest in the row: "1", "B2", "Lap 3"; "" for a checklist line, which has none. */
   position: string;
   /** A superset member's or a climb's name, on its own line over the row. */
   name?: string;
@@ -98,7 +98,7 @@ export function SetRow({
         </Pressable>
       )}
       <View style={[SET_COLUMNS.row, { minHeight: read ? 30 : 48 }]}>
-        {name === undefined ? place : <View style={SET_COLUMNS.position} />}
+        {position !== "" && (name === undefined ? place : <View style={SET_COLUMNS.position} />)}
         <View style={SET_COLUMNS.lead}>{children}</View>
         {rpe !== undefined && (
           <View style={read ? SET_COLUMNS.rpeRead : SET_COLUMNS.rpe}>{rpe}</View>

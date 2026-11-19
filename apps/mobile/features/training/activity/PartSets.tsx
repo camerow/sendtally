@@ -1,6 +1,5 @@
 import React from "react";
 import type { HangKind, HangSetup, ItemDone, SetDone, WeightUnit } from "@sendtally/core/hang";
-import { KIND_LOOK } from "@sendtally/features/training";
 import { HangDataProvider } from "../data/HangDataProvider";
 import { SetupPill } from "../done/SetupPill";
 import { DoneDetails } from "./DoneDetails";
@@ -43,7 +42,6 @@ export function PartSets({
         off={[]}
         planned={planned}
         unit={unit}
-        color={KIND_LOOK.hangboard.ink}
         hangs
         flat
         hangLoadKg={setup.loadKg}

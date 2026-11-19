@@ -11,12 +11,15 @@ import { ExerciseHead } from "./ExerciseHead";
 import { RpeField } from "./RpeField";
 import { SetDoneFields } from "./SetDoneFields";
 import { SetHeadings } from "./SetHeadings";
+import { holdsOnly } from "./holdsOnly";
 import { SetRow } from "./SetRow";
 
 export type SetsCardProps = {
   item: SessionItem;
   done: ItemDone;
   lifting: boolean;
+  /** Done each side: its target reads "a side". */
+  eachSide?: boolean;
   ticked: ReadonlySet<string>;
   selected: SetAt | null;
   unit: WeightUnit;
@@ -45,6 +48,7 @@ export function SetsCard({
   item,
   done,
   lifting,
+  eachSide = false,
   ticked,
   selected,
   unit,
@@ -73,7 +77,7 @@ export function SetsCard({
       head={
         <ExerciseHead
           name={name}
-          target={targetText(item.dose, "strength", unit)}
+          target={targetText(item.dose, "strength", unit, { eachSide })}
           about={about}
           {...(onHistory !== undefined && { onHistory })}
           onFold={onFold}
@@ -86,7 +90,11 @@ export function SetsCard({
         onPress: onAddSet,
       }}
     >
-      <SetHeadings position={t("activities.colSet")} fields={t("activities.colDone")} rpe={rated} />
+      <SetHeadings
+        position={t("activities.colSet")}
+        fields={holdsOnly(done.sets) ? t("workouts.dose.hold") : t("activities.colDone")}
+        rpe={rated}
+      />
       {done.sets.map((set, i) => {
         const on = ticked.has(setKey({ item: done.item, set: i }));
         const label = t("activities.setOf", { exercise: name, n: i + 1 });

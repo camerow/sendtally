@@ -37,20 +37,12 @@ export type WorkoutStart =
   | { open: "timer"; gripId: string }
   | { open: "liveSession" }
   | { open: "intervals"; run: IntervalsRun }
-  | { open: "sets" | "checklist"; run: WorkoutRun };
-
-const playerOf = (items: readonly SessionItem[]): "sets" | "checklist" =>
-  items.some(
-    (i) => i.checklist !== undefined || i.dose.reps !== undefined || i.dose.weightKg !== undefined
-  )
-    ? "sets"
-    : "checklist";
+  | { open: "sets"; run: WorkoutRun };
 
 /**
  * The player a workout's items call for: hangboard in the timer, all timed in the
- * intervals player (climbing measured in time too, as laps), any exercise logged in climbs on
- * the tally, with reps or weight, or beside a typed checklist in the sets player, anything else
- * in the checklist player. A mix of grips and other exercises always opens the sets player,
+ * intervals player (climbing measured in time too, as laps), anything else in the sets player.
+ * A mix of grips and other exercises always opens the sets player,
  * where its grips are one fingerboard part. A climbing workout with no items opens the live
  * session, and any other workout with none the sets player with no cards, its description the
  * body. An exercise done on each side plays twice in the intervals player.
@@ -73,14 +65,10 @@ export function workoutStart(
     return { open: "sets", run: { ...run, exerciseRestS: w.exerciseRestS, items: [] } };
   if (items.some((i) => isGrip(i.exercise)))
     return { open: "sets", run: { ...run, exerciseRestS: w.exerciseRestS, items: [...items] } };
-  const onTally = items.some((i) => tally(i.exercise) !== null);
   const climbs = items.some((i) => ["climbs", "laps"].includes(tally(i.exercise) ?? ""));
   if (!climbs && items.every((i) => i.dose.onS !== undefined))
     return { open: "intervals", run: { ...run, body: intervalsOf(items, eachSide) } };
-  return {
-    open: onTally ? "sets" : playerOf(items),
-    run: { ...run, exerciseRestS: w.exerciseRestS, items: [...items] },
-  };
+  return { open: "sets", run: { ...run, exerciseRestS: w.exerciseRestS, items: [...items] } };
 }
 
 /** The player a start opens and its params; none for the live session or the activity form. */
@@ -95,8 +83,7 @@ export function playerRoute(
     case "intervals":
       return { pathname: "/workout/intervals", params: intervalsParams(start.run) };
     case "sets":
-    case "checklist":
-      return { pathname: `/workout/${start.open}`, params: runParams(start.run) };
+      return { pathname: "/workout/sets", params: runParams(start.run) };
     default:
       return null;
   }

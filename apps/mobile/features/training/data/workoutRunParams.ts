@@ -8,10 +8,8 @@ import {
   type WorkoutRun,
 } from "@sendtally/features/workouts";
 
-export type RunPlayer = "/workout/sets" | "/workout/checklist";
-
-export function runPath(player: RunPlayer, r: WorkoutRun): Href {
-  return { pathname: player, params: runParams(r) };
+export function runPath(r: WorkoutRun): Href {
+  return { pathname: "/workout/sets", params: runParams(r) };
 }
 
 /**

@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
-import type { ItemDone, SetDone, WeightUnit } from "@sendtally/core/hang";
+import type { ActivityKind } from "@sendtally/api-client";
+import type { Dose, ItemDone, SetDone, WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import {
   addSet,
@@ -8,47 +9,47 @@ import {
   offWithout,
   removeSet,
   setKeyOf,
-  exerciseCountText,
   withLineToggled,
-  type SetsOf,
-  shortOf,
 } from "@sendtally/features/activities";
 import { heldSet } from "@sendtally/core/hang";
-import { supersetHeadAt } from "@sendtally/features/workouts";
+import { supersetHeadAt, targetText, type SetAt } from "@sendtally/features/workouts";
 import { t } from "@sendtally/features/i18n";
+import type { TallyMeasure } from "@sendtally/features/exercises";
 import { useFieldOrder } from "../../../components/useFieldOrder";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
-import { Button } from "../components/Button";
-import { Label } from "../components/Label";
-import { SheetSection } from "../components/SheetSection";
+import { ClimbSetsRead } from "../climbing/ClimbSetsRead";
+import { ChecklistCard } from "../sets/ChecklistCard";
+import { ExerciseBlock } from "../sets/ExerciseBlock";
+import { ExerciseHead } from "../sets/ExerciseHead";
+import { RpeField } from "../sets/RpeField";
 import { SET_COLUMNS } from "../sets/setColumns";
+import { SetDoneFields } from "../sets/SetDoneFields";
+import { SetHeadings } from "../sets/SetHeadings";
+import { holdsOnly } from "../sets/holdsOnly";
+import { SetRow } from "../sets/SetRow";
 import { type } from "../type";
-import { ChecklistReview } from "./ChecklistReview";
-import { ReviewSetRow } from "./ReviewSetRow";
 
 export type DoneDetailsProps = {
   done: readonly ItemDone[];
   /** Sets toggled off, which do not save. */
   off: readonly string[];
-  /** Each item's dose, which a set short of it reads against. */
-  planned: readonly (SetDone | undefined)[];
+  /** Each item's dose this session, which its head states as the target; a grip's set has none. */
+  planned: readonly (Dose | SetDone | undefined)[];
   unit: WeightUnit;
-  /** The kind's colour, on each exercise's mark. */
-  color: string;
+  /** What the targets are counted in, outside hangs and laps. */
+  kind?: ActivityKind;
   /** A hangboard workout: its sets are hang counts and loads. */
   hangs?: boolean;
   /** The load a hang set shows while it has none of its own: the session's. */
   hangLoadKg?: number;
-  /** Each exercise's sets as the workout's last run did them, which a lift's target borrows. */
-  previous?: (exercise: string) => readonly SetDone[];
-  /** Whether an exercise is a circuit, whose sets are laps of moves. */
-  laps?: (exercise: string) => boolean;
+  /** How a climbing exercise is measured: a circuit's sets are laps of moves. */
+  measure?: (exercise: string) => TallyMeasure | null;
   /** Beside the first exercise's name, such as a hangboard run's edge and weight. */
   setup?: React.ReactNode;
   onChange: (done: ItemDone[], off: string[]) => void;
   /** A set with values was removed: say so, with Undo putting it back. */
   onRemoved?: (message: string, undo: () => void) => void;
-  /** Inside a card of its own, such as a fingerboard part's: no heading, no card per exercise. */
+  /** Inside a card of its own, such as a fingerboard part's: no card per exercise. */
   flat?: boolean;
 };
 
@@ -57,26 +58,28 @@ const offWithoutKey = (off: readonly string[], item: number, set: number): strin
   off.filter((k) => k !== setKeyOf(item, set));
 
 /**
- * What was done, to review before saving: each exercise as its sets' table, ticked when it
- * counts, amber where it fell short, a number typed in place, a set added or swiped away. A hang
- * set has no tick: it counts when it held anything, and takes an RPE like any set.
+ * What was done, to review before saving: each exercise as the run's block, its target once in
+ * the head and a row per set, ticked when it counts. Pressing a set's number selects it, to
+ * remove it. A hang set has no tick: it counts when it held anything.
  */
 export function DoneDetails({
   done,
   off,
   planned,
   unit,
-  color,
+  kind = "strength",
   hangs = false,
   hangLoadKg = 0,
-  previous = () => [],
-  laps = () => false,
+  measure = () => null,
   setup,
   onChange,
   onRemoved,
   flat = false,
 }: DoneDetailsProps): React.ReactElement {
   const edit = (next: ItemDone[]): void => onChange(next, [...off]);
+  const [selected, setSelected] = React.useState<SetAt | null>(null);
+  const rated = (d: ItemDone): boolean =>
+    hangs || d.targetRpe !== undefined || d.sets.some((s) => s.rpe !== undefined);
   // A hang set's count, then its load, then its RPE, then the next set's.
   const counts = useFieldOrder(
     hangs
@@ -89,12 +92,15 @@ export function DoneDetails({
         )
       : []
   );
-  // A set's RPE, then the next set's, through every exercise.
+  // A set's RPE, then the next set's, through every exercise that asks one.
   const rpes = useFieldOrder(
-    hangs ? [] : done.flatMap((d) => d.sets.map((_, i) => `${setKeyOf(d.item, i)}:rpe`))
+    done.flatMap((d) =>
+      rated(d) && !hangs ? d.sets.map((_, i) => `${setKeyOf(d.item, i)}:rpe`) : []
+    )
   );
   const remove = (d: ItemDone, set: number): void => {
     const removed = (): void => {
+      setSelected(null);
       onChange(removeSet(done, d.item, set), offWithout(off, d.item, set));
       // An unticked set, or a hang set that held nothing, holds nothing logged, so it goes quietly.
       const held = !hangs || (d.sets[set] !== undefined && heldSet(d.sets[set]));
@@ -118,29 +124,111 @@ export function DoneDetails({
     const key = setKeyOf(item, set);
     onChange([...done], off.includes(key) ? off.filter((k) => k !== key) : [...off, key]);
   };
+  const select = (item: number, set: number): void =>
+    setSelected((s) => (s?.item === item && s.set === set ? null : { item, set }));
 
-  const Frame = flat ? FlatFrame : SetsFrame;
   const exercises = done.filter((d) => d.checklist === undefined);
   return (
     <>
       {done.map(
         (d) =>
           d.checklist !== undefined && (
-            <ChecklistReview
+            <ChecklistCard
               key={d.item}
-              list={d.checklist}
-              color={color}
+              lines={d.checklist.lines}
+              ticked={(line) => d.checklist?.checked.includes(line) ?? false}
               onToggle={(line) => edit(withLineToggled(done, d.item, line))}
             />
           )
       )}
       {exercises.length > 0 && (
-        <Frame>
+        <View style={{ gap: flat ? 14 : 10 }}>
           {exercises.map((d, index) => {
-            const target = planned[d.item];
-            const of: SetsOf = hangs ? "hangs" : laps(d.exercise) ? "laps" : "sets";
-            const lifting = d.sets.some((s) => s.weightKg !== undefined) && !hangs;
+            const measured = measure(d.exercise);
+            const lap = measured === "laps";
+            const dose = planned[d.item];
+            const lifting =
+              !hangs &&
+              (d.sets.some((s) => s.weightKg !== undefined) ||
+                (kind === "strength" && d.sets.every((s) => s.onS === undefined)));
             const head = supersetHeadAt(exercises, index);
+            const oneHang = hangs && dose?.reps === 1;
+            const climbs = !lap && d.sets.some((s) => s.climbs !== undefined);
+            const rows = climbs ? (
+              <ClimbSetsRead sets={d.sets} />
+            ) : (
+              <>
+                {index === 0 && setup}
+                <SetHeadings
+                  position={lap ? t("workouts.colLap") : t("activities.colSet")}
+                  fields={
+                    oneHang
+                      ? t("plan.colHeld")
+                      : hangs
+                        ? t("activities.colHangsLoad")
+                        : !lifting && holdsOnly(d.sets)
+                          ? t("workouts.dose.hold")
+                          : t("activities.colDone")
+                  }
+                  rpe={rated(d)}
+                />
+                {d.sets.map((set, i) => {
+                  const on = !off.includes(setKeyOf(d.item, i)) && (!hangs || heldSet(set));
+                  const label = t("activities.setOf", { exercise: d.exercise, n: i + 1 });
+                  const change = (value: typeof set): void =>
+                    onChange(changeSet(done, d.item, i, value), offWithoutKey(off, d.item, i));
+                  const rpeSlot = (hangs ? counts : rpes).slot(`${setKeyOf(d.item, i)}:rpe`);
+                  return (
+                    <SetRow
+                      key={i}
+                      position={String(i + 1)}
+                      label={label}
+                      ticked={on}
+                      onToggle={() => toggle(d.item, i)}
+                      {...(hangs && {
+                        trailing: <View style={{ width: SET_COLUMNS.tick.width }} />,
+                      })}
+                      selected={selected?.item === d.item && selected.set === i}
+                      onSelect={() => select(d.item, i)}
+                      onRemove={() => remove(d, i)}
+                      removeLabel={t("activities.removeSet", { n: i + 1 })}
+                      testID="review-set"
+                      {...(rated(d) && {
+                        rpe: on ? (
+                          <RpeField
+                            set={set}
+                            target={d.targetRpe}
+                            slot={rpeSlot}
+                            label={label}
+                            onChange={change}
+                          />
+                        ) : null,
+                      })}
+                    >
+                      <SetDoneFields
+                        set={set}
+                        lifting={lifting}
+                        hangs={hangs}
+                        oneHang={oneHang}
+                        unit={unit}
+                        label={label}
+                        {...(hangs && {
+                          slot: counts.slot(setKeyOf(d.item, i)),
+                          loadSlot: counts.slot(`${setKeyOf(d.item, i)}:load`),
+                        })}
+                        defaultLoadKg={hangLoadKg}
+                        onChange={change}
+                      />
+                    </SetRow>
+                  );
+                })}
+              </>
+            );
+            const add = {
+              label: lap ? t("tally.addLap") : t("activities.addSet"),
+              accessibilityLabel: t("activities.addSetTo", { exercise: d.exercise }),
+              onPress: () => edit(addSet(done, d.item)),
+            };
             return (
               <React.Fragment key={d.item}>
                 {head !== null && (
@@ -150,126 +238,37 @@ export function DoneDetails({
                     {head}
                   </Text>
                 )}
-                <View
-                  style={
-                    flat
-                      ? { gap: 4 }
-                      : {
-                          gap: 4,
-                          padding: 14,
-                          borderRadius: 16,
-                          borderWidth: 1,
-                          borderColor: colors.lineOnLightStrong,
-                        }
-                  }
-                >
-                  <View
-                    style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingBottom: 4 }}
+                {flat ? (
+                  <View style={{ gap: 4 }}>
+                    <ExerciseHead name={d.exercise} />
+                    {rows}
+                  </View>
+                ) : (
+                  <ExerciseBlock
+                    head={
+                      <ExerciseHead
+                        name={d.exercise}
+                        {...(dose !== undefined &&
+                          "sets" in dose && {
+                            target: targetText(
+                              dose,
+                              hangs ? "hangboard" : (measured ?? kind),
+                              unit,
+                              { round: d.group !== undefined }
+                            ),
+                          })}
+                      />
+                    }
+                    {...(!climbs && { add })}
                   >
-                    <View
-                      style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color }}
-                    />
-                    <Text
-                      style={[type.bodyBold, { flex: 1, fontSize: 17, color: colors.gunmetal }]}
-                    >
-                      {d.exercise}
-                    </Text>
-                    <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-                      {exerciseCountText(d, off, of)}
-                    </Text>
-                  </View>
-                  {index === 0 && setup}
-                  <View style={SET_COLUMNS.row}>
-                    <Label small color={colors.textSecondary} style={SET_COLUMNS.position}>
-                      {of === "laps" ? t("workouts.colLap") : t("activities.colSet")}
-                    </Label>
-                    <Label small color={colors.textSecondary} style={{ flex: 1 }}>
-                      {t("activities.colTarget")}
-                    </Label>
-                    <Label small color={colors.textSecondary} style={{ flex: 1 }}>
-                      {hangs
-                        ? t("activities.colHangsLoad")
-                        : lifting
-                          ? t("activities.colDoneUnit", { unit })
-                          : t("activities.colDone")}
-                    </Label>
-                    <Label small color={colors.textSecondary} style={SET_COLUMNS.rpe}>
-                      RPE
-                    </Label>
-                    {!hangs && <View style={SET_COLUMNS.tick} />}
-                  </View>
-                  {d.sets.map((set, i) => {
-                    const on = !off.includes(setKeyOf(d.item, i)) && (!hangs || heldSet(set));
-                    return (
-                      <ReviewSetRow
-                        key={i}
-                        n={i + 1}
-                        target={
-                          target === undefined || target.onS !== undefined
-                            ? target
-                            : {
-                                ...target,
-                                weightKg: target.weightKg ?? previous(d.exercise)[i]?.weightKg,
-                              }
-                        }
-                        done={set}
-                        hangs={hangs}
-                        lifting={lifting}
-                        unit={unit}
-                        on={on}
-                        short={shortOf(set, target, of)}
-                        label={t("activities.setOf", { exercise: d.exercise, n: i + 1 })}
-                        slot={hangs ? counts.slot(setKeyOf(d.item, i)) : undefined}
-                        loadSlot={hangs ? counts.slot(`${setKeyOf(d.item, i)}:load`) : undefined}
-                        defaultLoadKg={hangLoadKg}
-                        rpe={{
-                          slot: (hangs ? counts : rpes).slot(`${setKeyOf(d.item, i)}:rpe`),
-                          target: d.targetRpe,
-                        }}
-                        onChange={(value) =>
-                          onChange(changeSet(done, d.item, i, value), offWithoutKey(off, d.item, i))
-                        }
-                        onToggle={hangs ? undefined : () => toggle(d.item, i)}
-                        onRemove={() => remove(d, i)}
-                      />
-                    );
-                  })}
-                  <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
-                    <Button
-                      label={of === "laps" ? t("tally.addLap") : t("activities.addSet")}
-                      accessibilityLabel={t("activities.addSetTo", { exercise: d.exercise })}
-                      onPress={() => edit(addSet(done, d.item))}
-                      variant="outline"
-                      icon="plus"
-                      height={40}
-                    />
-                    {d.sets.length > 1 && (
-                      <Button
-                        label={of === "laps" ? t("tally.removeLap") : t("activities.removeLastSet")}
-                        accessibilityLabel={t("activities.removeLastSetFrom", {
-                          exercise: d.exercise,
-                        })}
-                        onPress={() => remove(d, d.sets.length - 1)}
-                        variant="outline"
-                        icon="minus"
-                        height={40}
-                      />
-                    )}
-                  </View>
-                </View>
+                    {rows}
+                  </ExerciseBlock>
+                )}
               </React.Fragment>
             );
           })}
-        </Frame>
+        </View>
       )}
     </>
   );
 }
-
-const SetsFrame = ({ children }: { children: React.ReactNode }): React.ReactElement => (
-  <SheetSection label={t("activities.sets")}>{children}</SheetSection>
-);
-
-const FlatFrame = ({ children }: { children: React.ReactNode }): React.ReactElement => (
-  <View style={{ gap: 14 }}>{children}</View>
-);

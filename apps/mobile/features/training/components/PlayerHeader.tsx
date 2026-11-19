@@ -11,7 +11,7 @@ import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
 import { Label } from "./Label";
 import { Title } from "./Title";
-import { t } from "@sendtally/features/i18n";
+import { formatNumber, t } from "@sendtally/features/i18n";
 import { gymLine } from "@sendtally/features/workouts";
 import { useRunWorkout } from "../library/useLibrary";
 import { Description } from "./Description";
@@ -45,10 +45,12 @@ export function PlayerHeader({
   gym,
 }: PlayerHeaderProps): React.ReactElement {
   const workout = useRunWorkout(workoutId);
-  const line = [
-    position !== null && t("workouts.exerciseOf", { n: position.at, of: position.of }),
-    workout?.targetRpe != null && t("plan.targetValue", { n: workout.targetRpe }),
-  ].filter((part) => part !== false);
+  const target =
+    workout?.targetRpe == null
+      ? null
+      : t("common.targetRpe", { n: formatNumber(workout.targetRpe) });
+  const line =
+    position === null ? [] : [t("workouts.exerciseOf", { n: position.at, of: position.of })];
   return (
     <View style={{ gap: 8 }}>
       <View style={[LIVE_HEADER, { marginHorizontal: -18, justifyContent: "space-between" }]}>
@@ -64,11 +66,25 @@ export function PlayerHeader({
       <View style={{ gap: 4 }}>
         <Label color={KIND_LOOK[kind].ink}>{kindLabel(kind)}</Label>
         <Title size={32}>{title}</Title>
-        {(line.length > 0 || gym !== undefined) && (
-          <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}>
-            <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-              {[...line, ...(gym === undefined ? [] : [""])].join(" · ")}
-            </Text>
+        {(target !== null || line.length > 0 || gym !== undefined) && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "baseline",
+              flexWrap: "wrap",
+              columnGap: 10,
+            }}
+          >
+            {target !== null && (
+              <Text style={[type.monoBold, { fontSize: 14, color: colors.gunmetal }]}>
+                {target}
+              </Text>
+            )}
+            {line.length > 0 && (
+              <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
+                {line.join(" · ")}
+              </Text>
+            )}
             {gym !== undefined && (
               <Pressable
                 onPress={gym.onPick}

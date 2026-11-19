@@ -2,7 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { effortWord } from "@sendtally/features/hang";
-import { t } from "@sendtally/features/i18n";
+import { formatNumber, t } from "@sendtally/features/i18n";
 import { type } from "../type";
 import { Button } from "./Button";
 import { EffortBars } from "./EffortBars";
@@ -10,14 +10,23 @@ import { Label } from "./Label";
 
 export type EffortFieldProps = {
   value: number | null;
+  /** The session's Target RPE, beside the label. */
+  target?: number;
   onChange: (rpe: number | null) => void;
 };
 
-/** Effort: optional, ten bars, the number and its word, clearable. */
-export function EffortField({ value, onChange }: EffortFieldProps): React.ReactElement {
+/** RPE: optional, ten bars, the number and its word, clearable; its target beside the label. */
+export function EffortField({ value, target, onChange }: EffortFieldProps): React.ReactElement {
   return (
     <View style={{ gap: 10 }}>
-      <Label color={colors.textSecondary}>{t("common.effort")}</Label>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <Label color={colors.textSecondary}>RPE</Label>
+        {target !== undefined && (
+          <Text style={[type.monoBold, { fontSize: 14, color: colors.gunmetal }]}>
+            {t("common.targetRpe", { n: formatNumber(target) })}
+          </Text>
+        )}
+      </View>
       <EffortBars value={value} onChange={onChange} />
       {value !== null && (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10, minHeight: 44 }}>
