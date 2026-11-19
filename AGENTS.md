@@ -163,22 +163,26 @@ A design or a build that breaks one is not ready for review.
   In any row the name is the strongest text, the values come second, and a position (A1, set 3, round 2) is the quietest.
   A name gets its own line when the row also holds inputs.
 - **What the user is aiming for gets the emphasis.**
-  The session's target (Target RPE, the sets and reps) sits in the hero or directly beside the input, never in a muted line.
+  The session's target (Target RPE, the sets and reps) sits in the hero, in the head of the exercise block above its rows, or directly beside the input, never in a muted line.
 - **Rows of one kind share one column grid.**
   Every set row on a screen takes its columns from one definition (`SET_COLUMNS` on mobile), so inputs, ticks and trailing controls line up down the screen across cards and workout kinds.
 - **Say it once.**
   No line that restates what the order or the layout already shows ("Next: Calf raises"), no tile that counts what is listed below ("16 sets"), no usage counter ("Used once").
 - **Selection is explicit and reversible.**
-  Pressing a row's title selects it and pressing it again unselects it; typing in a field or ticking a set does not select.
-  Remove and other secondary row actions show only on the selected row, and the row's primary control (the tick) holds the trailing edge otherwise.
+  Pressing a row outside its inputs and its tick selects it, and pressing it again or anywhere else unselects it; typing in a field or ticking a set does not select.
+  Remove and other secondary row actions show only on the selected row, where Remove takes the place of the row's number or position and nothing else moves.
+  The row's primary control (the tick) holds the trailing edge in every state.
 - **One press moves between inputs.**
   With the keypad open, pressing another field moves the keypad to that field.
 - **A log is not graded.**
   A set that differs from its target is recorded as done, in neutral ink, with no warning colour and no "2 of 5 reps" line.
-  Amber and red are for what blocks a save and for destructive actions.
+  Amber and red are for a status that needs the user (a missed day, a failed post), for what blocks a save, and for destructive actions.
 - **The same thing looks the same everywhere.**
   An exercise has one row anatomy in the workout page, the run, the review and the finished workout, and one component per platform draws it for every workout kind.
   A kind adds fields to the shared row; it does not get a row component of its own.
+
+The Workout states artifact (https://claude.ai/artifact/J8ec8noddsaU7kXUz33z1H) draws every workout screen under these rules, for each workout kind, as it was and as approved on 2026-11-19.
+Check a change to a workout screen against it, for every kind, before building.
 
 ## Migration order
 
