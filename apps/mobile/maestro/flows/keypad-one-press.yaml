@@ -1,0 +1,31 @@
+appId: com.sendtally.app
+name: keypad-one-press
+# With the keypad open on one set field, one press on another field moves the keypad there, in
+# the same row and in another row. On Android a clear scrim under the keypad sheet used to take
+# that press and only close the keypad. The step key tells the fields apart: reps step by 1,
+# a weight by 5.
+---
+- runFlow: ../helpers/open-dev-client.yaml
+- runFlow: ../helpers/ensure-signed-in.yaml
+- runFlow: ../helpers/discard-live-session.yaml
+- openLink: sendtally:///train
+- tapOn: "Workouts"
+- tapOn: "See all Strength"
+- scrollUntilVisible:
+    element: ".*5x5 strength.*"
+    direction: DOWN
+- tapOn: ".*5x5 strength.*"
+- tapOn: "Start"
+- tapOn: "Back squat, set 1 · Reps"
+- assertVisible: "Subtract 1"
+- tapOn: "Back squat, set 1 · Weight"
+- assertVisible: "Subtract 5"
+- tapOn: "Back squat, set 2 · Reps"
+- assertVisible: "Subtract 1"
+- tapOn: "Done"
+- tapOn: "Finish"
+- tapOn: "Discard"
+- assertVisible: "Discard this workout?"
+- tapOn:
+    text: "Discard"
+    rightOf: "Cancel"
