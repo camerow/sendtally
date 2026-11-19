@@ -14,7 +14,7 @@ export type SetRowProps = {
   name?: string;
   /** The row's fields or a kind's content, filling the grid after the position. */
   children: React.ReactNode;
-  /** The RPE column, for a block that asks a set RPE: null keeps the column empty. */
+  /** The RPE column, for a block that asks a set RPE: null keeps the column empty. Read mode widens it for a mark. */
   rpe?: React.ReactElement | null;
   /** Edit: the tick, or `trailing` in its place. Read: values as text, nothing trailing. */
   mode?: "edit" | "read";
@@ -100,7 +100,9 @@ export function SetRow({
       <View style={[SET_COLUMNS.row, { minHeight: read ? 30 : 48 }]}>
         {name === undefined ? place : <View style={SET_COLUMNS.position} />}
         <View style={SET_COLUMNS.lead}>{children}</View>
-        {rpe !== undefined && <View style={SET_COLUMNS.rpe}>{rpe}</View>}
+        {rpe !== undefined && (
+          <View style={read ? SET_COLUMNS.rpeRead : SET_COLUMNS.rpe}>{rpe}</View>
+        )}
         {!read &&
           (trailing ?? (
             <Pressable

@@ -12,5 +12,6 @@ export const SET_COLUMNS = {
   join: { width: 10, alignItems: "center" },
   measure: { flex: 3, minWidth: 0 },
   rpe: { width: 40 },
+  rpeRead: { width: 58, alignItems: "flex-end" },
   tick: { width: 44, height: 44, alignItems: "flex-end", justifyContent: "center" },
 } satisfies Record<string, ViewStyle>;
