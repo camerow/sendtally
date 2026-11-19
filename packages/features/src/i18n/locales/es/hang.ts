@@ -59,6 +59,8 @@ export const hang = {
   "hang.statOnEdge": "En la regleta",
   "hang.statTotalLifts": "Tirones totales",
   "hang.statSets": "Series",
+  "hang.statHangsASet": "Colgadas por serie",
+  "hang.statOnOff": "On / off",
   "hang.history": "Historial · {count}",
   "hang.sessionCount_one": "{count} sesión",
   "hang.sessionCount_other": "{count} sesiones",

@@ -59,6 +59,8 @@ export const hang = {
   "hang.statOnEdge": "On the edge",
   "hang.statTotalLifts": "Total lifts",
   "hang.statSets": "Sets",
+  "hang.statHangsASet": "Hangs a set",
+  "hang.statOnOff": "On / off",
   "hang.history": "History · {count}",
   "hang.sessionCount_one": "{count} session",
   "hang.sessionCount_other": "{count} sessions",

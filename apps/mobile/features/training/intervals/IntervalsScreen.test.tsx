@@ -84,15 +84,15 @@ describe("Intervals player", () => {
     await advance(5000);
     expect(screen.getByText("Hold · left side")).toBeTruthy();
     expect(screen.getByText("Squeeze the glute")).toBeTruthy();
-    expect(screen.getByText("Up next")).toBeTruthy();
+    expect(screen.queryByText("Up next")).toBeNull();
 
     await advance(45_000 + 20_000);
-    await fireEvent.press(screen.getByText("Stopped early · held 20s"));
+    await fireEvent.press(screen.getByLabelText("Skip to next interval"));
     expect(screen.getByText("Rest")).toBeTruthy();
 
     await advance(10_000);
     expect(screen.getByText("× 15")).toBeTruthy();
-    await fireEvent.press(screen.getAllByText("Done")[0]!);
+    await fireEvent.press(screen.getAllByLabelText("Done").at(-1)!);
 
     expect(router.replace).toHaveBeenCalledWith({
       pathname: "/activity/new",
@@ -107,9 +107,10 @@ describe("Intervals player", () => {
         week: "2",
         startTime: "18:05",
         done: JSON.stringify([
-          { item: 0, exercise: "Couch stretch", sets: [{ onS: 45 }, { onS: 20 }] },
+          { item: 0, exercise: "Couch stretch", sets: [{ onS: 45 }, { onS: 45 }] },
           { item: 1, exercise: "Swing", sets: [{ reps: 15, weightKg: 24 }] },
         ]),
+        off: JSON.stringify(["0:1"]),
         live: "1",
       },
     });

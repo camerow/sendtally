@@ -1,13 +1,15 @@
+import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 import type { WeightUnit } from "@sendtally/core/hang";
-import { colors, radius } from "@sendtally/design/tokens";
-import type { HangGripGrid } from "@sendtally/features/activities";
+import { colors } from "@sendtally/design/tokens";
+import { hangLoadText, type HangGripGrid } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
+import { EffortMark } from "../components/EffortMark";
+import { ExerciseBlock } from "../sets/ExerciseBlock";
+import { ExerciseHead } from "../sets/ExerciseHead";
+import { SetRow } from "../sets/SetRow";
 import { type } from "../type";
-import { HangGrid } from "./HangGrid";
-import { Label } from "../components/Label";
-import { hangCount } from "@sendtally/features/activities";
 
 export type HangResultCardProps = {
   grid: HangGripGrid;
@@ -15,33 +17,65 @@ export type HangResultCardProps = {
   unit: WeightUnit;
 };
 
-/** One grip of a hangboard session: its hangs, load and RPE set by set, and how many hangs it held. */
+/** One grip of a finished hangboard session: a read row per set, its hangs as boxes, its load and RPE. */
 export function HangResultCard({ grid, gripName, unit }: HangResultCardProps): React.ReactElement {
   const name =
     grid.kind === "hang" ? `${gripName} · ${t("hang.edgeMm", { n: grid.edgeMm })}` : gripName;
+  const all = grid.rows.flat();
+  const rated = grid.rpes.some((r) => r !== undefined);
   return (
-    <View
-      style={{
-        gap: 8,
-        paddingVertical: 12,
-        paddingHorizontal: 14,
-        borderRadius: radius.card,
-        borderWidth: 1,
-        borderColor: colors.lineOnLightStrong,
-      }}
+    <ExerciseBlock
+      head={
+        <ExerciseHead
+          name={name}
+          onHistory={() => router.push({ pathname: "/grip/[id]", params: { id: grid.gripId } })}
+        />
+      }
     >
-      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10 }}>
-        <Text style={[type.bodyBold, { flex: 1, fontSize: 15.5, color: colors.gunmetal }]}>
-          {name}
-        </Text>
-        <Label small color={colors.textSecondary}>
-          {t("summary.load")}
-        </Label>
-      </View>
-      <HangGrid rows={grid.rows} loads={grid.loads} rpes={grid.rpes} unit={unit} />
-      <Text style={[type.monoBold, { fontSize: 13, color: colors.gunmetal }]}>
-        {hangCount(grid, unit)}
+      {grid.rows.map((row, s) => {
+        const load = grid.loads[s] ?? 0;
+        const rpe = grid.rpes[s];
+        return (
+          <SetRow
+            key={s}
+            position={String(s + 1)}
+            mode="read"
+            label={t("summary.setN", { n: s + 1 })}
+            {...(rated && { rpe: rpe === undefined ? null : <EffortMark rpe={rpe} /> })}
+          >
+            {row.map((held, r) => (
+              <View
+                key={r}
+                style={{
+                  flex: 1,
+                  height: 24,
+                  borderRadius: 7,
+                  borderWidth: 2,
+                  borderColor: held ? colors.fern : "rgba(64,63,76,0.26)",
+                  backgroundColor: held ? colors.fern : colors.white,
+                }}
+              />
+            ))}
+            <Text
+              numberOfLines={1}
+              style={[
+                load === 0 ? type.mono : type.monoBold,
+                {
+                  width: 72,
+                  fontSize: 14,
+                  textAlign: "right",
+                  color: load === 0 ? colors.textSecondary : colors.gunmetal,
+                },
+              ]}
+            >
+              {hangLoadText(load, unit)}
+            </Text>
+          </SetRow>
+        );
+      })}
+      <Text style={[type.monoBold, { paddingTop: 4, fontSize: 13, color: colors.gunmetal }]}>
+        {t("summary.hangsOf", { held: all.filter(Boolean).length, total: all.length })}
       </Text>
-    </View>
+    </ExerciseBlock>
   );
 }

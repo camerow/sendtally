@@ -272,13 +272,11 @@ describe("A finished workout's summary", () => {
       updatedAt: "t",
     });
     await show("h2", [], [hang("h1", "2026-10-23", 10, 100), hang("h2", "2026-10-27", 12, 94)]);
-    expect(screen.getByText("17/18")).toBeTruthy();
-    expect(screen.getByText("hangs held")).toBeTruthy();
+    expect(screen.queryByText("hangs held")).toBeNull();
     expect(screen.getAllByText("+12 kg")).toHaveLength(3);
-    expect(screen.getByText("17 of 18 hangs · top load +12 kg")).toBeTruthy();
-    expect(screen.getByText("+12 kg · 17 of 18 hangs")).toBeTruthy();
-    expect(screen.getByText("Added weight on this exercise")).toBeTruthy();
-    expect(screen.getByText("+10 kg · 18 of 18 hangs")).toBeTruthy();
+    expect(screen.getByText("17 of 18 hangs")).toBeTruthy();
+    expect(screen.queryByText("Added weight on this exercise")).toBeNull();
+    expect(screen.queryByText("+10 kg · 18 of 18 hangs")).toBeNull();
     expect(screen.queryByText("New best")).toBeNull();
   });
 

@@ -44,7 +44,7 @@ describe("Timer", () => {
     jest.useRealTimers();
   });
 
-  it("counts down Get ready into the first hang, then credits a hang cut short", async () => {
+  it("counts down Get ready into the first hang, and a skip records the hang as not held", async () => {
     await renderWithHang(
       <TimerScreen workoutId="rep73" gripId="half" link={NO_PLAN} session={0} />
     );
@@ -59,7 +59,8 @@ describe("Timer", () => {
     expect(screen.getByText("Set 1 of 6")).toBeTruthy();
 
     await advance(3100);
-    await fireEvent.press(screen.getByText("Came off early · held 3s"));
+    expect(screen.queryByText(/Came off early/)).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Skip to next interval"));
     expect(screen.getByText("Rest")).toBeTruthy();
 
     await fireEvent.press(screen.getByText("End"));
@@ -118,16 +119,16 @@ describe("Timer", () => {
       <TimerScreen workoutId="max10" gripId="half" link={NO_PLAN} session={0} />
     );
     await advance(5000);
-    await fireEvent.press(screen.getByText("Pause"));
+    await fireEvent.press(screen.getAllByLabelText("Pause").at(-1)!);
     await advance(60_000);
     expect(screen.getByText("Paused")).toBeTruthy();
     expect(screen.getByText("10")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Resume"));
+    await fireEvent.press(screen.getAllByLabelText("Resume").at(-1)!);
     await advance(4000);
     expect(screen.getByText("6")).toBeTruthy();
   });
 
-  it("runs the week's prescription, and carries the setup and plan to the done screen", async () => {
+  it("runs the week's prescription, steps the load for the sets to come, and carries both to the done screen", async () => {
     const plan = {
       blocks: [
         { id: "b1", name: "Winter base", description: "", start: TODAY, weeks: 4, focus: null },
@@ -186,24 +187,19 @@ describe("Timer", () => {
       hangData({ sessions: [session] }),
       { plan }
     );
-    expect(screen.getByText("Half crimp · 15\u00A0mm · +8 kg")).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText("Change today’s setup"));
-    expect(screen.getByText("For today")).toBeTruthy();
-    expect(screen.getByText("Half crimp · Winter base · W1")).toBeTruthy();
-    expect(screen.getByLabelText("Edge depth").props.accessibilityValue).toEqual({ text: "15 mm" });
-    expect(screen.getByLabelText("Added weight").props.accessibilityValue).toEqual({
-      text: "8 kg",
-    });
-    await fireEvent.press(screen.getByLabelText("Deeper edge"));
-    await fireEvent.press(screen.getByText("Done"));
-    expect(screen.getByText("Half crimp · 16\u00A0mm · +8 kg")).toBeTruthy();
+    expect(screen.getByText("Half crimp · 15\u00A0mm")).toBeTruthy();
+    expect(screen.queryByLabelText("Change today’s setup")).toBeNull();
+    const load = (): unknown => screen.getByLabelText("Load").props.accessibilityValue;
+    expect(load()).toEqual({ text: "8 kg" });
+    await fireEvent.press(screen.getByLabelText("Increase Load"));
+    expect(load()).toEqual({ text: "8.5 kg" });
     expect(screen.getByText("3 sets ahead")).toBeTruthy();
     await fireEvent.press(screen.getByText("End"));
     await advance(200);
     const { params, run } = reviewed();
     expect(params).toMatchObject({ membershipId: "m1", week: "1", session: "0" });
-    expect(run.setups).toEqual([{ edgeMm: 16, loadKg: 8 }]);
-    expect(run.done[0]?.sets).toHaveLength(3);
+    expect(run.setups).toEqual([{ edgeMm: 15, loadKg: 8.5 }]);
+    expect(run.done[0]?.sets.map((s) => s.weightKg)).toEqual([8.5, 8.5, 8.5]);
   });
 
   it("rests between exercises, runs the next grip, and carries every item to the done screen", async () => {
@@ -229,7 +225,6 @@ describe("Timer", () => {
     );
     expect(screen.getByText(/^Half crimp · /)).toBeTruthy();
     await advance(5000);
-    expect(screen.getByText("Rest 2:00, then the next exercise")).toBeTruthy();
     await advance(10_000);
     expect(screen.getByText("Rest")).toBeTruthy();
     expect(screen.getByText("2:00")).toBeTruthy();
@@ -241,7 +236,7 @@ describe("Timer", () => {
     await advance(10_100);
     const { params, run } = reviewed();
     expect(params).toMatchObject({ workoutId: "w-two", gripId: "half" });
-    expect(run.done).toEqual([
+    expect(run.done).toMatchObject([
       { item: 0, exercise: "half", sets: [{ reps: 1, onS: 10 }] },
       { item: 1, exercise: "open", sets: [{ reps: 1, onS: 10 }] },
     ]);

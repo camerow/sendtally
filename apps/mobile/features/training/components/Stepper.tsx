@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
 import { colors } from "@sendtally/design/tokens";
+import { ON_DARK, ON_DARK_LINE } from "@sendtally/features/workouts";
 import { press } from "../../../lib/press";
 import { type } from "../type";
 import { NumberField, type NumberFieldProps } from "./NumberField";
@@ -9,8 +10,8 @@ export type StepperProps = Omit<NumberFieldProps, "before" | "after"> & {
   onStep: (direction: 1 | -1) => void;
   decreaseLabel: string;
   increaseLabel: string;
-  /** "card" sits on a soft panel, so its buttons are white; "plain" sits on white. */
-  surface: "card" | "plain";
+  /** "card" sits on a soft panel, so its buttons are white; "plain" sits on white; "dark" on a timer. */
+  surface: "card" | "plain" | "dark";
 };
 
 /** − / number box / + under the box's label, for a number stepped more often than typed. */
@@ -31,13 +32,20 @@ export function Stepper({
         height: 46,
         borderRadius: 23,
         borderWidth: 1,
-        borderColor: colors.lineOnLightStrong,
+        borderColor: surface === "dark" ? ON_DARK_LINE : colors.lineOnLightStrong,
         backgroundColor: surface === "card" ? colors.white : undefined,
         alignItems: "center",
         justifyContent: "center",
       })}
     >
-      <Text style={[type.bodyBold, { fontSize: 20, color: colors.gunmetal }]}>{glyph}</Text>
+      <Text
+        style={[
+          type.bodyBold,
+          { fontSize: 20, color: surface === "dark" ? ON_DARK : colors.gunmetal },
+        ]}
+      >
+        {glyph}
+      </Text>
     </Pressable>
   );
   return (

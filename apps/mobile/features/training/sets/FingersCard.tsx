@@ -1,20 +1,22 @@
+import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 import { protocolDose, type HangSetup, type WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { KIND_LOOK } from "@sendtally/features/training";
 import {
-  doseSummary,
   partDoses,
   partHangs,
   partSetLine,
   partTotal,
+  targetText,
   type PartInPlayer,
 } from "@sendtally/features/workouts";
 import { PartSets } from "../activity/PartSets";
 import { Button } from "../components/Button";
 import { type } from "../type";
+import { ExerciseBlock } from "./ExerciseBlock";
+import { ExerciseHead } from "./ExerciseHead";
 
 export type FingersCardProps = {
   part: PartInPlayer;
@@ -26,7 +28,7 @@ export type FingersCardProps = {
 };
 
 /**
- * A mix's fingerboard part in the workout view, where its first grip sits: its grips and Start;
+ * A mix's fingerboard part in the workout view, where its first grip sits: a block per grip and Start;
  * Resume while the timer has it; once the timer ends, the sets it held to edit in place.
  */
 export function FingersCard({
@@ -38,23 +40,10 @@ export function FingersCard({
 }: FingersCardProps): React.ReactElement {
   const { planned, state } = part;
   const running = state !== undefined && "run" in state;
-  const mark = (
-    <View
-      style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: KIND_LOOK.hangboard.ink }}
-    />
-  );
   return (
-    <View
-      style={{
-        gap: 8,
-        padding: 14,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: colors.lineOnLightStrong,
-      }}
-    >
+    <View style={{ gap: 8 }}>
       <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
-        <Text style={[type.bodyBold, { flex: 1, fontSize: 17, color: colors.gunmetal }]}>
+        <Text style={[type.bodyBold, { flex: 1, fontSize: 15, color: colors.gunmetal }]}>
           {t("workouts.fingerboard")}
         </Text>
         {state !== undefined && (
@@ -79,21 +68,23 @@ export function FingersCard({
         />
       ) : (
         <>
-          {planned.items.map((i, k) => (
-            <View key={k} style={{ gap: 2 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                {mark}
-                <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
-                  {gripName(i.workout.grip)}
-                </Text>
-              </View>
-              <Text
-                style={[type.monoBold, { fontSize: 13, color: colors.gunmetal, paddingLeft: 18 }]}
-              >
-                {doseSummary("hangboard", i.dose ?? protocolDose(i.workout), unit)}
-              </Text>
-            </View>
-          ))}
+          {planned.items.map((i, k) => {
+            const dose = i.dose ?? protocolDose(i.workout);
+            return (
+              <ExerciseBlock
+                key={k}
+                head={
+                  <ExerciseHead
+                    name={gripName(i.workout.grip)}
+                    target={targetText(dose, "hangboard", unit)}
+                    onHistory={() =>
+                      router.push({ pathname: "/grip/[id]", params: { id: i.workout.grip } })
+                    }
+                  />
+                }
+              />
+            );
+          })}
           {running && (
             <Text style={[type.monoBold, { fontSize: 13, color: colors.gunmetal }]}>
               {partSetLine(state.run, planned, gripName)}
