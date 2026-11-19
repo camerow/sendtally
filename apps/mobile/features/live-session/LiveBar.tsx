@@ -11,11 +11,12 @@ import { liveSessionStorage } from "../../lib/liveSessionStorage";
 import { press } from "../../lib/press";
 import { LiveClock } from "../../components/LiveClock";
 import { liveRunHref, useLiveRun } from "./liveRun";
-import { liveRunSummary } from "@sendtally/features/workouts";
+import { liveRunWhere } from "@sendtally/features/workouts";
 
 type Live = {
   name: string;
-  summary: string;
+  /** Where it is; an exercise's name shortens first so "Set 2 of 3" stays whole. */
+  summary: { name: string | null; where: string };
   elapsed: (now: Date) => number;
   open: Href;
   stop: Href;
@@ -31,7 +32,7 @@ export function LiveBar(): React.ReactElement | null {
     draft !== undefined
       ? {
           name: gymOfDraft(gyms.gyms, draft.gymId)?.name ?? t("gyms.noGym"),
-          summary: tallySummary(draft),
+          summary: { name: null, where: tallySummary(draft) },
           elapsed: (now) => tallyElapsedSeconds(draft, now),
           open: "/session/live",
           stop: { pathname: "/session/live", params: { finish: "1" } },
@@ -39,13 +40,16 @@ export function LiveBar(): React.ReactElement | null {
       : run !== null
         ? {
             name: run.title,
-            summary: liveRunSummary(run),
+            summary: liveRunWhere(run),
             elapsed: (now) => Math.max(0, Math.floor((now.getTime() - run.startedAt) / 1000)),
             open: liveRunHref(run),
             stop: liveRunHref(run, true),
           }
         : null;
   if (live === null) return null;
+  const { name: at, where } = live.summary;
+  const summaryText = at === null ? where : `${at} · ${where}`;
+  const summaryStyle = { fontFamily: fonts.mono, fontSize: 12, color: "rgba(255,255,255,0.75)" };
   return (
     <View
       style={{
@@ -58,7 +62,7 @@ export function LiveBar(): React.ReactElement | null {
       <Pressable
         onPress={() => router.push(live.open)}
         accessibilityRole="button"
-        accessibilityLabel={`${live.name}, ${live.summary}`}
+        accessibilityLabel={`${live.name}, ${summaryText}`}
         style={press({
           flex: 1,
           height: 56,
@@ -76,12 +80,16 @@ export function LiveBar(): React.ReactElement | null {
           >
             {live.name}
           </Text>
-          <Text
-            numberOfLines={1}
-            style={{ fontFamily: fonts.mono, fontSize: 12, color: "rgba(255,255,255,0.75)" }}
-          >
-            {live.summary}
-          </Text>
+          <View style={{ flexDirection: "row" }}>
+            {at !== null && (
+              <Text numberOfLines={1} style={[summaryStyle, { flexShrink: 1 }]}>
+                {at}
+              </Text>
+            )}
+            <Text numberOfLines={1} style={[summaryStyle, { flexShrink: at === null ? 1 : 0 }]}>
+              {at === null ? where : ` · ${where}`}
+            </Text>
+          </View>
         </View>
         <LiveClock
           elapsed={live.elapsed}
