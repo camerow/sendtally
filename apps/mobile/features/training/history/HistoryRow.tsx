@@ -69,8 +69,12 @@ export function HistoryRow({ item, onPress, byDay = false }: HistoryRowProps): R
         )}
       </View>
       {item.rpe !== null && <EffortMark rpe={item.rpe} />}
-      {byDay && item.current !== true && item.opens !== false && (
-        <Icon name="chevron" size={16} strokeWidth={2} color={colors.textMuted} />
+      {byDay && (
+        <View style={{ width: 16 }}>
+          {item.current !== true && item.opens !== false && (
+            <Icon name="chevron" size={16} strokeWidth={2} color={colors.textMuted} />
+          )}
+        </View>
       )}
     </Pressable>
   );
