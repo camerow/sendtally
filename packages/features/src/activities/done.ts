@@ -36,22 +36,6 @@ export function checklistsLine(done: readonly ItemDone[]): string | null {
   );
 }
 
-/** "Checklist · 4 of 5 · 3 exercises · 9 sets", or null when nothing was done. */
-export function doneSummary(done: readonly ItemDone[]): string | null {
-  const items = done.filter((d) => d.sets.length > 0);
-  const sets = items.reduce((n, d) => n + d.sets.length, 0);
-  const counts =
-    items.length === 0
-      ? []
-      : [
-          t("activities.exerciseCount", { count: items.length }),
-          t("activities.setCount", { count: sets }),
-        ];
-  const list = checklistsLine(done);
-  const parts = [...(list === null ? [] : [list]), ...counts];
-  return parts.length === 0 ? null : parts.join(" · ");
-}
-
 /** "5 × 100 kg · 30s", leaving out what the set does not have; a climbing set reads its climbs. */
 export function setText(set: SetDone, unit: WeightUnit, repsMax?: number): string {
   if (set.climbs !== undefined) return climbingSetText(set);
@@ -63,6 +47,25 @@ export function setText(set: SetDone, unit: WeightUnit, repsMax?: number): strin
     .filter((p) => p !== undefined)
     .join(" × ");
   return [work, set.onS === undefined ? "" : setSeconds(set.onS)]
+    .filter((p) => p !== "")
+    .join(" · ");
+}
+
+/** A set as done, every number with its word: "2 reps × 275 lb", "5 reps · 45s". */
+export function setReadText(set: SetDone, unit: WeightUnit): string {
+  if (set.climbs !== undefined) return climbingSetText(set);
+  const load =
+    set.weightKg === undefined
+      ? undefined
+      : t("hang.loadPlain", { value: weightValue(set.weightKg, unit), unit });
+  const reps =
+    set.reps === undefined
+      ? undefined
+      : t("workouts.targetReps", { count: set.reps, n: formatNumber(set.reps) });
+  return [
+    [reps, load].filter((p) => p !== undefined).join(" × "),
+    set.onS === undefined ? "" : setSeconds(set.onS),
+  ]
     .filter((p) => p !== "")
     .join(" · ");
 }

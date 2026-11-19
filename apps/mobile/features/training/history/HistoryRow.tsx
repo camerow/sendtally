@@ -1,15 +1,21 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
+import { Icon } from "../../../components/Icon";
 import { pressRow } from "../../../lib/press";
 import { EffortMark } from "../components/EffortMark";
 import { type } from "../type";
 import type { HistoryItem } from "@sendtally/features/activities";
 
-export type HistoryRowProps = { item: HistoryItem; onPress: () => void };
+export type HistoryRowProps = {
+  item: HistoryItem;
+  onPress: () => void;
+  /** Titled by its day: no date column, and a chevron where it opens. */
+  byDay?: boolean;
+};
 
 /** A past session: its date, name and one line of what mattered, with its effort; the one open marked by a blue bar. */
-export function HistoryRow({ item, onPress }: HistoryRowProps): React.ReactElement {
+export function HistoryRow({ item, onPress, byDay = false }: HistoryRowProps): React.ReactElement {
   return (
     <Pressable
       onPress={onPress}
@@ -39,9 +45,11 @@ export function HistoryRow({ item, onPress }: HistoryRowProps): React.ReactEleme
           }}
         />
       )}
-      <Text style={[type.mono, { width: 52, fontSize: 12, color: colors.textSecondary }]}>
-        {item.date}
-      </Text>
+      {!byDay && (
+        <Text style={[type.mono, { width: 52, fontSize: 12, color: colors.textSecondary }]}>
+          {item.date}
+        </Text>
+      )}
       <View style={{ flex: 1, gap: 2 }}>
         <Text numberOfLines={1} style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
           {item.name}
@@ -61,6 +69,9 @@ export function HistoryRow({ item, onPress }: HistoryRowProps): React.ReactEleme
         )}
       </View>
       {item.rpe !== null && <EffortMark rpe={item.rpe} />}
+      {byDay && item.current !== true && item.opens !== false && (
+        <Icon name="chevron" size={16} strokeWidth={2} color={colors.textMuted} />
+      )}
     </Pressable>
   );
 }

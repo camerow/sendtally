@@ -32,12 +32,12 @@ export {
   shortOf,
   type SetsOf,
   setChip,
-  doneSummary,
   exerciseNames,
   exerciseSuggestions,
   previousSets,
   setSeconds,
   setText,
+  setReadText,
   weightValue,
   withRpe,
 } from "./done";

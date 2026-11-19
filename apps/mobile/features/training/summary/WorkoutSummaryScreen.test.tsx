@@ -147,20 +147,27 @@ beforeEach(() => {
 });
 
 describe("A finished workout's summary", () => {
-  it("shows only its kind over the title, its tiles, and each exercise against last time", async () => {
+  it("shows its kind over the title, length and RPE tiles, and each set as done", async () => {
     await show("a1", [today, before]);
     expect(screen.getByText("Strength")).toBeTruthy();
     expect(screen.getByRole("header", { name: "Lower body strength" })).toBeTruthy();
     expect(screen.getByText("41 min")).toBeTruthy();
+    expect(screen.getByText("RPE 7")).toBeTruthy();
     expect(screen.getByText("Target RPE 7/10")).toBeTruthy();
-    expect(screen.getByText("5")).toBeTruthy();
-    expect(screen.getByText("What you did")).toBeTruthy();
-    expect(screen.getAllByText("+2.5 kg").length).toBeGreaterThan(0);
-    expect(screen.getByText("Same")).toBeTruthy();
-    expect(screen.getByText("+1 rep")).toBeTruthy();
-    expect(screen.getByText("Last time 5 × 80 kg · Fri, Oct 23")).toBeTruthy();
-    expect(screen.getByText("Over time")).toBeTruthy();
-    expect(screen.getByText("+2.5 kg · best yet")).toBeTruthy();
+    expect(screen.getAllByText("5 reps × 82.5 kg")).toHaveLength(2);
+    expect(screen.getByText("4 reps × 82.5 kg")).toBeTruthy();
+    expect(screen.getByText("7 reps × 10 kg")).toBeTruthy();
+    expect(screen.queryByText(/sets|What you did|Last time|Over time|\+2.5 kg/)).toBeNull();
+  });
+
+  it("keeps a rated set's RPE in its own column, beside its values", async () => {
+    const rated = {
+      ...today,
+      done: [{ item: 0, exercise: "Back squat", sets: [{ ...squat(80), rpe: 8 }, squat(80)] }],
+    };
+    await show("a1", [rated]);
+    expect(screen.getAllByText("5 reps × 80 kg")).toHaveLength(2);
+    expect(screen.getByText("RPE 8")).toBeTruthy();
   });
 
   it("shows its workout's fingerboard part grip by grip before the other exercises", async () => {
@@ -182,54 +189,42 @@ describe("A finished workout's summary", () => {
       .map((n) => n.props.children as string);
     expect(names[0]).toMatch(/^Half crimp/);
     expect(names.slice(1)).toContain("Back squat");
-    expect(screen.queryByText("5")).toBeNull();
-    expect(screen.getAllByText("7")).toHaveLength(1);
   });
 
-  it("lists the workout's past sessions with this one marked, each opening its summary", async () => {
+  it("opens the workout's history from History, this session marked, with none inline", async () => {
     await show("a1", [today, before]);
-    expect(screen.getByText("History · 2 sessions")).toBeTruthy();
-    expect(screen.getByText(/ \(this session\)$/)).toBeTruthy();
-    await fireEvent.press(screen.getByText("Back squat 5 × 80 kg · 41 min"));
-    expect(router.push).toHaveBeenCalledWith({ pathname: "/activity/[id]", params: { id: "a0" } });
+    expect(screen.queryByText(/^History · /)).toBeNull();
+    await fireEvent.press(screen.getByText("History"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/workout/history",
+      params: { id: "legs", current: "a1" },
+    });
   });
 
-  it("has no past sessions for a log with no workout, and still shows each exercise over time", async () => {
+  it("has no History for a log with no workout, and names its RPE without a target", async () => {
     const loose = { ...today, workoutId: null, membershipId: null, week: null };
     await show("a1", [loose, { ...before, workoutId: null }]);
-    expect(screen.queryByText(/^History/)).toBeNull();
-    expect(screen.getByText("Over time")).toBeTruthy();
+    expect(screen.queryByText("History")).toBeNull();
     expect(screen.getByText("Hard")).toBeTruthy();
   });
 
-  it("reads a climbing workout's climbs per set and its time, against last time", async () => {
+  it("reads a climbing workout's exercises without grading them against last time", async () => {
     const v = (grade: string, sent = true) => ({ grade, scale: "v" as const, tries: 1, sent });
-    const green = { ...v("V1"), circuit: { id: "g", label: "Green", colour: "green" } };
-    const climbing = (id: string, date: string, sends: boolean[], laps: number) =>
+    const climbing = (id: string, date: string, sends: boolean[]) =>
       activity(id, date, {
         kind: "climbing",
         title: "Power endurance",
         done: [
           { item: 0, exercise: "4x4s", sets: [{ climbs: sends.map((sent) => v("V4", sent)) }] },
-          {
-            item: 1,
-            exercise: "ARC",
-            sets: [{ onS: 1200, climbs: Array.from({ length: laps }, () => green) }],
-          },
         ],
       });
     await show("c2", [
-      climbing("c2", "2026-10-28", [true, true, true, false], 18),
-      climbing("c1", "2026-10-21", [true, false, false, false], 15),
+      climbing("c2", "2026-10-28", [true, true, true, false]),
+      climbing("c1", "2026-10-21", [true, false, false, false]),
     ]);
     expect(screen.getByText("Climbing")).toBeTruthy();
-    expect(screen.getByText("+2 sent vs last")).toBeTruthy();
-    expect(screen.getByText("4 climbs · 3 sent · top V4")).toBeTruthy();
-    expect(screen.getAllByLabelText("V4, Attempted")).toHaveLength(1);
-    expect(screen.getByText("+3 laps vs last")).toBeTruthy();
-    expect(screen.getByText("20:00 · 18 climbs")).toBeTruthy();
-    expect(screen.getByText("20:00 on the wall · Green circuit")).toBeTruthy();
-    expect(screen.getByText("3 of 4 sent")).toBeTruthy();
+    expect(screen.getByText("4x4s")).toBeTruthy();
+    expect(screen.queryByText(/vs last/)).toBeNull();
   });
 
   it("opens the form from Edit", async () => {

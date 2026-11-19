@@ -202,4 +202,5 @@ export const workouts = {
   "workouts.targetMoves_one": "{n} move",
   "workouts.targetMoves_other": "{n} moves",
   "workouts.targetOnOff": "{on} on, {off} off",
+  "workouts.noSessionsYet": "No sessions yet",
 } as const;

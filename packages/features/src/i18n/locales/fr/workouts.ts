@@ -203,4 +203,5 @@ export const workouts = {
   "workouts.targetMoves_one": "{n} mouvement",
   "workouts.targetMoves_other": "{n} mouvements",
   "workouts.targetOnOff": "{on} on, {off} off",
+  "workouts.noSessionsYet": "Aucune séance pour l’instant",
 } as const;

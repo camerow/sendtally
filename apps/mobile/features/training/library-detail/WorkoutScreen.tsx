@@ -3,11 +3,10 @@ import React from "react";
 import { libraryPictures } from "@sendtally/features/library";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { useActivities } from "@sendtally/features/activities";
-import { tallyMeasuresOf } from "@sendtally/features/exercises";
-import { hangWorkoutOf, setupLabel, useGrips } from "@sendtally/features/hang";
+import { eachSideOf, tallyMeasuresOf } from "@sendtally/features/exercises";
+import { hangWorkoutOf, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { exerciseKey, useExercises } from "@sendtally/features/statistics";
+import { useExercises } from "@sendtally/features/statistics";
 import {
   trainingDay,
   useTrainingLog,
@@ -15,7 +14,7 @@ import {
   plannedItems,
   blockName,
 } from "@sendtally/features/training";
-import { bodyHeading, type LibraryWorkout, type WorkoutUse } from "@sendtally/features/workouts";
+import { bodyHeading, workoutMinutes, type LibraryWorkout } from "@sendtally/features/workouts";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
@@ -25,73 +24,60 @@ import { DetailActions } from "../components/DetailActions";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
-import { HistoryList } from "../history/HistoryList";
-import { activityItem, hangItem, ofWorkout } from "@sendtally/features/activities";
+import { openExerciseHistory } from "../exercises/openExerciseHistory";
 import { useLibrary, useNextSession } from "../library/useLibrary";
 import type { AddFlow } from "@sendtally/features/training";
 import { AddButton } from "../planning/AddButton";
 import { useDayChanges } from "../plan-days/useDayChanges";
 import { PlanList } from "../plans/PlanList";
 import { startWorkout } from "../timer/startWorkout";
+import { SummaryTiles } from "../summary/SummaryTiles";
 import { ProtocolPanel } from "../workout-detail/ProtocolPanel";
-import { PreviewRow } from "./PreviewRow";
 import { ScheduleFooter } from "./ScheduleFooter";
 import { BodyPreview } from "./BodyPreview";
 import { DayLine } from "./DayLine";
 import { LibraryIntro } from "./LibraryIntro";
 import { LogItButton } from "./LogItButton";
 import { StartButton } from "./StartButton";
+import { usePlannedItems } from "./usePlannedItems";
 import { useWorkoutDetailActions } from "./useWorkoutDetailActions";
-import { WorkoutOverTime } from "./WorkoutOverTime";
-
-const openActivity = (id: string): void =>
-  router.push({ pathname: "/activity/[id]", params: { id } });
 
 /** A planned run a workout opens as: the day it lands on and the plan it is in. */
 export type RunOf = { date: string; membershipId: string };
 
 type DetailProps = {
   workout: LibraryWorkout;
-  use: WorkoutUse | undefined;
   grip: string | undefined;
   adding: AddFlow | null;
   run: Occurrence | undefined;
 };
 
-function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactElement {
+function Detail({ workout, grip, adding, run }: DetailProps): React.ReactElement {
   const api = useApi();
   const { isGrip } = useGrips(api);
   const { model, today } = useHangData();
   const session = useNextSession(workout.id);
   const exercises = useExercises(api).state;
-  const activities = useActivities(api).state;
+  const mine = exercises.status === "ready" ? exercises.data : [];
   const { bar, addToBlock } = useWorkoutDetailActions(workout, { planned: run !== undefined });
   const hang = workout.kind === "hangboard" ? model.workout(workout.id) : undefined;
   const next = hang === undefined ? undefined : (hangWorkoutOf(workout, session) ?? hang);
   const gripId = grip ?? (hang === undefined ? "" : model.defaultGrip(hang));
   const changes = useDayChanges();
-  const last = next === undefined ? null : model.lastUsed(next, gripId);
-  const lastUsed =
-    next === undefined || last === null
-      ? undefined
-      : t("hang.lastUsedValue", { setup: setupLabel(next.kind, last, model.settings.units) });
-
-  const openExercise = (name: string): (() => void) | undefined => {
-    const found =
-      exercises.status === "ready"
-        ? exercises.data.find((e) => exerciseKey(e.name) === exerciseKey(name))
-        : undefined;
-    return found === undefined
-      ? undefined
-      : () => router.push({ pathname: "/exercise/[id]", params: { id: found.id } });
-  };
-  const history =
-    hang === undefined
-      ? ofWorkout(activities.status === "ready" ? activities.data : [], workout.id).map((a) =>
-          activityItem(a, model.settings.units)
-        )
-      : ofWorkout(model.data.sessions, workout.id).map((s) => hangItem(s, model));
   const planned = run === undefined ? undefined : plannedItems(run);
+  const shown = usePlannedItems(workout, planned);
+  const minutes = workoutMinutes(workout, shown.session);
+  const tiles = [
+    ...(minutes === null
+      ? []
+      : [{ value: t("hang.minutes", { n: minutes }), label: t("summary.length") }]),
+    ...(workout.targetRpe === null
+      ? []
+      : [{ value: `${workout.targetRpe}/10`, label: t("common.targetRpeLabel") }]),
+  ];
+  const tally = tallyMeasuresOf(mine, workout.kind, isGrip);
+
+  const openExercise = (name: string): (() => void) | undefined => openExerciseHistory(mine, name);
   const missed = run?.status === "missed";
   const logIt = (
     <LogItButton
@@ -141,7 +127,16 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
     <ScreenFrame
       overlay={addToBlock.toast && <Toast {...addToBlock.toast} />}
       hero={libraryPictures("workout", workout.id)}
-      action={adding === null && <DetailActions {...bar} />}
+      action={
+        adding === null && (
+          <DetailActions
+            {...bar}
+            onHistory={() =>
+              router.push({ pathname: "/workout/history", params: { id: workout.id } })
+            }
+          />
+        )
+      }
       footer={
         adding === null ? (
           <View style={{ gap: 8 }}>
@@ -155,35 +150,29 @@ function Detail({ workout, use, grip, adding, run }: DetailProps): React.ReactEl
     >
       <LibraryIntro
         workout={workout}
-        use={use}
         {...(run !== undefined && run.block !== null && { kicker: blockName(run.block) })}
         {...(run !== undefined && {
           day: <DayLine week={run.week} date={run.date} missed={missed} />,
         })}
       />
-      {workout.items.length > 0 && (
+      {tiles.length > 0 && <SummaryTiles stats={tiles} />}
+      {shown.items.length > 0 && (
         <View style={{ gap: 8 }}>
-          <Label color={colors.gunmetal}>{bodyHeading(workout.items)}</Label>
+          <Label color={colors.gunmetal}>{bodyHeading(shown.items)}</Label>
           {next === undefined ? (
             <BodyPreview
-              workout={workout}
+              items={shown.items}
+              exerciseRestS={workout.exerciseRestS}
               unit={model.settings.units}
-              session={use?.count ?? 0}
-              tally={tallyMeasuresOf(
-                exercises.status === "ready" ? exercises.data : [],
-                workout.kind,
-                isGrip
-              )}
+              kindOf={(exercise) => tally(exercise) ?? workout.kind}
+              eachSide={eachSideOf(mine)}
               openExercise={openExercise}
             />
           ) : (
-            <PreviewRow title={model.gripName(gripId)} detail="" note={lastUsed} />
+            <ProtocolPanel workout={next} gripId={gripId} />
           )}
         </View>
       )}
-      {next !== undefined && <ProtocolPanel workout={next} gripId={gripId} />}
-      <WorkoutOverTime workout={workout} gripId={hang === undefined ? null : gripId} />
-      <HistoryList items={history} onOpen={openActivity} />
       {run === undefined && (
         <PlanList workoutId={workout.id} name={workout.name} kind={workout.kind} />
       )}
@@ -202,7 +191,7 @@ export type WorkoutScreenProps = {
   run?: RunOf | null;
 };
 
-/** A workout: what it holds, how it is going, its past sessions and where it is planned. */
+/** A workout: what this session holds, how to start it, and where it is planned. */
 export function WorkoutScreen({
   id,
   grip,
@@ -220,12 +209,6 @@ export function WorkoutScreen({
     return <LoadState state={state} onRetry={() => void reload()} framed />;
   const workout = state.data.workout(id);
   return workout === undefined ? null : (
-    <Detail
-      workout={workout}
-      use={state.data.usage.get(id)}
-      grip={grip}
-      adding={adding}
-      run={planned}
-    />
+    <Detail workout={workout} grip={grip} adding={adding} run={planned} />
   );
 }

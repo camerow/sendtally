@@ -1,44 +1,30 @@
 import React from "react";
-import { Text, View } from "react-native";
-import { colors } from "@sendtally/design/tokens";
+import { View } from "react-native";
 import { kindLabel } from "@sendtally/features/activities";
-import { t } from "@sendtally/features/i18n";
 import { focusBeside, KIND_LOOK } from "@sendtally/features/training";
-import { durationLabel } from "@sendtally/features/sessions";
-import { workoutMinutes, type LibraryWorkout, type WorkoutUse } from "@sendtally/features/workouts";
+import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { Description } from "../components/Description";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { CategoryMark } from "../library/CategoryMark";
-import { type } from "../type";
 
 export type LibraryIntroProps = {
   workout: LibraryWorkout;
-  use: WorkoutUse | undefined;
   /** In place of the kind's kicker, such as the block a planned run is in. */
   kicker?: string;
   /** Under the name, such as a planned run's day. */
   day?: React.ReactNode;
 };
 
-/** A workout's kicker (kind and focus), name, what it is for, and its length, effort and use. */
+/** A workout's kicker (kind and focus), name, its day when planned, and what it is for. */
 export function LibraryIntro({
   workout,
-  use,
   kicker: shown,
   day,
 }: LibraryIntroProps): React.ReactElement {
-  const minutes = workoutMinutes(workout, use?.count ?? 0);
   const kicker = [
     kindLabel(workout.kind),
     ...focusBeside(kindLabel(workout.kind), workout.focus),
-  ].join(" · ");
-  const meta = [
-    ...(minutes === null ? [] : [durationLabel(minutes)]),
-    ...(workout.targetRpe === null ? [] : [t("plan.targetValue", { n: workout.targetRpe })]),
-    use === undefined || use.count === 0
-      ? t("workouts.notUsed")
-      : t("workouts.usedTimes", { count: use.count }),
   ].join(" · ");
   return (
     <View style={{ gap: 8 }}>
@@ -49,7 +35,6 @@ export function LibraryIntro({
       <Title size={38}>{workout.name}</Title>
       {day}
       <Description text={workout.description} fold />
-      <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
     </View>
   );
 }

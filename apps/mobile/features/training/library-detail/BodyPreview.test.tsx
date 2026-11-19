@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import { render, screen } from "@testing-library/react-native";
+import { sessionItems } from "@sendtally/core/hang";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { readingOrder } from "../data/renderWithHang";
 import { BodyPreview } from "./BodyPreview";
@@ -22,10 +23,29 @@ describe("A workout's body with a superset", () => {
         { exercise: "Plank", doses: [{ sets: 3, onS: 45 }] },
       ],
     } as unknown as LibraryWorkout;
-    await render(<BodyPreview workout={workout} unit="kg" session={0} tally={() => null} />);
-    expect(
-      readingOrder("Superset · 3 rounds", "0:30 rest", "1:30 rest", "Pull-ups", "Push-ups", "Plank")
-    ).toEqual(["Superset · 3 rounds", "Pull-ups", "0:30 rest", "Push-ups", "1:30 rest", "Plank"]);
+    await render(
+      <BodyPreview
+        items={sessionItems(workout.items, 0)}
+        exerciseRestS={workout.exerciseRestS}
+        unit="kg"
+        kindOf={() => "strength"}
+        eachSide={() => false}
+      />
+    );
+    expect([
+      ...new Set(
+        readingOrder(
+          "Superset · 3 rounds",
+          "Rest 0:30",
+          "Rest 1:30",
+          "Pull-ups",
+          "Push-ups",
+          "Plank"
+        )
+      ),
+    ]).toEqual(["Superset · 3 rounds", "Pull-ups", "Rest 0:30", "Push-ups", "Rest 1:30", "Plank"]);
+    expect(screen.getByText("6 reps")).toBeTruthy();
+    expect(screen.getByText("3 sets × 0:45")).toBeTruthy();
     expect(screen.getAllByText("Superset · 3 rounds")).toHaveLength(1);
   });
 });
