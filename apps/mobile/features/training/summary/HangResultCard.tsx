@@ -65,13 +65,8 @@ export function HangResultCard({ grid, gripName, unit }: HangResultCardProps): R
             <Text
               numberOfLines={1}
               style={[
-                load === 0 ? type.mono : type.monoBold,
-                {
-                  width: 72,
-                  fontSize: 14,
-                  textAlign: "right",
-                  color: load === 0 ? colors.textSecondary : colors.gunmetal,
-                },
+                type.monoBold,
+                { width: 72, fontSize: 14, textAlign: "right", color: colors.gunmetal },
               ]}
             >
               {hangLoadText(load, unit)}
