@@ -41,6 +41,7 @@ export function HangResultCard({ grid, gripName, unit }: HangResultCardProps): R
             position={String(s + 1)}
             mode="read"
             label={t("summary.setN", { n: s + 1 })}
+            {...(rated && { rpe: rpe === undefined ? null : <EffortMark rpe={rpe} /> })}
           >
             {row.map((held, r) => (
               <View
@@ -69,11 +70,6 @@ export function HangResultCard({ grid, gripName, unit }: HangResultCardProps): R
             >
               {hangLoadText(load, unit)}
             </Text>
-            {rated && (
-              <View style={{ width: 58, alignItems: "flex-end" }}>
-                {rpe !== undefined && <EffortMark rpe={rpe} />}
-              </View>
-            )}
           </SetRow>
         );
       })}
