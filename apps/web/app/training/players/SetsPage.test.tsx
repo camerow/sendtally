@@ -383,7 +383,7 @@ describe("Sets player", () => {
     act(() => button("Skip").click());
     expect(byLabel("Rest, 1:00 left")).toBeNull();
     act(() => (byLabel("Back squat, set 2") as HTMLInputElement).click());
-    const folded = "Open Back squat, 2 × 5 · 100 kg";
+    const folded = "Open Back squat, 2 sets × 5 reps · 100 kg";
     expect(byLabel(folded)).not.toBeNull();
     expect(container.querySelector(".player-target")?.textContent).toBe(
       "Exercise 2 of 3 · Target effort 8"
@@ -430,7 +430,7 @@ describe("Sets player", () => {
     );
     advance(21_000);
     expect(container.querySelector(".player-row--hold")).toBeNull();
-    expect(byLabel("Open Plank, 1 × 30s")).not.toBeNull();
+    expect(byLabel("Open Plank, 1 set × 0:30")).not.toBeNull();
   });
 
   describe("a superset", () => {

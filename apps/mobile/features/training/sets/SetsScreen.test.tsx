@@ -119,7 +119,7 @@ describe("Sets player", () => {
     await fireEvent.press(screen.getByLabelText("Done"));
     await fireEvent.press(screen.getByLabelText("Back squat, set 2"));
     expect(screen.queryByLabelText("Rest, 1:00 left")).toBeNull();
-    const folded = "Open Back squat, 2 × 5 · 100 kg";
+    const folded = "Open Back squat, 2 sets × 5 reps · 100 kg";
     expect(screen.getByLabelText(folded)).toBeTruthy();
     expect(screen.getByText("Exercise 2 of 3")).toBeTruthy();
     expect(screen.queryByTestId("rest-next")?.props.children).toBe("Row");
@@ -285,12 +285,12 @@ describe("Sets player", () => {
   it("folds a finished exercise, opens it to edit, and folds an open one from its title", async () => {
     await renderWithHang(<SetsScreen run={run} />, hangData());
     await fireEvent.press(screen.getByLabelText("Row, set 1"));
-    await fireEvent.press(screen.getByLabelText("Open Row, 1 × 8 · 60 kg"));
+    await fireEvent.press(screen.getByLabelText("Open Row, 1 set × 8 reps · 60 kg"));
     expect(screen.getByLabelText("Row, set 1 · Reps")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Fold Row"));
     expect(screen.queryByLabelText("Row, set 1 · Reps")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Fold Back squat"));
-    expect(screen.getByLabelText("Open Back squat, 2 × 5 · 100 kg")).toBeTruthy();
+    expect(screen.getByLabelText("Open Back squat, 2 sets × 5 reps · 100 kg")).toBeTruthy();
   });
 
   it("ticks a checklist's typed lines in any order and logs which were ticked", async () => {

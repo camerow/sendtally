@@ -143,11 +143,11 @@ describe("a finished exercise folded to one line", () => {
       { reps: 5, weightKg: 60 },
       { reps: 5, weightKg: 62.5 },
     ];
-    expect(foldedLine(sets, "kg")).toBe("2 × 5 · 62.5 kg");
+    expect(foldedLine(sets, "kg")).toBe("2 sets × 5 reps · 62.5 kg");
   });
 
   it("reads timed sets by their time, and bare sets by their count", () => {
-    expect(foldedLine([{ onS: 45 }, { onS: 45 }, { onS: 45 }], "kg")).toBe("3 × 45s");
+    expect(foldedLine([{ onS: 45 }, { onS: 45 }, { onS: 45 }], "kg")).toBe("3 sets × 0:45");
     expect(foldedLine([{}], "kg")).toBe("1 set");
   });
 });
