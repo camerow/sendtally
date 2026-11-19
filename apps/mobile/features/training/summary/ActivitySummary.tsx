@@ -15,6 +15,7 @@ import { t } from "@sendtally/features/i18n";
 import { useExercises } from "@sendtally/features/statistics";
 import { type TrainingLog, KIND_LOOK } from "@sendtally/features/training";
 import { supersetHeadAt } from "@sendtally/features/workouts";
+import { ChecklistCard } from "../sets/ChecklistCard";
 import { ClimbSetsRead } from "../climbing/ClimbSetsRead";
 import { EffortMark } from "../components/EffortMark";
 import { useApi } from "../../../lib/api";
@@ -49,7 +50,7 @@ export function ActivitySummary({
   const exercises = useExercises(useApi()).state;
   const mine = exercises.status === "ready" ? exercises.data : null;
   const grids = part === undefined ? [] : hangGrids(part.session);
-  const done = activity.done.filter((d) => d.sets.length > 0);
+  const done = activity.done.filter((d) => d.sets.length > 0 || d.checklist !== undefined);
   const target = activity.workoutId === null ? null : log.workout(activity.workoutId);
   return (
     <SummaryFrame
@@ -78,6 +79,16 @@ export function ActivitySummary({
       ))}
       {done.map((d, i) => {
         const head = supersetHeadAt(done, i);
+        if (d.checklist !== undefined) {
+          const { lines, checked } = d.checklist;
+          return (
+            <ChecklistCard
+              key={`${d.item}-checklist`}
+              lines={lines}
+              ticked={(line) => checked.includes(line)}
+            />
+          );
+        }
         const history = openExerciseHistory(mine, d.exercise);
         const rated = d.sets.some((set) => set.rpe !== undefined);
         return (

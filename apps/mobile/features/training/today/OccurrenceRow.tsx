@@ -15,7 +15,6 @@ import { DetailMenu } from "../components/DetailMenu";
 import { Label } from "../components/Label";
 import { dayRows } from "../plan-days/dayRows";
 import { useDayChanges } from "../plan-days/useDayChanges";
-import { useHangData } from "../data/HangDataContext";
 import { logLibraryWorkout } from "../library-detail/startLibraryWorkout";
 import { type } from "../type";
 import { openOccurrence } from "./openOccurrence";
@@ -29,14 +28,13 @@ export type OccurrenceRowProps = { occurrence: Occurrence; workout: LibraryWorko
  * on its kind's mark, which the card and its ··· open the sheet to log, reschedule or skip.
  */
 export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): React.ReactElement {
-  const { model } = useHangData();
   const { status } = occurrence;
   const missed = status === "missed";
   const changes = useDayChanges();
   const [menu, setMenu] = React.useState(false);
   const planned = plannedItems(occurrence);
   const tag = occurrenceTag(t("hang.planned"), occurrence);
-  const meta = occurrenceMeta(occurrence, model.settings.units);
+  const meta = occurrenceMeta(occurrence);
   return (
     <View
       style={{
@@ -69,7 +67,7 @@ export function OccurrenceRow({ occurrence, workout }: OccurrenceRowProps): Reac
         <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
           {workout.name}
         </Text>
-        {meta !== workout.name && (
+        {meta !== "" && (
           <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{meta}</Text>
         )}
       </Pressable>

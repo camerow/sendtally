@@ -11,14 +11,15 @@ import { SetRow } from "./SetRow";
 export type ChecklistCardProps = {
   lines: readonly string[];
   ticked: (line: number) => boolean;
-  onToggle: (line: number) => void;
+  /** Ticks a line; none on the finished workout, which only reads them. */
+  onToggle?: (line: number) => void;
   /** In the run: its title folds it. */
   onFold?: () => void;
   /** In the run: its ··· menu. */
   menu?: readonly DetailMenuRow[];
 };
 
-/** A typed checklist in the run and the review: a row per line, its name and its tick. */
+/** A typed checklist in the run, the review and the finished workout: a row per line, its name and its tick. */
 export function ChecklistCard({
   lines,
   ticked,
@@ -37,7 +38,13 @@ export function ChecklistCard({
       }
     >
       {lines.map((line, i) => (
-        <SetRow key={i} position="" label={line} ticked={ticked(i)} onToggle={() => onToggle(i)}>
+        <SetRow
+          key={i}
+          position=""
+          label={line}
+          ticked={ticked(i)}
+          {...(onToggle !== undefined && { onToggle: () => onToggle(i) })}
+        >
           <Text style={[type.bodyBold, { flex: 1, fontSize: 15, color: colors.gunmetal }]}>
             {line}
           </Text>

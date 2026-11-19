@@ -160,6 +160,20 @@ describe("A finished workout's summary", () => {
     expect(screen.queryByText(/sets|What you did|Last time|Over time|\+2.5 kg/)).toBeNull();
   });
 
+  it("draws its checklist with the lines ticked in the run", async () => {
+    const checklist = { lines: ["Chalk, tape, brush", "Log the warm-up climbs"], checked: [0] };
+    await show("a1", [
+      { ...today, done: [{ item: 0, exercise: "Checklist", sets: [], checklist }] },
+    ]);
+    expect(screen.getByText("Checklist")).toBeTruthy();
+    expect(
+      screen.getByRole("checkbox", { name: "Chalk, tape, brush" }).props.accessibilityState
+    ).toMatchObject({ checked: true });
+    expect(
+      screen.getByRole("checkbox", { name: "Log the warm-up climbs" }).props.accessibilityState
+    ).toMatchObject({ checked: false });
+  });
+
   it("shows its notes under the tiles", async () => {
     await show("a1", [{ ...today, notes: "Felt slow to warm up." }]);
     expect(screen.getByText("Felt slow to warm up.")).toBeTruthy();

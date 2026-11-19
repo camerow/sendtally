@@ -9,7 +9,6 @@ import {
 } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { MoreMenu } from "../../components/MoreMenu";
-import { useHangData } from "../data/HangDataContext";
 import { DayMark } from "./DayMark";
 import { KindCircle } from "./KindCircle";
 import { occurrenceLogLink, occurrencePath } from "./planLinks";
@@ -26,10 +25,9 @@ export function OccurrenceRow({
   occurrence: Occurrence;
   workout: LibraryWorkout;
 }): React.ReactElement {
-  const { model } = useHangData();
   const changes = useDayChanges();
   const missed = o.status === "missed";
-  const meta = occurrenceMeta(o, model.settings.units);
+  const meta = occurrenceMeta(o);
   return (
     <div className="plan-row plan-row--day">
       {missed ? (
@@ -48,7 +46,7 @@ export function OccurrenceRow({
           </span>
         )}
         <span className="plan-row-name">{workout.name}</span>
-        {meta !== workout.name && <span className="plan-row-meta">{meta}</span>}
+        {meta !== "" && <span className="plan-row-meta">{meta}</span>}
       </Link>
       {(o.status === "planned" || missed) && (
         <MoreMenu
