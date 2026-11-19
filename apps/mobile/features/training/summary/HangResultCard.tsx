@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
-import type { WeightUnit } from "@sendtally/core/hang";
+import { clock, type WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { hangLoadText, type HangGripGrid } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
@@ -43,19 +43,25 @@ export function HangResultCard({ grid, gripName, unit }: HangResultCardProps): R
             label={t("summary.setN", { n: s + 1 })}
             {...(rated && { rpe: rpe === undefined ? null : <EffortMark rpe={rpe} /> })}
           >
-            {row.map((held, r) => (
-              <View
-                key={r}
-                style={{
-                  flex: 1,
-                  height: 24,
-                  borderRadius: 7,
-                  borderWidth: 2,
-                  borderColor: held ? colors.fern : "rgba(64,63,76,0.26)",
-                  backgroundColor: held ? colors.fern : colors.white,
-                }}
-              />
-            ))}
+            {row.length === 1 && grid.seconds[s] !== undefined ? (
+              <Text style={[type.monoBold, { flex: 1, fontSize: 14, color: colors.gunmetal }]}>
+                {row[0] === true ? clock(grid.seconds[s] ?? 0) : "–"}
+              </Text>
+            ) : (
+              row.map((held, r) => (
+                <View
+                  key={r}
+                  style={{
+                    flex: 1,
+                    height: 24,
+                    borderRadius: 7,
+                    borderWidth: 2,
+                    borderColor: held ? colors.fern : "rgba(64,63,76,0.26)",
+                    backgroundColor: held ? colors.fern : colors.white,
+                  }}
+                />
+              ))
+            )}
             <Text
               numberOfLines={1}
               style={[
