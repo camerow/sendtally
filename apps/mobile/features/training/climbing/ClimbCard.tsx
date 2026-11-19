@@ -23,6 +23,7 @@ import { ClimbReadRow } from "./ClimbReadRow";
 import { ClimbRow } from "./ClimbRow";
 import { GradePicker } from "./GradePicker";
 import { WallClock } from "./WallClock";
+import { useSessionTarget } from "../sets/sessionTarget";
 
 export type ClimbCardProps = {
   item: SessionItem;
@@ -75,6 +76,7 @@ export function ClimbCard({
   menu,
   onEdit,
 }: ClimbCardProps): React.ReactElement {
+  const sessionRpe = useSessionTarget();
   const restS = item.dose.setRestS ?? 0;
   const ex = tally?.draft?.exercise;
   const left = ex === undefined ? null : wallLeft(ex, tally?.now ?? new Date());
@@ -84,7 +86,9 @@ export function ClimbCard({
       head={
         <ExerciseHead
           name={exerciseName(item.exercise)}
-          target={targetText(item.dose, plan.onS === undefined ? "climbs" : "wallTime", unit)}
+          target={targetText(item.dose, plan.onS === undefined ? "climbs" : "wallTime", unit, {
+            sessionRpe,
+          })}
           about={about}
           {...(onHistory !== undefined && { onHistory })}
           onFold={onFold}

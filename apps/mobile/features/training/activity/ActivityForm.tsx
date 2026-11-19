@@ -52,6 +52,7 @@ import { AMBER } from "../components/tints";
 import { type } from "../type";
 import { ReadRow } from "./ReadRow";
 import { KindChips } from "./KindChips";
+import { SessionTargetContext } from "../sets/sessionTarget";
 
 export type ActivityFormProps = {
   id: string;
@@ -343,19 +344,21 @@ export function ActivityForm({
         )}
 
         {draft.done.length > 0 && (
-          <DoneDetails
-            done={draft.done}
-            off={draft.off}
-            planned={doses}
-            unit={unit}
-            kind={draft.kind}
-            hangs={hang !== undefined}
-            measure={measureOf}
-            setup={hang?.setup}
-            {...(hang !== undefined && { hangLoadKg: hang.loadKg })}
-            onRemoved={(message, undo) => setRemoved({ message, undo })}
-            onChange={(done, off) => update({ done, off })}
-          />
+          <SessionTargetContext.Provider value={targetRpe ?? null}>
+            <DoneDetails
+              done={draft.done}
+              off={draft.off}
+              planned={doses}
+              unit={unit}
+              kind={draft.kind}
+              hangs={hang !== undefined}
+              measure={measureOf}
+              setup={hang?.setup}
+              {...(hang !== undefined && { hangLoadKg: hang.loadKg })}
+              onRemoved={(message, undo) => setRemoved({ message, undo })}
+              onChange={(done, off) => update({ done, off })}
+            />
+          </SessionTargetContext.Provider>
         )}
 
         {hang === undefined && (

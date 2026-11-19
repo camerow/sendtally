@@ -7,6 +7,9 @@ import { CheckBox } from "../components/CheckBox";
 import { type } from "../type";
 import { SET_COLUMNS } from "./setColumns";
 
+/** How far a selected row's tint reaches past its columns, so the tick and Remove do not touch its edge. */
+const TINT_BLEED = 6;
+
 export type SetRowProps = {
   /** Its place, quietest in the row: "1", "B2", "Lap 3"; "" for a checklist line, which has none. */
   position: string;
@@ -80,7 +83,12 @@ export function SetRow({
       onPress={onSelect}
       disabled={onSelect === undefined}
       accessible={false}
-      style={{ borderRadius: 10, backgroundColor: selected ? colors.surfaceSoft : undefined }}
+      style={{
+        marginHorizontal: -TINT_BLEED,
+        paddingHorizontal: TINT_BLEED,
+        borderRadius: 10,
+        backgroundColor: selected ? colors.surfaceSoft : undefined,
+      }}
     >
       {name !== undefined && (
         <Pressable

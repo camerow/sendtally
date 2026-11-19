@@ -13,6 +13,7 @@ import { SetDoneFields } from "./SetDoneFields";
 import { SetHeadings } from "./SetHeadings";
 import { holdsOnly } from "./holdsOnly";
 import { SetRow } from "./SetRow";
+import { useSessionTarget } from "./sessionTarget";
 
 export type SetsCardProps = {
   item: SessionItem;
@@ -65,6 +66,7 @@ export function SetsCard({
   onFold,
   menu,
 }: SetsCardProps): React.ReactElement {
+  const sessionRpe = useSessionTarget();
   const name = exerciseName(item.exercise);
   const { setRestS, targetRpe } = item.dose;
   const rated = targetRpe !== undefined;
@@ -77,7 +79,7 @@ export function SetsCard({
       head={
         <ExerciseHead
           name={name}
-          target={targetText(item.dose, "strength", unit, { eachSide })}
+          target={targetText(item.dose, "strength", unit, { eachSide, sessionRpe })}
           about={about}
           {...(onHistory !== undefined && { onHistory })}
           onFold={onFold}

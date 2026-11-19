@@ -19,6 +19,7 @@ import { RestPreview } from "../rest/RestPreview";
 import { ExerciseBlock } from "../sets/ExerciseBlock";
 import { ExerciseHead } from "../sets/ExerciseHead";
 import { SupersetMembers } from "../sets/SupersetMembers";
+import { useSessionTarget } from "../sets/sessionTarget";
 
 export type BodyPreviewProps = {
   /** This session's items, as Start runs them. */
@@ -52,11 +53,13 @@ export function BodyPreview({
   eachSide,
   openExercise,
 }: BodyPreviewProps): React.ReactElement {
+  const sessionRpe = useSessionTarget();
   const target = (item: SessionItem, round = false): TargetText =>
     item.checklist === undefined
       ? targetText(item.dose, kindOf(item.exercise), unit, {
           eachSide: eachSide(item.exercise),
           round,
+          sessionRpe,
         })
       : { work: item.checklist.lines.join(" · "), rpe: undefined };
   const timed = items.length > 0 && items.every((item) => item.dose.onS !== undefined);

@@ -179,13 +179,18 @@ const counted = (key: MessageKey, min: number, max?: number): string =>
 /**
  * What one dose asks this session: "5 sets × 5 reps · 220 lb", "6 sets × 6 hangs · 7s on, 3s
  * off", "3 sets × 4 climbs", with "Target RPE 8/10" apart. A superset `round` leaves the sets
- * to the round count: "2 reps · 260 lb".
+ * to the round count: "2 reps · 260 lb". The Target RPE is left out when it is the session's own
+ * `sessionRpe`, which the screen already states.
  */
 export function targetText(
   dose: Dose,
   kind: TargetKind,
   unit: WeightUnit,
-  { eachSide = false, round = false }: { eachSide?: boolean; round?: boolean } = {}
+  {
+    eachSide = false,
+    round = false,
+    sessionRpe = null,
+  }: { eachSide?: boolean; round?: boolean; sessionRpe?: number | null } = {}
 ): TargetText {
   const load =
     dose.weightKg === undefined
@@ -232,7 +237,7 @@ export function targetText(
   const main = round ? per : per === null ? sets : `${sets} × ${per}`;
   return {
     work: [main, load].filter((x) => x !== null).join(" · "),
-    rpe: exerciseTargetLine(dose),
+    rpe: dose.targetRpe === sessionRpe ? undefined : exerciseTargetLine(dose),
   };
 }
 

@@ -27,6 +27,7 @@ import { SetHeadings } from "../sets/SetHeadings";
 import { holdsOnly } from "../sets/holdsOnly";
 import { SetRow } from "../sets/SetRow";
 import { type } from "../type";
+import { useSessionTarget } from "../sets/sessionTarget";
 
 export type DoneDetailsProps = {
   done: readonly ItemDone[];
@@ -75,6 +76,7 @@ export function DoneDetails({
   onRemoved,
   flat = false,
 }: DoneDetailsProps): React.ReactElement {
+  const sessionRpe = useSessionTarget();
   const edit = (next: ItemDone[]): void => onChange(next, [...off]);
   const [selected, setSelected] = React.useState<SetAt | null>(null);
   const rated = (d: ItemDone): boolean =>
@@ -257,7 +259,7 @@ export function DoneDetails({
                               dose,
                               hangs ? "hangboard" : (measured ?? kind),
                               unit,
-                              { round: d.group !== undefined }
+                              { round: d.group !== undefined, sessionRpe }
                             ),
                           })}
                       />

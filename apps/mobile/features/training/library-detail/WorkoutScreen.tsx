@@ -41,6 +41,7 @@ import { LogItButton } from "./LogItButton";
 import { StartButton } from "./StartButton";
 import { usePlannedItems } from "./usePlannedItems";
 import { useWorkoutDetailActions } from "./useWorkoutDetailActions";
+import { SessionTargetContext } from "../sets/sessionTarget";
 
 /** A planned run a workout opens as: the day it lands on and the plan it is in. */
 export type RunOf = { date: string; membershipId: string };
@@ -160,14 +161,16 @@ function Detail({ workout, grip, adding, run }: DetailProps): React.ReactElement
         <View style={{ gap: 8 }}>
           <Label color={colors.gunmetal}>{bodyHeading(shown.items)}</Label>
           {next === undefined ? (
-            <BodyPreview
-              items={shown.items}
-              exerciseRestS={workout.exerciseRestS}
-              unit={model.settings.units}
-              kindOf={(exercise) => tally(exercise) ?? workout.kind}
-              eachSide={eachSideOf(mine)}
-              openExercise={openExercise}
-            />
+            <SessionTargetContext.Provider value={workout.targetRpe}>
+              <BodyPreview
+                items={shown.items}
+                exerciseRestS={workout.exerciseRestS}
+                unit={model.settings.units}
+                kindOf={(exercise) => tally(exercise) ?? workout.kind}
+                eachSide={eachSideOf(mine)}
+                openExercise={openExercise}
+              />
+            </SessionTargetContext.Provider>
           ) : (
             <ProtocolPanel workout={next} gripId={gripId} />
           )}

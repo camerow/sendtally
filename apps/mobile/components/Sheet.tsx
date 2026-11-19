@@ -20,10 +20,7 @@ export type SheetProps = {
   children: React.ReactNode;
   /** Pinned under the scrolling body, above the home indicator. */
   footer?: React.ReactNode;
-  /**
-   * False leaves the screen behind undimmed and live, for a sheet that edits something on it: no
-   * scrim catches a press, so it lands where it falls (Android hit-tests even a clear scrim).
-   */
+  /** False: no scrim, so the screen behind stays live and a press lands where it falls. */
   dim?: boolean;
   /** Pictures across the sheet's top, under its handle, with the content on white over their edge. */
   hero?: readonly LibraryPicture[];

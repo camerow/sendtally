@@ -10,6 +10,7 @@ import { useHangData } from "../data/HangDataContext";
 import { type } from "../type";
 import { ExerciseBlock } from "./ExerciseBlock";
 import { ExerciseHead } from "./ExerciseHead";
+import { useSessionTarget } from "./sessionTarget";
 
 export type FingersGripProps = {
   workout: HangWorkout;
@@ -20,6 +21,7 @@ export type FingersGripProps = {
 
 /** One grip of a mix's fingerboard part before its timer ends: its target, then its edge and load. */
 export function FingersGrip({ workout, dose, setup }: FingersGripProps): React.ReactElement {
+  const sessionRpe = useSessionTarget();
   const { model } = useHangData();
   const unit = model.settings.units;
   const { edgeMm, loadKg } = setup ?? model.setup(workout, workout.grip, dose);
@@ -34,7 +36,7 @@ export function FingersGrip({ workout, dose, setup }: FingersGripProps): React.R
       head={
         <ExerciseHead
           name={model.gripName(workout.grip)}
-          target={targetText(dose ?? protocolDose(workout), "hangboard", unit)}
+          target={targetText(dose ?? protocolDose(workout), "hangboard", unit, { sessionRpe })}
           onHistory={() => router.push({ pathname: "/grip/[id]", params: { id: workout.grip } })}
         />
       }

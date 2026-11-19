@@ -466,4 +466,11 @@ describe("targetText", () => {
     );
     expect(targetText({ sets: 3, reps: 5 }, "strength", "kg").rpe).toBeUndefined();
   });
+
+  it("says the Target RPE once: left out when it equals the session's, kept when it differs or there is none", () => {
+    const dose = { sets: 3, reps: 15, targetRpe: 7 };
+    expect(targetText(dose, "strength", "kg", { sessionRpe: 7 }).rpe).toBeUndefined();
+    expect(targetText(dose, "strength", "kg", { sessionRpe: 8 }).rpe).toBe("Target RPE 7/10");
+    expect(targetText(dose, "strength", "kg", { sessionRpe: null }).rpe).toBe("Target RPE 7/10");
+  });
 });

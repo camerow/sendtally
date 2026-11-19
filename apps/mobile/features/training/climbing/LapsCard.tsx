@@ -21,6 +21,7 @@ import { ExerciseHead } from "../sets/ExerciseHead";
 import { SetRow, type SetRowProps } from "../sets/SetRow";
 import { exerciseName, targetText } from "@sendtally/features/workouts";
 import { type } from "../type";
+import { useSessionTarget } from "../sets/sessionTarget";
 
 export type LapsCardProps = {
   item: number;
@@ -280,6 +281,7 @@ export function LapsCard({
   menu,
   onLapRemoved,
 }: LapsCardProps): React.ReactElement {
+  const sessionRpe = useSessionTarget();
   const plan = lapPlanOf(at.dose);
   const active = draft?.exercise?.item === item;
   return (
@@ -287,7 +289,7 @@ export function LapsCard({
       head={
         <ExerciseHead
           name={exerciseName(at.exercise)}
-          target={targetText(at.dose, "laps", unit)}
+          target={targetText(at.dose, "laps", unit, { sessionRpe })}
           about={about}
           {...(onHistory !== undefined && { onHistory })}
           onFold={onFold}

@@ -29,6 +29,7 @@ import { RpeField } from "./RpeField";
 import { SetDoneFields } from "./SetDoneFields";
 import { SetRow } from "./SetRow";
 import { SupersetMembers } from "./SupersetMembers";
+import { useSessionTarget } from "./sessionTarget";
 
 export type SupersetCardProps = {
   group: RunGroup;
@@ -78,6 +79,7 @@ export function SupersetCard({
   menu,
   onHistory,
 }: SupersetCardProps): React.ReactElement {
+  const sessionRpe = useSessionTarget();
   const setsOf = (m: number): number => done.find((d) => d.item === m)?.sets.length ?? 0;
   const rounds = Math.max(...group.members.map(setsOf));
   const title = supersetRoundTitle(roundOn(items, ticked, group), rounds);
@@ -102,6 +104,7 @@ export function SupersetCard({
                 name: nameOf(item),
                 target: targetText(items[item]?.dose ?? { sets: 0 }, "strength", unit, {
                   round: true,
+                  sessionRpe,
                 }),
                 ...(history !== undefined && { onHistory: history }),
               };
