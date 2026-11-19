@@ -42,4 +42,7 @@ export const tally = {
   "tally.fewerMoves": "Menos movimientos",
   "tally.lapRemoved": "Vuelta {lap} quitada",
   "tally.removeLap": "Quitar vuelta",
+  "tally.climbOfSet": "N.º {n}, {grade}",
+  "tally.removeClimb": "Quitar {grade}",
+  "tally.endSet": "Terminar serie",
 } as const;

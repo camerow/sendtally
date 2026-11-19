@@ -45,6 +45,7 @@ export { doneOfRun, intervalsSummary, stepDose } from "./intervals";
 export {
   climbingDoseLine,
   climbingLastTime,
+  climbLine,
   climbsLine,
   climbsTotal,
   isClimbingSets,

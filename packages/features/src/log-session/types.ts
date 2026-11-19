@@ -76,8 +76,10 @@ export type ExerciseTally = {
   restS: number;
   /** The set being climbed, from 1; past the last once every set is done. */
   set: number;
-  /** When the set's time on the wall started, at its first grade. */
+  /** When the set's clock last started, while it runs. */
   setStartedAt?: string;
+  /** The set's time on the wall before its clock was last paused. */
+  setOnS?: number;
 };
 
 /**

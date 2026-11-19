@@ -1,27 +1,25 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { clock, type SessionItem, type SetDone } from "@sendtally/core/hang";
+import type { SessionItem, SetDone, WeightUnit } from "@sendtally/core/hang";
 import { colors, radius } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
   enduranceAmountLabel,
-  lapRowsOf,
   useLapsTally,
   type LiveSession,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { lapPlanOf } from "@sendtally/features/activities";
 import type { RestClock } from "@sendtally/features/workouts";
-import { Icon } from "../../../components/Icon";
 import { press } from "../../../lib/press";
 import type { About } from "../components/AboutButton";
 import { Button } from "../components/Button";
-import { Label } from "../components/Label";
-import { AMBER } from "../components/tints";
 import type { DetailMenuRow } from "../components/types";
 import { RestRow } from "../rest/RestRow";
+import { ExerciseBlock } from "../sets/ExerciseBlock";
 import { ExerciseHead } from "../sets/ExerciseHead";
-import { exerciseName, exerciseTargetLine } from "@sendtally/features/workouts";
+import { SetRow, type SetRowProps } from "../sets/SetRow";
+import { exerciseName, targetText } from "@sendtally/features/workouts";
 import { type } from "../type";
 
 export type LapsCardProps = {
@@ -36,68 +34,21 @@ export type LapsCardProps = {
   live: LiveSession;
   rest: RestClock;
   now: Date;
+  unit: WeightUnit;
   about?: About | undefined;
+  onHistory?: (() => void) | undefined;
   onFold: () => void;
   menu: readonly DetailMenuRow[];
   /** A lap still to climb was taken out, for its Undo. */
   onLapRemoved: (lap: number) => void;
 };
 
-type Shown = { n: number; share: number; clean: boolean; value: string };
-
-function LapRow({ n, share, clean, value }: Shown): React.ReactElement {
+/** A lap climbed: what it was, in neutral ink whether or not it reached the target. */
+function LapRow({ n, value }: { n: number; value: string }): React.ReactElement {
   return (
-    <View
-      accessibilityLabel={`${t("tally.lapLabel", { lap: n })}, ${value}`}
-      style={{
-        minHeight: 44,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        paddingHorizontal: 4,
-      }}
-    >
-      <Text style={[type.monoBold, { width: 30, fontSize: 14, color: colors.gunmetal }]}>{n}</Text>
-      <View
-        style={{
-          flex: 1,
-          height: 10,
-          borderRadius: 5,
-          overflow: "hidden",
-          backgroundColor: colors.dataBarEmpty,
-        }}
-      >
-        <View
-          style={{
-            width: `${Math.round(share * 100)}%`,
-            height: 10,
-            borderRadius: 5,
-            backgroundColor: clean ? colors.fern : AMBER,
-          }}
-        />
-      </View>
-      <Text
-        style={[
-          type.monoBold,
-          { minWidth: 48, textAlign: "right", fontSize: 13, color: colors.gunmetal },
-        ]}
-      >
-        {value}
-      </Text>
-    </View>
-  );
-}
-
-function RemoveLap({ n, onRemove }: { n: number; onRemove: () => void }): React.ReactElement {
-  return (
-    <Pressable
-      onPress={onRemove}
-      accessibilityRole="button"
-      accessibilityLabel={t("tally.removeLapOf", { lap: n })}
-      style={press({ width: 32, height: 40, alignItems: "center", justifyContent: "center" })}
-    >
-      <Icon name="minusCircle" color={colors.watermelonInk} size={24} strokeWidth={1.5} />
-    </Pressable>
+    <SetRow position={String(n)} label={`${t("tally.lapLabel", { lap: n })}, ${value}`} ticked>
+      <Text style={[type.monoBold, { fontSize: 14, color: colors.gunmetal }]}>{value}</Text>
+    </SetRow>
   );
 }
 
@@ -112,31 +63,20 @@ const STEP = {
   justifyContent: "center",
 } as const;
 
+/** A lap still to climb; selected, it can be taken out. */
 function Waiting({
   n,
-  text,
-  onRemove,
-}: {
-  n: number;
-  text: string;
-  onRemove: (() => void) | null;
-}): React.ReactElement {
+  ...select
+}: { n: number } & Pick<SetRowProps, "selected" | "onSelect" | "onRemove">): React.ReactElement {
   return (
-    <View
-      style={{
-        minHeight: 44,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        paddingHorizontal: 4,
-      }}
+    <SetRow
+      position={String(n)}
+      label={t("tally.lapLabel", { lap: n })}
+      removeLabel={t("tally.removeLapOf", { lap: n })}
+      {...select}
     >
-      <Text style={[type.monoBold, { width: 30, fontSize: 14, color: colors.textMuted }]}>{n}</Text>
-      <Text style={[type.mono, { flex: 1, fontSize: 13, color: colors.textSecondary }]}>
-        {text}
-      </Text>
-      {onRemove !== null && <RemoveLap n={n} onRemove={onRemove} />}
-    </View>
+      {null}
+    </SetRow>
   );
 }
 
@@ -146,41 +86,45 @@ function LiveLaps({
   live,
   rest,
   now,
-  target,
-  lapText,
+  plan,
   onLapRemoved,
 }: {
   draft: LogSessionDraft;
   live: LiveSession;
   rest: RestClock;
   now: Date;
-  target: number;
-  /** "40 moves", for a lap still to come. */
-  lapText: string;
+  plan: LapPlan;
   onLapRemoved: (lap: number) => void;
 }): React.ReactElement | null {
   const laps = useLapsTally(draft, live, rest, now);
   const [stepAt, setStepAt] = React.useState<{ lap: number; n: number } | null>(null);
+  const [selected, setSelected] = React.useState<number | null>(null);
   if (laps === null) return null;
   const done = laps.rows.length;
   const step = stepAt?.lap === done ? stepAt.n : null;
   const setStep = (n: number | null): void => setStepAt(n === null ? null : { lap: done, n });
   const removeLap = laps.removeLap;
-  const remove =
-    removeLap === null
-      ? null
-      : (n: number) => () => {
-          removeLap();
-          onLapRemoved(n);
-        };
+  const amounts = laps.circuit?.endurance?.laps ?? [];
   const waiting = Array.from(
     { length: Math.max(0, laps.planned - done - 1) },
     (_, i) => done + i + 2
   );
+  const removable = (n: number): Pick<SetRowProps, "selected" | "onSelect" | "onRemove"> =>
+    removeLap === null
+      ? {}
+      : {
+          selected: selected === n,
+          onSelect: () => setSelected(selected === n ? null : n),
+          onRemove: () => {
+            removeLap();
+            setSelected(null);
+            onLapRemoved(n);
+          },
+        };
   return (
     <>
-      {laps.rows.map((row, i) => (
-        <LapRow key={i} n={i + 1} share={row.share} clean={row.clean} value={row.value} />
+      {laps.rows.map((_, i) => (
+        <LapRow key={i} n={i + 1} value={lapAmount(plan, amounts[i] ?? 0)} />
       ))}
       {laps.rest !== null &&
         ("running" in laps.rest ? (
@@ -193,57 +137,12 @@ function LiveLaps({
         ) : (
           <RestRow rest={null} seconds={laps.rest.seconds} onStart={laps.startRest} />
         ))}
-      {laps.next !== null && (
-        <View
-          style={{
-            minHeight: 48,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-            paddingHorizontal: 4,
-            borderRadius: 10,
-            backgroundColor: colors.surfaceSoft,
-          }}
-        >
-          <Text style={[type.monoBold, { width: 30, fontSize: 14, color: colors.gunmetal }]}>
-            {done + 1}
-          </Text>
-          {step !== null ? (
-            <>
-              <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
-                {t("tally.attempt")}
-              </Text>
-              <View
-                style={{
-                  flex: 1,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                }}
-              >
-                <Pressable
-                  onPress={() => setStep(Math.max(0, step - 1))}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("tally.fewerMoves")}
-                  hitSlop={4}
-                  style={press(STEP)}
-                >
-                  <Text style={[type.bodyBold, { fontSize: 20, color: colors.gunmetal }]}>−</Text>
-                </Pressable>
-                <Text style={[type.monoBold, { fontSize: 15, color: colors.gunmetal }]}>
-                  {`${step}/${target}`}
-                </Text>
-                <Pressable
-                  onPress={() => setStep(Math.min(target - 1, step + 1))}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("tally.moreMoves")}
-                  hitSlop={4}
-                  style={press(STEP)}
-                >
-                  <Text style={[type.bodyBold, { fontSize: 20, color: colors.gunmetal }]}>+</Text>
-                </Pressable>
-              </View>
+      {laps.next !== null &&
+        (step !== null ? (
+          <SetRow
+            position={String(done + 1)}
+            label={laps.next.label}
+            trailing={
               <Button
                 label={t("common.save")}
                 onPress={() => {
@@ -251,28 +150,72 @@ function LiveLaps({
                   setStep(null);
                 }}
                 variant="primary"
-                height={44}
+                height={40}
               />
-            </>
-          ) : laps.next.startable ? (
-            <View style={{ flex: 1, alignItems: "flex-end" }}>
+            }
+          >
+            <Text style={[type.body, { fontSize: 13, color: colors.textSecondary }]}>
+              {t("tally.attempt")}
+            </Text>
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+              }}
+            >
+              <Pressable
+                onPress={() => setStep(Math.max(0, step - 1))}
+                accessibilityRole="button"
+                accessibilityLabel={t("tally.fewerMoves")}
+                hitSlop={4}
+                style={press(STEP)}
+              >
+                <Text style={[type.bodyBold, { fontSize: 20, color: colors.gunmetal }]}>−</Text>
+              </Pressable>
+              <Text style={[type.monoBold, { fontSize: 15, color: colors.gunmetal }]}>
+                {`${step}/${plan.target}`}
+              </Text>
+              <Pressable
+                onPress={() => setStep(Math.min(plan.target - 1, step + 1))}
+                accessibilityRole="button"
+                accessibilityLabel={t("tally.moreMoves")}
+                hitSlop={4}
+                style={press(STEP)}
+              >
+                <Text style={[type.bodyBold, { fontSize: 20, color: colors.gunmetal }]}>+</Text>
+              </Pressable>
+            </View>
+          </SetRow>
+        ) : laps.next.startable ? (
+          <SetRow
+            position={String(done + 1)}
+            label={laps.next.label}
+            trailing={
               <Button
                 label={t("tally.startLap")}
                 onPress={laps.startLap}
                 variant="outline"
-                height={44}
+                height={40}
               />
-            </View>
-          ) : (
-            <>
-              <Text style={[type.mono, { flex: 1, fontSize: 13, color: colors.textSecondary }]}>
-                {laps.next.text}
-              </Text>
-              {remove !== null && <RemoveLap n={done + 1} onRemove={remove(done + 1)} />}
-            </>
-          )}
-        </View>
-      )}
+            }
+          >
+            {null}
+          </SetRow>
+        ) : (
+          <SetRow
+            position={String(done + 1)}
+            label={laps.next.label}
+            removeLabel={t("tally.removeLapOf", { lap: done + 1 })}
+            {...removable(done + 1)}
+          >
+            <Text style={[type.mono, { flex: 1, fontSize: 13, color: colors.textSecondary }]}>
+              {laps.next.text}
+            </Text>
+          </SetRow>
+        ))}
       {laps.next !== null && step === null && !laps.next.startable && (
         <View style={{ flexDirection: "row", gap: 8, paddingTop: 2, paddingBottom: 6 }}>
           <View style={{ flex: 1 }}>
@@ -299,7 +242,7 @@ function LiveLaps({
         </View>
       )}
       {waiting.map((n) => (
-        <Waiting key={n} n={n} text={lapText} onRemove={remove === null ? null : remove(n)} />
+        <Waiting key={n} n={n} {...removable(n)} />
       ))}
       <View style={{ flexDirection: "row", paddingTop: 6 }}>
         <Button
@@ -314,7 +257,13 @@ function LiveLaps({
   );
 }
 
-/** A circuit exercise as a row per lap: how far each got, the lap on the wall, and + Add lap. */
+type LapPlan = ReturnType<typeof lapPlanOf>;
+
+/** "28 moves", "4:30": what one lap was. */
+const lapAmount = (plan: LapPlan, value: number): string =>
+  enduranceAmountLabel({ ...plan, laps: [] }, value);
+
+/** A circuit exercise as a row per lap: what each was, the lap on the wall, and + Add lap. */
 export function LapsCard({
   item,
   at,
@@ -324,62 +273,47 @@ export function LapsCard({
   live,
   rest,
   now,
+  unit,
   about,
+  onHistory,
   onFold,
   menu,
   onLapRemoved,
 }: LapsCardProps): React.ReactElement {
   const plan = lapPlanOf(at.dose);
   const active = draft?.exercise?.item === item;
-  const lapText = enduranceAmountLabel({ ...plan, laps: [] }, plan.target);
   return (
-    <View
-      style={{
-        gap: 4,
-        padding: 14,
-        paddingTop: 12,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: colors.lineOnLightStrong,
-      }}
+    <ExerciseBlock
+      head={
+        <ExerciseHead
+          name={exerciseName(at.exercise)}
+          target={targetText(at.dose, "laps", unit)}
+          about={about}
+          {...(onHistory !== undefined && { onHistory })}
+          onFold={onFold}
+          menu={menu}
+        />
+      }
     >
-      <ExerciseHead
-        name={exerciseName(at.exercise)}
-        target={{ work: "", rpe: exerciseTargetLine(at.dose) }}
-        about={about}
-        onFold={onFold}
-        menu={menu}
-      />
-      <View style={{ flexDirection: "row", gap: 8, paddingVertical: 4 }}>
-        <Label small color={colors.textSecondary} style={{ width: 34 }}>
-          {t("workouts.colLap")}
-        </Label>
-        <Label small color={colors.textSecondary}>
-          {plan.unit === "moves"
-            ? t("workouts.movesPerLap", { n: plan.target })
-            : t("workouts.timePerLap", { time: clock(plan.target) })}
-        </Label>
-      </View>
       {active && draft !== null ? (
         <LiveLaps
           draft={draft}
           live={live}
           rest={rest}
           now={now}
-          target={plan.target}
-          lapText={lapText}
+          plan={plan}
           onLapRemoved={onLapRemoved}
         />
       ) : (
         <View>
-          {lapRowsOf(logged, plan).map((row, i) => (
-            <LapRow key={i} n={i + 1} {...row} />
+          {logged.map((s, i) => (
+            <LapRow key={i} n={i + 1} value={lapAmount(plan, s.reps ?? s.onS ?? 0)} />
           ))}
           {Array.from({ length: Math.max(0, planned - logged.length) }, (_, i) => (
-            <Waiting key={`w${i}`} n={logged.length + i + 1} text={lapText} onRemove={null} />
+            <Waiting key={`w${i}`} n={logged.length + i + 1} />
           ))}
         </View>
       )}
-    </View>
+    </ExerciseBlock>
   );
 }

@@ -4,14 +4,20 @@ import {
   exerciseSets,
   nextSet,
   setClimbs,
+  setClimbOf,
   setOver,
   startExercise,
+  timeUp,
   wallLeft,
   withClimbFlipped,
+  withClimbTries,
   withExerciseClimb,
   withExerciseDone,
+  withoutClimb,
+  withSetClimbAdded,
   withSetEnded,
   withWallStarted,
+  withWallToggled,
   type ExerciseTallyStart,
 } from "./exerciseTally";
 import { newTallyClimb, type TallyGo } from "./tally";
@@ -99,6 +105,46 @@ describe("exercise tally", () => {
     expect(attempt.climbs[0]).toMatchObject({ kind: "attempt" });
     expect(withClimbFlipped(attempt, key).climbs[0]).toMatchObject({ kind: "send", tries: 1 });
     expect(withClimbFlipped(draft, "nope")).toBe(draft);
+  });
+
+  it("stores a row per climb: its attempts as tries, its tick as sent, its style by the tries", () => {
+    const v5 = { kind: "grade", scale: "v", grade: "V5" } as const;
+    let draft = withSetClimbAdded(startExercise(null, fourByFours, NOW), v5);
+    draft = withSetClimbAdded(draft, { ...v5, grade: "V6" });
+    const [first, second] = draft.climbs.map((c) => c.key) as [string, string];
+    draft = withClimbFlipped(withClimbTries(draft, first, 3), first);
+    expect(setOver(draft, NOW)).toBe(false);
+    draft = withClimbTries(withClimbTries(draft, second, 2), second, 0);
+    expect(draft.climbs.map(setClimbOf)).toEqual([
+      { grade: "V5", scale: "v", tries: 3, sent: true, style: "redpoint" },
+      { grade: "V6", scale: "v", tries: 1, sent: false },
+    ]);
+    expect(withClimbFlipped(draft, second).climbs[1]).toMatchObject({ kind: "send", style: "flash" });
+    expect(draft.climbs.map((c) => [c.item, c.set])).toEqual([
+      [0, 1],
+      [0, 1],
+    ]);
+    expect(withoutClimb(draft, first).climbs.map((c) => c.grade)).toEqual(["V6"]);
+  });
+
+  it("runs the clock on the wall only from its own button, pausing with the time so far", () => {
+    let draft = withSetClimbAdded(startExercise(null, arc, NOW), {
+      kind: "grade",
+      scale: "v",
+      grade: "V2",
+    });
+    expect(wallLeft(draft.exercise!, at(600))).toBe(1200);
+    expect(timeUp(draft, at(5000))).toBe(false);
+    draft = withWallToggled(draft, NOW);
+    draft = withWallToggled(draft, at(300));
+    expect(draft.exercise?.setStartedAt).toBeUndefined();
+    expect(wallLeft(draft.exercise!, at(900))).toBe(900);
+    draft = withWallToggled(draft, at(1000));
+    expect(wallLeft(draft.exercise!, at(1600))).toBe(300);
+    expect(timeUp(draft, at(1899))).toBe(false);
+    expect(timeUp(draft, at(1900))).toBe(true);
+    expect(exerciseSets(withExerciseDone(draft, at(1100)), 1, 1200, at(2000))[0]?.onS).toBe(400);
+    expect(withSetEnded(draft, at(1100)).draft.exercise).not.toHaveProperty("setOnS");
   });
 
   it("runs a set with no climb count until Done", () => {

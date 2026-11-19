@@ -131,6 +131,7 @@ export {
   setOver,
   startExercise,
   wallLeft,
+  setClimbOf,
   withExerciseClimb,
   withExerciseDone,
   withSetEnded,
