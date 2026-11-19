@@ -37,7 +37,7 @@ export function WorkoutHistoryScreen({
   if (workout === undefined) return null;
   return (
     <ScreenFrame>
-      <View style={{ gap: 6, paddingBottom: 8 }}>
+      <View style={{ gap: 6 }}>
         <Label color={KIND_LOOK[workout.kind].ink}>{t("common.history")}</Label>
         <Title size={28}>{workout.name}</Title>
       </View>
