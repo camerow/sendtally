@@ -22,7 +22,6 @@ import { ChecklistCard } from "../sets/ChecklistCard";
 import { ExerciseBlock } from "../sets/ExerciseBlock";
 import { ExerciseHead } from "../sets/ExerciseHead";
 import { RpeField } from "../sets/RpeField";
-import { SET_COLUMNS } from "../sets/setColumns";
 import { SetDoneFields } from "../sets/SetDoneFields";
 import { SetHeadings } from "../sets/SetHeadings";
 import { holdsOnly } from "../sets/holdsOnly";
@@ -165,12 +164,13 @@ export function DoneDetails({
                     oneHang
                       ? t("plan.colHeld")
                       : hangs
-                        ? t("activities.colHangsLoad")
+                        ? t("plan.colHangs")
                         : !lifting && holdsOnly(d.sets)
                           ? t("workouts.dose.hold")
                           : t("activities.colDone")
                   }
                   rpe={rated(d)}
+                  {...(hangs && { measure: t("hang.load"), tick: false })}
                 />
                 {d.sets.map((set, i) => {
                   const on = !off.includes(setKeyOf(d.item, i)) && (!hangs || heldSet(set));
@@ -185,9 +185,7 @@ export function DoneDetails({
                       label={label}
                       ticked={on}
                       onToggle={() => toggle(d.item, i)}
-                      {...(hangs && {
-                        trailing: <View style={{ width: SET_COLUMNS.tick.width }} />,
-                      })}
+                      {...(hangs && { trailing: null })}
                       selected={selected?.item === d.item && selected.set === i}
                       onSelect={() => select(d.item, i)}
                       onRemove={() => remove(d, i)}

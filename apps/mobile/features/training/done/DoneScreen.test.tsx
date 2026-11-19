@@ -98,6 +98,9 @@ describe("A hangboard workout's review", () => {
     expect(screen.getByText("Fingers")).toBeTruthy();
     expect(screen.queryByText(/^From the timer/)).toBeNull();
     expect(screen.queryByText("4 of 6 hangs")).toBeNull();
+    expect(screen.getByText("Hangs")).toBeTruthy();
+    expect(screen.getByText("Load")).toBeTruthy();
+    expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
     expect(screen.queryByText("Started")).toBeNull();
     expect(screen.queryByText("Focus")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Half crimp, set 5 · Hangs"));
