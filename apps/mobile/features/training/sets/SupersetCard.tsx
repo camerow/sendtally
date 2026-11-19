@@ -23,6 +23,9 @@ import { Label } from "../components/Label";
 import type { DetailMenuRow } from "../components/types";
 import { RestPreview } from "../rest/RestPreview";
 import { type } from "../type";
+import { useFieldOrder } from "../../../components/useFieldOrder";
+import { RpeField } from "./RpeField";
+import { SetDoneFields } from "./SetDoneFields";
 import { SetRow } from "./SetRow";
 
 export type SupersetCardProps = {
@@ -30,17 +33,16 @@ export type SupersetCardProps = {
   /** The run's items, sets as many as each has now. */
   items: readonly SessionItem[];
   done: readonly ItemDone[];
-  target: (at: SetAt) => SetDone;
   lifting: (item: number) => boolean;
   ticked: ReadonlySet<string>;
-  current: SetAt | null;
+  selected: SetAt | null;
   unit: WeightUnit;
   onChange: (at: SetAt, value: SetDone) => void;
   onToggle: (at: SetAt) => void;
   holdRow: (at: SetAt) => React.ReactNode;
   go: (at: SetAt) => React.ReactNode;
   restUnder: (at: SetAt) => React.ReactNode;
-  onFocus: (at: SetAt) => void;
+  onSelect: (at: SetAt) => void;
   onRemoveSet: (at: SetAt) => void;
   /** One more round, for every member. */
   onAddRound: () => void;
@@ -56,17 +58,16 @@ export function SupersetCard({
   group,
   items,
   done,
-  target,
   lifting,
   ticked,
-  current,
+  selected,
   unit,
   onChange,
   onToggle,
   holdRow,
   go,
   restUnder,
-  onFocus,
+  onSelect,
   onRemoveSet,
   onAddRound,
   onFold,
@@ -78,8 +79,15 @@ export function SupersetCard({
   const nameOf = (m: number): string => exerciseName(items[m]?.exercise ?? "");
   const next = supersetNextLine(
     nextInRound(items, ticked, group)
-      .filter((m) => m !== current?.item)
+      .filter((m) => m !== selected?.item)
       .map(nameOf)
+  );
+  const rpeOrder = useFieldOrder(
+    group.members.flatMap((item) =>
+      Array.from({ length: setsOf(item) }, (_, set) => setKey({ item, set })).filter((k) =>
+        ticked.has(k)
+      )
+    )
   );
   return (
     <View
@@ -134,29 +142,44 @@ export function SupersetCard({
             if (value === undefined) return null;
             const name = nameOf(item);
             const rest = restPreviewAfter(group, (m) => setsOf(m), letter, set);
+            const on = ticked.has(setKey(at));
+            const label = t("activities.setOf", { exercise: name, n: set + 1 });
+            const targetRpe = items[item]?.dose.targetRpe;
             return (
               <React.Fragment key={item}>
                 {holdRow(at) || (
                   <SetRow
-                    n={set + 1}
-                    tag={memberSetLabel(letter, set)}
+                    position={memberSetLabel(letter, set)}
                     name={name}
-                    repsMax={items[item]?.dose.repsMax}
-                    target={target(at)}
-                    done={value}
-                    previous={undefined}
-                    lifting={lifting(item)}
-                    ticked={ticked.has(setKey(at))}
-                    current={current?.item === item && current.set === set}
-                    unit={unit}
-                    label={t("activities.setOf", { exercise: name, n: set + 1 })}
-                    onChange={(v) => onChange(at, v)}
+                    label={label}
+                    ticked={on}
                     onToggle={() => onToggle(at)}
-                    onFocus={() => onFocus(at)}
+                    selected={selected?.item === item && selected.set === set}
+                    onSelect={() => onSelect(at)}
                     onRemove={() => onRemoveSet(at)}
+                    removeLabel={t("activities.removeSet", { n: set + 1 })}
                     testID={`set-row-${item}-${set}`}
-                    go={go(at) || undefined}
-                  />
+                    {...(targetRpe !== undefined && {
+                      rpe: on ? (
+                        <RpeField
+                          set={value}
+                          target={targetRpe}
+                          slot={rpeOrder.slot(setKey(at))}
+                          label={label}
+                          onChange={(v) => onChange(at, v)}
+                        />
+                      ) : null,
+                    })}
+                  >
+                    <SetDoneFields
+                      set={value}
+                      lifting={lifting(item)}
+                      unit={unit}
+                      label={label}
+                      {...(!on && go(at) ? { go: go(at) } : {})}
+                      onChange={(v) => onChange(at, v)}
+                    />
+                  </SetRow>
                 )}
                 {restUnder(at) || (rest !== null && <RestPreview seconds={rest} />)}
               </React.Fragment>

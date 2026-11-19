@@ -1,14 +1,12 @@
 import React from "react";
 import { View } from "react-native";
-import type { SessionItem } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { ChecklistRow } from "../checklist/ChecklistRow";
 import type { DetailMenuRow } from "../components/types";
-import { ExerciseCardHead } from "./ExerciseCardHead";
+import { ExerciseHead } from "./ExerciseHead";
 
 export type ChecklistCardProps = {
-  item: SessionItem;
   lines: readonly string[];
   ticked: (line: number) => boolean;
   onToggle: (line: number) => void;
@@ -18,7 +16,6 @@ export type ChecklistCardProps = {
 
 /** A checklist among the exercise cards: its typed lines, ticked in any order. */
 export function ChecklistCard({
-  item,
   lines,
   ticked,
   onToggle,
@@ -36,11 +33,7 @@ export function ChecklistCard({
         borderColor: colors.lineOnLightStrong,
       }}
     >
-      <ExerciseCardHead
-        item={{ ...item, exercise: t("workouts.checklist") }}
-        onFold={onFold}
-        menu={menu}
-      />
+      <ExerciseHead name={t("workouts.checklist")} onFold={onFold} menu={menu} />
       {lines.map((line, i) => (
         <ChecklistRow
           key={i}

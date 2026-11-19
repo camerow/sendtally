@@ -51,6 +51,30 @@ async function press(...keys: string[]): Promise<void> {
 }
 
 describe("Keypad", () => {
+  it("commits what was typed into a field when another field takes the keypad", async () => {
+    const reps = jest.fn();
+    const weight = jest.fn();
+    const pad = (field: string, value: number, onCommit: jest.Mock): React.ReactElement => (
+      <Keypad
+        visible
+        field={field}
+        label={field}
+        mode={{ kind: "number", step: 1 }}
+        value={value}
+        onCommit={onCommit}
+        onClose={jest.fn()}
+      />
+    );
+    const { rerender } = await render(pad("reps", 5, reps));
+    await press("6");
+    await rerender(pad("weight", 100, weight));
+    expect(reps).toHaveBeenCalledWith(6);
+    expect(weight).not.toHaveBeenCalled();
+    await press("Done");
+    expect(weight).not.toHaveBeenCalled();
+    expect(reps).toHaveBeenCalledTimes(1);
+  });
+
   it("fills a time from the right and carries the overflow on Done", async () => {
     const { onCommit, onClose } = await renderPad({ kind: "time" }, 7);
     expect(screen.getByText("00:00:07")).toBeTruthy();

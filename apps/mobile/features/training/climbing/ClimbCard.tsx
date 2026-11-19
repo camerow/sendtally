@@ -11,7 +11,8 @@ import { Label } from "../components/Label";
 import { RowFill } from "../components/RowFill";
 import type { DetailMenuRow } from "../components/types";
 import { RestPreview } from "../rest/RestPreview";
-import { ExerciseCardHead } from "../sets/ExerciseCardHead";
+import { ExerciseHead } from "../sets/ExerciseHead";
+import { exerciseName, exerciseTargetLine } from "@sendtally/features/workouts";
 import { type } from "../type";
 import { ClimbChip } from "./ClimbChip";
 import { GradePicker } from "./GradePicker";
@@ -64,7 +65,13 @@ export function ClimbCard({
         borderColor: colors.lineOnLightStrong,
       }}
     >
-      <ExerciseCardHead item={item} about={about} onFold={onFold} menu={menu} />
+      <ExerciseHead
+        name={exerciseName(item.exercise)}
+        target={{ work: "", rpe: exerciseTargetLine(item.dose) }}
+        about={about}
+        onFold={onFold}
+        menu={menu}
+      />
       <View style={{ flexDirection: "row", gap: 8, paddingVertical: 4 }}>
         <Label small color={colors.textSecondary} style={{ width: 34 }}>
           {t("activities.colSet")}

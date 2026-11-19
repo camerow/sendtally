@@ -152,7 +152,7 @@ describe("A finished workout's summary", () => {
     expect(screen.getByText("Strength")).toBeTruthy();
     expect(screen.getByRole("header", { name: "Lower body strength" })).toBeTruthy();
     expect(screen.getByText("41 min")).toBeTruthy();
-    expect(screen.getByText("effort · aimed 7")).toBeTruthy();
+    expect(screen.getByText("Target RPE 7/10")).toBeTruthy();
     expect(screen.getByText("5")).toBeTruthy();
     expect(screen.getByText("What you did")).toBeTruthy();
     expect(screen.getAllByText("+2.5 kg").length).toBeGreaterThan(0);
@@ -183,7 +183,7 @@ describe("A finished workout's summary", () => {
     expect(names[0]).toMatch(/^Half crimp/);
     expect(names.slice(1)).toContain("Back squat");
     expect(screen.queryByText("5")).toBeNull();
-    expect(screen.getAllByText("7")).toHaveLength(2);
+    expect(screen.getAllByText("7")).toHaveLength(1);
   });
 
   it("lists the workout's past sessions with this one marked, each opening its summary", async () => {
@@ -199,7 +199,7 @@ describe("A finished workout's summary", () => {
     await show("a1", [loose, { ...before, workoutId: null }]);
     expect(screen.queryByText(/^History/)).toBeNull();
     expect(screen.getByText("Over time")).toBeTruthy();
-    expect(screen.getByText("effort")).toBeTruthy();
+    expect(screen.getByText("Hard")).toBeTruthy();
   });
 
   it("reads a climbing workout's climbs per set and its time, against last time", async () => {

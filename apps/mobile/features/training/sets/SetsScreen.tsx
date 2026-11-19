@@ -89,7 +89,7 @@ export function SetsScreen({
     isGrip: grips.isGrip,
   });
   const { part } = player;
-  const { shown, ticked, current, rest, hold, previous, nameOf, items, order } = player;
+  const { shown, ticked, rest, hold, nameOf, items, order } = player;
   const climbs = useWorkoutTally(tally, rest);
   const [editing, setEditing] = React.useState<string | null>(null);
   const [pickingGym, setPickingGym] = React.useState(false);
@@ -108,7 +108,9 @@ export function SetsScreen({
         hold={hold.hold}
         now={hold.now}
         lead={
-          <Text style={[type.monoBold, SET_COLUMNS.set, { fontSize: 14, color: colors.gunmetal }]}>
+          <Text
+            style={[type.mono, SET_COLUMNS.position, { fontSize: 12, color: colors.textMuted }]}
+          >
             {formatNumber(at.set + 1)}
           </Text>
         }
@@ -295,17 +297,16 @@ export function SetsScreen({
                         group={g}
                         items={player.live}
                         done={shown}
-                        target={(set) => player.target(set)}
                         lifting={player.lifting}
                         ticked={ticked}
-                        current={current}
+                        selected={player.selected}
                         unit={unit}
                         onChange={(a, value) => player.change(a.item, a.set, value)}
                         onToggle={player.toggle}
                         holdRow={holdRow}
                         go={go}
                         restUnder={(a) => restAt(setKey(a))}
-                        onFocus={player.focus}
+                        onSelect={player.select}
                         onRemoveSet={player.removeSet}
                         onAddRound={() => player.addSet(i)}
                         onFold={() => g.members.forEach((m) => player.fold(m))}
@@ -389,7 +390,6 @@ export function SetsScreen({
                       />
                     ) : (
                       <ChecklistCard
-                        item={item}
                         lines={lines}
                         ticked={tickedLine}
                         onToggle={(set) => player.toggle({ item: i, set })}
@@ -417,11 +417,9 @@ export function SetsScreen({
                     <SetsCard
                       item={item}
                       done={d}
-                      target={(set) => player.target({ item: i, set })}
-                      previous={previous(d.exercise)}
                       lifting={player.lifting(i)}
                       ticked={ticked}
-                      current={current}
+                      selected={player.selected}
                       unit={unit}
                       onChange={(set, value) => player.change(i, set, value)}
                       onToggle={(set) => player.toggle({ item: i, set })}
@@ -429,7 +427,7 @@ export function SetsScreen({
                       go={(set) => go({ item: i, set })}
                       restUnder={(set) => restAt(setKey({ item: i, set }))}
                       about={exerciseAbout(mine, item.exercise, nameOf(i))}
-                      onFocus={(set) => player.focus({ item: i, set })}
+                      onSelect={(set) => player.select({ item: i, set })}
                       onRemoveSet={(set) => player.removeSet({ item: i, set })}
                       onAddSet={() => player.addSet(i)}
                       onFold={() => player.fold(i)}

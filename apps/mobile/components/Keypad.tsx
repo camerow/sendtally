@@ -125,26 +125,38 @@ export function Keypad({
   const valueOf = (e: Entries): number =>
     mode.kind === "time" ? entrySeconds(e.time) : entryNumber(e.number);
 
-  const finish = (): void => {
-    if (entries.committed) return;
-    const done = reduce(entries, { type: "done" });
-    setEntries({ ...done, committed: true });
+  const commit = (done: Entries): void => {
     if (range !== undefined) {
       const typed = entryRange(done.number, limits);
       if (typed.min !== value || typed.max !== range.max) onCommit(typed.min, typed.max);
     } else if (valueOf(done) !== value) onCommit(valueOf(done));
   };
+  const finish = (): void => {
+    if (entries.committed) return;
+    const done = reduce(entries, { type: "done" });
+    setEntries({ ...done, committed: true });
+    commit(done);
+  };
+  const leave = (): void => {
+    if (!entries.committed) commit(reduce(entries, { type: "done" }));
+  };
   const close = (): void => {
     finish();
     onClose();
   };
-  const latestFinish = React.useRef(finish);
+  const latest = React.useRef({ finish, leave });
+  const shownField = React.useRef(opened);
   React.useEffect(() => {
-    latestFinish.current = finish;
+    const was = shownField.current;
+    shownField.current = opened;
+    if (was !== null && opened !== null && was !== opened) latest.current.leave();
+  }, [opened]);
+  React.useEffect(() => {
+    latest.current = { finish, leave };
   });
   const wasVisible = React.useRef(visible);
   React.useEffect(() => {
-    if (wasVisible.current && !visible) latestFinish.current();
+    if (wasVisible.current && !visible) latest.current.finish();
     wasVisible.current = visible;
   }, [visible]);
   const reset = (): void => {

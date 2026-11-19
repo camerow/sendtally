@@ -180,13 +180,13 @@ export function DoneDetails({
                   </View>
                   {index === 0 && setup}
                   <View style={SET_COLUMNS.row}>
-                    <Label small color={colors.textSecondary} style={SET_COLUMNS.set}>
+                    <Label small color={colors.textSecondary} style={SET_COLUMNS.position}>
                       {of === "laps" ? t("workouts.colLap") : t("activities.colSet")}
                     </Label>
-                    <Label small color={colors.textSecondary} style={SET_COLUMNS.target}>
+                    <Label small color={colors.textSecondary} style={{ flex: 1 }}>
                       {t("activities.colTarget")}
                     </Label>
-                    <Label small color={colors.textSecondary} style={SET_COLUMNS.done}>
+                    <Label small color={colors.textSecondary} style={{ flex: 1 }}>
                       {hangs
                         ? t("activities.colHangsLoad")
                         : lifting

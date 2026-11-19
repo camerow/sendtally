@@ -73,7 +73,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
     activities: activities.status === "ready" ? activities.data : null,
     exercises: mine,
   });
-  const { shown, ticked, current, rest, hold, previous, nameOf, items, order, part } = player;
+  const { shown, ticked, rest, hold, previous, nameOf, items, order, part } = player;
   const climbs = useWorkoutTally(tally, rest);
   const draft = climbs.draft;
   const climbing = items.some((_, i) => player.tallyOf(i) !== null);
@@ -245,14 +245,14 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                   target={(a) => player.target(a)}
                   lifting={player.lifting}
                   ticked={ticked}
-                  current={current}
+                  current={player.selected}
                   unit={unit}
                   onChange={(a, value) => player.change(a.item, a.set, value)}
                   onToggle={player.toggle}
                   holdRow={holdRow}
                   go={go}
                   restUnder={(a) => restAt(setKey(a))}
-                  onFocus={player.focus}
+                  onFocus={player.select}
                   onRemoveSet={removeSet}
                   onAddRound={() => player.addSet(i)}
                   onFold={() => g.members.forEach((m) => player.fold(m))}
@@ -367,7 +367,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                 previous={previous(d.exercise)}
                 lifting={player.lifting(i)}
                 ticked={ticked}
-                current={current}
+                current={player.selected}
                 unit={unit}
                 onChange={(set, value) => player.change(i, set, value)}
                 onToggle={(set) => player.toggle({ item: i, set })}
@@ -375,7 +375,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                 go={(set) => go({ item: i, set })}
                 restUnder={(set) => restAt(setKey({ item: i, set }))}
                 about={exerciseAbout(mine, item.exercise, nameOf(i))}
-                onFocus={(set) => player.focus({ item: i, set })}
+                onFocus={(set) => player.select({ item: i, set })}
                 onRemoveSet={(set) => removeSet({ item: i, set })}
                 onAddSet={() => player.addSet(i)}
                 onFold={() => player.fold(i)}

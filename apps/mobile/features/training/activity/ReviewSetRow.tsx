@@ -107,13 +107,13 @@ export function ReviewSetRow({
         <Text
           style={[
             type.monoBold,
-            SET_COLUMNS.set,
+            SET_COLUMNS.position,
             { fontSize: 14, color: on ? colors.gunmetal : colors.textMuted },
           ]}
         >
           {formatNumber(n)}
         </Text>
-        <View style={[SET_COLUMNS.target, { gap: 2 }]}>
+        <View style={{ flex: 1, gap: 2 }}>
           {done.climbs === undefined ? (
             <Text
               numberOfLines={1}
@@ -135,7 +135,7 @@ export function ReviewSetRow({
             <Text style={[type.mono, { fontSize: 11, color: AMBER }]}>{short}</Text>
           )}
         </View>
-        <View style={SET_COLUMNS.done}>
+        <View style={SET_COLUMNS.lead}>
           {done.climbs === undefined && (
             <SetDoneFields
               set={done}
@@ -143,7 +143,6 @@ export function ReviewSetRow({
               hangs={hangs}
               short={on && short !== null}
               unit={unit}
-              unitless={rpe !== undefined}
               label={label}
               slot={slot}
               loadSlot={loadSlot}

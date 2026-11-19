@@ -1,13 +1,17 @@
-import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
+import React from "react";
+import type { ActivityRecord, HangSessionRecord, SendtallyApi } from "@sendtally/api-client";
 import type { CalendarDate, WeightUnit } from "@sendtally/core/hang";
 import { climbsLine, isClimbingSets, wallLine } from "./climbing";
 import { checklistsLine, setText } from "./done";
 import { bestSet, hangGrids, hangTotals } from "./summary";
-import { dayMonth, loadLabel } from "../hang/format";
+import { dayMonth, loadLabel, shortDate } from "../hang/format";
 import type { HangModel } from "../hang/model";
+import { useHang } from "../hang/useHang";
+import type { QueryState } from "../query";
 import { t } from "../i18n";
 import { exerciseKey, type ExerciseSeries } from "../statistics";
 import type { HistoryItem } from "./types";
+import { useActivities } from "./useActivities";
 
 /** A workout's sessions, newest first. */
 export function ofWorkout<T extends { workoutId: string | null; date: CalendarDate }>(
@@ -92,4 +96,47 @@ export function exerciseItems(
       rpe: activity?.rpe ?? null,
     };
   });
+}
+
+/**
+ * Every session of one workout, newest first, each titled by its day: a logged workout with how
+ * long it took, a hangboard one with its load and hangs held.
+ */
+export function workoutHistory(
+  activities: readonly ActivityRecord[],
+  model: Pick<HangModel, "gripName" | "settings" | "data">,
+  workoutId: string,
+  currentId?: string
+): HistoryItem[] {
+  const unit = model.settings.units;
+  const dated = [
+    ...ofWorkout(activities, workoutId).map((a) => ({
+      date: a.date,
+      item: { ...activityItem(a, unit, currentId), meta: t("hang.minutes", { n: a.minutes }) },
+    })),
+    ...ofWorkout(model.data.sessions, workoutId).map((s) => ({
+      date: s.date,
+      item: hangItem(s, model, currentId),
+    })),
+  ];
+  return dated
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .map(({ date, item }) => ({ ...item, name: shortDate(date) }));
+}
+
+export function useWorkoutHistory(
+  api: SendtallyApi,
+  workoutId: string,
+  currentId?: string
+): QueryState<HistoryItem[]> {
+  const activities = useActivities(api).state;
+  const hang = useHang(api).state;
+  return React.useMemo(() => {
+    if (activities.status !== "ready") return activities;
+    if (hang.status !== "ready") return hang;
+    return {
+      status: "ready",
+      data: workoutHistory(activities.data, hang.data, workoutId, currentId),
+    };
+  }, [activities, hang, workoutId, currentId]);
 }

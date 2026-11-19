@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, within } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import type { WorkoutRun } from "@sendtally/features/workouts";
@@ -71,7 +71,7 @@ describe("A superset in the workout view", () => {
     await fireEvent.press(screen.getByText("Add round"));
     expect(screen.getByLabelText("Pull-ups, set 3")).toBeTruthy();
     expect(screen.getByLabelText("Push-ups, set 3")).toBeTruthy();
-    await fireEvent.press(screen.getByTestId("set-row-0-2"));
+    await fireEvent.press(within(screen.getByTestId("set-row-0-2")).getByText(/-ups$/));
     await fireEvent.press(screen.getAllByLabelText("Remove set 3")[0]!);
     expect(screen.queryByLabelText("Pull-ups, set 3")).toBeNull();
     expect(screen.queryByLabelText("Push-ups, set 3")).toBeNull();

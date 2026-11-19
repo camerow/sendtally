@@ -1,158 +1,119 @@
 import React from "react";
-import { Pressable, Text, useWindowDimensions, View } from "react-native";
-import type { SetDone, WeightUnit } from "@sendtally/core/hang";
+import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { setChip } from "@sendtally/features/activities";
-import { formatNumber, t } from "@sendtally/features/i18n";
-import { holdShort } from "@sendtally/features/workouts";
 import { Icon } from "../../../components/Icon";
 import { press } from "../../../lib/press";
 import { CheckBox } from "../components/CheckBox";
 import { type } from "../type";
 import { SET_COLUMNS } from "./setColumns";
-import type { FieldSlot } from "../../../components/useFieldOrder";
-import { RpeField } from "./RpeField";
-import { SetDoneFields } from "./SetDoneFields";
 
 export type SetRowProps = {
-  n: number;
-  /** In place of the set's number: a superset member's letter and round, "B2". */
-  tag?: string;
-  /** Before its target: a superset member's exercise. */
+  /** Its place, quietest in the row: "1", "B2", "Lap 3". */
+  position: string;
+  /** A superset member's or a climb's name, on its own line over the row. */
   name?: string;
-  target: SetDone;
-  /** The top of a rep range the target runs to. */
-  repsMax?: number;
-  done: SetDone;
-  previous: SetDone | undefined;
-  lifting: boolean;
-  ticked: boolean;
-  current: boolean;
-  unit: WeightUnit;
+  /** The row's fields or a kind's content, filling the grid after the position. */
+  children: React.ReactNode;
+  /** The RPE column, for a block that asks a set RPE: null keeps the column empty. */
+  rpe?: React.ReactElement | null;
+  /** Edit: the tick, or `trailing` in its place. Read: values as text, nothing trailing. */
+  mode?: "edit" | "read";
+  ticked?: boolean;
+  onToggle?: () => void;
+  /** In place of the tick, such as Start lap. */
+  trailing?: React.ReactNode;
+  /** Names the set for screen readers: its tick and its select. */
   label: string;
-  /** ▶ in the Done cell, for the current set when it is timed. */
-  go?: React.ReactNode;
-  /** Where the exercise asks for a set RPE: the RPE cell's place in the card's order, and its target. */
-  rpe?: { slot: FieldSlot; target: number | undefined };
-  onChange: (set: SetDone) => void;
-  onToggle: () => void;
-  /** Makes it the current set, as a tap anywhere on it does. */
-  onFocus?: () => void;
-  /** − beside the tick, on the current set: takes the set out. */
+  selected?: boolean;
+  /** Pressing the position, or the name line, selects the row; pressing a selected name unselects. */
+  onSelect?: () => void;
+  /** Takes the row out: shown in place of the position while selected. */
   onRemove?: () => void;
+  removeLabel?: string;
   testID?: string;
 };
 
-const LAST_LINE = {
-  fontSize: 11,
-  color: colors.textSecondary,
-  marginTop: -4,
-  paddingBottom: 8,
-  paddingLeft: SET_COLUMNS.set.width + SET_COLUMNS.row.gap,
-  paddingRight:
-    SET_COLUMNS.row.gap + SET_COLUMNS.tick.width + SET_COLUMNS.row.gap + SET_COLUMNS.remove.width,
-};
-
-/** One set: its number, what it asks and did last time, what was done, and its tick. */
+/** One row of the set grid, in the run, the review and the finished workout. */
 export function SetRow({
-  n,
-  tag,
+  position,
   name,
-  target,
-  repsMax,
-  done,
-  previous,
-  lifting,
-  ticked,
-  current,
-  unit,
-  label,
-  go,
+  children,
   rpe,
-  onChange,
+  mode = "edit",
+  ticked = false,
   onToggle,
-  onFocus,
+  trailing,
+  label,
+  selected = false,
+  onSelect,
   onRemove,
+  removeLabel,
   testID,
 }: SetRowProps): React.ReactElement {
-  const { width } = useWindowDimensions();
-  const narrow = width < 390;
-  const last = previous === undefined ? "" : setChip(previous, unit);
-  return (
+  const read = mode === "read";
+  const removing = selected && onRemove !== undefined;
+  const place = removing ? (
     <Pressable
-      onPress={onFocus}
-      accessible={false}
-      testID={testID}
-      style={{ borderRadius: 10, backgroundColor: current ? colors.surfaceSoft : undefined }}
+      onPress={onRemove}
+      accessibilityRole="button"
+      accessibilityLabel={removeLabel ?? label}
+      hitSlop={{ top: 10, bottom: 10, left: 6 }}
+      style={press([SET_COLUMNS.position, { paddingLeft: 3 }])}
     >
-      <View style={[SET_COLUMNS.row, { minHeight: 48 }]}>
-        <Text style={[type.monoBold, SET_COLUMNS.set, { fontSize: 14, color: colors.gunmetal }]}>
-          {tag ?? formatNumber(n)}
-        </Text>
-        <View style={SET_COLUMNS.target}>
-          {width >= 360 && (
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.7}
-              style={[type.mono, { fontSize: 14, color: colors.textSecondary }]}
-            >
-              {[name, setChip(target, unit, repsMax) || "-"].filter(Boolean).join(" ")}
-            </Text>
-          )}
-        </View>
-        <View style={SET_COLUMNS.done}>
-          <SetDoneFields
-            set={done}
-            lifting={lifting}
-            unit={unit}
-            unitless={rpe !== undefined}
-            label={label}
-            {...(!ticked && go !== undefined && { go })}
-            holdShort={holdShort(target, done, ticked)}
-            onChange={onChange}
-          />
-        </View>
-        {rpe !== undefined && (
-          <View style={SET_COLUMNS.rpe}>
-            {ticked && (
-              <RpeField
-                set={done}
-                target={rpe.target}
-                slot={rpe.slot}
-                label={label}
-                onChange={onChange}
-              />
-            )}
-          </View>
-        )}
-        <Pressable
-          onPress={onToggle}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: ticked }}
-          accessibilityLabel={label}
-          style={press({ width: 44, height: 44, alignItems: "flex-end", justifyContent: "center" })}
-        >
-          <CheckBox checked={ticked} color={colors.fern} />
-        </Pressable>
-        <View style={SET_COLUMNS.remove}>
-          {current && onRemove !== undefined && (
-            <Pressable
-              onPress={onRemove}
-              accessibilityRole="button"
-              accessibilityLabel={t("activities.removeSet", { n })}
-              style={press(SET_COLUMNS.remove)}
-            >
-              <Icon name="minusCircle" color={colors.watermelonInk} size={24} strokeWidth={1.5} />
-            </Pressable>
-          )}
-        </View>
-      </View>
-      {last !== "" && !narrow && (
-        <Text numberOfLines={1} style={[type.mono, LAST_LINE]}>
-          {t("activities.previousSet", { set: last })}
-        </Text>
-      )}
+      <Icon name="minusCircle" color={colors.watermelonInk} size={24} strokeWidth={1.5} />
     </Pressable>
+  ) : (
+    <Pressable
+      onPress={name === undefined ? onSelect : undefined}
+      disabled={name !== undefined || onSelect === undefined}
+      accessibilityRole={name === undefined && onSelect !== undefined ? "button" : undefined}
+      accessibilityState={{ selected }}
+      hitSlop={{ top: 12, bottom: 12, left: 6 }}
+      style={SET_COLUMNS.position}
+    >
+      <Text style={[type.mono, { fontSize: 12, color: colors.textMuted }]}>{position}</Text>
+    </Pressable>
+  );
+  return (
+    <View
+      testID={testID}
+      style={{ borderRadius: 10, backgroundColor: selected ? colors.surfaceSoft : undefined }}
+    >
+      {name !== undefined && (
+        <Pressable
+          onPress={onSelect}
+          disabled={onSelect === undefined}
+          accessibilityRole={onSelect === undefined ? undefined : "button"}
+          accessibilityLabel={name}
+          accessibilityState={{ selected }}
+          style={[
+            SET_COLUMNS.row,
+            { alignItems: removing ? "center" : "baseline", paddingTop: read ? 6 : 11 },
+          ]}
+        >
+          {place}
+          <Text style={[type.bodyBold, { flex: 1, fontSize: 15, color: colors.gunmetal }]}>
+            {name}
+          </Text>
+        </Pressable>
+      )}
+      <View style={[SET_COLUMNS.row, { minHeight: read ? 30 : 48 }]}>
+        {name === undefined ? place : <View style={SET_COLUMNS.position} />}
+        <View style={SET_COLUMNS.lead}>{children}</View>
+        {rpe !== undefined && <View style={SET_COLUMNS.rpe}>{rpe}</View>}
+        {!read &&
+          (trailing ?? (
+            <Pressable
+              onPress={onToggle}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: ticked }}
+              accessibilityLabel={label}
+              style={press(SET_COLUMNS.tick)}
+            >
+              <CheckBox checked={ticked} color={colors.fern} />
+            </Pressable>
+          ))}
+      </View>
+    </View>
   );
 }

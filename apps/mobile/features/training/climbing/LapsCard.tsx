@@ -20,8 +20,8 @@ import { Label } from "../components/Label";
 import { AMBER } from "../components/tints";
 import type { DetailMenuRow } from "../components/types";
 import { RestRow } from "../rest/RestRow";
-import { ExerciseCardHead } from "../sets/ExerciseCardHead";
-import { SET_COLUMNS } from "../sets/setColumns";
+import { ExerciseHead } from "../sets/ExerciseHead";
+import { exerciseName, exerciseTargetLine } from "@sendtally/features/workouts";
 import { type } from "../type";
 
 export type LapsCardProps = {
@@ -94,7 +94,7 @@ function RemoveLap({ n, onRemove }: { n: number; onRemove: () => void }): React.
       onPress={onRemove}
       accessibilityRole="button"
       accessibilityLabel={t("tally.removeLapOf", { lap: n })}
-      style={press(SET_COLUMNS.remove)}
+      style={press({ width: 32, height: 40, alignItems: "center", justifyContent: "center" })}
     >
       <Icon name="minusCircle" color={colors.watermelonInk} size={24} strokeWidth={1.5} />
     </Pressable>
@@ -343,7 +343,13 @@ export function LapsCard({
         borderColor: colors.lineOnLightStrong,
       }}
     >
-      <ExerciseCardHead item={at} about={about} onFold={onFold} menu={menu} />
+      <ExerciseHead
+        name={exerciseName(at.exercise)}
+        target={{ work: "", rpe: exerciseTargetLine(at.dose) }}
+        about={about}
+        onFold={onFold}
+        menu={menu}
+      />
       <View style={{ flexDirection: "row", gap: 8, paddingVertical: 4 }}>
         <Label small color={colors.textSecondary} style={{ width: 34 }}>
           {t("workouts.colLap")}

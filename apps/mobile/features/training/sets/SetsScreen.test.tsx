@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, renderHook, screen } from "@testing-library/react-native";
+import { act, fireEvent, renderHook, screen, within } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
@@ -87,12 +87,11 @@ describe("Sets player", () => {
     expect(screen.queryByLabelText("About this workout")).toBeNull();
     expect(screen.getByText("Heavy squats, then rows.")).toBeTruthy();
     expect(screen.getByText("Exercise 1 of 3 · Target effort 8")).toBeTruthy();
-    expect(screen.getAllByText("5 × 100")).toHaveLength(2);
-    expect(screen.getByText("30s")).toBeTruthy();
-    expect(screen.getByText("Last 5 × 97.5")).toBeTruthy();
-    expect(screen.getByText("Last 8 × 60")).toBeTruthy();
-    expect(screen.getByText("8 × 60")).toBeTruthy();
-    expect(screen.getByText("1:30 rest")).toBeTruthy();
+    expect(screen.getByText("2 sets × 5 reps · 100 kg")).toBeTruthy();
+    expect(screen.getByText("1 set × 8 reps")).toBeTruthy();
+    expect(screen.getByText("1 set × 0:30")).toBeTruthy();
+    expect(screen.queryByText(/^Last /)).toBeNull();
+    expect(screen.queryByText("1:30 rest")).toBeNull();
     expect(screen.getAllByText("Rest 2:00")).toHaveLength(2);
     expect(readingOrder("Back squat, set 1", "Rest 1:30", "Back squat, set 2")).toEqual([
       "Back squat, set 1",
@@ -207,7 +206,7 @@ describe("Sets player", () => {
       ],
     };
     await renderWithHang(<SetsScreen run={targeted} />, hangData());
-    expect(screen.getByText("Target RPE 8")).toBeTruthy();
+    expect(screen.getByText("Target RPE 8/10")).toBeTruthy();
     expect(screen.getAllByText(/RPE/)).toHaveLength(2);
   });
 
@@ -227,17 +226,19 @@ describe("Sets player", () => {
     expect(screen.queryByLabelText("Row, set 1 · RPE")).toBeNull();
   });
 
-  it("makes a set current on a tap or an edit, not on a touch that may start a scroll", async () => {
+  it("selects a set from its number only, never from a tick or a typed value", async () => {
     await renderWithHang(<SetsScreen run={run} />, hangData());
-    await fireEvent(screen.getByTestId("set-row-0-1"), "touchStart", {
-      nativeEvent: { pageX: 0, pageY: 0 },
-    });
-    expect(screen.queryByLabelText("Remove set 2")).toBeNull();
-    await fireEvent.press(screen.getByTestId("set-row-0-1"));
+    expect(screen.queryByLabelText(/^Remove set/)).toBeNull();
+    await fireEvent.press(within(screen.getByTestId("set-row-0-1")).getByText("2"));
     expect(screen.getByLabelText("Remove set 2")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Back squat, set 1 · Reps"));
     await fireEvent.press(screen.getByLabelText("4"));
     await fireEvent.press(screen.getByLabelText("Done"));
+    await fireEvent.press(screen.getByLabelText("Back squat, set 1"));
+    expect(screen.getAllByLabelText(/^Remove set/)).toHaveLength(1);
+    expect(screen.getByLabelText("Remove set 2")).toBeTruthy();
+    await fireEvent.press(within(screen.getByTestId("set-row-1-0")).getByText("1"));
+    expect(screen.getAllByLabelText(/^Remove set/)).toHaveLength(1);
     expect(screen.getByLabelText("Remove set 1")).toBeTruthy();
   });
 
@@ -257,7 +258,8 @@ describe("Sets player", () => {
     await fireEvent.press(screen.getByLabelText("Add a set to Row"));
     expect(screen.getByLabelText("Row, set 2")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Back squat, set 2"));
-    expect(screen.getByLabelText("Remove set 2")).toBeTruthy();
+    expect(screen.queryByLabelText(/^Remove set/)).toBeNull();
+    await fireEvent.press(within(screen.getByTestId("set-row-0-1")).getByText("2"));
     expect(screen.getAllByLabelText(/^Remove set/)).toHaveLength(1);
     await fireEvent.press(screen.getByLabelText("Remove set 2"));
     expect(screen.queryByLabelText("Back squat, set 2")).toBeNull();
@@ -390,7 +392,7 @@ describe("Sets player", () => {
     expect(screen.getByText("Finish")).toBeTruthy();
   });
 
-  it("shows which dose an alternating exercise runs, with its name when it has one", async () => {
+  it("never names which alternate an exercise runs", async () => {
     const alternating: WorkoutRun = {
       ...run,
       items: [
@@ -400,10 +402,8 @@ describe("Sets player", () => {
       ],
     };
     await renderWithHang(<SetsScreen run={alternating} />, hangData());
-    expect(screen.getByText("B")).toBeTruthy();
-    expect(screen.getByText("Light")).toBeTruthy();
-    expect(screen.getByText("A")).toBeTruthy();
-    expect(screen.queryByText("C")).toBeNull();
+    for (const shown of ["A", "B", "Light"]) expect(screen.queryByText(shown)).toBeNull();
+    expect(screen.getByText("3 sets × 10 reps")).toBeTruthy();
   });
 
   it("times a timed set in its row after a count-in, records what it held, and rests", async () => {

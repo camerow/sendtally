@@ -111,8 +111,8 @@ export type SetsPlayer = {
   /** What each item has done so far, last time's sets filled in where nothing was typed. */
   shown: ItemDone[];
   ticked: ReadonlySet<string>;
-  /** The set last tapped, ticked or edited, else the first not ticked yet. */
-  current: SetAt | null;
+  /** The set picked from its number or name, for its fill and its Remove; ticking and typing leave it. */
+  selected: SetAt | null;
   /** The cards in the order they run, each keyed by its item. */
   order: readonly number[];
   /** Every item the run has by key: the workout's, then any added during it. */
@@ -147,8 +147,8 @@ export type SetsPlayer = {
   dismissRemoved: () => void;
   open: (item: number) => void;
   fold: (item: number) => void;
-  /** Marks a set as the one being worked on, for its fill and its −. */
-  focus: (at: SetAt) => void;
+  /** Selects a set, or unselects it when it already is. */
+  select: (at: SetAt) => void;
   skip: (item: number) => void;
   move: (item: number, by: -1 | 1) => void;
   /** Whether a card, or the superset it is in, has a place to move to that way. */
@@ -224,7 +224,7 @@ export function useSetsPlayer({
   const [cards, setCards] = React.useState<RunCards>(() =>
     cardsFrom(resumed?.cards, run.items.length)
   );
-  const [focused, setFocused] = React.useState<SetAt | null>(null);
+  const [selected, setSelected] = React.useState<SetAt | null>(null);
   const [removed, setRemoved] = React.useState<
     (RemovedSet & { parts: { at: SetAt; value: SetDone; wasTicked: boolean }[] }) | null
   >(null);
@@ -310,13 +310,11 @@ export function useSetsPlayer({
   const lifting = (item: number): boolean => isLifting(run.kind, items[item]);
   const shown = withPrevious(done, lifting, previous);
   const next = sets.find((at) => !ticked.has(setKey(at))) ?? null;
-  const current = sets.find((at) => at.item === focused?.item && at.set === focused.set) ?? next;
   /** The fingerboard part while it is still to do and comes before the set being worked on. */
   const partFirst =
     partOpen &&
-    focused === null &&
     places[0] !== undefined &&
-    (current === null || cards.order.indexOf(places[0]) < cards.order.indexOf(current.item))
+    (next === null || cards.order.indexOf(places[0]) < cards.order.indexOf(next.item))
       ? places[0]
       : null;
   const nameOf = (item: number): string => {
@@ -334,7 +332,6 @@ export function useSetsPlayer({
     setTicked(after);
     if (ticking) setLastTickAt(() => Date.now());
     const finished = sets.every((s) => s.item !== at.item || after.has(setKey(s)));
-    setFocused(ticking && finished ? null : at);
     setCards((c) => withCardEnded(withCardFold(c, at.item, null), at.item, finished));
     const inGroup = groupOf(at.item);
     const restAfter = !ticking
@@ -352,7 +349,6 @@ export function useSetsPlayer({
   };
   const change = (item: number, set: number, value: SetDone): void => {
     setDone((all) => changeSet(all, item, set, value));
-    setFocused({ item, set });
   };
   const endHold = (h: Hold, seconds: number | null): void => {
     store.writeHold(null);
@@ -371,12 +367,11 @@ export function useSetsPlayer({
   };
 
   const sided = eachSideOf(exercises ?? []);
-  const holdAt = current !== null && !ticked.has(setKey(current)) ? current : next;
   const holdTarget = (at: SetAt): number | null => {
     const targetS = items[at.item]?.dose.onS;
     return hold.hold === null &&
-      holdAt?.item === at.item &&
-      holdAt.set === at.set &&
+      next?.item === at.item &&
+      next.set === at.set &&
       targetS !== undefined &&
       targetS > 0
       ? targetS
@@ -499,15 +494,15 @@ export function useSetsPlayer({
     startedAt,
     shown,
     ticked,
-    current,
+    selected,
     order: cards.order,
     items,
     position: exercisePosition(
       cards.order,
       partFirst ??
-        (focused === null && climbAt !== null && next !== null
+        (climbAt !== null && next !== null
           ? (cards.order.find((k) => k === climbAt || k === next.item) ?? -1)
-          : (current?.item ?? climbAt ?? -1)),
+          : (next?.item ?? climbAt ?? -1)),
       (k) => (listAt(k) ? null : (groupOf(k)?.id ?? String(k))),
       (k) => inPart(k) && !partOpen
     ),
@@ -572,7 +567,7 @@ export function useSetsPlayer({
       setCards((c) =>
         members.reduce((x, m) => withCardEnded(x, m, ended(out.done, out.ticked, m)), c)
       );
-      setFocused(null);
+      setSelected(null);
       rest.skip();
     },
     removed: removed && { exercise: removed.exercise, set: removed.set },
@@ -601,7 +596,7 @@ export function useSetsPlayer({
       if (tallyOf(item) !== null) setChosen(item);
     },
     fold: (item) => withFold(item, true),
-    focus: setFocused,
+    select: (at) => setSelected((was) => (was?.item === at.item && was.set === at.set ? null : at)),
     skip: (item) => {
       setCards((c) => withCardSkipped(c, item));
       withFold(item, null);
@@ -610,7 +605,7 @@ export function useSetsPlayer({
     canMove: (item, by) => unitMovedOrder(cards.order, unitOf(item), by, unitOf) !== cards.order,
     remove: (item) => {
       setCards((c) => withCardRemoved(c, item));
-      if (focused?.item === item) setFocused(null);
+      if (selected?.item === item) setSelected(null);
     },
     addExercise: ({ exercise, kind, measure, dose }) => {
       const key = cards.base + cards.added.length;

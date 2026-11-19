@@ -45,4 +45,5 @@ export const summary = {
   "summary.lapsDown_other": "−{count} vueltas vs. la última vez",
   "summary.sentOf": "{sent} de {of} encadenadas",
   "summary.laps": "Vueltas",
+  "summary.notRated": "sin valorar",
 } as const;

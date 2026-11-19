@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
 import type { HangSettings, SetClimb } from "@sendtally/core/hang";
 import { exerciseSeries } from "../statistics";
-import { activityItem, exerciseItems, hangItem } from "./historyItems";
+import { activityItem, exerciseItems, hangItem, workoutHistory } from "./historyItems";
 
 const climb = (grade: string, sent = true): SetClimb => ({ grade, scale: "v", tries: 1, sent });
 
@@ -108,5 +108,39 @@ describe("a workout's History row", () => {
       done: [list],
     } as unknown as ActivityRecord;
     expect(activityItem(activity, "kg").meta).toBe("1 min · Checklist · 3 of 4");
+  });
+});
+
+describe("workoutHistory", () => {
+  it("lists one workout's sessions newest first, each titled by its day", () => {
+    const activity = (id: string, date: string, workoutId: string | null): ActivityRecord =>
+      ({
+        id,
+        date,
+        workoutId,
+        title: "Strength A",
+        minutes: 59,
+        rpe: 7,
+        done: [],
+      }) as unknown as ActivityRecord;
+    const model = {
+      gripName: (id: string): string => id,
+      settings: { units: "kg" } as HangSettings,
+      data: { sessions: [] } as unknown as Parameters<typeof workoutHistory>[1]["data"],
+    };
+    const items = workoutHistory(
+      [
+        activity("a", "2026-11-16", "w"),
+        activity("b", "2026-11-18", "w"),
+        activity("c", "2026-11-17", null),
+      ],
+      model,
+      "w",
+      "b"
+    );
+    expect(items.map((i) => [i.id, i.name, i.meta, i.current])).toEqual([
+      ["b", "Wed, Nov 18", "59 min", true],
+      ["a", "Mon, Nov 16", "59 min", false],
+    ]);
   });
 });

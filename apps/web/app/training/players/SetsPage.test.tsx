@@ -326,7 +326,7 @@ describe("Sets player", () => {
         { exercise: "Row", dose: { sets: 1, reps: 8 } },
       ],
     });
-    expect(texts(".player-card-meta")).toEqual(["Target RPE 8"]);
+    expect(texts(".player-card-meta")).toEqual(["Target RPE 8/10"]);
   });
 
   it("asks a ticked set's RPE only where the exercise sets a target, its target dim", () => {

@@ -45,4 +45,5 @@ export const summary = {
   "summary.lapsDown_other": "−{count} boucles vs la dernière fois",
   "summary.sentOf": "{sent} enchaînées sur {of}",
   "summary.laps": "Boucles",
+  "summary.notRated": "non évalué",
 } as const;
