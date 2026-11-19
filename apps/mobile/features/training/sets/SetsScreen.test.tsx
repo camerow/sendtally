@@ -236,7 +236,7 @@ describe("Sets player", () => {
     expect(screen.queryByLabelText("Row, set 1 · RPE")).toBeNull();
   });
 
-  it("selects a set from its number only, never from a tick or a typed value", async () => {
+  it("selects a set from the row outside its inputs, never from a tick or a typed value", async () => {
     await renderWithHang(<SetsScreen run={run} />, hangData());
     expect(screen.queryByLabelText(/^Remove set/)).toBeNull();
     await fireEvent.press(within(screen.getByTestId("set-row-0-1")).getByText("2"));
@@ -250,6 +250,12 @@ describe("Sets player", () => {
     await fireEvent.press(within(screen.getByTestId("set-row-1-0")).getByText("1"));
     expect(screen.getAllByLabelText(/^Remove set/)).toHaveLength(1);
     expect(screen.getByLabelText("Remove set 1")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("set-row-1-0"));
+    expect(screen.queryByLabelText(/^Remove set/)).toBeNull();
+    await fireEvent.press(screen.getByTestId("set-row-0-0"));
+    expect(screen.getByLabelText("Remove set 1")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("run-body"));
+    expect(screen.queryByLabelText(/^Remove set/)).toBeNull();
   });
 
   it("says whether an exercise card is open", async () => {

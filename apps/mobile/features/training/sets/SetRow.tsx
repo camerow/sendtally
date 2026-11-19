@@ -25,7 +25,7 @@ export type SetRowProps = {
   /** Names the set for screen readers: its tick and its select. */
   label: string;
   selected?: boolean;
-  /** Pressing the position, or the name line, selects the row; pressing a selected name unselects. */
+  /** Pressing the row outside its inputs and tick selects it, and pressing it again unselects it. */
   onSelect?: () => void;
   /** Takes the row out: shown in place of the position while selected. */
   onRemove?: () => void;
@@ -75,8 +75,11 @@ export function SetRow({
     </Pressable>
   );
   return (
-    <View
+    <Pressable
       testID={testID}
+      onPress={onSelect}
+      disabled={onSelect === undefined}
+      accessible={false}
       style={{ borderRadius: 10, backgroundColor: selected ? colors.surfaceSoft : undefined }}
     >
       {name !== undefined && (
@@ -118,6 +121,6 @@ export function SetRow({
             </Pressable>
           ))}
       </View>
-    </View>
+    </Pressable>
   );
 }
