@@ -237,6 +237,30 @@ describe("hang sessions", () => {
     expect(cards[1]?.rows[1]).toEqual([true, true, true, true, false, false]);
   });
 
+  it("carries each set's seconds on, so a set of one hang reads its time held", () => {
+    const max = { ...protocol, name: "Max hangs", hangS: 10, restS: 0, reps: 1, sets: 2 };
+    const done = [
+      {
+        item: 0,
+        exercise: "half",
+        sets: [
+          { reps: 1, onS: 7 },
+          { reps: 0, onS: 10 },
+        ],
+      },
+    ];
+    const [card] = hangGrids({
+      gripId: "half",
+      edgeMm: 20,
+      protocol: max,
+      pct: 0,
+      loadKg: 0,
+      done,
+    });
+    expect(card?.rows).toEqual([[true], [false]]);
+    expect(card?.seconds).toEqual([7, 10]);
+  });
+
   it("draws a one-grip session's card from its share held", () => {
     const one = { gripId: "half", edgeMm: 20, protocol, pct: 94, loadKg: 0 };
     const held = Array(6).fill(true);
@@ -248,6 +272,7 @@ describe("hang sessions", () => {
         rows: [held, held, [true, true, true, true, true, false]],
         loads: [0, 0, 0],
         rpes: [undefined, undefined, undefined],
+        seconds: [undefined, undefined, undefined],
         held: 17,
         total: 18,
       },

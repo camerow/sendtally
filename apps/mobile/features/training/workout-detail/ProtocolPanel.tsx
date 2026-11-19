@@ -27,13 +27,12 @@ export function ProtocolPanel({ workout, gripId }: ProtocolPanelProps): React.Re
       : { label: t("plan.colReps"), value: String(workout.reps) },
     ...(hang
       ? [
-          {
-            label: t("hang.statOnOff"),
-            value:
-              workout.reps > 1
-                ? `${humanDuration(workout.hangS)} / ${humanDuration(workout.restS)}`
-                : humanDuration(workout.hangS),
-          },
+          workout.reps > 1
+            ? {
+                label: t("hang.statOnOff"),
+                value: `${humanDuration(workout.hangS)} / ${humanDuration(workout.restS)}`,
+              }
+            : { label: t("hang.statOn"), value: humanDuration(workout.hangS) },
         ]
       : []),
     { label: t("plan.colSetRest"), value: clock(workout.setRestS) },

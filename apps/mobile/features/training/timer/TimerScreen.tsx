@@ -10,6 +10,7 @@ import {
   type PlanLink,
   type Run,
 } from "@sendtally/core/hang";
+import { hangLoadText } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { useGrips } from "@sendtally/features/hang";
 import {
@@ -100,29 +101,21 @@ function Timer({
 
   return (
     <TimerFrame timer={timer} controls={{ color: view.look.fill, primary: view.primary }}>
-      <View style={{ alignItems: "center", gap: 8 }}>
-        <Text style={[type.mono, { fontSize: 13, color: ON_DARK_SOFT }]}>
-          {[model.gripName(view.gripId), view.edge].filter((x) => x !== null).join(" · ")}
-        </Text>
-        <Stepper
-          surface="dark"
-          label={t("hang.load")}
-          compact
-          value={toUnit(kg, unit)}
-          unit={unit}
-          step={step}
-          min={toUnit(-200, unit)}
-          max={toUnit(1000, unit)}
-          decimals
-          signed={view.current.kind === "hang"}
-          onChange={setLoad}
-          onStep={(d) => setLoad(toUnit(kg, unit) + d * step)}
-          decreaseLabel={t("hang.decrease", { field: t("hang.load") })}
-          increaseLabel={t("hang.increase", { field: t("hang.load") })}
-        />
-        <WorkoutNotes workoutId={workout.id} dark />
-      </View>
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 22 }}>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 24 }}>
+        <View style={{ alignItems: "center", gap: 8 }}>
+          <Text style={[type.mono, { fontSize: 13, color: ON_DARK_SOFT }]}>
+            {[model.gripName(view.gripId), view.edge].filter((x) => x !== null).join(" · ")}
+          </Text>
+          <Stepper
+            surface="dark"
+            text={hangLoadText(kg, unit)}
+            label={t("hang.load")}
+            onStep={(d) => setLoad(toUnit(kg, unit) + d * step)}
+            decreaseLabel={t("hang.decrease", { field: t("hang.load") })}
+            increaseLabel={t("hang.increase", { field: t("hang.load") })}
+          />
+          <WorkoutNotes workoutId={workout.id} dark />
+        </View>
         <TimerRing
           progress={progress}
           color={view.look.mark}
@@ -130,7 +123,6 @@ function Timer({
           phaseKey={run.index}
           label={view.label}
           big={view.big}
-          hint={view.hint}
           accessibilityLabel={view.ring}
           onPress={timer.primary}
         />

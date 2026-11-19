@@ -194,6 +194,8 @@ export type HangGripGrid = HangGrid & {
   kind: HangKind;
   edgeMm: number;
   rpes: (number | undefined)[];
+  /** Each set's seconds on, which a set of one hang reads as its time held. */
+  seconds: (number | undefined)[];
 };
 
 type HangRun = HangLog & Pick<HangSession, "gripId" | "edgeMm">;
@@ -212,6 +214,7 @@ export function hangGrids(session: HangRun): HangGripGrid[] {
         kind: first ? session.protocol.kind : hangKindOf(dose),
         edgeMm: first ? session.edgeMm : (sets[0]?.edgeMm ?? dose.edgeMm ?? 0),
         rpes: sets.map((s) => s.rpe),
+        seconds: sets.map((s) => s.onS),
       },
     ];
   });
