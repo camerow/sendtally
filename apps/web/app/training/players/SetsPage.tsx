@@ -26,6 +26,7 @@ import {
   supersetRoundsTitle,
   type RunGroup,
 } from "@sendtally/features/workouts";
+import { Icon } from "../../components/Icon";
 import { type MoreMenuItem } from "../../components/MoreMenu";
 import { Sheet } from "../../components/Sheet";
 import { useToast } from "../../components/Toast";
@@ -420,7 +421,8 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
             className="outline-button player-add-exercise"
             onClick={() => setPicking(true)}
           >
-            + {t("workouts.addExercise")}
+            <Icon name="plus" size={16} strokeWidth={2.4} />
+            {t("workouts.addExercise")}
           </button>
         )}
         {picking && (

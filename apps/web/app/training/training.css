@@ -2377,6 +2377,7 @@
 }
 
 .set-headings .train-label {
+  font-size: 10px;
   color: var(--text-on-white-secondary);
 }
 
