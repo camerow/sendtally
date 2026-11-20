@@ -1,12 +1,8 @@
 import React from "react";
+import { useHangData } from "../data/HangDataContext";
 import { useNavigate } from "react-router";
 import { restAfterItem } from "@sendtally/core/hang";
-import {
-  climbingDoseLine,
-  foldedLine,
-  useActivities,
-  useWeightUnit,
-} from "@sendtally/features/activities";
+import { climbingDoseLine, foldedLine, useActivities } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { useLiveSession, withLapBack } from "@sendtally/features/log-session";
 import { exerciseAbout } from "@sendtally/features/exercises";
@@ -63,7 +59,7 @@ import { useFinishRun } from "./useFinishRun";
 export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React.ReactElement {
   const navigate = useNavigate();
   const api = useAppApi();
-  const unit = useWeightUnit(api);
+  const unit = useHangData().model.settings.units;
   const activities = useActivities(api).state;
   const exercises = useExercises(api).state;
   const mine = exercises.status === "ready" ? exercises.data : null;

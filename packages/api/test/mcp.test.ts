@@ -327,9 +327,9 @@ describe("connector", () => {
         },
         {
           discipline: "route",
-          hardestSend: "7a",
-          hardestTried: "7a",
-          sendPyramid: [{ grade: "7a", sends: 1 }],
+          hardestSend: "5.11d",
+          hardestTried: "5.11d",
+          sendPyramid: [{ grade: "5.11d", sends: 1 }],
         },
       ]),
     });

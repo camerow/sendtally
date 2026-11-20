@@ -1,8 +1,8 @@
 import React from "react";
 import { Link } from "react-router";
 import { isPullSetup, setupsOf, type GripSetup } from "@sendtally/core/hang";
-import { kindLabel, loadChange } from "@sendtally/features/activities";
-import { compareGrips, loadLabel } from "@sendtally/features/hang";
+import { kindLabel } from "@sendtally/features/activities";
+import { compareGrips, loadChange, loadLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { KIND_LOOK } from "@sendtally/features/training";
 import { DetailFrame } from "../../components/detail/DetailFrame";

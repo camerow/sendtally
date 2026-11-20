@@ -13,6 +13,7 @@ import {
   type NumberLimits,
   type WeightUnit,
   type WorkoutKind,
+  weightStep,
 } from "@sendtally/core/hang";
 import { tallyMeasureOf } from "../exercises/measure";
 import type { TallyMeasure } from "../exercises/types";
@@ -175,7 +176,7 @@ export const RANGE_PLACEHOLDER: Record<Ranged, string> = { sets: "3, 3-5", reps:
 
 /** What an empty field reads as: no added weight, its own hint, an example range, else a dash. */
 export function fieldPlaceholder(field: DoseField): string | undefined {
-  if (field.measure === "weight") return t("hang.bodyweight");
+  if (field.measure === "weight") return t("hang.bw");
   if (field.placeholder !== undefined) return t(field.placeholder);
   return field.range === true && isRanged(field.key) ? RANGE_PLACEHOLDER[field.key] : undefined;
 }
@@ -200,7 +201,7 @@ export function withFieldRange(
 /** How a count or weight types on the keypad: weight by 2.5 kg or 5 lb, stepping below zero for assistance. */
 export function fieldLimits(field: DoseField, unit: WeightUnit): NumberLimits {
   if (field.measure === "weight")
-    return { step: unit === "lb" ? 5 : 2.5, decimals: true, min: toUnit(LIMITS.weight[0], unit) };
+    return { step: weightStep(unit), decimals: true, min: toUnit(LIMITS.weight[0], unit) };
   const [min, max] = limitsOf(field);
   return { step: 1, min, max };
 }

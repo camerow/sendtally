@@ -1,3 +1,4 @@
+import { DEFAULT_GRADE_PREFS } from "./types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDraftAutosaver } from "./draftAutosaver";
 import { draftStorage, parseStoredDraft, type DraftStorage } from "./draftStore";
@@ -35,7 +36,7 @@ describe("draft autosaver", () => {
     const storage = memory();
     const saved = vi.fn();
     const saver = createDraftAutosaver(storage, 400, saved);
-    const base = emptySessionDraft(NOW);
+    const base = emptySessionDraft(NOW, DEFAULT_GRADE_PREFS);
     saver.reset(base);
 
     saver.update(withClimb(base));
@@ -53,7 +54,7 @@ describe("draft autosaver", () => {
   it("keeps an edit made right before the form goes away", () => {
     const storage = memory();
     const saver = createDraftAutosaver(storage, 400, () => {});
-    const base = emptySessionDraft(NOW);
+    const base = emptySessionDraft(NOW, DEFAULT_GRADE_PREFS);
     saver.reset(base);
 
     saver.update(withClimb(base));
@@ -69,7 +70,7 @@ describe("draft autosaver", () => {
   it("never writes the untouched draft", () => {
     const storage = memory();
     const saver = createDraftAutosaver(storage, 400, () => {});
-    const base = emptySessionDraft(NOW);
+    const base = emptySessionDraft(NOW, DEFAULT_GRADE_PREFS);
     saver.reset(base);
 
     saver.update({ ...base });
@@ -81,7 +82,7 @@ describe("draft autosaver", () => {
   it("drops a pending edit that is undone before the debounce", () => {
     const storage = memory();
     const saver = createDraftAutosaver(storage, 400, () => {});
-    const base = emptySessionDraft(NOW);
+    const base = emptySessionDraft(NOW, DEFAULT_GRADE_PREFS);
     saver.reset(base);
 
     saver.update(withClimb(base));
@@ -94,7 +95,7 @@ describe("draft autosaver", () => {
   it("reset takes a new baseline without writing it", () => {
     const storage = memory();
     const saver = createDraftAutosaver(storage, 400, () => {});
-    const base = emptySessionDraft(NOW);
+    const base = emptySessionDraft(NOW, DEFAULT_GRADE_PREFS);
     saver.reset(base);
 
     saver.update(withClimb(base));
@@ -107,7 +108,7 @@ describe("draft autosaver", () => {
   it("rebase takes a new baseline before anything is edited", () => {
     const storage = memory();
     const saver = createDraftAutosaver(storage, 400, () => {});
-    const base = emptySessionDraft(NOW);
+    const base = emptySessionDraft(NOW, DEFAULT_GRADE_PREFS);
     saver.reset(base);
 
     saver.rebase(withClimb(base));
@@ -119,7 +120,7 @@ describe("draft autosaver", () => {
   it("rebase saves once the user has edited, so a slow preference never eats their work", () => {
     const storage = memory();
     const saver = createDraftAutosaver(storage, 400, () => {});
-    const base = emptySessionDraft(NOW);
+    const base = emptySessionDraft(NOW, DEFAULT_GRADE_PREFS);
     saver.reset(base);
 
     const edited = withClimb(base);
@@ -134,7 +135,7 @@ describe("draft autosaver", () => {
   it("stop ends saving, including a pending edit", () => {
     const storage = memory();
     const saver = createDraftAutosaver(storage, 400, () => {});
-    const base = emptySessionDraft(NOW);
+    const base = emptySessionDraft(NOW, DEFAULT_GRADE_PREFS);
     saver.reset(base);
 
     saver.update(withClimb(base));

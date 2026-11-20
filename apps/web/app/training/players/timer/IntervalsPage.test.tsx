@@ -22,6 +22,9 @@ const memory = (): RunStorage => {
 const store = liveRunStore(memory(), { remove: () => undefined });
 const playTone = vi.fn();
 
+vi.mock("../../data/HangDataContext", () => ({
+  useHangData: () => ({ model: { settings: { units: "kg" } } }),
+}));
 vi.mock("../../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
 vi.mock("../../../lib/useLiveRun", () => ({ useLiveRunStore: () => store }));
 vi.mock("../../../lib/tones", () => ({ playTone: (s: string) => playTone(s) }));
@@ -31,7 +34,6 @@ vi.mock("../../library/useLibrary", async (actual) => ({
 }));
 vi.mock("@sendtally/features/activities", async (actual) => ({
   ...(await actual<typeof T_activities>()),
-  useWeightUnit: () => "kg",
 }));
 
 const workout: IntervalsRun = {

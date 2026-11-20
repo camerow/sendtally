@@ -26,6 +26,7 @@ vi.mock("../../lib/useAppApi", () => ({
 }));
 vi.mock("@sendtally/features/settings", () => ({
   useGradeScalePrefs: () => ({ scales: { boulder: "v", route: "yds" }, ready: true }),
+  useDisplayScales: () => ({ boulder: "v", route: "yds" }),
 }));
 vi.mock("@sendtally/features/log-session", async (original) => ({
   ...(await original<typeof LogSession>()),

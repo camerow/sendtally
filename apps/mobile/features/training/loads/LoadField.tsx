@@ -7,6 +7,7 @@ import {
   toUnit,
   type HangKind,
   type WeightUnit,
+  stepOnGrid,
 } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { Stepper } from "../components/Stepper";
@@ -40,7 +41,7 @@ export function LoadField({
         label={label}
         value={toUnit(kg, unit)}
         onChange={set}
-        onStep={(direction) => set(toUnit(kg, unit) + direction * step)}
+        onStep={(direction) => set(stepOnGrid(toUnit(kg, unit), step, direction))}
         unit={unit}
         step={step}
         decimals

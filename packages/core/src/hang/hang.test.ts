@@ -14,6 +14,7 @@ import {
   tick,
   togglePause,
   toUnit,
+  stepOnGrid,
   fromUnit,
   isCalendarDate,
   totalSeconds,
@@ -90,12 +91,22 @@ describe("protocol", () => {
 });
 
 describe("loads", () => {
-  it("rounds display to the nearest half unit and steps in the display unit", () => {
-    expect(toUnit(4, "lb")).toBe(9);
-    expect(toUnit(fromUnit(toUnit(4, "lb"), "lb"), "kg")).toBe(4);
+  it("reads a typed value back as typed in either unit", () => {
+    expect(toUnit(4, "lb")).toBe(8.82);
+    expect(toUnit(fromUnit(61.25, "kg"), "kg")).toBe(61.25);
+    expect(toUnit(fromUnit(46.25, "lb"), "lb")).toBe(46.25);
+    expect(toUnit(fromUnit(47.3, "lb"), "lb")).toBe(47.3);
+  });
+
+  it("steps onto the step grid in the display unit", () => {
     expect(bumpLoad("hang", 0, "kg", -1)).toBe(-1);
     expect(bumpLoad("pull", 0, "kg", -1)).toBe(0);
-    expect(toUnit(bumpLoad("pull", 20, "lb", 1), "lb")).toBe(49);
+    expect(toUnit(bumpLoad("pull", 20, "lb", 1), "lb")).toBe(45);
+    expect(toUnit(bumpLoad("pull", 20, "lb", -1), "lb")).toBe(40);
+    expect(toUnit(bumpLoad("pull", fromUnit(45, "lb"), "lb", 1), "lb")).toBe(50);
+    expect(stepOnGrid(44.09, 5, 1)).toBe(45);
+    expect(stepOnGrid(44.09, 5, -1)).toBe(40);
+    expect(stepOnGrid(45, 2.5, 1)).toBe(47.5);
   });
 });
 

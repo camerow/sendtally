@@ -1,7 +1,6 @@
 export const hang = {
   "hang.kindHang": "Suspensión",
   "hang.kindPull": "Tirón desde el suelo",
-  "hang.bodyweight": "Peso corporal",
   "hang.loadPlus": "+{value} {unit}",
   "hang.loadMinus": "−{value} {unit}",
   "hang.loadPlain": "{value} {unit}",

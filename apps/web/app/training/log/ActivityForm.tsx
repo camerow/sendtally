@@ -11,7 +11,6 @@ import {
   kindLabel,
   minutesOf,
   useActivityActions,
-  useWeightUnit,
   type ActivityDraft,
   plannedDoses,
   workoutItemsOfDone,
@@ -89,14 +88,14 @@ export function ActivityForm({
   const toast = useToast();
   const liveRun = useLiveRunStore();
   const [discarding, setDiscarding] = React.useState(false);
-  const { today } = useHangData();
+  const { today, model } = useHangData();
   const failed = React.useCallback(
     () => toast.show({ message: t("activities.saveFailed") }),
     [toast]
   );
   const actions = useActivityActions(api, failed);
   const workouts = useWorkoutActions(api, failed);
-  const unit = useWeightUnit(api);
+  const unit = model.settings.units;
   const [draft, setDraft] = React.useState(initial);
   const update = (patch: Partial<ActivityDraft>): void => setDraft((d) => ({ ...d, ...patch }));
   const [grips, setGrips] = React.useState(() => part && { done: part.done, setup: part.setup });

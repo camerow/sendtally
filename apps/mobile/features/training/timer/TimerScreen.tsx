@@ -9,10 +9,11 @@ import {
   type HangSetup,
   type PlanLink,
   type Run,
+  stepOnGrid,
+  timerLoadStep,
 } from "@sendtally/core/hang";
-import { hangLoadText } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import { useGrips } from "@sendtally/features/hang";
+import { hangLoadText, useGrips } from "@sendtally/features/hang";
 import {
   ON_DARK,
   ON_DARK_SOFT,
@@ -95,7 +96,7 @@ function Timer({
   const { run, secondsLeft, progress } = timer;
   const view = timerView(run, secondsLeft, { planned, grips, setups });
   const kg = loadNow(loads, run);
-  const step = unit === "lb" ? 1 : 0.5;
+  const step = timerLoadStep(unit);
   const setLoad = (n: number): void =>
     setLoads(changeLoad(loads, run, clampLoad(view.current.kind, fromUnit(n, unit))));
 
@@ -110,7 +111,7 @@ function Timer({
             surface="dark"
             text={hangLoadText(kg, unit)}
             label={t("hang.load")}
-            onStep={(d) => setLoad(toUnit(kg, unit) + d * step)}
+            onStep={(d) => setLoad(stepOnGrid(toUnit(kg, unit), step, d))}
             decreaseLabel={t("hang.decrease", { field: t("hang.load") })}
             increaseLabel={t("hang.increase", { field: t("hang.load") })}
           />

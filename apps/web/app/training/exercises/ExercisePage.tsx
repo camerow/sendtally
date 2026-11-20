@@ -1,13 +1,9 @@
 import React from "react";
+import { useHangData } from "../data/HangDataContext";
 import { libraryPictures } from "@sendtally/features/library";
 import { Link } from "react-router";
 import type { Exercise } from "@sendtally/api-client";
-import {
-  exerciseItems,
-  kindLabel,
-  useActivities,
-  useWeightUnit,
-} from "@sendtally/features/activities";
+import { exerciseItems, kindLabel, useActivities } from "@sendtally/features/activities";
 import {
   builtInExercise,
   exerciseDescription,
@@ -51,7 +47,7 @@ function Detail({
   const series = useExerciseSeries(api);
   const activities = useActivities(api).state;
   const library = useLibrary().state;
-  const unit = useWeightUnit(api);
+  const unit = useHangData().model.settings.units;
   const logged =
     series.status === "ready"
       ? series.data.find((s) => s.key === exerciseKey(exercise.name))

@@ -1,5 +1,6 @@
 import type { WeightUnit } from "@sendtally/core/hang";
 import { metricText } from "../exercises/exerciseText";
+import { loadChange } from "../hang/weights";
 import { KIND_COLORS } from "../training/kindColors";
 import { plot, type Point } from "./chartGeometry";
 import { focusColor } from "./focusColors";
@@ -21,6 +22,7 @@ export function mixRows(
 /** "+6 kg": the change since the first time in range, in what the exercise is measured in; nothing when it did not move. */
 export function trendChange(row: ExerciseTrendVM, unit: WeightUnit): string {
   if (row.change === 0 || row.count < 2) return "";
+  if (row.metric === "load") return loadChange(row.change, unit);
   return `${row.change < 0 ? "−" : "+"}${metricText(Math.abs(row.change), row.metric, unit)}`;
 }
 

@@ -1,3 +1,4 @@
+import { DEFAULT_GRADE_SCALES } from "../settings/transforms";
 import { describe, expect, it } from "vitest";
 import { planImport } from "@sendtally/core/import";
 import { planStats, sessionNames, withAddedTags } from "./transforms";
@@ -15,7 +16,7 @@ const sendtally = `date,session,location,gym,start_time,end_time,rpe,tags,sessio
 
 describe("review helpers", () => {
   it("sums the plan for the review step", () => {
-    expect(planStats(planImport(sendtally, "UTC").sessions)).toEqual({
+    expect(planStats(planImport(sendtally, "UTC").sessions, DEFAULT_GRADE_SCALES)).toEqual({
       sessions: 5,
       sends: 6,
       attempts: 1,

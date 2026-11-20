@@ -1,13 +1,13 @@
 import {
   clock,
   currentPhase,
-  toUnit,
   type IntervalPhase,
   type Intervals,
   type Run,
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { stepDose } from "./intervals";
+import { weightText } from "../hang/weights";
 import { formatNumber, t } from "../i18n";
 
 export type StepText = {
@@ -65,10 +65,7 @@ export function stepText(
       kicker,
       title: step.label,
       big: `× ${formatNumber(step.count ?? 0)}`,
-      of:
-        step.loadKg === undefined
-          ? null
-          : t("hang.loadPlain", { value: formatNumber(toUnit(step.loadKg, unit)), unit }),
+      of: step.loadKg === undefined ? null : weightText(step.loadKg, unit),
       note: step.cue ?? t("activities.tapWhenDone"),
     };
   return { kicker, title: step.label, ...timer, note: step.cue ?? null };

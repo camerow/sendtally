@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Pressable, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
+import { kindLabel } from "@sendtally/features/activities";
 import { canCompareGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -26,9 +26,9 @@ export function ExerciseGroups({
   groups: ExerciseGroupVM[];
 }): React.ReactElement | null {
   const api = useApi();
-  const unit = useWeightUnit(api);
   const exercises = useExercises(api).state;
   const { model } = useHangData();
+  const unit = model.settings.units;
   if (groups.length === 0) return null;
 
   const openOf = (kind: ExerciseGroupKind, key: string): (() => void) | undefined => {

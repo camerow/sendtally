@@ -17,12 +17,12 @@ import type {
   SessionDetail,
 } from "@sendtally/api-client";
 import { t } from "../i18n";
+import { displayGrade, type GradeScales } from "../sessions/grades";
 import { isUnscored } from "../sessions/meta";
 import { sameTagName } from "../sessions/tags";
 import { minutesOf as wholeMinutes } from "../activities/draft";
 import { durationLabel, hasEnd, hasStart, sessionMinutes } from "../sessions/years";
 import {
-  DEFAULT_GRADE_PREFS,
   GRADE_SCALE_OPTIONS,
   sendStylesFor,
   type ClimbDraft,
@@ -77,6 +77,26 @@ export function draftGrade(grade: string, scale: GradeScale): Grade | undefined 
   return parsed;
 }
 
+/** A draft climb's grade as the climber reads it, in their scale; the climb keeps the grade as it was logged. */
+export function draftGradeLabel(
+  climb: Pick<ClimbDraft, "grade" | "scale">,
+  scales: GradeScales
+): string {
+  const grade = draftGrade(climb.grade, climb.scale);
+  return grade === undefined ? climb.grade : displayGrade(grade, scales);
+}
+
+/** The scale a climb's grade picker offers: the climber's, for the climb's discipline. */
+export const pickerScale = (climb: Pick<ClimbDraft, "scale">, scales: GradeScales): GradeScale =>
+  scales[disciplineOf(climb.scale)];
+
+/** A grade picked on the climber's ladder, the only way a logged grade changes scale. */
+export const withPickedGrade = (
+  climb: ClimbDraft,
+  grade: string,
+  scales: GradeScales
+): ClimbDraft => ({ ...climb, scale: pickerScale(climb, scales), grade });
+
 export function vGradeOf(grade: string, scale: GradeScale): number | undefined {
   const parsed = draftGrade(grade, scale);
   return parsed === undefined ? undefined : effortGrade(parsed);
@@ -94,10 +114,7 @@ function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-export function emptySessionDraft(
-  now: Date,
-  prefs: GradePrefs = DEFAULT_GRADE_PREFS
-): LogSessionDraft {
+export function emptySessionDraft(now: Date, prefs: GradePrefs): LogSessionDraft {
   return {
     name: "",
     date: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
@@ -256,7 +273,7 @@ export function unbrokenParts(text: string): string {
     .join(" · ");
 }
 
-export function draftSummary(draft: LogSessionDraft): string {
+export function draftSummary(draft: LogSessionDraft, scales: GradeScales): string {
   const sends = draft.climbs.filter((c) => c.kind === "send").length;
   const attempts = draft.climbs.length - sends;
   const top = topDraftGrade(draft);
@@ -264,7 +281,7 @@ export function draftSummary(draft: LogSessionDraft): string {
     t("common.climbCount", { count: draft.climbs.length }),
     `${t("logSession.sendCount", { count: sends })}, ${t("logSession.attemptCount", { count: attempts })}`,
   ];
-  if (top !== undefined) parts.push(t("sessions.topGrade", { grade: formatGrade(top) }));
+  if (top !== undefined) parts.push(t("sessions.topGrade", { grade: displayGrade(top, scales) }));
   const minutes = draftLength(draft);
   if (minutes !== null) parts.push(durationLabel(minutes));
   return parts.join(" · ");

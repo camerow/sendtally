@@ -1,8 +1,8 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { fromUnit, toUnit, type WeightUnit } from "@sendtally/core/hang";
+import { fromUnit, toUnit, type WeightUnit, chartAir } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { shortDate } from "@sendtally/features/hang";
+import { shortDate, weightText } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import type {
   ExerciseMetric,
@@ -14,7 +14,7 @@ import { Title } from "../components/Title";
 import { Legend } from "../trends/Legend";
 import { SeriesChart } from "../trends/SeriesChart";
 import { type } from "../type";
-import { headlineLabel, loadText, metricText, volumeLine } from "@sendtally/features/exercises";
+import { headlineLabel, metricText, volumeLine } from "@sendtally/features/exercises";
 import type { ExerciseChartMetric } from "./types";
 
 export type ExerciseTrendCardProps = {
@@ -48,7 +48,7 @@ export function ExerciseTrendCard({
       : series.sessions.map((s) => ({ session: s, value: s.value }));
   const load = chart === "e1rm" || series.metric === "load";
   const text = (v: number): string =>
-    load ? loadText(v, unit) : metricText(v, series.metric, unit, series.grades);
+    load ? weightText(v, unit) : metricText(v, series.metric, unit, series.grades);
   const shown = (v: number): number => (load ? toUnit(v, unit) : v);
   const fromShown = (v: number): number => (load ? fromUnit(v, unit) : v);
   const latest = points.at(-1);
@@ -80,7 +80,7 @@ export function ExerciseTrendCard({
         <SeriesChart
           values={points.map((p) => shown(p.value))}
           hollow={points.map(() => false)}
-          air={load ? (unit === "lb" ? 4 : 2) : AIR[series.metric]}
+          air={load ? chartAir(unit) : AIR[series.metric]}
           edge={(v) => text(fromShown(v))}
           label={t("statistics.exerciseChart", {
             exercise: series.name,

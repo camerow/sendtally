@@ -17,7 +17,7 @@ const [, , weight] = DOSE_FIELDS_OF.strength;
 describe("dose fields", () => {
   it("reads times in seconds and weights in the user's unit, null when unset", () => {
     expect(fieldValue(rest!, { sets: 1, offS: 180 }, "kg")).toBe(180);
-    expect(fieldValue(weight!, { sets: 1, weightKg: 100 }, "lb")).toBe(220.5);
+    expect(fieldValue(weight!, { sets: 1, weightKg: 100 }, "lb")).toBe(220.46);
     expect(fieldValue(hangs!, { sets: 1 }, "kg")).toBeNull();
     expect(withField({ sets: 1 }, weight!, -20, "kg")).toEqual({ sets: 1, weightKg: -20 });
   });
@@ -125,7 +125,7 @@ describe("dose placeholders", () => {
     const [sets, reps, weight, rpe] = DOSE_FIELDS_OF.strength;
     expect(fieldPlaceholder(sets!)).toBe("3, 3-5");
     expect(fieldPlaceholder(reps!)).toBe("8, 8-12");
-    expect(fieldPlaceholder(weight!)).toBe("Bodyweight");
+    expect(fieldPlaceholder(weight!)).toBe("BW");
     expect(fieldPlaceholder(rpe!)).toBeUndefined();
     expect(DOSE_FIELDS_OF.hangboard.map(fieldPlaceholder)).toEqual([
       undefined,

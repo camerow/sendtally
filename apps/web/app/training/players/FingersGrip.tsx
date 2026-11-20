@@ -1,6 +1,6 @@
 import React from "react";
+import { hangLoadText } from "@sendtally/features/hang";
 import { protocolDose, type Dose, type HangSetup, type HangWorkout } from "@sendtally/core/hang";
-import { hangLoadText } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { targetText } from "@sendtally/features/workouts";
 import { ExerciseBlock } from "../components/ExerciseBlock";

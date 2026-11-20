@@ -3,11 +3,13 @@ import type { ClimbSummary } from "@sendtally/api-client";
 import type { Gym } from "@sendtally/features/gyms";
 import {
   disciplineOf,
+  draftGradeLabel,
   gymOfCircuit,
   withClimbDiscipline,
   type ClimbDraft,
   type GradePrefs,
 } from "@sendtally/features/log-session";
+import { useDisplayScales } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
@@ -118,6 +120,7 @@ export function ClimbEditorSheet({
   saving = false,
   error = null,
 }: ClimbEditorSheetProps): React.ReactElement {
+  const scales = useDisplayScales();
   const named = climb.name.trim() !== "";
   const endurance = climb.endurance !== undefined;
   const gym = gymOfCircuit(gyms, climb.circuit?.id);
@@ -343,7 +346,8 @@ export function ClimbEditorSheet({
         <p className="sheet-body">
           {t("logSession.removeClimbBody", {
             name: named ? climb.name.trim() : t("logSession.unnamed"),
-            grade: climb.circuit === undefined ? climb.grade : climb.circuit.label,
+            grade:
+              climb.circuit === undefined ? draftGradeLabel(climb, scales) : climb.circuit.label,
           })}
         </p>
       </Sheet>

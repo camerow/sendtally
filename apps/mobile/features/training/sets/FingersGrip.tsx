@@ -1,9 +1,9 @@
 import { router } from "expo-router";
+import { hangLoadText } from "@sendtally/features/hang";
 import React from "react";
 import { Text } from "react-native";
 import { protocolDose, type HangSetup, type HangWorkout, type Dose } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { hangLoadText } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { targetText } from "@sendtally/features/workouts";
 import { useHangData } from "../data/HangDataContext";

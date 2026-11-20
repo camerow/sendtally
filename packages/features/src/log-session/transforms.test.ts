@@ -1,8 +1,10 @@
+import { DEFAULT_GRADE_SCALES } from "../settings/transforms";
 import { describe, expect, it } from "vitest";
 import type { ClimbSummary, SessionDetail } from "@sendtally/api-client";
 import {
   convertGrade,
   draftFromSession,
+  draftGradeLabel,
   draftProblem,
   draftSummary,
   durationMinutes,
@@ -15,6 +17,7 @@ import {
   vGradeOf,
   withClimbDiscipline,
   withClimbScale,
+  withPickedGrade,
   withTag,
   withoutTag,
   withClimbOutcome,
@@ -121,7 +124,7 @@ describe("route drafts", () => {
   it("summarises the top route in its own scale and validates route grades", () => {
     const routes = atScale(draft(), "yds");
     expect(routes.climbs.map((c) => c.grade)).toEqual(["5.12b", "5.12d"]);
-    expect(draftSummary(routes)).toContain("TOP 5.12d");
+    expect(draftSummary(routes, DEFAULT_GRADE_SCALES)).toContain("TOP 5.12d");
     expect(draftProblem(routes)).toBeNull();
     expect(draftProblem({ ...routes, climbs: [{ ...routes.climbs[0]!, grade: "5.10" }] })).toBe(
       "Every climb needs a grade."
@@ -231,7 +234,7 @@ describe("mixed sessions", () => {
       ],
     });
     expect(draftProblem(mixed)).toBeNull();
-    expect(draftSummary(mixed)).toContain("TOP 5.12d");
+    expect(draftSummary(mixed, DEFAULT_GRADE_SCALES)).toContain("TOP 5.12d");
     expect(toLogSessionInput(mixed).climbs.map((c) => c.grade)).toEqual([
       { scale: "v", value: 4 },
       { scale: "yds", value: "5.12d" },
@@ -345,7 +348,7 @@ describe("durationMinutes", () => {
 
 describe("emptySessionDraft", () => {
   it("starts on today with no times", () => {
-    const d = emptySessionDraft(new Date(2026, 7, 26, 20, 2));
+    const d = emptySessionDraft(new Date(2026, 7, 26, 20, 2), DEFAULT_GRADE_PREFS);
     expect(d.date).toBe("2026-08-26");
     expect(d.startTime).toBe("");
     expect(d.endTime).toBe("");
@@ -372,11 +375,14 @@ describe("withTag / withoutTag", () => {
 
 describe("draftSummary", () => {
   it("summarises climbs, results, top grade, and duration", () => {
-    expect(draftSummary(draft())).toBe("2 climbs · 1 send, 1 attempt · TOP V6 · 1h 30m");
+    expect(draftSummary(draft(), DEFAULT_GRADE_SCALES)).toBe(
+      "2 climbs · 1 send, 1 attempt · TOP V6 · 1h 30m"
+    );
   });
 
   it("uses the active scale for the top grade", () => {
-    expect(draftSummary(atScale(draft(), "font"))).toContain("TOP 7A");
+    expect(draftSummary(draft(), { boulder: "font", route: "french" })).toContain("TOP 7A");
+    expect(draftSummary(atScale(draft(), "font"), DEFAULT_GRADE_SCALES)).toContain("TOP V6");
   });
 });
 
@@ -528,6 +534,19 @@ function session(overrides: Partial<SessionDetail> = {}): SessionDetail {
 }
 
 describe("draftFromSession", () => {
+  it("shows a logged grade in the climber's scale and saves it untouched unless re-picked", () => {
+    const font = { boulder: "font", route: "french" } as const;
+    const [cave, other] = draftFromSession(session()).climbs;
+    expect(draftGradeLabel(cave!, font)).toBe("6B");
+    const untouched = toLogSessionInput({ ...draftFromSession(session()) }).climbs;
+    expect(untouched[0]?.grade).toEqual({ scale: "v", value: 4 });
+    const picked = withPickedGrade(cave!, "6C", font);
+    expect(picked).toMatchObject({ scale: "font", grade: "6C" });
+    const saved = toLogSessionInput({ ...draftFromSession(session()), climbs: [picked, other!] });
+    expect(saved.climbs[0]?.grade).toEqual({ scale: "font", value: "6C" });
+    expect(saved.climbs[1]?.grade).toEqual(untouched[1]?.grade);
+  });
+
   it("opens an unscored session on Auto", () => {
     expect(draftFromSession(session({ rpe_source: "none" })).rpe).toBeNull();
   });
@@ -632,7 +651,7 @@ describe("draftFromSession", () => {
 describe("toLogSessionInput climb notes", () => {
   it("sends a note only for a named climb, trimmed", () => {
     const withNotes: LogSessionDraft = {
-      ...emptySessionDraft(new Date("2026-09-09T19:00:00")),
+      ...emptySessionDraft(new Date("2026-09-09T19:00:00"), DEFAULT_GRADE_PREFS),
       climbs: [
         {
           key: "a",
@@ -687,7 +706,7 @@ describe("toLogSessionInput climb notes", () => {
 describe("toLogSessionInput project flags", () => {
   it("sends the flag only for climbs the user toggled", () => {
     const draft: LogSessionDraft = {
-      ...emptySessionDraft(new Date("2026-09-09T19:00:00")),
+      ...emptySessionDraft(new Date("2026-09-09T19:00:00"), DEFAULT_GRADE_PREFS),
       climbs: [
         {
           key: "a",

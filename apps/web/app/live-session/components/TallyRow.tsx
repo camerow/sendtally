@@ -1,7 +1,8 @@
 import React from "react";
 import { CIRCUIT_HEX } from "@sendtally/features/gyms";
 import { t } from "@sendtally/features/i18n";
-import type { ClimbDraft } from "@sendtally/features/log-session";
+import { draftGradeLabel, type ClimbDraft } from "@sendtally/features/log-session";
+import { useDisplayScales } from "@sendtally/features/settings";
 import { Icon } from "../../components/Icon";
 
 /** One climb: hollow dots for its falls, a tick once sent. The selected one is what Fell and Sent act on. */
@@ -16,9 +17,10 @@ export function TallyRow({
   onPress: () => void;
   onEdit: () => void;
 }): React.ReactElement {
+  const scales = useDisplayScales();
   const sent = climb.kind === "send";
   const falls = Math.max(0, climb.tries - (sent ? 1 : 0));
-  const grade = climb.circuit === undefined ? climb.grade : climb.circuit.label;
+  const grade = climb.circuit === undefined ? draftGradeLabel(climb, scales) : climb.circuit.label;
   const name = climb.name.trim();
   return (
     <div className={selected ? "tally-row tally-row--selected" : "tally-row"}>
@@ -42,7 +44,7 @@ export function TallyRow({
               : { background: CIRCUIT_HEX[climb.circuit.colour] }
           }
         >
-          {climb.circuit === undefined ? climb.grade : ""}
+          {climb.circuit === undefined ? draftGradeLabel(climb, scales) : ""}
         </span>
         <span className="tally-marks">
           {name !== "" && <span className="tally-name">{name}</span>}

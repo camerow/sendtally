@@ -1,8 +1,8 @@
 import React from "react";
 import type { SetClimb } from "@sendtally/core/hang";
 import { CIRCUIT_COLOURS } from "@sendtally/features/gyms";
-import { draftGrade } from "@sendtally/features/log-session";
-import { displayGrade, type GradeScales } from "@sendtally/features/sessions";
+import { draftGradeLabel } from "@sendtally/features/log-session";
+import type { GradeScales } from "@sendtally/features/sessions";
 import { CircuitDot } from "../../components/CircuitDot";
 
 export type ClimbGradeProps = {
@@ -11,11 +11,8 @@ export type ClimbGradeProps = {
 };
 
 /** "V5" in the climber's scale, or a circuit's label. */
-export const climbGradeText = (climb: ClimbGradeProps["climb"], scales: GradeScales): string => {
-  if (climb.circuit !== undefined) return climb.circuit.label;
-  const grade = draftGrade(climb.grade, climb.scale);
-  return grade === undefined ? climb.grade : displayGrade(grade, scales);
-};
+export const climbGradeText = (climb: ClimbGradeProps["climb"], scales: GradeScales): string =>
+  climb.circuit !== undefined ? climb.circuit.label : draftGradeLabel(climb, scales);
 
 /** A climb row's grade column: the grade, or a circuit's colour and label. */
 export function ClimbGrade({ climb, scales }: ClimbGradeProps): React.ReactElement {

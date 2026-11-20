@@ -124,14 +124,18 @@ export function hangModel(data: HangData, all: readonly LibraryWorkout[]): HangM
       return hidden.has(id) ? BUILT_IN_GRIPS[0] : id;
     },
     setup: (w, gripId, planned) =>
-      resolveSetup(w.kind, [
-        planned === undefined ? null : { edgeMm: planned.edgeMm, loadKg: planned.weightKg },
-        ...usedLayers(w.id, gripId),
-      ]),
+      resolveSetup(
+        w.kind,
+        [
+          planned === undefined ? null : { edgeMm: planned.edgeMm, loadKg: planned.weightKg },
+          ...usedLayers(w.id, gripId),
+        ],
+        data.settings.units
+      ),
     lastUsed: (w, gripId) => {
       const used =
         lastSession(hangs, w.id, gripId) !== undefined || loadKey(w.id, gripId) in data.loads;
-      return used ? resolveSetup(w.kind, usedLayers(w.id, gripId)) : null;
+      return used ? resolveSetup(w.kind, usedLayers(w.id, gripId), data.settings.units) : null;
     },
   };
 

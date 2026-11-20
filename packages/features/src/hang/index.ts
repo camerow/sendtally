@@ -1,4 +1,5 @@
 export * from "./format";
+export * from "./weights";
 export {
   findGrip,
   hangModel,

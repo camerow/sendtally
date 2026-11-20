@@ -118,12 +118,14 @@ function Detail({ exercise, all }: DetailProps): React.ReactElement {
       {logged === undefined ? (
         <DashedPanel body={t("workouts.exerciseNothingLogged")} />
       ) : (
-        <>
-          {logged.untracked !== true && (
-            <ExerciseTrendCard series={logged} chart="best" unit={unit} />
-          )}
-          <ExerciseHistory series={logged} unit={unit} />
-        </>
+        unit !== null && (
+          <>
+            {logged.untracked !== true && (
+              <ExerciseTrendCard series={logged} chart="best" unit={unit} />
+            )}
+            <ExerciseHistory series={logged} unit={unit} />
+          </>
+        )
       )}
       {usedIn.length > 0 && (
         <View style={{ gap: 4 }}>

@@ -1,3 +1,4 @@
+import { stepOnGrid } from "./loads";
 import { clamp } from "./parse";
 
 /** Keys a keypad sends to an entry. A digit is "0" to "9" or "00". */
@@ -140,8 +141,8 @@ export function numberEntry(
     }
     case "plus":
     case "minus": {
-      const step = action.type === "plus" ? limits.step : -limits.step;
-      return { text: String(boundedNumber(entryNumber(state) + step, limits)), fresh: false };
+      const next = stepOnGrid(entryNumber(state), limits.step, action.type === "plus" ? 1 : -1);
+      return { text: String(boundedNumber(next, limits)), fresh: false };
     }
     case "to":
       return state;

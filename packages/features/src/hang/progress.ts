@@ -9,7 +9,6 @@ import {
   setupOf,
   setupsOf,
   summarise,
-  toUnit,
   type CalendarDate,
   type GripSetup,
   type HangRun,
@@ -21,7 +20,8 @@ import { formatNumber, t } from "../i18n";
 import { hangSets } from "../activities/summary";
 import { hangAt } from "../sessions/hang";
 import { sessionDay } from "../sessions/meta";
-import { dayMonth, gripSetupLabel, loadLabel } from "./format";
+import { dayMonth, gripSetupLabel } from "./format";
+import { loadLabel, weightText } from "./weights";
 
 const complete = (s: Pick<HangRun, "pct">): boolean => s.pct >= 100;
 
@@ -195,12 +195,11 @@ export function newBestOf(
 ): NewBestVM | null {
   const previous = previousBest(all, session);
   if (previous === null || newBestBy(all, session) === null) return null;
-  const by = toUnit(session.loadKg, unit) - toUnit(previous, unit);
   return {
     title: `${gripName} ${loadLabel(session.protocol.kind, session.loadKg, unit)}`,
     meta: [
       gripSetupLabel(setupOf(session)),
-      t("hang.upOnLastBest", { change: `${formatNumber(by)} ${unit}` }),
+      t("hang.upOnLastBest", { change: weightText(session.loadKg - previous, unit) }),
     ].join(" · "),
   };
 }

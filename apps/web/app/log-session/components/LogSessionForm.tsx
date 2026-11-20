@@ -330,7 +330,7 @@ export function LogSessionForm({
 
   return (
     <div className="log-session">
-      {header?.(unbrokenParts(draftSummary(draft)))}
+      {header?.(unbrokenParts(draftSummary(draft, prefs.scales)))}
       {autosave.offered !== null && (
         <DraftBanner
           stored={autosave.offered}

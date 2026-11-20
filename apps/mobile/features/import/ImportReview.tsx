@@ -7,6 +7,8 @@ import {
   type LikelyDuplicate,
 } from "@sendtally/core/import";
 import { planStats } from "@sendtally/features/import";
+import type { GradeScales } from "@sendtally/features/sessions";
+import { useDisplayScales } from "@sendtally/features/settings";
 import { formatDate, formatNumber, t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
 import { SectionHeading } from "../../components/SectionHeading";
@@ -24,9 +26,9 @@ const dayLabel = (date: string): string =>
     year: "numeric",
   });
 
-function rowMeta(session: ImportSession): string {
+function rowMeta(session: ImportSession, scales: GradeScales): string {
   const sends = session.climbs.filter((c) => c.kind === "send");
-  const top = planStats([{ ...session, climbs: sends }]).topGrade;
+  const top = planStats([{ ...session, climbs: sends }], scales).topGrade;
   return [
     t("tally.sentCount", { count: sends.length }),
     ...(top === null ? [] : [t("sessions.topSend", { grade: top })]),
@@ -54,7 +56,8 @@ export function ImportReview({
   importAnyway: boolean;
   onImportAnyway: (value: boolean) => void;
 }): React.ReactElement {
-  const stats = planStats(importing);
+  const scales = useDisplayScales();
+  const stats = planStats(importing, scales);
   const first = plan.sessions[0]!;
   const last = plan.sessions[plan.sessions.length - 1]!;
   return (
@@ -91,7 +94,9 @@ export function ImportReview({
         <View>
           <SectionHeading title={t("import.sessionsLabel")} />
           <SessionsByMonth
-            rows={[...unflagged].reverse().map((session) => ({ session, meta: rowMeta(session) }))}
+            rows={[...unflagged]
+              .reverse()
+              .map((session) => ({ session, meta: rowMeta(session, scales) }))}
           />
         </View>
       )}

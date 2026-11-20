@@ -1,7 +1,6 @@
 export const hang = {
   "hang.kindHang": "Hängen",
   "hang.kindPull": "Bodenzug",
-  "hang.bodyweight": "Körpergewicht",
   "hang.loadPlus": "+{value} {unit}",
   "hang.loadMinus": "−{value} {unit}",
   "hang.loadPlain": "{value} {unit}",

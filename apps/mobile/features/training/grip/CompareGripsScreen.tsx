@@ -5,7 +5,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { isPullSetup, setupsOf, type GripSetup } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
-import { compareGrips, loadLabel } from "@sendtally/features/hang";
+
+import { compareGrips, loadChange, loadLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { BackButton } from "../../../components/BackButton";
 import { pressRow } from "../../../lib/press";
@@ -13,7 +14,6 @@ import { DashedPanel } from "../components/DashedPanel";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
-import { loadChange } from "@sendtally/features/activities";
 import { KIND_LOOK } from "@sendtally/features/training";
 import { type } from "../type";
 import { SetupChips } from "./SetupChips";

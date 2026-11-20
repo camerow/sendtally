@@ -1,7 +1,8 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { CIRCUIT_HEX } from "@sendtally/features/gyms";
-import type { ClimbDraft } from "@sendtally/features/log-session";
+import { draftGradeLabel, type ClimbDraft } from "@sendtally/features/log-session";
+import { useDisplayScales } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
@@ -16,9 +17,10 @@ export type TallyRowProps = {
 
 /** One climb: hollow dots for its falls, a tick once sent. The selected one is what Fell and Sent act on. */
 export function TallyRow({ climb, selected, onPress, onEdit }: TallyRowProps): React.ReactElement {
+  const scales = useDisplayScales();
   const sent = climb.kind === "send";
   const falls = Math.max(0, climb.tries - (sent ? 1 : 0));
-  const grade = climb.circuit === undefined ? climb.grade : climb.circuit.label;
+  const grade = climb.circuit === undefined ? draftGradeLabel(climb, scales) : climb.circuit.label;
   const name = climb.name.trim();
   return (
     <View
@@ -71,7 +73,7 @@ export function TallyRow({ climb, selected, onPress, onEdit }: TallyRowProps): R
               numberOfLines={1}
               style={{ fontFamily: fonts.monoSemiBold, fontSize: 15, color: colors.white }}
             >
-              {climb.grade}
+              {draftGradeLabel(climb, scales)}
             </Text>
           )}
         </View>

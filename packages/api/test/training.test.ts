@@ -1339,7 +1339,7 @@ describe("activity strava posting", () => {
       [
         "RPE 7/10",
         "created by https://sendtally.com",
-        "Back squat 5×220.5 lb, 4×220.5 lb",
+        "Back squat 5×220.46 lb, 4×220.46 lb",
         "Copenhagen plank 30s",
       ].join("\n")
     );

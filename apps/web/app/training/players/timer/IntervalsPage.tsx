@@ -1,6 +1,6 @@
 import React from "react";
+import { useHangData } from "../../data/HangDataContext";
 import { useNavigate } from "react-router";
-import { useWeightUnit } from "@sendtally/features/activities";
 import {
   finishedRunParams,
   intervalsView,
@@ -8,7 +8,6 @@ import {
   type IntervalsRun,
 } from "@sendtally/features/workouts";
 import { playTone } from "../../../lib/tones";
-import { useAppApi } from "../../../lib/useAppApi";
 import { useLiveRunStore } from "../../../lib/useLiveRun";
 import { newActivityPath } from "../../log/paths";
 import { StepCard } from "./StepCard";
@@ -24,7 +23,7 @@ export function IntervalsPage({
   end: boolean;
 }): React.ReactElement {
   const navigate = useNavigate();
-  const unit = useWeightUnit(useAppApi());
+  const unit = useHangData().model.settings.units;
   const timer = useIntervalsPlayer({
     workout,
     store: useLiveRunStore(),

@@ -1,15 +1,12 @@
 import { router } from "expo-router";
+import { WithWeightUnit } from "../data/WithWeightUnit";
+import type { WeightUnit } from "@sendtally/core/hang";
 import React from "react";
 import { restAfterItem } from "@sendtally/core/hang";
 import { Alert, KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
-import {
-  climbingDoseLine,
-  foldedLine,
-  useActivities,
-  useWeightUnit,
-} from "@sendtally/features/activities";
+import { climbingDoseLine, foldedLine, useActivities } from "@sendtally/features/activities";
 import { exerciseAbout } from "@sendtally/features/exercises";
 import { useGrips } from "@sendtally/features/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
@@ -65,16 +62,20 @@ import { useRunWorkout } from "../library/useLibrary";
  * after it, then log what was done. A climbing exercise's sets take a row per climb on the
  * workout's tally; its climbs come back as its sets.
  */
-export function SetsScreen({
+export function SetsScreen(props: { run: WorkoutRun; end?: boolean }): React.ReactElement {
+  return <WithWeightUnit>{(unit) => <SetsScreenBody {...props} unit={unit} />}</WithWeightUnit>;
+}
+
+function SetsScreenBody({
+  unit,
   run,
   end = false,
 }: {
   run: WorkoutRun;
   /** Finishes the running workout as it opens, straight to its review. */
   end?: boolean;
-}): React.ReactElement {
+} & { unit: WeightUnit }): React.ReactElement {
   const api = useApi();
-  const unit = useWeightUnit(api);
   const { state: activities } = useActivities(api);
   const exercises = useExercises(api).state;
   const mine = exercises.status === "ready" ? exercises.data : null;
