@@ -11,6 +11,10 @@ export type PyramidProps = {
   grow?: Readonly<SharedValue<number>>;
   /** Gold on the app's dark ground, as the wizard's payoff cards draw it. */
   tone?: "light" | "dark";
+  /** The fewest climbs the widest bar stands for, so a short pyramid reads as one still growing. */
+  minScale?: number;
+  /** Rows shorter than Stats' 27, for a card pinned over a form. */
+  rowHeight?: number;
 };
 
 const TONES = {
@@ -34,15 +38,22 @@ const ROW_HEIGHT = 27;
 const BAR_HEIGHT = 12;
 const GAP = 8;
 
-const cell: ViewStyle = { height: ROW_HEIGHT, justifyContent: "center", borderBottomWidth: 1 };
+const cell: ViewStyle = { justifyContent: "center", borderBottomWidth: 1 };
 
 /** One centred bar per grade, hardest on top: the inner count dark, the rest split either side; the counts share a column as wide as the widest. */
-export function Pyramid({ rows, label, grow, tone = "light" }: PyramidProps): React.ReactElement {
+export function Pyramid({
+  rows,
+  label,
+  grow,
+  tone = "light",
+  minScale = 1,
+  rowHeight = ROW_HEIGHT,
+}: PyramidProps): React.ReactElement {
   const look = TONES[tone];
-  const row = [cell, { borderBottomColor: look.rule }];
+  const row = [cell, { height: rowHeight, borderBottomColor: look.rule }];
   const [width, setWidth] = React.useState(0);
   const grown = useAnimatedStyle(() => ({ transform: [{ scaleX: grow?.value ?? 1 }] }));
-  const widest = Math.max(1, ...rows.map((r) => r.inner + r.outer));
+  const widest = Math.max(minScale, ...rows.map((r) => r.inner + r.outer));
   const unit = width === 0 ? 0 : (width - 2) / widest;
   return (
     <View
