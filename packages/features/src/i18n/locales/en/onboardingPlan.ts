@@ -41,4 +41,10 @@ export const onboardingPlan = {
   "onboarding.plan.done.historyHint": "Import your log, or add the climbs that mattered",
   "onboarding.plan.done.openPlan": "Open my plan",
   "onboarding.plan.done.dayFirst": "{day} is first",
+  "onboarding.plan.yours": "Yours",
+  "onboarding.plan.week.perWeek_one": "{count} session a week",
+  "onboarding.plan.week.perWeek_other": "{count} sessions a week",
+  "onboarding.plan.block.namePlaceholder": "Winter base",
+  "onboarding.plan.workout.newExercise": "New exercise",
+  "onboarding.plan.workout.exercises": "Exercises",
 } as const;
