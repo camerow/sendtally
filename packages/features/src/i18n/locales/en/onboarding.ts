@@ -36,4 +36,12 @@ export const onboarding = {
   "onboarding.firstRun.later": "Later",
   "onboarding.firstRun.daysQuestion": "Which days do you usually climb?",
   "onboarding.firstRun.continue": "Continue",
+  "onboarding.chooser.title": "Where do you want to start?",
+  "onboarding.chooser.historyTitle": "Bring in my climbing",
+  "onboarding.chooser.historyBody":
+    "Import your log, or add the climbs that mattered. See your pyramid in about a minute.",
+  "onboarding.chooser.planTitle": "Build my training plan",
+  "onboarding.chooser.planBody":
+    "Your days, a workout of your own, and the weeks laid out with their loads.",
+  "onboarding.chooser.otherAfter": "You can do the other one after.",
 } as const;

@@ -37,4 +37,12 @@ export const onboarding = {
   "onboarding.firstRun.later": "Más tarde",
   "onboarding.firstRun.daysQuestion": "¿Qué días sueles escalar?",
   "onboarding.firstRun.continue": "Continuar",
+  "onboarding.chooser.title": "¿Por dónde quieres empezar?",
+  "onboarding.chooser.historyTitle": "Traer mi historial de escalada",
+  "onboarding.chooser.historyBody":
+    "Importa tu registro o añade las vías y bloques que importaron. Verás tu pirámide en un minuto más o menos.",
+  "onboarding.chooser.planTitle": "Crear mi plan de entrenamiento",
+  "onboarding.chooser.planBody":
+    "Tus días, un entrenamiento propio y las semanas organizadas con sus cargas.",
+  "onboarding.chooser.otherAfter": "Puedes hacer el otro después.",
 } as const;
