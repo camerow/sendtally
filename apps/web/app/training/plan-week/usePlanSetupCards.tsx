@@ -18,7 +18,7 @@ import { useDisplayScales } from "@sendtally/features/settings";
 import { Pyramid } from "../../components/Pyramid";
 import type { SetupCard } from "../../components/SetupStack";
 import { useDismissed } from "../../lib/useDismissed";
-import { DayMark } from "./DayMark";
+import { GridCell } from "../components/GridCell";
 
 const LIGHT = "var(--surface-soft)";
 const STRAVA = "#fc4c02";
@@ -35,11 +35,9 @@ const planArt = (): SetupCard["art"] => ({
       {weekdayLetters().map((letter, i) => {
         const kind = SAMPLE_WEEK[i] ?? null;
         return (
-          <span key={i} className="day-cell day-cell--plain">
-            <span className="day-cell-name">{letter}</span>
-            <span className="day-cell-marks">
-              {kind !== null && <DayMark kind={kind} filled />}
-            </span>
+          <span key={i} className="setup-week-day">
+            <GridCell kind={kind ?? "strength"} on={kind !== null} label={letter} />
+            <span className="setup-week-letter">{letter}</span>
           </span>
         );
       })}
@@ -92,7 +90,9 @@ export function usePlanSetupCards(api: SendtallyApi): SetupCard[] {
     return {
       key: path,
       eyebrow: history
-        ? t("onboarding.setup.soFarCount", { count: climbs })
+        ? climbs > 0
+          ? t("onboarding.setup.soFarCount", { count: climbs })
+          : t("onboarding.history.card.soFar")
         : t("onboarding.plan.yourPlan"),
       title: t("onboarding.setup.finish"),
       body: history ? historyNextLine(climbs) : t("onboarding.plan.setupBody"),

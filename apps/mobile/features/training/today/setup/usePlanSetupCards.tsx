@@ -46,7 +46,7 @@ export function usePlanSetupCards(): SetupCard[] {
     return {
       key: path,
       eyebrow: history
-        ? resume
+        ? resume && climbs > 0
           ? t("onboarding.setup.soFarCount", { count: climbs })
           : t("onboarding.history.card.soFar")
         : t("onboarding.plan.yourPlan"),

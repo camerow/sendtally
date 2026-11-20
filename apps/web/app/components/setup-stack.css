@@ -127,12 +127,28 @@
   gap: 4px;
 }
 
-.setup-week .day-cell {
-  cursor: default;
+.setup-week {
+  justify-content: space-between;
 }
 
-.setup-week .day-cell:hover {
-  background: none;
+.setup-week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.setup-week-day .grid-cell {
+  width: 32px;
+  height: 32px;
+}
+
+.setup-week-letter {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-on-white-secondary);
 }
 
 .setup-circuits {
