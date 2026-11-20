@@ -1,33 +1,17 @@
 import React from "react";
-import { workoutAbout } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../../components/Icon";
 import { useGoBack } from "../../../lib/useGoBack";
-import { useLibrary, workoutIn } from "../../library/useLibrary";
-import { AboutButton } from "../../components/AboutButton";
 
 export type TimerHeaderProps = {
-  name: string;
-  meta: string;
-  /** Its description behind an info button beside the name. */
-  workoutId: string | null;
   muted: boolean;
   onEnd: () => void;
   onToggleMute: () => void;
 };
 
-/** Minimise, which leaves the run going on the live bar, the workout, mute, and End. */
-export function TimerHeader({
-  name,
-  meta,
-  workoutId,
-  muted,
-  onEnd,
-  onToggleMute,
-}: TimerHeaderProps): React.ReactElement {
+/** Minimise, which leaves the run going on the live bar, then mute and End. */
+export function TimerHeader({ muted, onEnd, onToggleMute }: TimerHeaderProps): React.ReactElement {
   const minimise = useGoBack("/app/plan");
-  const library = useLibrary();
-  const workout = workoutIn(library)(workoutId);
   return (
     <div className="timer-head">
       <button
@@ -38,13 +22,7 @@ export function TimerHeader({
       >
         <Icon name="down" size={24} strokeWidth={2} />
       </button>
-      <div className="timer-head-title">
-        <span className="timer-head-name-row">
-          <span className="timer-head-name">{name}</span>
-          <AboutButton about={workout && workoutAbout(workout)} label={t("workouts.about")} dark />
-        </span>
-        <span className="timer-label timer-head-meta">{meta}</span>
-      </div>
+      <span className="timer-head-space" />
       <button
         type="button"
         className="timer-icon"

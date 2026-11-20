@@ -123,20 +123,30 @@ const button = (name: string): HTMLButtonElement => {
 const advance = (ms: number): void => act(() => void vi.advanceTimersByTime(ms));
 
 describe("TimerPage", () => {
-  it("counts in, then logs lifts with a tone, a dot each, and Missed lift beside", () => {
+  it("counts in, then logs lifts with a tone and a dot each", () => {
     expect(container.textContent).toContain(t("hang.phaseReady"));
+    expect(button(t("hang.previousSet")).disabled).toBe(true);
     advance(5_100);
     expect(container.textContent).toContain("0/2");
     act(() => button(t("hang.lifted")).click());
     expect(playTone).toHaveBeenCalledWith("lift");
     expect(container.querySelectorAll(".timer-dot--ok")).toHaveLength(1);
-    act(() => button(t("hang.missedLift")).click());
-    expect(playTone).toHaveBeenCalledWith("miss");
   });
 
-  it("changes the load for today from the setup pill", () => {
-    act(() => button(t("hang.changeToday")).click());
-    expect(document.querySelector("dialog[open]")?.textContent).toContain(t("hang.forToday"));
+  it("steps the load for the sets still to come, which the review gets", () => {
+    const load = (): string | null | undefined =>
+      container.querySelector(`[aria-label="${t("hang.load")}"]`)?.textContent;
+    const before = load();
+    act(() => button(t("hang.increase", { field: t("hang.load") })).click());
+    expect(load()).not.toBe(before);
+    advance(5_100);
+    act(() => button(t("hang.lifted")).click());
+    act(() => button(t("hang.end")).click());
+    const where = container.querySelector("[data-testid=where]");
+    const params = readDoneParams(
+      Object.fromEntries(new URLSearchParams(where?.getAttribute("data-search") ?? ""))
+    );
+    expect(params.run?.done[0]?.sets[0]?.weightKg).not.toBe(20);
   });
 
   it("is quiet once muted", () => {

@@ -18,7 +18,6 @@ export type TimerRingProps = {
   phaseKey: number;
   label: string;
   big: string;
-  hint: string;
   ariaLabel: string;
   onPress: () => void;
 };
@@ -30,7 +29,6 @@ export function TimerRing({
   phaseKey,
   label,
   big,
-  hint,
   ariaLabel,
   onPress,
 }: TimerRingProps): React.ReactElement {
@@ -68,7 +66,6 @@ export function TimerRing({
         <span key={phaseKey} className={bigClass(big)}>
           {big}
         </span>
-        <span className="timer-label timer-ring-hint">{hint}</span>
       </span>
     </button>
   );

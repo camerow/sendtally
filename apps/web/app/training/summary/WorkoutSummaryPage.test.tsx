@@ -133,7 +133,7 @@ describe("WorkoutSummaryPage", () => {
 
   it("shows a hang session's grid and how many hangs it held", () => {
     mount("h1");
-    expect(container.querySelectorAll(".hang-cell--held")).toHaveLength(6);
+    expect(container.querySelectorAll(".hang-box--held")).toHaveLength(6);
     expect(container.querySelector(".hang-count")?.textContent).toContain("6 of 6 hangs");
   });
 });

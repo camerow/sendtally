@@ -62,9 +62,6 @@ export { useActivityPost, type ActivityPostFeature, type PostTarget } from "./us
 export {
   bestSet,
   exerciseResults,
-  gripLoads,
-  loadShares,
-  type GripLoad,
   hangGrids,
   type HangGripGrid,
   hangTotals,

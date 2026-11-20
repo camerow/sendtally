@@ -12,15 +12,12 @@ export type AboutButtonProps = {
   about: About | undefined;
   /** What the button says to a screen reader. */
   label: string;
-  /** On the dark timer, in its softer ink. */
-  dark?: boolean;
 };
 
 /** An info button beside a name, opening its picture and description in a sheet; none without either. */
 export function AboutButton({
   about,
   label,
-  dark = false,
 }: AboutButtonProps): React.ReactElement | null {
   const [open, setOpen] = React.useState(false);
   if (!hasAbout(about)) return null;
@@ -29,7 +26,7 @@ export function AboutButton({
     <>
       <button
         type="button"
-        className={dark ? "player-info player-info--dark" : "player-info"}
+        className="player-info"
         aria-label={label}
         onClick={() => setOpen(true)}
       >

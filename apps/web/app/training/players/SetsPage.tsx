@@ -350,7 +350,9 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                   live={tally}
                   rest={rest}
                   now={climbs.now}
+                  unit={unit}
                   about={exerciseAbout(mine, item.exercise, nameOf(i))}
+                  history={exerciseHistoryPath(mine, item.exercise)}
                   onFold={() => player.fold(i)}
                   menu={menu(i)}
                   onLapRemoved={(lap) =>
@@ -365,12 +367,13 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                   item={item}
                   plan={player.climbPlan(i)}
                   rows={climbRows(draft, i, player.climbPlan(i), climbs.now)}
+                  unit={unit}
                   tally={player.climbAt === i ? climbs : null}
                   restUnder={(set) => restAt(setKey({ item: i, set }))}
                   about={exerciseAbout(mine, item.exercise, nameOf(i))}
+                  history={exerciseHistoryPath(mine, item.exercise)}
                   onFold={() => player.fold(i)}
                   menu={menu(i)}
-                  onFlip={climbs.flip}
                   onEdit={setEditing}
                 />
               ) : player.folded(i) ? (

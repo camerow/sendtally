@@ -259,34 +259,3 @@ export const hangTotals = (session: HangRun): HangTotals =>
     }),
     { held: 0, total: 0, loads: [] }
   );
-
-type Hang = Dated & HangRun;
-
-/** A session's top load on one grip. */
-export type GripLoad = { id: string; loadKg: number };
-
-/**
- * Every session that ran this grip with the same kind, oldest first, at its top load there: the
- * added weight over time. None when every one hung at bodyweight, which has no weight to chart.
- */
-export function gripLoads(
-  grip: Pick<HangGripGrid, "gripId" | "kind">,
-  all: readonly Hang[]
-): GripLoad[] {
-  const on = [...all].sort(chronological).flatMap((s) =>
-    hangGrids(s)
-      .filter((g) => g.gripId === grip.gripId && g.kind === grip.kind)
-      .slice(0, 1)
-      .map((g) => ({ id: s.id, loadKg: Math.max(0, ...g.loads) }))
-  );
-  return on.every((s) => s.loadKg === 0) ? [] : on;
-}
-
-/**
- * Each load's bar as a share of the chart's height, from zero: equal loads draw equal full bars and
- * the rest in proportion. Assisted loads run from the most assisted up to zero.
- */
-export function loadShares(loads: readonly number[]): number[] {
-  const [lo, hi] = [Math.min(0, ...loads), Math.max(0, ...loads)];
-  return loads.map((kg) => (kg - lo) / (hi - lo || 1));
-}

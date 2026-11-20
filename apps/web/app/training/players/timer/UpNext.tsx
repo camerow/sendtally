@@ -1,13 +1,11 @@
 import React from "react";
 import type { UpNextItem } from "@sendtally/features/activities";
-import { t } from "@sendtally/features/i18n";
 
 /** The phases coming after this one: a side badge, the step or Rest, and how long or how many. */
 export function UpNext({ items }: { items: readonly UpNextItem[] }): React.ReactElement | null {
   if (items.length === 0) return null;
   return (
     <div className="timer-upnext">
-      <span className="timer-label timer-upnext-label">{t("activities.upNext")}</span>
       {items.map((item) => (
         <div
           key={item.index}

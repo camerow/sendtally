@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router";
-import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
+import { useWeightUnit } from "@sendtally/features/activities";
 import {
   finishedRunParams,
   intervalsView,
@@ -11,12 +11,11 @@ import { playTone } from "../../../lib/tones";
 import { useAppApi } from "../../../lib/useAppApi";
 import { useLiveRunStore } from "../../../lib/useLiveRun";
 import { newActivityPath } from "../../log/paths";
-import { SetArrows } from "./SetArrows";
 import { StepCard } from "./StepCard";
 import { TimerFrame } from "./TimerFrame";
 import { UpNext } from "./UpNext";
 
-/** Plays the steps round by round: the step now, what comes next, and pause, restart and skip. */
+/** Plays the steps round by round: the step now, the steps to come, and the timer's controls. */
 export function IntervalsPage({
   workout,
   end,
@@ -40,20 +39,7 @@ export function IntervalsPage({
   const view = intervalsView(timer.run, workout.body, timer.secondsLeft, unit, climbing);
 
   return (
-    <TimerFrame
-      timer={timer}
-      name={workout.title}
-      meta={kindLabel(workout.kind)}
-      workoutId={workout.workoutId}
-      controls={{
-        color: view.look.fill,
-        primary: view.primary,
-        next: null,
-        fail: view.fail,
-        onPrimary: timer.primary,
-        onFail: timer.fail,
-      }}
-    >
+    <TimerFrame timer={timer} controls={{ color: view.look.fill, primary: view.primary }}>
       <div className="timer-middle timer-middle--top">
         <StepCard
           text={view.step}
@@ -61,7 +47,7 @@ export function IntervalsPage({
           ariaLabel={view.primary}
           onPress={timer.primary}
         />
-        <SetArrows timer={timer} label={view.round} />
+        <span className="timer-set-line">{view.round}</span>
         <UpNext items={view.upNext} />
       </div>
     </TimerFrame>

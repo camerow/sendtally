@@ -93,7 +93,7 @@ function Timer({
   });
   const timer = useTimer(player);
   const { run, secondsLeft, progress } = timer;
-  const view = timerView(run, secondsLeft, { planned, grips, setups, unit });
+  const view = timerView(run, secondsLeft, { planned, grips, setups });
   const kg = loadNow(loads, run);
   const step = unit === "lb" ? 1 : 0.5;
   const setLoad = (n: number): void =>
@@ -156,7 +156,7 @@ export function TimerScreen({
   const planned = usePlannedRun(workoutId, link, session);
   const [resumed] = React.useState(() => resumedTimer(liveRun, "/workout/timer", workoutId));
   if (planned === undefined) return null;
-  const forRun = forToday(planned, gripId, model, null);
+  const forRun = forToday(planned, gripId, model);
   return (
     <Timer
       planned={planned}
@@ -187,7 +187,7 @@ export function PartTimerScreen({ workoutId }: { workoutId: string }): React.Rea
   if (run === null || state === undefined) return null;
   const planned = partPlanned(run, partPlaces(run.items, isGrip));
   if (planned === null) return null;
-  const forRun = forToday(planned, planned.items[0].workout.grip, model, null);
+  const forRun = forToday(planned, planned.items[0].workout.grip, model);
   const keep = (part: FingersPart): void => {
     const now = liveRun.resumed("/workout/sets", workoutId);
     if (now?.state.player === "sets")

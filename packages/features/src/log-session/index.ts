@@ -148,8 +148,6 @@ export {
   lapSets,
   lapsPlanned,
   lapsPlannedFor,
-  lapRowsOf,
-  type LapShown,
   withLapAdded,
   withLapBack,
   withLapRemoved,

@@ -3,8 +3,6 @@ import type { ItemDone } from "@sendtally/core/hang";
 import { exerciseSeries } from "../statistics/exercises";
 import {
   exerciseResults,
-  gripLoads,
-  loadShares,
   hangGrids,
   hangTotals,
   pastSessions,
@@ -142,22 +140,6 @@ describe("hang sessions", () => {
     sets: 3,
     setRestS: 180,
   };
-  const hang = (
-    id: string,
-    date: string,
-    gripId: string,
-    loadKg: number,
-    done: ItemDone[] = []
-  ) => ({
-    id,
-    date,
-    gripId,
-    edgeMm: 20,
-    pct: 100,
-    loadKg,
-    protocol,
-    done,
-  });
 
   it("reads each set's hangs and load as saved, hangs filling from the left", () => {
     const done = [{ item: 0, exercise: "half", sets: [{ reps: 6 }, { reps: 4, weightKg: 5 }] }];
@@ -277,46 +259,5 @@ describe("hang sessions", () => {
         total: 18,
       },
     ]);
-  });
-
-  it("charts each grip's top load in every session that ran it, oldest first", () => {
-    const open = (kg: number): ItemDone[] => [
-      { item: 0, exercise: "half", sets: [{ reps: 6, weightKg: 5 }] },
-      { item: 1, exercise: "open", sets: [{ reps: 6, onS: 7, edgeMm: 20, weightKg: kg }] },
-    ];
-    const all = [
-      hang("4", "2026-10-27", "half", 12),
-      hang("1", "2026-10-20", "half", 10),
-      hang("2", "2026-10-22", "open", 4),
-      hang("3", "2026-10-23", "half", 5, open(8)),
-    ];
-    expect(gripLoads({ gripId: "half", kind: "hang" }, all)).toEqual([
-      { id: "1", loadKg: 10 },
-      { id: "3", loadKg: 5 },
-      { id: "4", loadKg: 12 },
-    ]);
-    expect(gripLoads({ gripId: "open", kind: "hang" }, all)).toEqual([
-      { id: "2", loadKg: 4 },
-      { id: "3", loadKg: 8 },
-    ]);
-  });
-
-  it("charts a one-grip session at its load", () => {
-    const all = [hang("1", "2026-10-20", "half", 5), hang("2", "2026-10-22", "half", 10)];
-    expect(gripLoads({ gripId: "half", kind: "hang" }, all)).toEqual([
-      { id: "1", loadKg: 5 },
-      { id: "2", loadKg: 10 },
-    ]);
-  });
-
-  it("draws added weight from zero: equal loads full, the rest in proportion", () => {
-    expect(loadShares([4.5, 4.5, 4.5])).toEqual([1, 1, 1]);
-    expect(loadShares([5, 15, 25])).toEqual([0.2, 0.6, 1]);
-    expect(loadShares([-10, -5, 0])).toEqual([0, 0.5, 1]);
-  });
-
-  it("charts no added weight on a grip only ever hung at bodyweight", () => {
-    const all = [hang("1", "2026-10-20", "half", 0), hang("2", "2026-10-22", "half", 0)];
-    expect(gripLoads({ gripId: "half", kind: "hang" }, all)).toEqual([]);
   });
 });

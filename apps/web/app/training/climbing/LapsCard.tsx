@@ -1,19 +1,22 @@
 import React from "react";
-import { clock, type SessionItem, type SetDone } from "@sendtally/core/hang";
+import type { SessionItem, SetDone, WeightUnit } from "@sendtally/core/hang";
 import { lapPlanOf } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import {
   enduranceAmountLabel,
-  lapRowsOf,
   useLapsTally,
   type LiveSession,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
-import type { RestClock } from "@sendtally/features/workouts";
+import { exerciseName, targetText, type RestClock } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
 import type { MoreMenuItem } from "../../components/MoreMenu";
 import type { About } from "../components/AboutButton";
-import { ExerciseCardHead } from "../players/ExerciseCardHead";
+import { ExerciseBlock } from "../components/ExerciseBlock";
+import { ExerciseHead } from "../components/ExerciseHead";
+import { SetRow, type SetRowProps } from "../components/SetRow";
+import { Stepper } from "../components/Stepper";
+import { useSessionTarget } from "../components/sessionTarget";
 import { IdleRestRow } from "../players/IdleRestRow";
 import { RestRow } from "../players/RestRow";
 
@@ -29,48 +32,43 @@ export type LapsCardProps = {
   live: LiveSession;
   rest: RestClock;
   now: Date;
+  unit: WeightUnit;
   about?: About | undefined;
+  /** Where its history opens. */
+  history?: string | undefined;
   onFold: () => void;
   menu: readonly MoreMenuItem[];
   /** A lap still to climb was taken out, for its Undo. */
   onLapRemoved: (lap: number) => void;
 };
 
-function LapRow({
-  n,
-  share,
-  clean,
-  value,
-}: {
-  n: number;
-  share: number;
-  clean: boolean;
-  value: string;
-}): React.ReactElement {
+type LapPlan = ReturnType<typeof lapPlanOf>;
+type Removable = Pick<SetRowProps, "selected" | "onSelect" | "onRemove">;
+
+/** "28 moves", "4:30": what one lap was. */
+const lapAmount = (plan: LapPlan, value: number): string =>
+  enduranceAmountLabel({ ...plan, laps: [] }, value);
+
+/** A lap climbed: what it was, in neutral ink whether or not it reached the target. */
+function LapRow({ n, value }: { n: number; value: string }): React.ReactElement {
   return (
-    <div className="climb-row" aria-label={`${t("tally.lapLabel", { lap: n })}, ${value}`}>
-      <span className="climb-set">{n}</span>
-      <span className="lap-bar">
-        <span
-          className={clean ? "lap-fill" : "lap-fill lap-fill--short"}
-          style={{ width: `${Math.round(share * 100)}%` }}
-        />
-      </span>
-      <span className="lap-value">{value}</span>
-    </div>
+    <SetRow position={String(n)} label={`${t("tally.lapLabel", { lap: n })}, ${value}`} ticked>
+      <span className="climb-line">{value}</span>
+    </SetRow>
   );
 }
 
-function RemoveLap({ n, onRemove }: { n: number; onRemove: () => void }): React.ReactElement {
+/** A lap still to climb; selected, it can be taken out. */
+function Waiting({ n, ...select }: { n: number } & Removable): React.ReactElement {
   return (
-    <button
-      type="button"
-      className="set-remove set-remove--run"
-      aria-label={t("tally.removeLapOf", { lap: n })}
-      onClick={onRemove}
+    <SetRow
+      position={String(n)}
+      label={t("tally.lapLabel", { lap: n })}
+      removeLabel={t("tally.removeLapOf", { lap: n })}
+      {...select}
     >
-      <Icon name="minusCircle" size={24} strokeWidth={1.5} />
-    </button>
+      {null}
+    </SetRow>
   );
 }
 
@@ -80,40 +78,46 @@ function LiveLaps({
   live,
   rest,
   now,
-  target,
-  lapText,
+  plan,
   onLapRemoved,
 }: {
   draft: LogSessionDraft;
   live: LiveSession;
   rest: RestClock;
   now: Date;
-  target: number;
-  lapText: string;
+  plan: LapPlan;
   onLapRemoved: (lap: number) => void;
 }): React.ReactElement | null {
   const laps = useLapsTally(draft, live, rest, now);
   const [stepAt, setStepAt] = React.useState<{ lap: number; n: number } | null>(null);
+  const [selected, setSelected] = React.useState<number | null>(null);
   if (laps === null) return null;
   const done = laps.rows.length;
   const step = stepAt?.lap === done ? stepAt.n : null;
   const setStep = (n: number | null): void => setStepAt(n === null ? null : { lap: done, n });
   const removeLap = laps.removeLap;
-  const remove =
-    removeLap === null
-      ? null
-      : (n: number) => () => {
-          removeLap();
-          onLapRemoved(n);
-        };
+  const amounts = laps.circuit?.endurance?.laps ?? [];
   const waiting = Array.from(
     { length: Math.max(0, laps.planned - done - 1) },
     (_, i) => done + i + 2
   );
+  const removable = (n: number): Removable =>
+    removeLap === null
+      ? {}
+      : {
+          selected: selected === n,
+          onSelect: () => setSelected(selected === n ? null : n),
+          onRemove: () => {
+            removeLap();
+            setSelected(null);
+            onLapRemoved(n);
+          },
+        };
+  const next = laps.next;
   return (
     <>
-      {laps.rows.map((row, i) => (
-        <LapRow key={i} n={i + 1} share={row.share} clean={row.clean} value={row.value} />
+      {laps.rows.map((_, i) => (
+        <LapRow key={i} n={i + 1} value={lapAmount(plan, amounts[i] ?? 0)} />
       ))}
       {laps.rest !== null &&
         ("running" in laps.rest ? (
@@ -126,31 +130,12 @@ function LiveLaps({
         ) : (
           <IdleRestRow seconds={laps.rest.seconds} onStart={laps.startRest} />
         ))}
-      {laps.next !== null && (
-        <div className="climb-row climb-row--current">
-          <span className="climb-set">{done + 1}</span>
-          {step !== null ? (
-            <>
-              <span className="climb-note">{t("tally.attempt")}</span>
-              <span className="lap-step">
-                <button
-                  type="button"
-                  className="lap-step-button"
-                  aria-label={t("tally.fewerMoves")}
-                  onClick={() => setStep(Math.max(0, step - 1))}
-                >
-                  −
-                </button>
-                <span className="lap-step-value">{`${step}/${target}`}</span>
-                <button
-                  type="button"
-                  className="lap-step-button"
-                  aria-label={t("tally.moreMoves")}
-                  onClick={() => setStep(Math.min(target - 1, step + 1))}
-                >
-                  +
-                </button>
-              </span>
+      {next !== null &&
+        (step !== null ? (
+          <SetRow
+            position={String(done + 1)}
+            label={next.label}
+            trailing={
               <button
                 type="button"
                 className="detail-primary lap-go"
@@ -161,24 +146,43 @@ function LiveLaps({
               >
                 {t("common.save")}
               </button>
-            </>
-          ) : laps.next.startable ? (
-            <button
-              type="button"
-              className="outline-button lap-go lap-start"
-              onClick={laps.startLap}
-            >
-              {t("tally.startLap")}
-            </button>
-          ) : (
-            <>
-              <span className="climb-note lap-now">{laps.next.text}</span>
-              {remove !== null && <RemoveLap n={done + 1} onRemove={remove(done + 1)} />}
-            </>
-          )}
-        </div>
-      )}
-      {laps.next !== null && step === null && !laps.next.startable && (
+            }
+          >
+            <span className="lap-attempt">{t("tally.attempt")}</span>
+            <span className="lap-step">
+              <Stepper
+                compact
+                onStep={(d) => setStep(Math.min(plan.target - 1, Math.max(0, step + d)))}
+                decreaseLabel={t("tally.fewerMoves")}
+                increaseLabel={t("tally.moreMoves")}
+              >
+                <span className="lap-step-value">{`${step}/${plan.target}`}</span>
+              </Stepper>
+            </span>
+          </SetRow>
+        ) : next.startable ? (
+          <SetRow
+            position={String(done + 1)}
+            label={next.label}
+            trailing={
+              <button type="button" className="outline-button lap-go" onClick={laps.startLap}>
+                {t("tally.startLap")}
+              </button>
+            }
+          >
+            {null}
+          </SetRow>
+        ) : (
+          <SetRow
+            position={String(done + 1)}
+            label={next.label}
+            removeLabel={t("tally.removeLapOf", { lap: done + 1 })}
+            {...removable(done + 1)}
+          >
+            <span className="lap-now">{next.text}</span>
+          </SetRow>
+        ))}
+      {next !== null && step === null && !next.startable && (
         <div className="climb-goes">
           <button
             type="button"
@@ -197,20 +201,17 @@ function LiveLaps({
         </div>
       )}
       {waiting.map((n) => (
-        <div key={n} className="climb-row climb-row--waiting">
-          <span className="climb-set">{n}</span>
-          <span className="climb-note lap-now">{lapText}</span>
-          {remove !== null && <RemoveLap n={n} onRemove={remove(n)} />}
-        </div>
+        <Waiting key={n} n={n} {...removable(n)} />
       ))}
-      <button type="button" className="outline-button player-add-set" onClick={laps.addLap}>
-        + {t("tally.addLap")}
+      <button type="button" className="outline-button exercise-block-add" onClick={laps.addLap}>
+        <Icon name="plus" size={16} strokeWidth={2.4} />
+        {t("tally.addLap")}
       </button>
     </>
   );
 }
 
-/** A circuit exercise as a row per lap: how far each got, the lap on the wall, and + Add lap. */
+/** A circuit exercise as a row per lap: what each was, the lap on the wall, and + Add lap. */
 export function LapsCard({
   item,
   at,
@@ -220,48 +221,48 @@ export function LapsCard({
   live,
   rest,
   now,
+  unit,
   about,
+  history,
   onFold,
   menu,
   onLapRemoved,
 }: LapsCardProps): React.ReactElement {
+  const sessionRpe = useSessionTarget();
   const plan = lapPlanOf(at.dose);
   const active = draft?.exercise?.item === item;
-  const lapText = enduranceAmountLabel({ ...plan, laps: [] }, plan.target);
   return (
-    <section className="player-card">
-      <ExerciseCardHead item={at} about={about} onFold={onFold} menu={menu} />
-      <div className="climb-row climb-row--head" aria-hidden="true">
-        <span className="climb-col train-label climb-col-set">{t("workouts.colLap")}</span>
-        <span className="climb-col train-label">
-          {plan.unit === "moves"
-            ? t("workouts.movesPerLap", { n: plan.target })
-            : t("workouts.timePerLap", { time: clock(plan.target) })}
-        </span>
-      </div>
+    <ExerciseBlock
+      head={
+        <ExerciseHead
+          name={exerciseName(at.exercise)}
+          target={targetText(at.dose, "laps", unit, { sessionRpe })}
+          about={about}
+          {...(history !== undefined && { history })}
+          onFold={onFold}
+          menu={menu}
+        />
+      }
+    >
       {active && draft !== null ? (
         <LiveLaps
           draft={draft}
           live={live}
           rest={rest}
           now={now}
-          target={plan.target}
-          lapText={lapText}
+          plan={plan}
           onLapRemoved={onLapRemoved}
         />
       ) : (
         <div>
-          {lapRowsOf(logged, plan).map((row, i) => (
-            <LapRow key={i} n={i + 1} {...row} />
+          {logged.map((s, i) => (
+            <LapRow key={i} n={i + 1} value={lapAmount(plan, s.reps ?? s.onS ?? 0)} />
           ))}
           {Array.from({ length: Math.max(0, planned - logged.length) }, (_, i) => (
-            <div key={`w${i}`} className="climb-row climb-row--waiting">
-              <span className="climb-set">{logged.length + i + 1}</span>
-              <span className="climb-note lap-now">{lapText}</span>
-            </div>
+            <Waiting key={`w${i}`} n={logged.length + i + 1} />
           ))}
         </div>
       )}
-    </section>
+    </ExerciseBlock>
   );
 }

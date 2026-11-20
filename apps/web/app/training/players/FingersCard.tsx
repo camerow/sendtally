@@ -1,9 +1,7 @@
 import React from "react";
-import { protocolDose, type WeightUnit } from "@sendtally/core/hang";
+import type { WeightUnit } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { KIND_LOOK } from "@sendtally/features/training";
 import {
-  doseSummary,
   partDoses,
   partHangs,
   partSetLine,
@@ -12,6 +10,7 @@ import {
 } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
 import { PartSets } from "../log/PartSets";
+import { FingersGrip } from "./FingersGrip";
 
 export type FingersCardProps = {
   part: PartInPlayer;
@@ -23,7 +22,7 @@ export type FingersCardProps = {
 };
 
 /**
- * A mix's fingerboard part in the workout view, where its first grip sits: its grips and Start;
+ * A mix's fingerboard part in the workout view, where its first grip sits: a block per grip and Start;
  * Resume while the timer has it; once the timer ends, the sets it held to edit in place.
  */
 export function FingersCard({
@@ -36,11 +35,11 @@ export function FingersCard({
   const { planned, state } = part;
   const running = state !== undefined && "run" in state;
   return (
-    <section className="player-card">
-      <div className="player-card-head">
-        <h2 className="player-card-name">{t("workouts.fingerboard")}</h2>
+    <section className="fingers-part">
+      <div className="fingers-head">
+        <h2 className="fingers-title">{t("workouts.fingerboard")}</h2>
         {state !== undefined && (
-          <span className="player-card-meta">
+          <span className="fingers-count">
             {t("summary.hangsOf", { held: partHangs(state), total: partTotal(planned) })}
           </span>
         )}
@@ -60,18 +59,15 @@ export function FingersCard({
       ) : (
         <>
           {planned.items.map((i, k) => (
-            <div key={k} className="player-grip">
-              <span className="player-grip-name">
-                <span className="done-card-mark" style={{ background: KIND_LOOK.hangboard.ink }} />
-                {gripName(i.workout.grip)}
-              </span>
-              <span className="player-dose">
-                {doseSummary("hangboard", i.dose ?? protocolDose(i.workout), unit)}
-              </span>
-            </div>
+            <FingersGrip
+              key={k}
+              workout={i.workout}
+              dose={i.dose}
+              setup={running ? state.setups[k] : undefined}
+            />
           ))}
           {running && (
-            <span className="player-dose">{partSetLine(state.run, planned, gripName)}</span>
+            <span className="fingers-set-line">{partSetLine(state.run, planned, gripName)}</span>
           )}
           <button type="button" className="detail-primary player-start" onClick={onStart}>
             <Icon name="play" size={16} strokeWidth={2.2} />

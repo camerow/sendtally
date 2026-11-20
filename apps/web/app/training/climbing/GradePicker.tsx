@@ -4,65 +4,50 @@ import type { Tally } from "@sendtally/features/log-session";
 import { GradeChips } from "../../components/GradeChips";
 import { Segmented } from "../../components/Segmented";
 
-/** Under the set being climbed: Boulder, Route or Circuit, its grades (or one typed), then Attempt or Sent. */
+/**
+ * Under the set being climbed: Boulder, Route or Circuit, and its grades; a grade adds a climb,
+ * clicked as a chip or picked from the keyboard in the select beside the switch.
+ */
 export function GradePicker({ tally }: { tally: Tally }): React.ReactElement {
-  const [typed, setTyped] = React.useState("");
-  const pickTyped = (): void => {
-    const match = tally.chips.find((c) => c.label.toLowerCase() === typed.trim().toLowerCase());
-    if (match === undefined) return;
-    tally.pick(match.key);
-    setTyped("");
-  };
   return (
     <div className="climb-picker">
       <div className="climb-picker-top">
         {tally.segments.length > 1 && (
-          <Segmented
-            soft
-            label={t("climbs.discipline")}
-            options={tally.segments.map((s) => ({ value: s, label: tally.segmentLabel(s) }))}
-            value={tally.segment}
-            onChange={tally.pickSegment}
-          />
+          <span className="climb-picker-segments" style={{ width: tally.segments.length * 96 }}>
+            <Segmented
+              soft
+              label={t("climbs.discipline")}
+              options={tally.segments.map((s) => ({ value: s, label: tally.segmentLabel(s) }))}
+              value={tally.segment}
+              onChange={tally.pickSegment}
+            />
+          </span>
         )}
-        <input
-          className="form-input climb-type"
+        <select
+          className="form-input climb-grade-select"
           aria-label={t("common.grade")}
-          placeholder={tally.chips[tally.startIndex]?.label ?? ""}
-          value={typed}
-          onChange={(e) => setTyped(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key !== "Enter") return;
-            e.preventDefault();
-            pickTyped();
+          value=""
+          onChange={(e) => {
+            if (e.target.value !== "") tally.add(e.target.value);
           }}
-        />
+        >
+          <option value="" disabled>
+            {t("common.grade")}
+          </option>
+          {tally.chips.map((c) => (
+            <option key={c.key} value={c.key}>
+              {c.label}
+            </option>
+          ))}
+        </select>
       </div>
       <GradeChips
         label={t("common.grade")}
         chips={tally.chips}
-        active={tally.active}
+        active={null}
         startIndex={tally.startIndex}
-        onPick={tally.pick}
+        onPick={tally.add}
       />
-      <div className="climb-goes">
-        <button
-          type="button"
-          className="outline-button"
-          disabled={tally.active === null}
-          onClick={() => tally.go("fell")}
-        >
-          {t("tally.attempt")}
-        </button>
-        <button
-          type="button"
-          className="detail-primary"
-          disabled={tally.active === null}
-          onClick={() => tally.go("sent")}
-        >
-          {t("common.sent")}
-        </button>
-      </div>
     </div>
   );
 }

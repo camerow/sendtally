@@ -37,8 +37,10 @@ vi.mock("@sendtally/features/log-session", async (actual) => ({
   ...(await actual<typeof T_logSession>()),
   useLocalSessions: () => ({ save: vi.fn(), remove: vi.fn() }),
 }));
+vi.mock("../../lib/tones", () => ({ playTone: vi.fn() }));
 vi.mock("@sendtally/features/settings", () => ({
   useGradeScalePrefs: () => ({ scales: { boulder: "v", route: "yds" }, ready: true }),
+  useDisplayScales: () => ({ boulder: "v", route: "yds" }),
 }));
 vi.mock("../library/useLibrary", async (actual) => ({
   ...(await actual<typeof T_useLibrary>()),
@@ -114,10 +116,17 @@ const texts = (selector: string): string[] =>
 const click = async (label: string): Promise<void> => {
   await act(async () => button(label)!.click());
 };
-const log = async (grade: string, go: "Attempt" | "Sent"): Promise<void> => {
-  await click(grade);
-  await click(go);
+const tick = async (label: string): Promise<void> => {
+  await act(async () => byLabel(label)!.click());
 };
+const add = async (grade: string): Promise<void> => {
+  const chip = [...container.querySelectorAll<HTMLButtonElement>(".climb-picker button")].find(
+    (b) => b.textContent === grade
+  );
+  await act(async () => chip!.click());
+};
+const block = (name: string): Element =>
+  [...container.querySelectorAll(".exercise-block")].find((c) => c.textContent?.includes(name))!;
 const finished = async (): Promise<unknown> => {
   await click("Finish");
   const where = new URL(`http://x${container.querySelector("[data-testid=where]")?.textContent}`);
@@ -142,46 +151,36 @@ afterEach(() => {
 });
 
 describe("Climbing inside the workout", () => {
-  it("logs each climb in its set's row, flips one pressed wrong, and rests in place after the set", async () => {
+  it("adds a row per climb, steps its attempts, ticks it sent, and ends the set only on End set", async () => {
     await mount(runOf("4x4s", { sets: 2, reps: 2, setRestS: 240 }));
-    expect(texts(".climb-col").at(-1)).toBe("Climbs · 2 per set");
     expect(texts(".player-gym")).toEqual(["No gym"]);
-    expect(texts(".climb-note")).toEqual(["2 climbs", "2 climbs"]);
-    await log("V4", "Sent");
-    expect(texts(".climb-note")[0]).toBe("1 of 2 climbs");
-    await click("V4, Sent, tap to mark as attempt");
-    expect(byLabel("V4, Attempt, tap to mark as sent")).not.toBeNull();
-    await click("V4, Attempt, tap to mark as sent");
-    await log("V3", "Attempt");
+    await add("V5");
+    for (let i = 0; i < 2; i++) await click("Increase Climb 1, V5 · Attempts");
+    await tick("Climb 1, V5, Sent");
+    expect(byLabel("Climb 1, V5, Sent")).toHaveProperty("checked", true);
+    for (const g of ["V6", "V4", "V6"]) await add(g);
+    expect(byLabel("Rest, 4:00 left")).toBeNull();
+    await click("Climb 4, V6");
+    await click("Remove V6");
+    expect(byLabel("Climb 4, V6")).toBeNull();
+    await click("End set 1");
     expect(byLabel("Rest, 4:00 left")).not.toBeNull();
-    expect(await finished()).toEqual([
-      {
-        item: 0,
-        exercise: "4x4s",
-        sets: [
-          {
-            climbs: [
-              { grade: "V4", scale: "v", tries: 1, sent: true, style: "flash" },
-              { grade: "V3", scale: "v", tries: 1, sent: false },
-            ],
-          },
-        ],
-      },
+    expect(texts(".climb-line")).toContain("3 attempts · sent");
+    const done = (await finished()) as { sets: { climbs: unknown[] }[] }[];
+    expect(done[0]?.sets[0]?.climbs).toEqual([
+      { grade: "V5", scale: "v", tries: 3, sent: true, style: "redpoint" },
+      { grade: "V6", scale: "v", tries: 1, sent: false },
+      { grade: "V4", scale: "v", tries: 1, sent: false },
     ]);
   });
 
-  it("takes a typed grade as well as a clicked one", async () => {
+  it("names a climb from the selected row's edit control", async () => {
     await mount(runOf("4x4s", { sets: 1, reps: 2 }));
-    const input = container.querySelector<HTMLInputElement>(".climb-type")!;
-    await act(async () => {
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, "v6");
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    await act(async () =>
-      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
-    );
-    await click("Sent");
-    expect(byLabel("V6, Sent, tap to mark as attempt")).not.toBeNull();
+    await add("V5");
+    expect(button("Edit climb")).toBeUndefined();
+    await click("Climb 1, V5");
+    await click("Edit climb");
+    expect(document.querySelector("dialog[open]")).not.toBeNull();
   });
 
   it("picks up a run left on the old tally with its climbs where they were", async () => {
@@ -203,13 +202,21 @@ describe("Climbing inside the workout", () => {
       state: { player: "sets", done: [{ item: 0, exercise: "4x4s", sets: [{}, {}] }], ticked: [] },
     });
     await mount(run);
-    expect(byLabel("V7, Sent, tap to mark as attempt")).not.toBeNull();
-    expect(texts(".climb-note")[0]).toBe("1 of 2 climbs");
+    expect(byLabel("Climb 1, V7, Sent")).toHaveProperty("checked", true);
+  });
+
+  it("runs a time set's clock only from its own button", async () => {
+    await mount(runOf("ARC", { sets: 2, onS: 60, setRestS: 30 }));
+    await add("V1");
+    expect(byLabel("On the wall 0:00 of 1:00")).not.toBeNull();
+    await click("Start");
+    expect(button("Pause")).toBeDefined();
+    await click("Pause");
+    expect(button("Start")).toBeDefined();
   });
 
   it("logs a lap Sent, an Attempt lap as far as it got, and takes back a lap with its −", async () => {
     await mount(runOf("Circuit laps", { sets: 2, reps: 40 }));
-    expect(texts(".climb-col").at(-1)).toBe("Moves · 40 a lap");
     await click("Sent");
     await click("Attempt");
     for (let i = 0; i < 3; i++) await click("More moves");
@@ -218,12 +225,14 @@ describe("Climbing inside the workout", () => {
     await act(async () =>
       container.querySelector<HTMLButtonElement>("button.player-card--folded")!.click()
     );
-    await click("+ Add lap");
-    expect(button("Remove lap 3")?.className).toBe("set-remove set-remove--run");
+    await click("Add lap");
+    expect(texts(".climb-line")).toEqual(["40 moves", "3 moves"]);
+    await click("3");
     await click("Remove lap 3");
     expect(button("Remove lap 3")).toBeUndefined();
     expect(document.body.textContent).toContain("Circuit laps · Lap 3 removed");
     await click("Undo");
+    await click("3");
     await click("Remove lap 3");
     expect(await finished()).toEqual([
       { item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 3 }] },
@@ -238,40 +247,32 @@ describe("Climbing inside the workout", () => {
     });
     await click("Sent");
     await click("Sent");
+    await click("3");
     await click("Remove lap 3");
     expect(container.querySelector("button.player-card--folded")?.textContent).toContain(
       "Circuit laps"
     );
-    expect(texts(".climb-col").at(-1)).toBe("Climbs · 2 per set");
     await click("Undo");
     expect(container.querySelector("button.player-card--folded")).toBeNull();
-    expect(texts(".lap-value")).toEqual(["40", "40"]);
+    expect(texts(".climb-line")).toEqual(["40 moves", "40 moves"]);
   });
 
-  it("never moves the tally from a click in a row; only the card's menu does", async () => {
+  it("never moves the tally from a click in a block; only the block's menu does", async () => {
     const two = runOf("4x4s", { sets: 2, reps: 2 });
     await mount({ ...two, items: [...two.items, { exercise: "ARC", dose: { sets: 1, onS: 60 } }] });
-    await log("V4", "Sent");
-    const arc = () =>
-      [...container.querySelectorAll(".player-card")].find((c) => c.textContent?.includes("ARC"))!;
-    await act(async () =>
-      arc().querySelector<HTMLElement>(".climb-row:not(.climb-row--head)")!.click()
-    );
-    expect(arc().querySelector(".climb-picker")).toBeNull();
-    await click("V4, Sent, tap to mark as attempt");
-    expect(byLabel("V4, Attempt, tap to mark as sent")).not.toBeNull();
+    await add("V4");
+    await act(async () => (block("ARC") as HTMLElement).click());
+    expect(block("ARC").querySelector(".climb-picker")).toBeNull();
+    expect(block("4x4s").querySelector(".climb-picker")).not.toBeNull();
   });
 
-  it("offers Climb this now only on a card with climbing still to do", async () => {
+  it("offers Climb this now only on a block the tally is not on", async () => {
     const one = runOf("4x4s", { sets: 1, reps: 1 });
     await mount({ ...one, items: [...one.items, { exercise: "ARC", dose: { sets: 1, onS: 60 } }] });
-    await log("V4", "Sent");
-    const card = (name: string) =>
-      [...container.querySelectorAll(".player-card")].find((c) => c.textContent?.includes(name))!;
-    await act(async () => (card("4x4s") as HTMLElement).click());
+    await add("V4");
     const menuOf = async (name: string): Promise<string[]> => {
       await act(async () =>
-        card(name)
+        block(name)
           .querySelector<HTMLButtonElement>('[aria-label="More for this exercise"]')!
           .click()
       );
@@ -279,21 +280,18 @@ describe("Climbing inside the workout", () => {
     };
     expect(await menuOf("ARC")).toContain("Climb this now");
     await click("Climb this now");
-    expect(await menuOf("4x4s")).not.toContain("Climb this now");
+    expect(await menuOf("ARC")).not.toContain("Climb this now");
   });
 
-  it("moves the tally to a card from its menu", async () => {
+  it("moves the tally to a block from its menu", async () => {
     const two = runOf("4x4s", { sets: 1, reps: 2 });
     await mount({ ...two, items: [...two.items, { exercise: "ARC", dose: { sets: 1, onS: 60 } }] });
-    const arc = [...container.querySelectorAll(".player-card")].find((c) =>
-      c.textContent?.includes("ARC")
-    )!;
     await act(async () =>
-      arc.querySelector<HTMLButtonElement>('[aria-label="More for this exercise"]')!.click()
+      block("ARC")
+        .querySelector<HTMLButtonElement>('[aria-label="More for this exercise"]')!
+        .click()
     );
     await click("Climb this now");
-    expect(
-      container.querySelector(".climb-row--current")?.closest(".player-card")?.textContent
-    ).toContain("ARC");
+    expect(block("ARC").querySelector(".climb-picker")).not.toBeNull();
   });
 });
