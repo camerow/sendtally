@@ -1,3 +1,7 @@
+:root {
+  --tick-white: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E");
+}
+
 .train-label {
   font-family: var(--font-mono);
   font-weight: 500;
@@ -1057,77 +1061,6 @@
   border: 1.5px solid var(--bs-white);
 }
 
-/* A fingerboard part's grips sit in its own card, one after another with no card each. */
-.done-flat {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.done-card-mark {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-}
-
-.set-fields {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* A hang load fits "+102.5" whatever it holds, so every grip's loads line up in one column. */
-.set-fields--hangs .set-joiner + .number-field .number-field-box {
-  min-width: 78px;
-  justify-content: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.set-joiner,
-.set-climbs {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: rgba(64, 63, 76, 0.55);
-}
-
-.set-tick {
-  width: 44px;
-  height: 44px;
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  cursor: pointer;
-}
-
-.set-tick input {
-  width: 20px;
-  height: 20px;
-  margin: 0;
-  accent-color: var(--bs-fern);
-  cursor: pointer;
-}
-
-.set-remove {
-  width: 32px;
-  height: 44px;
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: none;
-  border-radius: 8px;
-  background: none;
-  color: rgba(64, 63, 76, 0.55);
-  cursor: pointer;
-}
-
-.set-remove:hover {
-  background: var(--surface-soft);
-  color: var(--bs-gunmetal);
-}
-
 .setup-pill {
   align-self: flex-start;
   height: 32px;
@@ -1182,33 +1115,6 @@
 
 .summary-title {
   font-size: 32px;
-}
-
-.result-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--line-on-light-strong);
-}
-
-.result-card-head {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.result-card-name {
-  flex: 1;
-  font-weight: 600;
-  font-size: 15.5px;
-}
-
-.climb-set {
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .climb-set-label {
@@ -1640,9 +1546,7 @@
 
 .picker-tick--on {
   border-color: var(--bs-gunmetal);
-  background: var(--bs-gunmetal)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E")
-    center / 16px no-repeat;
+  background: var(--bs-gunmetal) var(--tick-white) center / 16px no-repeat;
 }
 
 .sheet-form {
@@ -1657,23 +1561,6 @@
 .exercise-preview {
   opacity: 0.4;
   pointer-events: none;
-}
-
-@media (max-width: 767px) {
-  .set-tick {
-    position: relative;
-    width: 32px;
-  }
-
-  .set-tick::before {
-    content: "";
-    position: absolute;
-    inset: 0 -6px;
-  }
-
-  .set-remove {
-    width: 28px;
-  }
 }
 
 @media (max-width: 767px) {
@@ -2041,7 +1928,7 @@
 .set-check:checked {
   border: none;
   background-color: var(--bs-fern);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E");
+  background-image: var(--tick-white);
 }
 
 .set-check:focus-visible {
