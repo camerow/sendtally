@@ -5,7 +5,6 @@ import { occurrenceMeta, plannedItems, type Occurrence } from "@sendtally/featur
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { MoreMenu } from "../../components/MoreMenu";
 import { StartButton } from "../components/StartButton";
-import { useHangData } from "../data/HangDataContext";
 import { useWorkoutStart } from "../library-detail/useWorkoutStart";
 import { DayMark } from "./DayMark";
 import { occurrenceLogLink, occurrencePath } from "./planLinks";
@@ -22,7 +21,6 @@ export function OccurrenceCard({
   occurrence: Occurrence;
   workout: LibraryWorkout;
 }): React.ReactElement {
-  const { model } = useHangData();
   const changes = useDayChanges();
   const logIt = occurrenceLogLink(workout, o);
   const start = useWorkoutStart(workout, o.date, plannedItems(o));
@@ -38,7 +36,7 @@ export function OccurrenceCard({
       </div>
       <div className="plan-card-meta">
         <DayMark kind={workout.kind} filled />
-        <span>{occurrenceMeta(o, model.settings.units)}</span>
+        <span>{occurrenceMeta(o)}</span>
       </div>
       {(start !== null || logIt !== null) && (
         <div className="plan-card-actions">

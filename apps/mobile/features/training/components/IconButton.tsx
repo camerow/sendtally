@@ -4,7 +4,7 @@ import { disabledOpacity } from "@sendtally/design/tokens";
 import { press } from "../../../lib/press";
 import { HangIcon, type HangIconName } from "./HangIcon";
 
-const THIN: readonly HangIconName[] = ["restart", "skip", "sound", "muted", "edit"];
+const THIN: readonly HangIconName[] = ["restart", "skip", "sound", "muted", "edit", "history"];
 
 export type IconButtonProps = {
   icon: HangIconName;

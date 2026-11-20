@@ -5,12 +5,14 @@ import {
   holdCues,
   liveRunStore,
   liveRunSummary,
+  liveRunWhere,
   parseLiveRun,
   type LiveRun,
   type RunState,
   type RunStorage,
 } from "./liveRun";
 import type { Rest } from "./restCountdown";
+import { runParams } from "./runParams";
 
 const live = (state: RunState): LiveRun => ({
   title: "Max hangs",
@@ -42,6 +44,48 @@ describe("a live run", () => {
     expect(parseLiveRun(JSON.stringify({ ...stored, lastTickAt: 5 }))?.lastTickAt).toBe(5);
     expect(parseLiveRun(JSON.stringify({ ...stored, lastTickAt: "5" }))).toEqual(stored);
     expect(parseLiveRun(JSON.stringify({ ...stored, lastTickAt: null }))).toEqual(stored);
+  });
+
+  it("splits an exercise's name from its set, so a bar can shorten the name alone", () => {
+    const state: RunState = {
+      player: "sets",
+      done: [{ item: 0, exercise: "Couch stretch, each side", sets: [{ onS: 60 }] }],
+      ticked: [],
+    };
+    expect(liveRunWhere(live(state))).toEqual({
+      name: "Couch stretch, each side",
+      where: "Set 1 of 1",
+    });
+    expect(liveRunWhere(live({ player: "timer", run }))).toEqual({
+      name: null,
+      where: "Set 1 of 5 · Hang",
+    });
+  });
+
+  it("names a checklist's next open line, not a set", () => {
+    const params = runParams({
+      kind: "strength",
+      title: "Warm-up",
+      date: "2026-11-19",
+      workoutId: "w1",
+      link: { membershipId: null, week: null, focus: null },
+      session: 0,
+      minutes: 30,
+      exerciseRestS: 60,
+      items: [
+        {
+          exercise: "Checklist",
+          dose: { sets: 2 },
+          checklist: { lines: ["Chalk, tape, brush", "Log the warm-up climbs"] },
+        },
+      ],
+    });
+    const state: RunState = {
+      player: "sets",
+      done: [{ item: 0, exercise: "Checklist", sets: [{}, {}] }],
+      ticked: ["0:0"],
+    };
+    expect(liveRunSummary({ ...live(state), params })).toBe("Log the warm-up climbs");
   });
 
   it("says where each player is", () => {

@@ -1,24 +1,26 @@
 import React from "react";
-import { View } from "react-native";
-import type { SessionItem } from "@sendtally/core/hang";
+import { Text } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { ChecklistRow } from "../checklist/ChecklistRow";
 import type { DetailMenuRow } from "../components/types";
-import { ExerciseCardHead } from "./ExerciseCardHead";
+import { type } from "../type";
+import { ExerciseBlock } from "./ExerciseBlock";
+import { ExerciseHead } from "./ExerciseHead";
+import { SetRow } from "./SetRow";
 
 export type ChecklistCardProps = {
-  item: SessionItem;
   lines: readonly string[];
   ticked: (line: number) => boolean;
-  onToggle: (line: number) => void;
-  onFold: () => void;
-  menu: readonly DetailMenuRow[];
+  /** Ticks a line; none on the finished workout, which only reads them. */
+  onToggle?: (line: number) => void;
+  /** In the run: its title folds it. */
+  onFold?: () => void;
+  /** In the run: its ··· menu. */
+  menu?: readonly DetailMenuRow[];
 };
 
-/** A checklist among the exercise cards: its typed lines, ticked in any order. */
+/** A typed checklist in the run, the review and the finished workout: a row per line, its name and its tick. */
 export function ChecklistCard({
-  item,
   lines,
   ticked,
   onToggle,
@@ -26,30 +28,28 @@ export function ChecklistCard({
   menu,
 }: ChecklistCardProps): React.ReactElement {
   return (
-    <View
-      style={{
-        gap: 4,
-        padding: 14,
-        paddingTop: 12,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: colors.lineOnLightStrong,
-      }}
-    >
-      <ExerciseCardHead
-        item={{ ...item, exercise: t("workouts.checklist") }}
-        onFold={onFold}
-        menu={menu}
-      />
-      {lines.map((line, i) => (
-        <ChecklistRow
-          key={i}
-          name={line}
-          ticked={ticked(i)}
-          last={i === lines.length - 1}
-          onToggle={() => onToggle(i)}
+    <ExerciseBlock
+      head={
+        <ExerciseHead
+          name={t("workouts.checklist")}
+          {...(onFold !== undefined && { onFold })}
+          {...(menu !== undefined && { menu })}
         />
+      }
+    >
+      {lines.map((line, i) => (
+        <SetRow
+          key={i}
+          position=""
+          label={line}
+          ticked={ticked(i)}
+          {...(onToggle !== undefined && { onToggle: () => onToggle(i) })}
+        >
+          <Text style={[type.bodyBold, { flex: 1, fontSize: 15, color: colors.gunmetal }]}>
+            {line}
+          </Text>
+        </SetRow>
       ))}
-    </View>
+    </ExerciseBlock>
   );
 }

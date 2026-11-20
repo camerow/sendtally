@@ -83,6 +83,23 @@ const FILL: Record<KeyLook, string> = {
 };
 
 /** An in-app keypad for a length of time or a number, with its field's label and live value on top. */
+const LABEL = {
+  fontFamily: fonts.monoMedium,
+  fontSize: 10,
+  letterSpacing: 0.8,
+  textTransform: "uppercase",
+  color: colors.textSecondary,
+} as const;
+
+/**
+ * A field's label split so the exercise truncates and the field stays whole: "Deadlift, set 1 ·
+ * Weight" is ["Deadlift, ", "set 1 · Weight"]. Every locale writes a set as "{exercise}, …".
+ */
+export function labelParts(label: string): [lead: string, field: string] {
+  const cut = label.lastIndexOf(", ");
+  return cut === -1 ? ["", label] : [label.slice(0, cut + 2), label.slice(cut + 2)];
+}
+
 export function Keypad({
   visible,
   label,
@@ -125,26 +142,38 @@ export function Keypad({
   const valueOf = (e: Entries): number =>
     mode.kind === "time" ? entrySeconds(e.time) : entryNumber(e.number);
 
-  const finish = (): void => {
-    if (entries.committed) return;
-    const done = reduce(entries, { type: "done" });
-    setEntries({ ...done, committed: true });
+  const commit = (done: Entries): void => {
     if (range !== undefined) {
       const typed = entryRange(done.number, limits);
       if (typed.min !== value || typed.max !== range.max) onCommit(typed.min, typed.max);
     } else if (valueOf(done) !== value) onCommit(valueOf(done));
   };
+  const finish = (): void => {
+    if (entries.committed) return;
+    const done = reduce(entries, { type: "done" });
+    setEntries({ ...done, committed: true });
+    commit(done);
+  };
+  const leave = (): void => {
+    if (!entries.committed) commit(reduce(entries, { type: "done" }));
+  };
   const close = (): void => {
     finish();
     onClose();
   };
-  const latestFinish = React.useRef(finish);
+  const latest = React.useRef({ finish, leave });
+  const shownField = React.useRef(opened);
   React.useEffect(() => {
-    latestFinish.current = finish;
+    const was = shownField.current;
+    shownField.current = opened;
+    if (was !== null && opened !== null && was !== opened) latest.current.leave();
+  }, [opened]);
+  React.useEffect(() => {
+    latest.current = { finish, leave };
   });
   const wasVisible = React.useRef(visible);
   React.useEffect(() => {
-    if (wasVisible.current && !visible) latestFinish.current();
+    if (wasVisible.current && !visible) latest.current.finish();
     wasVisible.current = visible;
   }, [visible]);
   const reset = (): void => {
@@ -163,7 +192,7 @@ export function Keypad({
 
   const [zeros, typed] =
     mode.kind === "time"
-      ? timeText(entries.time)
+      ? timeText(entries.time, mode)
       : range !== undefined
         ? ["", entries.number.text]
         : ["", entries.number.text.replace(".", decimalMark()).replace("-", "−")];
@@ -172,6 +201,7 @@ export function Keypad({
     if (visible) onType?.([zeros, typed]);
   }, [visible, zeros, typed, onType]);
   const step = mode.kind === "time" ? "30s" : formatNumber(limits.step);
+  const [labelLead, labelField] = labelParts(label);
 
   const key = (
     text: string,
@@ -301,20 +331,14 @@ export function Keypad({
               {walk("›", t("common.next"), onNext === undefined ? null : next)}
             </View>
           )}
-          <Text
-            numberOfLines={1}
-            style={{
-              flex: 1,
-              flexShrink: 1,
-              fontFamily: fonts.monoMedium,
-              fontSize: 10,
-              letterSpacing: 0.8,
-              textTransform: "uppercase",
-              color: colors.textSecondary,
-            }}
-          >
-            {label}
-          </Text>
+          <View style={{ flex: 1, flexDirection: "row", minWidth: 0 }}>
+            <Text numberOfLines={1} style={[LABEL, { flexShrink: 1 }]}>
+              {labelLead}
+            </Text>
+            <Text numberOfLines={1} style={[LABEL, { flexShrink: labelLead === "" ? 1 : 0 }]}>
+              {labelField}
+            </Text>
+          </View>
           <Text
             accessibilityLiveRegion="polite"
             testID="keypad-value"

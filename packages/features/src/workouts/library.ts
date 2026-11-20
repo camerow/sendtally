@@ -1,5 +1,6 @@
 import type { ActivityKind, Exercise, WorkoutRecord } from "@sendtally/api-client";
 import {
+  clock,
   defaultExerciseRestS,
   doseProtocol,
   gapRestSeconds,
@@ -22,11 +23,12 @@ import {
 } from "@sendtally/core/hang";
 import { climbingDoseLine } from "../activities/climbing";
 import { tallyMeasuresOf } from "../exercises/measure";
+import type { TallyMeasure } from "../exercises/types";
 import { weightValue } from "../activities/done";
 import { ACTIVITY_KINDS, kindLabel } from "../activities/format";
 import { countText, humanDuration, protocolParts, protocolSummary } from "../hang/format";
 import { builtInGripName } from "../hang/names";
-import { formatNumber, t } from "../i18n";
+import { formatNumber, t, type MessageKey } from "../i18n";
 import { durationLabel } from "../sessions/years";
 import { builtInWorkouts } from "./builtIns";
 import type { LibraryShelf, LibraryWorkout, WorkoutDraft, WorkoutUse } from "./types";
@@ -161,11 +163,83 @@ const separated = (parts: readonly (string | null)[]): string =>
 export const exerciseTarget = ({ targetRpe }: Pick<Dose, "targetRpe">): string | undefined =>
   targetRpe === undefined ? undefined : t("hang.rpeValue", { value: formatNumber(targetRpe) });
 
-/** "Target RPE 8": the same, on its own line under the exercise name. */
+/** "Target RPE 8/10": the same, on its own line under the exercise name. */
 export const exerciseTargetLine = ({ targetRpe }: Pick<Dose, "targetRpe">): string | undefined =>
-  targetRpe === undefined
-    ? undefined
-    : t("activities.targetRpe", { value: formatNumber(targetRpe) });
+  targetRpe === undefined ? undefined : t("common.targetRpe", { n: formatNumber(targetRpe) });
+
+/** What a target is counted in: the workout's kind, or how a climbing exercise is measured. */
+export type TargetKind = WorkoutKind | TallyMeasure;
+
+/** A session's target, every number with its word; `rpe` is its own line, or joins a member's. */
+export type TargetText = { work: string; rpe: string | undefined };
+
+const counted = (key: MessageKey, min: number, max?: number): string =>
+  t(key, { count: max ?? min, n: countText(min, max) });
+
+/**
+ * What one dose asks this session: "5 sets × 5 reps · 220 lb", "6 sets × 6 hangs · 7s on, 3s
+ * off", "3 sets × 4 climbs", with "Target RPE 8/10" apart. A superset `round` leaves the sets
+ * to the round count: "2 reps · 260 lb". The Target RPE is left out when it is the session's own
+ * `sessionRpe`, which the screen already states.
+ */
+export function targetText(
+  dose: Dose,
+  kind: TargetKind,
+  unit: WeightUnit,
+  {
+    eachSide = false,
+    round = false,
+    sessionRpe = null,
+  }: { eachSide?: boolean; round?: boolean; sessionRpe?: number | null } = {}
+): TargetText {
+  const load =
+    dose.weightKg === undefined
+      ? null
+      : t("hang.loadPlain", { value: weightValue(dose.weightKg, unit), unit });
+  const time = (s: number): string => (s < 60 ? t("hang.seconds", { n: s }) : clock(s, true));
+  const per = ((): string | null => {
+    if (kind === "laps")
+      return dose.onS !== undefined
+        ? clock(dose.onS, true)
+        : dose.reps === undefined
+          ? null
+          : counted("workouts.targetMoves", dose.reps);
+    if (kind === "wallTime")
+      return dose.onS === undefined
+        ? null
+        : t("activities.onTheWall", { time: clock(dose.onS, true) });
+    if (kind === "climbs" || kind === "climbing")
+      return dose.reps === undefined ? null : counted("workouts.targetClimbs", dose.reps);
+    if (kind === "hangboard") {
+      const hangs = counted("workouts.targetHangs", dose.reps ?? 1);
+      const on = dose.onS === undefined ? null : time(dose.onS);
+      return on === null
+        ? hangs
+        : `${hangs} · ${
+            dose.offS === undefined || (dose.reps ?? 1) <= 1
+              ? on
+              : t("workouts.targetOnOff", { on, off: time(dose.offS) })
+          }`;
+    }
+    const work = [
+      dose.reps === undefined ? null : counted("workouts.targetReps", dose.reps, dose.repsMax),
+      dose.onS === undefined ? null : clock(dose.onS, true),
+    ]
+      .filter((x) => x !== null)
+      .join(" · ");
+    return work === "" ? null : eachSide ? t("workouts.aSide", { value: work }) : work;
+  })();
+  const sets = counted(
+    kind === "laps" ? "workouts.targetLaps" : "workouts.targetSets",
+    dose.sets,
+    dose.setsMax
+  );
+  const main = round ? per : per === null ? sets : `${sets} × ${per}`;
+  return {
+    work: [main, load].filter((x) => x !== null).join(" · "),
+    rpe: dose.targetRpe === sessionRpe ? undefined : exerciseTargetLine(dose),
+  };
+}
 
 /** A line with the exercise's target first: "RPE 8 · Same every session". */
 export const withTarget = (dose: Pick<Dose, "targetRpe">, line?: string): string | undefined =>

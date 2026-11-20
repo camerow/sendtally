@@ -45,4 +45,5 @@ export const summary = {
   "summary.lapsDown_other": "−{count} laps vs last",
   "summary.sentOf": "{sent} of {of} sent",
   "summary.laps": "Laps",
+  "summary.notRated": "not rated",
 } as const;

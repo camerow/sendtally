@@ -11,7 +11,6 @@ import { DetailMenu } from "../components/DetailMenu";
 import { dayRows } from "../plan-days/dayRows";
 import { useDayChanges } from "../plan-days/useDayChanges";
 import { Title } from "../components/Title";
-import { useHangData } from "../data/HangDataContext";
 import { LogItButton } from "../library-detail/LogItButton";
 import { StartButton } from "../library-detail/StartButton";
 import { type } from "../type";
@@ -22,7 +21,6 @@ export type OccurrenceCardProps = { occurrence: Occurrence; workout: LibraryWork
 
 /** A workout due today, its kind marked by its name: the card opens the workout, Start runs what it prescribes, Resume goes back to it running. */
 export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): React.ReactElement {
-  const { model } = useHangData();
   const o = occurrence;
   const planned = plannedItems(o);
   const run = useLiveRun();
@@ -69,7 +67,7 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
                 { flex: 1, fontSize: 14, lineHeight: 20, color: colors.textSecondary },
               ]}
             >
-              {occurrenceMeta(o, model.settings.units)}
+              {occurrenceMeta(o)}
             </Text>
           </View>
         </View>

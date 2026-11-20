@@ -1,21 +1,34 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
-import { colors } from "@sendtally/design/tokens";
+import { colors, disabledOpacity } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { elapsedClock } from "@sendtally/features/sessions";
 import { press } from "../../../lib/press";
 import { HangIcon } from "../components/HangIcon";
 import { type } from "../type";
 
-export type HoldButtonProps = { name: string; targetS: number; onPress: () => void };
+export type HoldButtonProps = {
+  name: string;
+  targetS: number;
+  onPress: () => void;
+  /** Another hold is running: shown idle, so no row changes shape. */
+  disabled?: boolean;
+};
 
 /** ▶ and the target: runs a timed set or line in its own row. */
-export function HoldButton({ name, targetS, onPress }: HoldButtonProps): React.ReactElement {
+export function HoldButton({
+  name,
+  targetS,
+  onPress,
+  disabled = false,
+}: HoldButtonProps): React.ReactElement {
   const time = elapsedClock(targetS);
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
       accessibilityLabel={t("activities.holdStart", { name, time })}
       hitSlop={4}
       style={press({
@@ -28,6 +41,7 @@ export function HoldButton({ name, targetS, onPress }: HoldButtonProps): React.R
         borderRadius: 18,
         borderWidth: 1.5,
         borderColor: colors.fern,
+        opacity: disabled ? disabledOpacity : 1,
       })}
     >
       <HangIcon name="play" color={colors.fern} size={14} />

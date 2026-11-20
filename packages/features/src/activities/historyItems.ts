@@ -3,7 +3,7 @@ import type { CalendarDate, WeightUnit } from "@sendtally/core/hang";
 import { climbsLine, isClimbingSets, wallLine } from "./climbing";
 import { checklistsLine, setText } from "./done";
 import { bestSet, hangGrids, hangTotals } from "./summary";
-import { dayMonth, loadLabel } from "../hang/format";
+import { dayMonth, loadLabel, shortDate } from "../hang/format";
 import type { HangModel } from "../hang/model";
 import { t } from "../i18n";
 import { exerciseKey, type ExerciseSeries } from "../statistics";
@@ -92,4 +92,30 @@ export function exerciseItems(
       rpe: activity?.rpe ?? null,
     };
   });
+}
+
+/**
+ * Every session of one workout, newest first, each titled by its day: a logged workout with how
+ * long it took, a hangboard one with its load and hangs held.
+ */
+export function workoutHistory(
+  activities: readonly ActivityRecord[],
+  model: Pick<HangModel, "gripName" | "settings" | "data">,
+  workoutId: string,
+  currentId?: string
+): HistoryItem[] {
+  const unit = model.settings.units;
+  const dated = [
+    ...ofWorkout(activities, workoutId).map((a) => ({
+      date: a.date,
+      item: { ...activityItem(a, unit, currentId), meta: t("hang.minutes", { n: a.minutes }) },
+    })),
+    ...ofWorkout(model.data.sessions, workoutId).map((s) => ({
+      date: s.date,
+      item: hangItem(s, model, currentId),
+    })),
+  ];
+  return dated
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .map(({ date, item }) => ({ ...item, name: shortDate(date) }));
 }

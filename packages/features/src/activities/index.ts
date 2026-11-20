@@ -32,12 +32,12 @@ export {
   shortOf,
   type SetsOf,
   setChip,
-  doneSummary,
   exerciseNames,
   exerciseSuggestions,
   previousSets,
   setSeconds,
   setText,
+  setReadText,
   weightValue,
   withRpe,
 } from "./done";
@@ -45,6 +45,7 @@ export { doneOfRun, intervalsSummary, stepDose } from "./intervals";
 export {
   climbingDoseLine,
   climbingLastTime,
+  climbLine,
   climbsLine,
   climbsTotal,
   isClimbingSets,

@@ -8,7 +8,16 @@ import { t } from "../i18n";
 import type { RestClock } from "../workouts/useLiveRun";
 import { readClimbKind } from "./climbKind";
 import type { DraftStorage } from "./draftStore";
-import { setOver, withClimbFlipped, withSetEnded, withWallStarted } from "./exerciseTally";
+import {
+  setOver,
+  timeUp,
+  withClimbFlipped,
+  withClimbTries,
+  withSetClimbAdded,
+  withSetEnded,
+  withWallStarted,
+  withWallToggled,
+} from "./exerciseTally";
 import { tallyDraft, type TallyChoice, type TallyGo } from "./tally";
 import { tallyStep, type TallySelection, type TallyUndo } from "./tallySelection";
 import { gradeOptions } from "./transforms";
@@ -78,8 +87,14 @@ export type Tally = {
   now: Date;
   /** A logged climb pressed the wrong way, sent or attempt, turned the other way. */
   flip: (key: string) => void;
-  /** Ends the set being climbed now, for a set with no climb count or time to end it. */
+  /** Ends the set being climbed now. */
   endSet: () => void;
+  /** A workout set's row per climb: a grade picked adds a climb at it, one attempt, not sent. */
+  add: (chip: string) => void;
+  setTries: (key: string, tries: number) => void;
+  remove: (key: string) => void;
+  /** Starts or pauses the set's time on the wall. */
+  toggleWall: () => void;
 };
 
 /**
@@ -155,9 +170,9 @@ export function useTally({
   );
   const pending = selection?.kind === "pending";
   React.useEffect(() => {
-    if (draft === null || pending || !setOver(draft, now)) return;
-    live.replace(settle(draft, now));
-  }, [draft, pending, now, live, settle]);
+    if (draft === null || pending || !timeUp(draft, now)) return;
+    live.replace(end(draft, now));
+  }, [draft, pending, now, live, end]);
 
   const gym = draft === null ? null : gymOfDraft(gyms, draft.gymId);
   const circuitGym = draft === null ? null : liveGymOfDraft(gyms, draft.gymId);
@@ -240,6 +255,24 @@ export function useTally({
     },
     endSet: () => {
       if (draft?.exercise !== undefined) live.replace(end(draft, new Date()));
+    },
+    add: (chip) => {
+      const choice = choiceOf(chip);
+      if (draft === null || choice === null) return;
+      rest.skip();
+      setSelection(null);
+      live.replace(withSetClimbAdded(draft, choice));
+    },
+    setTries: (key, tries) => {
+      if (draft !== null) live.replace(withClimbTries(draft, key, tries));
+    },
+    remove: (key) => {
+      if (draft === null) return;
+      setSelection(null);
+      live.replace({ ...draft, climbs: draft.climbs.filter((c) => c.key !== key) });
+    },
+    toggleWall: () => {
+      if (draft !== null) live.replace(withWallToggled(draft, new Date()));
     },
   };
 }

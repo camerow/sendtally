@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, Text } from "react-native";
 import type { HangKind, HangSetup } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
+import { hangLoadText } from "@sendtally/features/activities";
 import { setupLabel } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { press } from "../../../lib/press";
@@ -44,7 +45,9 @@ export function SetupPill({ kind, setup, kicker, onChange }: SetupPillProps): Re
         })}
       >
         <Text style={[type.mono, { fontSize: 12.5, color: colors.gunmetal }]}>
-          {setupLabel(kind, setup, model.settings.units)}
+          {kind === "hang"
+            ? `${t("hang.edgeMm", { n: setup.edgeMm })} · ${hangLoadText(setup.loadKg, model.settings.units)}`
+            : setupLabel(kind, setup, model.settings.units)}
         </Text>
         <HangIcon name="edit" color={colors.textSecondary} size={13} strokeWidth={1.8} />
       </Pressable>

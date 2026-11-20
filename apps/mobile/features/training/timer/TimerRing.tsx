@@ -10,7 +10,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
-import { ON_DARK, ON_DARK_MUTED, ON_DARK_TRACK } from "@sendtally/features/workouts";
+import { ON_DARK, ON_DARK_TRACK } from "@sendtally/features/workouts";
 import { type } from "../type";
 import { useAnimatedColor } from "./useAnimatedColor";
 
@@ -31,7 +31,6 @@ export type TimerRingProps = {
   phaseKey: number;
   label: string;
   big: string;
-  hint: string;
   accessibilityLabel: string;
   onPress: () => void;
 };
@@ -47,7 +46,6 @@ export function TimerRing({
   phaseKey,
   label,
   big,
-  hint,
   accessibilityLabel,
   onPress,
 }: TimerRingProps): React.ReactElement {
@@ -107,7 +105,6 @@ export function TimerRing({
           >
             {big}
           </Animated.Text>
-          <Animated.Text style={[type.label, { color: ON_DARK_MUTED }]}>{hint}</Animated.Text>
         </View>
       </Animated.View>
     </Pressable>

@@ -8,12 +8,10 @@ import { Alert, KeyboardAvoidingView, Platform, Text, View } from "react-native"
 import { TextInput } from "../../../components/TextInput";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { defaultExerciseRestS, type SessionItem, type SetDone } from "@sendtally/core/hang";
+import { defaultExerciseRestS, type SessionItem } from "@sendtally/core/hang";
 import {
   activityFromDraft,
   justLogged,
-  previousSets,
-  useActivities,
   kindLabel,
   minutesOf,
   useActivityActions,
@@ -54,6 +52,7 @@ import { AMBER } from "../components/tints";
 import { type } from "../type";
 import { ReadRow } from "./ReadRow";
 import { KindChips } from "./KindChips";
+import { SessionTargetContext } from "../sets/sessionTarget";
 
 export type ActivityFormProps = {
   id: string;
@@ -71,8 +70,10 @@ export type ActivityFormProps = {
   live?: boolean;
   /** Where the review cut a run left open, said in amber under the duration until it is changed. */
   idleEnd?: IdleEnd | null;
-  /** What the workout prescribes, which a set short of its dose reads against. */
+  /** What the workout prescribes this session, which each exercise's head states as its target. */
   planned?: readonly SessionItem[];
+  /** The workout's Target RPE, beside the RPE field. */
+  targetRpe?: number;
   /** A hangboard workout, which saves as a hang session with its setup and no notes or times. */
   hang?: { setup: React.ReactNode; loadKg: number; save: (draft: ActivityDraft) => void };
   /** A mix's fingerboard part, its grips inline in hang mode; it saves with the activity. */
@@ -106,6 +107,7 @@ export function ActivityForm({
   kindSet = false,
   live = false,
   planned = [],
+  targetRpe,
   idleEnd = null,
   hang,
   part,
@@ -200,18 +202,12 @@ export function ActivityForm({
       />
     </SheetSection>
   );
-  const activities = useActivities(api).state;
   const exercises = useExercises(api).state;
   const measureOf = tallyMeasuresOf(
     exercises.status === "ready" ? exercises.data : [],
     draft.kind,
     isGrip
   );
-  // A lift reads against what the last run lifted wherever the workout sets no weight, as the player does.
-  const previous = (exercise: string): SetDone[] =>
-    draft.kind === "strength" && draft.workoutId !== null && activities.status === "ready"
-      ? previousSets(activities.data, draft.workoutId, exercise)
-      : [];
   const durationField = (
     <TimeField
       label={t("common.duration")}
@@ -234,7 +230,7 @@ export function ActivityForm({
               ? t("activities.logWorkout")
               : t("activities.logActivity")
         }
-        cancelLabel={live ? t("hang.discard") : t("common.cancel")}
+        cancelLabel={logged === null ? t("hang.discard") : t("common.cancel")}
         onCancel={live ? discard : () => router.back()}
         onSave={() => void save()}
         saveDisabled={saving}
@@ -320,9 +316,15 @@ export function ActivityForm({
           </>
         )}
 
-        <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
+        <EffortField
+          value={draft.rpe}
+          {...(targetRpe !== undefined && { target: targetRpe })}
+          onChange={(rpe) => update({ rpe })}
+        />
 
-        {!timed && <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />}
+        {draft.workoutId === null && (
+          <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />
+        )}
 
         {part !== undefined && grips !== undefined && (
           <View style={{ gap: 8 }}>
@@ -342,20 +344,21 @@ export function ActivityForm({
         )}
 
         {draft.done.length > 0 && (
-          <DoneDetails
-            done={draft.done}
-            off={draft.off}
-            planned={doses}
-            unit={unit}
-            color={KIND_LOOK[look].ink}
-            hangs={hang !== undefined}
-            previous={previous}
-            laps={(exercise) => measureOf(exercise) === "laps"}
-            setup={hang?.setup}
-            {...(hang !== undefined && { hangLoadKg: hang.loadKg })}
-            onRemoved={(message, undo) => setRemoved({ message, undo })}
-            onChange={(done, off) => update({ done, off })}
-          />
+          <SessionTargetContext.Provider value={targetRpe ?? null}>
+            <DoneDetails
+              done={draft.done}
+              off={draft.off}
+              planned={doses}
+              unit={unit}
+              kind={draft.kind}
+              hangs={hang !== undefined}
+              measure={measureOf}
+              setup={hang?.setup}
+              {...(hang !== undefined && { hangLoadKg: hang.loadKg })}
+              onRemoved={(message, undo) => setRemoved({ message, undo })}
+              onChange={(done, off) => update({ done, off })}
+            />
+          </SessionTargetContext.Provider>
         )}
 
         {hang === undefined && (

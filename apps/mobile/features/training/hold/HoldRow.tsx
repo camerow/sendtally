@@ -1,11 +1,8 @@
 import React from "react";
-import { Text, View } from "react-native";
-import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import { Button } from "../components/Button";
-import { RowFill } from "../components/RowFill";
-import { type } from "../type";
 import { holdRowVM, type Hold } from "@sendtally/features/workouts";
+import { Button } from "../components/Button";
+import { ClockRow } from "./ClockRow";
 
 export type HoldRowProps = {
   hold: Hold;
@@ -31,30 +28,14 @@ export function HoldRow({
 }: HoldRowProps): React.ReactElement {
   const vm = holdRowVM(hold, now);
   return (
-    <View
+    <ClockRow
+      share={vm.share}
       accessibilityLabel={vm.label}
-      style={{
-        minHeight: 48,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
-        paddingRight: 6,
-        borderRadius: 10,
-        overflow: "hidden",
-        backgroundColor: colors.surfaceSoft,
-      }}
+      lead={lead}
+      word={vm.word}
+      clock={vm.clock}
+      of={vm.of}
     >
-      <RowFill share={vm.share} color={colors.fern} opacity={0.16} />
-      {lead ?? <View style={{ width: 12 }} />}
-      <View style={{ flex: 1, flexDirection: "row", alignItems: "baseline", gap: 6 }}>
-        {vm.word !== null && (
-          <Text style={[type.bodyBold, { fontSize: 13, color: colors.gunmetal }]}>{vm.word}</Text>
-        )}
-        <Text style={[type.monoBold, { fontSize: 20, color: colors.gunmetal }]}>{vm.clock}</Text>
-        {vm.of !== null && (
-          <Text style={[type.mono, { fontSize: 12.5, color: colors.textSecondary }]}>{vm.of}</Text>
-        )}
-      </View>
       <Button
         label={vm.paused ? t("hang.resume") : t("hang.pause")}
         onPress={vm.paused ? onResume : onPause}
@@ -62,6 +43,6 @@ export function HoldRow({
         height={40}
       />
       <Button label={t("common.done")} onPress={onDone} variant="link" height={40} />
-    </View>
+    </ClockRow>
   );
 }

@@ -22,6 +22,9 @@ const DAY_MAX = 24 * 3600 - 1;
 
 const padded = (digits: string): string => digits.padStart(TIME_DIGITS, "0").slice(-TIME_DIGITS);
 
+/** A time capped under an hour is typed and read as MM:SS: four digits, no hours pair. */
+const underHour = (limits: TimeLimits): boolean => limits.max !== undefined && limits.max < 3600;
+
 /** The seconds the digits stand for as typed, overflow included: "90" is 90 s. */
 export function entrySeconds({ digits }: TimeEntry): number {
   const p = padded(digits);
@@ -52,7 +55,8 @@ export function timeEntry(
     case "digit": {
       const base = state.fresh ? "" : state.digits;
       const next = (base + action.digit).replace(/^0+/, "") || "0";
-      return { digits: next.length > TIME_DIGITS ? state.digits : next, fresh: false };
+      const most = underHour(limits) ? 4 : TIME_DIGITS;
+      return { digits: next.length > most ? state.digits : next, fresh: false };
     }
     case "back":
       return { digits: state.digits.slice(0, -1) || "0", fresh: false };
@@ -70,10 +74,12 @@ export function timeEntry(
   }
 }
 
-/** "HH:MM:SS" split where the dimmed leading zeros end: 7 s is ["00:00:0", "7"]. */
-export function timeText(state: TimeEntry): [zeros: string, rest: string] {
+/** "HH:MM:SS", or "MM:SS" under an hour, split where the dimmed leading zeros end: 7 s is ["00:00:0", "7"]. */
+export function timeText(state: TimeEntry, limits: TimeLimits = {}): [zeros: string, rest: string] {
   const p = padded(state.digits);
-  const text = `${p.slice(0, 2)}:${p.slice(2, 4)}:${p.slice(4, 6)}`;
+  const text = underHour(limits)
+    ? `${p.slice(2, 4)}:${p.slice(4, 6)}`
+    : `${p.slice(0, 2)}:${p.slice(2, 4)}:${p.slice(4, 6)}`;
   const first = text.search(/[1-9]/);
   const cut = first === -1 ? text.length - 1 : first;
   return [text.slice(0, cut), text.slice(cut)];

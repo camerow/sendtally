@@ -94,4 +94,8 @@ export const common = {
   "common.weekCount_one": "{count} week",
   "common.weekCount_other": "{count} weeks",
   "common.clearAll": "Clear all",
+  "common.targetRpe": "Target RPE {n}/10",
+  "common.targetRpeLabel": "Target RPE",
+  "common.history": "History",
+  "common.historyOf": "History of {name}",
 } as const;

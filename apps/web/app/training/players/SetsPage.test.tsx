@@ -326,7 +326,7 @@ describe("Sets player", () => {
         { exercise: "Row", dose: { sets: 1, reps: 8 } },
       ],
     });
-    expect(texts(".player-card-meta")).toEqual(["Target RPE 8"]);
+    expect(texts(".player-card-meta")).toEqual(["Target RPE 8/10"]);
   });
 
   it("asks a ticked set's RPE only where the exercise sets a target, its target dim", () => {
@@ -383,15 +383,12 @@ describe("Sets player", () => {
     act(() => button("Skip").click());
     expect(byLabel("Rest, 1:00 left")).toBeNull();
     act(() => (byLabel("Back squat, set 2") as HTMLInputElement).click());
-    const folded = "Open Back squat, 2 × 5 · 100 kg";
+    const folded = "Open Back squat, 2 sets × 5 reps · 100 kg";
     expect(byLabel(folded)).not.toBeNull();
     expect(container.querySelector(".player-target")?.textContent).toBe(
       "Exercise 2 of 3 · Target effort 8"
     );
-    expect(container.querySelector(".player-row-next [aria-hidden]")?.textContent).toBe("Row");
-    expect(container.querySelector(".player-row-next .visually-hidden")?.textContent).toBe(
-      "Next: Row"
-    );
+    expect(container.querySelector(".player-row-next")).toBeNull();
     act(() => (byLabel(folded) as HTMLButtonElement).click());
     expect(byLabel("Back squat, set 1")).not.toBeNull();
     act(() => (byLabel("Fold Back squat") as HTMLButtonElement).click());
@@ -430,7 +427,7 @@ describe("Sets player", () => {
     );
     advance(21_000);
     expect(container.querySelector(".player-row--hold")).toBeNull();
-    expect(byLabel("Open Plank, 1 × 30s")).not.toBeNull();
+    expect(byLabel("Open Plank, 1 set × 0:30")).not.toBeNull();
   });
 
   describe("a superset", () => {

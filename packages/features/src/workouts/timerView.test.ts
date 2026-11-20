@@ -16,7 +16,7 @@ import { intervalsView } from "./intervalsView";
 import { progressMove } from "./progressMove";
 import type { PlannedRun } from "./usePlannedRun";
 import { phaseCue, ticks } from "./timerCues";
-import { forToday, hangRunDone, timerView } from "./timerView";
+import { changeLoad, forToday, hangRunDone, loadNow, startLoads, timerView } from "./timerView";
 
 const units = { hangS: "s", restS: "s", setRestS: "s" } as const;
 const repeaters: HangWorkout = {
@@ -148,6 +148,31 @@ describe("hangRunDone", () => {
     expect(done.off).toEqual(["0:0", "0:1"]);
     expect(done.setups).toEqual([setup]);
     expect(done.startedAt).toBe(at0);
+  });
+});
+
+describe("set loads", () => {
+  it("changes the set under way and those to come, from a hang, a rest between hangs or a set rest, and each set logs the load it hung at", () => {
+    const start = startLoads(planned, [{ edgeMm: 20, loadKg: 5 }]);
+    expect(start).toEqual([[5, 5]]);
+    expect(loadNow(start, hanging)).toBe(5);
+    const between = skip(hanging, at0 + 6_000);
+    expect(between.phases[between.index]).toMatchObject({ kind: "rest", set: 1 });
+    expect(changeLoad(start, between, 6)).toEqual([[6, 6]]);
+    const heavier = changeLoad(start, hanging, 6);
+    expect(heavier).toEqual([[6, 6]]);
+    let resting = hanging;
+    while (resting.phases[resting.index]?.kind !== "setrest") resting = skip(resting, at0 + 10_000);
+    const secondOnly = changeLoad(heavier, resting, 7);
+    expect(secondOnly).toEqual([[6, 7]]);
+    expect(loadNow(secondOnly, resting)).toBe(7);
+    let run = resting;
+    while (run.finished === null) run = skip(run, at0 + 20_000);
+    const done = hangRunDone(run, planned, ["half-crimp"], [{ edgeMm: 20, loadKg: 5 }], {
+      loads: secondOnly,
+    });
+    expect(done.done[0]?.sets.map((s) => s.weightKg)).toEqual([6, 7]);
+    expect(done.setups).toEqual([{ edgeMm: 20, loadKg: 7 }]);
   });
 });
 

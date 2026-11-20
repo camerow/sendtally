@@ -8,6 +8,7 @@ export {
   doseSummary,
   exerciseTarget,
   exerciseTargetLine,
+  targetText,
   withTarget,
   draftOf,
   exerciseName,
@@ -20,7 +21,7 @@ export {
   workoutMinutes,
   workoutUsage,
 } from "./library";
-export type { LibrarySearch } from "./library";
+export type { LibrarySearch, TargetKind, TargetText } from "./library";
 export type {
   LibraryShelf,
   LibrarySource,

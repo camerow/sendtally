@@ -1,57 +1,61 @@
+import { router } from "expo-router";
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { clock, type HangWorkout } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { timeOnEdge, type HangWorkout } from "@sendtally/core/hang";
-import { humanDuration, protocolSummary } from "@sendtally/features/hang";
+import { hangLoadText } from "@sendtally/features/activities";
+import { humanDuration } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { durationLabel } from "@sendtally/features/sessions";
-import { Label } from "../components/Label";
 import { PhaseBar } from "../components/PhaseBar";
 import { StatGrid } from "../components/StatGrid";
-import { type } from "../type";
+import { useHangData } from "../data/HangDataContext";
+import { ExerciseBlock } from "../sets/ExerciseBlock";
+import { ExerciseHead } from "../sets/ExerciseHead";
 import { Swatch } from "./Swatch";
 
-export type ProtocolPanelProps = {
-  workout: HangWorkout;
-  /** The workout's planned length, as its cards and meta line read it. */
-  minutes: number | null;
-};
+export type ProtocolPanelProps = { workout: HangWorkout; gripId: string };
 
-/** The phase bar with its legend, the summary line, and the headline numbers. */
-export function ProtocolPanel({ workout, minutes }: ProtocolPanelProps): React.ReactElement {
+/** A hangboard workout's grip on its page: its session as labelled numbers, then the phase bar. */
+export function ProtocolPanel({ workout, gripId }: ProtocolPanelProps): React.ReactElement {
+  const { model } = useHangData();
   const hang = workout.kind === "hang";
+  const setup = model.setup(workout, gripId);
+  const stats = [
+    { label: t("hang.statSets"), value: String(workout.sets) },
+    hang
+      ? { label: t("hang.statHangsASet"), value: String(workout.reps) }
+      : { label: t("plan.colReps"), value: String(workout.reps) },
+    ...(hang
+      ? [
+          workout.reps > 1
+            ? {
+                label: t("hang.statOnOff"),
+                value: `${humanDuration(workout.hangS)} / ${humanDuration(workout.restS)}`,
+              }
+            : { label: t("hang.statOn"), value: humanDuration(workout.hangS) },
+        ]
+      : []),
+    { label: t("plan.colSetRest"), value: clock(workout.setRestS) },
+    ...(hang ? [{ label: t("plan.colEdge"), value: t("hang.edgeMm", { n: setup.edgeMm }) }] : []),
+    { label: t("hang.load"), value: hangLoadText(setup.loadKg, model.settings.units) },
+  ];
   return (
-    <>
-      <View style={{ gap: 10 }}>
-        <View
-          style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
-        >
-          <Label color={colors.gunmetal}>{t("hang.protocol")}</Label>
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <Swatch color={colors.azure} label={hang ? t("hang.kindHang") : t("hang.lifts")} />
-            <Swatch color={colors.fern} label={t("hang.rest")} short />
-          </View>
-        </View>
-        <View style={{ flexDirection: "row" }}>
-          <PhaseBar protocol={workout} height={14} />
-        </View>
-        <Text style={[type.mono, { fontSize: 13, color: colors.gunmetal }]}>
-          {protocolSummary(workout, workout.timeUnits)}
-        </Text>
+    <ExerciseBlock
+      head={
+        <ExerciseHead
+          name={model.gripName(gripId)}
+          onHistory={() => router.push({ pathname: "/grip/[id]", params: { id: gripId } })}
+        />
+      }
+    >
+      <StatGrid stats={stats} valueSize={16} />
+      <View style={{ flexDirection: "row", paddingTop: 12 }}>
+        <PhaseBar protocol={workout} height={14} />
       </View>
-      <StatGrid
-        columns={3}
-        stats={[
-          { label: t("hang.statDuration"), value: minutes === null ? "-" : durationLabel(minutes) },
-          hang
-            ? { label: t("hang.statOnEdge"), value: humanDuration(timeOnEdge(workout)) }
-            : { label: t("hang.statTotalLifts"), value: String(workout.reps * workout.sets) },
-          {
-            label: t("hang.statSets"),
-            value: hang ? `${workout.sets} × ${workout.reps}` : String(workout.sets),
-          },
-        ]}
-      />
-    </>
+      <View style={{ flexDirection: "row", gap: 12, paddingTop: 6 }}>
+        <Swatch color={colors.azure} label={hang ? t("hang.kindHang") : t("hang.lifts")} />
+        <Swatch color={colors.fern} label={t("hang.rest")} short />
+      </View>
+    </ExerciseBlock>
   );
 }

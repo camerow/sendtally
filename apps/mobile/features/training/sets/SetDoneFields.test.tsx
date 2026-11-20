@@ -63,4 +63,22 @@ describe("SetDoneFields", () => {
         );
     }
   );
+
+  it("records a lone hang's time held, opening empty when it did not hold", async () => {
+    const onChange = jest.fn();
+    await render(
+      <SetDoneFields
+        set={{ reps: 0, onS: 10, weightKg: 5 }}
+        hangs
+        oneHang
+        unit="kg"
+        label="Set 2"
+        onChange={onChange}
+      />
+    );
+    const held = screen.getByLabelText("Set 2 · Held");
+    expect(held.props.accessibilityValue).toEqual({ text: "–" });
+    await press("Set 2 · Held", "7", "Done");
+    expect(onChange).toHaveBeenLastCalledWith({ reps: 1, onS: 7, weightKg: 5 });
+  });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, within } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 import React from "react";
@@ -9,7 +9,6 @@ import { activityFromDraft, justLogged, newActivityDraft } from "@sendtally/feat
 import { readingOrder } from "../data/renderWithHang";
 import { ActivityForm } from "./ActivityForm";
 
-let mockPrevious: Partial<ActivityRecord>[] = [];
 const mockActions = {
   saveActivity: jest.fn(async (): Promise<boolean> => true),
   deleteActivity: jest.fn(async (): Promise<boolean> => true),
@@ -52,7 +51,6 @@ jest.mock("@sendtally/features/activities", () => {
   return {
     ...actual,
     useActivityActions: () => mockActions,
-    useActivities: () => ({ state: { status: "ready", data: mockPrevious } }),
     useWeightUnit: () => "kg",
   };
 });
@@ -66,13 +64,14 @@ const logged = (post: Partial<ActivityRecord> = {}): ActivityRecord => ({
   ...post,
 });
 
-/** Swipes a set away, as a screen reader's remove action does. */
-async function removeSetRow(n: number, of: number): Promise<void> {
+/** Selects the nth set row by its number, then presses the Remove that takes the number's place. */
+async function removeSetRow(n: number, of: number, position = n): Promise<void> {
   const rows = screen.getAllByTestId("review-set");
   expect(rows).toHaveLength(of);
   const row = rows[n - 1];
   if (row === undefined) throw new Error(`no set row ${n}`);
-  await fireEvent(row, "accessibilityAction", { nativeEvent: { actionName: "remove" } });
+  await fireEvent.press(within(row).getByText(String(position)));
+  await fireEvent.press(screen.getByLabelText(`Remove set ${position}`));
 }
 
 async function keys(...pressed: string[]): Promise<void> {
@@ -129,7 +128,7 @@ describe("Log activity", () => {
 
   it("reads a timed run's date, start and length, opening one in place to change it", async () => {
     const initial = newActivityDraft(
-      { kind: "mobility", startTime: "07:00", minutes: "4" },
+      { kind: "mobility", workoutId: "w1", startTime: "07:00", minutes: "4" },
       "2026-10-22"
     );
     await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet />);
@@ -163,8 +162,7 @@ describe("Log activity", () => {
     expect(screen.getByRole("header", { name: "Strength" })).toBeTruthy();
     expect(screen.queryByTestId("activity-title")).toBeNull();
     expect(screen.getByText("Back squat")).toBeTruthy();
-    expect(screen.getByText("2 sets")).toBeTruthy();
-    expect(screen.getAllByText("5 × 100")).toHaveLength(2);
+    expect(screen.getByText("2 sets × 5 reps · 100 kg")).toBeTruthy();
     await fireEvent.press(screen.getByText("Save"));
     expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -185,28 +183,6 @@ describe("Log activity", () => {
     );
   });
 
-  it("reads a lift's target against what the last run lifted when the workout sets no weight", async () => {
-    mockPrevious = [
-      {
-        workoutId: "w1",
-        done: [{ item: 0, exercise: "Back squat", sets: [{ reps: 5, weightKg: 80 }] }],
-      },
-    ];
-    const initial = newActivityDraft({ kind: "strength", workoutId: "w1" }, "2026-10-22", [
-      { exercise: "Back squat", dose: { sets: 1, reps: 5 } },
-    ]);
-    await render(
-      <ActivityForm
-        id="a1"
-        initial={initial}
-        logged={null}
-        planned={[{ exercise: "Back squat", dose: { sets: 1, reps: 5 } }]}
-      />
-    );
-    mockPrevious = [];
-    expect(screen.getByText("5 × 80")).toBeTruthy();
-  });
-
   it("edits the sets of one exercise at a time in place, and saves them", async () => {
     const initial = {
       ...newActivityDraft({ kind: "strength", workoutId: "w1", title: "Lower body" }, "2026-10-22"),
@@ -219,7 +195,7 @@ describe("Log activity", () => {
     expect(screen.getByRole("header", { name: "Lower body" })).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Add a set to Back squat"));
     await keys("Back squat, set 2 · Reps", "4", "Done");
-    await removeSetRow(3, 4);
+    await removeSetRow(3, 4, 1);
     await fireEvent.press(screen.getByText("Save"));
 
     expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
@@ -310,7 +286,7 @@ describe("Log activity", () => {
         ]}
       />
     );
-    expect(screen.getByText("6 of 8 reps")).toBeTruthy();
+    expect(screen.getByText("3 sets × 8 reps")).toBeTruthy();
   });
 
   it("says under the measured duration that a run left open ended at its last set", async () => {
@@ -355,7 +331,7 @@ describe("Log activity", () => {
     ).toBeNull();
   });
 
-  it("reads a circuit's sets as laps of moves", async () => {
+  it("states a circuit's target as laps of moves, its sets as laps", async () => {
     const done = [{ item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 8 }] }];
     const initial = newActivityDraft(
       { kind: "climbing", workoutId: "w4", done: JSON.stringify(done) },
@@ -372,11 +348,11 @@ describe("Log activity", () => {
         planned={[{ exercise: "Circuit laps", dose: { sets: 3, reps: 40 } }]}
       />
     );
-    expect(screen.getByText("2 laps")).toBeTruthy();
-    expect(screen.getByText("8 of 40 moves")).toBeTruthy();
+    expect(screen.getByText("3 laps × 40 moves")).toBeTruthy();
+    expect(screen.queryByText("8 of 40 moves")).toBeNull();
     expect(screen.getByText("Lap")).toBeTruthy();
     expect(screen.getByText("Add lap")).toBeTruthy();
-    expect(screen.getByText("Remove lap")).toBeTruthy();
+    expect(screen.queryByText("Remove lap")).toBeNull();
     expect(screen.queryByText("Add set")).toBeNull();
   });
 
@@ -392,16 +368,13 @@ describe("Log activity", () => {
       "2026-11-18"
     );
     await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet live />);
-    expect(readingOrder("Superset · 2 rounds", "Pull-ups", "Push-ups", "Plank")).toEqual([
-      "Superset · 2 rounds",
-      "Pull-ups",
-      "Push-ups",
-      "Plank",
-    ]);
+    expect([
+      ...new Set(readingOrder("Superset · 2 rounds", "Pull-ups", "Push-ups", "Plank")),
+    ]).toEqual(["Superset · 2 rounds", "Pull-ups", "Push-ups", "Plank"]);
     expect(screen.getAllByText("Superset · 2 rounds")).toHaveLength(1);
   });
 
-  it("puts each checklist above the Sets heading, the exercises under it", async () => {
+  it("puts each checklist above the exercises, with no Sets heading", async () => {
     const done = [
       { item: 0, exercise: "Checklist", sets: [], checklist: { lines: ["Jog"], checked: [0] } },
       { item: 1, exercise: "Back squat", sets: [{ reps: 5 }] },
@@ -412,15 +385,15 @@ describe("Log activity", () => {
       "2026-11-18"
     );
     await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet live />);
-    expect(readingOrder("Checklist · 1 of 1", "Checklist · 0 of 1", "Sets", "Back squat")).toEqual([
-      "Checklist · 1 of 1",
-      "Checklist · 0 of 1",
-      "Sets",
+    expect([...new Set(readingOrder("Jog", "Stretch", "Back squat"))]).toEqual([
+      "Jog",
+      "Stretch",
       "Back squat",
     ]);
+    expect(screen.queryByText("Sets")).toBeNull();
   });
 
-  it("reviews a checklist as lines ticked of its count, a tap ticking one", async () => {
+  it("reviews a checklist as its lines with a tick each, no count", async () => {
     const lines = ["Jog 5 min", "Arm circles x20", "Easy boulders x10"];
     const done = [{ item: 0, exercise: "Checklist", sets: [], checklist: { lines, checked: [0] } }];
     const initial = newActivityDraft(
@@ -428,13 +401,16 @@ describe("Log activity", () => {
       "2026-11-18"
     );
     await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet live />);
-    expect(screen.getByText("Checklist · 1 of 3")).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText("Easy boulders x10"));
-    expect(screen.getByText("Checklist · 2 of 3")).toBeTruthy();
+    expect(screen.getByText("Checklist")).toBeTruthy();
+    expect(screen.queryByText("Checklist · 1 of 3")).toBeNull();
+    const line = screen.getByRole("checkbox", { name: "Easy boulders x10" });
+    expect(line).not.toBeChecked();
+    await fireEvent.press(line);
+    expect(screen.getByRole("checkbox", { name: "Easy boulders x10" })).toBeChecked();
     expect(screen.queryByText("Add set")).toBeNull();
   });
 
-  it("says an exercise with nothing ticked was not started, its planned sets there to tick", async () => {
+  it("keeps an exercise with nothing ticked, its planned sets there to tick", async () => {
     const done = [{ item: 0, exercise: "Volume climbing", sets: [{ onS: 600 }, { onS: 600 }] }];
     const initial = newActivityDraft(
       { kind: "climbing", workoutId: "w6", done: JSON.stringify(done), off: '["0:0","0:1"]' },
@@ -451,11 +427,12 @@ describe("Log activity", () => {
         planned={[{ exercise: "Volume climbing", dose: { sets: 2, onS: 600 } }]}
       />
     );
-    expect(screen.getByText("Not started")).toBeTruthy();
-    expect(screen.getAllByText("10:00")).toHaveLength(2);
+    expect(screen.queryByText("Not started")).toBeNull();
+    expect(screen.getByText("2 sets")).toBeTruthy();
+    expect(screen.getAllByRole("checkbox", { checked: false })).toHaveLength(2);
   });
 
-  it("reviews a run: a set short of its dose in amber, and Discard ends the run once confirmed", async () => {
+  it("reviews a run: its target once in the head, no short line, and Discard ends the run once confirmed", async () => {
     jest.clearAllMocks();
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     const done = [
@@ -478,7 +455,9 @@ describe("Log activity", () => {
     );
     expect(screen.getAllByText("Strength").length).toBeGreaterThan(0);
     expect(screen.queryByText(/^From the timer/)).toBeNull();
-    expect(screen.getByText("7 of 10 reps")).toBeTruthy();
+    expect(screen.getByText("3 sets × 10 reps")).toBeTruthy();
+    expect(screen.queryByText("7 of 10 reps")).toBeNull();
+    expect(screen.queryByText("Remove last set")).toBeNull();
     await fireEvent.press(screen.getByText("Discard"));
     expect(router.back).not.toHaveBeenCalled();
     await act(async () =>
@@ -490,6 +469,69 @@ describe("Log activity", () => {
     );
     expect(router.back).toHaveBeenCalled();
     expect(mockActions.saveActivity).not.toHaveBeenCalled();
+    alert.mockRestore();
+  });
+
+  it("asks a set RPE of an exercise with a Target RPE or a rating already, and shows the session's Target RPE by the RPE field", async () => {
+    const done = [
+      { item: 0, exercise: "Pull-ups", sets: [{ reps: 5 }], targetRpe: 8 },
+      { item: 1, exercise: "Dips", sets: [{ reps: 8 }] },
+      { item: 2, exercise: "Rows", sets: [{ reps: 8, rpe: 7 }] },
+    ];
+    const initial = newActivityDraft(
+      { kind: "strength", workoutId: "w7", done: JSON.stringify(done), off: "[]" },
+      "2026-11-19"
+    );
+    await render(
+      <ActivityForm id="a1" initial={initial} logged={null} timed kindSet live targetRpe={7} />
+    );
+    expect(screen.getByText("Target RPE 7/10")).toBeTruthy();
+    expect(screen.getByLabelText("Pull-ups, set 1 · RPE")).toBeTruthy();
+    expect(screen.queryByLabelText("Dips, set 1 · RPE")).toBeNull();
+    expect(screen.getByLabelText("Rows, set 1 · RPE")).toBeTruthy();
+  });
+
+  it("selects a set by pressing its row, and a press off the rows unselects it", async () => {
+    const done = [{ item: 0, exercise: "Dips", sets: [{ reps: 8 }, { reps: 8 }] }];
+    const initial = newActivityDraft(
+      { kind: "strength", workoutId: "w8", done: JSON.stringify(done), off: "[]" },
+      "2026-11-19"
+    );
+    await render(<ActivityForm id="a1" initial={initial} logged={null} timed kindSet live />);
+    const row = screen.getAllByTestId("review-set")[0];
+    if (row === undefined) throw new Error("no set row");
+    await fireEvent.press(within(row).getByText("1"));
+    expect(screen.getByLabelText("Remove set 1")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("review-body"));
+    expect(screen.queryByLabelText("Remove set 1")).toBeNull();
+  });
+
+  it("asks Focus only of an activity with no workout, and saves Log it with the workout's focus", async () => {
+    await render(
+      <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={null} />
+    );
+    expect(screen.getByText("Focus")).toBeTruthy();
+    const initial = newActivityDraft(
+      { kind: "strength", workoutId: "w3", focus: "recovery" },
+      "2026-10-22"
+    );
+    await render(<ActivityForm id="a1" initial={initial} logged={null} kindSet />);
+    expect(screen.queryByText("Focus")).toBeNull();
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
+      expect.objectContaining({ focus: "recovery" })
+    );
+  });
+
+  it("leaves Log it at once on Discard, with nothing to confirm", async () => {
+    jest.clearAllMocks();
+    const alert = jest.spyOn(Alert, "alert");
+    const initial = newActivityDraft({ kind: "strength", workoutId: "w3" }, "2026-10-22");
+    await render(<ActivityForm id="a1" initial={initial} logged={null} kindSet />);
+    expect(screen.queryByText("Cancel")).toBeNull();
+    await fireEvent.press(screen.getByText("Discard"));
+    expect(alert).not.toHaveBeenCalled();
+    expect(router.back).toHaveBeenCalled();
     alert.mockRestore();
   });
 

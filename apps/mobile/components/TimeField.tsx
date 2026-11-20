@@ -6,8 +6,8 @@ import type { FieldSlot } from "./useFieldOrder";
 export type TimeFieldProps = FieldSlot & {
   label: string;
   compact?: boolean;
-  /** Amber: less than was asked. */
-  short?: boolean;
+  /** A compact box filling its column. */
+  fill?: boolean;
   accessibilityLabel?: string;
   /** Seconds. */
   value: number;
@@ -35,7 +35,7 @@ export function TimeField({
       text={
         placeholder !== undefined && value === 0
           ? [placeholder, ""]
-          : timeText(openTime(value, { min, max }))
+          : timeText(openTime(value, { min, max }), { min, max })
       }
     />
   );

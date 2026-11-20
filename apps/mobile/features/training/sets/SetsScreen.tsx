@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
 import { restAfterItem } from "@sendtally/core/hang";
-import { Alert, KeyboardAvoidingView, Platform, Text, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import {
@@ -25,7 +25,7 @@ import {
   type WorkoutRun,
   checklistLine,
   runItems,
-  supersetName,
+  supersetMembers,
   supersetRoundsTitle,
   type RunGroup,
 } from "@sendtally/features/workouts";
@@ -51,16 +51,19 @@ import { type } from "../type";
 import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
 import type { DetailMenuRow } from "../components/types";
 import { ChecklistCard } from "./ChecklistCard";
+import { openExerciseHistory } from "../exercises/openExerciseHistory";
 import { SupersetCard } from "./SupersetCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
 import { SET_COLUMNS } from "./setColumns";
 import { SetsCard } from "./SetsCard";
 import { FingersCard } from "./FingersCard";
+import { SessionTargetContext } from "./sessionTarget";
+import { useRunWorkout } from "../library/useLibrary";
 
 /**
  * A workout as a set table on a clock from Start: tick each set as it is done, rest in line
- * after it, then log what was done. A climbing exercise's sets take their climbs in the row, a
- * grade then Attempt or Sent, on the workout's tally; its climbs come back as its sets.
+ * after it, then log what was done. A climbing exercise's sets take a row per climb on the
+ * workout's tally; its climbs come back as its sets.
  */
 export function SetsScreen({
   run,
@@ -80,6 +83,7 @@ export function SetsScreen({
   const grips = useGrips(api);
   const [removed, setRemoved] = React.useState<{ message: string; undo: () => void } | null>(null);
   const [picking, setPicking] = React.useState(false);
+  const runWorkout = useRunWorkout(run.workoutId);
   const player = useSetsPlayer({
     run,
     store: liveRun,
@@ -89,7 +93,7 @@ export function SetsScreen({
     isGrip: grips.isGrip,
   });
   const { part } = player;
-  const { shown, ticked, current, rest, hold, previous, nameOf, items, order } = player;
+  const { shown, ticked, rest, hold, nameOf, items, order } = player;
   const climbs = useWorkoutTally(tally, rest);
   const [editing, setEditing] = React.useState<string | null>(null);
   const [pickingGym, setPickingGym] = React.useState(false);
@@ -108,7 +112,9 @@ export function SetsScreen({
         hold={hold.hold}
         now={hold.now}
         lead={
-          <Text style={[type.monoBold, SET_COLUMNS.set, { fontSize: 14, color: colors.gunmetal }]}>
+          <Text
+            style={[type.mono, SET_COLUMNS.position, { fontSize: 12, color: colors.textMuted }]}
+          >
             {formatNumber(at.set + 1)}
           </Text>
         }
@@ -123,7 +129,12 @@ export function SetsScreen({
     const targetS = player.holdTarget(at);
     return (
       targetS !== null && (
-        <HoldButton name={nameOf(at.item)} targetS={targetS} onPress={() => player.startHold(at)} />
+        <HoldButton
+          name={nameOf(at.item)}
+          targetS={targetS}
+          disabled={hold.hold !== null}
+          onPress={() => player.startHold(at)}
+        />
       )
     );
   };
@@ -232,222 +243,241 @@ export function SetsScreen({
         <View style={{ flex: 1 }}>
           <KeypadScrollView
             onKeypadChange={setKeypad}
-            contentContainerStyle={{ gap: 10, paddingHorizontal: 18, paddingBottom: 24 }}
+            contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24 }}
           >
-            <PlayerHeader
-              kind={run.kind}
-              title={run.title}
-              workoutId={run.workoutId}
-              startedAt={player.startedAt}
-              position={player.position}
-              bare={run.items.length === 0}
-              gym={
-                climbing ? { name: climbs.gym?.name, onPick: () => setPickingGym(true) } : undefined
-              }
-            />
-            {order.map((i, at) => {
-              const item = items[i];
-              const d = shown.find((x) => x.item === i);
-              if (item === undefined || d === undefined) return null;
-              if (part !== null && part.places.includes(i))
-                return (
-                  i === part.places[0] && (
-                    <React.Fragment key={i}>
-                      <FingersCard
-                        part={part}
-                        unit={unit}
-                        gripName={grips.gripName}
-                        onStart={() =>
-                          router.push({
-                            pathname: "/workout/timer",
-                            params: { workoutId: run.workoutId, gripId: item.exercise, part: "1" },
-                          })
-                        }
-                        onRemoved={(message, undo) => setRemoved({ message, undo })}
-                      />
-                      {at < order.length - 1 && restBetween(i)}
-                    </React.Fragment>
-                  )
-                );
-              const g = player.groups.find((x) => x.members.includes(i));
-              if (g !== undefined) {
-                if (g.members[0] !== i) return null;
-                const last = g.members[g.members.length - 1] ?? i;
-                const names = g.members.map((m) => nameOf(m));
-                const allDone = g.members.every((m) =>
-                  (shown.find((x) => x.item === m)?.sets ?? []).every((_, set) =>
-                    ticked.has(setKey({ item: m, set }))
-                  )
-                );
-                return (
-                  <React.Fragment key={i}>
-                    {g.members.every((m) => player.folded(m)) ? (
-                      <FoldedSetsCard
-                        name={supersetName(names)}
-                        line={supersetRoundsTitle(
-                          Math.max(...g.members.map((m) => player.live[m]?.dose.sets ?? 0))
+            <SessionTargetContext.Provider value={runWorkout?.targetRpe ?? null}>
+              <Pressable
+                accessible={false}
+                testID="run-body"
+                onPress={() => {
+                  if (player.selected !== null) player.select(player.selected);
+                }}
+                style={{ gap: 10 }}
+              >
+                <PlayerHeader
+                  kind={run.kind}
+                  title={run.title}
+                  workoutId={run.workoutId}
+                  startedAt={player.startedAt}
+                  position={player.position}
+                  bare={run.items.length === 0}
+                  gym={
+                    climbing
+                      ? { name: climbs.gym?.name, onPick: () => setPickingGym(true) }
+                      : undefined
+                  }
+                />
+                {order.map((i, at) => {
+                  const item = items[i];
+                  const d = shown.find((x) => x.item === i);
+                  if (item === undefined || d === undefined) return null;
+                  if (part !== null && part.places.includes(i))
+                    return (
+                      i === part.places[0] && (
+                        <React.Fragment key={i}>
+                          <FingersCard
+                            part={part}
+                            unit={unit}
+                            gripName={grips.gripName}
+                            onStart={() =>
+                              router.push({
+                                pathname: "/workout/timer",
+                                params: {
+                                  workoutId: run.workoutId,
+                                  gripId: item.exercise,
+                                  part: "1",
+                                },
+                              })
+                            }
+                            onRemoved={(message, undo) => setRemoved({ message, undo })}
+                          />
+                          {at < order.length - 1 && restBetween(i)}
+                        </React.Fragment>
+                      )
+                    );
+                  const g = player.groups.find((x) => x.members.includes(i));
+                  if (g !== undefined) {
+                    if (g.members[0] !== i) return null;
+                    const last = g.members[g.members.length - 1] ?? i;
+                    const names = g.members.map((m) => nameOf(m));
+                    const allDone = g.members.every((m) =>
+                      (shown.find((x) => x.item === m)?.sets ?? []).every((_, set) =>
+                        ticked.has(setKey({ item: m, set }))
+                      )
+                    );
+                    return (
+                      <React.Fragment key={i}>
+                        {g.members.every((m) => player.folded(m)) ? (
+                          <FoldedSetsCard
+                            name={supersetMembers(names)}
+                            line={supersetRoundsTitle(
+                              Math.max(...g.members.map((m) => player.live[m]?.dose.sets ?? 0))
+                            )}
+                            done={allDone}
+                            onOpen={() => g.members.forEach((m) => player.open(m))}
+                          />
+                        ) : (
+                          <SupersetCard
+                            group={g}
+                            items={player.live}
+                            done={shown}
+                            lifting={player.lifting}
+                            ticked={ticked}
+                            selected={player.selected}
+                            unit={unit}
+                            onChange={(a, value) => player.change(a.item, a.set, value)}
+                            onToggle={player.toggle}
+                            holdRow={holdRow}
+                            go={go}
+                            restUnder={(a) => restAt(setKey(a))}
+                            onSelect={player.select}
+                            onRemoveSet={player.removeSet}
+                            onAddRound={() => player.addSet(i)}
+                            onFold={() => g.members.forEach((m) => player.fold(m))}
+                            menu={groupMenu(g)}
+                            onHistory={(m) => openExerciseHistory(mine, items[m]?.exercise ?? "")}
+                          />
                         )}
-                        done={allDone}
-                        onOpen={() => g.members.forEach((m) => player.open(m))}
-                      />
-                    ) : (
-                      <SupersetCard
-                        group={g}
-                        items={player.live}
-                        done={shown}
-                        target={(set) => player.target(set)}
-                        lifting={player.lifting}
-                        ticked={ticked}
-                        current={current}
-                        unit={unit}
-                        onChange={(a, value) => player.change(a.item, a.set, value)}
-                        onToggle={player.toggle}
-                        holdRow={holdRow}
-                        go={go}
-                        restUnder={(a) => restAt(setKey(a))}
-                        onFocus={player.focus}
-                        onRemoveSet={player.removeSet}
-                        onAddRound={() => player.addSet(i)}
-                        onFold={() => g.members.forEach((m) => player.fold(m))}
-                        menu={groupMenu(g)}
-                      />
-                    )}
-                    {order.indexOf(last) < order.length - 1 && restBetween(last)}
-                  </React.Fragment>
-                );
-              }
-              const climbItem = player.climbing(i);
-              const skipped = player.skipped(i);
-              const between = at < order.length - 1 && restBetween(i);
-              if (climbItem !== null) {
-                const about = exerciseAbout(mine, item.exercise, nameOf(i));
-                const card = player.folded(i) ? (
-                  <FoldedSetsCard
-                    name={nameOf(i)}
-                    line={
-                      skipped
-                        ? t("workouts.skippedTapToDo")
-                        : (climbItem.logged ?? climbingDoseLine(item.dose, climbItem.measure))
-                    }
-                    done={!skipped && climbItem.logged !== null}
-                    onOpen={() => player.open(i)}
-                  />
-                ) : climbItem.measure === "laps" ? (
-                  <LapsCard
-                    item={i}
-                    at={item}
-                    logged={player.climbedSets(i)}
-                    planned={player.lapsPlanned(i)}
-                    draft={draft}
-                    live={tally}
-                    rest={rest}
-                    now={climbs.now}
-                    about={about}
-                    onFold={() => player.fold(i)}
-                    menu={menu(i)}
-                    onLapRemoved={(lap) => setLapRemoved({ item: i, name: nameOf(i), lap })}
-                  />
-                ) : (
-                  <ClimbCard
-                    item={item}
-                    plan={player.climbPlan(i)}
-                    rows={climbRows(draft, i, player.climbPlan(i), climbs.now)}
-                    tally={player.climbAt === i ? climbs : null}
-                    restUnder={(set) => restAt(setKey({ item: i, set }))}
-                    about={about}
-                    onFold={() => player.fold(i)}
-                    menu={menu(i)}
-                    onFlip={climbs.flip}
-                    onEdit={setEditing}
-                  />
-                );
-                return (
-                  <React.Fragment key={i}>
-                    {card}
-                    {between}
-                  </React.Fragment>
-                );
-              }
-              const lines = player.checklist(i);
-              const tickedLine = (set: number): boolean => ticked.has(setKey({ item: i, set }));
-              if (lines !== null)
-                return (
-                  <React.Fragment key={i}>
-                    {player.folded(i) ? (
+                        {order.indexOf(last) < order.length - 1 && restBetween(last)}
+                      </React.Fragment>
+                    );
+                  }
+                  const climbItem = player.climbing(i);
+                  const skipped = player.skipped(i);
+                  const between = at < order.length - 1 && restBetween(i);
+                  if (climbItem !== null) {
+                    const about = exerciseAbout(mine, item.exercise, nameOf(i));
+                    const card = player.folded(i) ? (
                       <FoldedSetsCard
-                        name={t("workouts.checklist")}
+                        name={nameOf(i)}
                         line={
                           skipped
-                            ? t("workouts.skippedTapToDo")
-                            : checklistLine(
-                                lines.filter((_, n) => tickedLine(n)).length,
-                                lines.length
-                              )
+                            ? t("plan.skipped")
+                            : (climbItem.logged ?? climbingDoseLine(item.dose, climbItem.measure))
                         }
-                        done={!skipped && lines.every((_, n) => tickedLine(n))}
+                        done={!skipped && climbItem.logged !== null}
                         onOpen={() => player.open(i)}
                       />
-                    ) : (
-                      <ChecklistCard
-                        item={item}
-                        lines={lines}
-                        ticked={tickedLine}
-                        onToggle={(set) => player.toggle({ item: i, set })}
+                    ) : climbItem.measure === "laps" ? (
+                      <LapsCard
+                        item={i}
+                        at={item}
+                        logged={player.climbedSets(i)}
+                        planned={player.lapsPlanned(i)}
+                        draft={draft}
+                        live={tally}
+                        rest={rest}
+                        now={climbs.now}
+                        unit={unit}
+                        about={about}
+                        onHistory={openExerciseHistory(mine, item.exercise)}
                         onFold={() => player.fold(i)}
                         menu={menu(i)}
+                        onLapRemoved={(lap) => setLapRemoved({ item: i, name: nameOf(i), lap })}
                       />
-                    )}
-                    {between}
-                  </React.Fragment>
-                );
-              return (
-                <React.Fragment key={i}>
-                  {player.folded(i) ? (
-                    <FoldedSetsCard
-                      name={nameOf(i)}
-                      line={skipped ? t("workouts.skippedTapToDo") : foldedLine(d.sets, unit)}
-                      done={
-                        !skipped &&
-                        d.sets.length > 0 &&
-                        d.sets.every((_, set) => ticked.has(setKey({ item: i, set })))
-                      }
-                      onOpen={() => player.open(i)}
-                    />
-                  ) : (
-                    <SetsCard
-                      item={item}
-                      done={d}
-                      target={(set) => player.target({ item: i, set })}
-                      previous={previous(d.exercise)}
-                      lifting={player.lifting(i)}
-                      ticked={ticked}
-                      current={current}
-                      unit={unit}
-                      onChange={(set, value) => player.change(i, set, value)}
-                      onToggle={(set) => player.toggle({ item: i, set })}
-                      holdRow={(set) => holdRow({ item: i, set })}
-                      go={(set) => go({ item: i, set })}
-                      restUnder={(set) => restAt(setKey({ item: i, set }))}
-                      about={exerciseAbout(mine, item.exercise, nameOf(i))}
-                      onFocus={(set) => player.focus({ item: i, set })}
-                      onRemoveSet={(set) => player.removeSet({ item: i, set })}
-                      onAddSet={() => player.addSet(i)}
-                      onFold={() => player.fold(i)}
-                      menu={menu(i)}
-                    />
-                  )}
-                  {between}
-                </React.Fragment>
-              );
-            })}
-            {run.items.length > 0 && (
-              <Button
-                label={t("workouts.addExercise")}
-                onPress={() => setPicking(true)}
-                variant="outline"
-                icon="plus"
-              />
-            )}
+                    ) : (
+                      <ClimbCard
+                        item={item}
+                        plan={player.climbPlan(i)}
+                        rows={climbRows(draft, i, player.climbPlan(i), climbs.now)}
+                        unit={unit}
+                        tally={player.climbAt === i ? climbs : null}
+                        restUnder={(set) => restAt(setKey({ item: i, set }))}
+                        about={about}
+                        onHistory={openExerciseHistory(mine, item.exercise)}
+                        onFold={() => player.fold(i)}
+                        menu={menu(i)}
+                        onEdit={setEditing}
+                      />
+                    );
+                    return (
+                      <React.Fragment key={i}>
+                        {card}
+                        {between}
+                      </React.Fragment>
+                    );
+                  }
+                  const lines = player.checklist(i);
+                  const tickedLine = (set: number): boolean => ticked.has(setKey({ item: i, set }));
+                  if (lines !== null)
+                    return (
+                      <React.Fragment key={i}>
+                        {player.folded(i) ? (
+                          <FoldedSetsCard
+                            name={t("workouts.checklist")}
+                            line={
+                              skipped
+                                ? t("plan.skipped")
+                                : checklistLine(
+                                    lines.filter((_, n) => tickedLine(n)).length,
+                                    lines.length
+                                  )
+                            }
+                            done={!skipped && lines.every((_, n) => tickedLine(n))}
+                            onOpen={() => player.open(i)}
+                          />
+                        ) : (
+                          <ChecklistCard
+                            lines={lines}
+                            ticked={tickedLine}
+                            onToggle={(set) => player.toggle({ item: i, set })}
+                            onFold={() => player.fold(i)}
+                            menu={menu(i)}
+                          />
+                        )}
+                        {between}
+                      </React.Fragment>
+                    );
+                  return (
+                    <React.Fragment key={i}>
+                      {player.folded(i) ? (
+                        <FoldedSetsCard
+                          name={nameOf(i)}
+                          line={skipped ? t("plan.skipped") : foldedLine(d.sets, unit)}
+                          done={
+                            !skipped &&
+                            d.sets.length > 0 &&
+                            d.sets.every((_, set) => ticked.has(setKey({ item: i, set })))
+                          }
+                          onOpen={() => player.open(i)}
+                        />
+                      ) : (
+                        <SetsCard
+                          item={item}
+                          done={d}
+                          lifting={player.lifting(i)}
+                          eachSide={player.sided(item.exercise)}
+                          ticked={ticked}
+                          selected={player.selected}
+                          unit={unit}
+                          onChange={(set, value) => player.change(i, set, value)}
+                          onToggle={(set) => player.toggle({ item: i, set })}
+                          holdRow={(set) => holdRow({ item: i, set })}
+                          go={(set) => go({ item: i, set })}
+                          restUnder={(set) => restAt(setKey({ item: i, set }))}
+                          about={exerciseAbout(mine, item.exercise, nameOf(i))}
+                          onSelect={(set) => player.select({ item: i, set })}
+                          onRemoveSet={(set) => player.removeSet({ item: i, set })}
+                          onAddSet={() => player.addSet(i)}
+                          onFold={() => player.fold(i)}
+                          menu={menu(i)}
+                          onHistory={openExerciseHistory(mine, item.exercise)}
+                        />
+                      )}
+                      {between}
+                    </React.Fragment>
+                  );
+                })}
+                {run.items.length > 0 && (
+                  <Button
+                    label={t("workouts.addExercise")}
+                    onPress={() => setPicking(true)}
+                    variant="outline"
+                    icon="plus"
+                  />
+                )}
+              </Pressable>
+            </SessionTargetContext.Provider>
           </KeypadScrollView>
           {climbs.snack !== null && (
             <UndoSnackbar

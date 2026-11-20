@@ -12,12 +12,10 @@ export type KeypadFieldProps = FieldSlot & {
   label: string;
   /** A small box sized to its value with no label shown, for a value in a table row. */
   compact?: boolean;
-  /** A compact box this wide whatever its value, so a column of them lines up. */
-  width?: number;
+  /** A compact box filling its column, so a column of them lines up. */
+  fill?: boolean;
   /** A small box filling its table column, gold when `marked`. Implies no label, like `compact`. */
   cell?: { marked: boolean };
-  /** Amber: a value short of what was asked, such as a set cut short. */
-  short?: boolean;
   /** On the keypad under the value, with Reset when `onReset` is given. */
   note?: string;
   onReset?: () => void;
@@ -38,8 +36,6 @@ export type KeypadFieldProps = FieldSlot & {
 
 const MARKED = "rgba(249,220,92,0.35)";
 const MARKED_LINE = "rgba(194,124,14,0.45)";
-const SHORT = "rgba(194,124,14,0.12)";
-const AMBER_LINE = "#C27C0E";
 
 /** The one label a typable number has, in the same voice as a form section's. */
 export const keypadFieldLabel = {
@@ -57,9 +53,8 @@ export const keypadFieldLabel = {
 export function KeypadField({
   label,
   compact = false,
-  width,
+  fill = false,
   cell,
-  short = false,
   note,
   onReset,
   accessibilityLabel = label,
@@ -176,8 +171,7 @@ export function KeypadField({
               borderRadius: 8,
               borderWidth: open ? 2 : 1,
             },
-            compact && width !== undefined && { width },
-            short && !open && { backgroundColor: SHORT, borderWidth: 1.5, borderColor: AMBER_LINE },
+            compact && fill && { flex: 1, minWidth: 0 },
             cell !== undefined && {
               flex: 1,
               minHeight: 36,

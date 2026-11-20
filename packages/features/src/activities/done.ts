@@ -12,6 +12,7 @@ import {
 import { formatNumber, t } from "../i18n";
 import { countText } from "../hang/format";
 import { checklistTitle } from "../workouts/checklist";
+import { targetText } from "../workouts/library";
 import { climbingSetText } from "./climbing";
 
 /** A set's time: "45s", or "20:00" past a minute. */
@@ -35,22 +36,6 @@ export function checklistsLine(done: readonly ItemDone[]): string | null {
   );
 }
 
-/** "Checklist · 4 of 5 · 3 exercises · 9 sets", or null when nothing was done. */
-export function doneSummary(done: readonly ItemDone[]): string | null {
-  const items = done.filter((d) => d.sets.length > 0);
-  const sets = items.reduce((n, d) => n + d.sets.length, 0);
-  const counts =
-    items.length === 0
-      ? []
-      : [
-          t("activities.exerciseCount", { count: items.length }),
-          t("activities.setCount", { count: sets }),
-        ];
-  const list = checklistsLine(done);
-  const parts = [...(list === null ? [] : [list]), ...counts];
-  return parts.length === 0 ? null : parts.join(" · ");
-}
-
 /** "5 × 100 kg · 30s", leaving out what the set does not have; a climbing set reads its climbs. */
 export function setText(set: SetDone, unit: WeightUnit, repsMax?: number): string {
   if (set.climbs !== undefined) return climbingSetText(set);
@@ -66,25 +51,36 @@ export function setText(set: SetDone, unit: WeightUnit, repsMax?: number): strin
     .join(" · ");
 }
 
-/** A finished exercise on one line, its sets with the top set's reps or time and load: "5 × 5 · 60 kg". */
+/** A set as done, every number with its word: "2 reps × 275 lb", "5 reps · 45s". */
+export function setReadText(set: SetDone, unit: WeightUnit): string {
+  if (set.climbs !== undefined) return climbingSetText(set);
+  const load =
+    set.weightKg === undefined
+      ? undefined
+      : t("hang.loadPlain", { value: weightValue(set.weightKg, unit), unit });
+  const reps =
+    set.reps === undefined
+      ? undefined
+      : t("workouts.targetReps", { count: set.reps, n: formatNumber(set.reps) });
+  return [
+    [reps, load].filter((p) => p !== undefined).join(" × "),
+    set.onS === undefined ? "" : setSeconds(set.onS),
+  ]
+    .filter((p) => p !== "")
+    .join(" · ");
+}
+
+/** A finished exercise on one line in the target's words, its top set's reps or time and load: "5 sets × 5 reps · 60 kg". */
 export function foldedLine(sets: readonly SetDone[], unit: WeightUnit): string {
   const top = sets.reduce<SetDone | undefined>(
     (best, s) => (best === undefined || (s.weightKg ?? 0) > (best.weightKg ?? 0) ? s : best),
     undefined
   );
-  const work = top?.reps ?? (top?.onS === undefined ? undefined : setSeconds(top.onS));
-  const load =
-    top?.weightKg === undefined
-      ? undefined
-      : t("hang.loadPlain", { value: weightValue(top.weightKg, unit), unit });
-  return [
-    work === undefined
-      ? t("activities.setCount", { count: sets.length })
-      : `${formatNumber(sets.length)} × ${typeof work === "number" ? formatNumber(work) : work}`,
-    load,
-  ]
-    .filter((p) => p !== undefined)
-    .join(" · ");
+  return targetText(
+    { sets: sets.length, reps: top?.reps, onS: top?.onS, weightKg: top?.weightKg },
+    "strength",
+    unit
+  ).work;
 }
 
 /** A set as a chip under its exercise, whose unit the card states once: "5 × 180", "8", "60s". */

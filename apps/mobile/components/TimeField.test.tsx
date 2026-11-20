@@ -72,6 +72,23 @@ describe("TimeField", () => {
     expect(onChange).toHaveBeenCalledWith(60);
   });
 
+  it("reads MM:SS only when capped under an hour, as a set's hold is, and HH:MM:SS otherwise", async () => {
+    await render(
+      <>
+        <TimeField label="Hold" value={90} max={3599} onChange={jest.fn()} />
+        <TimeField label="Duration" value={3540} min={60} onChange={jest.fn()} />
+        <TimeField label="Rest" value={90} max={3600} onChange={jest.fn()} />
+      </>
+    );
+    const shown = (label: string): unknown =>
+      screen.getByLabelText(label).props.accessibilityValue.text;
+    expect(shown("Hold")).toBe("01:30");
+    expect(shown("Duration")).toBe("00:59:00");
+    expect(shown("Rest")).toBe("00:01:30");
+    await press("Hold", "4", "5");
+    expect(shown("Hold")).toBe("00:45");
+  });
+
   it("commits and calls through on Next", async () => {
     const onChange = jest.fn();
     const onNext = jest.fn();

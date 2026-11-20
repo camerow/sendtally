@@ -72,30 +72,26 @@ beforeEach(() => {
 describe("Hangboard workout", () => {
   it("shows the first dose before any session", async () => {
     await renderWithHang(<WorkoutScreen id="fingers-ab" />);
-    expect(screen.getByText("6 × 1")).toBeTruthy();
+    expect(screen.getByLabelText("Sets 6")).toBeTruthy();
+    expect(screen.getByLabelText("Hangs a set 1")).toBeTruthy();
   });
 
   it("shows the dose the next session takes, as Start runs it", async () => {
     await renderWithHang(<WorkoutScreen id="fingers-ab" />, hangData({ sessions: [logged] }));
-    expect(screen.getByText("3 × 6")).toBeTruthy();
-    expect(screen.queryByText("6 × 1")).toBeNull();
+    expect(screen.getByLabelText("Sets 3")).toBeTruthy();
+    expect(screen.getByLabelText("Hangs a set 6")).toBeTruthy();
   });
 
-  it("links to its grip's progress once the grip has a session", async () => {
+  it("opens its grip's progress from the grip's History button", async () => {
     await renderWithHang(<WorkoutScreen id="fingers-ab" />);
-    expect(screen.queryByText("Half crimp progress")).toBeNull();
-    await renderWithHang(<WorkoutScreen id="fingers-ab" />, hangData({ sessions: [logged] }));
-    await fireEvent.press(screen.getByText("Half crimp progress"));
+    await fireEvent.press(screen.getByLabelText("History of Half crimp"));
     expect(router.push).toHaveBeenCalledWith({ pathname: "/grip/[id]", params: { id: "half" } });
   });
 
-  it("lists its grip as an exercise, with what it last used once it has", async () => {
-    await renderWithHang(<WorkoutScreen id="fingers-ab" />);
-    expect(screen.getByText("Half crimp")).toBeTruthy();
-    expect(screen.queryByText("Grip")).toBeNull();
-    expect(screen.queryByText(/^Last used/)).toBeNull();
+  it("heads its block with its grip, and leaves what it last used to the history", async () => {
     await renderWithHang(<WorkoutScreen id="fingers-ab" />, hangData({ sessions: [logged] }));
-    expect(screen.getByText(/^Last used .+/)).toBeTruthy();
+    expect(screen.getAllByText("Half crimp").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/^Last used|Not used yet/)).toBeNull();
   });
 
   it("never run, holds only its exercises", async () => {
@@ -111,12 +107,14 @@ describe("Hangboard workout", () => {
     expect(screen.queryByText(/No exercises/)).toBeNull();
   });
 
-  it("lists its sessions after its exercises and over time, each opening its summary", async () => {
+  it("keeps its past sessions behind the History button", async () => {
     await renderWithHang(<WorkoutScreen id="fingers-ab" />, hangData({ sessions: [logged] }));
-    expect(labels()).toEqual(["Exercises", "Over time", "History · 1 session"]);
-    expect(screen.getByText("RPE 7")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Bodyweight · 6 of 6 hangs"));
-    expect(router.push).toHaveBeenCalledWith({ pathname: "/activity/[id]", params: { id: "h1" } });
+    expect(labels()).toEqual(["Exercises"]);
+    await fireEvent.press(screen.getByText("History"));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/workout/history",
+      params: { id: "fingers-ab" },
+    });
   });
 
   it("opened while adding, adds it instead of starting or changing it", async () => {
@@ -155,16 +153,40 @@ describe("Other workouts", () => {
     expect(screen.getByLabelText("Tue")).toBeTruthy();
   });
 
-  it("reads Exercises, Over time, History, then Scheduled in", async () => {
+  it("reads Exercises, then Scheduled in, with no history inline", async () => {
     await renderWithHang(<WorkoutScreen id="legs" />, hangData(), {
       workouts: [legs],
       activities: [ran("a1", "2026-09-20", 6), ran("a2", "2026-09-27", 8)],
       plan: planned,
     });
-    expect(labels()).toEqual(["Exercises", "Over time", "History · 2 sessions", "Scheduled in"]);
-    expect(screen.getByText("RPE 8")).toBeTruthy();
-    await fireEvent.press(screen.getAllByText("Back squat 5 × 80 kg · 45 min")[0]!);
-    expect(router.push).toHaveBeenCalledWith({ pathname: "/activity/[id]", params: { id: "a2" } });
+    expect(labels()).toEqual(["Exercises", "Scheduled in"]);
+    expect(screen.queryByText("RPE 8")).toBeNull();
+  });
+
+  it("shows only this session, every number with its word, and its Target RPE as a tile", async () => {
+    const ab: WorkoutRecord = {
+      ...legs,
+      targetRpe: 8,
+      items: [
+        {
+          exercise: "Back squat",
+          doses: [
+            { sets: 5, reps: 5 },
+            { sets: 2, reps: 3 },
+          ],
+        },
+      ],
+    };
+    await renderWithHang(<WorkoutScreen id="legs" />, hangData(), {
+      workouts: [ab],
+      activities: [ran("a1", "2026-09-20", 6)],
+    });
+    expect(screen.getByText("2 sets × 3 reps")).toBeTruthy();
+    expect(screen.queryByText(/5 reps/)).toBeNull();
+    expect(screen.queryByText(/Alternates|Next session|Used/)).toBeNull();
+    expect(screen.getByText("8/10")).toBeTruthy();
+    expect(screen.getByText("Target RPE")).toBeTruthy();
+    expect(screen.getByText("50 min")).toBeTruthy();
   });
 
   it("opened from a plan day, leaves out Scheduled in", async () => {
@@ -234,8 +256,7 @@ describe("Its length", () => {
     expect(screen.getByText("13m")).toBeTruthy();
 
     await renderWithHang(<WorkoutScreen id="max10" />);
-    expect(screen.getByText("13m · Not used yet")).toBeTruthy();
-    expect(screen.getByText("13m")).toBeTruthy();
+    expect(screen.getByText("13 min")).toBeTruthy();
   });
 });
 
@@ -258,7 +279,7 @@ describe("A climbing workout", () => {
 
   it("reads an exercise the library does not know in climbs, as the player does", async () => {
     await renderWithHang(<WorkoutScreen id="boulders" />, hangData(), { workouts: [boulders] });
-    expect(screen.getByText("4 sets of 4 climbs")).toBeTruthy();
+    expect(screen.getByText("4 sets × 4 climbs")).toBeTruthy();
     expect(screen.queryByText("4 × 4")).toBeNull();
   });
 });

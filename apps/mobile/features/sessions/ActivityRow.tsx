@@ -8,7 +8,7 @@ import { Icon } from "../../components/Icon";
 import { pressRow } from "../../lib/press";
 import { SESSION_ROW_HEIGHT, rowMeta, rowTitle } from "./SessionRow";
 import { DayColumn } from "./SessionRowParts";
-import { CategoryMark } from "../training/library/CategoryMark";
+import { DayMark } from "../training/today/DayMark";
 
 /** Other training carries no tags, so it is one plain row tall before any block line. */
 export const ACTIVITY_ROW_HEIGHT = SESSION_ROW_HEIGHT;
@@ -51,14 +51,16 @@ export function ActivityRow({
       })}
     >
       <DayColumn weekday={weekday} day={day} />
-      <CategoryMark kind={activity.kind} size={28} />
       <View style={{ flex: 1, gap: 3 }}>
         <Text numberOfLines={1} style={rowTitle}>
           {activity.title}
         </Text>
-        <Text numberOfLines={1} style={rowMeta}>
-          {meta}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <DayMark kind={activity.kind} filled />
+          <Text numberOfLines={1} style={[rowMeta, { flexShrink: 1 }]}>
+            {meta}
+          </Text>
+        </View>
         {blockTag !== undefined && (
           <Text numberOfLines={1} style={rowMeta}>
             {blockTag}

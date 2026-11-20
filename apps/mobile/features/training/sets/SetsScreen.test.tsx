@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, renderHook, screen } from "@testing-library/react-native";
+import { act, fireEvent, renderHook, screen, within } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
@@ -86,13 +86,13 @@ describe("Sets player", () => {
     expect(router.back).toHaveBeenCalled();
     expect(screen.queryByLabelText("About this workout")).toBeNull();
     expect(screen.getByText("Heavy squats, then rows.")).toBeTruthy();
-    expect(screen.getByText("Exercise 1 of 3 · Target effort 8")).toBeTruthy();
-    expect(screen.getAllByText("5 × 100")).toHaveLength(2);
-    expect(screen.getByText("30s")).toBeTruthy();
-    expect(screen.getByText("Last 5 × 97.5")).toBeTruthy();
-    expect(screen.getByText("Last 8 × 60")).toBeTruthy();
-    expect(screen.getByText("8 × 60")).toBeTruthy();
-    expect(screen.getByText("1:30 rest")).toBeTruthy();
+    expect(screen.getByText("Target RPE 8/10")).toBeTruthy();
+    expect(screen.getByText("Exercise 1 of 3")).toBeTruthy();
+    expect(screen.getByText("2 sets × 5 reps · 100 kg")).toBeTruthy();
+    expect(screen.getByText("1 set × 8 reps")).toBeTruthy();
+    expect(screen.getByText("1 set × 0:30")).toBeTruthy();
+    expect(screen.queryByText(/^Last /)).toBeNull();
+    expect(screen.queryByText("1:30 rest")).toBeNull();
     expect(screen.getAllByText("Rest 2:00")).toHaveLength(2);
     expect(readingOrder("Back squat, set 1", "Rest 1:30", "Back squat, set 2")).toEqual([
       "Back squat, set 1",
@@ -112,17 +112,17 @@ describe("Sets player", () => {
     ]);
     await advance(30_000);
     expect(screen.getByLabelText("Rest, 1:00 left")).toBeTruthy();
-    expect(screen.getByText("0:30")).toBeTruthy();
+    expect(screen.getAllByText("0:30")).toHaveLength(2);
 
     await fireEvent.press(screen.getByLabelText("Back squat, set 2 · Reps"));
     await fireEvent.press(screen.getByLabelText("4"));
     await fireEvent.press(screen.getByLabelText("Done"));
     await fireEvent.press(screen.getByLabelText("Back squat, set 2"));
     expect(screen.queryByLabelText("Rest, 1:00 left")).toBeNull();
-    const folded = "Open Back squat, 2 × 5 · 100 kg";
+    const folded = "Open Back squat, 2 sets × 5 reps · 100 kg";
     expect(screen.getByLabelText(folded)).toBeTruthy();
-    expect(screen.getByText("Exercise 2 of 3 · Target effort 8")).toBeTruthy();
-    expect(screen.queryByTestId("rest-next")?.props.children).toBe("Row");
+    expect(screen.getByText("Exercise 2 of 3")).toBeTruthy();
+    expect(screen.queryByTestId("rest-next")).toBeNull();
     expect(readingOrder(folded, "Rest, 2:00 left", "Row, set 1", "Rest 2:00")).toEqual([
       folded,
       "Rest, 2:00 left",
@@ -182,6 +182,23 @@ describe("Sets player", () => {
     expect(screen.getAllByText("Row").length).toBeGreaterThan(1);
   });
 
+  it("opens an exercise's history from its head, with no History where it has no screen", async () => {
+    await renderWithHang(<SetsScreen run={run} />, hangData(), {
+      exercises: [anExercise("e2", "Back squat", "strength")],
+    });
+    expect(screen.queryByLabelText("History of Row")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("History of Back squat"));
+    expect(router.push).toHaveBeenCalledWith({ pathname: "/exercise/[id]", params: { id: "e2" } });
+  });
+
+  it("names no exercise position in the header once every set is ticked", async () => {
+    const one: WorkoutRun = { ...run, items: [{ exercise: "Row", dose: { sets: 1, reps: 8 } }] };
+    await renderWithHang(<SetsScreen run={one} />, hangData());
+    expect(screen.getByText(/Exercise 1 of 1/)).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Row, set 1"));
+    expect(screen.queryByText(/Exercise \d+ of/)).toBeNull();
+  });
+
   it("keeps a running rest when the player is minimised and opened again", async () => {
     const view = await renderWithHang(<SetsScreen run={run} />, hangData());
     await fireEvent.press(screen.getByLabelText("Back squat, set 1"));
@@ -207,7 +224,7 @@ describe("Sets player", () => {
       ],
     };
     await renderWithHang(<SetsScreen run={targeted} />, hangData());
-    expect(screen.getByText("Target RPE 8")).toBeTruthy();
+    expect(screen.getByText("Target RPE 8/10")).toBeTruthy();
     expect(screen.getAllByText(/RPE/)).toHaveLength(2);
   });
 
@@ -227,18 +244,26 @@ describe("Sets player", () => {
     expect(screen.queryByLabelText("Row, set 1 · RPE")).toBeNull();
   });
 
-  it("makes a set current on a tap or an edit, not on a touch that may start a scroll", async () => {
+  it("selects a set from the row outside its inputs, never from a tick or a typed value", async () => {
     await renderWithHang(<SetsScreen run={run} />, hangData());
-    await fireEvent(screen.getByTestId("set-row-0-1"), "touchStart", {
-      nativeEvent: { pageX: 0, pageY: 0 },
-    });
-    expect(screen.queryByLabelText("Remove set 2")).toBeNull();
-    await fireEvent.press(screen.getByTestId("set-row-0-1"));
+    expect(screen.queryByLabelText(/^Remove set/)).toBeNull();
+    await fireEvent.press(within(screen.getByTestId("set-row-0-1")).getByText("2"));
     expect(screen.getByLabelText("Remove set 2")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Back squat, set 1 · Reps"));
     await fireEvent.press(screen.getByLabelText("4"));
     await fireEvent.press(screen.getByLabelText("Done"));
+    await fireEvent.press(screen.getByLabelText("Back squat, set 1"));
+    expect(screen.getAllByLabelText(/^Remove set/)).toHaveLength(1);
+    expect(screen.getByLabelText("Remove set 2")).toBeTruthy();
+    await fireEvent.press(within(screen.getByTestId("set-row-1-0")).getByText("1"));
+    expect(screen.getAllByLabelText(/^Remove set/)).toHaveLength(1);
     expect(screen.getByLabelText("Remove set 1")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("set-row-1-0"));
+    expect(screen.queryByLabelText(/^Remove set/)).toBeNull();
+    await fireEvent.press(screen.getByTestId("set-row-0-0"));
+    expect(screen.getByLabelText("Remove set 1")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("run-body"));
+    expect(screen.queryByLabelText(/^Remove set/)).toBeNull();
   });
 
   it("says whether an exercise card is open", async () => {
@@ -257,7 +282,8 @@ describe("Sets player", () => {
     await fireEvent.press(screen.getByLabelText("Add a set to Row"));
     expect(screen.getByLabelText("Row, set 2")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Back squat, set 2"));
-    expect(screen.getByLabelText("Remove set 2")).toBeTruthy();
+    expect(screen.queryByLabelText(/^Remove set/)).toBeNull();
+    await fireEvent.press(within(screen.getByTestId("set-row-0-1")).getByText("2"));
     expect(screen.getAllByLabelText(/^Remove set/)).toHaveLength(1);
     await fireEvent.press(screen.getByLabelText("Remove set 2"));
     expect(screen.queryByLabelText("Back squat, set 2")).toBeNull();
@@ -282,12 +308,12 @@ describe("Sets player", () => {
   it("folds a finished exercise, opens it to edit, and folds an open one from its title", async () => {
     await renderWithHang(<SetsScreen run={run} />, hangData());
     await fireEvent.press(screen.getByLabelText("Row, set 1"));
-    await fireEvent.press(screen.getByLabelText("Open Row, 1 × 8 · 60 kg"));
+    await fireEvent.press(screen.getByLabelText("Open Row, 1 set × 8 reps · 60 kg"));
     expect(screen.getByLabelText("Row, set 1 · Reps")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText("Fold Row"));
     expect(screen.queryByLabelText("Row, set 1 · Reps")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Fold Back squat"));
-    expect(screen.getByLabelText("Open Back squat, 2 × 5 · 100 kg")).toBeTruthy();
+    expect(screen.getByLabelText("Open Back squat, 2 sets × 5 reps · 100 kg")).toBeTruthy();
   });
 
   it("ticks a checklist's typed lines in any order and logs which were ticked", async () => {
@@ -347,7 +373,7 @@ describe("Sets player", () => {
     await renderWithHang(<SetsScreen run={run} />, hangData());
     await fireEvent.press(screen.getAllByLabelText("More for this exercise")[0]!);
     await fireEvent.press(screen.getByText("Skip for now"));
-    const skipped = "Open Back squat, Skipped · tap to do it now";
+    const skipped = "Open Back squat, Skipped";
     expect(readingOrder("Row, set 1", "Plank, set 1", skipped)).toEqual([
       "Row, set 1",
       "Plank, set 1",
@@ -390,7 +416,7 @@ describe("Sets player", () => {
     expect(screen.getByText("Finish")).toBeTruthy();
   });
 
-  it("shows which dose an alternating exercise runs, with its name when it has one", async () => {
+  it("never names which alternate an exercise runs", async () => {
     const alternating: WorkoutRun = {
       ...run,
       items: [
@@ -400,10 +426,8 @@ describe("Sets player", () => {
       ],
     };
     await renderWithHang(<SetsScreen run={alternating} />, hangData());
-    expect(screen.getByText("B")).toBeTruthy();
-    expect(screen.getByText("Light")).toBeTruthy();
-    expect(screen.getByText("A")).toBeTruthy();
-    expect(screen.queryByText("C")).toBeNull();
+    for (const shown of ["A", "B", "Light"]) expect(screen.queryByText(shown)).toBeNull();
+    expect(screen.getByText("3 sets × 10 reps")).toBeTruthy();
   });
 
   it("times a timed set in its row after a count-in, records what it held, and rests", async () => {
@@ -412,20 +436,23 @@ describe("Sets player", () => {
       items: [{ exercise: "Plank", dose: { sets: 2, onS: 30, setRestS: 20 } }],
     };
     await renderWithHang(<SetsScreen run={planks} />, hangData());
-    await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
+    await fireEvent.press(screen.getAllByLabelText("Start Plank, 0:30")[0]!);
     expect(screen.getByText("Ready")).toBeTruthy();
     expect(screen.getByText("3")).toBeTruthy();
     await advance(13_000);
     expect(screen.getByText("0:10")).toBeTruthy();
     expect(screen.getByText("of 0:30")).toBeTruthy();
     expect(liveRun.read()?.hold?.name).toBe("Plank");
+    expect(screen.getByLabelText("Start Plank, 0:30")).toHaveProp("accessibilityState", {
+      disabled: true,
+    });
     await fireEvent.press(screen.getByRole("button", { name: "Done" }));
     expect(screen.getByLabelText("Plank, set 1")).toHaveProp("accessibilityState", {
       checked: true,
     });
     expect(screen.getByLabelText("Rest, 0:20 left")).toBeTruthy();
 
-    await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
+    await fireEvent.press(screen.getAllByLabelText("Start Plank, 0:30")[0]!);
     expect(screen.queryByLabelText("Rest, 0:20 left")).toBeNull();
     await advance(34_000);
     expect(liveRun.read()?.hold).toBeUndefined();
@@ -450,7 +477,7 @@ describe("Sets player", () => {
       items: [{ exercise: "Plank", dose: { sets: 1, onS: 30 } }],
     };
     await renderWithHang(<SetsScreen run={planks} />, hangData());
-    await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
+    await fireEvent.press(screen.getAllByLabelText("Start Plank, 0:30")[0]!);
     await advance(1_000);
     await fireEvent.press(screen.getByRole("button", { name: "Done" }));
     expect(screen.getByLabelText("Plank, set 1")).toHaveProp("accessibilityState", {
@@ -466,7 +493,7 @@ describe("Sets player", () => {
     };
     const root = await renderHook(() => useLiveHold());
     const view = await renderWithHang(<SetsScreen run={planks} />, hangData());
-    await fireEvent.press(screen.getByLabelText("Start Plank, 0:30"));
+    await fireEvent.press(screen.getAllByLabelText("Start Plank, 0:30")[0]!);
     await view.unmount();
     await advance(35_000);
     expect(liveRun.read()?.hold).toBeUndefined();

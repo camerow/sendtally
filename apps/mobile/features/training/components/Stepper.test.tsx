@@ -33,4 +33,25 @@ describe("number field labels", () => {
     const section = styleOf("Section");
     for (const label of ["Rest", "Reps", "Weeks"]) expect(styleOf(label)).toEqual(section);
   });
+
+  it("gives a compact stepper's buttons a 44pt touch target", async () => {
+    await render(
+      <Stepper
+        compact
+        label="Attempts"
+        value={1}
+        step={1}
+        onChange={jest.fn()}
+        onStep={jest.fn()}
+        decreaseLabel="Fewer"
+        increaseLabel="More"
+        surface="plain"
+      />
+    );
+    for (const label of ["Fewer", "More"]) {
+      const button = screen.getByLabelText(label);
+      expect(StyleSheet.flatten(button.props.style)).toMatchObject({ width: 36, height: 36 });
+      expect(button.props.hitSlop).toBe(4);
+    }
+  });
 });

@@ -6,7 +6,7 @@ import { type } from "../type";
 
 export type SummaryTilesProps = { stats: readonly Stat[] };
 
-/** The headline numbers side by side: value over label. */
+/** The headline numbers side by side: label over value. */
 export function SummaryTiles({ stats }: SummaryTilesProps): React.ReactElement {
   return (
     <View style={{ flexDirection: "row", gap: 6 }}>
@@ -22,15 +22,15 @@ export function SummaryTiles({ stats }: SummaryTilesProps): React.ReactElement {
             backgroundColor: colors.surfaceSoft,
           }}
         >
+          <Text style={[type.body, { fontSize: 11.5, color: colors.textSecondary }]}>
+            {s.label}
+          </Text>
           <Text
             style={[type.display, { fontSize: 22, color: colors.gunmetal }]}
             numberOfLines={1}
             adjustsFontSizeToFit
           >
             {s.value}
-          </Text>
-          <Text style={[type.body, { fontSize: 11.5, color: colors.textSecondary }]}>
-            {s.label}
           </Text>
         </View>
       ))}

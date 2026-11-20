@@ -87,6 +87,20 @@ describe("starting a workout with a checklist", () => {
   });
 });
 
+describe("starting a routine with no reps or weight", () => {
+  it("runs it in the sets player, a card per exercise", () => {
+    const mobility = { ...climbing, id: "w-hips", kind: "mobility" } as LibraryWorkout;
+    const items = [
+      { exercise: "Pigeon", dose: { sets: 2, onS: 60 } },
+      { exercise: "Cat-cow", dose: { sets: 1 } },
+    ];
+    const run = { link: PLAN, session: 0, items };
+    const start = workoutStart(mobility, "2026-10-30", run, () => false);
+    expect(start.open).toBe("sets");
+    expect(playerRoute(mobility, start, run)?.pathname).toBe("/workout/sets");
+  });
+});
+
 describe("the player a start opens", () => {
   const hangboard = { ...climbing, id: "rep73", kind: "hangboard" } as LibraryWorkout;
   const half = { exercise: "half", dose: { sets: 6 } };

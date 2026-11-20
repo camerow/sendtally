@@ -3,6 +3,7 @@ import type { SetChange } from "./summary";
 import { formatDate, formatNumber, t } from "../i18n";
 import type { Stat } from "./types";
 import { gradesText } from "../exercises/exerciseText";
+import { effortWord } from "../hang/names";
 
 /** "+5 lb", "+1 rep", "−10s", or "Same". */
 export function changeText({ metric, by }: SetChange, unit: WeightUnit): string {
@@ -32,8 +33,13 @@ export function loadChange(kg: number, unit: WeightUnit): string {
 export const postedTime = (iso: string): string =>
   formatDate(new Date(iso), { hour: "numeric", minute: "2-digit" });
 
-/** The effort tile: the effort given, and what the workout aimed for when it says. */
+/** The RPE tile: "RPE 7" over "Target RPE 8/10", or over the RPE's word with no target. */
 export const effortTile = (rpe: number | null, target: number | null): Stat => ({
-  value: rpe === null ? "–" : String(rpe),
-  label: target === null ? t("summary.effort") : t("summary.effortAimed", { n: target }),
+  value: t("hang.rpeValue", { value: rpe === null ? "–" : formatNumber(rpe) }),
+  label:
+    target !== null
+      ? t("common.targetRpe", { n: formatNumber(target) })
+      : rpe === null
+        ? t("summary.notRated")
+        : effortWord(rpe),
 });

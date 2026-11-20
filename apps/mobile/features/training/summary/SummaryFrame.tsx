@@ -25,7 +25,7 @@ export type SummaryFrameProps = {
   children: React.ReactNode;
 };
 
-/** What every finished workout shares: Back, Edit and the menu, its kicker, title, its tiles and Strava. */
+/** What every finished workout shares: Back, History, Edit and the menu, its kicker, title, its tiles and Strava. */
 export function SummaryFrame({
   kicker,
   kickerColor,
@@ -64,6 +64,13 @@ export function SummaryFrame({
     <ScreenFrame
       action={
         <DetailActions
+          {...(target.record.workoutId !== null && {
+            onHistory: () =>
+              router.push({
+                pathname: "/workout/history",
+                params: { id: target.record.workoutId, current: id },
+              }),
+          })}
           onEdit={() => router.push({ pathname: "/activity/[id]/edit", params: { id } })}
           menu={post.state === null ? [remove] : [stravaRow(post.state, onStrava), remove]}
         />

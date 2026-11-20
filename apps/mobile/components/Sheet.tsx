@@ -20,7 +20,7 @@ export type SheetProps = {
   children: React.ReactNode;
   /** Pinned under the scrolling body, above the home indicator. */
   footer?: React.ReactNode;
-  /** False leaves the screen behind undimmed, for a sheet that edits something on it. */
+  /** False: no scrim, so the screen behind stays live and a press lands where it falls. */
   dim?: boolean;
   /** Pictures across the sheet's top, under its handle, with the content on white over their edge. */
   hero?: readonly LibraryPicture[];
@@ -128,12 +128,12 @@ export function Sheet({
         {...props}
         appearsOnIndex={0}
         disappearsOnIndex={-1}
-        opacity={dim ? 0.45 : 0}
+        opacity={0.45}
         style={[props.style, { backgroundColor: colors.gunmetal }]}
         accessibilityLabel={closeLabel}
       />
     ),
-    [closeLabel, dim]
+    [closeLabel]
   );
 
   if (generation === 0) return <></>;
@@ -147,7 +147,7 @@ export function Sheet({
       enableDynamicSizing
       topInset={insets.top + 24}
       maxDynamicContentSize={windowHeight - insets.top - 24}
-      backdropComponent={renderBackdrop}
+      {...(dim && { backdropComponent: renderBackdrop })}
       footerComponent={footer === undefined ? undefined : FooterComponent}
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"

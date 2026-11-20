@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, within } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
 import type * as LogSession from "@sendtally/features/log-session";
@@ -76,14 +76,16 @@ describe("A hangboard workout's review", () => {
     await renderWithHang(<DoneScreen params={ended} />);
     const rows = (): number => screen.getAllByTestId("review-set").length;
     expect(rows()).toBe(6);
-    await fireEvent.press(screen.getByLabelText("Remove the last set from Half crimp"));
+    const select = async (n: number): Promise<void> => {
+      const row = screen.getAllByTestId("review-set")[n - 1];
+      if (row === undefined) throw new Error(`no set ${n}`);
+      await fireEvent.press(within(row).getByText(String(n)));
+      await fireEvent.press(screen.getByLabelText(`Remove set ${n}`));
+    };
+    await select(6);
     expect(rows()).toBe(5);
     expect(screen.queryByText("Set 6 removed")).toBeNull();
-    const second = screen.getAllByTestId("review-set")[1];
-    if (second === undefined) throw new Error("no second set");
-    await fireEvent(second, "accessibilityAction", {
-      nativeEvent: { actionName: "remove" },
-    });
+    await select(2);
     expect(rows()).toBe(4);
     expect(screen.getByText("Set 2 removed")).toBeTruthy();
     await fireEvent.press(screen.getByText("Undo"));
@@ -95,7 +97,10 @@ describe("A hangboard workout's review", () => {
     expect(screen.getByText("Log workout")).toBeTruthy();
     expect(screen.getByText("Fingers")).toBeTruthy();
     expect(screen.queryByText(/^From the timer/)).toBeNull();
-    expect(screen.getByText("4 of 6 hangs")).toBeTruthy();
+    expect(screen.queryByText("4 of 6 hangs")).toBeNull();
+    expect(screen.getByText("Hangs")).toBeTruthy();
+    expect(screen.getByText("Load")).toBeTruthy();
+    expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
     expect(screen.queryByText("Started")).toBeNull();
     expect(screen.queryByText("Focus")).toBeNull();
     await fireEvent.press(screen.getByLabelText("Half crimp, set 5 · Hangs"));

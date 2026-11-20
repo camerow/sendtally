@@ -3,13 +3,15 @@ import { phaseLabel } from "../hang/timerText";
 import { t } from "../i18n";
 import { exerciseName } from "./library";
 import type { FingersPart } from "./fingersPart";
+import type { SetLoads } from "./timerView";
 import { COUNT_IN_S, SWITCH_S, type Hold } from "./holdClock";
 import type { Rest } from "./restCountdown";
 import type { RunCards } from "./runCards";
+import { readWorkoutRun } from "./runParams";
 
 /** Where a player is: the timer's run, or the sets and items ticked so far. */
 export type RunState =
-  | { player: "timer"; run: Run; setups?: HangSetup[]; laps?: boolean }
+  | { player: "timer"; run: Run; setups?: HangSetup[]; loads?: SetLoads; laps?: boolean }
   | {
       player: "sets";
       done: ItemDone[];
@@ -135,35 +137,56 @@ export function liveRunStore(storage: RunStorage, tally: { remove: () => void })
   };
 }
 
-/** Where the run is, for the live bar: "Set 2 of 5 · Hang", "Ring row · Set 1 of 3", "2 of 5 done". */
-export function liveRunSummary({ state }: LiveRun): string {
+/**
+ * Where the run is, for the live bar: "Set 2 of 5 · Hang", "Ring row · Set 1 of 3", a checklist's
+ * next open line, "2 of 5 done".
+ */
+export function liveRunSummary(run: LiveRun): string {
+  const { name, where } = liveRunWhere(run);
+  return name === null ? where : `${name} · ${where}`;
+}
+
+/** The same, split so a bar can shorten the exercise's name and keep "Set 2 of 3" whole. */
+export function liveRunWhere({ state, params }: LiveRun): { name: string | null; where: string } {
   if (state.player === "timer") {
     const { set } = currentPhase(state.run);
     const sets = { set, sets: state.run.sets };
     const where = state.laps === true ? t("tally.lapOf", sets) : t("hang.setOf", sets);
-    return `${where} · ${phaseLabel(state.run, state.laps === true)}`;
+    return { name: null, where: `${where} · ${phaseLabel(state.run, state.laps === true)}` };
   }
   if (state.player === "checklist")
-    return t("plan.doneOf", { done: state.ticked.length, planned: state.count });
+    return {
+      name: null,
+      where: t("plan.doneOf", { done: state.ticked.length, planned: state.count }),
+    };
   if (
     state.fingers !== undefined &&
     "run" in state.fingers &&
     state.fingers.run.finished === null
   ) {
     const { set } = currentPhase(state.fingers.run);
-    return `${t("workouts.fingerboard")} · ${t("hang.setOf", { set, sets: state.fingers.run.sets })}`;
+    return {
+      name: t("workouts.fingerboard"),
+      where: t("hang.setOf", { set, sets: state.fingers.run.sets }),
+    };
   }
   const order = state.cards?.order ?? state.done.map((d) => d.item);
   const grips = state.grips ?? [];
   const over = [...state.ticked, ...(state.climbed ?? [])];
+  const lines = readWorkoutRun(params)?.items;
   for (const d of order.flatMap((key) =>
     state.done.filter((x) => x.item === key && !grips.includes(x.item))
   )) {
     const set = d.sets.findIndex((_, s) => !over.includes(`${d.item}:${s}`));
+    const line = set === -1 ? undefined : lines?.[d.item]?.checklist?.lines[set];
+    if (line !== undefined) return { name: null, where: line };
     if (set !== -1)
-      return `${exerciseName(d.exercise)} · ${t("hang.setOf", { set: set + 1, sets: d.sets.length })}`;
+      return {
+        name: exerciseName(d.exercise),
+        where: t("hang.setOf", { set: set + 1, sets: d.sets.length }),
+      };
   }
-  return t("tally.allSetsDone");
+  return { name: null, where: t("tally.allSetsDone") };
 }
 
 export type HoldCue = { at: number; sound: "tick" | "work" | "rest" };

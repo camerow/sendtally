@@ -16,6 +16,7 @@ import {
   letterName,
   libraryShelves,
   newWorkoutDraft,
+  targetText,
   turnName,
   withTarget,
   estimatedMinutes,
@@ -415,5 +416,61 @@ describe("libraryLine", () => {
     const climbing = { ...base, kind: "climbing" as const, name: "Climbing", items: [] };
     expect(libraryLine({ ...climbing, minutes: 90 }, "kg")).toBe("1h 30m");
     expect(libraryLine({ ...climbing, minutes: null }, "kg")).toBeNull();
+  });
+});
+
+describe("targetText", () => {
+  it.each<[string, Parameters<typeof targetText>, string]>([
+    [
+      "sets, reps and load",
+      [{ sets: 5, reps: 5, weightKg: 100 }, "strength", "kg"],
+      "5 sets × 5 reps · 100 kg",
+    ],
+    ["a rep range", [{ sets: 3, reps: 6, repsMax: 8 }, "strength", "kg"], "3 sets × 6-8 reps"],
+    [
+      "a hold on each side",
+      [{ sets: 2, onS: 45 }, "mobility", "kg", { eachSide: true }],
+      "2 sets × 0:45 a side",
+    ],
+    [
+      "an assisted load",
+      [{ sets: 3, reps: 5, weightKg: -10 }, "strength", "kg"],
+      "3 sets × 5 reps · −10 kg",
+    ],
+    [
+      "a superset member's round",
+      [{ sets: 2, reps: 2, weightKg: 120 }, "strength", "kg", { round: true }],
+      "2 reps · 120 kg",
+    ],
+    [
+      "hangs on and off",
+      [{ sets: 6, reps: 6, onS: 7, offS: 3 }, "hangboard", "kg"],
+      "6 sets × 6 hangs · 7s on, 3s off",
+    ],
+    [
+      "one hang",
+      [{ sets: 5, reps: 1, onS: 10, offS: 0 }, "hangboard", "kg"],
+      "5 sets × 1 hang · 10s",
+    ],
+    ["climbs per set", [{ sets: 3, reps: 4 }, "climbs", "kg"], "3 sets × 4 climbs"],
+    ["time on the wall", [{ sets: 3, onS: 600 }, "wallTime", "kg"], "3 sets × 10:00 on the wall"],
+    ["laps of moves", [{ sets: 4, reps: 40 }, "laps", "kg"], "4 laps × 40 moves"],
+    ["sets alone", [{ sets: 3 }, "strength", "kg"], "3 sets"],
+  ])("says %s with every number's word", (_, args, work) => {
+    expect(targetText(...args).work).toBe(work);
+  });
+
+  it("puts the Target RPE apart, with its scale", () => {
+    expect(targetText({ sets: 3, reps: 5, targetRpe: 8 }, "strength", "kg").rpe).toBe(
+      "Target RPE 8/10"
+    );
+    expect(targetText({ sets: 3, reps: 5 }, "strength", "kg").rpe).toBeUndefined();
+  });
+
+  it("says the Target RPE once: left out when it equals the session's, kept when it differs or there is none", () => {
+    const dose = { sets: 3, reps: 15, targetRpe: 7 };
+    expect(targetText(dose, "strength", "kg", { sessionRpe: 7 }).rpe).toBeUndefined();
+    expect(targetText(dose, "strength", "kg", { sessionRpe: 8 }).rpe).toBe("Target RPE 7/10");
+    expect(targetText(dose, "strength", "kg", { sessionRpe: null }).rpe).toBe("Target RPE 7/10");
   });
 });

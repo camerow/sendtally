@@ -198,11 +198,11 @@ describe("PlanPage", () => {
     expect(container.querySelector(".dashed-panel")).toBeNull();
   });
 
-  it("gives a Climbing day its name alone, with no meta repeating it", () => {
+  it("gives a Climbing day its length, never a meta repeating its name", () => {
     const row = [...container.querySelectorAll(".plan-row")].find(
       (r) => r.querySelector(".plan-row-name")?.textContent === "Climbing"
     )!;
-    expect(row.querySelector(".plan-row-meta")).toBeNull();
+    expect(row.querySelector(".plan-row-meta")?.textContent).not.toBe("Climbing");
   });
 
   it("leads a missed workout's ··· with Log it", () => {

@@ -9,7 +9,7 @@ export type NumberFieldProps = FieldSlot &
   NumberLimits &
   Pick<
     KeypadFieldProps,
-    "label" | "compact" | "short" | "accessibilityLabel" | "before" | "after"
+    "label" | "compact" | "fill" | "accessibilityLabel" | "before" | "after"
   > & {
     /** Null reads as the placeholder, and the keypad opens on zero. */
     value: number | null;

@@ -42,6 +42,13 @@ export function climbsTotal(sets: readonly SetDone[]): ClimbsTotal {
   };
 }
 
+/** "2 attempts · sent": one climb of a set, as its row reads. */
+export const climbLine = (climb: SetClimb): string =>
+  [
+    t("logSession.attemptCount", { count: climb.tries }),
+    ...(climb.sent ? [t("summary.sent")] : []),
+  ].join(" · ");
+
 /** "16 climbs · 15 sent · top V4" */
 export function climbsLine(sets: readonly SetDone[]): string {
   const { climbs, sent, top } = climbsTotal(sets);

@@ -28,6 +28,7 @@ export function RpeField({
       label="RPE"
       accessibilityLabel={`${label} · RPE`}
       compact
+      fill
       value={set.rpe ?? null}
       placeholder={target === undefined ? "–" : formatNumber(target)}
       step={1}

@@ -3,7 +3,6 @@ import { Alert } from "react-native";
 import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
 import { useActivities, useActivityActions } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
-import { useExerciseSeries } from "@sendtally/features/statistics";
 import { useTrainingLog } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { useHangData } from "../data/HangDataContext";
@@ -21,7 +20,6 @@ export function WorkoutSummaryScreen({ id }: { id: string }): React.ReactElement
   const api = useApi();
   const { model, actions: hangActions } = useHangData();
   const { state, reload } = useActivities(api);
-  const series = useExerciseSeries(api);
   const { log } = useTrainingLog(api);
   const actions = useActivityActions(api, reportFailure);
   const activities = state.status === "ready" ? state.data : [];
@@ -46,8 +44,6 @@ export function WorkoutSummaryScreen({ id }: { id: string }): React.ReactElement
     return (
       <ActivitySummary
         activity={shown.record}
-        activities={activities}
-        series={series.status === "ready" ? series.data : []}
         log={log}
         unit={model.settings.units}
         actions={actions}

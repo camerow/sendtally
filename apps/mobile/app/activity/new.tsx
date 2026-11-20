@@ -14,7 +14,13 @@ import { ActivityForm } from "../../features/training/activity/ActivityForm";
 import { HangDataProvider } from "../../features/training/data/HangDataProvider";
 import { readPlanLink, readSession } from "@sendtally/features/training";
 import { useGrips } from "@sendtally/features/hang";
-import { idleEnd, livePartForm, partEnded, usePrescribed } from "@sendtally/features/workouts";
+import {
+  idleEnd,
+  livePartForm,
+  partEnded,
+  usePrescribed,
+  useWorkoutLibrary,
+} from "@sendtally/features/workouts";
 import { liveRun } from "../../features/live-session/liveRun";
 import { useApi } from "../../lib/api";
 
@@ -39,6 +45,11 @@ export default function NewActivityScreen(): React.ReactElement {
     readPlanLink(params),
     readSession(params)
   );
+  const library = useWorkoutLibrary(api).state;
+  const targetRpe =
+    library.status === "ready" && params.workoutId !== undefined
+      ? (library.data.workout(params.workoutId)?.targetRpe ?? undefined)
+      : undefined;
   const [initial, setInitial] = React.useState<ActivityDraft | null>(null);
   if (initial === null && prescribed !== undefined) {
     const draft = newActivityDraft(params, today(), prescribed);
@@ -61,6 +72,7 @@ export default function NewActivityScreen(): React.ReactElement {
             live={params.live === "1"}
             idleEnd={idleEnd(params)}
             planned={prescribed}
+            {...(targetRpe !== undefined && { targetRpe })}
             {...(part !== undefined && { part, gripName: grips.gripName })}
           />
         </HangDataProvider>

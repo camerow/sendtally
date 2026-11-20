@@ -276,7 +276,7 @@ describe("Today", () => {
   it("starts today's lifting workout in the sets player with what it prescribes", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("legs"), workouts: [legs] });
     expect(screen.queryByText(/^Up today/)).toBeNull();
-    expect(screen.getAllByText("5 × 5").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("50 min").length).toBeGreaterThan(0);
     await fireEvent.press(screen.getByText("Start"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/sets",
