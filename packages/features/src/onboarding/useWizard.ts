@@ -110,15 +110,21 @@ export function patchStatus(status: ConnectionStatus, to: FirstRunStep): Connect
   return status;
 }
 
-export function wizardOf(state: WizardState, deps: WizardDeps): Wizard {
-  const { path, step, order, trail, memory } = state;
+/** Every action reads the state as it is when called, so two actions in one handler (answerLog then next) both land. */
+export function wizardOf(current: () => WizardState, deps: WizardDeps): Wizard {
   const { send, capture, update } = deps;
-  const setWay = (way: HistoryWay): void =>
+  const { path, step, order, trail, memory } = current();
+  const setWay = (way: HistoryWay): void => {
+    const s = current();
     update({
-      ...state,
-      memory: { ...memory, way },
-      order: path === null ? order : remainingSteps(path, way, deps.progress, memory, deps.member),
+      ...s,
+      memory: { ...s.memory, way },
+      order:
+        s.path === null
+          ? s.order
+          : remainingSteps(s.path, way, deps.progress, s.memory, deps.member),
     });
+  };
   return {
     path,
     step,
@@ -129,28 +135,44 @@ export function wizardOf(state: WizardState, deps: WizardDeps): Wizard {
     capture,
     choose: (to, from) => {
       send({ step: "path", path: to, from });
-      update(choosePath(state, to, deps));
+      update(choosePath(current(), to, deps));
     },
     answerLog: (existingLog) => {
       send({ step: "log_answered", existingLog });
       setWay(existingLog === "none" || existingLog === "skipped" ? "by_hand" : "import");
     },
     setWay,
-    setDays: (days) => update({ ...state, memory: { ...memory, days } }),
+    setDays: (days) => {
+      const s = current();
+      update({ ...s, memory: { ...s.memory, days } });
+    },
     next: (extra) => {
-      if (path === null) return;
-      capture("onboarding_step_completed", { ...extra, path, step });
-      const to = order[order.indexOf(step) + 1];
-      if (to !== undefined) update({ ...enter(state, to, capture), trail: [...trail, step] });
+      const s = current();
+      if (s.path === null) return;
+      capture("onboarding_step_completed", { ...extra, path: s.path, step: s.step });
+      const to = s.order[s.order.indexOf(s.step) + 1];
+      if (to !== undefined) update({ ...enter(s, to, capture), trail: [...s.trail, s.step] });
     },
     back: () => {
-      const to = trail.at(-1);
-      if (to !== undefined) update({ ...state, step: to, trail: trail.slice(0, -1) });
+      const s = current();
+      const to = s.trail.at(-1);
+      if (to !== undefined) update({ ...s, step: to, trail: s.trail.slice(0, -1) });
     },
-    skip: () => send({ step: "skipped", path, at: step }),
-    leave: () => send(path === null ? { step: "skipped", path, at: step } : { step: "left", path }),
+    skip: () => {
+      const s = current();
+      send({ step: "skipped", path: s.path, at: s.step });
+    },
+    leave: () => {
+      const s = current();
+      send(
+        s.path === null
+          ? { step: "skipped", path: null, at: s.step }
+          : { step: "left", path: s.path }
+      );
+    },
     complete: (outcome, next) => {
-      if (path !== null) send({ step: "completed", path, outcome, next });
+      const s = current();
+      if (s.path !== null) send({ step: "completed", path: s.path, outcome, next });
     },
   };
 }
@@ -162,7 +184,14 @@ export function useWizard(api: SendtallyApi, { capture, member, start }: WizardO
   const onboarding = data?.onboarding;
   // ponytail: opens on NO_PROGRESS when the status is not cached yet; the gate only opens the wizard once it is.
   const progress = onboarding?.progress ?? NO_PROGRESS;
-  const [state, update] = React.useState(() => openWizard(onboarding, { progress, member }, start));
+  const [state, setState] = React.useState(() =>
+    openWizard(onboarding, { progress, member }, start)
+  );
+  const latest = React.useRef(state);
+  const update = React.useCallback((next: WizardState): void => {
+    latest.current = next;
+    setState(next);
+  }, []);
 
   const send = React.useCallback(
     (to: FirstRunStep): void => {
@@ -182,5 +211,5 @@ export function useWizard(api: SendtallyApi, { capture, member, start }: WizardO
     announceOpen(state, onboarding, start, { send, capture });
   });
 
-  return wizardOf(state, { member, progress, capture, send, update });
+  return wizardOf(() => latest.current, { member, progress, capture, send, update });
 }

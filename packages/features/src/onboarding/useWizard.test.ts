@@ -38,7 +38,7 @@ function setup({ onboarding: given = {}, member = false, start }: Setup = {}): {
     },
   };
   return {
-    wizard: () => wizardOf(state, deps),
+    wizard: () => wizardOf(() => state, deps),
     announce: () => announceOpen(state, onboarding, start, deps),
     capture,
     send,
@@ -253,5 +253,16 @@ describe("patchStatus", () => {
       next: "other_path",
     };
     expect(patchStatus(status, to)).toBe(status);
+  });
+});
+
+describe("two actions in one handler", () => {
+  it("lands both, as H1 does with answerLog then next", () => {
+    const { wizard } = setup();
+    wizard().choose("history", "chooser");
+    const held = wizard();
+    held.answerLog("kaya");
+    held.next({ way: "import" });
+    expect(wizard().step).toBe("H2i");
   });
 });
