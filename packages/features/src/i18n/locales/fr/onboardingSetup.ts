@@ -10,4 +10,5 @@ export const onboardingSetup = {
   "onboarding.setup.stravaArtName": "Séance du soir",
   "onboarding.setup.welcomeCard": "Ta grimpe",
   "onboarding.setup.welcomeTitle": "Note ta grimpe. Planifie ton entraînement.",
+  "onboarding.setup.historyMore": "Ajoute d'autres voies, ou vois tout.",
 } as const;

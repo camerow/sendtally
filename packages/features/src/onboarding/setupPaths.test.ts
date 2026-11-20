@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { setupPaths } from "./setupPaths";
+import { historyNextLine, setupPaths } from "./setupPaths";
 import type { OnboardingProgress, OnboardingStatus } from "./types";
 
 const NONE: OnboardingProgress = {
@@ -53,5 +53,14 @@ describe("setupPaths", () => {
       path: "history",
       resume: false,
     });
+  });
+});
+
+describe("historyNextLine", () => {
+  it("starts the pyramid, then says what the next climbs unlock, then invites more once all of it shows", () => {
+    expect(historyNextLine(0)).toBe("Add a climb and your pyramid starts here.");
+    expect(historyNextLine(1)).toBe("2 more and you get your average send.");
+    expect(historyNextLine(4)).toBe("1 more draws your hardest send, year by year.");
+    expect(historyNextLine(5)).toBe("Add more climbs, or see it all.");
   });
 });

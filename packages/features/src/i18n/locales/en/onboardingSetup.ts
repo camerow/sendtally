@@ -10,4 +10,5 @@ export const onboardingSetup = {
   "onboarding.setup.stravaArtName": "Evening session",
   "onboarding.setup.welcomeCard": "Your climbing",
   "onboarding.setup.welcomeTitle": "Log your climbing. Plan your training.",
+  "onboarding.setup.historyMore": "Add more climbs, or see it all.",
 } as const;

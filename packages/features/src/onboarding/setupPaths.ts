@@ -43,7 +43,7 @@ export const SETUP_CIRCUITS: readonly CircuitColour[] = [
 /** What the next climbs unlock, under the user's own pyramid on Finish setting up. */
 export function historyNextLine(climbs: number): string {
   const next = nextUnlock(climbs);
-  if (next === null) return t("onboarding.history.setupBody");
+  if (next === null) return t("onboarding.setup.historyMore");
   return "text" in next ? next.text : `${next.before}${next.more}${next.after}`;
 }
 

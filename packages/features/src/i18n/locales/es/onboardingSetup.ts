@@ -10,4 +10,5 @@ export const onboardingSetup = {
   "onboarding.setup.stravaArtName": "Sesión de tarde",
   "onboarding.setup.welcomeCard": "Tu escalada",
   "onboarding.setup.welcomeTitle": "Registra tu escalada. Planifica tu entrenamiento.",
+  "onboarding.setup.historyMore": "Añade más vías, o míralo todo.",
 } as const;
