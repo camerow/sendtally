@@ -40,7 +40,7 @@ export const onboardingHistory = {
   "onboarding.history.add.needsName": "A project needs its name.",
   "onboarding.history.add.whenRoughly": "When, roughly",
   "onboarding.history.add.pickDay": "Pick the day",
-  "onboarding.history.add.addedCount": "Added · {count}",
+  "onboarding.history.add.addedCount": "Added · {n}",
   "onboarding.history.add.see": "See my climbing",
   "onboarding.history.add.seeCount_one": "See my climbing · {count} climb",
   "onboarding.history.add.seeCount_other": "See my climbing · {count} climbs",
