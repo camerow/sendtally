@@ -48,7 +48,7 @@ const CHOOSER: WizardState = {
   step: "choose",
   order: [],
   trail: [],
-  memory: { way: null, days: [], membershipShown: false },
+  memory: { way: null, existingLog: null, days: [], membershipShown: false },
 };
 
 function choosePath(
@@ -111,9 +111,10 @@ export function patchStatus(status: ConnectionStatus, to: FirstRunStep): Connect
 }
 
 /** Every action reads the state as it is when called, so two actions in one handler (answerLog then next) both land. */
-export function wizardOf(current: () => WizardState, deps: WizardDeps): Wizard {
+/** The wizard as drawn from `state`; its actions read `current()`, so two in one handler both land. */
+export function wizardOf(state: WizardState, current: () => WizardState, deps: WizardDeps): Wizard {
   const { send, capture, update } = deps;
-  const { path, step, order, trail, memory } = current();
+  const { path, step, order, trail, memory } = state;
   const setWay = (way: HistoryWay): void => {
     const s = current();
     update({
@@ -140,6 +141,8 @@ export function wizardOf(current: () => WizardState, deps: WizardDeps): Wizard {
     answerLog: (existingLog) => {
       send({ step: "log_answered", existingLog });
       setWay(existingLog === "none" || existingLog === "skipped" ? "by_hand" : "import");
+      const s = current();
+      update({ ...s, memory: { ...s.memory, existingLog } });
     },
     setWay,
     setDays: (days) => {
@@ -189,11 +192,17 @@ export function useWizard(api: SendtallyApi, { capture, member, start }: WizardO
   const [state, setState] = React.useState(() =>
     openWizard(onboarding, { progress, member }, start)
   );
-  const latest = React.useRef(state);
-  const update = React.useCallback((next: WizardState): void => {
-    latest.current = next;
-    setState(next);
-  }, []);
+  const [latest] = React.useState(() => {
+    let held = state;
+    return { get: (): WizardState => held, set: (next: WizardState): void => void (held = next) };
+  });
+  const update = React.useCallback(
+    (next: WizardState): void => {
+      latest.set(next);
+      setState(next);
+    },
+    [latest]
+  );
 
   const send = React.useCallback(
     (to: FirstRunStep): void => {
@@ -213,5 +222,5 @@ export function useWizard(api: SendtallyApi, { capture, member, start }: WizardO
     announceOpen(state, onboarding, start, { send, capture });
   });
 
-  return wizardOf(() => latest.current, { member, progress, capture, send, update });
+  return wizardOf(state, latest.get, { member, progress, capture, send, update });
 }

@@ -38,7 +38,7 @@ function setup({ onboarding: given = {}, member = false, start }: Setup = {}): {
     },
   };
   return {
-    wizard: () => wizardOf(() => state, deps),
+    wizard: () => wizardOf(state, () => state, deps),
     announce: () => announceOpen(state, onboarding, start, deps),
     capture,
     send,
@@ -99,7 +99,7 @@ describe("the history path", () => {
 
     wizard().answerLog("kaya");
     expect(send).toHaveBeenLastCalledWith({ step: "log_answered", existingLog: "kaya" });
-    expect(wizard().memory.way).toBe("import");
+    expect(wizard().memory).toMatchObject({ way: "import", existingLog: "kaya" });
     expect(wizard().position).toEqual({ n: 1, total: 6 });
 
     const visited = [wizard().step];
