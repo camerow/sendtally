@@ -1,40 +1,31 @@
+import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import type { OnboardingPath, Wizard } from "@sendtally/features/settings";
+import { queries } from "@sendtally/features/query";
+import {
+  pathDone,
+  SAMPLE_PYRAMID,
+  SAMPLE_WEEK,
+  type OnboardingPath,
+} from "@sendtally/features/settings";
 import { displayGrade } from "@sendtally/features/sessions";
 import { useDisplayScales } from "@sendtally/features/settings";
 import { Icon } from "../../components/Icon";
+import { DarkWeek } from "../../components/DarkWeek";
 import { Pyramid } from "../../components/Pyramid";
 import { press } from "../../lib/press";
-import { Label } from "../training/components/Label";
 import { Title } from "../training/components/Title";
-import { DayCell } from "../training/plan/DayCell";
+import type { StepComponent } from "./types";
 import { WizardFrame } from "./WizardFrame";
 
-const PYRAMID = [
-  { value: 6, inner: 1, outer: 0 },
-  { value: 5, inner: 2, outer: 1 },
-  { value: 4, inner: 4, outer: 0 },
-  { value: 3, inner: 5, outer: 0 },
-];
-
-const WEEK: readonly ("strength" | "hangboard" | null)[] = [
-  null,
-  "strength",
-  null,
-  "strength",
-  null,
-  "hangboard",
-  null,
-];
+const WEEK = SAMPLE_WEEK.map((kind) => (kind === null ? null : [kind]));
 
 /** Two doors, each with a small picture of what its path builds. */
-export function ChooserStep({ wizard }: { wizard: Wizard }): React.ReactElement {
+export const ChooserStep: StepComponent = ({ wizard, api }) => {
   const scales = useDisplayScales();
-  const letters = weekdayLetters();
+  const progress = useQuery(queries.status(api)).data?.onboarding.progress;
   const doors: { path: OnboardingPath; title: string; body: string; art: React.ReactNode }[] = [
     {
       path: "history",
@@ -42,8 +33,9 @@ export function ChooserStep({ wizard }: { wizard: Wizard }): React.ReactElement 
       body: t("onboarding.chooser.historyBody"),
       art: (
         <Pyramid
+          tone="dark"
           label={t("trends.gradePyramid")}
-          rows={PYRAMID.map(({ value, inner, outer }) => ({
+          rows={SAMPLE_PYRAMID.map(({ value, inner, outer }) => ({
             gradeLabel: displayGrade({ scale: "v", value }, scales),
             inner,
             outer,
@@ -56,18 +48,7 @@ export function ChooserStep({ wizard }: { wizard: Wizard }): React.ReactElement 
       path: "plan",
       title: t("onboarding.chooser.planTitle"),
       body: t("onboarding.chooser.planBody"),
-      art: (
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          {WEEK.map((kind, i) => (
-            <View key={i} style={{ alignItems: "center", gap: 6 }}>
-              <DayCell kind={kind ?? "strength"} on={kind !== null} size={36} />
-              <Label small color={colors.textSecondary}>
-                {letters[i]}
-              </Label>
-            </View>
-          ))}
-        </View>
-      ),
+      art: <DarkWeek week={WEEK} />,
     },
   ];
   return (
@@ -94,7 +75,7 @@ export function ChooserStep({ wizard }: { wizard: Wizard }): React.ReactElement 
               justifyContent: "center",
               paddingVertical: 16,
               paddingHorizontal: 18,
-              backgroundColor: colors.surfaceSoft,
+              backgroundColor: colors.gunmetal,
             }}
           >
             {d.art}
@@ -113,6 +94,11 @@ export function ChooserStep({ wizard }: { wizard: Wizard }): React.ReactElement 
             <Text style={{ fontFamily: fonts.sans, fontSize: 14, color: colors.textSecondary }}>
               {d.body}
             </Text>
+            {progress !== undefined && pathDone(progress, d.path) && (
+              <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.fern }}>
+                {t("common.done")}
+              </Text>
+            )}
           </View>
         </Pressable>
       ))}
@@ -128,4 +114,4 @@ export function ChooserStep({ wizard }: { wizard: Wizard }): React.ReactElement 
       </Text>
     </WizardFrame>
   );
-}
+};

@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
+import type { SendtallyApi } from "@sendtally/api-client";
 import type { Wizard } from "@sendtally/features/settings";
 import { ChooserStep } from "./ChooserStep";
 
@@ -27,7 +29,26 @@ const wizard: Wizard = {
   capture: jest.fn(),
 };
 
-const show = (): Promise<unknown> => render(<ChooserStep wizard={wizard} />);
+const progress = {
+  sessions: true,
+  exercises: false,
+  workouts: false,
+  blockMemberships: false,
+  scheduledBlocks: false,
+};
+
+const api = {
+  status: async () => ({ onboarding: { path: null, left: false, progress } }),
+} as unknown as SendtallyApi;
+
+const show = (): Promise<unknown> => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={client}>
+      <ChooserStep wizard={wizard} api={api} />
+    </QueryClientProvider>
+  );
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -48,5 +69,10 @@ describe("chooser", () => {
     expect(wizard.choose).toHaveBeenCalledWith("history", "chooser");
     await fireEvent.press(screen.getByText("Build my training plan"));
     expect(wizard.choose).toHaveBeenCalledWith("plan", "chooser");
+  });
+
+  it("marks a path the user has already done", async () => {
+    await show();
+    expect(await screen.findAllByText("Done")).toHaveLength(1);
   });
 });
