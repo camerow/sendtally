@@ -1,11 +1,13 @@
 /**
  * Where a full load under /app goes: an account the server says has not had first run goes to
- * it, keeping its import page reachable as the phone does, and anyone else leaves /app/start.
+ * it, keeping its import page reachable as the phone does, and anyone else leaves /app/start
+ * unless it was opened onto a path, as the setup cards and Account do.
  */
-export function firstRunGate(path: string, firstRun: boolean | undefined): string | null {
+export function firstRunGate(url: URL, firstRun: boolean | undefined): string | null {
+  const path = url.pathname;
   if (firstRun === true)
     return path === "/app/start" || path === "/app/import" ? null : "/app/start";
-  return path === "/app/start" ? "/app" : null;
+  return path === "/app/start" && !url.searchParams.has("path") ? "/app" : null;
 }
 
 /**
