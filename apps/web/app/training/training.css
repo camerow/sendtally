@@ -370,32 +370,10 @@
   cursor: pointer;
 }
 
-.intro-meta {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-on-white-secondary);
-}
-
 .body-preview {
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-.body-turn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.body-turn-label {
-  flex: 1;
-  color: var(--bs-gunmetal);
-}
-
-.body-turn-names {
-  font-size: 13px;
-  color: var(--text-on-white-secondary);
 }
 
 .body-bar {
@@ -434,47 +412,6 @@
   color: var(--bs-petal-ink);
 }
 
-.preview-row {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--line-on-light-soft);
-}
-
-.preview-row-line {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.preview-row-title {
-  flex: 1 1 auto;
-  font-weight: 600;
-  font-size: 15px;
-}
-
-.preview-row-detail {
-  flex-shrink: 1;
-  text-align: right;
-  font-family: var(--font-mono);
-  font-size: 13px;
-}
-
-.preview-row-note {
-  font-size: 13px;
-  color: rgba(64, 63, 76, 0.55);
-}
-
-.preview-row-note > :first-child {
-  flex: 1;
-}
-
-.preview-row-rest {
-  font-family: var(--font-mono);
-  font-size: 12px;
-}
-
 .rest-divider {
   min-height: 34px;
   display: flex;
@@ -490,16 +427,6 @@
   content: "";
   flex: 1;
   border-top: 1.5px dashed var(--line-on-light-strong);
-}
-
-.protocol {
-  gap: 10px;
-}
-
-.protocol-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
 .swatches {
@@ -526,11 +453,6 @@
 .swatch--rest::before {
   height: 4px;
   background: var(--bs-fern);
-}
-
-.protocol-summary {
-  font-family: var(--font-mono);
-  font-size: 13px;
 }
 
 .stat-grid {
@@ -1135,15 +1057,6 @@
   border: 1.5px solid var(--bs-white);
 }
 
-.done-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 14px;
-  border-radius: var(--radius-card-lg);
-  border: 1px solid var(--line-on-light-strong);
-}
-
 /* A fingerboard part's grips sit in its own card, one after another with no card each. */
 .done-flat {
   display: flex;
@@ -1151,112 +1064,10 @@
   gap: 14px;
 }
 
-.done-card.done-card--flat {
-  padding: 0;
-  border: none;
-}
-
-.done-card-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-bottom: 4px;
-}
-
 .done-card-mark {
   width: 10px;
   height: 10px;
   border-radius: 3px;
-}
-
-.done-card-name {
-  flex: 1;
-  font-weight: 600;
-  font-size: 17px;
-}
-
-.done-card-count {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-on-white-secondary);
-}
-
-.done-card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.set-row {
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.set-row--head {
-  min-height: 24px;
-}
-
-.set-col-n {
-  width: 34px;
-  flex: none;
-  box-sizing: border-box;
-  padding-left: 8px;
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.set-row--head .set-col-n {
-  font-weight: 500;
-  font-size: 10px;
-}
-
-.set-col-target {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--text-on-white-secondary);
-}
-
-.set-row--head .set-col-target,
-.set-row--head .set-col-done {
-  font-size: 10px;
-}
-
-.set-row--head .set-col-done {
-  text-align: right;
-}
-
-.set-row--head .set-tick,
-.set-row--head .set-remove {
-  height: auto;
-}
-
-.set-short {
-  font-size: 11px;
-  color: #c27c0e;
-}
-
-.set-col-done {
-  flex: none;
-}
-
-.set-col-rpe {
-  width: 64px;
-  flex: none;
-  display: inline-flex;
-  justify-content: center;
-}
-
-.set-row--head .set-col-rpe {
-  font-size: 10px;
 }
 
 .set-fields {
@@ -1276,11 +1087,6 @@
 .set-climbs {
   font-family: var(--font-mono);
   font-size: 13px;
-  color: rgba(64, 63, 76, 0.55);
-}
-
-.set-row--off .set-col-n,
-.set-row--off .set-col-target {
   color: rgba(64, 63, 76, 0.55);
 }
 
@@ -1378,11 +1184,6 @@
   font-size: 32px;
 }
 
-.summary-section {
-  padding-top: 4px;
-  color: var(--text-on-white-secondary);
-}
-
 .result-card {
   display: flex;
   flex-direction: column;
@@ -1404,67 +1205,6 @@
   font-size: 15.5px;
 }
 
-.result-change {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 11.5px;
-  color: var(--text-on-white-secondary);
-}
-
-.result-change--up {
-  color: var(--bs-fern);
-}
-
-.result-card-effort {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--bs-gunmetal);
-}
-
-.result-card-effort .effort-mark-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 4px;
-}
-
-.result-card-aimed {
-  font-weight: 400;
-  font-size: 11.5px;
-  color: var(--text-on-white-secondary);
-}
-
-.result-card-foot {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--text-on-white-secondary);
-}
-
-.set-chips,
-.climb-set-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.set-chip {
-  padding: 0 9px;
-  border-radius: 8px;
-  background: var(--surface-soft);
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 12.5px;
-  line-height: 28px;
-}
-
-.set-chip--best {
-  background: var(--bs-gunmetal);
-  color: var(--bs-white);
-}
-
 .climb-set {
   display: flex;
   align-items: center;
@@ -1474,48 +1214,6 @@
 .climb-set-label {
   width: 44px;
   flex: none;
-}
-
-.climb-badge {
-  min-width: 30px;
-  height: 28px;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 7px;
-  border-radius: 8px;
-  background: var(--surface-soft);
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 12.5px;
-}
-
-.climb-badge--open {
-  background: none;
-  border: 1.5px dashed var(--line-on-light-strong);
-  color: var(--text-on-white-secondary);
-}
-
-.climb-badge-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.over-time {
-  gap: 12px;
-  padding-top: 4px;
-}
-
-.over-time-headline {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.over-time-value {
-  font-size: 24px;
 }
 
 .hang-box {
@@ -1962,23 +1660,6 @@
 }
 
 @media (max-width: 767px) {
-  .done-card {
-    padding: 12px 10px;
-  }
-
-  .set-row {
-    gap: 6px;
-  }
-
-  .set-col-n {
-    width: 22px;
-    padding-left: 2px;
-  }
-
-  .set-col-target {
-    font-size: 11px;
-  }
-
   .set-tick {
     position: relative;
     width: 32px;
@@ -1988,10 +1669,6 @@
     content: "";
     position: absolute;
     inset: 0 -6px;
-  }
-
-  .set-col-rpe {
-    width: 40px;
   }
 
   .set-remove {
@@ -2519,4 +2196,67 @@
 .set-check:disabled,
 .set-tick-col:has(.set-check:disabled) {
   cursor: default;
+}
+
+.done-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.done-body--flat {
+  gap: 14px;
+}
+
+.done-flat-exercise {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.set-read-value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--bs-gunmetal);
+  white-space: nowrap;
+}
+
+.summary-notes {
+  margin: 0;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--bs-gunmetal);
+  white-space: pre-wrap;
+}
+
+.effort-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.effort-target {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--bs-gunmetal);
+}
+
+.stat-grid--compact dd {
+  font-size: 16px;
+}
+
+.protocol-bar {
+  display: flex;
+  padding-top: 12px;
+}
+
+.protocol-bar .phase-bar {
+  flex: 1;
+}
+
+.exercise-block .swatches {
+  padding-top: 6px;
 }

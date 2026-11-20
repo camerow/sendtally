@@ -6,17 +6,13 @@ export {
   browseLibrary,
   copyName,
   doseSummary,
-  exerciseTarget,
   exerciseTargetLine,
   targetText,
-  withTarget,
   draftOf,
   exerciseName,
   libraryOf,
   libraryShelves,
-  letterName,
   newWorkoutDraft,
-  turnName,
   estimatedMinutes,
   workoutMinutes,
   workoutUsage,
@@ -66,14 +62,7 @@ export * from "./holdRow";
 export * from "./startLive";
 export * from "./useTimerPlayers";
 export * from "./hangReview";
-export {
-  bodyHeading,
-  checklistLine,
-  checklistTitle,
-  itemDoseText,
-  itemTitle,
-  runItems,
-} from "./checklist";
+export { bodyHeading, checklistLine, checklistTitle, itemTitle, runItems } from "./checklist";
 export { useLineKeys } from "./useLineKeys";
 export {
   memberSetLabel,

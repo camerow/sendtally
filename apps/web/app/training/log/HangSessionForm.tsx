@@ -5,7 +5,6 @@ import { hangCount, hangTotals } from "@sendtally/features/activities";
 import { hangEditResult, hangEditSets } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { hangTitle } from "@sendtally/features/sessions";
-import { KIND_LOOK } from "@sendtally/features/training";
 import { useToast } from "../../components/Toast";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { useGoBack } from "../../lib/useGoBack";
@@ -91,7 +90,6 @@ export function HangSessionForm({ session }: { session: HangSessionRecord }): Re
         off={sets.off}
         planned={hangSessionItems(session).map((i) => i.dose)}
         unit={unit}
-        color={KIND_LOOK.hangboard.ink}
         hangs
         hangLoadKg={draft.loadKg}
         setup={

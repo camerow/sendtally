@@ -1,17 +1,29 @@
 import React from "react";
 import { effortColor } from "@sendtally/design/tokens";
 import { effortWord } from "@sendtally/features/hang";
-import { t } from "@sendtally/features/i18n";
+import { formatNumber, t } from "@sendtally/features/i18n";
 
 const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 
-export type EffortFieldProps = { value: number | null; onChange: (rpe: number | null) => void };
+export type EffortFieldProps = {
+  value: number | null;
+  /** The session's Target RPE, beside the label. */
+  target?: number;
+  onChange: (rpe: number | null) => void;
+};
 
-/** Effort: optional, ten bars rising with it, the number and its word, clearable. */
-export function EffortField({ value, onChange }: EffortFieldProps): React.ReactElement {
+/** RPE: optional, ten bars rising with it, the number and its word, clearable; its target beside the label. */
+export function EffortField({ value, target, onChange }: EffortFieldProps): React.ReactElement {
   return (
     <div className="form-section">
-      <span className="train-label">{t("common.effort")}</span>
+      <span className="effort-head">
+        <span className="train-label">RPE</span>
+        {target !== undefined && (
+          <span className="effort-target">
+            {t("common.targetRpe", { n: formatNumber(target) })}
+          </span>
+        )}
+      </span>
       <div className="effort-bars">
         {LEVELS.map((level) => (
           <button

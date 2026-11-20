@@ -10,6 +10,7 @@ import { SummaryTiles } from "../../components/detail/SummaryTiles";
 import { stravaMenuItem } from "../../components/detail/stravaMenuItem";
 import { useAppApi } from "../../lib/useAppApi";
 import { useGoBack } from "../../lib/useGoBack";
+import { workoutHistoryPath } from "../history/paths";
 import { activityEditPath } from "../log/paths";
 
 export type SummaryFrameProps = {
@@ -22,7 +23,7 @@ export type SummaryFrameProps = {
   children: React.ReactNode;
 };
 
-/** What every finished workout shares: Back, Edit and the menu, its kicker, title, its tiles and Strava. */
+/** What every finished workout shares: Back, History, Edit and the menu, its kicker, title, its tiles and Strava. */
 export function SummaryFrame({
   kicker,
   kickerColor,
@@ -51,6 +52,14 @@ export function SummaryFrame({
       backTo="/app"
       action={
         <span className="detail-actions">
+          {target.record.workoutId !== null && (
+            <Link
+              to={workoutHistoryPath(target.record.workoutId, target.record.id)}
+              className="edit-button"
+            >
+              {t("common.history")}
+            </Link>
+          )}
           <Link to={activityEditPath(target.record.id)} className="edit-button">
             {t("common.edit")}
           </Link>

@@ -1,14 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { isChecklist } from "@sendtally/core/hang";
 import { setLocale } from "../i18n";
-import {
-  bodyHeading,
-  checklistLine,
-  checklistTitle,
-  itemDoseText,
-  itemTitle,
-  runItems,
-} from "./checklist";
+import { bodyHeading, checklistLine, checklistTitle, itemTitle, runItems } from "./checklist";
 
 afterEach(() => setLocale("en"));
 
@@ -27,10 +20,8 @@ describe("a checklist as a workout's item", () => {
       checklist: { lines: ["Jog", "Hang"] },
     };
     expect(itemTitle(list)).toBe("Checklist");
-    expect(itemDoseText("strength", list, "kg")).toBe("2 lines");
     const rows = { exercise: "Row", dose: { sets: 3, reps: 8 } };
     expect(itemTitle(rows)).toBe("Row");
-    expect(itemDoseText("strength", rows, "kg")).toBe("3 × 8");
   });
 });
 

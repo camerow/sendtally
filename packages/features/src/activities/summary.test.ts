@@ -1,16 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ItemDone } from "@sendtally/core/hang";
 import { exerciseSeries } from "../statistics/exercises";
-import {
-  exerciseResults,
-  hangGrids,
-  hangTotals,
-  pastSessions,
-  seriesPoint,
-  setChange,
-  setEffort,
-  setEffortText,
-} from "./summary";
+import { hangGrids, hangTotals, pastSessions, seriesPoint, setChange } from "./summary";
 
 type Log = { id: string; date: string; startTime: string | null; workoutId: string | null };
 
@@ -39,57 +30,6 @@ describe("setChange", () => {
       by: 1,
     });
     expect(setChange({ reps: 8 }, { reps: 8 }, "reps")).toEqual({ metric: "reps", by: 0 });
-  });
-});
-
-describe("setEffort", () => {
-  it("averages the rated sets to one decimal against the target, none when none was rated", () => {
-    expect(setEffort([{ rpe: 8 }, { rpe: 9 }, { rpe: 9 }, {}], 8)).toEqual({
-      actual: 8.7,
-      target: 8,
-    });
-    expect(setEffort([{ rpe: 7 }])).toEqual({ actual: 7, target: null });
-    expect(setEffort([{ reps: 5 }], 8)).toBeNull();
-    expect(setEffortText({ actual: 8.8, target: 8 })).toEqual(["RPE 8.8", "· aimed 8"]);
-    expect(setEffortText({ actual: 7, target: null })).toEqual(["RPE 7", ""]);
-  });
-});
-
-describe("exerciseResults", () => {
-  const before = log("a1", "2026-10-23", [squat([5, 80], [5, 80])]);
-  const other = log("x", "2026-10-25", [squat([5, 120])], "w2");
-  const today = log("a2", "2026-10-28", [
-    squat([5, 82.5], [5, 82.5], [4, 82.5]),
-    { item: 1, exercise: "Bench press", sets: [{ reps: 8, weightKg: 60 }] },
-    { item: 2, exercise: "Cat-cow", sets: [] },
-  ]);
-
-  it("marks the best set and compares it with the same workout's previous session", () => {
-    const [squats, bench] = exerciseResults(today, [today, other, before]);
-    expect(squats).toEqual({
-      exercise: "Back squat",
-      sets: today.done[0]?.sets,
-      best: 0,
-      last: { set: { reps: 5, weightKg: 80 }, date: "2026-10-23" },
-      change: { metric: "load", by: 2.5 },
-      effort: null,
-    });
-    expect(bench).toMatchObject({ best: 0, last: null, change: null });
-  });
-
-  it("compares a log with no workout against any earlier session of the exercise", () => {
-    const loose = { ...today, workoutId: null };
-    const [squats] = exerciseResults(loose, [loose, other, before]);
-    expect(squats?.last).toEqual({ set: { reps: 5, weightKg: 120 }, date: "2026-10-25" });
-  });
-
-  it("never compares with a later session", () => {
-    expect(exerciseResults(before, [before, today])[0]).toMatchObject({ last: null });
-  });
-
-  it("has no best set for a checklist's ticks", () => {
-    const flow = log("m", "2026-10-28", [{ item: 0, exercise: "Pigeon", sets: [{}] }], null);
-    expect(exerciseResults(flow, [flow])[0]).toMatchObject({ best: null, change: null });
   });
 });
 

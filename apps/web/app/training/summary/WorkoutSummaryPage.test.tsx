@@ -55,12 +55,15 @@ vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
 vi.mock("@sendtally/features/activities", async (actual) => ({
   ...(await actual<typeof Activities>()),
   useActivityActions: () => writes,
-  useActivities: () => ({ state: { status: "ready", data: [legs] }, reload: vi.fn() }),
+  useActivities: () => ({
+    state: { status: "ready", data: [legs, { ...legs, id: "a2", workoutId: "w1" }] },
+    reload: vi.fn(),
+  }),
   useActivityPost: () => ({ state: null, run: vi.fn(), refresh: vi.fn() }),
 }));
 vi.mock("@sendtally/features/statistics", async (actual) => ({
   ...(await actual<typeof Statistics>()),
-  useExerciseSeries: () => ({ status: "ready", data: [] }),
+  useExercises: () => ({ state: { status: "ready", data: [] } }),
 }));
 vi.mock("@sendtally/features/training", async (actual) => ({
   ...(await actual<typeof Training>()),
@@ -111,14 +114,24 @@ const click = (el: Element | null | undefined): void => act(() => (el as HTMLEle
 const text = (): string => container.textContent ?? "";
 
 describe("WorkoutSummaryPage", () => {
-  it("shows an activity's tiles and what was done, with Edit beside the menu", () => {
+  it("shows its length and RPE, and each exercise as read rows, with Edit beside the menu", () => {
     mount("a1");
     expect(container.querySelector("h1")?.textContent).toBe("Gym, legs");
-    expect(text()).toContain("What you did");
-    expect(container.querySelectorAll(".set-chip")).toHaveLength(2);
-    expect(container.querySelector(".set-chip--best")?.textContent).toContain("85");
+    const tiles = [...container.querySelectorAll(".detail-tile")].map((t) => t.textContent);
+    expect(tiles).toHaveLength(2);
+    expect(text()).not.toContain("What you did");
+    expect(container.querySelector(".exercise-head-name")?.textContent).toBe("Back squat");
+    const rows = [...container.querySelectorAll(".set-read-value")].map((r) => r.textContent);
+    expect(rows).toEqual(["5 reps × 80 kg", "5 reps × 85 kg"]);
     expect(container.querySelector(".edit-button")?.getAttribute("href")).toBe(
       "/app/activity/a1/edit"
+    );
+  });
+
+  it("opens its workout's history from the header when it ran a workout", () => {
+    mount("a2");
+    expect(container.querySelector(".detail-actions a")?.getAttribute("href")).toBe(
+      "/app/train/workouts/w1/history?current=a2"
     );
   });
 

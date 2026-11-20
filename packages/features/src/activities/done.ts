@@ -83,18 +83,6 @@ export function foldedLine(sets: readonly SetDone[], unit: WeightUnit): string {
   ).work;
 }
 
-/** A set as a chip under its exercise, whose unit the card states once: "5 × 180", "8", "60s". */
-export function setChip(set: SetDone, unit: WeightUnit, repsMax?: number): string {
-  if (set.climbs !== undefined) return climbingSetText(set);
-  const weight = set.weightKg ? weightValue(set.weightKg, unit) : undefined;
-  const work = [set.reps === undefined ? undefined : countText(set.reps, repsMax), weight]
-    .filter((p) => p !== undefined)
-    .join(" × ");
-  return [work, set.onS === undefined ? "" : setSeconds(set.onS)]
-    .filter((p) => p !== "")
-    .join(" · ");
-}
-
 /** One set of one item, as the review ticks it off: "0:2". */
 export const setKeyOf = (item: number, set: number): string => `${item}:${set}`;
 
@@ -125,42 +113,6 @@ export const withLineToggled = (
       : [...checked, line].sort((a, b) => a - b);
     return { ...d, checklist: { ...d.checklist, checked: next } };
   });
-
-/** What an exercise's sets are: sets of reps, a hangboard's hangs, or a circuit's laps of moves. */
-export type SetsOf = "sets" | "hangs" | "laps";
-
-/** An exercise's count in the review: its sets or laps, or "Not started" when none is ticked. */
-export const exerciseCountText = (
-  d: Pick<ItemDone, "item" | "sets">,
-  off: readonly string[],
-  of: SetsOf
-): string =>
-  d.sets.every((_, s) => off.includes(setKeyOf(d.item, s)))
-    ? t("activities.notStarted")
-    : setsCountText(d.sets.length, of);
-
-/** "2 sets", or "2 laps" for a circuit. */
-export const setsCountText = (count: number, of: SetsOf = "sets"): string =>
-  of === "laps" ? t("tally.lapCount", { count }) : t("activities.setCount", { count });
-
-const SHORT = {
-  sets: "activities.shortReps",
-  hangs: "activities.shortHangs",
-  laps: "activities.shortMoves",
-} as const;
-
-/** How far a set fell short of its dose, "4 of 6 hangs", "6 of 8 reps", "8 of 40 moves" or "0:30 of 0:45"; null when it did not. */
-export function shortOf(
-  set: SetDone,
-  dose: SetDone | undefined,
-  of: SetsOf = "sets"
-): string | null {
-  if (dose?.reps !== undefined && set.reps !== undefined && set.reps < dose.reps)
-    return t(SHORT[of], { done: formatNumber(set.reps), of: formatNumber(dose.reps) });
-  if (dose?.onS !== undefined && set.onS !== undefined && set.onS < dose.onS)
-    return t("activities.partOf", { done: clock(set.onS, true), of: clock(dose.onS, true) });
-  return null;
-}
 
 const withSets = (
   done: readonly ItemDone[],
