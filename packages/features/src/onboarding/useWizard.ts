@@ -32,7 +32,7 @@ type WizardDeps = {
   progress: OnboardingProgress;
   capture: Capture;
   send: (to: FirstRunStep) => void;
-  update: (state: WizardState) => void;
+  update: (change: (state: WizardState) => WizardState) => void;
 };
 
 const NO_PROGRESS: OnboardingProgress = {
@@ -62,10 +62,15 @@ function choosePath(
   return { ...state, path, order, step: first, trail: [...state.trail, state.step] };
 }
 
-function enter(state: WizardState, step: StepId, capture: Capture): WizardState {
-  if (state.path === null || (step !== "H5" && step !== "P6")) return { ...state, step };
-  capture("paywall_shown", { source: "onboarding", path: state.path, step });
+function enter(state: WizardState, step: StepId): WizardState {
+  if (step !== "H5" && step !== "P6") return { ...state, step };
   return { ...state, step, memory: { ...state.memory, membershipShown: true } };
+}
+
+/** The membership offer just came on screen: the app sends this once, as the step lands on H5 or P6. */
+export function paywallOnEnter(path: OnboardingPath | null, step: StepId, capture: Capture): void {
+  if (path !== null && (step === "H5" || step === "P6"))
+    capture("paywall_shown", { source: "onboarding", path, step });
 }
 
 /** Where the wizard opens: the path asked for, the path the status says is under way, or the chooser. */
@@ -110,21 +115,17 @@ export function patchStatus(status: ConnectionStatus, to: FirstRunStep): Connect
   return status;
 }
 
-/** Every action reads the state as it is when called, so two actions in one handler (answerLog then next) both land. */
-export function wizardOf(current: () => WizardState, deps: WizardDeps): Wizard {
+/** Each action is a pure change of the state as it is when React applies it, so two in one handler both land. */
+export function wizardOf(state: WizardState, deps: WizardDeps): Wizard {
   const { send, capture, update } = deps;
-  const { path, step, order, trail, memory } = current();
-  const setWay = (way: HistoryWay): void => {
-    const s = current();
-    update({
-      ...s,
-      memory: { ...s.memory, way },
-      order:
-        s.path === null
-          ? s.order
-          : remainingSteps(s.path, way, deps.progress, s.memory, deps.member),
-    });
-  };
+  const { path, step, order, trail, memory } = state;
+  const reorder = (s: WizardState, way: HistoryWay): WizardState => ({
+    ...s,
+    memory: { ...s.memory, way },
+    order:
+      s.path === null ? s.order : remainingSteps(s.path, way, deps.progress, s.memory, deps.member),
+  });
+  const setWay = (way: HistoryWay): void => update((s) => reorder(s, way));
   return {
     path,
     step,
@@ -135,44 +136,34 @@ export function wizardOf(current: () => WizardState, deps: WizardDeps): Wizard {
     capture,
     choose: (to, from) => {
       send({ step: "path", path: to, from });
-      update(choosePath(current(), to, deps));
+      update((s) => choosePath(s, to, deps));
     },
     answerLog: (existingLog) => {
       send({ step: "log_answered", existingLog });
       setWay(existingLog === "none" || existingLog === "skipped" ? "by_hand" : "import");
     },
     setWay,
-    setDays: (days) => {
-      const s = current();
-      update({ ...s, memory: { ...s.memory, days } });
-    },
+    setDays: (days) => update((s) => ({ ...s, memory: { ...s.memory, days } })),
     next: (extra) => {
-      const s = current();
-      if (s.path === null) return;
-      capture("onboarding_step_completed", { ...extra, path: s.path, step: s.step });
-      const to = s.order[s.order.indexOf(s.step) + 1];
-      if (to !== undefined) update({ ...enter(s, to, capture), trail: [...s.trail, s.step] });
+      if (path === null) return;
+      capture("onboarding_step_completed", { ...extra, path, step });
+      update((s) => {
+        const at = s.order.indexOf(s.step);
+        const from = at >= 0 ? at : Math.max(-1, ...s.trail.map((x) => s.order.indexOf(x)));
+        const to = s.order[from + 1];
+        return to === undefined ? s : { ...enter(s, to), trail: [...s.trail, s.step] };
+      });
     },
-    back: () => {
-      const s = current();
-      const to = s.trail.at(-1);
-      if (to !== undefined) update({ ...s, step: to, trail: s.trail.slice(0, -1) });
-    },
-    skip: () => {
-      const s = current();
-      send({ step: "skipped", path: s.path, at: s.step });
-    },
-    leave: () => {
-      const s = current();
-      send(
-        s.path === null
-          ? { step: "skipped", path: null, at: s.step }
-          : { step: "left", path: s.path }
-      );
-    },
+    back: () =>
+      update((s) => {
+        const to = s.trail.at(-1);
+        return to === undefined ? s : { ...s, step: to, trail: s.trail.slice(0, -1) };
+      }),
+    skip: () => send({ step: "skipped", path, at: step }),
+    leave: () =>
+      send(path === null ? { step: "skipped", path: null, at: step } : { step: "left", path }),
     complete: (outcome, next) => {
-      const s = current();
-      if (s.path !== null) send({ step: "completed", path: s.path, outcome, next });
+      if (path !== null) send({ step: "completed", path, outcome, next });
     },
   };
 }
@@ -184,14 +175,7 @@ export function useWizard(api: SendtallyApi, { capture, member, start }: WizardO
   const onboarding = data?.onboarding;
   // ponytail: opens on NO_PROGRESS when the status is not cached yet; the gate only opens the wizard once it is.
   const progress = onboarding?.progress ?? NO_PROGRESS;
-  const [state, setState] = React.useState(() =>
-    openWizard(onboarding, { progress, member }, start)
-  );
-  const latest = React.useRef(state);
-  const update = React.useCallback((next: WizardState): void => {
-    latest.current = next;
-    setState(next);
-  }, []);
+  const [state, update] = React.useState(() => openWizard(onboarding, { progress, member }, start));
 
   const send = React.useCallback(
     (to: FirstRunStep): void => {
@@ -211,5 +195,8 @@ export function useWizard(api: SendtallyApi, { capture, member, start }: WizardO
     announceOpen(state, onboarding, start, { send, capture });
   });
 
-  return wizardOf(() => latest.current, { member, progress, capture, send, update });
+  const { path, step } = state;
+  React.useEffect(() => paywallOnEnter(path, step, capture), [path, step, capture]);
+
+  return wizardOf(state, { member, progress, capture, send, update });
 }

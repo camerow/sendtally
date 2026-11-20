@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ConnectionStatus, FirstRunStep } from "@sendtally/api-client";
 import { DEFAULT_GRADE_SCALES } from "../settings/transforms";
 import type { Capture, OnboardingProgress, OnboardingStatus, PathFrom } from "./types";
-import { announceOpen, openWizard, patchStatus, wizardOf } from "./useWizard";
+import { announceOpen, openWizard, patchStatus, paywallOnEnter, wizardOf } from "./useWizard";
 
 const NONE: OnboardingProgress = {
   sessions: false,
@@ -33,12 +33,14 @@ function setup({ onboarding: given = {}, member = false, start }: Setup = {}): {
     progress: onboarding.progress,
     capture,
     send,
-    update: (next: typeof state): void => {
-      state = next;
+    update: (change: (s: typeof state) => typeof state): void => {
+      const before = state.step;
+      state = change(state);
+      if (state.step !== before) paywallOnEnter(state.path, state.step, capture);
     },
   };
   return {
-    wizard: () => wizardOf(() => state, deps),
+    wizard: () => wizardOf(state, deps),
     announce: () => announceOpen(state, onboarding, start, deps),
     capture,
     send,

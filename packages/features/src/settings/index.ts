@@ -19,3 +19,4 @@ export {
   type FirstRunSource,
 } from "./firstRun";
 export type { DeleteAccountStatus, SettingsVM } from "./types";
+export * from "../onboarding";

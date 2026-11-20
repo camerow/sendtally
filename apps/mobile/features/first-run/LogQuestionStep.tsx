@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import type { Wizard } from "@sendtally/features/onboarding";
+import type { Wizard } from "@sendtally/features/settings";
 import {
   FIRST_RUN_SOURCES,
   firstRunNextLabel,

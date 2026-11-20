@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import type { OnboardingPath, Wizard } from "@sendtally/features/onboarding";
+import type { OnboardingPath, Wizard } from "@sendtally/features/settings";
 import { displayGrade } from "@sendtally/features/sessions";
 import { useDisplayScales } from "@sendtally/features/settings";
 import { Icon } from "../../components/Icon";
