@@ -1,7 +1,7 @@
 export const settings = {
   "settings.grades": "Cotations",
   "settings.gradesBody":
-    "L'échelle dans laquelle tu enregistres. Les voies déjà enregistrées gardent leur échelle d'origine.",
+    "Chaque cotation s'affiche dans cette échelle, y compris les voies enregistrées dans une autre.",
   "settings.stravaActive":
     "Lié à ton compte Strava. Les séances que tu enregistres peuvent être publiées dans ton fil comme activités Rock Climbing.",
   "settings.stravaLapsed":
