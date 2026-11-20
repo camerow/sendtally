@@ -214,7 +214,7 @@ export function AddClimbsStep({ wizard, api }: Parameters<StepComponent>[0]): Re
             light
             chips={ladder.map((g) => ({ key: g, label: g }))}
             active={at < 0 ? null : climb.grade}
-            startIndex={at < 0 ? Math.floor(ladder.length / 3) : at}
+            startIndex={Math.max(0, at)}
             onPick={(grade) => setClimb({ ...climb, grade })}
           />
         </View>

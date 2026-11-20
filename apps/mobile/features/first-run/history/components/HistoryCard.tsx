@@ -107,7 +107,10 @@ export function HistoryCard({
       {!slim && vm.climbs > 0 && (
         <>
           <View style={{ flexDirection: "row", gap: 6 }}>
-            <DarkTile value={stats.avgSend} label={t("climbs.avgSendWord")} />
+            <DarkTile
+              value={next && vm.climbs < 3 ? null : stats.avgSend}
+              label={t("climbs.avgSendWord")}
+            />
             {days ? (
               <DarkTile
                 value={vm.days}
