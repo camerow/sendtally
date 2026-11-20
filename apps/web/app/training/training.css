@@ -1940,6 +1940,10 @@
   min-height: 20px;
 }
 
+.set-headings .set-tick-col {
+  height: auto;
+}
+
 .set-headings .train-label {
   font-size: 10px;
   color: var(--text-on-white-secondary);
@@ -1972,10 +1976,6 @@
   padding-top: 6px;
 }
 
-.set-item--selected .set-item-name-line:has(.set-remove-button) {
-  align-items: center;
-}
-
 .set-item-name {
   flex: 1;
   min-width: 0;
@@ -2002,6 +2002,9 @@
 }
 
 .set-remove-button {
+  height: 16px;
+  align-self: center;
+  overflow: visible;
   display: inline-flex;
   align-items: center;
   padding-left: 3px;
