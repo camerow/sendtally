@@ -40,6 +40,14 @@ describe("setupPaths", () => {
     ]);
   });
 
+  it("resumes a path left after its first save, so climbs already added are counted", () => {
+    const left = status({ path: "history", left: true, progress: { ...NONE, sessions: true } });
+    expect(setupPaths(left, kept)).toEqual([
+      { path: "history", resume: true },
+      { path: "plan", resume: false },
+    ]);
+  });
+
   it("does not resume a path the wizard is still open on", () => {
     expect(setupPaths(status({ path: "history" }), kept)[0]).toEqual({
       path: "history",

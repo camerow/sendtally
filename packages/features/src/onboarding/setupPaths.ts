@@ -53,15 +53,14 @@ const PATHS: readonly OnboardingPath[] = ["history", "plan"];
 export const pathDone = (progress: OnboardingProgress, path: OnboardingPath): boolean =>
   path === "history" ? progress.sessions : progress.scheduledBlocks;
 
-/** The path cards in order: none once its path is done, Finish setting up while it is left mid-way, otherwise Start until Not now on this device. */
+/** The path cards in order: Finish setting up while a path is left mid-way, otherwise Start until the path is done or Not now on this device. */
 export function setupPaths(
   onboarding: OnboardingStatus,
   dismissed: (path: OnboardingPath) => boolean
 ): SetupPath[] {
-  return PATHS.flatMap((path) => {
-    if (pathDone(onboarding.progress, path)) return [];
-    const resume = onboarding.left && onboarding.path === path;
-    return resume || !dismissed(path) ? [{ path, resume }] : [];
+  return PATHS.flatMap((path): SetupPath[] => {
+    if (onboarding.left && onboarding.path === path) return [{ path, resume: true }];
+    return pathDone(onboarding.progress, path) || dismissed(path) ? [] : [{ path, resume: false }];
   });
 }
 
