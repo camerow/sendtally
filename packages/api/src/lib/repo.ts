@@ -241,6 +241,60 @@ export async function reachFirstRunStep(
   return moved.length > 0;
 }
 
+export type OnboardingPath = NonNullable<UserRow["onboarding_path"]>;
+
+export async function setOnboardingPath(
+  db: D1Database,
+  id: string,
+  path: OnboardingPath | null
+): Promise<void> {
+  await drizzle(db).update(users).set({ onboarding_path: path }).where(eq(users.id, id));
+}
+
+/** A write counts as onboarding while the wizard is open or a path is still running. */
+export const inOnboarding = (user: UserRow | null): boolean =>
+  user !== null &&
+  ((user.first_run_step > 0 && user.first_run_step < 3) || user.onboarding_path !== null);
+
+export type OnboardingProgress = {
+  sessions: boolean;
+  exercises: boolean;
+  workouts: boolean;
+  blockMemberships: boolean;
+  scheduledBlocks: boolean;
+};
+
+/** What the user has made of each thing a wizard step makes, so a step is done when its data exists. */
+export async function onboardingProgress(db: D1Database, id: string): Promise<OnboardingProgress> {
+  const d = drizzle(db);
+  const [s, e, w, m, b] = await d.batch([
+    d.select({ id: sessions.user_id }).from(sessions).where(eq(sessions.user_id, id)).limit(1),
+    d
+      .select({ id: exercises.user_id })
+      .from(exercises)
+      .where(and(eq(exercises.user_id, id), isNull(exercises.built_in)))
+      .limit(1),
+    d.select({ id: workouts.user_id }).from(workouts).where(eq(workouts.user_id, id)).limit(1),
+    d
+      .select({ id: memberships.user_id })
+      .from(memberships)
+      .where(and(eq(memberships.user_id, id), isNotNull(memberships.block_id)))
+      .limit(1),
+    d
+      .select({ id: trainingBlocks.user_id })
+      .from(trainingBlocks)
+      .where(and(eq(trainingBlocks.user_id, id), isNotNull(trainingBlocks.start)))
+      .limit(1),
+  ]);
+  return {
+    sessions: s.length > 0,
+    exercises: e.length > 0,
+    workouts: w.length > 0,
+    blockMemberships: m.length > 0,
+    scheduledBlocks: b.length > 0,
+  };
+}
+
 export type StravaConnectionInput = {
   user_id: string;
   athlete_id: number;
