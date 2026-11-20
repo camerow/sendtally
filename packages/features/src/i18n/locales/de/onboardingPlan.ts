@@ -42,4 +42,10 @@ export const onboardingPlan = {
     "Importiere dein Logbuch oder trag die Klettereien ein, die dir wichtig waren",
   "onboarding.plan.done.openPlan": "Meinen Plan öffnen",
   "onboarding.plan.done.dayFirst": "{day} geht es los",
+  "onboarding.plan.yours": "Deins",
+  "onboarding.plan.week.perWeek_one": "{count} Einheit pro Woche",
+  "onboarding.plan.week.perWeek_other": "{count} Einheiten pro Woche",
+  "onboarding.plan.block.namePlaceholder": "Winterbasis",
+  "onboarding.plan.workout.newExercise": "Neue Übung",
+  "onboarding.plan.workout.exercises": "Übungen",
 } as const;

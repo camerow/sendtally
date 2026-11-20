@@ -36,7 +36,10 @@ export type ItemEditorProps = {
   unit: WeightUnit;
   onChange: (item: Item) => void;
   onRemove: () => void;
-  onSwap: () => void;
+  /** Absent where the card offers no swap. */
+  onSwap?: () => void;
+  /** Shown beside the name, such as a Yours tag. */
+  tag?: React.ReactNode;
   /** Only shows the card, as the exercise editor previews it: no move, swap or remove. */
   preview?: boolean;
   /** Absent for the first item. */
@@ -48,6 +51,8 @@ export type ItemEditorProps = {
    * it out of the superset, saying so, rather than out of the workout.
    */
   member?: number;
+  /** The wizard's card: one row of numbers per dose, no target RPE or dose name, and Remove in the menu. */
+  compact?: boolean;
 };
 
 /**
@@ -68,24 +73,33 @@ export function ItemEditor({
   onMoveDown,
   preview = false,
   member,
+  tag,
+  compact = false,
 }: ItemEditorProps): React.ReactElement {
   const alternating = item.doses.length > 1;
   const next = letterOf(item.doses.length);
   const last = letterOf(item.doses.length - 1);
   const fields = doseFieldsFor(kind, measure, item.doses[0]).filter(
-    (f) => member === undefined || f.key !== "sets"
+    (f) => (member === undefined || f.key !== "sets") && !(compact && f.key === "targetRpe")
   );
   const laps = measure === "laps";
   const { slot } = useFieldOrder([
     ...item.doses.flatMap((_, d) => fields.map((f) => `${d}.${f.key}`)),
     "setRest",
   ]);
+  const remove: DetailMenuRow = {
+    icon: "trash",
+    title:
+      member !== undefined
+        ? t("workouts.outOfSuperset", { name })
+        : t("workouts.removeExercise", { name }),
+    danger: true,
+    onPress: onRemove,
+  };
   const menu: DetailMenuRow[] = [
-    {
-      icon: "refresh",
-      title: t("workouts.swapExercise"),
-      onPress: onSwap,
-    },
+    ...(onSwap === undefined
+      ? []
+      : [{ icon: "refresh" as const, title: t("workouts.swapExercise"), onPress: onSwap }]),
     ...(item.doses.length < MAX_DOSES
       ? [
           {
@@ -104,16 +118,18 @@ export function ItemEditor({
           },
         ]
       : []),
-    {
-      icon: "trash",
-      title:
-        member !== undefined
-          ? t("workouts.outOfSuperset", { name })
-          : t("workouts.removeExercise", { name }),
-      danger: true,
-      onPress: onRemove,
-    },
+    remove,
   ];
+
+  const rest = (
+    <TimeField
+      {...slot("setRest")}
+      label={laps ? t("workouts.lapRest") : t("hang.fieldSetRest")}
+      value={item.doses[0]?.setRestS ?? 0}
+      max={3600}
+      onChange={(seconds) => onChange(withSetRest(item, seconds))}
+    />
+  );
 
   return (
     <View
@@ -132,6 +148,7 @@ export function ItemEditor({
         <Text style={[type.bodyBold, { flex: 1, fontSize: 16, color: colors.gunmetal }]}>
           {name}
         </Text>
+        {tag}
         {onMoveUp !== undefined && (
           <IconButton
             icon="moveUp"
@@ -152,9 +169,9 @@ export function ItemEditor({
             iconSize={18}
           />
         )}
-        {preview ? null : alternating ? (
+        {preview ? null : alternating || compact ? (
           <DetailMenu
-            rows={menu}
+            rows={compact ? [remove] : menu}
             button={{
               label: t("workouts.exerciseMore"),
               color: colors.textSecondary,
@@ -164,14 +181,16 @@ export function ItemEditor({
           />
         ) : (
           <>
-            <IconButton
-              icon="restart"
-              label={t("workouts.swapExercise")}
-              onPress={onSwap}
-              color={colors.textSecondary}
-              size={36}
-              iconSize={18}
-            />
+            {onSwap !== undefined && (
+              <IconButton
+                icon="restart"
+                label={t("workouts.swapExercise")}
+                onPress={onSwap}
+                color={colors.textSecondary}
+                size={36}
+                iconSize={18}
+              />
+            )}
             <IconButton
               icon="remove"
               label={
@@ -209,6 +228,7 @@ export function ItemEditor({
               return (
                 <DoseInput
                   key={field.key}
+                  compact={compact}
                   {...slot(`${d}.${field.key}`)}
                   field={field}
                   dose={dose}
@@ -220,14 +240,14 @@ export function ItemEditor({
                 />
               );
             })}
-            {alternating && (
+            {alternating && !compact && (
               <DoseNameTile
                 name={dose.name ?? ""}
                 accessibilityLabel={`${t("workouts.doseName")} ${letterOf(d)}`}
                 onChange={(text) => onChange(withDoseName(item, d, text))}
               />
             )}
-            {!alternating && fields.length % 2 === 1 && (
+            {!alternating && !compact && fields.length % 2 === 1 && (
               <View testID="dose-spacer" style={{ flexGrow: 1, flexBasis: "40%" }} />
             )}
           </View>
@@ -235,6 +255,7 @@ export function ItemEditor({
       ))}
       {member === undefined && (
         <>
+          {compact && <View style={{ width: "40%" }}>{rest}</View>}
           <View
             style={{
               minHeight: 44,
@@ -256,13 +277,7 @@ export function ItemEditor({
               label={`${t("workouts.alternates")}: ${name}`}
             />
           </View>
-          <TimeField
-            {...slot("setRest")}
-            label={laps ? t("workouts.lapRest") : t("hang.fieldSetRest")}
-            value={item.doses[0]?.setRestS ?? 0}
-            max={3600}
-            onChange={(seconds) => onChange(withSetRest(item, seconds))}
-          />
+          {!compact && rest}
         </>
       )}
     </View>

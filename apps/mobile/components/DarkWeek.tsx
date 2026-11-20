@@ -3,9 +3,8 @@ import { Text, View } from "react-native";
 import type { Weekday, WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { weekdayLetters } from "@sendtally/features/hang";
-import { ON_DARK_SOFT, ON_DARK_TRACK } from "@sendtally/features/workouts";
 import { DayMark } from "../features/training/today/DayMark";
-import { type } from "../features/training/type";
+import { darkMeta } from "../features/first-run/components/DarkCard";
 
 /** Seven days on the dark ground, Monday first: lit where training lands, with each workout's mark. */
 export function DarkWeek({
@@ -27,7 +26,7 @@ export function DarkWeek({
               alignItems: "center",
               justifyContent: "center",
               gap: 3,
-              backgroundColor: kinds === null ? ON_DARK_TRACK : "rgba(249,220,92,0.18)",
+              backgroundColor: kinds === null ? "rgba(255,255,255,0.07)" : "rgba(249,220,92,0.18)",
               borderWidth: kinds === null ? 0 : 1.5,
               borderColor: colors.gold,
             }}
@@ -36,9 +35,7 @@ export function DarkWeek({
               <DayMark key={j} kind={k} filled onDark />
             ))}
           </View>
-          <Text style={[type.mono, { fontSize: 10, color: ON_DARK_SOFT }]}>
-            {letters[i as Weekday]}
-          </Text>
+          <Text style={{ ...darkMeta, fontSize: 10 }}>{letters[i as Weekday]}</Text>
         </View>
       ))}
     </View>
