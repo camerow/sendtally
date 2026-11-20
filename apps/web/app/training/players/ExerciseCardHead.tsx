@@ -5,7 +5,7 @@ import { exerciseName, exerciseTargetLine } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
 import { MoreMenu, type MoreMenuItem } from "../../components/MoreMenu";
 import { LetterBadge } from "../components/LetterBadge";
-import { AboutButton, type About } from "./AboutButton";
+import { AboutButton, type About } from "../components/AboutButton";
 
 export type ExerciseCardHeadProps = {
   item: SessionItem;

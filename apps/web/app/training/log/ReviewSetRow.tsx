@@ -3,8 +3,8 @@ import type { SetDone, WeightUnit } from "@sendtally/core/hang";
 import { setChip, setSeconds, setText } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
-import { RpeField } from "./RpeField";
-import { SetDoneFields } from "./SetDoneFields";
+import { RpeField } from "../components/RpeField";
+import { SetDoneFields } from "../components/SetDoneFields";
 
 export type ReviewSetRowProps = {
   n: number;
@@ -73,9 +73,7 @@ export function ReviewSetRow({
             set={done}
             lifting={lifting}
             hangs={hangs}
-            short={on && short !== null}
             unit={unit}
-            unitless={rpe !== undefined}
             label={label}
             defaultLoadKg={defaultLoadKg}
             onChange={onChange}

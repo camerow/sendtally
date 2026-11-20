@@ -4,7 +4,7 @@ import { hasAbout, type About } from "@sendtally/features/exercises";
 import { KIND_LOOK } from "@sendtally/features/training";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
-import { Description } from "../components/Description";
+import { Description } from "./Description";
 
 export type { About };
 

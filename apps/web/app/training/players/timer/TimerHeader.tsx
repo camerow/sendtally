@@ -4,7 +4,7 @@ import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../../components/Icon";
 import { useGoBack } from "../../../lib/useGoBack";
 import { useLibrary, workoutIn } from "../../library/useLibrary";
-import { AboutButton } from "../AboutButton";
+import { AboutButton } from "../../components/AboutButton";
 
 export type TimerHeaderProps = {
   name: string;

@@ -38,22 +38,24 @@ export type NumberFieldProps = {
   display?: string;
   /** A small box sized to its value with no label shown, for a value in a table row. */
   compact?: boolean;
-  /** Amber: a value short of what was asked. */
-  short?: boolean;
   /** An emptied box commits zero rather than keeping the value it had. */
   clearable?: boolean;
   autoFocus?: boolean;
 };
 
 const shown = (mode: NumberFieldMode, value: number): string =>
-  mode.kind === "time" ? timeText(openTime(value, mode)).join("") : String(value);
+  mode.kind === "time" ? timeText(openTime(value, mode), mode).join("") : String(value);
 
-/** Typed text as HH:MM:SS filling from the right, as on the keypad; a seventh digit is refused. */
-function liveTime(text: string, previous: string): string {
+/**
+ * Typed text as HH:MM:SS filling from the right, as on the keypad, or MM:SS for a time capped
+ * under an hour; a digit past the last pair is refused.
+ */
+function liveTime(text: string, previous: string, limits: TimeLimits): string {
   const digits = text.replace(/\D/g, "");
   if (digits === "") return "";
   const kept = digits.replace(/^0+/, "") || "0";
-  return kept.length > 6 ? previous : timeText({ digits: kept, fresh: false }).join("");
+  const most = limits.max !== undefined && limits.max < 3600 ? 4 : 6;
+  return kept.length > most ? previous : timeText({ digits: kept, fresh: false }, limits).join("");
 }
 
 const typed = (mode: NumberFieldMode, text: string): number | null =>
@@ -83,7 +85,6 @@ export function NumberField({
   mode,
   unit,
   compact = false,
-  short = false,
   placeholder = "–",
   range,
   clearable = false,
@@ -121,7 +122,15 @@ export function NumberField({
       <label htmlFor={id} className={compact ? "visually-hidden" : "number-field-label"}>
         {label}
       </label>
-      <span className={short ? "number-field-box number-field-box--short" : "number-field-box"}>
+      <span
+        className="number-field-box"
+        onMouseDown={(e) => {
+          const input = e.currentTarget.querySelector("input");
+          if (input === null || e.target === input) return;
+          e.preventDefault();
+          input.focus();
+        }}
+      >
         <input
           id={id}
           className="number-field-input"
@@ -133,12 +142,12 @@ export function NumberField({
           value={draft ?? text}
           onFocus={(e) => e.currentTarget.select()}
           onChange={(e) =>
-            setDraft(time ? liveTime(e.target.value, draft ?? text) : e.target.value)
+            setDraft(time ? liveTime(e.target.value, draft ?? text, mode) : e.target.value)
           }
           onPaste={(e) => {
             if (!time) return;
             e.preventDefault();
-            setDraft(liveTime(e.clipboardData.getData("text"), draft ?? text));
+            setDraft(liveTime(e.clipboardData.getData("text"), draft ?? text, mode));
           }}
           onSelect={(e) => {
             const input = e.currentTarget;

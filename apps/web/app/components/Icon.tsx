@@ -41,7 +41,8 @@ export type IconName =
   | "info"
   | "skip"
   | "sound"
-  | "muted";
+  | "muted"
+  | "history";
 
 const SHAPES: Record<IconName, React.ReactElement> = {
   today: (
@@ -121,6 +122,7 @@ const SHAPES: Record<IconName, React.ReactElement> = {
     </>
   ),
   check: <path d="M5 12.5l4.5 4.5L19 7" />,
+  history: <path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4.5v4h4M12 7.5V12l3 2" />,
   pencil: <path d="M5 19h4L19 9l-4-4L5 15zM13.5 6.5l4 4" />,
   moderation: <path d="M12 3.5 19 6.2v5.3c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6.2z" />,
 };

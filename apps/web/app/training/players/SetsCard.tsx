@@ -8,7 +8,7 @@ import {
 import { t } from "@sendtally/features/i18n";
 import { exerciseName, setKey, type SetAt } from "@sendtally/features/workouts";
 import type { MoreMenuItem } from "../../components/MoreMenu";
-import type { About } from "./AboutButton";
+import type { About } from "../components/AboutButton";
 import { RestPreview } from "./RestPreview";
 import { ExerciseCardHead } from "./ExerciseCardHead";
 import { SetRow } from "./SetRow";

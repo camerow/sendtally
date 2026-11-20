@@ -2,10 +2,9 @@ import React from "react";
 import type { SetDone, WeightUnit } from "@sendtally/core/hang";
 import { setChip } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import { holdShort } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
-import { RpeField } from "../log/RpeField";
-import { SetDoneFields } from "../log/SetDoneFields";
+import { RpeField } from "../components/RpeField";
+import { SetDoneFields } from "../components/SetDoneFields";
 
 export type SetRowProps = {
   n: number;
@@ -68,10 +67,8 @@ export function SetRow({
           set={done}
           lifting={lifting}
           unit={unit}
-          unitless={rpe !== undefined}
           label={label}
           go={ticked ? undefined : go}
-          holdShort={holdShort(target, done, ticked)}
           onChange={onChange}
         />
       </span>

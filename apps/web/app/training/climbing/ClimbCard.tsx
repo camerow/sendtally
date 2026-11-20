@@ -4,7 +4,7 @@ import { t } from "@sendtally/features/i18n";
 import type { Tally } from "@sendtally/features/log-session";
 import type { ClimbPlan, ClimbRow } from "@sendtally/features/workouts";
 import type { MoreMenuItem } from "../../components/MoreMenu";
-import type { About } from "../players/AboutButton";
+import type { About } from "../components/AboutButton";
 import { ExerciseCardHead } from "../players/ExerciseCardHead";
 import { RestPreview } from "../players/RestPreview";
 import { ClimbChip } from "./ClimbChip";

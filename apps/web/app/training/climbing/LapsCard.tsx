@@ -12,7 +12,7 @@ import {
 import type { RestClock } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
 import type { MoreMenuItem } from "../../components/MoreMenu";
-import type { About } from "../players/AboutButton";
+import type { About } from "../components/AboutButton";
 import { ExerciseCardHead } from "../players/ExerciseCardHead";
 import { IdleRestRow } from "../players/IdleRestRow";
 import { RestRow } from "../players/RestRow";
