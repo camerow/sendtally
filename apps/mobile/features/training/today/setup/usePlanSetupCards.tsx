@@ -1,0 +1,116 @@
+import { router } from "expo-router";
+import { colors } from "@sendtally/design/tokens";
+import { useClimbingInsights } from "@sendtally/features/climbs";
+import { useGyms } from "@sendtally/features/gyms";
+import { t } from "@sendtally/features/i18n";
+import {
+  historyNextLine,
+  setupCardQuery,
+  useSetupPaths,
+  type OnboardingPath,
+  type SetupPath,
+} from "@sendtally/features/onboarding";
+import { useSettings } from "@sendtally/features/settings";
+import { Pyramid } from "../../../../components/Pyramid";
+import { SamplePyramid } from "../../../../components/SamplePyramid";
+import type { SetupCard } from "../../../../components/SetupStack";
+import { useApi } from "../../../../lib/api";
+import { useSetupDismissed } from "../../../../lib/setupPrompt";
+import { useStravaConnect } from "../../../settings/useStravaConnect";
+import { CircuitsArt } from "./CircuitsArt";
+import { STRAVA_ORANGE, StravaArt } from "./StravaArt";
+import { WeekArt } from "./WeekArt";
+
+const ART_ROWS = 3;
+
+/** The cards on Plan, in order: the two onboarding paths, then the gym and Strava. */
+export function usePlanSetupCards(): SetupCard[] {
+  const api = useApi();
+  const prompts = {
+    history: useSetupDismissed("history"),
+    plan: useSetupDismissed("plan"),
+  };
+  const { paths, skip } = useSetupPaths(api, (p) => prompts[p].dismissed !== false);
+  const own = useClimbingInsights(api, "all").vm?.pyramid ?? [];
+  const climbs = own.reduce((n, r) => n + r.inner + r.outer, 0);
+  const settings = useSettings(api);
+  const connect = useStravaConnect(api, settings.reload);
+  const gyms = useGyms(api);
+  const gymPrompt = useSetupDismissed("gym");
+  const stravaPrompt = useSetupDismissed("strava");
+
+  const open = (path: OnboardingPath): void => router.push(`/first-run${setupCardQuery(path)}`);
+  const pathCard = ({ path, resume }: SetupPath): SetupCard => {
+    const history = path === "history";
+    const ownArt = history && resume && own.length > 0;
+    return {
+      key: path,
+      eyebrow: history
+        ? resume
+          ? t("onboarding.setup.soFarCount", { count: climbs })
+          : t("onboarding.history.card.soFar")
+        : t("onboarding.plan.yourPlan"),
+      title: resume
+        ? t("onboarding.setup.finish")
+        : history
+          ? t("onboarding.chooser.historyTitle")
+          : t("onboarding.chooser.planTitle"),
+      body:
+        history && resume
+          ? historyNextLine(climbs)
+          : history
+            ? t("onboarding.history.setupBody")
+            : t("onboarding.plan.setupBody"),
+      action: resume ? t("onboarding.firstRun.continue") : t("onboarding.setup.start"),
+      art: {
+        background: colors.surfaceSoft,
+        content: ownArt ? (
+          <Pyramid label={t("trends.gradePyramid")} rows={own.slice(0, ART_ROWS)} />
+        ) : history ? (
+          <SamplePyramid rows={ART_ROWS} />
+        ) : (
+          <WeekArt />
+        ),
+      },
+      onAction: () => open(path),
+      onDismiss: () => {
+        if (resume) skip(path);
+        prompts[path].dismiss();
+      },
+    };
+  };
+
+  const cards = paths.map(pathCard);
+  if (gyms.ready && gyms.gyms.length === 0 && gymPrompt.dismissed === false) {
+    cards.push({
+      key: "gym",
+      eyebrow: t("gyms.gym"),
+      title: t("gyms.setupTitle"),
+      body: t("gyms.setupBody"),
+      action: t("gyms.setupAction"),
+      art: { background: colors.surfaceSoft, content: <CircuitsArt /> },
+      onAction: () => router.push({ pathname: "/gym/[id]", params: { id: "new" } }),
+      onDismiss: gymPrompt.dismiss,
+    });
+  }
+  if (settings.ready && !settings.vm.stravaActive && stravaPrompt.dismissed === false) {
+    const lapsed = settings.vm.stravaConnected;
+    cards.push({
+      key: "strava",
+      eyebrow: lapsed ? t("sessions.setupEyebrowLapsed") : t("sessions.setupEyebrow"),
+      title: lapsed ? t("sessions.setupLapsedTitle") : t("sessions.setupTitle"),
+      body: lapsed ? t("sessions.setupLapsedBody") : t("sessions.setupBody"),
+      action: connect.busy
+        ? t("settings.openingStrava")
+        : lapsed
+          ? t("settings.relinkStrava")
+          : t("sessions.connectStrava"),
+      busy: connect.busy,
+      error: connect.error,
+      art: { background: STRAVA_ORANGE, content: <StravaArt /> },
+      onAction: connect.connect,
+      onDismiss: stravaPrompt.dismiss,
+    });
+  }
+  return cards;
+}
