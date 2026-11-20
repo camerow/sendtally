@@ -8,4 +8,6 @@ export type EditorBarProps = {
   solid?: boolean;
   /** The title is the page's h1, on an editor whose body has no heading of its own. */
   heading?: boolean;
+  /** Cancel throws away real work, such as a workout that was run, so it reads as destructive. */
+  cancelDestructive?: boolean;
 };

@@ -50,6 +50,10 @@
 
 .editor-bar-cancel {
   justify-self: start;
+  color: var(--bs-gunmetal);
+}
+
+.editor-bar-cancel--danger {
   color: var(--bs-watermelon-ink);
 }
 
