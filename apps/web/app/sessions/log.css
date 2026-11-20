@@ -179,6 +179,17 @@
   color: var(--text-on-white-secondary);
 }
 
+.log-row-kind {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.log-row-kind .day-mark {
+  flex: none;
+}
+
 .log-row-effort {
   flex: none;
   font-family: var(--font-mono);
