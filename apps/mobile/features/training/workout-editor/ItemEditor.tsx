@@ -36,7 +36,10 @@ export type ItemEditorProps = {
   unit: WeightUnit;
   onChange: (item: Item) => void;
   onRemove: () => void;
-  onSwap: () => void;
+  /** Absent where the card offers no swap. */
+  onSwap?: () => void;
+  /** Shown beside the name, such as a Yours tag. */
+  tag?: React.ReactNode;
   /** Only shows the card, as the exercise editor previews it: no move, swap or remove. */
   preview?: boolean;
   /** Absent for the first item. */
@@ -68,6 +71,7 @@ export function ItemEditor({
   onMoveDown,
   preview = false,
   member,
+  tag,
 }: ItemEditorProps): React.ReactElement {
   const alternating = item.doses.length > 1;
   const next = letterOf(item.doses.length);
@@ -81,11 +85,9 @@ export function ItemEditor({
     "setRest",
   ]);
   const menu: DetailMenuRow[] = [
-    {
-      icon: "refresh",
-      title: t("workouts.swapExercise"),
-      onPress: onSwap,
-    },
+    ...(onSwap === undefined
+      ? []
+      : [{ icon: "refresh" as const, title: t("workouts.swapExercise"), onPress: onSwap }]),
     ...(item.doses.length < MAX_DOSES
       ? [
           {
@@ -132,6 +134,7 @@ export function ItemEditor({
         <Text style={[type.bodyBold, { flex: 1, fontSize: 16, color: colors.gunmetal }]}>
           {name}
         </Text>
+        {tag}
         {onMoveUp !== undefined && (
           <IconButton
             icon="moveUp"
@@ -164,14 +167,16 @@ export function ItemEditor({
           />
         ) : (
           <>
-            <IconButton
-              icon="restart"
-              label={t("workouts.swapExercise")}
-              onPress={onSwap}
-              color={colors.textSecondary}
-              size={36}
-              iconSize={18}
-            />
+            {onSwap !== undefined && (
+              <IconButton
+                icon="restart"
+                label={t("workouts.swapExercise")}
+                onPress={onSwap}
+                color={colors.textSecondary}
+                size={36}
+                iconSize={18}
+              />
+            )}
             <IconButton
               icon="remove"
               label={
