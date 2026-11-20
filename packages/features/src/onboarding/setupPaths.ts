@@ -3,6 +3,7 @@ import type { SendtallyApi } from "@sendtally/api-client";
 import type { CircuitColour } from "../gyms";
 import { t } from "../i18n";
 import { queries } from "../query";
+import { nextUnlock } from "./historyCard";
 import { resumeStep } from "./steps";
 import type { OnboardingPath, OnboardingProgress, OnboardingStatus } from "./types";
 import { patchStatus } from "./useWizard";
@@ -41,11 +42,9 @@ export const SETUP_CIRCUITS: readonly CircuitColour[] = [
 
 /** What the next climbs unlock, under the user's own pyramid on Finish setting up. */
 export function historyNextLine(climbs: number): string {
-  const more = (n: number): string => t("onboarding.history.card.more", { count: n });
-  if (climbs === 0) return t("onboarding.history.card.empty");
-  if (climbs < 3) return t("onboarding.history.card.nextAverage", { more: more(3 - climbs) });
-  if (climbs < 5) return t("onboarding.history.card.nextYears", { more: more(5 - climbs) });
-  return t("onboarding.history.card.keepGoing");
+  const next = nextUnlock(climbs);
+  if (next === null) return t("onboarding.history.setupBody");
+  return "text" in next ? next.text : `${next.before}${next.more}${next.after}`;
 }
 
 const PATHS: readonly OnboardingPath[] = ["history", "plan"];
