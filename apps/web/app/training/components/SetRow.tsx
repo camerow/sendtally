@@ -63,7 +63,6 @@ export function SetRow({
     <button
       type="button"
       className={`${SET_COLUMNS.position} set-select`}
-      aria-label={label}
       aria-pressed={selected}
       onClick={onSelect}
     >

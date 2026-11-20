@@ -429,3 +429,10 @@
     bottom: calc(153px + env(safe-area-inset-bottom));
   }
 }
+
+.history-chevron {
+  width: 16px;
+  flex: none;
+  display: inline-flex;
+  color: var(--text-muted);
+}

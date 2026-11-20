@@ -14,6 +14,8 @@ export type SetDoneFieldsProps = {
   label: string;
   /** A hangboard set: its hangs typed and its load. */
   hangs?: boolean;
+  /** A hangboard set of one hang: its count field is the time held, empty when it did not hold. */
+  oneHang?: boolean;
   /** In place of the hold field: ▶ to time it. */
   go?: React.ReactNode;
   /** The load a hang set shows while it has none of its own: the session's. */
@@ -43,6 +45,7 @@ export function SetDoneFields({
   unit,
   label,
   hangs = false,
+  oneHang = false,
   defaultLoadKg = 0,
   go,
   onChange,
@@ -58,7 +61,15 @@ export function SetDoneFields({
           {
             key: "reps",
             mark: "",
-            field: (
+            field: oneHang ? (
+              <NumberField
+                compact
+                label={named(t("plan.colHeld"))}
+                value={set.reps === 0 ? 0 : (set.onS ?? 0)}
+                onChange={(onS) => onChange({ ...set, reps: onS > 0 ? 1 : 0, onS })}
+                mode={{ kind: "time", max: SET_TIME_MAX }}
+              />
+            ) : (
               <NumberField
                 compact
                 label={named(hangs ? t("plan.colHangs") : t("workouts.dose.reps"))}

@@ -136,12 +136,11 @@ describe("ActivityForm", () => {
       ...review,
       done: [{ item: 0, exercise: "Checklist", sets: [], checklist: { lines, checked: [0] } }],
     });
-    expect(container.textContent).toContain("Checklist · 1 of 3");
-    const line = [...container.querySelectorAll("label")].find((l) =>
-      l.textContent?.includes("Easy boulders x10")
-    );
-    click(line?.querySelector("input"));
-    expect(container.textContent).toContain("Checklist · 2 of 3");
+    const box = (text: string): HTMLInputElement | null =>
+      container.querySelector(`input[aria-label="${text}"]`);
+    expect(lines.map((l) => box(l)?.checked)).toEqual([true, false, false]);
+    click(box("Easy boulders x10"));
+    expect(lines.map((l) => box(l)?.checked)).toEqual([true, false, true]);
     save();
     expect(saved()[0]?.checklist).toEqual({ lines, checked: [0, 2] });
   });
@@ -179,8 +178,8 @@ describe("ActivityForm", () => {
     });
     const text = container.textContent ?? "";
     const at = (s: string): number => text.indexOf(s);
-    expect(at("Checklist · 1 of 1")).toBeLessThan(at("Checklist · 0 of 1"));
-    expect(at("Checklist · 0 of 1")).toBeLessThan(at("Sets"));
+    expect(at("Jog")).toBeLessThan(at("Stretch"));
+    expect(at("Stretch")).toBeLessThan(at("Sets"));
     expect(at("Sets")).toBeLessThan(at("Back squat"));
   });
 

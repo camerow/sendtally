@@ -32,7 +32,7 @@ export function FoldedSetsCard({
       </span>
       {done ? (
         <span className="player-check">
-          <Icon name="check" size={14} strokeWidth={2.6} />
+          <Icon name="check" size={16} strokeWidth={3} />
         </span>
       ) : (
         <span className="player-chevron player-chevron--down">

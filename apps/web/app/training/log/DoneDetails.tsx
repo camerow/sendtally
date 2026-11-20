@@ -16,7 +16,7 @@ import { supersetHeadAt } from "@sendtally/features/workouts";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { Sheet } from "../../components/Sheet";
-import { ChecklistReview } from "./ChecklistReview";
+import { ChecklistCard } from "../components/ChecklistCard";
 import { ReviewSetRow } from "./ReviewSetRow";
 
 export type DoneDetailsProps = {
@@ -89,10 +89,10 @@ export function DoneDetails({
       {done.map(
         (d) =>
           d.checklist !== undefined && (
-            <ChecklistReview
+            <ChecklistCard
               key={d.item}
-              list={d.checklist}
-              color={color}
+              lines={d.checklist.lines}
+              ticked={(line) => d.checklist?.checked.includes(line) === true}
               onToggle={(line) => onChange(withLineToggled(done, d.item, line), [...off])}
             />
           )

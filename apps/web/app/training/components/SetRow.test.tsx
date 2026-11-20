@@ -58,7 +58,7 @@ describe("SetRow", () => {
 
   it("keeps the position a button to select it by keyboard", () => {
     const { onSelect } = mount(false);
-    click(container.querySelector('button[aria-label="Squat set 2"]'));
+    click(container.querySelector("button.set-pos"));
     expect(onSelect).toHaveBeenCalledTimes(1);
   });
 

@@ -92,6 +92,7 @@ const run: WorkoutRun = {
 };
 
 const { store } = liveRunOf("u1");
+const NAMES = ".exercise-head-name, .player-card--folded .player-card-name";
 let container: HTMLDivElement;
 let root: Root;
 
@@ -136,7 +137,7 @@ const loggedOrder = (): string[] => {
 };
 const removeSecondSquat = (): void => {
   act(() => (byLabel("Back squat, set 1") as HTMLInputElement).click());
-  act(() => byLabel("Back squat, set 2")?.closest<HTMLElement>(".set-row")?.click());
+  act(() => byLabel("Back squat, set 2")?.closest<HTMLElement>(".set-item")?.click());
   act(() => (byLabel("Remove set 2") as HTMLButtonElement).click());
 };
 const advance = (ms: number): void =>
@@ -161,28 +162,33 @@ afterEach(() => {
 });
 
 describe("Sets player", () => {
-  it("adds a set to any exercise, and takes the current one out with Undo", () => {
+  it("adds a set to any exercise, and takes the selected one out with Undo", () => {
     mount();
     act(() => (byLabel("Add a set to Row") as HTMLButtonElement).click());
     expect(byLabel("Row, set 2")).not.toBeNull();
-    act(() => (byLabel("Back squat, set 2") as HTMLInputElement).click());
+    act(() => byLabel("Back squat, set 2")?.closest<HTMLElement>(".set-item")?.click());
     expect(document.querySelectorAll('[aria-label^="Remove set"]')).toHaveLength(1);
     act(() => (byLabel("Remove set 2") as HTMLButtonElement).click());
     expect(byLabel("Back squat, set 2")).toBeNull();
     expect(document.body.textContent).toContain("Back squat · Set 2 removed");
     act(() => button("Undo").click());
-    expect((byLabel("Back squat, set 2") as HTMLInputElement).checked).toBe(true);
+    expect(byLabel("Back squat, set 2")).not.toBeNull();
   });
 
-  it("makes a set current on a tap in its row, not on a press that may start a scroll", () => {
+  it("selects a set from its row, never from typing or a tick, and unselects on another click", () => {
     mount();
-    const reps = byLabel("Back squat, set 2 · Reps") as HTMLElement;
-    act(() => {
-      reps.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
-    });
+    act(() => (byLabel("Back squat, set 2 · Reps") as HTMLElement).click());
+    act(() => (byLabel("Back squat, set 1") as HTMLInputElement).click());
     expect(byLabel("Remove set 2")).toBeNull();
-    act(() => reps.click());
+    expect(byLabel("Remove set 1")).toBeNull();
+    const row = byLabel("Back squat, set 2")?.closest<HTMLElement>(".set-item");
+    act(() => row?.click());
     expect(byLabel("Remove set 2")).not.toBeNull();
+    act(() => row?.click());
+    expect(byLabel("Remove set 2")).toBeNull();
+    act(() => row?.click());
+    act(() => (container.querySelector(".player-title") as HTMLElement).click());
+    expect(byLabel("Remove set 2")).toBeNull();
   });
 
   it("says whether an exercise card is open", () => {
@@ -197,6 +203,7 @@ describe("Sets player", () => {
   it("puts a removed set back on Undo without losing a tick made since", () => {
     mount();
     act(() => (byLabel("Back squat, set 2") as HTMLInputElement).click());
+    act(() => byLabel("Back squat, set 2")?.closest<HTMLElement>(".set-item")?.click());
     act(() => (byLabel("Remove set 2") as HTMLButtonElement).click());
     act(() => (byLabel("Row, set 1") as HTMLInputElement).click());
     act(() => button("Undo").click());
@@ -252,15 +259,15 @@ describe("Sets player", () => {
       );
     act(() => more()[0]!.click());
     act(() => button("Skip for now").click());
-    expect(texts(".player-card-name")).toEqual(["Row", "Plank", "Back squat"]);
-    expect(byLabel("Open Back squat, Skipped · tap to do it now")).not.toBeNull();
+    expect(texts(NAMES)).toEqual(["Row", "Plank", "Back squat"]);
+    expect(byLabel("Open Back squat, Skipped")).not.toBeNull();
     act(() => more()[1]!.click());
     act(() => button("Move up").click());
-    expect(texts(".player-card-name")).toEqual(["Plank", "Row", "Back squat"]);
+    expect(texts(NAMES)).toEqual(["Plank", "Row", "Back squat"]);
     act(() => more()[0]!.click());
     act(() => button("Remove").click());
     act(() => button("Remove").click());
-    expect(texts(".player-card-name")).toEqual(["Row", "Back squat"]);
+    expect(texts(NAMES)).toEqual(["Row", "Back squat"]);
     act(() => (byLabel("Row, set 1") as HTMLInputElement).click());
     act(() => button("Finish").click());
     const where = new URL(`http://x${document.querySelector("[data-testid=where]")?.textContent}`);
@@ -278,7 +285,7 @@ describe("Sets player", () => {
       ...run,
       items: [{ exercise: "Checklist", dose: { sets: 3 }, checklist: { lines } }, run.items[1]!],
     });
-    expect(texts(".player-card-name")[0]).toBe("Checklist");
+    expect(texts(NAMES)[0]).toBe("Checklist");
     act(() => (byLabel("Easy boulders x10") as HTMLInputElement).click());
     act(() => (byLabel("Jog 5 min") as HTMLInputElement).click());
     expect((byLabel("Jog 5 min") as HTMLInputElement).checked).toBe(true);
@@ -326,7 +333,7 @@ describe("Sets player", () => {
         { exercise: "Row", dose: { sets: 1, reps: 8 } },
       ],
     });
-    expect(texts(".player-card-meta")).toEqual(["Target RPE 8/10"]);
+    expect(texts(".exercise-head-target")).toEqual(["2 sets × 5 reps", "1 set × 8 reps"]);
   });
 
   it("asks a ticked set's RPE only where the exercise sets a target, its target dim", () => {
@@ -337,7 +344,7 @@ describe("Sets player", () => {
         { exercise: "Row", dose: { sets: 1, reps: 8 } },
       ],
     });
-    expect(texts(".set-row--head .set-col-rpe")).toEqual(["RPE"]);
+    expect(texts(".set-headings .set-rpe")).toEqual(["RPE"]);
     expect(byLabel("Back squat, set 1 · RPE")).toBeNull();
     act(() => (byLabel("Back squat, set 1") as HTMLInputElement).click());
     act(() => (byLabel("Row, set 1") as HTMLInputElement).click());
@@ -353,24 +360,20 @@ describe("Sets player", () => {
     mount();
     const info = document.querySelectorAll('[aria-label="About this exercise"]');
     expect(info).toHaveLength(1);
-    expect(info[0]?.closest(".player-card-title")?.textContent).toBe("Row");
+    expect(info[0]?.closest(".exercise-head-title")?.textContent).toBe("Row");
     act(() => (info[0] as HTMLElement).click());
     expect(document.querySelector("dialog[open] .sheet-body")?.textContent).toBe(
       "Pull to the hip."
     );
   });
 
-  it("shows each set's target and last time, with the rests still to come", () => {
+  it("heads the run with its Target RPE and position, and the rests to come", () => {
     mount();
     expect(container.querySelector(".player-title")?.textContent).toBe("Lower body A");
-    expect(container.querySelector(".player-target")?.textContent).toBe(
-      "Exercise 1 of 3 · Target effort 8"
-    );
+    expect(texts(".player-target > span")).toEqual(["Target RPE 8/10", "Exercise 1 of 3"]);
     expect(texts(".desc-text")).toEqual(["Heavy squats, then rows."]);
     expect(byLabel("About this workout")).toBeNull();
-    expect(texts(".set-previous")).toEqual(["Last 5 × 97.5", "Last 8 × 60"]);
-    expect(document.querySelectorAll(".set-col-target .set-previous")).toHaveLength(0);
-    expect(document.querySelectorAll(".set-row > .set-previous")).toHaveLength(2);
+    expect(container.textContent).not.toContain("Last");
     expect(texts(".rest-preview")).toEqual(["Rest 1:30", "Rest 2:00", "Rest 2:00"]);
   });
 
@@ -385,10 +388,7 @@ describe("Sets player", () => {
     act(() => (byLabel("Back squat, set 2") as HTMLInputElement).click());
     const folded = "Open Back squat, 2 sets × 5 reps · 100 kg";
     expect(byLabel(folded)).not.toBeNull();
-    expect(container.querySelector(".player-target")?.textContent).toBe(
-      "Exercise 2 of 3 · Target effort 8"
-    );
-    expect(container.querySelector(".player-row-next")).toBeNull();
+    expect(texts(".player-target > span")).toEqual(["Target RPE 8/10", "Exercise 2 of 3"]);
     act(() => (byLabel(folded) as HTMLButtonElement).click());
     expect(byLabel("Back squat, set 1")).not.toBeNull();
     act(() => (byLabel("Fold Back squat") as HTMLButtonElement).click());
@@ -454,7 +454,8 @@ describe("Sets player", () => {
       expect(container.textContent).toContain("Exercise 1 of 2");
       act(() => (byLabel("Pull-ups, set 1") as HTMLInputElement).click());
       expect(container.querySelector(".player-row")).toBeNull();
-      expect(container.textContent).toContain("Next: Push-ups");
+      expect(texts(".superset-member-name")).toEqual(["Pull-ups", "Push-ups"]);
+      expect(container.textContent).not.toContain("Next");
       act(() => (byLabel("Push-ups, set 1") as HTMLInputElement).click());
       expect(container.textContent).toContain("Superset · Round 2 of 2");
       expect(container.querySelector(".player-row")).not.toBeNull();
@@ -462,9 +463,9 @@ describe("Sets player", () => {
 
     it("adds a round to every member, and takes a round from every member with one Undo", () => {
       mount(superset);
-      act(() => button("+ Add round").click());
+      act(() => button("Add round").click());
       expect(byLabel("Push-ups, set 3")).not.toBeNull();
-      act(() => byLabel("Pull-ups, set 3")?.closest<HTMLElement>(".set-row")?.click());
+      act(() => byLabel("Pull-ups, set 3")?.closest<HTMLElement>(".set-item")?.click());
       act(() => (byLabel("Remove set 3") as HTMLButtonElement).click());
       expect(byLabel("Pull-ups, set 3")).toBeNull();
       expect(byLabel("Push-ups, set 3")).toBeNull();
@@ -478,7 +479,7 @@ describe("Sets player", () => {
       act(() => (byLabel("More for this exercise") as HTMLButtonElement).click());
       act(() => button("Skip Push-ups for now").click());
       expect(container.textContent).not.toContain("Superset");
-      expect(texts(".player-card-name")[0]).toBe("Pull-ups");
+      expect(texts(NAMES)[0]).toBe("Pull-ups");
     });
 
     it("moves the superset whole from its menu", () => {

@@ -5,8 +5,8 @@ import { restRowVM, type Rest } from "@sendtally/features/workouts";
 export type RestRowProps = { rest: Rest; left: number; onMore: () => void; onSkip: () => void };
 
 /**
- * A rest counting down inline: a gold fill drains with it, and it takes more time or a skip. A
- * row of the set table between sets, between the cards with what is next between exercises.
+ * A rest counting down inline, one height everywhere: a gold fill drains with it, and it takes
+ * more time or a skip. A row of the set table between sets, and between the cards.
  */
 export function RestRow({ rest, left, onMore, onSkip }: RestRowProps): React.ReactElement {
   const vm = restRowVM(rest, left);
@@ -21,12 +21,6 @@ export function RestRow({ rest, left, onMore, onSkip }: RestRowProps): React.Rea
           <span className="player-row-word">{t("hang.rest")}</span>
           <span className="player-row-clock">{vm.clock}</span>
         </span>
-        {vm.next !== null && (
-          <span className="player-row-next">
-            <span aria-hidden="true">{vm.next}</span>
-            <span className="visually-hidden">{vm.nextLabel}</span>
-          </span>
-        )}
       </span>
       <button type="button" className="player-row-action" onClick={onMore}>
         {t("activities.restMore")}

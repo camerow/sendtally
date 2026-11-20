@@ -2471,3 +2471,15 @@
   color: var(--bs-watermelon-ink);
   cursor: pointer;
 }
+
+.history-title {
+  font-size: 28px;
+}
+
+.checklist-line {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--bs-gunmetal);
+}
