@@ -9,6 +9,8 @@ export type EditorHeaderProps = {
   title: string;
   onCancel: () => void;
   cancelLabel?: string;
+  /** Cancel throws away real work, such as a workout that was run, so it reads as destructive. */
+  cancelDestructive?: boolean;
   onSave: () => void;
   saveDisabled?: boolean;
   /** Save as a solid button, for an Edit mode on a detail screen. */
@@ -20,6 +22,7 @@ export function EditorHeader({
   title,
   onCancel,
   cancelLabel = t("hang.cancel"),
+  cancelDestructive = false,
   onSave,
   saveDisabled,
   solid = false,
@@ -35,7 +38,12 @@ export function EditorHeader({
         paddingVertical: 4,
       }}
     >
-      <Button label={cancelLabel} onPress={onCancel} variant="danger" height={44} />
+      <Button
+        label={cancelLabel}
+        onPress={onCancel}
+        variant={cancelDestructive ? "danger" : "plain"}
+        height={44}
+      />
       <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>{title}</Text>
       <Button
         label={t("hang.save")}
