@@ -77,6 +77,47 @@ export default tseslint.config(
     },
   },
   {
+    // Grades and weights always follow the user's settings: every label goes through the
+    // formatters in packages/features/src/sessions/grades.ts and hang/weights.ts (AGENTS.md).
+    files: ["**/*.ts", "**/*.tsx"],
+    ignores: [
+      "packages/core/**",
+      "packages/features/src/sessions/grades.ts",
+      "packages/features/src/log-session/transforms.ts",
+      "packages/features/src/gyms/transforms.ts",
+      "packages/features/src/climbs/transforms.ts",
+      "packages/features/src/climbs/log.ts",
+      "packages/api/src/db/schema.ts",
+      "packages/api/src/lib/export.ts",
+      "packages/api/src/lib/gyms.ts",
+      "packages/api/src/mcp/climbingSummary.ts",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "apps/mobile/features/training/data/renderWithHang.tsx",
+      "apps/web/app/training/data/testHang.tsx",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Literal[value=/^(kg|lb)$/]",
+          message:
+            "Read the unit with useWeightUnit or the hang model and write weights with the formatters in hang/weights.ts; the units list is WEIGHT_UNITS.",
+        },
+        {
+          selector:
+            "ImportDeclaration[source.value='@sendtally/core'] ImportSpecifier[imported.name='formatGrade']",
+          message:
+            "Show grades with displayGrade, sessionGradeLabel, climbGradeLabel, gradeFormatter or draftGradeLabel, in the user's scales.",
+        },
+        {
+          selector: "TemplateLiteral[quasis.0.value.raw='V'][expressions.length>0]",
+          message: "Build grade labels with the formatters in sessions/grades.ts, never by hand.",
+        },
+      ],
+    },
+  },
+  {
     files: ["**/*.test.ts", "**/*.test.tsx"],
     rules: { "@typescript-eslint/no-non-null-assertion": "off" },
   }
