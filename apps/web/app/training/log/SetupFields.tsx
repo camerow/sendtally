@@ -6,7 +6,7 @@ import {
   toUnit,
   type HangKind,
   type HangSetup,
-  weightStep,
+  loadStep,
 } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { NumberField } from "../../components/NumberField";
@@ -38,7 +38,7 @@ export function SetupFields({ kind, setup, onChange }: SetupFieldsProps): React.
         unit={unit}
         mode={{
           kind: "number",
-          step: weightStep(unit),
+          step: loadStep("pull", unit),
           min: toUnit(-200, unit),
           max: toUnit(1000, unit),
           decimals: true,

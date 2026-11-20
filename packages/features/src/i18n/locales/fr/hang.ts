@@ -1,8 +1,6 @@
 export const hang = {
   "hang.kindHang": "Suspension",
   "hang.kindPull": "Tirage au sol",
-  "hang.loadPlus": "+{value} {unit}",
-  "hang.loadMinus": "−{value} {unit}",
   "hang.loadPlain": "{value} {unit}",
   "hang.seconds": "{n} s",
   "hang.minutes": "{n} min",

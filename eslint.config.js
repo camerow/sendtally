@@ -77,8 +77,6 @@ export default tseslint.config(
     },
   },
   {
-    // Grades and weights always follow the user's settings: every label goes through the
-    // formatters in packages/features/src/sessions/grades.ts and hang/weights.ts (AGENTS.md).
     files: ["**/*.ts", "**/*.tsx"],
     ignores: [
       "packages/core/**",

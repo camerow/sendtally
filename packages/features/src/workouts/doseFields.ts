@@ -13,7 +13,7 @@ import {
   type NumberLimits,
   type WeightUnit,
   type WorkoutKind,
-  weightStep,
+  loadStep,
 } from "@sendtally/core/hang";
 import { tallyMeasureOf } from "../exercises/measure";
 import type { TallyMeasure } from "../exercises/types";
@@ -201,7 +201,7 @@ export function withFieldRange(
 /** How a count or weight types on the keypad: weight by 2.5 kg or 5 lb, stepping below zero for assistance. */
 export function fieldLimits(field: DoseField, unit: WeightUnit): NumberLimits {
   if (field.measure === "weight")
-    return { step: weightStep(unit), decimals: true, min: toUnit(LIMITS.weight[0], unit) };
+    return { step: loadStep("pull", unit), decimals: true, min: toUnit(LIMITS.weight[0], unit) };
   const [min, max] = limitsOf(field);
   return { step: 1, min, max };
 }

@@ -1,8 +1,6 @@
 export const hang = {
   "hang.kindHang": "Hängen",
   "hang.kindPull": "Bodenzug",
-  "hang.loadPlus": "+{value} {unit}",
-  "hang.loadMinus": "−{value} {unit}",
   "hang.loadPlain": "{value} {unit}",
   "hang.seconds": "{n} s",
   "hang.minutes": "{n} Min",

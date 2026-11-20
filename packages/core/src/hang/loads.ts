@@ -8,7 +8,7 @@ export const WEIGHT_UNITS = ["lb", "kg"] as const satisfies readonly WeightUnit[
 export const DEFAULT_WEIGHT_UNIT: WeightUnit = "lb";
 
 /** A ground pull's first load, authored per unit so it reads round in either. */
-export const DEFAULT_PULL: Record<WeightUnit, number> = { kg: 20, lb: 45 };
+const DEFAULT_PULL: Record<WeightUnit, number> = { kg: 20, lb: 45 };
 
 export const defaultPullKg = (unit: WeightUnit): number => fromUnit(DEFAULT_PULL[unit], unit);
 
@@ -31,9 +31,6 @@ export function stepOnGrid(value: number, step: number, direction: 1 | -1): numb
   return Math.round((from + direction) * step * 100) / 100;
 }
 
-/** A set's weight step: 5 lb or 2.5 kg. */
-export const weightStep = (unit: WeightUnit): number => (unit === "lb" ? 5 : 2.5);
-
 /** The timer's load nudge mid-run: 1 lb or 0.5 kg. */
 export const timerLoadStep = (unit: WeightUnit): number => (unit === "lb" ? 1 : 0.5);
 
@@ -53,10 +50,13 @@ export function clampLoad(kind: HangKind, kg: number): number {
   return kind === "pull" ? Math.max(0, kg) : kg;
 }
 
-/** One − or + press: the step applies to the displayed value, then converts back. */
-export function bumpLoad(kind: HangKind, kg: number, unit: WeightUnit, direction: 1 | -1): number {
-  return clampLoad(
-    kind,
-    fromUnit(stepOnGrid(toUnit(kg, unit), loadStep(kind, unit), direction), unit)
-  );
+/** One − or + press onto the step grid of the displayed value, then back to kg; the kind's step unless given one. */
+export function bumpLoad(
+  kind: HangKind,
+  kg: number,
+  unit: WeightUnit,
+  direction: 1 | -1,
+  step = loadStep(kind, unit)
+): number {
+  return clampLoad(kind, fromUnit(stepOnGrid(toUnit(kg, unit), step, direction), unit));
 }

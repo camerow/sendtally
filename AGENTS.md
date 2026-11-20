@@ -240,9 +240,9 @@ Store listing copy lives in `apps/mobile/store/listing.md` and should match what
 - Grades follow the user's grade scales everywhere; the rule and its functions are under Session flow, Invariants.
 - Weights follow the user's weight unit everywhere.
   Values are stored in kilograms; the unit comes from `useWeightUnit(api)`, which is null until it loads, or the ready hang model (`model.settings.units`), and a screen that shows or takes a weight waits for it (`WithWeightUnit` on mobile) rather than guess.
-  Every weight a user reads goes through `packages/features/src/hang/weights.ts`: `weightText` ("100 kg"), `weightValue` (the number alone), `hangLoadText` / `hangLoadValue` (added load, "+10 lb", "BW"), `loadLabel` (either, by kind) and `loadChange` ("+2.5 lb", "Same").
-  Inputs convert with `toUnit` / `fromUnit` and step with `stepOnGrid`, `weightStep` and `loadStep` in `packages/core/src/hang/loads.ts`, so a typed value reads back as typed and a step lands on the step grid.
-  A default or a sample weight is authored per unit (`DEFAULT_PULL`), never converted from a kilogram literal.
+  Every weight a user reads goes through `packages/features/src/hang/weights.ts`: `weightText` ("100 kg"), `hangLoadText` / `hangLoadValue` (added load, "+10 lb", "BW"), `loadLabel` (either, by kind) and `loadChange` ("+2.5 lb", "Same").
+  Inputs convert with `toUnit` / `fromUnit` and step with `bumpLoad`, `loadStep` and `stepOnGrid` in `packages/core/src/hang/loads.ts`, so a typed value reads back as typed and a step lands on the step grid.
+  A default or a sample weight is authored per unit (`defaultPullKg`), never converted from a kilogram literal.
 - ESLint enforces both (the grades-and-weights block in `eslint.config.js`): no `"kg"` / `"lb"` literal (the list is `WEIGHT_UNITS`), no `formatGrade` import and no hand-built `` `V${...}` `` outside the formatter modules.
   The Log render test on each app sets kg and Font and asserts no "lb" or V grade; keep it passing when a screen changes.
 

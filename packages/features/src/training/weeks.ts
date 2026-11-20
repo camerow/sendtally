@@ -11,8 +11,8 @@ import {
   type NumberLimits,
   type WeightUnit,
   type WorkoutKind,
-  weightStep,
   stepOnGrid,
+  loadStep,
 } from "@sendtally/core/hang";
 import { countText, humanDuration } from "../hang/format";
 import { RANGE_PLACEHOLDER } from "../workouts/doseFields";
@@ -111,7 +111,7 @@ export function withWeekField(
 export function weekFieldLimits(field: WeekField, unit: WeightUnit): NumberLimits {
   if (field === "weightKg")
     return {
-      step: weightStep(unit),
+      step: loadStep("pull", unit),
       decimals: true,
       min: toUnit(MIN.weightKg, unit),
     };

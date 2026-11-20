@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { fromUnit } from "@sendtally/core/hang";
-import { hangLoadText, loadChange, loadLabel, weightText, weightValue } from "./weights";
+import { hangLoadText, loadChange, loadLabel, weightText } from "./weights";
 
 describe("weights", () => {
   it("writes a weight in the user's unit with one minus sign", () => {
     expect(weightText(100, "kg")).toBe("100 kg");
-    expect(weightValue(-20, "kg")).toBe("−20");
+    expect(weightText(-20, "kg")).toBe("−20 kg");
+    expect(hangLoadText(-5, "kg")).toBe("−5 kg");
     expect(weightText(fromUnit(45, "lb"), "lb")).toContain("45");
   });
 

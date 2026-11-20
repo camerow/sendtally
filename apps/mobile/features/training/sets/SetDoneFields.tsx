@@ -1,7 +1,7 @@
 import React from "react";
 import { hangLoadValue } from "@sendtally/features/hang";
 import { Text, View } from "react-native";
-import { fromUnit, toUnit, type SetDone, type WeightUnit, weightStep } from "@sendtally/core/hang";
+import { fromUnit, toUnit, type SetDone, type WeightUnit, loadStep } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { KeypadField } from "../../../components/KeypadField";
@@ -124,7 +124,7 @@ export function SetDoneFields({
                 value={set.weightKg === undefined ? null : toUnit(set.weightKg, unit)}
                 onChange={(n) => onChange({ ...set, weightKg: fromUnit(n, unit) })}
                 unit={unit}
-                step={weightStep(unit)}
+                step={loadStep("pull", unit)}
                 min={toUnit(-200, unit)}
                 max={toUnit(1000, unit)}
                 decimals
@@ -219,7 +219,7 @@ function LoadValue({
       mode={{
         kind: "number",
         unit,
-        step: weightStep(unit),
+        step: loadStep("pull", unit),
         min: toUnit(-200, unit),
         max: toUnit(1000, unit),
         decimals: true,

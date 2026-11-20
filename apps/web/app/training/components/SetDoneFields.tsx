@@ -1,6 +1,6 @@
 import React from "react";
 import { hangLoadValue } from "@sendtally/features/hang";
-import { fromUnit, toUnit, type SetDone, type WeightUnit, weightStep } from "@sendtally/core/hang";
+import { fromUnit, toUnit, type SetDone, type WeightUnit, loadStep } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { NumberField } from "../../components/NumberField";
 import { SET_COLUMNS } from "./setColumns";
@@ -94,7 +94,7 @@ export function SetDoneFields({
                 onChange={(n) => onChange({ ...set, weightKg: fromUnit(n, unit) })}
                 mode={{
                   kind: "number",
-                  step: weightStep(unit),
+                  step: loadStep("pull", unit),
                   min: toUnit(-200, unit),
                   max: toUnit(1000, unit),
                   decimals: true,

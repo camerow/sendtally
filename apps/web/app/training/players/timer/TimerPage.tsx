@@ -1,14 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router";
 import {
-  clampLoad,
-  fromUnit,
-  toUnit,
+  bumpLoad,
   type HangPhase,
   type HangSetup,
   type PlanLink,
   type Run,
-  stepOnGrid,
   timerLoadStep,
 } from "@sendtally/core/hang";
 import { hangLoadText, useGrips } from "@sendtally/features/hang";
@@ -89,7 +86,6 @@ function Timer({
   const { run, secondsLeft } = timer;
   const view = timerView(run, secondsLeft, { planned, grips, setups });
   const kg = loadNow(loads, run);
-  const step = timerLoadStep(unit);
   const load = t("hang.load");
 
   return (
@@ -106,10 +102,7 @@ function Timer({
                 changeLoad(
                   loads,
                   run,
-                  clampLoad(
-                    view.current.kind,
-                    fromUnit(stepOnGrid(toUnit(kg, unit), step, d), unit)
-                  )
+                  bumpLoad(view.current.kind, kg, unit, d, timerLoadStep(unit))
                 )
               )
             }

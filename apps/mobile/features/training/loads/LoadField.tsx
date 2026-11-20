@@ -1,13 +1,13 @@
 import React from "react";
 import { View } from "react-native";
 import {
+  bumpLoad,
   clampLoad,
   fromUnit,
   loadStep,
   toUnit,
   type HangKind,
   type WeightUnit,
-  stepOnGrid,
 } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { Stepper } from "../components/Stepper";
@@ -41,7 +41,7 @@ export function LoadField({
         label={label}
         value={toUnit(kg, unit)}
         onChange={set}
-        onStep={(direction) => set(stepOnGrid(toUnit(kg, unit), step, direction))}
+        onStep={(direction) => onChange(bumpLoad(kind, kg, unit, direction))}
         unit={unit}
         step={step}
         decimals
