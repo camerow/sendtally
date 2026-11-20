@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import { formatDate, t } from "@sendtally/features/i18n";
+import { formatDate, formatNumber, t } from "@sendtally/features/i18n";
 import { queries } from "@sendtally/features/query";
 import { useBilling } from "../../billing/useBilling";
 import { MenuRow } from "../../live-session/MenuRow";
@@ -51,7 +51,10 @@ export function DoneStep({ wizard, api }: Parameters<StepComponent>[0]): React.R
     {
       icon: "sessions" as const,
       title: t("onboarding.history.done.openLog"),
-      hint: t("sessions.sessionCount", { count: vm?.sessions ?? 0 }),
+      hint:
+        wizard.memory.way === "import"
+          ? t("sessions.sessionCount", { count: vm?.sessions ?? 0 })
+          : `${formatNumber(vm?.climbs ?? 0)} ${t("onboarding.history.reveal.climbsWord", { count: vm?.climbs ?? 0 })}`,
       onPress: () => wizard.complete(outcome, "log"),
     },
   ];
