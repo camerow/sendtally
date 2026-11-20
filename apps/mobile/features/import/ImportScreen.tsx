@@ -73,7 +73,11 @@ export function ImportScreen({
   const confirm = async (current: Review): Promise<void> => {
     setReview({ ...current, busy: true, error: null });
     try {
-      const { imported, skipped } = await importAll(api, split(current).importing);
+      const { imported, skipped } = await importAll(
+        api,
+        split(current).importing,
+        current.plan.format
+      );
       const likely = current.importAnyway ? 0 : current.duplicates.length;
       router.dismissTo({ pathname: then, params: { imported, skipped, likely } });
     } catch (error: unknown) {

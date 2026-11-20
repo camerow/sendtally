@@ -86,7 +86,7 @@ export function ImportFlow({
       const sessions = withAddedTags(state.plan.sessions, state.added).filter(
         (_, i) => !held.includes(i)
       );
-      const totals = await importAll(api, sessions);
+      const totals = await importAll(api, sessions, state.plan.format);
       if (then !== undefined) {
         const result = new URLSearchParams({
           imported: String(totals.imported),

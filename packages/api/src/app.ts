@@ -2064,7 +2064,7 @@ const app = new Hono<AppEnv>()
 
   // A batch of sessions from a CSV.
   .post("/v1/sessions/import", zValidator("json", importBody, invalidBody), async (c) =>
-    c.json(await importSessions(c, c.req.valid("json").sessions), 201)
+    c.json(await importSessions(c, c.req.valid("json").sessions, c.req.valid("json").format), 201)
   )
 
   // Everything the user logged, one row per climb, in the importer's format.

@@ -100,6 +100,6 @@ export const importClimbingLog: ConnectorTool<typeof inputSchema> = {
         likelyDuplicates: likely,
       };
     }
-    return { format: plan.format, ...(await importSessions(c, sessions)), issues };
+    return { format: plan.format, ...(await importSessions(c, sessions, plan.format)), issues };
   },
 };
