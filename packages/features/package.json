@@ -27,7 +27,8 @@
     "./activities": "./src/activities/index.ts",
     "./workouts": "./src/workouts/index.ts",
     "./exercises": "./src/exercises/index.ts",
-    "./outbox": "./src/outbox/index.ts"
+    "./outbox": "./src/outbox/index.ts",
+    "./onboarding": "./src/onboarding/index.ts"
   },
   "scripts": {
     "test": "vitest run",

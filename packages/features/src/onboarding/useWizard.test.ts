@@ -1,0 +1,257 @@
+import { describe, expect, it, vi } from "vitest";
+import type { ConnectionStatus, FirstRunStep } from "@sendtally/api-client";
+import { DEFAULT_GRADE_SCALES } from "../settings/transforms";
+import type { Capture, OnboardingProgress, OnboardingStatus, PathFrom } from "./types";
+import { announceOpen, openWizard, patchStatus, wizardOf } from "./useWizard";
+
+const NONE: OnboardingProgress = {
+  sessions: false,
+  exercises: false,
+  workouts: false,
+  blockMemberships: false,
+  scheduledBlocks: false,
+};
+
+type Setup = {
+  onboarding?: Partial<OnboardingStatus>;
+  member?: boolean;
+  start?: { path: "history" | "plan"; from: PathFrom };
+};
+
+function setup({ onboarding: given = {}, member = false, start }: Setup = {}): {
+  wizard: () => ReturnType<typeof wizardOf>;
+  announce: () => void;
+  capture: ReturnType<typeof vi.fn<Capture>>;
+  send: ReturnType<typeof vi.fn<(to: FirstRunStep) => void>>;
+} {
+  const onboarding: OnboardingStatus = { path: null, left: false, progress: NONE, ...given };
+  const capture = vi.fn<Capture>();
+  const send = vi.fn<(to: FirstRunStep) => void>();
+  let state = openWizard(onboarding, { progress: onboarding.progress, member }, start);
+  const deps = {
+    member,
+    progress: onboarding.progress,
+    capture,
+    send,
+    update: (next: typeof state): void => {
+      state = next;
+    },
+  };
+  return {
+    wizard: () => wizardOf(state, deps),
+    announce: () => announceOpen(state, onboarding, start, deps),
+    capture,
+    send,
+  };
+}
+
+describe("opening the wizard", () => {
+  it("shows the chooser and says it started", () => {
+    const { wizard, announce, send } = setup();
+    expect(wizard().step).toBe("choose");
+    expect(wizard().position).toEqual({ n: 0, total: 0 });
+    announce();
+    expect(send).toHaveBeenCalledExactlyOnceWith({ step: "started" });
+  });
+
+  it("reopens a path under way at its first step not done, and sends nothing", () => {
+    const { wizard, announce, send } = setup({
+      onboarding: { path: "plan", progress: { ...NONE, workouts: true } },
+    });
+    expect(wizard().step).toBe("P1");
+    announce();
+    expect(send).not.toHaveBeenCalled();
+    wizard().back();
+    expect(wizard().step).toBe("choose");
+  });
+
+  it("opens the asked path from the setup card and counts a resume of a path left", () => {
+    const start = { path: "plan", from: "setup_card" } as const;
+    const progress = { ...NONE, workouts: true, blockMemberships: true };
+    const { wizard, announce, send, capture } = setup({
+      onboarding: { path: "plan", left: true, progress },
+      start,
+    });
+    expect(wizard().step).toBe("P4");
+    announce();
+    expect(send).toHaveBeenCalledExactlyOnceWith({ step: "path", ...start });
+    expect(capture).toHaveBeenCalledExactlyOnceWith("onboarding_resumed", {
+      path: "plan",
+      at: "P4",
+    });
+    wizard().back();
+    expect(wizard().step).toBe("P4");
+  });
+
+  it("does not count a path opened from Account as a resume", () => {
+    const { announce, capture } = setup({ start: { path: "history", from: "account" } });
+    announce();
+    expect(capture).not.toHaveBeenCalled();
+  });
+});
+
+describe("the history path", () => {
+  it("goes from the chooser through the import to the end, offering membership once", () => {
+    const { wizard, send, capture } = setup();
+    wizard().choose("history", "chooser");
+    expect(send).toHaveBeenLastCalledWith({ step: "path", path: "history", from: "chooser" });
+    expect(wizard()).toMatchObject({ path: "history", step: "H1" });
+
+    wizard().answerLog("kaya");
+    expect(send).toHaveBeenLastCalledWith({ step: "log_answered", existingLog: "kaya" });
+    expect(wizard().memory.way).toBe("import");
+    expect(wizard().position).toEqual({ n: 1, total: 6 });
+
+    const visited = [wizard().step];
+    for (let i = 0; i < 5; i++) {
+      wizard().next();
+      visited.push(wizard().step);
+    }
+    expect(visited).toEqual(["H1", "H2i", "H3i", "H4", "H5", "H6"]);
+    expect(wizard().position).toEqual({ n: 6, total: 6 });
+    expect(wizard().memory.membershipShown).toBe(true);
+    expect(capture).toHaveBeenCalledWith("onboarding_step_completed", {
+      path: "history",
+      step: "H1",
+    });
+    expect(capture.mock.calls.filter(([event]) => event === "paywall_shown")).toEqual([
+      ["paywall_shown", { source: "onboarding", path: "history", step: "H5" }],
+    ]);
+  });
+
+  it("goes by hand for a first log, and carries a step's extra on its event", () => {
+    const { wizard, capture } = setup();
+    wizard().choose("history", "chooser");
+    wizard().answerLog("none");
+    expect(wizard().memory.way).toBe("by_hand");
+    wizard().next();
+    expect(wizard().step).toBe("H2h");
+    wizard().next({ count: 3, sends: 2 });
+    expect(wizard().step).toBe("H4");
+    expect(capture).toHaveBeenLastCalledWith("onboarding_step_completed", {
+      path: "history",
+      step: "H2h",
+      count: 3,
+      sends: 2,
+    });
+  });
+
+  it("skips the membership offer for a member", () => {
+    const { wizard, capture } = setup({ member: true });
+    wizard().choose("history", "chooser");
+    wizard().answerLog("none");
+    wizard().next();
+    wizard().next();
+    wizard().next();
+    expect(wizard().step).toBe("H6");
+    expect(capture.mock.calls.some(([event]) => event === "paywall_shown")).toBe(false);
+  });
+
+  it("goes back the way it came, to the chooser", () => {
+    const { wizard } = setup();
+    wizard().choose("history", "chooser");
+    wizard().answerLog("8a");
+    wizard().next();
+    wizard().back();
+    expect(wizard().step).toBe("H1");
+    wizard().back();
+    expect(wizard().step).toBe("choose");
+  });
+});
+
+describe("closing the wizard", () => {
+  it("skips at the chooser with no path", () => {
+    const { wizard, send } = setup();
+    wizard().skip();
+    expect(send).toHaveBeenCalledExactlyOnceWith({ step: "skipped", path: null, at: "choose" });
+  });
+
+  it("skips mid-path at the step it is on", () => {
+    const { wizard, send } = setup();
+    wizard().choose("plan", "chooser");
+    wizard().next({ count: 3 });
+    wizard().next();
+    wizard().skip();
+    expect(send).toHaveBeenLastCalledWith({ step: "skipped", path: "plan", at: "P3" });
+  });
+
+  it("leaves mid-path keeping the path", () => {
+    const { wizard, send } = setup();
+    wizard().choose("plan", "chooser");
+    wizard().leave();
+    expect(send).toHaveBeenLastCalledWith({ step: "left", path: "plan" });
+  });
+
+  it("completes into the other path, which shows no second membership offer", () => {
+    const { wizard, send, capture } = setup();
+    wizard().choose("history", "chooser");
+    wizard().answerLog("none");
+    for (let i = 0; i < 4; i++) wizard().next();
+    expect(wizard().step).toBe("H6");
+
+    wizard().complete("later", "other_path");
+    expect(send).toHaveBeenLastCalledWith({
+      step: "completed",
+      path: "history",
+      outcome: "later",
+      next: "other_path",
+    });
+    wizard().choose("plan", "end_screen");
+    expect(send).toHaveBeenLastCalledWith({ step: "path", path: "plan", from: "end_screen" });
+    expect(wizard()).toMatchObject({ path: "plan", step: "P1", position: { n: 1, total: 6 } });
+
+    for (let i = 0; i < 5; i++) wizard().next();
+    expect(wizard().step).toBe("P7");
+    expect(capture.mock.calls.filter(([event]) => event === "paywall_shown")).toHaveLength(1);
+  });
+});
+
+describe("patchStatus", () => {
+  const status: ConnectionStatus = {
+    gradeScales: DEFAULT_GRADE_SCALES,
+    role: "user",
+    trainingReminders: { enabled: false, time: "08:00", promptSeen: false },
+    firstRun: true,
+    onboarding: { path: null, left: false, progress: NONE },
+    strava: null,
+  };
+
+  it("sets the path when one is chosen and keeps the gate open", () => {
+    expect(patchStatus(status, { step: "path", path: "plan", from: "chooser" })).toMatchObject({
+      firstRun: true,
+      onboarding: { path: "plan", left: false },
+    });
+  });
+
+  it("closes the gate on leave and keeps the path as left", () => {
+    const chosen = { ...status, onboarding: { ...status.onboarding, path: "plan" as const } };
+    expect(patchStatus(chosen, { step: "left", path: "plan" })).toMatchObject({
+      firstRun: false,
+      onboarding: { path: "plan", left: true },
+    });
+  });
+
+  it("clears the path and closes the gate on skip and on a completion that ends", () => {
+    const left = {
+      ...status,
+      onboarding: { path: "history" as const, left: true, progress: NONE },
+    };
+    const closed = { firstRun: false, onboarding: { path: null, left: false } };
+    expect(patchStatus(left, { step: "skipped", path: "history", at: "H2h" })).toMatchObject(
+      closed
+    );
+    expect(
+      patchStatus(left, { step: "completed", path: "history", outcome: "member", next: "log" })
+    ).toMatchObject(closed);
+  });
+
+  it("keeps the wizard open on a completion into the other path", () => {
+    const to: FirstRunStep = {
+      step: "completed",
+      path: "history",
+      outcome: "later",
+      next: "other_path",
+    };
+    expect(patchStatus(status, to)).toBe(status);
+  });
+});
