@@ -1,4 +1,4 @@
-import { clock, type SetDone } from "@sendtally/core/hang";
+import type { SetDone } from "@sendtally/core/hang";
 import { t } from "../i18n";
 import { enduranceAmountLabel, type Endurance, type EnduranceUnit } from "./endurance";
 import { newClimb, nextClimbKey } from "./transforms";
@@ -129,20 +129,4 @@ export function lapSets(climbs: readonly ClimbDraft[], item: number): SetDone[] 
   const e = lapsClimb(climbs, item)?.endurance;
   if (e === undefined) return [];
   return e.laps.map((done) => (e.unit === "moves" ? { reps: done } : { onS: done }));
-}
-
-/** A lap logged on a card the tally is not on: how full its bar is, whether it went clean, and "8/40". */
-export type LapShown = { share: number; clean: boolean; value: string };
-
-export function lapRowsOf(logged: readonly SetDone[], plan: LapPlan): LapShown[] {
-  const text = (v: number): string => (plan.unit === "moves" ? String(v) : clock(v));
-  return logged.map((s) => {
-    const v = s.reps ?? s.onS ?? 0;
-    const clean = v >= plan.target;
-    return {
-      share: Math.min(1, v / plan.target),
-      clean,
-      value: clean ? text(v) : `${text(v)}/${text(plan.target)}`,
-    };
-  });
 }

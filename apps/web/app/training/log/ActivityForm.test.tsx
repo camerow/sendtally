@@ -102,7 +102,12 @@ const mount = (live = false, idleEnd: IdleEnd | null = null, initial = review): 
   );
 
 const click = (el: Element | null | undefined): void => act(() => (el as HTMLElement).click());
-const rows = (): NodeListOf<Element> => container.querySelectorAll("[data-testid=review-set]");
+const rows = (): NodeListOf<Element> =>
+  container.querySelectorAll("[data-testid=review-body] .set-item");
+const removeAt = (i: number): void => {
+  click(rows()[i]?.querySelector(".set-select"));
+  click(rows()[i]?.querySelector(".set-remove-button"));
+};
 const save = (): void => click(container.querySelector(".editor-bar-save"));
 const saved = (): ActivityDraft["done"] =>
   (writes.saveActivity.mock.calls[0] as unknown as [{ done: ActivityDraft["done"] }])[0].done;
@@ -136,12 +141,11 @@ describe("ActivityForm", () => {
       ...review,
       done: [{ item: 0, exercise: "Checklist", sets: [], checklist: { lines, checked: [0] } }],
     });
-    expect(container.textContent).toContain("Checklist · 1 of 3");
-    const line = [...container.querySelectorAll("label")].find((l) =>
-      l.textContent?.includes("Easy boulders x10")
-    );
-    click(line?.querySelector("input"));
-    expect(container.textContent).toContain("Checklist · 2 of 3");
+    const box = (text: string): HTMLInputElement | null =>
+      container.querySelector(`input[aria-label="${text}"]`);
+    expect(lines.map((l) => box(l)?.checked)).toEqual([true, false, false]);
+    click(box("Easy boulders x10"));
+    expect(lines.map((l) => box(l)?.checked)).toEqual([true, false, true]);
     save();
     expect(saved()[0]?.checklist).toEqual({ lines, checked: [0, 2] });
   });
@@ -163,7 +167,7 @@ describe("ActivityForm", () => {
     expect(text.indexOf("Push-ups")).toBeLessThan(text.indexOf("Plank"));
   });
 
-  it("puts each checklist above the Sets heading, the exercises under it", () => {
+  it("puts each checklist above the exercises", () => {
     mount(false, null, {
       ...review,
       done: [
@@ -179,9 +183,8 @@ describe("ActivityForm", () => {
     });
     const text = container.textContent ?? "";
     const at = (s: string): number => text.indexOf(s);
-    expect(at("Checklist · 1 of 1")).toBeLessThan(at("Checklist · 0 of 1"));
-    expect(at("Checklist · 0 of 1")).toBeLessThan(at("Sets"));
-    expect(at("Sets")).toBeLessThan(at("Back squat"));
+    expect(at("Jog")).toBeLessThan(at("Stretch"));
+    expect(at("Stretch")).toBeLessThan(at("Back squat"));
   });
 
   it("ends the live run it reviews when saved, and only after asking when discarded", async () => {
@@ -206,6 +209,19 @@ describe("ActivityForm", () => {
     expect(store.read()).toBeNull();
   });
 
+  it("selects a set with a click on its row, and a second click unselects it", () => {
+    mount();
+    click(rows()[0]?.querySelector(".set-select"));
+    expect(rows()[0]?.querySelector(".set-remove-button")).not.toBeNull();
+    click(rows()[0]?.querySelector(".set-remove-button")?.parentElement);
+    expect(container.querySelector(".set-remove-button")).toBeNull();
+  });
+
+  it("leaves a new log with Discard", () => {
+    mount();
+    expect(container.querySelector(".editor-bar-cancel")?.textContent).toBe("Discard");
+  });
+
   it("stays on the form with no toast when the save fails", async () => {
     writes.saveActivity.mockResolvedValueOnce(false);
     mount();
@@ -224,7 +240,7 @@ describe("ActivityForm", () => {
 
   it("removes a set with an Undo that puts it back", () => {
     mount();
-    click(rows()[2]?.querySelector(".set-remove"));
+    removeAt(2);
     expect(rows()).toHaveLength(2);
     const undo = document.querySelector<HTMLElement>(".toast-action");
     expect(undo?.textContent).toBe("Undo");
@@ -234,9 +250,9 @@ describe("ActivityForm", () => {
 
   it("asks before removing an exercise's last set", () => {
     mount();
-    click(rows()[2]?.querySelector(".set-remove"));
-    click(rows()[1]?.querySelector(".set-remove"));
-    click(rows()[0]?.querySelector(".set-remove"));
+    removeAt(2);
+    removeAt(1);
+    removeAt(0);
     expect(rows()).toHaveLength(1);
     click(document.querySelector(".sheet-action--danger"));
     expect(rows()).toHaveLength(0);

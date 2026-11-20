@@ -7,14 +7,11 @@ import {
   hangboardSeconds,
   isBuiltInGrip,
   itemsSeconds,
-  letterOf,
   sessionItems,
   timeUnitsOf,
-  turnsOf,
   type CalendarDate,
   type Dose,
   type Focus,
-  type Item,
   type Membership,
   type WeightUnit,
   type Workout,
@@ -159,10 +156,6 @@ const separated = (parts: readonly (string | null)[]): string =>
     .map((x) => x.replaceAll(" ", "\u00A0"))
     .join("\u00A0· ");
 
-/** "RPE 8": the effort an exercise aims for, when it sets one. */
-export const exerciseTarget = ({ targetRpe }: Pick<Dose, "targetRpe">): string | undefined =>
-  targetRpe === undefined ? undefined : t("hang.rpeValue", { value: formatNumber(targetRpe) });
-
 /** "Target RPE 8/10": the same, on its own line under the exercise name. */
 export const exerciseTargetLine = ({ targetRpe }: Pick<Dose, "targetRpe">): string | undefined =>
   targetRpe === undefined ? undefined : t("common.targetRpe", { n: formatNumber(targetRpe) });
@@ -239,27 +232,6 @@ export function targetText(
     work: [main, load].filter((x) => x !== null).join(" · "),
     rpe: dose.targetRpe === sessionRpe ? undefined : exerciseTargetLine(dose),
   };
-}
-
-/** A line with the exercise's target first: "RPE 8 · Same every session". */
-export const withTarget = (dose: Pick<Dose, "targetRpe">, line?: string): string | undefined =>
-  [exerciseTarget(dose), line].filter((x) => x !== undefined && x !== "").join(" · ") || undefined;
-
-/** "B Light": a dose's letter, with its name when it has one. */
-export const letterName = (turn: number, name?: string): string =>
-  name === undefined ? letterOf(turn) : `${letterOf(turn)} ${name}`;
-
-/**
- * What session `n` of a workout that takes turns is called, such as Heavy: the name its
- * turn's dose has on the first item that takes as many turns as the workout and names it.
- */
-export function turnName(items: readonly Pick<Item, "doses">[], n: number): string | undefined {
-  const turns = turnsOf(items);
-  const turn = n % turns;
-  if (turns === 1) return undefined;
-  return items.find((i) => i.doses.length === turns && i.doses[turn]?.name !== undefined)?.doses[
-    turn
-  ]?.name;
 }
 
 /** The exercises a workout's climbing line reads its measure from, such as laps of a circuit. */

@@ -6,7 +6,13 @@ import {
 } from "@sendtally/features/activities";
 import { readPlanLink, readSession } from "@sendtally/features/training";
 import { useGrips } from "@sendtally/features/hang";
-import { idleEnd, livePartForm, partEnded, usePrescribed } from "@sendtally/features/workouts";
+import {
+  idleEnd,
+  livePartForm,
+  partEnded,
+  usePrescribed,
+  useWorkoutLibrary,
+} from "@sendtally/features/workouts";
 import { useAppApi } from "../../lib/useAppApi";
 import { useLiveRunStore } from "../../lib/useLiveRun";
 import { useHangData } from "../data/HangDataContext";
@@ -40,6 +46,11 @@ export function NewActivityPage({
     readPlanLink(params),
     readSession(params)
   );
+  const library = useWorkoutLibrary(api).state;
+  const targetRpe =
+    library.status === "ready" && params.workoutId !== undefined
+      ? (library.data.workout(params.workoutId)?.targetRpe ?? undefined)
+      : undefined;
   const [initial, setInitial] = React.useState<ActivityDraft | null>(null);
   if (initial === null && prescribed !== undefined) {
     const draft = newActivityDraft(params, today, prescribed);
@@ -54,6 +65,7 @@ export function NewActivityPage({
       live={params.live === "1"}
       idleEnd={idleEnd(params)}
       planned={prescribed}
+      {...(targetRpe !== undefined && { targetRpe })}
       {...(part !== undefined && { part, gripName: model.gripName })}
     />
   );

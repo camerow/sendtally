@@ -34,13 +34,11 @@ describe("a hold's row", () => {
 });
 
 describe("a rest's row", () => {
-  it("drains toward zero and says what is next", () => {
+  it("drains toward zero", () => {
     const rest = { at: "after:0", seconds: 90, next: "Ring row", endsAt: 0 } as unknown as Rest;
     expect(restRowVM(rest, 45)).toEqual({
       clock: "0:45",
       share: 0.5,
-      next: "Ring row",
-      nextLabel: "Next: Ring row",
       label: "Rest, 0:45 left",
     });
   });

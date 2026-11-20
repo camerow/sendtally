@@ -30,10 +30,7 @@ const ON_DARK_VARS = {
 
 export type TimerFrameProps<P extends Phase> = {
   timer: HangTimer<P>;
-  name: string;
-  meta: string;
-  workoutId: string | null;
-  controls: Omit<TimerControlsProps, "onRestart" | "onSkip">;
+  controls: Omit<TimerControlsProps<P>, "timer">;
   children: React.ReactNode;
 };
 
@@ -43,9 +40,6 @@ export type TimerFrameProps<P extends Phase> = {
  */
 export function TimerFrame<P extends Phase>({
   timer,
-  name,
-  meta,
-  workoutId,
   controls,
   children,
 }: TimerFrameProps<P>): React.ReactElement {
@@ -54,18 +48,11 @@ export function TimerFrame<P extends Phase>({
   return (
     <div className="timer" style={ON_DARK_VARS}>
       <div className="timer-column" ref={progress}>
-        <TimerHeader
-          name={name}
-          meta={meta}
-          workoutId={workoutId}
-          muted={timer.muted}
-          onEnd={timer.end}
-          onToggleMute={timer.toggleMute}
-        />
+        <TimerHeader muted={timer.muted} onEnd={timer.end} onToggleMute={timer.toggleMute} />
         <div className="timer-body">
           <RunProgressBar run={timer.run} />
           {children}
-          <TimerControls {...controls} onRestart={timer.restart} onSkip={timer.skip} />
+          <TimerControls timer={timer} {...controls} />
         </div>
       </div>
     </div>

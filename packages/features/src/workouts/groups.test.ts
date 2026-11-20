@@ -2,15 +2,12 @@ import { describe, expect, it } from "vitest";
 import type { SessionItem } from "@sendtally/core/hang";
 import {
   memberSetLabel,
-  nextInRound,
   restAfterGroupTick,
   restPreviewAfter,
   roundOn,
   runGroupsOf,
   supersetHeadAt,
   supersetMembers,
-  supersetName,
-  supersetNextLine,
   supersetRoundTitle,
   supersetRoundsTitle,
   withRunGroups,
@@ -90,23 +87,16 @@ describe("a superset in the run", () => {
 });
 
 describe("a superset's words", () => {
-  it("names its round, what comes next, its members and its rounds", () => {
+  it("names its round, its members and its rounds", () => {
     expect(supersetRoundTitle(2, 3)).toBe("Superset · Round 2 of 3");
-    expect(supersetNextLine(["Push-ups", "Hollow hold", "Dips"])).toBe(
-      "Next: Push-ups, then Hollow hold"
-    );
-    expect(supersetNextLine(["Dips"])).toBe("Next: Dips");
-    expect(supersetNextLine([])).toBeNull();
-    expect(supersetName(["Dips", "Rows"])).toBe("Superset · Dips + Rows");
     expect(supersetMembers(["A", "B", "C"])).toBe("A + B + C");
     expect(supersetRoundsTitle(3)).toBe("Superset · 3 rounds");
     expect(memberSetLabel(1, 0)).toBe("B1");
   });
 
-  it("says which round is on, and the members still to go in it after the one on now", () => {
+  it("says which round is on", () => {
     const g = runGroupsOf([0, 1, 2, 3], items)[0]!;
     expect(roundOn(items, ticks([0, 0], [1, 0], [2, 0]), g)).toBe(2);
-    expect(nextInRound(items, ticks([0, 0]), g)).toEqual([1, 2]);
   });
 });
 

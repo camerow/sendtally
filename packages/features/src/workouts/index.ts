@@ -6,17 +6,13 @@ export {
   browseLibrary,
   copyName,
   doseSummary,
-  exerciseTarget,
   exerciseTargetLine,
   targetText,
-  withTarget,
   draftOf,
   exerciseName,
   libraryOf,
   libraryShelves,
-  letterName,
   newWorkoutDraft,
-  turnName,
   estimatedMinutes,
   workoutMinutes,
   workoutUsage,
@@ -62,30 +58,19 @@ export { useRun, type RunControls } from "./useRun";
 export * from "./liveRun";
 export * from "./useLiveRun";
 export * from "./useSetsPlayer";
-export * from "./useChecklistPlayer";
 export * from "./holdRow";
 export * from "./startLive";
 export * from "./useTimerPlayers";
 export * from "./hangReview";
-export {
-  bodyHeading,
-  checklistLine,
-  checklistTitle,
-  itemDoseText,
-  itemTitle,
-  runItems,
-} from "./checklist";
+export { bodyHeading, checklistLine, checklistTitle, itemTitle, runItems } from "./checklist";
 export { useLineKeys } from "./useLineKeys";
 export {
   memberSetLabel,
-  nextInRound,
   restPreviewAfter,
   roundOn,
   runGroupsOf,
   supersetHeadAt,
   supersetMembers,
-  supersetName,
-  supersetNextLine,
   supersetRoundTitle,
   supersetRoundsTitle,
   type RunGroup,

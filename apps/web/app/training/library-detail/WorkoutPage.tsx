@@ -1,78 +1,95 @@
 import React from "react";
 import { libraryPictures } from "@sendtally/features/library";
 import { Link } from "react-router";
-import { activityItem, hangItem, ofWorkout, useActivities } from "@sendtally/features/activities";
-import { tallyMeasuresOf } from "@sendtally/features/exercises";
-import { hangWorkoutOf, setupLabel, useGrips } from "@sendtally/features/hang";
+import { eachSideOf, tallyMeasuresOf } from "@sendtally/features/exercises";
+import { hangWorkoutOf, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import type { CalendarDate } from "@sendtally/core/hang";
+import {
+  blockName,
+  plannedItems,
+  trainingDay,
+  useTrainingLog,
+  type Occurrence,
+} from "@sendtally/features/training";
 import { useExercises } from "@sendtally/features/statistics";
 import {
+  bodyHeading,
   unplannedItems,
   workoutMinutes,
   type LibraryWorkout,
-  type WorkoutUse,
-  bodyHeading,
 } from "@sendtally/features/workouts";
 import { MoreMenu } from "../../components/MoreMenu";
 import { DetailFrame } from "../../components/detail/DetailFrame";
-import { HistoryList } from "../../components/detail/HistoryList";
 import { SectionHeading } from "../../components/detail/SectionHeading";
+import { SummaryTiles } from "../../components/detail/SummaryTiles";
 import { useAppApi } from "../../lib/useAppApi";
+import { SessionTargetContext } from "../components/sessionTarget";
+import { StartButton } from "../components/StartButton";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { editWorkoutPath } from "../editor/paths";
+import { exerciseHistoryPath } from "../components/exerciseHistory";
+import { workoutHistoryPath } from "../history/paths";
 import { WORKOUTS_VIEW, useLibrary } from "../library/useLibrary";
-import { StartButton } from "../components/StartButton";
-import { logLink } from "../log/logLink";
-import { useWorkoutStart } from "./useWorkoutStart";
-import { activityPath } from "../log/paths";
+import { plannedLogLink } from "../log/logLink";
+import { MoveSheet } from "../plan-week/MoveSheet";
+import { schedulePath } from "../schedule/paths";
 import { BodyPreview } from "./BodyPreview";
+import { DayLine } from "./DayLine";
 import { LibraryIntro } from "./LibraryIntro";
 import { PlanList } from "./PlanList";
-import { PreviewRow } from "./PreviewRow";
 import { ProtocolPanel } from "./ProtocolPanel";
 import { useWorkoutMenu } from "./useWorkoutMenu";
-import { WorkoutOverTime } from "./WorkoutOverTime";
-import { schedulePath } from "../schedule/paths";
+import { useWorkoutStart } from "./useWorkoutStart";
 
-function Detail({
-  workout,
-  use,
-}: {
-  workout: LibraryWorkout;
-  use: WorkoutUse | undefined;
-}): React.ReactElement {
+/** A planned run a workout opens as: the day it lands on and the plan it is in. */
+export type RunOf = { date: CalendarDate; membershipId: string };
+
+type DetailProps = { workout: LibraryWorkout; session: number; run: Occurrence | undefined };
+
+function Detail({ workout, session, run }: DetailProps): React.ReactElement {
   const api = useAppApi();
   const { isGrip } = useGrips(api);
   const { model, today } = useHangData();
-  const session = use?.count ?? 0;
   const exercises = useExercises(api).state;
-  const activities = useActivities(api).state;
+  const mine = exercises.status === "ready" ? exercises.data : [];
   const menu = useWorkoutMenu(workout);
-  const logIt = logLink(workout, today, session);
-  const start = useWorkoutStart(workout, today, unplannedItems(workout, session), true);
+  const [moving, setMoving] = React.useState(false);
+  const shown = run === undefined ? unplannedItems(workout, session) : plannedItems(run);
+  const date = run?.date ?? today;
+  const missed = run?.status === "missed";
+  const logIt = plannedLogLink(workout, date, shown);
+  const start = useWorkoutStart(workout, date, shown, true);
   const hang = workout.kind === "hangboard" ? model.workout(workout.id) : undefined;
-  const next = hang === undefined ? undefined : (hangWorkoutOf(workout, session) ?? hang);
+  const next = hang === undefined ? undefined : (hangWorkoutOf(workout, shown.session) ?? hang);
   const gripId = hang === undefined ? "" : model.defaultGrip(hang);
-  const last = next === undefined ? null : model.lastUsed(next, gripId);
-  const lastUsed =
-    next === undefined || last === null
-      ? undefined
-      : t("hang.lastUsedValue", { setup: setupLabel(next.kind, last, model.settings.units) });
-  const history =
-    hang === undefined
-      ? ofWorkout(activities.status === "ready" ? activities.data : [], workout.id).map((a) =>
-          activityItem(a, model.settings.units)
-        )
-      : ofWorkout(model.data.sessions, workout.id).map((s) => hangItem(s, model));
+  const minutes = workoutMinutes(workout, shown.session);
+  const tiles = [
+    ...(minutes === null
+      ? []
+      : [{ value: t("hang.minutes", { n: minutes }), label: t("summary.length") }]),
+    ...(workout.targetRpe === null
+      ? []
+      : [{ value: `${workout.targetRpe}/10`, label: t("common.targetRpeLabel") }]),
+  ];
+  const tally = tallyMeasuresOf(mine, workout.kind, isGrip);
+  const logButton = logIt !== null && (
+    <Link to={logIt} replace className="outline-button outline-button--wide">
+      {t("workouts.logIt")}
+    </Link>
+  );
 
   return (
     <DetailFrame
-      backTo={WORKOUTS_VIEW}
+      backTo={run === undefined ? WORKOUTS_VIEW : "/app/plan"}
       hero={libraryPictures("workout", workout.id)}
       action={
         <span className="detail-actions">
-          {workout.source === "mine" && (
+          <Link to={workoutHistoryPath(workout.id)} className="edit-button">
+            {t("common.history")}
+          </Link>
+          {workout.source === "mine" && run === undefined && (
             <Link to={editWorkoutPath(workout.id)} className="edit-button">
               {t("common.edit")}
             </Link>
@@ -83,54 +100,82 @@ function Detail({
       footer={
         <div className="footer-stack">
           <div className="footer-row">
-            <Link to={schedulePath(workout.id)} className="outline-button outline-button--wide">
-              {t("plan.schedule")}
-            </Link>
-            {logIt !== null && (
-              <Link to={logIt} replace className="outline-button outline-button--wide">
-                {t("workouts.logIt")}
+            {run === undefined && (
+              <Link to={schedulePath(workout.id)} className="outline-button outline-button--wide">
+                {t("plan.schedule")}
               </Link>
             )}
+            {logButton}
+            {missed && (
+              <button
+                type="button"
+                className="outline-button outline-button--wide"
+                onClick={() => setMoving(true)}
+              >
+                {t("plan.move")}
+              </button>
+            )}
           </div>
-          {start !== null && <StartButton start={start} />}
+          {!missed && start !== null && <StartButton start={start} />}
         </div>
       }
     >
-      <LibraryIntro workout={workout} use={use} />
-      {workout.items.length > 0 && (
+      <LibraryIntro
+        workout={workout}
+        {...(run?.block != null && { kicker: blockName(run.block) })}
+        {...(run !== undefined && {
+          day: <DayLine week={run.week} date={run.date} missed={missed} />,
+        })}
+      />
+      {tiles.length > 0 && <SummaryTiles stats={tiles} />}
+      {shown.items.length > 0 && (
         <section className="detail-section">
-          <SectionHeading title={bodyHeading(workout.items)} />
+          <SectionHeading title={bodyHeading(shown.items)} />
           {next === undefined ? (
-            <BodyPreview
-              workout={workout}
-              unit={model.settings.units}
-              session={session}
-              tally={tallyMeasuresOf(
-                exercises.status === "ready" ? exercises.data : [],
-                workout.kind,
-                isGrip
-              )}
-            />
+            <SessionTargetContext.Provider value={workout.targetRpe}>
+              <BodyPreview
+                items={shown.items}
+                exerciseRestS={workout.exerciseRestS}
+                unit={model.settings.units}
+                kindOf={(exercise) => tally(exercise) ?? workout.kind}
+                eachSide={eachSideOf(mine)}
+                historyOf={(exercise) => exerciseHistoryPath(mine, exercise)}
+              />
+            </SessionTargetContext.Provider>
           ) : (
-            <PreviewRow title={model.gripName(gripId)} detail="" note={lastUsed} />
+            <ProtocolPanel workout={next} gripId={gripId} />
           )}
         </section>
       )}
-      {next !== undefined && (
-        <ProtocolPanel workout={next} minutes={workoutMinutes(workout, session)} />
+      {run === undefined && (
+        <PlanList workoutId={workout.id} name={workout.name} kind={workout.kind} />
       )}
-      {hang === undefined && <WorkoutOverTime workout={workout} />}
-      <HistoryList items={history} to={activityPath} />
-      <PlanList workoutId={workout.id} name={workout.name} kind={workout.kind} />
       {menu.sheets}
+      {moving && run !== undefined && (
+        <MoveSheet occurrence={run} name={workout.name} onClose={() => setMoving(false)} />
+      )}
     </DetailFrame>
   );
 }
 
-/** A workout: what it holds, how it is going, its past sessions and where it is planned. */
-export function WorkoutPage({ id }: { id: string }): React.ReactElement | null {
+export type WorkoutPageProps = {
+  id: string;
+  /** Opened from a planned run: its day, and Start and Log it for that run. */
+  run?: RunOf | null;
+};
+
+/** A workout: what this session holds, how to start it, and where it is planned. */
+export function WorkoutPage({ id, run = null }: WorkoutPageProps): React.ReactElement | null {
   const { state, reload } = useLibrary();
+  const { today } = useHangData();
+  const { log } = useTrainingLog(useAppApi());
+  const planned =
+    run === null
+      ? undefined
+      : trainingDay(log, run.date, today).plans.find((o) => o.membership.id === run.membershipId);
   if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;
   const workout = state.data.workout(id);
-  return workout === undefined ? null : <Detail workout={workout} use={state.data.usage.get(id)} />;
+  return workout === undefined ? null : (
+    <Detail workout={workout} session={state.data.usage.get(id)?.count ?? 0} run={planned} />
+  );
 }

@@ -96,12 +96,12 @@ const button = (name: string): HTMLButtonElement => {
 const advance = (ms: number): void => act(() => void vi.advanceTimersByTime(ms));
 
 describe("IntervalsPage", () => {
-  it("counts the step down after Get ready, with the round and what comes next", () => {
+  it("counts the step down after Get ready, with the round and the steps to come", () => {
     expect(container.textContent).toContain(t("hang.phaseReady"));
     advance(5_100);
     expect(container.textContent).toContain("Couch stretch");
     expect(container.textContent).toContain(t("activities.roundOf", { round: 1, rounds: 2 }));
-    expect(container.textContent).toContain(t("activities.upNext"));
+    expect(container.textContent).toContain("Swing");
     expect(playTone).toHaveBeenCalledWith("work");
   });
 

@@ -644,11 +644,6 @@
   padding: 0 11.3px;
 }
 
-.number-field-box--short {
-  background: color-mix(in srgb, var(--warning-amber) 12%, transparent);
-  border: 1.5px solid var(--warning-amber);
-}
-
 .number-field-input {
   flex: 1;
   min-width: 0;

@@ -1,69 +1,69 @@
 import React from "react";
+import { currentPhase, hasNextSet, type Phase } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
+import type { HangTimer } from "@sendtally/features/workouts";
 import { Icon } from "../../../components/Icon";
 
-export type TimerControlsProps = {
+export type TimerControlsProps<P extends Phase> = {
+  timer: HangTimer<P>;
   color: string;
+  /** What the round button does: Pause, Resume, or Lifted on a lift. */
   primary: string;
-  /** What comes after this phase; null leaves the line out. */
-  next: string | null;
-  fail: string | null;
-  onPrimary: () => void;
-  onFail: () => void;
-  onRestart: () => void;
-  onSkip: () => void;
 };
 
-/** Came off early / missed lift, what comes next, and restart · primary · skip. */
-export function TimerControls({
+/** One row: set back, restart, a round pause, play or lift button in the phase's colour, skip, set forward. */
+export function TimerControls<P extends Phase>({
+  timer,
   color,
   primary,
-  next,
-  fail,
-  onPrimary,
-  onFail,
-  onRestart,
-  onSkip,
-}: TimerControlsProps): React.ReactElement {
+}: TimerControlsProps<P>): React.ReactElement {
+  const icon =
+    currentPhase(timer.run).taps > 0 ? "check" : timer.run.pausedAt === null ? "pause" : "play";
   return (
-    <div className="timer-controls">
-      {fail !== null && (
-        <button type="button" className="timer-fail" onClick={onFail}>
-          {fail}
-        </button>
-      )}
-      {next !== null && (
-        <div className="timer-next">
-          <span className="timer-label">{t("hang.next")}</span>
-          <span className="timer-next-text">{next}</span>
-        </div>
-      )}
-      <div className="timer-buttons">
-        <button
-          type="button"
-          className="timer-icon timer-icon--big"
-          aria-label={t("hang.restartInterval")}
-          onClick={onRestart}
-        >
-          <Icon name="restart" size={22} strokeWidth={2.2} />
-        </button>
-        <button
-          type="button"
-          className="timer-primary"
-          style={{ backgroundColor: color }}
-          onClick={onPrimary}
-        >
-          {primary}
-        </button>
-        <button
-          type="button"
-          className="timer-icon timer-icon--big"
-          aria-label={t("hang.skipInterval")}
-          onClick={onSkip}
-        >
-          <Icon name="skip" size={22} strokeWidth={2.2} />
-        </button>
-      </div>
+    <div className="timer-buttons">
+      <button
+        type="button"
+        className="timer-icon"
+        aria-label={t("hang.previousSet")}
+        disabled={timer.run.index === 0}
+        onClick={timer.previousSet}
+      >
+        <Icon name="back" size={18} strokeWidth={2.2} />
+      </button>
+      <button
+        type="button"
+        className="timer-icon"
+        aria-label={t("hang.restartInterval")}
+        onClick={timer.restart}
+      >
+        <Icon name="restart" size={22} strokeWidth={2.2} />
+      </button>
+      <button
+        type="button"
+        className="timer-primary"
+        style={{ backgroundColor: color }}
+        aria-label={primary}
+        onClick={timer.primary}
+      >
+        <Icon name={icon} size={26} strokeWidth={3} />
+      </button>
+      <button
+        type="button"
+        className="timer-icon"
+        aria-label={t("hang.skipInterval")}
+        onClick={timer.skip}
+      >
+        <Icon name="skip" size={22} strokeWidth={2.2} />
+      </button>
+      <button
+        type="button"
+        className="timer-icon"
+        aria-label={t("hang.nextSet")}
+        disabled={!hasNextSet(timer.run)}
+        onClick={timer.nextSet}
+      >
+        <Icon name="forward" size={18} strokeWidth={2.2} />
+      </button>
     </div>
   );
 }

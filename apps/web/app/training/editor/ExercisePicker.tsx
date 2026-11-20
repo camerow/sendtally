@@ -22,7 +22,7 @@ import { Sheet } from "../../components/Sheet";
 import { useAppApi } from "../../lib/useAppApi";
 import { useHangData } from "../data/HangDataContext";
 import { KindTile } from "../components/KindTile";
-import { AboutButton } from "../players/AboutButton";
+import { AboutButton } from "../components/AboutButton";
 import { CategorySheet } from "./CategorySheet";
 import { NewExerciseSheet } from "./NewExerciseSheet";
 import { useMake, usePick } from "./useMake";

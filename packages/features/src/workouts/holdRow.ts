@@ -48,20 +48,15 @@ export function holdRowVM(hold: Hold, now: number): HoldRowVM {
 export type RestRowVM = {
   clock: string;
   share: number;
-  next: string | null;
-  /** What comes next as a screen reader says it, since the name alone sounds like its row. */
-  nextLabel: string | null;
   label: string;
 };
 
-/** A running rest's row: what is left, how full its fill still is, and what comes next. */
+/** A running rest's row: what is left and how full its fill still is. */
 export function restRowVM(rest: Rest, left: number): RestRowVM {
   const clock = elapsedClock(left);
   return {
     clock,
     share: Math.min(1, left / rest.seconds),
-    next: rest.next,
-    nextLabel: rest.next === null ? null : t("activities.restNext", { name: rest.next }),
     label: t("activities.restLeft", { time: clock }),
   };
 }

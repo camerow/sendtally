@@ -1,40 +1,40 @@
 import React from "react";
-import {
-  type ItemDone,
-  type SessionItem,
-  type SetDone,
-  type WeightUnit,
-} from "@sendtally/core/hang";
+import type { ItemDone, SessionItem, SetDone, WeightUnit } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { exerciseName, setKey, type SetAt } from "@sendtally/features/workouts";
+import { exerciseName, setKey, targetText, type SetAt } from "@sendtally/features/workouts";
 import type { MoreMenuItem } from "../../components/MoreMenu";
-import type { About } from "./AboutButton";
+import type { About } from "../components/AboutButton";
+import { ExerciseBlock } from "../components/ExerciseBlock";
+import { ExerciseHead } from "../components/ExerciseHead";
+import { RpeField } from "../components/RpeField";
+import { SetDoneFields } from "../components/SetDoneFields";
+import { SetHeadings } from "../components/SetHeadings";
+import { SetRow } from "../components/SetRow";
+import { holdsOnly } from "../components/setColumns";
+import { useSessionTarget } from "../components/sessionTarget";
 import { RestPreview } from "./RestPreview";
-import { ExerciseCardHead } from "./ExerciseCardHead";
-import { SetRow } from "./SetRow";
 
 export type SetsCardProps = {
   item: SessionItem;
   done: ItemDone;
-  /** What each set asks. */
-  target: (set: number) => SetDone;
-  /** Each set as the last run of this workout did it. */
-  previous: readonly SetDone[];
   lifting: boolean;
+  /** Done each side: its target reads "a side". */
+  eachSide?: boolean;
   ticked: ReadonlySet<string>;
-  current: SetAt | null;
+  selected: SetAt | null;
   unit: WeightUnit;
   onChange: (set: number, value: SetDone) => void;
   onToggle: (set: number) => void;
   /** A set running on its timer, in place of its row. */
   holdRow: (set: number) => React.ReactNode;
-  /** ▶ for a set, when it is the current one and timed. */
+  /** ▶ for a set, when it is open and timed. */
   go: (set: number) => React.ReactNode;
-  /** What shows under a set: the rest its tick started, if it is running. */
+  /** What shows under a set: the rest its tick started, if it is running, else its rest to come. */
   restUnder: (set: number) => React.ReactNode;
   /** The exercise's description behind an info button beside its name; none without one. */
   about?: About | undefined;
-  onFocus: (set: number) => void;
+  history?: string | undefined;
+  onSelect: (set: number) => void;
   onRemoveSet: (set: number) => void;
   onAddSet: () => void;
   /** Its title folds it. */
@@ -43,15 +43,14 @@ export type SetsCardProps = {
   menu: readonly MoreMenuItem[];
 };
 
-/** One exercise of the workout as a table of its sets, with its dose's letter when it alternates. */
+/** One exercise of the run: its target once in the head, then a row per set on the set grid. */
 export function SetsCard({
   item,
   done,
-  target,
-  previous,
   lifting,
+  eachSide = false,
   ticked,
-  current,
+  selected,
   unit,
   onChange,
   onToggle,
@@ -59,62 +58,84 @@ export function SetsCard({
   go,
   restUnder,
   about,
-  onFocus,
+  history,
+  onSelect,
   onRemoveSet,
   onAddSet,
   onFold,
   menu,
 }: SetsCardProps): React.ReactElement {
+  const sessionRpe = useSessionTarget();
   const name = exerciseName(item.exercise);
-  const { setRestS = 0, targetRpe } = item.dose;
+  const { setRestS, targetRpe } = item.dose;
   const rated = targetRpe !== undefined;
   return (
-    <section className="player-card">
-      <ExerciseCardHead item={item} about={about} onFold={onFold} menu={menu} />
-      <div className="set-row set-row--head" aria-hidden="true">
-        <span className="set-col-n train-label">{t("activities.colSet")}</span>
-        <span className="set-col-target train-label">{t("activities.colTarget")}</span>
-        <span className="set-col-done train-label">
-          {rated && lifting ? t("activities.colDoneUnit", { unit }) : t("activities.colDone")}
-        </span>
-        {rated && <span className="set-col-rpe train-label">RPE</span>}
-        <span className="set-tick" />
-        <span className="set-remove" />
-      </div>
-      {done.sets.map((set, i) => (
-        <React.Fragment key={i}>
-          {holdRow(i) || (
-            <SetRow
-              n={i + 1}
-              repsMax={item.dose.repsMax}
-              target={target(i)}
-              done={set}
-              previous={previous[i]}
-              lifting={lifting}
-              ticked={ticked.has(setKey({ item: done.item, set: i }))}
-              current={current?.item === done.item && current.set === i}
-              unit={unit}
-              label={t("activities.setOf", { exercise: name, n: i + 1 })}
-              onChange={(value) => onChange(i, value)}
-              onToggle={() => onToggle(i)}
-              onFocus={() => onFocus(i)}
-              onRemove={() => onRemoveSet(i)}
-              go={go(i) || undefined}
-              {...(rated && { rpe: { target: targetRpe } })}
-            />
-          )}
-          {restUnder(i) ||
-            (i < done.sets.length - 1 && setRestS > 0 && <RestPreview seconds={setRestS} />)}
-        </React.Fragment>
-      ))}
-      <button
-        type="button"
-        className="outline-button player-add-set"
-        aria-label={t("activities.addSetTo", { exercise: name })}
-        onClick={onAddSet}
-      >
-        + {t("activities.addSet")}
-      </button>
-    </section>
+    <ExerciseBlock
+      head={
+        <ExerciseHead
+          name={name}
+          target={targetText(item.dose, "strength", unit, { eachSide, sessionRpe })}
+          about={about}
+          {...(history !== undefined && { history })}
+          onFold={onFold}
+          menu={menu}
+        />
+      }
+      add={{
+        label: t("activities.addSet"),
+        accessibilityLabel: t("activities.addSetTo", { exercise: name }),
+        onPress: onAddSet,
+      }}
+    >
+      <SetHeadings
+        position={t("activities.colSet")}
+        fields={holdsOnly(done.sets) ? t("workouts.dose.hold") : t("activities.colDone")}
+        rpe={rated}
+      />
+      {done.sets.map((set, i) => {
+        const on = ticked.has(setKey({ item: done.item, set: i }));
+        const label = t("activities.setOf", { exercise: name, n: i + 1 });
+        const timer = on ? null : go(i);
+        return (
+          <React.Fragment key={i}>
+            {holdRow(i) || (
+              <SetRow
+                position={String(i + 1)}
+                label={label}
+                ticked={on}
+                onToggle={() => onToggle(i)}
+                selected={selected?.item === done.item && selected.set === i}
+                onSelect={() => onSelect(i)}
+                onRemove={() => onRemoveSet(i)}
+                removeLabel={t("activities.removeSet", { n: i + 1 })}
+                {...(rated && {
+                  rpe: on ? (
+                    <RpeField
+                      set={set}
+                      target={targetRpe}
+                      label={label}
+                      onChange={(value) => onChange(i, value)}
+                    />
+                  ) : null,
+                })}
+              >
+                <SetDoneFields
+                  set={set}
+                  lifting={lifting}
+                  unit={unit}
+                  label={label}
+                  {...(timer ? { go: timer } : {})}
+                  onChange={(value) => onChange(i, value)}
+                />
+              </SetRow>
+            )}
+            {restUnder(i) ||
+              (i < done.sets.length - 1 && setRestS !== undefined && setRestS > 0 && (
+                <RestPreview seconds={setRestS} />
+              ))}
+          </React.Fragment>
+        );
+      })}
+    </ExerciseBlock>
   );
 }

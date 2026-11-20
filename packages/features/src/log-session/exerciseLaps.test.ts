@@ -7,7 +7,6 @@ import {
   lapsDone,
   lapsPlanned,
   lapsPlannedFor,
-  lapRowsOf,
   withLapBack,
   lapRemovable,
   withLapAdded,
@@ -97,17 +96,5 @@ describe("circuit laps", () => {
     expect(lapsPlannedFor(left, 5, 2)).toBe(2);
     expect(lapsPlannedFor(withLapBack(left, 1), 1, 2)).toBe(2);
     expect(withLapBack(removed, 1).exercise?.sets).toBe(2);
-  });
-});
-
-describe("a circuit's laps as rows on a card the tally is not on", () => {
-  it("reads each lap's share, whether it went clean, and how far it got", () => {
-    expect(lapRowsOf([{ reps: 40 }, { reps: 8 }], { unit: "moves", target: 40 })).toEqual([
-      { share: 1, clean: true, value: "40" },
-      { share: 0.2, clean: false, value: "8/40" },
-    ]);
-    expect(lapRowsOf([{ onS: 120 }], { unit: "seconds", target: 240 })).toEqual([
-      { share: 0.5, clean: false, value: "2:00/4:00" },
-    ]);
   });
 });

@@ -10,7 +10,6 @@ import {
   type Intervals,
 } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { setupLabel } from "../hang/format";
 import { t } from "../i18n";
 import { intervalsView } from "./intervalsView";
 import { progressMove } from "./progressMove";
@@ -38,44 +37,38 @@ const items = {
   planned,
   grips: ["half-crimp"],
   setups: [{ edgeMm: 20, loadKg: 5 }],
-  unit: "kg",
 } as const;
 const at0 = 1_000_000;
 const hanging = tick(startWorkoutRun([repeaters], [], at0), at0 + 5_000);
 
 describe("timerView", () => {
-  it("reads Get ready on a white fill, with nothing to fail before the first hang", () => {
+  it("reads Get ready on a white fill", () => {
     const view = timerView(startWorkoutRun([repeaters], [], at0), 5, items);
     expect(view.look.fill).toBe(colors.white);
     expect(view.primary).toBe(t("hang.pause"));
-    expect(view.fail).toBeNull();
     expect(view.working).toBe(false);
   });
 
-  it("offers Came off early while a hang runs, and nothing once paused", () => {
+  it("names the grip and its edge while a hang runs, and Resume once paused", () => {
     const view = timerView(hanging, 5, items);
     expect(view.working).toBe(true);
     expect(view.current).toBe(repeaters);
     expect(view.gripId).toBe("half-crimp");
-    expect(view.setup).toBe(setupLabel("hang", { edgeMm: 20, loadKg: 5 }, "kg"));
-    expect(view.fail).toBe(t("hang.cameOffEarly", { n: 2 }));
+    expect(view.edge).toBe(t("hang.edgeMm", { n: 20 }));
     const paused = timerView(togglePause(hanging, at0 + 6_000), 5, items);
-    expect(paused.fail).toBeNull();
     expect(paused.primary).toBe(t("hang.resume"));
     expect(paused.ring).toBe(t("hang.resume"));
   });
 
-  it("logs a lift on a pull, and offers Missed lift", () => {
+  it("logs a lift on a pull", () => {
     const pull = tick(startWorkoutRun([lifts], [], at0), at0 + 5_000);
     const view = timerView(pull, 0, {
       planned: { items: [{ workout: lifts, dose: undefined }], exerciseRestS: 0 },
       grips: ["bar"],
       setups: [{ edgeMm: 0, loadKg: 20 }],
-      unit: "kg",
     });
     expect(view.primary).toBe(t("hang.lifted"));
     expect(view.ring).toBe(t("hang.logLift"));
-    expect(view.fail).toBe(t("hang.missedLift"));
   });
 });
 
@@ -183,16 +176,11 @@ describe("forToday", () => {
   };
 
   it("starts the first item on the grip the run was started on", () => {
-    const today = forToday(planned, "open-hand", model, "Winter base · W4");
+    const today = forToday(planned, "open-hand", model);
     expect(today.grips).toEqual(["open-hand"]);
     expect(today.entries).toEqual([
       { gripId: "open-hand", kind: "hang", planned: { edgeMm: 20, loadKg: 5 } },
     ]);
-    expect(today.kicker).toBe("open-hand · Winter base · W4");
-  });
-
-  it("leaves the block out when the run is not from one", () => {
-    expect(forToday(planned, "half-crimp", model, null).kicker).toBe("Half crimp");
   });
 });
 
@@ -207,16 +195,6 @@ describe("intervalsView", () => {
   const start = startIntervalsRun(flow, at0);
   const holding = tick(start, at0 + 5_000);
 
-  it("offers Stopped early while a timed step runs, Stop here on a climb", () => {
-    expect(intervalsView(holding, flow, 40, "kg", false).fail).toBe(
-      t("activities.stoppedEarly", { n: 5 })
-    );
-    expect(intervalsView(holding, flow, 40, "kg", true).fail).toBe(
-      t("activities.stopHere", { time: "0:05" })
-    );
-    expect(intervalsView(start, flow, 5, "kg", false).fail).toBeNull();
-  });
-
   it("counts rounds, or laps on a climb", () => {
     expect(intervalsView(holding, flow, 40, "kg", false).round).toBe(
       t("activities.roundOf", { round: 1, rounds: 2 })
@@ -229,6 +207,5 @@ describe("intervalsView", () => {
   it("asks Done on a counted step", () => {
     const counted = skip(skip(holding, at0 + 6_000), at0 + 7_000);
     expect(intervalsView(counted, flow, 0, "kg", false).primary).toBe(t("common.done"));
-    expect(intervalsView(counted, flow, 0, "kg", false).fail).toBeNull();
   });
 });

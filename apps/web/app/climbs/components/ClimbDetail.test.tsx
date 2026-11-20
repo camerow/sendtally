@@ -118,9 +118,9 @@ describe("ClimbDetail", () => {
     for (const s of [
       "The Arete, V5",
       "The Depot · first tried 2 Sep",
-      "6Days",
-      "23Tries",
-      "FlashBest",
+      "Days6",
+      "Tries23",
+      "BestFlash",
     ]) {
       expect(text()).toContain(s);
     }

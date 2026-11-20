@@ -15,7 +15,6 @@ import { ToastProvider } from "../../components/Toast";
 import { WorkoutPage } from "./WorkoutPage";
 
 import type * as T_useLibrary from "../library/useLibrary";
-import type * as T_activities from "@sendtally/features/activities";
 import type * as T_statistics from "@sendtally/features/statistics";
 import type * as T_training from "@sendtally/features/training";
 import type * as T_workouts from "@sendtally/features/workouts";
@@ -76,14 +75,9 @@ vi.mock("../data/HangDataContext", () => ({
     today: "2026-11-12",
   }),
 }));
-vi.mock("./WorkoutOverTime", () => ({ WorkoutOverTime: () => null }));
 vi.mock("@sendtally/features/statistics", async (actual) => ({
   ...(await actual<typeof T_statistics>()),
   useExercises: () => ({ state: { status: "ready", data: [] } }),
-}));
-vi.mock("@sendtally/features/activities", async (actual) => ({
-  ...(await actual<typeof T_activities>()),
-  useActivities: () => ({ state: { status: "ready", data: [] } }),
 }));
 vi.mock("@sendtally/features/workouts", async (actual) => ({
   ...(await actual<typeof T_workouts>()),
@@ -137,14 +131,25 @@ function Spy(): null {
 }
 
 function WorkoutPageAt(): React.ReactElement | null {
-  return <WorkoutPage id={useParams().id ?? ""} />;
+  const run = new URLSearchParams(useLocation().search);
+  const date = run.get("date");
+  const membershipId = run.get("membershipId");
+  return (
+    <WorkoutPage
+      id={useParams().id ?? ""}
+      run={date === null || membershipId === null ? null : { date, membershipId }}
+    />
+  );
 }
 
-function mount(id: string): void {
+function mount(id: string, search = ""): void {
   act(() =>
     root.render(
       <ToastProvider>
-        <MemoryRouter initialEntries={["/app/train", `/app/train/workouts/${id}`]} initialIndex={1}>
+        <MemoryRouter
+          initialEntries={["/app/train", `/app/train/workouts/${id}${search}`]}
+          initialIndex={1}
+        >
           <Spy />
           <Routes>
             <Route path="/app/train" element={<p>Train</p>} />
@@ -168,14 +173,55 @@ const menu = (): string[] => {
 };
 
 describe("WorkoutPage", () => {
-  it("shows what it is and what its next session holds", () => {
+  it("shows what it is, its length and Target RPE, and only this session's exercises", () => {
     mount("legs");
     expect(container.querySelector("h1")?.textContent).toBe("Gym, legs");
     expect(container.textContent).toContain("Heavy lower body.");
-    expect(container.querySelector(".intro-meta")?.textContent).toContain("Used 3 times");
-    const rows = [...container.querySelectorAll(".preview-row-title")].map((r) => r.textContent);
-    expect(rows).toEqual(["Back squat", "Deadlift"]);
-    expect(container.querySelector(".rest-divider")?.textContent).toContain("3:00");
+    const tiles = [...container.querySelectorAll(".detail-tile")].map((t) => t.textContent);
+    expect(tiles).toEqual(["length50 min", "Target RPE8/10"]);
+    expect(container.textContent).not.toContain("Used");
+    const names = [...container.querySelectorAll(".exercise-head-name")].map((r) => r.textContent);
+    expect(names).toEqual(["Back squat", "Deadlift"]);
+    const targets = [...container.querySelectorAll(".exercise-head-target")].map(
+      (r) => r.textContent
+    );
+    expect(targets).toEqual(["5 sets × 5 reps", "3 sets × 5 reps"]);
+    expect(container.querySelector(".rest-preview")?.textContent).toContain("3:00");
+  });
+
+  it("opens its history from the header, and has Edit for the user's own", () => {
+    mount("legs");
+    const links = [...container.querySelectorAll(".detail-actions a")].map((a) => [
+      a.textContent,
+      a.getAttribute("href"),
+    ]);
+    expect(links).toEqual([
+      ["History", "/app/train/workouts/legs/history"],
+      ["Edit", "/app/train/workouts/legs/edit"],
+    ]);
+  });
+
+  it("opened from the plan, shows that day with no Edit and no Scheduled in", () => {
+    writes.plan = {
+      ...writes.plan,
+      memberships: [
+        {
+          id: "m1",
+          workoutId: "legs",
+          blockId: null,
+          weekdays: [0, 3],
+          start: "2026-11-01",
+          position: 0,
+        },
+      ],
+    };
+    mount("legs", "?date=2026-11-12&membershipId=m1");
+    expect(container.querySelector(".day-line")?.textContent).toContain("Nov 12");
+    const links = [...container.querySelectorAll(".detail-actions a")].map((a) => a.textContent);
+    expect(links).toEqual(["History"]);
+    expect(container.textContent).not.toContain("Scheduled in");
+    expect(container.textContent).not.toContain("Schedule");
+    expect(button("Start")).toBeDefined();
   });
 
   it("left empty on purpose, has no Exercises row", () => {

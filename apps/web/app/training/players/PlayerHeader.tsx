@@ -1,7 +1,7 @@
 import React from "react";
 import type { ActivityKind } from "@sendtally/api-client";
 import { kindLabel } from "@sendtally/features/activities";
-import { t } from "@sendtally/features/i18n";
+import { formatNumber, t } from "@sendtally/features/i18n";
 import { KIND_LOOK } from "@sendtally/features/training";
 import { gymLine } from "@sendtally/features/workouts";
 import { Icon } from "../../components/Icon";
@@ -33,19 +33,22 @@ export function PlayerHeader({
   gym,
 }: PlayerHeaderProps): React.ReactElement {
   const workout = workoutIn(useLibrary())(workoutId);
-  const line = [
-    position !== null && t("workouts.exerciseOf", { n: position.at, of: position.of }),
-    workout?.targetRpe != null && t("plan.targetValue", { n: workout.targetRpe }),
-  ].filter((part) => part !== false);
+  const target =
+    workout?.targetRpe == null
+      ? null
+      : t("common.targetRpe", { n: formatNumber(workout.targetRpe) });
   return (
     <div className="player-head">
       <span className="train-label" style={{ color: KIND_LOOK[kind].ink }}>
         {kindLabel(kind)}
       </span>
       <h1 className="train-title player-title">{title}</h1>
-      {(line.length > 0 || gym !== undefined) && (
+      {(target !== null || position !== null || gym !== undefined) && (
         <span className="player-target">
-          {[...line, ...(gym === undefined ? [] : [""])].join(" · ")}
+          {target !== null && <span className="player-target-rpe">{target}</span>}
+          {position !== null && (
+            <span>{t("workouts.exerciseOf", { n: position.at, of: position.of })}</span>
+          )}
           {gym !== undefined && (
             <button
               type="button"

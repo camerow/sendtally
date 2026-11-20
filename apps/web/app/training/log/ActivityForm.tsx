@@ -4,14 +4,12 @@ import { useExercises } from "@sendtally/features/statistics";
 import React from "react";
 import { useNavigate } from "react-router";
 import type { ActivityRecord } from "@sendtally/api-client";
-import { defaultExerciseRestS, type SessionItem, type SetDone } from "@sendtally/core/hang";
+import { defaultExerciseRestS, type SessionItem } from "@sendtally/core/hang";
 import {
   activityFromDraft,
   justLoggedText,
   kindLabel,
   minutesOf,
-  previousSets,
-  useActivities,
   useActivityActions,
   useWeightUnit,
   type ActivityDraft,
@@ -37,6 +35,7 @@ import { askingStore } from "@sendtally/features/workouts";
 import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { workoutPath } from "../library/useLibrary";
+import { SessionTargetContext } from "../components/sessionTarget";
 import { DoneDetails } from "./DoneDetails";
 import { activityPath } from "./paths";
 import { PartSets } from "./PartSets";
@@ -53,8 +52,10 @@ export type ActivityFormProps = {
   kindSet?: boolean;
   /** Where the review cut a run left open, said in amber under the duration until it is changed. */
   idleEnd?: IdleEnd | null;
-  /** What the workout prescribes, which a set short of its dose reads against. */
+  /** What the workout prescribes this session, which each exercise's head states as its target. */
   planned?: readonly SessionItem[];
+  /** The workout's Target RPE, beside the RPE field. */
+  targetRpe?: number;
   /** It reviews the workout running live, which saving or discarding ends. */
   live?: boolean;
   /** A hangboard workout, which saves as a hang session with its setup and no notes or times. */
@@ -75,6 +76,7 @@ export function ActivityForm({
   kindSet = false,
   live = false,
   planned = [],
+  targetRpe,
   idleEnd = null,
   hang,
   part,
@@ -94,7 +96,6 @@ export function ActivityForm({
   );
   const actions = useActivityActions(api, failed);
   const workouts = useWorkoutActions(api, failed);
-  const activities = useActivities(api).state;
   const unit = useWeightUnit(api);
   const [draft, setDraft] = React.useState(initial);
   const update = (patch: Partial<ActivityDraft>): void => setDraft((d) => ({ ...d, ...patch }));
@@ -117,10 +118,6 @@ export function ActivityForm({
     notes: React.useId(),
   };
 
-  const previous = (exercise: string): SetDone[] =>
-    draft.kind === "strength" && draft.workoutId !== null && activities.status === "ready"
-      ? previousSets(activities.data, draft.workoutId, exercise)
-      : [];
   /** A live run's review leaves to what waited on it, if anything did, which then opens in its place. */
   const leave = (): void => {
     if (live && askingStore.waiting()) liveRun.clear();
@@ -172,7 +169,7 @@ export function ActivityForm({
   return (
     <DetailFrame
       backTo="/app"
-      backLabel={live ? t("hang.discard") : t("common.cancel")}
+      backLabel={logged === null ? t("hang.discard") : t("common.cancel")}
       {...(live && { onBack: () => setDiscarding(true) })}
       editor={{
         title:
@@ -254,8 +251,14 @@ export function ActivityForm({
           {note !== null && <p className="form-idle-note">{note}</p>}
         </div>
       )}
-      <EffortField value={draft.rpe} onChange={(rpe) => update({ rpe })} />
-      <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />
+      <EffortField
+        value={draft.rpe}
+        {...(targetRpe !== undefined && { target: targetRpe })}
+        onChange={(rpe) => update({ rpe })}
+      />
+      {draft.workoutId === null && (
+        <FocusField value={draft.focus} onChange={(focus) => update({ focus })} />
+      )}
       {part !== undefined && grips !== undefined && (
         <div className="form-section">
           <span className="train-label" style={{ color: KIND_LOOK.hangboard.ink }}>
@@ -277,22 +280,23 @@ export function ActivityForm({
         </div>
       )}
       {draft.done.length > 0 && (
-        <DoneDetails
-          done={draft.done}
-          off={draft.off}
-          planned={plannedDoses(planned, draft.done)}
-          unit={unit}
-          color={KIND_LOOK[look].ink}
-          hangs={hang !== undefined}
-          previous={previous}
-          laps={(exercise) => measureOf(exercise) === "laps"}
-          setup={hang?.setup}
-          {...(hang !== undefined && { hangLoadKg: hang.loadKg })}
-          onRemoved={(message, undo) =>
-            toast.show({ message, action: { label: t("tally.undo"), onPress: undo } })
-          }
-          onChange={(done, off) => update({ done, off })}
-        />
+        <SessionTargetContext.Provider value={targetRpe ?? null}>
+          <DoneDetails
+            done={draft.done}
+            off={draft.off}
+            planned={plannedDoses(planned, draft.done)}
+            unit={unit}
+            kind={draft.kind}
+            hangs={hang !== undefined}
+            measure={measureOf}
+            setup={hang?.setup}
+            {...(hang !== undefined && { hangLoadKg: hang.loadKg })}
+            onRemoved={(message, undo) =>
+              toast.show({ message, action: { label: t("tally.undo"), onPress: undo } })
+            }
+            onChange={(done, off) => update({ done, off })}
+          />
+        </SessionTargetContext.Provider>
       )}
       {hang === undefined && (
         <div className="form-section">

@@ -90,22 +90,9 @@ export function withRunGroups(done: readonly ItemDone[], groups: readonly RunGro
 export const supersetRoundTitle = (round: number, rounds: number): string =>
   t("workouts.supersetRound", { n: round, total: rounds });
 
-/** "Next: Push-ups, then Hollow hold": the members still to go in this round; null when none. */
-export const supersetNextLine = (names: readonly string[]): string | null => {
-  const [first, second] = names;
-  if (first === undefined) return null;
-  return second === undefined
-    ? t("workouts.supersetNextOne", { first })
-    : t("workouts.supersetNextTwo", { first, second });
-};
-
 /** "Dips + Rows": a superset's members, joined as the locale joins them. */
 export const supersetMembers = (names: readonly string[]): string =>
   names.reduce((first, next) => t("workouts.memberJoin", { first, next }));
-
-/** "Superset · Dips + Rows", for a superset folded to one line. */
-export const supersetName = (names: readonly string[]): string =>
-  t("workouts.supersetOf", { names: supersetMembers(names) });
 
 /** "Superset · 3 rounds", over its members in a review, a log or a workout's body. */
 export const supersetRoundsTitle = (rounds: number): string =>
@@ -128,18 +115,6 @@ export function roundOn(
     group.members.some((m) => set < setsOf(items, m) && !ticked.has(setKey({ item: m, set })))
   );
   return (open ?? rounds - 1) + 1;
-}
-
-/** The members with their set of the round on now still to tick, in order. */
-export function nextInRound(
-  items: readonly SessionItem[],
-  ticked: ReadonlySet<string>,
-  group: RunGroup
-): number[] {
-  const set = roundOn(items, ticked, group) - 1;
-  return group.members.filter(
-    (m) => set < setsOf(items, m) && !ticked.has(setKey({ item: m, set }))
-  );
 }
 
 /**

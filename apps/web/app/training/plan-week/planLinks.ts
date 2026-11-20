@@ -16,4 +16,9 @@ export function loggedPath(item: LoggedItem): string {
 export const occurrenceLogLink = (w: LibraryWorkout, o: Occurrence): string | null =>
   plannedLogLink(w, o.date, plannedItems(o));
 
-export const occurrencePath = (o: Occurrence): string => workoutPath(o.membership.workoutId);
+/** A planned run's workout page: that day's session, started and logged for that run. */
+export const occurrencePath = (o: Occurrence): string =>
+  `${workoutPath(o.membership.workoutId)}?${new URLSearchParams({
+    date: o.date,
+    membershipId: o.membership.id,
+  })}`;

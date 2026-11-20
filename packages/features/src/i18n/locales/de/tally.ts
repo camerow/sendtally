@@ -41,7 +41,6 @@ export const tally = {
   "tally.moreMoves": "Mehr Züge",
   "tally.fewerMoves": "Weniger Züge",
   "tally.lapRemoved": "Runde {lap} entfernt",
-  "tally.removeLap": "Runde entfernen",
   "tally.climbOfSet": "Nr. {n}, {grade}",
   "tally.removeClimb": "{grade} entfernen",
   "tally.endSet": "Satz beenden",
