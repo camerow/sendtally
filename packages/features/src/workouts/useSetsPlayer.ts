@@ -124,12 +124,9 @@ export type SetsPlayer = {
   tallyOf: (item: number) => TallyMeasure | null;
   /** A climbing item's card: how it is measured, last time, and what this run logged. */
   climbing: (item: number) => ClimbingItem | null;
-  /** What a set asks: a lifting set takes last time's weight where the workout sets none. */
-  target: (at: SetAt) => SetDone;
   /** The seconds an open timed set's hold would run for; its ▶ shows on every one, idle while another holds. */
   holdTarget: (at: SetAt) => number | null;
   startHold: (at: SetAt) => void;
-  previous: (exercise: string) => SetDone[];
   lifting: (item: number) => boolean;
   nameOf: (item: number) => string;
   sided: (exercise: string) => boolean;
@@ -505,18 +502,12 @@ export function useSetsPlayer({
     hold,
     tallyOf,
     climbing,
-    target: ({ item, set }) => {
-      const target = setOf(items[item]?.dose ?? { sets: 0 });
-      const last = previous(items[item]?.exercise ?? "")[set];
-      return lifting(item) ? { ...target, weightKg: target.weightKg ?? last?.weightKg } : target;
-    },
     holdTarget,
     startHold: (at) => {
       const targetS = holdTarget(at);
       if (targetS !== null && hold.hold === null)
         hold.start(setKey(at), nameOf(at.item), targetS, sided(items[at.item]?.exercise ?? ""));
     },
-    previous,
     lifting,
     nameOf,
     sided,

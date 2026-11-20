@@ -77,10 +77,6 @@ export const withPrevious = (
       : d
   );
 
-/** A ticked set held for less than it asked. */
-export const holdShort = (target: SetDone, done: SetDone, ticked: boolean): boolean =>
-  ticked && target.onS !== undefined && (done.onS ?? 0) < target.onS;
-
 /**
  * "Exercise 2 of 3" over the cards in their order, counting each exercise once, a superset as
  * one, and a checklist (null) not at all: on a checklist it reads the next exercise after it not

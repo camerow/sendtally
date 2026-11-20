@@ -43,7 +43,6 @@ export const activities = {
   "activities.colTarget": "Ziel",
   "activities.endedAtLastSet":
     "Endet mit deinem letzten Satz, {time} · danach {idle} offen gelassen",
-  "activities.previousSet": "Zuletzt {set}",
   "activities.colDone": "Gemacht",
   "activities.colDoneUnit": "Gemacht · {unit}",
   "activities.targetRpe": "Ziel-RPE {value}",

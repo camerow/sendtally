@@ -42,7 +42,6 @@ export const activities = {
   "activities.colSet": "Série",
   "activities.colTarget": "Objectif",
   "activities.endedAtLastSet": "Terminé à ta dernière série, {time} · laissé ouvert {idle} après",
-  "activities.previousSet": "Dernier {set}",
   "activities.colDone": "Fait",
   "activities.colDoneUnit": "Fait · {unit}",
   "activities.targetRpe": "RPE cible {value}",

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   afterKey,
   exercisePosition,
-  holdShort,
   itemDone,
   restAfterTick,
   setKey,
@@ -47,15 +46,6 @@ describe("rest after a tick", () => {
   it("rests no more after the last exercise", () => {
     const all = ticked("0:0", "0:1", "1:0");
     expect(restAfterTick(items, all, { item: 1, set: 0 }, 180)).toBeNull();
-  });
-});
-
-describe("hold short", () => {
-  it("reads short only for a ticked set held under its target", () => {
-    expect(holdShort({ onS: 30 }, { onS: 20 }, true)).toBe(true);
-    expect(holdShort({ onS: 30 }, { onS: 20 }, false)).toBe(false);
-    expect(holdShort({ onS: 30 }, { onS: 30 }, true)).toBe(false);
-    expect(holdShort({ reps: 5 }, {}, true)).toBe(false);
   });
 });
 

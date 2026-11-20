@@ -77,14 +77,11 @@ export {
 export { useLineKeys } from "./useLineKeys";
 export {
   memberSetLabel,
-  nextInRound,
   restPreviewAfter,
   roundOn,
   runGroupsOf,
   supersetHeadAt,
   supersetMembers,
-  supersetName,
-  supersetNextLine,
   supersetRoundTitle,
   supersetRoundsTitle,
   type RunGroup,

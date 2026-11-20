@@ -2483,3 +2483,8 @@
   font-size: 15px;
   color: var(--bs-gunmetal);
 }
+
+.set-check:disabled,
+.set-tick-col:has(.set-check:disabled) {
+  cursor: default;
+}

@@ -116,6 +116,8 @@ export function SetRow({
                 className="set-check"
                 checked={ticked}
                 onChange={onToggle}
+                readOnly={onToggle === undefined}
+                disabled={onToggle === undefined}
                 aria-label={label}
               />
             </label>
