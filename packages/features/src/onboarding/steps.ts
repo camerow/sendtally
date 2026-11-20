@@ -15,6 +15,31 @@ const PLAN_DONE_BY: readonly (readonly [keyof OnboardingProgress, readonly StepI
 
 const MEMBERSHIP: Record<OnboardingPath, StepId> = { history: "H5", plan: "P6" };
 
+/** The history path's four stages: the question, bringing climbs in (any way), the reveal, the offer. */
+const HISTORY_STAGE: Partial<Record<StepId, number>> = {
+  H1: 1,
+  H2i: 2,
+  H2s: 2,
+  H3i: 2,
+  H2h: 2,
+  H4: 3,
+  H5: 4,
+  H6: 4,
+};
+
+/** Where the frame's progress stands: history's fixed four stages, else the place in the path's order. */
+export function stepPosition(
+  path: OnboardingPath | null,
+  step: StepId,
+  order: readonly StepId[]
+): { n: number; total: number } {
+  if (step === "choose") return { n: 0, total: 0 };
+  const stage = path === "history" ? HISTORY_STAGE[step] : undefined;
+  return stage === undefined
+    ? { n: order.indexOf(step) + 1, total: order.length }
+    : { n: stage, total: 4 };
+}
+
 const END: Record<OnboardingPath, StepId> = { history: "H6", plan: "P7" };
 
 export function historySteps(way: HistoryWay | null): StepId[] {

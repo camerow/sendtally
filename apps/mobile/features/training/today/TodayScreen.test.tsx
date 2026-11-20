@@ -23,6 +23,7 @@ jest.mock("../../../components/Sheet", () => ({
       </>
     ) : null,
 }));
+jest.mock("./setup/usePlanSetupCards", () => ({ usePlanSetupCards: () => [] }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "b-new" }));
 let mockParams: Record<string, string> = {};
 

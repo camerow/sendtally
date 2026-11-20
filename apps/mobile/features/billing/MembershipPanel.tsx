@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { membershipPanel, type MembershipPanelRow } from "@sendtally/features/billing";
+import { membershipPanel } from "@sendtally/features/billing";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 
 export const panelEyebrow = {
@@ -26,7 +26,12 @@ export const panelNote = {
   color: "rgba(64,63,76,0.88)",
 } as const;
 
-function LedgerRow({ row }: { row: MembershipPanelRow }): React.ReactElement {
+/** A line of what membership keeps: its metric, its own words, a small chart of it. */
+export type LedgerRowVM = { eyebrow: string; text: string };
+
+type DrawnRow = LedgerRowVM & { bars: readonly number[]; peak: number };
+
+function LedgerRow({ row }: { row: DrawnRow }): React.ReactElement {
   return (
     <View
       style={{
@@ -58,7 +63,7 @@ function LedgerRow({ row }: { row: MembershipPanelRow }): React.ReactElement {
         <Text
           style={{ fontFamily: fonts.sans, fontSize: 13, lineHeight: 19, color: colors.gunmetal }}
         >
-          {row.line}
+          {row.text}
         </Text>
       </View>
     </View>
@@ -69,6 +74,8 @@ export type MembershipPanelProps = {
   eyebrow: string;
   title: string;
   body?: string;
+  /** In place of the stats rows; each borrows the chart of the default row in its place. */
+  rows?: readonly LedgerRowVM[];
   /** The strip at the bottom: plans and purchase, or status and manage. */
   children?: React.ReactNode;
 };
@@ -78,8 +85,16 @@ export function MembershipPanel({
   eyebrow,
   title,
   body,
+  rows,
   children,
 }: MembershipPanelProps): React.ReactElement {
+  const charts = membershipPanel().rows;
+  const drawn: DrawnRow[] = (rows ?? charts.map((r) => ({ eyebrow: r.eyebrow, text: r.line }))).map(
+    (row, i) => {
+      const chart = charts[i % charts.length]!;
+      return { ...row, bars: chart.bars, peak: chart.peak };
+    }
+  );
   return (
     <View
       style={{
@@ -103,8 +118,8 @@ export function MembershipPanel({
       </Text>
       {body !== undefined && <Text style={panelNote}>{body}</Text>}
       <View>
-        {membershipPanel().rows.map((row) => (
-          <LedgerRow key={row.metric} row={row} />
+        {drawn.map((row) => (
+          <LedgerRow key={row.eyebrow} row={row} />
         ))}
       </View>
       {children !== undefined && (

@@ -16,6 +16,7 @@ describe("signed-out onboarding screen", () => {
     await render(<Onboarding />);
     expect(screen.getByText("Create account")).toBeTruthy();
     expect(screen.getByText("Sign in")).toBeTruthy();
+    expect(screen.getByText("Log your climbing. Plan your training.")).toBeTruthy();
     const text = texts(screen.toJSON() as unknown as Node).join(" ");
     expect(text).not.toMatch(/\bfree\b|price|no card|trial|member|subscri/i);
   });

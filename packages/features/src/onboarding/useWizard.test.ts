@@ -101,8 +101,8 @@ describe("the history path", () => {
 
     wizard().answerLog("kaya");
     expect(send).toHaveBeenLastCalledWith({ step: "log_answered", existingLog: "kaya" });
-    expect(wizard().memory.way).toBe("import");
-    expect(wizard().position).toEqual({ n: 1, total: 6 });
+    expect(wizard().memory).toMatchObject({ way: "import", existingLog: "kaya" });
+    expect(wizard().position).toEqual({ n: 1, total: 4 });
 
     const visited = [wizard().step];
     for (let i = 0; i < 5; i++) {
@@ -110,7 +110,7 @@ describe("the history path", () => {
       visited.push(wizard().step);
     }
     expect(visited).toEqual(["H1", "H2i", "H3i", "H4", "H5", "H6"]);
-    expect(wizard().position).toEqual({ n: 6, total: 6 });
+    expect(wizard().position).toEqual({ n: 4, total: 4 });
     expect(wizard().memory.membershipShown).toBe(true);
     expect(capture).toHaveBeenCalledWith("onboarding_step_completed", {
       path: "history",
@@ -135,6 +135,33 @@ describe("the history path", () => {
       step: "H2h",
       count: 3,
       sends: 2,
+    });
+  });
+
+  it("shows history as four fixed stages whichever way it goes", () => {
+    const { wizard } = setup();
+    wizard().choose("history", "chooser");
+    expect(wizard().position).toEqual({ n: 1, total: 4 });
+    wizard().answerLog("none");
+    wizard().next();
+    expect(wizard()).toMatchObject({ step: "H2h", position: { n: 2, total: 4 } });
+    wizard().next();
+    expect(wizard()).toMatchObject({ step: "H4", position: { n: 3, total: 4 } });
+  });
+
+  it("turns from the import's how-to to adding climbs by hand", () => {
+    const { wizard, capture } = setup();
+    wizard().choose("history", "chooser");
+    wizard().answerLog("kaya");
+    wizard().next();
+    expect(wizard().step).toBe("H2i");
+    wizard().setWay("by_hand");
+    wizard().next({ way: "by_hand" });
+    expect(wizard().step).toBe("H2h");
+    expect(capture).toHaveBeenLastCalledWith("onboarding_step_completed", {
+      path: "history",
+      step: "H2i",
+      way: "by_hand",
     });
   });
 

@@ -11,8 +11,6 @@ export const onboardingHistory = {
   "onboarding.history.card.nextAverage": "{more}, dann siehst du deinen Ø Durchstieg.",
   "onboarding.history.card.nextYears":
     "{more}, dann erscheint deine schwerste Begehung, Jahr für Jahr.",
-  "onboarding.history.card.keepGoing":
-    "Jede Kletterei macht das Bild schärfer. Mach weiter oder sieh dir alles an.",
   "onboarding.history.card.moreGrades_one": "und {count} weiterer Grad",
   "onboarding.history.card.moreGrades_other": "und {count} weitere Grade",
   "onboarding.history.card.hardestSendYear": "Schwerste Begehung · {year}",
@@ -45,7 +43,7 @@ export const onboardingHistory = {
   "onboarding.history.add.needsName": "Ein Projekt braucht einen Namen.",
   "onboarding.history.add.whenRoughly": "Wann, ungefähr",
   "onboarding.history.add.pickDay": "Tag wählen",
-  "onboarding.history.add.addedCount": "Eingetragen · {count}",
+  "onboarding.history.add.addedCount": "Eingetragen · {n}",
   "onboarding.history.add.see": "Mein Klettern ansehen",
   "onboarding.history.add.seeCount_one": "Mein Klettern ansehen · {count} Kletterei",
   "onboarding.history.add.seeCount_other": "Mein Klettern ansehen · {count} Klettereien",

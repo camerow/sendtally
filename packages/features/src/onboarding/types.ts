@@ -8,6 +8,8 @@ export type PathFrom = Extract<FirstRunStep, { step: "path" }>["from"];
 export type CompletedNext = Extract<FirstRunStep, { step: "completed" }>["next"];
 export type MembershipOutcome = Extract<FirstRunStep, { step: "completed" }>["outcome"];
 
+export type ExistingLog = Extract<FirstRunStep, { step: "log_answered" }>["existingLog"];
+
 /** How path history goes on from H1: an export to import, or climbs typed in by hand. */
 export type HistoryWay = "import" | "by_hand";
 
@@ -59,6 +61,8 @@ export type Capture = <K extends OnboardingEvent["event"]>(
 /** What the wizard keeps on the device between steps: never stored, lost on a kill by design (spec section 2). */
 export type WizardMemory = {
   way: HistoryWay | null;
+  /** H1's answer, so the import's how-to names that app. */
+  existingLog: ExistingLog | null;
   days: readonly number[];
   membershipShown: boolean;
 };
@@ -73,7 +77,7 @@ export type Wizard = {
   memory: WizardMemory;
   choose: (path: OnboardingPath, from: PathFrom) => void;
   /** H1's answer and which way history goes from it. */
-  answerLog: (existingLog: Extract<FirstRunStep, { step: "log_answered" }>["existingLog"]) => void;
+  answerLog: (existingLog: ExistingLog) => void;
   setWay: (way: HistoryWay) => void;
   setDays: (days: readonly number[]) => void;
   /** Leaves the current step forward; `extra` rides on its onboarding_step_completed. */
