@@ -27,7 +27,7 @@ export async function captureWorkoutCreated(
     from_library: items.filter((i) => builtIn.has(exerciseNameKey(i.exercise))).length,
     superset_count: new Set(items.flatMap((i) => (i.group === undefined ? [] : [i.group.id]))).size,
     alternating_count: items.filter((i) => i.doses.length > 1).length,
-    rest_set: items.some((i) => i.restAfterS !== undefined),
+    rest_set: items.some((i) => i.doses.some((d) => d.setRestS !== undefined)),
   });
 }
 
