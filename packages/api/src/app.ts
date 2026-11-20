@@ -848,6 +848,7 @@ const app = new Hono<AppEnv>()
         "Content-Type",
         "X-POSTHOG-DISTINCT-ID",
         "X-POSTHOG-SESSION-ID",
+        "X-Sendtally-Client",
       ],
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     })(c, next)
