@@ -1,9 +1,8 @@
 import React from "react";
 import type { PyramidRow } from "@sendtally/features/climbs";
 import { t } from "@sendtally/features/i18n";
-import { SAMPLE_PYRAMID } from "@sendtally/features/onboarding";
+import { SAMPLE_PYRAMID, useDisplayScales } from "@sendtally/features/settings";
 import { displayGrade } from "@sendtally/features/sessions";
-import { useDisplayScales } from "@sendtally/features/settings";
 import { Pyramid } from "./Pyramid";
 
 /** The pyramid drawn before the user has one, in their grade scale. */

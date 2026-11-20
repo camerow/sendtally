@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { weekdayLetters } from "@sendtally/features/hang";
-import { SAMPLE_WEEK } from "@sendtally/features/onboarding";
+import { SAMPLE_WEEK } from "@sendtally/features/settings";
 import { Label } from "../../components/Label";
 import { DayCell } from "../../plan/DayCell";
 

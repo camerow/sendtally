@@ -6,11 +6,11 @@ import { t } from "@sendtally/features/i18n";
 import {
   historyNextLine,
   setupCardQuery,
+  useSettings,
   useSetupPaths,
   type OnboardingPath,
   type SetupPath,
-} from "@sendtally/features/onboarding";
-import { useSettings } from "@sendtally/features/settings";
+} from "@sendtally/features/settings";
 import { Pyramid } from "../../../../components/Pyramid";
 import { SamplePyramid } from "../../../../components/SamplePyramid";
 import type { SetupCard } from "../../../../components/SetupStack";

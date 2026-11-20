@@ -2,12 +2,12 @@ import React from "react";
 import { Link } from "react-router";
 import type {
   GradeScalesFeature,
+  OnboardingProgress,
   SettingsVM,
   StravaPostingFeature,
 } from "@sendtally/features/settings";
 import type { MembershipVM } from "@sendtally/features/billing";
 import type { Gym } from "@sendtally/features/gyms";
-import type { OnboardingProgress } from "@sendtally/features/onboarding";
 import { MenuRow } from "../../components/MenuRow";
 import { GymsSection } from "../../gyms/components/GymsSection";
 import { bodyText, monoMuted, pageTitle, secondaryButton } from "./styles";

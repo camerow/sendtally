@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { CIRCUIT_HEX } from "@sendtally/features/gyms";
-import { SETUP_CIRCUITS } from "@sendtally/features/onboarding";
+import { SETUP_CIRCUITS } from "@sendtally/features/settings";
 
 /** A gym's circuit colours, for the gym card. */
 export function CircuitsArt(): React.ReactElement {

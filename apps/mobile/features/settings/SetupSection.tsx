@@ -3,7 +3,7 @@ import React from "react";
 import { Text, View, type ViewStyle } from "react-native";
 import { colors, radius } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import type { OnboardingPath } from "@sendtally/features/onboarding";
+import type { OnboardingPath } from "@sendtally/features/settings";
 import { queries, useQuery } from "@sendtally/features/query";
 import { useApi } from "../../lib/api";
 import { sectionCard, sectionLabel } from "../../lib/styles";

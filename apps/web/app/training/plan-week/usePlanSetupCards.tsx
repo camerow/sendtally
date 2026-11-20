@@ -9,12 +9,12 @@ import {
   SAMPLE_WEEK,
   SETUP_CIRCUITS,
   setupCardQuery,
+  useDisplayScales,
   useSetupPaths,
   type OnboardingPath,
-} from "@sendtally/features/onboarding";
+} from "@sendtally/features/settings";
 import { queries, useQuery } from "@sendtally/features/query";
 import { displayGrade } from "@sendtally/features/sessions";
-import { useDisplayScales } from "@sendtally/features/settings";
 import { Pyramid } from "../../components/Pyramid";
 import type { SetupCard } from "../../components/SetupStack";
 import { useDismissed } from "../../lib/useDismissed";
