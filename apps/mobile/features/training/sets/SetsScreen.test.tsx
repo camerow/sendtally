@@ -191,6 +191,14 @@ describe("Sets player", () => {
     expect(router.push).toHaveBeenCalledWith({ pathname: "/exercise/[id]", params: { id: "e2" } });
   });
 
+  it("names no exercise position in the header once every set is ticked", async () => {
+    const one: WorkoutRun = { ...run, items: [{ exercise: "Row", dose: { sets: 1, reps: 8 } }] };
+    await renderWithHang(<SetsScreen run={one} />, hangData());
+    expect(screen.getByText(/Exercise 1 of 1/)).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Row, set 1"));
+    expect(screen.queryByText(/Exercise \d+ of/)).toBeNull();
+  });
+
   it("keeps a running rest when the player is minimised and opened again", async () => {
     const view = await renderWithHang(<SetsScreen run={run} />, hangData());
     await fireEvent.press(screen.getByLabelText("Back squat, set 1"));

@@ -479,6 +479,12 @@ export function useSetsPlayer({
     };
   };
 
+  /** The card the run is on; -1 once nothing is left, where the header names no position. */
+  const positionOn =
+    partFirst ??
+    (climbAt !== null && next !== null
+      ? (cards.order.find((k) => k === climbAt || k === next.item) ?? -1)
+      : (next?.item ?? climbAt ?? -1));
   return {
     startedAt,
     shown,
@@ -486,15 +492,15 @@ export function useSetsPlayer({
     selected,
     order: cards.order,
     items,
-    position: exercisePosition(
-      cards.order,
-      partFirst ??
-        (climbAt !== null && next !== null
-          ? (cards.order.find((k) => k === climbAt || k === next.item) ?? -1)
-          : (next?.item ?? climbAt ?? -1)),
-      (k) => (listAt(k) ? null : (groupOf(k)?.id ?? String(k))),
-      (k) => inPart(k) && !partOpen
-    ),
+    position:
+      positionOn === -1
+        ? null
+        : exercisePosition(
+            cards.order,
+            positionOn,
+            (k) => (listAt(k) ? null : (groupOf(k)?.id ?? String(k))),
+            (k) => inPart(k) && !partOpen
+          ),
     rest,
     hold,
     tallyOf,

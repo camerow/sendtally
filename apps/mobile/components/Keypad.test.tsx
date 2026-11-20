@@ -3,7 +3,7 @@ import React from "react";
 import type * as MockReact from "react";
 import type * as MockReactNative from "react-native";
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { Keypad, type KeypadMode } from "./Keypad";
+import { Keypad, labelParts, type KeypadMode } from "./Keypad";
 
 type MockSheetProps = {
   visible: boolean;
@@ -51,6 +51,15 @@ async function press(...keys: string[]): Promise<void> {
 }
 
 describe("Keypad", () => {
+  it("keeps a field's name whole and lets the exercise before it truncate", () => {
+    expect(labelParts("Deadlift, set 1 · Weight")).toEqual(["Deadlift, ", "set 1 · Weight"]);
+    expect(labelParts("Couch stretch, each side, set 2 · Hold")).toEqual([
+      "Couch stretch, each side, ",
+      "set 2 · Hold",
+    ]);
+    expect(labelParts("Rest between sets")).toEqual(["", "Rest between sets"]);
+  });
+
   it("commits what was typed into a field when another field takes the keypad", async () => {
     const reps = jest.fn();
     const weight = jest.fn();
