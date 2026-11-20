@@ -51,6 +51,8 @@ export type ItemEditorProps = {
    * it out of the superset, saying so, rather than out of the workout.
    */
   member?: number;
+  /** The wizard's card: one row of numbers per dose, no target RPE or dose name, and Remove in the menu. */
+  compact?: boolean;
 };
 
 /**
@@ -72,18 +74,28 @@ export function ItemEditor({
   preview = false,
   member,
   tag,
+  compact = false,
 }: ItemEditorProps): React.ReactElement {
   const alternating = item.doses.length > 1;
   const next = letterOf(item.doses.length);
   const last = letterOf(item.doses.length - 1);
   const fields = doseFieldsFor(kind, measure, item.doses[0]).filter(
-    (f) => member === undefined || f.key !== "sets"
+    (f) => (member === undefined || f.key !== "sets") && !(compact && f.key === "targetRpe")
   );
   const laps = measure === "laps";
   const { slot } = useFieldOrder([
     ...item.doses.flatMap((_, d) => fields.map((f) => `${d}.${f.key}`)),
     "setRest",
   ]);
+  const remove: DetailMenuRow = {
+    icon: "trash",
+    title:
+      member !== undefined
+        ? t("workouts.outOfSuperset", { name })
+        : t("workouts.removeExercise", { name }),
+    danger: true,
+    onPress: onRemove,
+  };
   const menu: DetailMenuRow[] = [
     ...(onSwap === undefined
       ? []
@@ -106,15 +118,7 @@ export function ItemEditor({
           },
         ]
       : []),
-    {
-      icon: "trash",
-      title:
-        member !== undefined
-          ? t("workouts.outOfSuperset", { name })
-          : t("workouts.removeExercise", { name }),
-      danger: true,
-      onPress: onRemove,
-    },
+    remove,
   ];
 
   return (
@@ -155,9 +159,9 @@ export function ItemEditor({
             iconSize={18}
           />
         )}
-        {preview ? null : alternating ? (
+        {preview ? null : alternating || compact ? (
           <DetailMenu
-            rows={menu}
+            rows={compact ? [remove] : menu}
             button={{
               label: t("workouts.exerciseMore"),
               color: colors.textSecondary,
@@ -214,6 +218,7 @@ export function ItemEditor({
               return (
                 <DoseInput
                   key={field.key}
+                  compact={compact}
                   {...slot(`${d}.${field.key}`)}
                   field={field}
                   dose={dose}
@@ -225,14 +230,14 @@ export function ItemEditor({
                 />
               );
             })}
-            {alternating && (
+            {alternating && !compact && (
               <DoseNameTile
                 name={dose.name ?? ""}
                 accessibilityLabel={`${t("workouts.doseName")} ${letterOf(d)}`}
                 onChange={(text) => onChange(withDoseName(item, d, text))}
               />
             )}
-            {!alternating && fields.length % 2 === 1 && (
+            {!alternating && !compact && fields.length % 2 === 1 && (
               <View testID="dose-spacer" style={{ flexGrow: 1, flexBasis: "40%" }} />
             )}
           </View>
