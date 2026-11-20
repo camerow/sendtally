@@ -31,10 +31,9 @@ const pullDay = {
       id: "i1",
       exercise: "Weighted pull-up",
       doses: [
-        { sets: 5, reps: 5, weightKg: 10 },
+        { sets: 5, reps: 5, weightKg: 10, setRestS: 120 },
         { sets: 3, reps: 8, weightKg: 0 },
       ],
-      restAfterS: 180,
       group: { id: "g1", rounds: 3, restBetweenS: 30, restRoundS: 120 },
     },
     {

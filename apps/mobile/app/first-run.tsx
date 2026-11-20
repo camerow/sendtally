@@ -7,7 +7,7 @@ import {
   type OnboardingPath,
   type PathFrom,
   type Wizard,
-} from "@sendtally/features/onboarding";
+} from "@sendtally/features/settings";
 import { useBilling } from "../features/billing/useBilling";
 import { ChooserStep } from "../features/first-run/ChooserStep";
 import { historyStepMap } from "../features/first-run/history/steps";

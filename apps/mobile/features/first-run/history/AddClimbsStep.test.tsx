@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import React from "react";
 import type { LogSessionInput, SendtallyApi } from "@sendtally/api-client";
-import type { Wizard } from "@sendtally/features/onboarding";
+import type { Wizard } from "@sendtally/features/settings";
 import { AddClimbsStep } from "./AddClimbsStep";
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn(), replace: jest.fn() } }));
@@ -90,6 +90,6 @@ describe("adding climbs by hand", () => {
       outcome: "flash",
       dated: "year",
     });
-    expect(screen.getByText("Added · 1")).toBeTruthy();
+    expect(await screen.findByText("Added · 1")).toBeTruthy();
   });
 });

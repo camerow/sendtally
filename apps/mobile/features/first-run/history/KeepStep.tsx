@@ -2,7 +2,7 @@ import React from "react";
 import { ActivityIndicator } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { formatDate, t } from "@sendtally/features/i18n";
-import { keepCopy } from "@sendtally/features/onboarding";
+import { keepCopy } from "@sendtally/features/settings";
 import { useBilling } from "../../billing/useBilling";
 import { Paywall } from "../../billing/Paywall";
 import { Button } from "../../training/components/Button";

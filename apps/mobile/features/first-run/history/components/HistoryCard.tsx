@@ -4,7 +4,7 @@ import type { SharedValue } from "react-native-reanimated";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { disciplineLabel } from "@sendtally/features/log-session";
-import { cardMeta, nextUnlock, type HistoryCardVM } from "@sendtally/features/onboarding";
+import { cardMeta, nextUnlock, type HistoryCardVM } from "@sendtally/features/settings";
 import { Pyramid } from "../../../../components/Pyramid";
 import { DarkCard } from "../../components/DarkCard";
 import { DarkTile } from "./DarkTile";

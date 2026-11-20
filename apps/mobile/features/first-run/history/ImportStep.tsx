@@ -3,8 +3,12 @@ import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { importSourceOf } from "@sendtally/features/import";
-import { historyCard, importedInsights } from "@sendtally/features/onboarding";
-import { firstRunSourceLabel, useDisplayScales } from "@sendtally/features/settings";
+import {
+  historyCard,
+  importedInsights,
+  firstRunSourceLabel,
+  useDisplayScales,
+} from "@sendtally/features/settings";
 import { messageText } from "../../../lib/styles";
 import { ExportHowTo } from "../../import/ExportHowTo";
 import { ImportReview } from "../../import/ImportReview";

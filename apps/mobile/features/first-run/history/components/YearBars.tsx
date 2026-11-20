@@ -2,7 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import type { HardestInYear } from "@sendtally/features/onboarding";
+import type { HardestInYear } from "@sendtally/features/settings";
 import { darkLabel } from "../../components/DarkCard";
 
 /** Hardest send by year: a gold bar a year, as tall as its grade, the grade over it. */

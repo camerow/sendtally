@@ -1,8 +1,7 @@
 import React from "react";
 import type { SendtallyApi } from "@sendtally/api-client";
 import { useClimbs, workoutClimbSessions } from "@sendtally/features/climbs";
-import { historyCard, type HistoryCardVM } from "@sendtally/features/onboarding";
-import { useDisplayScales } from "@sendtally/features/settings";
+import { historyCard, type HistoryCardVM, useDisplayScales } from "@sendtally/features/settings";
 
 /** The card from the whole log, as Stats reads it; refetched after every save, so it grows with each climb. */
 export function useHistoryCard(api: SendtallyApi): HistoryCardVM | null {

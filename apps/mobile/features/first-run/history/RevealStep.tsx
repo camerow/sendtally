@@ -4,7 +4,7 @@ import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { disciplineLabel } from "@sendtally/features/log-session";
-import { revealLine } from "@sendtally/features/onboarding";
+import { revealLine } from "@sendtally/features/settings";
 import { useTween } from "@sendtally/features/trends";
 import { Icon } from "../../../components/Icon";
 import { Pyramid } from "../../../components/Pyramid";

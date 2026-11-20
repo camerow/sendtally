@@ -15,8 +15,7 @@ import {
   withClimbDiscipline,
   type ClimbDraft,
 } from "@sendtally/features/log-session";
-import { yearDate } from "@sendtally/features/onboarding";
-import { useDisplayScales } from "@sendtally/features/settings";
+import { yearDate, useDisplayScales } from "@sendtally/features/settings";
 import { DateTimeField } from "../../../components/DateTimeField";
 import { GradeChips } from "../../../components/GradeChips";
 import { Segmented } from "../../../components/Segmented";
@@ -287,7 +286,7 @@ export function AddClimbsStep({ wizard, api }: Parameters<StepComponent>[0]): Re
       {added.length > 0 && (
         <View>
           <Label color={colors.gunmetal}>
-            {t("onboarding.history.add.addedCount", { count: added.length })}
+            {t("onboarding.history.add.addedCount", { n: added.length })}
           </Label>
           {added.map((a) => (
             <ClimbLogRow
