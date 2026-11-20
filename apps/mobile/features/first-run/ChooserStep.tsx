@@ -4,17 +4,10 @@ import { Pressable, Text, View } from "react-native";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { queries } from "@sendtally/features/query";
-import {
-  pathDone,
-  SAMPLE_PYRAMID,
-  SAMPLE_WEEK,
-  type OnboardingPath,
-} from "@sendtally/features/settings";
-import { displayGrade } from "@sendtally/features/sessions";
-import { useDisplayScales } from "@sendtally/features/settings";
+import { pathDone, SAMPLE_WEEK, type OnboardingPath } from "@sendtally/features/settings";
 import { Icon } from "../../components/Icon";
 import { DarkWeek } from "../../components/DarkWeek";
-import { Pyramid } from "../../components/Pyramid";
+import { SamplePyramid } from "../../components/SamplePyramid";
 import { press } from "../../lib/press";
 import { Title } from "../training/components/Title";
 import type { StepComponent } from "./types";
@@ -24,25 +17,13 @@ const WEEK = SAMPLE_WEEK.map((kind) => (kind === null ? null : [kind]));
 
 /** Two doors, each with a small picture of what its path builds. */
 export const ChooserStep: StepComponent = ({ wizard, api }) => {
-  const scales = useDisplayScales();
   const progress = useQuery(queries.status(api)).data?.onboarding.progress;
   const doors: { path: OnboardingPath; title: string; body: string; art: React.ReactNode }[] = [
     {
       path: "history",
       title: t("onboarding.chooser.historyTitle"),
       body: t("onboarding.chooser.historyBody"),
-      art: (
-        <Pyramid
-          tone="dark"
-          label={t("trends.gradePyramid")}
-          rows={SAMPLE_PYRAMID.map(({ value, inner, outer }) => ({
-            gradeLabel: displayGrade({ scale: "v", value }, scales),
-            inner,
-            outer,
-            countLabel: `${inner}/${inner + outer}`,
-          }))}
-        />
-      ),
+      art: <SamplePyramid tone="dark" counts={false} />,
     },
     {
       path: "plan",
