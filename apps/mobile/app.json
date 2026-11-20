@@ -116,6 +116,7 @@
           }
         }
       ],
+      "./plugins/with-meta-install.js",
       "./plugins/with-android-play-compliance.js",
       "@react-native-community/datetimepicker",
       [
