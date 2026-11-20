@@ -126,7 +126,11 @@ export function HistoryCard({
                 label={t("onboarding.history.card.daysWord", { count: vm.days })}
               />
             ) : (
-              <DarkTile value={stats.sends} label={t("climbs.sendsWord", { count: stats.sends })} />
+              <DarkTile
+                compact={raised}
+                value={stats.sends}
+                label={t("climbs.sendsWord", { count: stats.sends })}
+              />
             )}
             <DarkTile compact={raised} value={stats.flashed} label={t("climbs.flashedWord")} />
             <DarkTile
