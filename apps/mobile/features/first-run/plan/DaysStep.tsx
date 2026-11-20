@@ -1,7 +1,7 @@
 import React from "react";
 import type { Weekday } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import type { Wizard } from "@sendtally/features/onboarding";
+import type { Wizard } from "@sendtally/features/settings";
 import { WeekdayChips } from "../../training/planning/WeekdayChips";
 import { Button } from "../../training/components/Button";
 import { Title } from "../../training/components/Title";

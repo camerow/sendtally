@@ -14,7 +14,7 @@ import {
   type PickerEntry,
 } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
-import type { Wizard } from "@sendtally/features/onboarding";
+import type { Wizard } from "@sendtally/features/settings";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
   doseMeasureOf,

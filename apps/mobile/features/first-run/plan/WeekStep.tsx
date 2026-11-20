@@ -5,7 +5,7 @@ import type { SendtallyApi } from "@sendtally/api-client";
 import type { Weekday, WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import type { Wizard } from "@sendtally/features/onboarding";
+import type { Wizard } from "@sendtally/features/settings";
 import { newBlock, usePlan } from "@sendtally/features/training";
 import { useWorkouts } from "@sendtally/features/workouts";
 import { Button } from "../../training/components/Button";

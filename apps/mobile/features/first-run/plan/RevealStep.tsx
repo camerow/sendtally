@@ -11,7 +11,7 @@ import {
   weightText,
 } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import type { Wizard } from "@sendtally/features/onboarding";
+import type { Wizard } from "@sendtally/features/settings";
 import { useTrainingReminders } from "@sendtally/features/settings";
 import { KIND_LOOK, usePlan } from "@sendtally/features/training";
 import { exerciseName, ON_DARK_SOFT, type LibraryWorkout } from "@sendtally/features/workouts";

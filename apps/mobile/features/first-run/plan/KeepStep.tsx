@@ -2,7 +2,7 @@ import React from "react";
 import type { SendtallyApi } from "@sendtally/api-client";
 import { exerciseLabel } from "@sendtally/features/exercises";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import type { Wizard } from "@sendtally/features/onboarding";
+import type { Wizard } from "@sendtally/features/settings";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import { usePlan } from "@sendtally/features/training";
 import { Paywall } from "../../billing/Paywall";

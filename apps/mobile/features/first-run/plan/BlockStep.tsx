@@ -5,7 +5,7 @@ import { isChecklist, itemIdOf, letterOf, type Dose, type WeekChange } from "@se
 import { colors } from "@sendtally/design/tokens";
 import { hangLoadText, shortDate, weightText } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import type { Wizard } from "@sendtally/features/onboarding";
+import type { Wizard } from "@sendtally/features/settings";
 import { clampWeeks, emptyPlanDraft, loadColumns, usePlan } from "@sendtally/features/training";
 import { exerciseName, useWorkouts } from "@sendtally/features/workouts";
 import { press } from "../../../lib/press";
