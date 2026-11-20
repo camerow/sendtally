@@ -6,6 +6,7 @@ import {
   type HangKind,
   type TrendSummary,
   type WeightUnit,
+  chartAir,
 } from "@sendtally/core/hang";
 import { bestIndex, changeOf, dayMonth, loadLabel } from "@sendtally/features/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
@@ -66,7 +67,7 @@ export function LoadTrendCard({
       <SeriesChart
         values={series.map((s) => toUnit(s.loadKg, unit))}
         hollow={series.map((s) => s.pct < 100)}
-        air={unit === "lb" ? 4 : 2}
+        air={chartAir(unit)}
         edge={(v) => loadLabel(kind, fromUnit(v, unit), unit)}
         marked={bestIndex(series, summary)}
         label={t("hang.chartAria", {

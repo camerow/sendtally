@@ -1,14 +1,8 @@
-import { toUnit, type WeightUnit } from "@sendtally/core/hang";
+import type { WeightUnit } from "@sendtally/core/hang";
+import { weightText } from "../hang/weights";
 import { formatNumber, t } from "../i18n";
 import type { GradeFormatter } from "../sessions";
 import type { ExerciseMetric, ExerciseSession } from "../statistics";
-
-export function loadText(kg: number, unit: WeightUnit): string {
-  return t("hang.loadPlain", {
-    value: formatNumber(toUnit(kg, unit), { maximumFractionDigits: 1 }),
-    unit,
-  });
-}
 
 /** A value on the exercise's metric, as the chart and sentences show it; a grade reads on `grades`. */
 export function metricText(
@@ -19,7 +13,7 @@ export function metricText(
 ): string {
   if (metric === "topGrade" && grades !== undefined) return grades.label(value);
   if (metric === "averageGrade" && grades !== undefined) return grades.average(value);
-  if (metric === "load") return loadText(value, unit);
+  if (metric === "load") return weightText(value, unit);
   if (metric === "volume") return formatNumber(value);
   if (metric === "seconds") return `${formatNumber(value)}s`;
   if (metric === "sends") return t("tally.sentCount", { count: value });

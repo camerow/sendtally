@@ -41,7 +41,10 @@ const known: ClimbSummary = {
 
 describe("withGym", () => {
   it("keeps a climb's circuit where the new gym has it, else takes its first", () => {
-    const onArch = withGym({ ...emptySessionDraft(NOW), climbs: [newClimb("climb-1", "v")] }, arch);
+    const onArch = withGym(
+      { ...emptySessionDraft(NOW, DEFAULT_GRADE_PREFS), climbs: [newClimb("climb-1", "v")] },
+      arch
+    );
     expect(onArch.gymId).toBe("g1");
     expect(onArch.climbs[0]?.circuit?.id).toBe("c1");
     const moved = withGym(
@@ -52,7 +55,10 @@ describe("withGym", () => {
   });
 
   it("takes every climb off circuits for a gym without any, or no gym", () => {
-    const onArch = withGym({ ...emptySessionDraft(NOW), climbs: [newClimb("climb-1", "v")] }, arch);
+    const onArch = withGym(
+      { ...emptySessionDraft(NOW, DEFAULT_GRADE_PREFS), climbs: [newClimb("climb-1", "v")] },
+      arch
+    );
     expect(withGym(onArch, plain).climbs[0]?.circuit).toBeUndefined();
     const none = withGym(onArch, null);
     expect("gymId" in none).toBe(false);
@@ -81,7 +87,11 @@ describe("nextFormClimb", () => {
   it("carries the crag forward outdoors only", () => {
     const area = { id: "a1", name: "Stanage" };
     const first = { ...newClimb("climb-1", "v"), area };
-    const outdoor = { ...emptySessionDraft(NOW), location: "outdoor" as const, climbs: [first] };
+    const outdoor = {
+      ...emptySessionDraft(NOW, DEFAULT_GRADE_PREFS),
+      location: "outdoor" as const,
+      climbs: [first],
+    };
     const next = nextFormClimb(outdoor, "boulder", DEFAULT_GRADE_PREFS, []);
     expect(next).toMatchObject({ key: "climb-2", area });
     const indoor = nextFormClimb(
@@ -94,7 +104,7 @@ describe("nextFormClimb", () => {
   });
 
   it("starts on the gym's circuit when that is the kind last used", () => {
-    const draft = { ...emptySessionDraft(NOW), climbs: [] };
+    const draft = { ...emptySessionDraft(NOW, DEFAULT_GRADE_PREFS), climbs: [] };
     expect(nextFormClimb(draft, "g1", DEFAULT_GRADE_PREFS, [arch]).circuit?.id).toBe("c1");
   });
 });

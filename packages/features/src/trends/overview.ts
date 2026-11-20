@@ -452,7 +452,7 @@ export function trendsVM(
       sessions: gymSessions(g.id),
       ladder: [...g.circuits]
         .sort((a, b) => a.low - b.low || a.high - b.high)
-        .map((c) => ({ id: c.id, colour: c.colour, range: circuitRangeLabel(c, g.scale) })),
+        .map((c) => ({ id: c.id, colour: c.colour, range: circuitRangeLabel(c, scales.boulder) })),
     }));
 
   return {

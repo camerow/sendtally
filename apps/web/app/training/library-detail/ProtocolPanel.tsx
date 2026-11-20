@@ -1,7 +1,6 @@
 import React from "react";
 import { clock, phasesFor, type HangWorkout } from "@sendtally/core/hang";
-import { hangLoadText } from "@sendtally/features/activities";
-import { humanDuration } from "@sendtally/features/hang";
+import { hangLoadText, humanDuration } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { ExerciseBlock } from "../components/ExerciseBlock";
 import { ExerciseHead } from "../components/ExerciseHead";

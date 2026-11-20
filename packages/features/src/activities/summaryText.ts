@@ -1,4 +1,5 @@
-import { toUnit, type WeightUnit } from "@sendtally/core/hang";
+import type { WeightUnit } from "@sendtally/core/hang";
+import { loadChange } from "../hang/weights";
 import type { SetChange } from "./summary";
 import { formatDate, formatNumber, t } from "../i18n";
 import type { Stat } from "./types";
@@ -19,14 +20,6 @@ export function changeText({ metric, by }: SetChange, unit: WeightUnit): string 
   if (metric === "laps")
     return by > 0 ? t("summary.lapsUp", { count }) : t("summary.lapsDown", { count });
   return by > 0 ? t("summary.repsUp", { count }) : t("summary.repsDown", { count });
-}
-
-/** "+2 kg", "−5 lb": a difference in weight, in the user's unit. */
-export function loadChange(kg: number, unit: WeightUnit): string {
-  const v = Math.round(toUnit(kg, unit) * 10) / 10;
-  if (v === 0) return t("summary.same");
-  const value = formatNumber(Math.abs(v));
-  return v > 0 ? t("hang.loadPlus", { value, unit }) : t("hang.loadMinus", { value, unit });
 }
 
 /** "8:42 pm" on the day it was posted. */

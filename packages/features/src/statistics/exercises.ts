@@ -17,7 +17,6 @@ import {
 } from "@sendtally/core/hang";
 import { draftGrade } from "../log-session/transforms";
 import { gradeFormatter, type GradeFormatter, type GradeScales } from "../sessions/grades";
-import { DEFAULT_GRADE_SCALES } from "../settings/transforms";
 
 /**
  * What an exercise's best set is judged on: the heaviest load, the longest hold, or the most
@@ -230,8 +229,10 @@ const chronological = (a: Logged, b: Logged): number =>
  */
 export function exerciseSeries(
   activities: readonly Logged[],
-  progressOf: (key: string) => ExerciseProgress | null | undefined = () => undefined,
-  scales: GradeScales = DEFAULT_GRADE_SCALES
+  grading?: {
+    progressOf: (key: string) => ExerciseProgress | null | undefined;
+    scales: GradeScales;
+  }
 ): ExerciseSeries[] {
   const found = new Map<string, { name: string; logs: { activity: Logged; sets: SetDone[] }[] }>();
   for (const activity of [...activities].sort(chronological)) {
@@ -249,7 +250,7 @@ export function exerciseSeries(
     .map(([key, { name, logs }]): ExerciseSeries => {
       const sets = logs.flatMap((l) => l.sets);
       const counted = metricOf(sets);
-      const progress = isClimbingMetric(counted) ? progressOf(key) : undefined;
+      const progress = isClimbingMetric(counted) ? grading?.progressOf(key) : undefined;
       const metric =
         progress === "averageGrade" || progress === "topGrade" || progress === "volume"
           ? progress
@@ -259,7 +260,10 @@ export function exerciseSeries(
       const sessions = logs
         .map((l) => sessionOf(l.activity, l.sets, metric, discipline))
         .filter((s) => s !== null);
-      const grades = isSessionMetric(metric) ? gradeFormatter(discipline, scales) : undefined;
+      const grades =
+        grading !== undefined && isSessionMetric(metric)
+          ? gradeFormatter(discipline, grading.scales)
+          : undefined;
       return {
         key,
         name,

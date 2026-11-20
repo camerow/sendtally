@@ -1,4 +1,11 @@
-import { disciplineOf, effortGrade, formatGrade, parseClimbs, type Grade } from "@sendtally/core";
+import {
+  convertGrade,
+  disciplineOf,
+  effortGrade,
+  formatGrade,
+  parseClimbs,
+  type Grade,
+} from "@sendtally/core";
 import { z } from "zod";
 import * as repo from "../lib/repo";
 import type { ConnectorTool } from "./types";
@@ -16,12 +23,13 @@ export const climbingSummary: ConnectorTool<typeof inputSchema> = {
   name: "get_climbing_summary",
   title: "Summarise climbing",
   description:
-    "An overview of the user's climbing over the last few weeks (12 by default): sessions per week, average effort (RPE 1-10) per week, the hardest grade sent and tried in each discipline (boulder, route), and the grade pyramid of sends. Call this first when planning training or judging the user's level.",
+    "An overview of the user's climbing over the last few weeks (12 by default): sessions per week, average effort (RPE 1-10) per week, the hardest grade sent and tried in each discipline (boulder, route), and the grade pyramid of sends, every grade in the user's own grade scale. Call this first when planning training or judging the user's level.",
   inputSchema,
   annotations: { readOnlyHint: true, destructiveHint: false },
   run: async ({ weeks }, { env, userId }) => {
     const since = new Date(Date.now() - weeks * WEEK_MS).toISOString();
     const rows = (await repo.listSessions(env.DB, userId, true)).filter((r) => r.start_at >= since);
+    const scales = repo.gradeScalesOf(await repo.getUser(env.DB, userId));
     const byWeek = new Map<string, number[]>();
     const top: Record<string, { sent?: Grade; tried?: Grade }> = {};
     const pyramid: Record<string, Map<string, { grade: Grade; sends: number }>> = {};
@@ -31,7 +39,8 @@ export const climbingSummary: ConnectorTool<typeof inputSchema> = {
       const week = monday.toISOString().slice(0, 10);
       byWeek.set(week, [...(byWeek.get(week) ?? []), row.rpe]);
       for (const climb of parseClimbs(row.climbs_json)) {
-        const grade = climb.grade ?? { scale: "v", value: climb.vGrade };
+        const logged: Grade = climb.grade ?? { scale: "v", value: climb.vGrade };
+        const grade = convertGrade(logged, scales[disciplineOf(logged.scale)]) ?? logged;
         if (effortGrade(grade) < 0) continue;
         const d = disciplineOf(grade.scale);
         const best = (top[d] ??= {});

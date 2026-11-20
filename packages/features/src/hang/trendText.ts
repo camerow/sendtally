@@ -5,7 +5,8 @@ import {
   type TrendSummary,
   type WeightUnit,
 } from "@sendtally/core/hang";
-import { dayMonth, loadLabel } from "./format";
+import { dayMonth } from "./format";
+import { loadLabel, weightText } from "./weights";
 import { formatNumber, t } from "../i18n";
 
 export type TrendContext = {
@@ -30,13 +31,13 @@ function trendLine(summary: TrendSummary, ctx: TrendContext): string | null {
       ? t("hang.insightUpNoEffort", {
           workout: ctx.workout,
           grip: ctx.grip.toLowerCase(),
-          change: `${formatNumber(change)} ${ctx.unit}`,
+          change: weightText((summary.last ?? 0) - (summary.first ?? 0), ctx.unit),
           weeks: summary.weeks,
         })
       : t("hang.insightUp", {
           workout: ctx.workout,
           grip: ctx.grip.toLowerCase(),
-          change: `${formatNumber(change)} ${ctx.unit}`,
+          change: weightText((summary.last ?? 0) - (summary.first ?? 0), ctx.unit),
           weeks: summary.weeks,
           rpe: formatNumber(summary.avgRpe, {
             maximumFractionDigits: 1,

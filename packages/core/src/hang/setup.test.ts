@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampEdge, lastSession, resolveSetup, type HangSession } from ".";
+import { clampEdge, lastSession, resolveSetup, toUnit, type HangSession } from ".";
 
 const session = (over: Partial<HangSession>): HangSession => ({
   id: over.date ?? "s",
@@ -22,17 +22,25 @@ const session = (over: Partial<HangSession>): HangSession => ({
 describe("setup", () => {
   it("takes each field from the first layer that sets it", () => {
     expect(
-      resolveSetup("hang", [
-        { edgeMm: 15, loadKg: null },
-        { edgeMm: 20, loadKg: -5 },
-      ])
+      resolveSetup(
+        "hang",
+        [
+          { edgeMm: 15, loadKg: null },
+          { edgeMm: 20, loadKg: -5 },
+        ],
+        "kg"
+      )
     ).toEqual({ edgeMm: 15, loadKg: -5 });
-    expect(resolveSetup("hang", [{ loadKg: 0 }, { loadKg: 4 }])).toEqual({ edgeMm: 20, loadKg: 0 });
+    expect(resolveSetup("hang", [{ loadKg: 0 }, { loadKg: 4 }], "kg")).toEqual({
+      edgeMm: 20,
+      loadKg: 0,
+    });
   });
 
   it("falls back to the kind's default", () => {
-    expect(resolveSetup("hang", [null, undefined, {}])).toEqual({ edgeMm: 20, loadKg: 0 });
-    expect(resolveSetup("pull", [])).toEqual({ edgeMm: 0, loadKg: 20 });
+    expect(resolveSetup("hang", [null, undefined, {}], "kg")).toEqual({ edgeMm: 20, loadKg: 0 });
+    expect(resolveSetup("pull", [], "kg")).toEqual({ edgeMm: 0, loadKg: 20 });
+    expect(toUnit(resolveSetup("pull", [], "lb").loadKg, "lb")).toBe(45);
   });
 
   it("finds the latest session of a workout on a grip", () => {

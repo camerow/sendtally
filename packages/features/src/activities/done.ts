@@ -1,7 +1,6 @@
 import type { Activity } from "@sendtally/api-client";
 import {
   clock,
-  toUnit,
   type Dose,
   type Item,
   type ItemDone,
@@ -11,6 +10,7 @@ import {
 } from "@sendtally/core/hang";
 import { formatNumber, t } from "../i18n";
 import { countText } from "../hang/format";
+import { weightText } from "../hang/weights";
 import { checklistTitle } from "../workouts/checklist";
 import { targetText } from "../workouts/library";
 import { climbingSetText } from "./climbing";
@@ -20,10 +20,6 @@ export const setSeconds = (seconds: number): string =>
   seconds > 60 ? clock(seconds, true) : t("hang.seconds", { n: seconds });
 
 const MAX_SUGGESTIONS = 5;
-
-/** A weight in the user's unit, an assisted one with a true minus: "−20". */
-export const weightValue = (kg: number, unit: WeightUnit): string =>
-  formatNumber(toUnit(kg, unit)).replace("-", "−");
 
 /** "Checklist · 4 of 5" over every checklist the run held, or null when it held none. */
 export function checklistsLine(done: readonly ItemDone[]): string | null {
@@ -39,10 +35,7 @@ export function checklistsLine(done: readonly ItemDone[]): string | null {
 /** "5 × 100 kg · 30s", leaving out what the set does not have; a climbing set reads its climbs. */
 export function setText(set: SetDone, unit: WeightUnit, repsMax?: number): string {
   if (set.climbs !== undefined) return climbingSetText(set);
-  const load =
-    set.weightKg === undefined
-      ? undefined
-      : t("hang.loadPlain", { value: weightValue(set.weightKg, unit), unit });
+  const load = set.weightKg === undefined ? undefined : weightText(set.weightKg, unit);
   const work = [set.reps === undefined ? undefined : countText(set.reps, repsMax), load]
     .filter((p) => p !== undefined)
     .join(" × ");
@@ -54,10 +47,7 @@ export function setText(set: SetDone, unit: WeightUnit, repsMax?: number): strin
 /** A set as done, every number with its word: "2 reps × 275 lb", "5 reps · 45s". */
 export function setReadText(set: SetDone, unit: WeightUnit): string {
   if (set.climbs !== undefined) return climbingSetText(set);
-  const load =
-    set.weightKg === undefined
-      ? undefined
-      : t("hang.loadPlain", { value: weightValue(set.weightKg, unit), unit });
+  const load = set.weightKg === undefined ? undefined : weightText(set.weightKg, unit);
   const reps =
     set.reps === undefined
       ? undefined

@@ -1,7 +1,7 @@
 export const settings = {
   "settings.grades": "Grade",
   "settings.gradesBody":
-    "Die Skala, in der du einträgst. Bereits eingetragene Klettereien behalten die Skala, in der sie erfasst wurden.",
+    "Jeder Grad wird in dieser Skala angezeigt, auch bei Klettereien, die du in einer anderen eingetragen hast.",
   "settings.stravaActive":
     "Mit deinem Strava-Konto verbunden. Eingetragene Sessions können als Rock Climbing-Aktivitäten in deinem Feed landen.",
   "settings.stravaLapsed":

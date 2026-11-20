@@ -21,7 +21,7 @@ import {
 import { climbingDoseLine } from "../activities/climbing";
 import { tallyMeasuresOf } from "../exercises/measure";
 import type { TallyMeasure } from "../exercises/types";
-import { weightValue } from "../activities/done";
+import { weightText } from "../hang/weights";
 import { ACTIVITY_KINDS, kindLabel } from "../activities/format";
 import { countText, humanDuration, protocolParts, protocolSummary } from "../hang/format";
 import { builtInGripName } from "../hang/names";
@@ -128,10 +128,7 @@ export function doseSummary(
   unit: WeightUnit,
   eachSide = false
 ): string {
-  const weight =
-    dose.weightKg === undefined
-      ? null
-      : t("hang.loadPlain", { value: weightValue(dose.weightKg, unit), unit });
+  const weight = dose.weightKg === undefined ? null : weightText(dose.weightKg, unit);
   const edge = dose.edgeMm ? t("hang.edgeMm", { n: dose.edgeMm }) : null;
   if (kind === "hangboard") {
     const p = doseProtocol("", dose);
@@ -185,10 +182,7 @@ export function targetText(
     sessionRpe = null,
   }: { eachSide?: boolean; round?: boolean; sessionRpe?: number | null } = {}
 ): TargetText {
-  const load =
-    dose.weightKg === undefined
-      ? null
-      : t("hang.loadPlain", { value: weightValue(dose.weightKg, unit), unit });
+  const load = dose.weightKg === undefined ? null : weightText(dose.weightKg, unit);
   const time = (s: number): string => (s < 60 ? t("hang.seconds", { n: s }) : clock(s, true));
   const per = ((): string | null => {
     if (kind === "laps")

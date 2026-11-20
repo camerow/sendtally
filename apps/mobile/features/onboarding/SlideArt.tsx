@@ -12,7 +12,12 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import Svg, { Circle, Path } from "react-native-svg";
+import type { Grade } from "@sendtally/core";
+import { DEFAULT_WEIGHT_UNIT, fromUnit, type WeightUnit } from "@sendtally/core/hang";
+import { hangLoadText } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import { displayGrade } from "@sendtally/features/sessions";
+import { useDisplayScales } from "@sendtally/features/settings";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Pyramid } from "../../components/Pyramid";
 import type { OnboardingSlide } from "./slides";
@@ -124,14 +129,21 @@ function ClimbRow({
   );
 }
 
+/** The sample's added load, authored per unit so it reads round in either. */
+const ADDED_LOAD: Record<WeightUnit, number> = { kg: 12, lb: 25 };
+
+const v = (value: number): Grade => ({ scale: "v", value });
+
 const PYRAMID = [
-  { gradeLabel: "V7", inner: 0, outer: 2, countLabel: "0/2" },
-  { gradeLabel: "V6", inner: 3, outer: 1, countLabel: "3/4" },
-  { gradeLabel: "V5", inner: 5, outer: 2, countLabel: "5/7" },
-  { gradeLabel: "V4", inner: 6, outer: 1, countLabel: "6/7" },
+  { grade: v(7), inner: 0, outer: 2, countLabel: "0/2" },
+  { grade: v(6), inner: 3, outer: 1, countLabel: "3/4" },
+  { grade: v(5), inner: 5, outer: 2, countLabel: "5/7" },
+  { grade: v(4), inner: 6, outer: 1, countLabel: "6/7" },
 ];
 
 function IntroArt({ play }: { play: Play }): React.ReactElement {
+  const scales = useDisplayScales();
+  const grade = (value: number): string => displayGrade(v(value), scales);
   const grow = useDerivedValue(() => stage(play.value, 0.3, 0.6));
   const effort = useAnimatedStyle(() => ({ opacity: stage(play.value, 0.45, 0.6) }));
   return (
@@ -146,15 +158,32 @@ function IntroArt({ play }: { play: Play }): React.ReactElement {
       </View>
       <View style={{ height: 1, backgroundColor: colors.lineOnLight }} />
       <Arrive play={play} from={0} to={0.15}>
-        <ClimbRow name="Cascade" grade="V6" detail={t("onboarding.art.sendTries")} sent />
+        <ClimbRow name="Cascade" grade={grade(6)} detail={t("onboarding.art.sendTries")} sent />
       </Arrive>
       <Arrive play={play} from={0.06} to={0.21}>
-        <ClimbRow name="Left Hand Drive" grade="V5" detail={t("onboarding.art.sendTry")} sent />
+        <ClimbRow
+          name="Left Hand Drive"
+          grade={grade(5)}
+          detail={t("onboarding.art.sendTry")}
+          sent
+        />
       </Arrive>
       <Arrive play={play} from={0.12} to={0.27}>
-        <ClimbRow name="Torque" grade="V7" detail={t("onboarding.art.attemptTries")} sent={false} />
+        <ClimbRow
+          name="Torque"
+          grade={grade(7)}
+          detail={t("onboarding.art.attemptTries")}
+          sent={false}
+        />
       </Arrive>
-      <Pyramid rows={PYRAMID} label={t("trends.gradePyramid")} grow={grow} />
+      <Pyramid
+        rows={PYRAMID.map(({ grade: g, ...row }) => ({
+          ...row,
+          gradeLabel: displayGrade(g, scales),
+        }))}
+        label={t("trends.gradePyramid")}
+        grow={grow}
+      />
     </View>
   );
 }
@@ -175,7 +204,10 @@ function ExercisesArt({ play }: { play: Play }): React.ReactElement {
       >
         <Text style={TITLE}>{`${t("onboarding.art.maxHangs")} · 20mm`}</Text>
         <Text style={{ fontFamily: fonts.monoSemiBold, fontSize: 13, color: colors.petalInk }}>
-          +12 kg
+          {hangLoadText(
+            fromUnit(ADDED_LOAD[DEFAULT_WEIGHT_UNIT], DEFAULT_WEIGHT_UNIT),
+            DEFAULT_WEIGHT_UNIT
+          )}
         </Text>
       </View>
       <Text style={MONO_LABEL}>{t("onboarding.art.addedLoad")}</Text>

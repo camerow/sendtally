@@ -1,13 +1,11 @@
 import React from "react";
 import { Text, View } from "react-native";
-import type { WeightUnit } from "@sendtally/core/hang";
+import { WEIGHT_UNITS } from "@sendtally/core/hang";
 import { useHang, useHangActions } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { Segmented } from "../../components/Segmented";
 import { useApi } from "../../lib/api";
 import { bodyText, sectionCard, sectionLabel } from "../../lib/styles";
-
-const UNITS: readonly WeightUnit[] = ["lb", "kg"];
 
 /** The one place the weight unit is chosen; every load and lift shows in it. */
 export function WeightUnitSection(): React.ReactElement {
@@ -23,7 +21,7 @@ export function WeightUnitSection(): React.ReactElement {
       </View>
       <Segmented
         label={t("settings.weightUnit")}
-        segments={UNITS.map((u) => ({
+        segments={WEIGHT_UNITS.map((u) => ({
           key: u,
           label: u,
           on: u === current,

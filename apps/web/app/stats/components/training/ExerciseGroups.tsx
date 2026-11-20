@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router";
-import { kindLabel, useWeightUnit } from "@sendtally/features/activities";
+import { kindLabel } from "@sendtally/features/activities";
 import { canCompareGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -23,9 +23,9 @@ export function ExerciseGroups({
   groups: ExerciseGroupVM[];
 }): React.ReactElement | null {
   const api = useAppApi();
-  const unit = useWeightUnit(api);
   const exercises = useExercises(api).state;
   const { model } = useHangData();
+  const unit = model.settings.units;
   if (groups.length === 0) return null;
 
   const pathOf = (kind: ExerciseGroupKind, key: string): string | undefined => {

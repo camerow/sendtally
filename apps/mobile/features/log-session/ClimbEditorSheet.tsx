@@ -13,12 +13,15 @@ import { circuitGrades, findCircuit, type Gym } from "@sendtally/features/gyms";
 import {
   disciplineLabel,
   disciplineOf,
+  draftGradeLabel,
   gymOfCircuit,
   withClimbDiscipline,
   type ClimbDraft,
   type Discipline,
   type GradePrefs,
 } from "@sendtally/features/log-session";
+import type { GradeScales } from "@sendtally/features/sessions";
+import { useDisplayScales } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { colors, disabledOpacity, fonts, radius, sheetTitleSize } from "@sendtally/design/tokens";
 import { Button } from "../training/components/Button";
@@ -287,6 +290,7 @@ function CircuitFields({
   gym: Gym;
   onChange: (climb: ClimbDraft) => void;
 }): React.ReactElement {
+  const scales = useDisplayScales();
   const current = findCircuit(gym, climb.circuit?.id);
   const wall = climb.wall ?? "";
   return (
@@ -313,7 +317,7 @@ function CircuitFields({
             {circuitGrades(current, gym.scale).map((grade) => (
               <ChoiceChip
                 key={grade}
-                label={grade}
+                label={draftGradeLabel({ grade, scale: gym.scale }, scales)}
                 mono
                 active={grade === climb.grade}
                 onPress={() => onChange({ ...climb, grade })}
@@ -326,9 +330,9 @@ function CircuitFields({
   );
 }
 
-function confirmRemoveClimb(climb: ClimbDraft, onRemove: () => void): void {
+function confirmRemoveClimb(climb: ClimbDraft, scales: GradeScales, onRemove: () => void): void {
   const name = climb.name.trim() === "" ? t("logSession.unnamed") : climb.name.trim();
-  const grade = climb.circuit === undefined ? climb.grade : climb.circuit.label;
+  const grade = climb.circuit === undefined ? draftGradeLabel(climb, scales) : climb.circuit.label;
   Alert.alert(t("logSession.removeClimbTitle"), t("logSession.removeClimbBody", { name, grade }), [
     { text: t("common.cancel"), style: "cancel" },
     { text: t("logSession.remove"), style: "destructive", onPress: onRemove },
@@ -363,6 +367,7 @@ export function ClimbEditorSheet({
   date,
   saving = false,
 }: ClimbEditorSheetProps): React.ReactElement {
+  const scales = useDisplayScales();
   const climb = useLingering(current);
   const gym = climb === null ? null : gymOfCircuit(gyms, climb.circuit?.id);
   const endurance = climb?.endurance !== undefined;
@@ -387,7 +392,7 @@ export function ClimbEditorSheet({
           <View style={{ flexDirection: "row", alignItems: "stretch", gap: 10 }}>
             {removable && (
               <Pressable
-                onPress={tap(() => confirmRemoveClimb(climb, onRemove))}
+                onPress={tap(() => confirmRemoveClimb(climb, scales, onRemove))}
                 accessibilityRole="button"
                 accessibilityLabel={t("logSession.removeClimb")}
                 style={press({

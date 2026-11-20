@@ -110,8 +110,10 @@ Invariants:
 - Grades carry their scale: `v` and `font` are boulders, `yds` and `french` are routes.
   Route grades map to a shared route ladder plus a V-equivalent (both tables in `packages/core/src/grades.ts`), and the effort engine scores every climb through that V-equivalent.
   Display never converts across disciplines, but within one it follows the climber's grade scale preference (`gradeScales`: V or Font, YDS or French).
-  Every grade label goes through `displayGrade` / `sessionGradeLabel` in `packages/features/src/sessions/grades.ts` with those scales; the apps read them from `useDisplayScales()` (a provider at each app root) or, inside a feature hook, `useGradeScalePrefs(api)`.
-  The persisted `top_grade_label` / `top_send_grade_label` columns hold the label in the scale it was logged in and are converted at display time, never rewritten.
+  Every grade a user reads, in a label, chart, picker, accessibility label or assistant tool, goes through `displayGrade`, `sessionGradeLabel`, `climbGradeLabel` or `gradeFormatter` in `packages/features/src/sessions/grades.ts`, or `draftGradeLabel` for a climb in a form; the apps read the scales from `useDisplayScales()` (a provider at each app root) or, inside a feature hook, `useGradeScalePrefs(api)`.
+  A grade is stored in the scale it was logged in and converted at display time, never rewritten: the persisted `top_grade_label` / `top_send_grade_label` columns, and a climb in the edit form, which changes scale only when the user picks a grade again (`withPickedGrade`).
+  Pickers offer the user's scale; only the gym editor shows a gym's own scale, because that is what it edits.
+  The CSV export and the Strava description keep the scale logged.
   A mixed session reports stats for its dominant discipline.
 - Keep the "created by https://sendtally.com" attribution line in activity descriptions (Strava attribution expectations).
 - Legacy `source = "board"` rows are read-only history: never re-scored, never re-posted, never edited.
@@ -235,6 +237,14 @@ Store listing copy lives in `apps/mobile/store/listing.md` and should match what
   Terms, privacy, support, API error bodies, and the Strava activity description stay English.
 - Moderation tooling (`/app/moderation`, `apps/web/app/moderation/`, `packages/features/src/areas/moderation.ts`) is internal and English only: plain string literals, no `t()`, no catalog keys.
   It is also never indexed or crawled - the route sets `noindex` and `robots.txt` disallows `/app/`.
+- Grades follow the user's grade scales everywhere; the rule and its functions are under Session flow, Invariants.
+- Weights follow the user's weight unit everywhere.
+  Values are stored in kilograms; the unit comes from `useWeightUnit(api)`, which is null until it loads, or the ready hang model (`model.settings.units`), and a screen that shows or takes a weight waits for it (`WithWeightUnit` on mobile) rather than guess.
+  Every weight a user reads goes through `packages/features/src/hang/weights.ts`: `weightText` ("100 kg"), `hangLoadText` / `hangLoadValue` (added load, "+10 lb", "BW"), `loadLabel` (either, by kind) and `loadChange` ("+2.5 lb", "Same").
+  Inputs convert with `toUnit` / `fromUnit` and step with `bumpLoad`, `loadStep` and `stepOnGrid` in `packages/core/src/hang/loads.ts`, so a typed value reads back as typed and a step lands on the step grid.
+  A default or a sample weight is authored per unit (`defaultPullKg`), never converted from a kilogram literal.
+- ESLint enforces both (the grades-and-weights block in `eslint.config.js`): no `"kg"` / `"lb"` literal (the list is `WEIGHT_UNITS`), no `formatGrade` import and no hand-built `` `V${...}` `` outside the formatter modules.
+  The Log render test on each app sets kg and Font and asserts no "lb" or V grade; keep it passing when a screen changes.
 
 ### Code organization
 

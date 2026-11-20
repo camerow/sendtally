@@ -3,7 +3,13 @@ import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
-import type { Activity, ClimbSummary, SessionRow, SessionWithClimbs } from "@sendtally/api-client";
+import type {
+  Activity,
+  ClimbSummary,
+  HangHistoryRow,
+  SessionRow,
+  SessionWithClimbs,
+} from "@sendtally/api-client";
 import type * as Climbs from "@sendtally/features/climbs";
 import type * as Training from "@sendtally/features/training";
 import { LogPage } from "./LogPage";
@@ -65,6 +71,35 @@ const climb = (id: string, name: string, v: number, sent: boolean): ClimbSummary
 });
 
 const evening = session("s1", "Evening session", "2026-11-10T18:00:00Z");
+const hang: HangHistoryRow = {
+  id: "h1",
+  workoutId: "rep73",
+  gripId: "half",
+  gripName: null,
+  date: "2026-11-11",
+  loadKg: 4,
+  pct: 100,
+  misses: 0,
+  rpe: 7,
+  edgeMm: 20,
+  protocol: {
+    name: "Repeaters 7:3",
+    kind: "hang",
+    hangS: 7,
+    restS: 3,
+    reps: 6,
+    sets: 6,
+    setRestS: 180,
+  },
+  stravaActivityId: null,
+  membershipId: null,
+  week: null,
+  focus: null,
+  done: [],
+  postState: null,
+  postError: null,
+  updatedAt: "2026-11-11T19:00:00.000Z",
+};
 const legDay: Activity = {
   id: "a1",
   kind: "strength",
@@ -88,9 +123,17 @@ vi.mock("@clerk/react-router", () => ({
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
 vi.mock("../../live-session/useStartLiveSession", () => ({ useStartLiveSession: () => vi.fn() }));
 vi.mock("@sendtally/features/gyms", () => ({ useGyms: () => ({ ready: false, gyms: [] }) }));
+const prefs = vi.hoisted(() => ({
+  scales: { boulder: "v", route: "yds" } as { boulder: string; route: string },
+  unit: "lb" as string | null,
+}));
 vi.mock("@sendtally/features/settings", () => ({
-  useGradeScalePrefs: () => ({ scales: { boulder: "v", route: "yds" }, ready: true }),
-  useDisplayScales: () => ({ boulder: "v", route: "yds" }),
+  useGradeScalePrefs: () => ({ scales: prefs.scales, ready: true }),
+  useDisplayScales: () => prefs.scales,
+}));
+vi.mock("@sendtally/features/activities", async (original) => ({
+  ...(await original<object>()),
+  useWeightUnit: () => prefs.unit,
 }));
 vi.mock("@sendtally/features/training", async (original) => ({
   ...(await original<typeof Training>()),
@@ -127,7 +170,7 @@ function Where(): React.ReactElement {
   return <span data-testid="search">{useLocation().search}</span>;
 }
 
-function mount(at = "/app"): void {
+function mount(at = "/app", hangSessions: HangHistoryRow[] = []): void {
   act(() =>
     root.render(
       <MemoryRouter initialEntries={[at]}>
@@ -139,7 +182,7 @@ function mount(at = "/app"): void {
                 <LogPage
                   status={null}
                   sessions={[evening]}
-                  hangSessions={[]}
+                  hangSessions={hangSessions}
                   hangParts={[]}
                   activities={[legDay]}
                   entries={[]}
@@ -162,6 +205,8 @@ const button = (name: string): HTMLButtonElement =>
 const search = (): string => container.querySelector('[data-testid="search"]')?.textContent ?? "";
 
 beforeEach(() => {
+  prefs.scales = { boulder: "v", route: "yds" };
+  prefs.unit = "lb";
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -173,6 +218,23 @@ afterEach(() => {
 });
 
 describe("LogPage", () => {
+  it("reads every grade and weight in the user's settings, nothing in V or lb for a Font and kg climber", () => {
+    prefs.scales = { boulder: "font", route: "french" };
+    prefs.unit = "kg";
+    mount("/app", [hang]);
+    expect(text()).toMatch(/Half crimp · 20.mm · \+4.kg/);
+    const drawn = `${text()} ${Array.from(container.querySelectorAll("[aria-label]"))
+      .map((e) => e.getAttribute("aria-label"))
+      .join(" ")}`;
+    expect(drawn).not.toMatch(/\blb\b/);
+    expect(drawn).not.toMatch(/\bV\d/);
+  });
+
+  it("reads a hangboard row's load in lb for an lb climber", () => {
+    mount("/app", [hang]);
+    expect(text()).toMatch(/Half crimp · 20.mm · \+8\.82.lb/);
+  });
+
   it("lists climbing and training together, without the old switch", () => {
     mount();
     expect(text()).toContain("Evening session");

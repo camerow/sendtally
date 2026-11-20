@@ -1,4 +1,6 @@
 import { useGrips } from "@sendtally/features/hang";
+import { WithWeightUnit } from "../data/WithWeightUnit";
+import type { WeightUnit } from "@sendtally/core/hang";
 import { tallyMeasuresOf } from "@sendtally/features/exercises";
 import { useExercises } from "@sendtally/features/statistics";
 import { randomUUID } from "expo-crypto";
@@ -15,7 +17,6 @@ import {
   kindLabel,
   minutesOf,
   useActivityActions,
-  useWeightUnit,
   type ActivityDraft,
   plannedDoses,
   workoutItemsOfDone,
@@ -99,7 +100,12 @@ const reportFailure = (): void => Alert.alert(t("activities.saveFailed"));
  * Log or edit one activity: kind, title, when, how long, how hard, its focus, and a chip per set
  * to tick. A workout's review says how the run went first. Save sits in the header.
  */
-export function ActivityForm({
+export function ActivityForm(props: ActivityFormProps): React.ReactElement {
+  return <WithWeightUnit>{(unit) => <ActivityFormBody {...props} unit={unit} />}</WithWeightUnit>;
+}
+
+function ActivityFormBody({
+  unit,
   id,
   initial,
   logged,
@@ -112,7 +118,7 @@ export function ActivityForm({
   hang,
   part,
   gripName = (id) => id,
-}: ActivityFormProps): React.ReactElement {
+}: ActivityFormProps & { unit: WeightUnit }): React.ReactElement {
   const api = useApi();
   const { isGrip } = useGrips(api);
   const actions = useActivityActions(api, reportFailure);
@@ -120,7 +126,6 @@ export function ActivityForm({
   const [removed, setRemoved] = React.useState<{ message: string; undo: () => void } | null>(null);
   const update = (patch: Partial<ActivityDraft>): void => setDraft((d) => ({ ...d, ...patch }));
   const [grips, setGrips] = React.useState(() => part && { done: part.done, setup: part.setup });
-  const unit = useWeightUnit(api);
   const workouts = useWorkoutActions(api, reportFailure);
   const items = workoutItemsOfDone(draft.done);
   const note = idleNote(idleEnd, draft.minutes);

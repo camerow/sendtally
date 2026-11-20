@@ -1,7 +1,6 @@
 import {
   clock,
   intervalSeconds,
-  toUnit,
   type Intervals,
   type IntervalSide,
   type IntervalStep,
@@ -10,6 +9,7 @@ import {
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { humanDuration } from "../hang/format";
+import { weightText } from "../hang/weights";
 import { setKeyOf } from "./done";
 import { formatNumber, t, type MessageKey } from "../i18n";
 
@@ -32,10 +32,7 @@ export function intervalsSummary(body: Intervals): string {
 export function stepDose(step: IntervalStep, unit: WeightUnit): string {
   const work =
     step.measure === "time" ? clock(step.seconds ?? 0, true) : `× ${formatNumber(step.count ?? 0)}`;
-  const load =
-    step.loadKg === undefined
-      ? ""
-      : t("hang.loadPlain", { value: formatNumber(toUnit(step.loadKg, unit)), unit });
+  const load = step.loadKg === undefined ? "" : weightText(step.loadKg, unit);
   const side = step.side === undefined ? "" : t(SIDE_TEXT[step.side]);
   return [work, load, side].filter((p) => p !== "").join(" · ");
 }

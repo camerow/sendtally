@@ -3,7 +3,6 @@ import {
   isPullSetup,
   isTimed,
   toLocalDate,
-  toUnit,
   type CalendarDate,
   type GripSetup,
   type HangKind,
@@ -14,6 +13,7 @@ import {
   type WeightUnit,
 } from "@sendtally/core/hang";
 import { formatDate, formatNumber, t } from "../i18n";
+import { loadLabel } from "./weights";
 
 const DAY_INDEXES = [0, 1, 2, 3, 4, 5, 6] as const;
 
@@ -64,16 +64,6 @@ export function weekTitle(offset: number): string {
   if (offset === 1) return t("hang.weekNext");
   const count = Math.abs(offset);
   return offset < 0 ? t("hang.weeksAgo", { count }) : t("hang.weeksAhead", { count });
-}
-
-/** "Bodyweight", "+4 kg", "−15 kg" for hangs; "30 kg" for ground pulls. */
-export function loadLabel(kind: HangKind, kg: number, unit: WeightUnit): string {
-  const v = toUnit(kg, unit);
-  if (kind === "pull") return t("hang.loadPlain", { value: formatNumber(v), unit });
-  if (v === 0) return t("hang.bodyweight");
-  return v > 0
-    ? t("hang.loadPlus", { value: formatNumber(v), unit })
-    : t("hang.loadMinus", { value: formatNumber(-v), unit });
 }
 
 /** "20 mm · +4 kg" on a hang; a ground pull's weight alone. */

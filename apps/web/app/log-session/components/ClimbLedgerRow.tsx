@@ -1,11 +1,13 @@
 import React from "react";
 import {
+  draftGradeLabel,
   climbOutcome,
   enduranceLapCountLabel,
   enduranceOf,
   enduranceSummaryLabel,
   type ClimbDraft,
 } from "@sendtally/features/log-session";
+import { useDisplayScales } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
@@ -60,6 +62,7 @@ function EnduranceLedgerRow({
   climb: ClimbDraft;
   onPress: () => void;
 }): React.ReactElement {
+  const scales = useDisplayScales();
   const endurance = enduranceOf(climb);
   const named = climb.name.trim() !== "";
   const title = named ? climb.name : t("endurance.title");
@@ -67,7 +70,7 @@ function EnduranceLedgerRow({
   return (
     <Row
       onPress={onPress}
-      label={`${title}, ${climb.grade}, ${meta}`}
+      label={`${title}, ${draftGradeLabel(climb, scales)}, ${meta}`}
       className="climb-ledger-row climb-ledger-row--endurance"
     >
       <span style={{ display: "inline-flex", color: "var(--bs-petal-ink)" }}>
@@ -90,7 +93,7 @@ function EnduranceLedgerRow({
           color: "var(--bs-gunmetal)",
         }}
       >
-        {climb.grade}
+        {draftGradeLabel(climb, scales)}
       </span>
       <Glyph d={CHEVRON} size={14} />
     </Row>
@@ -104,6 +107,7 @@ export function ClimbLedgerRow({
   onChangeTries,
   onToggleSent,
 }: ClimbLedgerRowProps): React.ReactElement {
+  const scales = useDisplayScales();
   if (climb.endurance !== undefined) return <EnduranceLedgerRow climb={climb} onPress={onPress} />;
   const named = climb.name.trim() !== "";
   const send = climb.kind === "send";
@@ -123,7 +127,7 @@ export function ClimbLedgerRow({
   return (
     <Row onPress={onPress} className="climb-ledger-row">
       {circuit === undefined ? (
-        <span className="climb-ledger-grade">{climb.grade}</span>
+        <span className="climb-ledger-grade">{draftGradeLabel(climb, scales)}</span>
       ) : (
         <CircuitDot colour={circuit.colour} />
       )}

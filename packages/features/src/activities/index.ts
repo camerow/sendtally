@@ -33,7 +33,6 @@ export {
   setSeconds,
   setText,
   setReadText,
-  weightValue,
   withRpe,
 } from "./done";
 export { doneOfRun, intervalsSummary, stepDose } from "./intervals";
@@ -72,6 +71,6 @@ export * from "./historyItems";
 export * from "./intervalsText";
 export * from "./summaryText";
 export type { HistoryItem, Stat } from "./types";
-export { hangCount, hangLoadText, hangLoadValue } from "./hangText";
+export { hangCount } from "./hangText";
 export { stravaLabel } from "./stravaLabel";
 export { justLogged, justLoggedText, useJustLogged, type JustLogged } from "./justLogged";

@@ -294,7 +294,7 @@ export function LogSessionForm({
                 color: colors.textMuted,
               }}
             >
-              {unbrokenParts(draftSummary(draft))}
+              {unbrokenParts(draftSummary(draft, gradePrefs))}
             </Text>
           )}
         </View>

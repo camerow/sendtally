@@ -1,12 +1,14 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import {
+  draftGradeLabel,
   climbOutcome,
   enduranceLapCountLabel,
   enduranceOf,
   enduranceSummaryLabel,
   type ClimbDraft,
 } from "@sendtally/features/log-session";
+import { useDisplayScales } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { colors, disabledOpacity, fonts } from "@sendtally/design/tokens";
 import { CircuitDot } from "../../components/CircuitDot";
@@ -90,6 +92,7 @@ function EnduranceLedgerRow({
   climb: ClimbDraft;
   onPress: () => void;
 }): React.ReactElement {
+  const scales = useDisplayScales();
   const endurance = enduranceOf(climb);
   const named = climb.name.trim() !== "";
   const meta = `${enduranceLapCountLabel(endurance.laps.length)} · ${enduranceSummaryLabel(endurance)}`;
@@ -97,7 +100,7 @@ function EnduranceLedgerRow({
     <Pressable
       onPress={tap(onPress)}
       accessibilityRole="button"
-      accessibilityLabel={`${named ? climb.name : t("endurance.title")}, ${climb.grade}, ${meta}`}
+      accessibilityLabel={`${named ? climb.name : t("endurance.title")}, ${draftGradeLabel(climb, scales)}, ${meta}`}
       style={pressRow({
         flexDirection: "row",
         alignItems: "center",
@@ -134,7 +137,7 @@ function EnduranceLedgerRow({
         </Text>
       </View>
       <Text style={{ fontFamily: fonts.monoSemiBold, fontSize: 14, color: colors.gunmetal }}>
-        {climb.grade}
+        {draftGradeLabel(climb, scales)}
       </Text>
       <Icon name="chevron" color={colors.textFaint} size={16} />
     </Pressable>
@@ -148,6 +151,7 @@ export function ClimbLedgerRow({
   onChangeTries,
   onToggleSent,
 }: ClimbLedgerRowProps): React.ReactElement {
+  const scales = useDisplayScales();
   if (climb.endurance !== undefined)
     return <EnduranceLedgerRow climb={climb} onPress={tap(onPress)} />;
   const named = climb.name.trim() !== "";
@@ -163,7 +167,10 @@ export function ClimbLedgerRow({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={t("logSession.ledgerLabel", {
-        grade: circuit === undefined ? climb.grade : `${circuit.label} ${climb.grade}`,
+        grade:
+          circuit === undefined
+            ? draftGradeLabel(climb, scales)
+            : `${circuit.label} ${draftGradeLabel(climb, scales)}`,
         name: [title, ...(climb.wall === undefined || climb.wall === "" ? [] : [climb.wall])].join(
           " · "
         ),
@@ -194,7 +201,7 @@ export function ClimbLedgerRow({
           }}
         >
           <Text style={{ fontFamily: fonts.monoSemiBold, fontSize: 14, color: colors.gunmetal }}>
-            {climb.grade}
+            {draftGradeLabel(climb, scales)}
           </Text>
         </View>
       ) : (

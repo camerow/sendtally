@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { hangCount, hangLoadText } from "./hangText";
+import { hangLoadText } from "../hang/weights";
+import { hangCount } from "./hangText";
 
 describe("hangText", () => {
   it("reads a load as added, assisted or bodyweight", () => {

@@ -1,7 +1,7 @@
 export const settings = {
   "settings.grades": "Grades",
   "settings.gradesBody":
-    "The scale you log in. Climbs you have already logged keep the scale they were entered in.",
+    "Every grade shows in this scale, including climbs you logged in another one.",
   "settings.stravaActive":
     "Linked to your Strava account. Sessions you log can post to your feed as Rock Climbing activities.",
   "settings.stravaLapsed":

@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import {
+  bumpLoad,
   clampLoad,
   fromUnit,
   loadStep,
@@ -40,7 +41,7 @@ export function LoadField({
         label={label}
         value={toUnit(kg, unit)}
         onChange={set}
-        onStep={(direction) => set(toUnit(kg, unit) + direction * step)}
+        onStep={(direction) => onChange(bumpLoad(kind, kg, unit, direction))}
         unit={unit}
         step={step}
         decimals

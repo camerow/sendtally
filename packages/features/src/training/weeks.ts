@@ -11,6 +11,8 @@ import {
   type NumberLimits,
   type WeightUnit,
   type WorkoutKind,
+  stepOnGrid,
+  loadStep,
 } from "@sendtally/core/hang";
 import { countText, humanDuration } from "../hang/format";
 import { RANGE_PLACEHOLDER } from "../workouts/doseFields";
@@ -109,7 +111,7 @@ export function withWeekField(
 export function weekFieldLimits(field: WeekField, unit: WeightUnit): NumberLimits {
   if (field === "weightKg")
     return {
-      step: unit === "lb" ? 5 : STEP.weightKg,
+      step: loadStep("pull", unit),
       decimals: true,
       min: toUnit(MIN.weightKg, unit),
     };
@@ -163,7 +165,12 @@ export function withWeekRange(
 export function stepped(dose: Dose, field: WeekField, direction: 1 | -1, unit: WeightUnit): Dose {
   const { step } = weekFieldLimits(field, unit);
   return (
-    withWeekField(dose, field, weekFieldValue(dose, field, unit) + direction * step, unit) ?? dose
+    withWeekField(
+      dose,
+      field,
+      stepOnGrid(weekFieldValue(dose, field, unit), step, direction),
+      unit
+    ) ?? dose
   );
 }
 

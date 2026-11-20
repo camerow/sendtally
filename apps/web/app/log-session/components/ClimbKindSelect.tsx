@@ -3,13 +3,17 @@ import { circuitLabel, circuitRangeLabel, withCircuit, type Gym } from "@sendtal
 import {
   climbKindOf,
   disciplineLabel,
+  draftGradeLabel,
   gradeOptions,
+  pickerScale,
+  withPickedGrade,
   gymOfCircuit,
   withClimbKind,
   type ClimbDraft,
   type GradePrefs,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
+import { useDisplayScales } from "@sendtally/features/settings";
 import { climbKindStorage } from "../../lib/localStorages";
 import { inputStyle } from "../../components/styles";
 
@@ -83,18 +87,19 @@ export function ClimbGradeSelect({
   style,
   onChange,
 }: ClimbGradeSelectProps): React.ReactElement {
+  const scales = useDisplayScales();
   const gym = gymOfCircuit(gyms, climb.circuit?.id);
   if (gym === null) {
     return (
       <select
         id={id}
         name="grade"
-        value={climb.grade}
-        onChange={(e) => onChange({ ...climb, grade: e.target.value })}
+        value={draftGradeLabel(climb, scales)}
+        onChange={(e) => onChange(withPickedGrade(climb, e.target.value, scales))}
         className="log-session-control"
         style={{ ...gradeStyle, ...style }}
       >
-        {gradeOptions(climb.scale).map((g) => (
+        {gradeOptions(pickerScale(climb, scales)).map((g) => (
           <option key={g} value={g}>
             {g}
           </option>
@@ -116,7 +121,7 @@ export function ClimbGradeSelect({
     >
       {gym.circuits.map((c) => (
         <option key={c.id} value={c.id}>
-          {`${circuitLabel(c)} · ${circuitRangeLabel(c, gym.scale)}`}
+          {`${circuitLabel(c)} · ${circuitRangeLabel(c, scales.boulder)}`}
         </option>
       ))}
     </select>

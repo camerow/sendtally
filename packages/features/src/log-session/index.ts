@@ -18,6 +18,9 @@ export {
   withLength,
   emptySessionDraft,
   gradeOptions,
+  draftGradeLabel,
+  pickerScale,
+  withPickedGrade,
   newClimb,
   nextClimbKey,
   scaleOptionsFor,
@@ -45,7 +48,6 @@ export {
   localDate,
   withClimbName,
   withPickedClimb,
-  withQuickClimb,
 } from "./liveSession";
 export {
   FELL_AFTER_START,

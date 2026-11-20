@@ -18,6 +18,9 @@ HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogEleme
   this.setAttribute("open", "");
 };
 
+vi.mock("../data/HangDataContext", () => ({
+  useHangData: () => ({ model: { settings: { units: "kg" } } }),
+}));
 vi.mock("@sendtally/features/hang", async (actual) => ({
   ...(await actual<typeof T_hang>()),
   useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),
@@ -58,7 +61,6 @@ vi.mock("@sendtally/features/statistics", async (actual) => ({
 }));
 vi.mock("@sendtally/features/activities", async (actual) => ({
   ...(await actual<typeof T_activities>()),
-  useWeightUnit: () => "kg",
   useActivities: () => ({
     state: {
       status: "ready",

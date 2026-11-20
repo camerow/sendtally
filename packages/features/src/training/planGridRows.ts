@@ -11,7 +11,8 @@ import {
 import { kindLabel } from "../activities/format";
 import type { OccurrenceStatus, WorkoutLookup } from "./plan";
 import { durationLabel } from "../sessions/years";
-import { humanDuration, loadLabel } from "../hang/format";
+import { humanDuration } from "../hang/format";
+import { loadLabel } from "../hang/weights";
 import type { HangModel } from "../hang/model";
 import { t } from "../i18n";
 import { bodySummary, workoutMinutes, type MeasuredExercises } from "../workouts/library";

@@ -1,9 +1,6 @@
 export const hang = {
   "hang.kindHang": "Hängen",
   "hang.kindPull": "Bodenzug",
-  "hang.bodyweight": "Körpergewicht",
-  "hang.loadPlus": "+{value} {unit}",
-  "hang.loadMinus": "−{value} {unit}",
   "hang.loadPlain": "{value} {unit}",
   "hang.seconds": "{n} s",
   "hang.minutes": "{n} Min",
@@ -124,7 +121,7 @@ export const hang = {
 
   "hang.date": "Datum",
   "hang.load": "Last",
-  "hang.bw": "KG",
+  "hang.bw": "BW",
   "hang.addedLoadCompleted": "Zusatzgewicht · geschafft",
   "hang.weightCompleted": "Gezogenes Gewicht · geschafft",
   "hang.delta": "{arrow} {value} {unit}",

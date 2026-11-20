@@ -8,7 +8,9 @@ import {
   hangTitle,
   sessionDay,
 } from "@sendtally/features/sessions";
+import { useWeightUnit } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
+import { useApi } from "../../lib/api";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
 import { StravaMark } from "../../components/StravaMark";
@@ -39,7 +41,7 @@ export function HangRow({
 }: HangRowProps): React.ReactElement {
   const { weekday, day } = sessionDay({ start_at: hangAt(hang) });
   const title = hangTitle(hang);
-  const meta = hangMetaLabel(hang);
+  const meta = hangMetaLabel(hang, useWeightUnit(useApi()));
   const effort = hangEffortLabel(hang);
   const onStrava = hang.stravaActivityId !== null;
   const spoken = [

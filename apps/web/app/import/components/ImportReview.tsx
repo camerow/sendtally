@@ -1,4 +1,5 @@
 import React from "react";
+import { useDisplayScales } from "@sendtally/features/settings";
 import { IMPORT_SERVICES, type ImportPlan, type LikelyDuplicate } from "@sendtally/core/import";
 import {
   issueText,
@@ -72,7 +73,8 @@ export function ImportReview({
   const [allIssues, setAllIssues] = React.useState(false);
   const unrecognised = plan.sessions.length === 0;
   const issues = allIssues ? plan.issues : plan.issues.slice(0, ISSUE_ROWS);
-  const stats = planStats(plan.sessions);
+  const scales = useDisplayScales();
+  const stats = planStats(plan.sessions, scales);
   const narrow = useIsNarrow();
   const [selected, setSelected] = React.useState<number[]>([]);
   const tagged = withAddedTags(plan.sessions, added);
@@ -295,7 +297,8 @@ export function ImportReview({
                     <span style={monoMuted}>
                       {t("common.climbCount", { count: s.climbs.length })} ·{" "}
                       {s.location === "indoor" ? t("common.indoor") : t("common.outdoor")} ·{" "}
-                      {t("import.sendCount", { count: sends })} · {planStats([s]).topGrade ?? "–"}
+                      {t("import.sendCount", { count: sends })} ·{" "}
+                      {planStats([s], scales).topGrade ?? "–"}
                     </span>
                     {s.tags !== undefined && (
                       <span style={{ ...monoMuted, color: "var(--bs-petal-ink)" }}>

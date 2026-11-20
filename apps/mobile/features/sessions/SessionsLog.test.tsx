@@ -96,6 +96,41 @@ function mockMemoryStorage(): unknown {
 }
 jest.mock("../../lib/liveSessionStorage", () => ({ liveSessionStorage: mockMemoryStorage() }));
 let mockScales = { boulder: "v", route: "yds" };
+let mockUnit: string | null = "lb";
+let mockHangs: object[] = [];
+jest.mock("@sendtally/features/activities", () => ({
+  ...jest.requireActual<object>("@sendtally/features/activities"),
+  useWeightUnit: () => mockUnit,
+}));
+const mockHang = {
+  id: "h1",
+  workoutId: "rep73",
+  gripId: "half",
+  gripName: null,
+  date: "2026-10-19",
+  loadKg: 4,
+  pct: 100,
+  misses: 0,
+  rpe: 7,
+  edgeMm: 20,
+  protocol: {
+    name: "Repeaters 7:3",
+    kind: "hang",
+    hangS: 7,
+    restS: 3,
+    reps: 6,
+    sets: 6,
+    setRestS: 180,
+  },
+  stravaActivityId: null,
+  membershipId: null,
+  week: null,
+  focus: null,
+  done: [],
+  postState: null,
+  postError: null,
+  updatedAt: "2026-10-19T19:00:00.000Z",
+};
 jest.mock("@sendtally/features/settings", () => ({
   useSettings: () => ({ ready: false, vm: {}, reload: () => undefined }),
   useGradeScalePrefs: () => ({ scales: mockScales, ready: true }),
@@ -116,7 +151,7 @@ jest.mock("@sendtally/features/query", () => ({
       data: [
         {
           sessions: [mockNamed, mockBare],
-          hangSessions: [],
+          hangSessions: mockHangs,
           activities: [
             {
               id: "a1",
@@ -169,6 +204,29 @@ jest.mock("@sendtally/features/climbs", () => ({
 describe("Log", () => {
   beforeEach(() => {
     mockScales = { boulder: "v", route: "yds" };
+    mockUnit = "lb";
+    mockHangs = [];
+  });
+
+  it("reads a hangboard row's load in lb for an lb climber, and leaves it off until the unit loads", async () => {
+    mockHangs = [mockHang];
+    await render(<SessionsLog />);
+    expect(screen.getByLabelText(/Half crimp · 20.mm · \+8\.82.lb/)).toBeTruthy();
+    mockUnit = null;
+    await render(<SessionsLog />);
+    expect(screen.getByLabelText(/Hangboard session · Half crimp, RPE 7/)).toBeTruthy();
+  });
+
+  it("reads every grade and weight in the user's settings, nothing in V or lb for a Font and kg climber", async () => {
+    mockScales = { boulder: "font", route: "french" };
+    mockUnit = "kg";
+    mockHangs = [mockHang];
+    await render(<SessionsLog />);
+    expect(screen.getByLabelText(/Half crimp · 20.mm · \+4.kg/)).toBeTruthy();
+    for (const wrong of [/\blb\b/, /\bV\d/]) {
+      expect(screen.queryAllByText(wrong)).toHaveLength(0);
+      expect(screen.queryAllByLabelText(wrong)).toHaveLength(0);
+    }
   });
 
   it("lists climbing and training in one list, each row as before", async () => {

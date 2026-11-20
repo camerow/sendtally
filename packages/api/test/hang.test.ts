@@ -450,7 +450,9 @@ describe("hangboard strava posting", () => {
     const first = new URLSearchParams(updates[0]?.body ?? "");
     expect(first.get("name")).toBe("Repeaters 7:3 · Wide pinch");
     expect(first.get("description")).toContain("Load bodyweight");
-    expect(new URLSearchParams(updates[1]?.body ?? "").get("description")).toContain("Load +9 lb");
+    expect(new URLSearchParams(updates[1]?.body ?? "").get("description")).toContain(
+      "Load +8.82 lb"
+    );
 
     expect(
       await (await call(userId, "DELETE", "/sessions/h1", undefined, fetchImpl)).json()

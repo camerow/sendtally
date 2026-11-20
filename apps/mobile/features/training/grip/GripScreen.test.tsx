@@ -63,13 +63,11 @@ describe("GripScreen", () => {
     await renderWithHang(<GripScreen id="half" />, hangData({ sessions: partials }));
     expect(screen.getByText("Latest attempt")).toBeTruthy();
     expect(screen.queryByText("Added load · completed")).toBeNull();
-    expect(screen.getAllByText("Bodyweight").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("BW").length).toBeGreaterThan(0);
     expect(screen.getByText("Best")).toBeTruthy();
     expect(screen.getAllByText("–")).toHaveLength(2);
     expect(
-      screen.getByText(
-        "No completed session yet. Finish every set at Bodyweight to set your first best."
-      )
+      screen.getByText("No completed session yet. Finish every set at BW to set your first best.")
     ).toBeTruthy();
     expect(screen.queryByText(/▲|▼/)).toBeNull();
   });

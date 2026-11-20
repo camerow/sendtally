@@ -1,7 +1,7 @@
 import React from "react";
-import { fromUnit, toUnit, type WeightUnit } from "@sendtally/core/hang";
-import { headlineLabel, loadText, metricText, volumeLine } from "@sendtally/features/exercises";
-import { shortDate } from "@sendtally/features/hang";
+import { fromUnit, toUnit, type WeightUnit, chartAir } from "@sendtally/core/hang";
+import { headlineLabel, metricText, volumeLine } from "@sendtally/features/exercises";
+import { shortDate, weightText } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import type { ExerciseMetric, ExerciseSeries } from "@sendtally/features/statistics";
 import { SeriesChart } from "./SeriesChart";
@@ -30,7 +30,7 @@ export function ExerciseTrendCard({
   const load = series.metric === "load";
   const made = volumeLine(latest, series.grades);
   const text = (v: number): string =>
-    load ? loadText(v, unit) : metricText(v, series.metric, unit, series.grades);
+    load ? weightText(v, unit) : metricText(v, series.metric, unit, series.grades);
   return (
     <div className="trend-card">
       <div className="trend-card-head">
@@ -41,7 +41,7 @@ export function ExerciseTrendCard({
       {made !== null && <span className="trend-card-name">{made}</span>}
       <SeriesChart
         values={series.sessions.map((s) => (load ? toUnit(s.value, unit) : s.value))}
-        air={load ? (unit === "lb" ? 4 : 2) : AIR[series.metric]}
+        air={load ? chartAir(unit) : AIR[series.metric]}
         edge={(v) => text(load ? fromUnit(v, unit) : v)}
         label={t("statistics.exerciseChart", {
           exercise: series.name,

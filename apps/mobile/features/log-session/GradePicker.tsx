@@ -1,6 +1,13 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
-import { gradeOptions, type ClimbDraft } from "@sendtally/features/log-session";
+import {
+  draftGradeLabel,
+  gradeOptions,
+  pickerScale,
+  withPickedGrade,
+  type ClimbDraft,
+} from "@sendtally/features/log-session";
+import { useDisplayScales } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { Icon } from "../../components/Icon";
@@ -13,18 +20,20 @@ export type GradePickerProps = {
 };
 
 export function GradePicker({ climb, onChange }: GradePickerProps): React.ReactElement {
+  const scales = useDisplayScales();
+  const shown = draftGradeLabel(climb, scales);
   return (
-    <SelectRow label={t("common.grade")} value={climb.grade} valueFont={fonts.monoSemiBold}>
+    <SelectRow label={t("common.grade")} value={shown} valueFont={fonts.monoSemiBold}>
       {(close) =>
-        gradeOptions(climb.scale).map((g) => {
-          const selected = g === climb.grade;
+        gradeOptions(pickerScale(climb, scales)).map((g) => {
+          const selected = g === shown;
           return (
             <Pressable
               key={g}
               accessibilityRole="radio"
               accessibilityState={{ checked: selected }}
               onPress={() => {
-                onChange({ ...climb, grade: g });
+                onChange(withPickedGrade(climb, g, scales));
                 close();
               }}
               style={pressRow({

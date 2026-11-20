@@ -16,6 +16,7 @@ import {
   type GradePrefs,
 } from "@sendtally/features/log-session";
 import { t } from "@sendtally/features/i18n";
+import { useDisplayScales } from "@sendtally/features/settings";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { CircuitDot } from "../../components/CircuitDot";
 import { Icon } from "../../components/Icon";
@@ -151,10 +152,12 @@ export function ClimbGradePicker({
   gyms,
   onChange,
 }: ClimbGradePickerProps): React.ReactElement {
+  const scales = useDisplayScales();
   const gym = gymOfCircuit(gyms, climb.circuit?.id);
   if (gym === null) return <GradePicker climb={climb} onChange={onChange} />;
   const current = gym.circuits.find((c) => c.id === climb.circuit?.id);
-  const title = (c: Circuit): string => `${circuitLabel(c)} · ${circuitRangeLabel(c, gym.scale)}`;
+  const title = (c: Circuit): string =>
+    `${circuitLabel(c)} · ${circuitRangeLabel(c, scales.boulder)}`;
   return (
     <SelectRow
       label={t("common.grade")}
@@ -167,7 +170,7 @@ export function ClimbGradePicker({
           <Option
             key={c.id}
             label={circuitLabel(c)}
-            hint={circuitRangeLabel(c, gym.scale)}
+            hint={circuitRangeLabel(c, scales.boulder)}
             selected={c.id === current?.id}
             leading={<CircuitDot colour={c.colour} size={14} />}
             onPress={() => {

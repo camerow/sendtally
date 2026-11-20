@@ -1,7 +1,7 @@
 export const settings = {
   "settings.grades": "Grados",
   "settings.gradesBody":
-    "La escala en la que registras. Lo que ya has registrado conserva la escala con la que se introdujo.",
+    "Cada grado se muestra en esta escala, también lo que registraste en otra.",
   "settings.stravaActive":
     "Vinculado a tu cuenta de Strava. Las sesiones que registres pueden publicarse en tu feed como actividades Rock Climbing.",
   "settings.stravaLapsed":

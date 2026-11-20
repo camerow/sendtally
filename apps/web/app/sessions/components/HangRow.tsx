@@ -2,7 +2,9 @@ import React from "react";
 import { Link } from "react-router";
 import { activityPath } from "../../training/log/paths";
 import type { HangHistoryRow } from "@sendtally/api-client";
+import { useWeightUnit } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
+import { useAppApi } from "../../lib/useAppApi";
 import {
   hangAt,
   hangEffortLabel,
@@ -30,7 +32,7 @@ export function HangRow({
 }): React.ReactElement {
   const { weekday, day } = sessionDay({ start_at: hangAt(hang) });
   const title = hangTitle(hang);
-  const meta = hangMetaLabel(hang);
+  const meta = hangMetaLabel(hang, useWeightUnit(useAppApi()));
   const effort = hangEffortLabel(hang);
   const onStrava = hang.stravaActivityId !== null;
   return (

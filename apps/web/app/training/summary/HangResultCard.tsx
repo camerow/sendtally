@@ -1,6 +1,7 @@
 import React from "react";
+import { hangLoadText } from "@sendtally/features/hang";
 import { clock, type WeightUnit } from "@sendtally/core/hang";
-import { hangLoadText, type HangGripGrid } from "@sendtally/features/activities";
+import { type HangGripGrid } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { EffortMark } from "../../components/detail/EffortMark";
 import { ExerciseBlock } from "../components/ExerciseBlock";

@@ -347,7 +347,7 @@ describe("Workout editor", () => {
     );
     await pick("Back squat");
     expect(screen.getByLabelText("Weight").props.accessibilityValue).toEqual({
-      text: "Bodyweight lb",
+      text: "BW lb",
     });
     await type("Weight", "135");
     await fireEvent.press(screen.getByText("Save"));

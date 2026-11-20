@@ -17,6 +17,6 @@ export function useExerciseSeries(api: SendtallyApi): QueryState<ExerciseSeries[
     const mine = exercises.status === "ready" ? exercises.data : [];
     const progressOf = (key: string): ExerciseProgress | null | undefined =>
       mine.find((e) => exerciseKey(e.name) === key)?.progress;
-    return { status: "ready", data: exerciseSeries(state.data, progressOf, scales) };
+    return { status: "ready", data: exerciseSeries(state.data, { progressOf, scales }) };
   }, [state, exercises, scales]);
 }

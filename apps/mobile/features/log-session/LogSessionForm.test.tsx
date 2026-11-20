@@ -33,6 +33,8 @@ jest.mock("../../lib/useSessions", () => ({
   useSessions: () => ({ save: mockLogSession, remove: jest.fn() }),
 }));
 jest.mock("@sendtally/features/settings", () => ({
+  useDisplayScales: () =>
+    jest.requireActual<typeof LogSession>("@sendtally/features/log-session").DEFAULT_GRADE_PREFS,
   useGradeScalePrefs: () => ({
     scales: jest.requireActual<typeof LogSession>("@sendtally/features/log-session")
       .DEFAULT_GRADE_PREFS,

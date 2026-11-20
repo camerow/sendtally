@@ -1,5 +1,6 @@
-import { effortGrade, formatGrade, type Grade } from "@sendtally/core";
+import { effortGrade, type Grade } from "@sendtally/core";
 import type { ImportSession } from "@sendtally/core/import";
+import { displayGrade, type GradeScales } from "../sessions/grades";
 import { sameTagName } from "../sessions/tags";
 
 export type PlanStats = {
@@ -9,7 +10,7 @@ export type PlanStats = {
   topGrade: string | null;
 };
 
-export function planStats(sessions: ImportSession[]): PlanStats {
+export function planStats(sessions: ImportSession[], scales: GradeScales): PlanStats {
   let top: Grade | undefined;
   let sends = 0;
   let attempts = 0;
@@ -24,7 +25,7 @@ export function planStats(sessions: ImportSession[]): PlanStats {
     sessions: sessions.length,
     sends,
     attempts,
-    topGrade: top === undefined ? null : formatGrade(top),
+    topGrade: top === undefined ? null : displayGrade(top, scales),
   };
 }
 

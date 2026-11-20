@@ -1,3 +1,4 @@
+import { DEFAULT_GRADE_SCALES } from "../settings/transforms";
 import { describe, expect, it } from "vitest";
 import type { Activity } from "@sendtally/api-client";
 import type { GradeScale } from "@sendtally/core";
@@ -128,8 +129,14 @@ describe("grade metrics", () => {
   ];
 
   it("reads the average and highest grade sent per session, leaving out falls and circuits", () => {
-    const [top] = exerciseSeries(sessions, () => "topGrade");
-    const [average] = exerciseSeries(sessions, () => "averageGrade");
+    const [top] = exerciseSeries(sessions, {
+      progressOf: () => "topGrade",
+      scales: DEFAULT_GRADE_SCALES,
+    });
+    const [average] = exerciseSeries(sessions, {
+      progressOf: () => "averageGrade",
+      scales: DEFAULT_GRADE_SCALES,
+    });
     expect(top?.metric).toBe("topGrade");
     expect(top?.sessions.map((s) => s.value)).toEqual([5, 6]);
     expect(average?.sessions.map((s) => s.value)).toEqual([4, 5]);
@@ -139,12 +146,20 @@ describe("grade metrics", () => {
 
   it("counts sends when the progress is the climbs completed or unset", () => {
     expect(exerciseSeries(sessions)[0]?.metric).toBe("sends");
-    expect(exerciseSeries(sessions, () => null)[0]?.metric).toBe("sends");
-    expect(exerciseSeries(sessions, () => "completed")[0]?.metric).toBe("sends");
+    expect(
+      exerciseSeries(sessions, { progressOf: () => null, scales: DEFAULT_GRADE_SCALES })[0]?.metric
+    ).toBe("sends");
+    expect(
+      exerciseSeries(sessions, { progressOf: () => "completed", scales: DEFAULT_GRADE_SCALES })[0]
+        ?.metric
+    ).toBe("sends");
   });
 
   it("marks an exercise with no progress untracked, still logged", () => {
-    const [series] = exerciseSeries(sessions, () => "none");
+    const [series] = exerciseSeries(sessions, {
+      progressOf: () => "none",
+      scales: DEFAULT_GRADE_SCALES,
+    });
     expect(series).toMatchObject({ metric: "sends", untracked: true });
     expect(series?.sessions).toHaveLength(2);
   });
@@ -152,9 +167,15 @@ describe("grade metrics", () => {
   it("ranks routes on their own ladder and reads them in the climber's route scale", () => {
     const routes = limit(climb("6a", true, "french"), climb("V9"), climb("6c", true, "french"));
     const log = [logged("a", "2026-10-01", [routes])];
-    const [yds] = exerciseSeries(log, () => "topGrade");
+    const [yds] = exerciseSeries(log, {
+      progressOf: () => "topGrade",
+      scales: DEFAULT_GRADE_SCALES,
+    });
     expect(yds?.grades?.label(yds.sessions[0]?.value ?? -1)).toBe("5.11b");
-    const [french] = exerciseSeries(log, () => "topGrade", { boulder: "v", route: "french" });
+    const [french] = exerciseSeries(log, {
+      progressOf: () => "topGrade",
+      scales: { boulder: "v", route: "french" },
+    });
     expect(french?.grades?.label(french.sessions[0]?.value ?? -1)).toBe("6c");
   });
 
@@ -168,7 +189,10 @@ describe("grade metrics", () => {
       climb("V6", false),
       climb("6a", true, "french")
     );
-    const [series] = exerciseSeries([logged("a", "2026-10-01", [capacity])], () => "volume");
+    const [series] = exerciseSeries([logged("a", "2026-10-01", [capacity])], {
+      progressOf: () => "volume",
+      scales: DEFAULT_GRADE_SCALES,
+    });
     expect(series?.metric).toBe("volume");
     expect(series?.sessions[0]).toMatchObject({ value: 23, average: { grade: 3.6, sends: 5 } });
     expect(series?.grades?.average(3.6)).toBe("V3.6");
@@ -177,14 +201,17 @@ describe("grade metrics", () => {
   it("scores a V0 send, so easy mileage still counts", () => {
     const [series] = exerciseSeries(
       [logged("a", "2026-10-01", [limit(climb("V0"), climb("V0"))])],
-      () => "volume"
+      { progressOf: () => "volume", scales: DEFAULT_GRADE_SCALES }
     );
     expect(series?.sessions[0]?.value).toBe(2);
   });
 
   it("drops a session with nothing sent at a grade", () => {
     const fell = logged("c", "2026-10-15", [limit(climb("V8", false))]);
-    const [series] = exerciseSeries([...sessions, fell], () => "averageGrade");
+    const [series] = exerciseSeries([...sessions, fell], {
+      progressOf: () => "averageGrade",
+      scales: DEFAULT_GRADE_SCALES,
+    });
     expect(series?.sessions.map((s) => s.activityId)).toEqual(["a", "b"]);
   });
 });

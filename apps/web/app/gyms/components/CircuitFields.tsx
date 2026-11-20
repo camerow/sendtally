@@ -1,6 +1,7 @@
 import React from "react";
 import { circuitGrades, findCircuit, type Gym } from "@sendtally/features/gyms";
-import type { ClimbDraft } from "@sendtally/features/log-session";
+import { draftGradeLabel, type ClimbDraft } from "@sendtally/features/log-session";
+import { useDisplayScales } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { chipStyle } from "../../components/chip";
 import { columnHead } from "../../log-session/components/styles";
@@ -79,6 +80,7 @@ export function CircuitFields({
   gym: Gym;
   onChange: (climb: ClimbDraft) => void;
 }): React.ReactElement {
+  const scales = useDisplayScales();
   const current = findCircuit(gym, climb.circuit?.id);
   const wall = climb.wall ?? "";
   return (
@@ -100,7 +102,7 @@ export function CircuitFields({
           {circuitGrades(current, gym.scale).map((grade) => (
             <ChoiceChip
               key={grade}
-              label={grade}
+              label={draftGradeLabel({ grade, scale: gym.scale }, scales)}
               mono
               active={grade === climb.grade}
               onPress={() => onChange({ ...climb, grade })}

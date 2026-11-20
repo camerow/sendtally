@@ -2,7 +2,9 @@ import {
   GRIP_MEASURES,
   isBuiltInGrip,
   isCalendarDate,
-  defaultSetup,
+  defaultEdgeMm,
+  DEFAULT_WEIGHT_UNIT,
+  WEIGHT_UNITS,
   protocolOf,
   type BuiltInGrip,
   type BuiltInLibrary,
@@ -86,7 +88,7 @@ const withEdge = <T extends { edgeMm?: number; protocol: z.infer<typeof protocol
   ...rest
 }: T): Omit<T, "edgeMm" | "protocol"> & { edgeMm: number; protocol: Protocol } => ({
   ...rest,
-  edgeMm: mm ?? protocol.edgeMm ?? defaultSetup(protocol.kind).edgeMm,
+  edgeMm: mm ?? protocol.edgeMm ?? defaultEdgeMm(protocol.kind),
   protocol: protocolOf(protocol),
 });
 
@@ -114,7 +116,7 @@ export type Fingerboard = z.infer<typeof fingerboardBody>;
 
 export const hangSettingsBody = z
   .object({
-    units: z.enum(["kg", "lb"]),
+    units: z.enum(WEIGHT_UNITS),
     theme: z.enum(["moss", "dusk", "gunmetal"]),
     reminders: z.boolean(),
     reminderTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
@@ -124,7 +126,7 @@ export const hangSettingsBody = z
   .partial();
 
 export const DEFAULT_HANG_SETTINGS: HangSettings = {
-  units: "lb",
+  units: DEFAULT_WEIGHT_UNIT,
   theme: "moss",
   reminders: false,
   reminderTime: "08:00",

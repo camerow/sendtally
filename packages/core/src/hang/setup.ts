@@ -1,7 +1,7 @@
-import { DEFAULT_PULL_KG } from "./loads";
+import { defaultPullKg } from "./loads";
 import { clamp } from "./parse";
 import { seriesFor } from "./trends";
-import type { HangKind, HangRun } from "./types";
+import type { HangKind, HangRun, WeightUnit } from "./types";
 
 export const DEFAULT_EDGE_MM = 20;
 export const MIN_EDGE_MM = 4;
@@ -12,14 +12,20 @@ export type HangSetup = { edgeMm: number; loadKg: number };
 
 export type SetupLayer = { edgeMm?: number | null; loadKg?: number | null } | null | undefined;
 
-export const defaultSetup = (kind: HangKind): HangSetup => ({
-  edgeMm: kind === "hang" ? DEFAULT_EDGE_MM : 0,
-  loadKg: kind === "pull" ? DEFAULT_PULL_KG : 0,
+export const defaultEdgeMm = (kind: HangKind): number => (kind === "hang" ? DEFAULT_EDGE_MM : 0);
+
+export const defaultSetup = (kind: HangKind, unit: WeightUnit): HangSetup => ({
+  edgeMm: defaultEdgeMm(kind),
+  loadKg: kind === "pull" ? defaultPullKg(unit) : 0,
 });
 
-/** Each field from the first layer that sets it, else the kind's default. */
-export function resolveSetup(kind: HangKind, layers: readonly SetupLayer[]): HangSetup {
-  const fallback = defaultSetup(kind);
+/** Each field from the first layer that sets it, else the kind's default in the user's unit. */
+export function resolveSetup(
+  kind: HangKind,
+  layers: readonly SetupLayer[],
+  unit: WeightUnit
+): HangSetup {
+  const fallback = defaultSetup(kind, unit);
   const pick = (field: keyof HangSetup): number =>
     layers.map((l) => l?.[field]).find((v): v is number => typeof v === "number") ??
     fallback[field];

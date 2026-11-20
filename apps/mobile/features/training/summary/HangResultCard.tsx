@@ -1,9 +1,10 @@
 import { router } from "expo-router";
+import { hangLoadText } from "@sendtally/features/hang";
 import React from "react";
 import { Text, View } from "react-native";
 import { clock, type WeightUnit } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { hangLoadText, type HangGripGrid } from "@sendtally/features/activities";
+import { type HangGripGrid } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { EffortMark } from "../components/EffortMark";
 import { ExerciseBlock } from "../sets/ExerciseBlock";

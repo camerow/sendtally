@@ -1,5 +1,5 @@
 import React from "react";
-import type { WeightUnit } from "@sendtally/core/hang";
+import { WEIGHT_UNITS } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { Segmented } from "../../components/Segmented";
 import { sectionLabel } from "../../components/styles";
@@ -8,14 +8,12 @@ import { useHangData } from "../../training/data/HangDataContext";
 import { Section } from "./Section";
 import { bodyText } from "./styles";
 
-const UNITS: readonly WeightUnit[] = ["lb", "kg"];
-
 function UnitPicker(): React.ReactElement {
   const { model, actions } = useHangData();
   return (
     <Segmented
       label={t("settings.weightUnit")}
-      options={UNITS.map((unit) => ({ value: unit, label: unit }))}
+      options={WEIGHT_UNITS.map((unit) => ({ value: unit, label: unit }))}
       value={model.settings.units}
       onChange={(units) => void actions.saveSettings({ units })}
     />
