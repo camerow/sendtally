@@ -2,7 +2,7 @@ import React from "react";
 import { formatDate, t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { ExampleRow } from "./ExampleRow";
-import { MenuRow } from "./MenuRow";
+import { MenuRow } from "../../components/MenuRow";
 import { SectionHeader } from "./SectionHeader";
 import type { ExampleRowData, LogEmptyAction } from "./types";
 

@@ -4,4 +4,10 @@ export const onboardingSetup = {
   "onboarding.setup.historyHint": "Importa tu registro o añade escaladas pasadas",
   "onboarding.setup.historyDoneHint": "Hecho · añade más cuando quieras",
   "onboarding.setup.notStarted": "Sin empezar",
+  "onboarding.setup.start": "Empezar",
+  "onboarding.setup.soFarCount_one": "Tu escalada hasta ahora · {count} escalada",
+  "onboarding.setup.soFarCount_other": "Tu escalada hasta ahora · {count} escaladas",
+  "onboarding.setup.stravaArtName": "Sesión de tarde",
+  "onboarding.setup.welcomeCard": "Tu escalada",
+  "onboarding.setup.welcomeTitle": "Registra tu escalada. Planifica tu entrenamiento.",
 } as const;

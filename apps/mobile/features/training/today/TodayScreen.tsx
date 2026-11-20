@@ -19,6 +19,7 @@ import {
   useTrainingLog,
 } from "@sendtally/features/training";
 import { Fab } from "../../../components/Fab";
+import { SetupStack } from "../../../components/SetupStack";
 import { Toast } from "../../../components/Toast";
 import { ImportResultToast } from "../../import/ImportResultToast";
 import { useApi } from "../../../lib/api";
@@ -29,6 +30,7 @@ import { AddWorkoutsSheet, type Scheduled } from "../planning/AddWorkoutsSheet";
 import { BlockRow } from "../train/BlockRow";
 import { DaySection } from "./DaySection";
 import { openLogged } from "./openLogged";
+import { usePlanSetupCards } from "./setup/usePlanSetupCards";
 import { WeekStrip } from "./WeekStrip";
 
 const weekOffset = (today: CalendarDate, date: CalendarDate): number =>
@@ -49,6 +51,7 @@ export function TodayScreen(): React.ReactElement {
   const asked = useLocalSearchParams<{ date?: string; at?: string; imported?: string }>();
   const { today } = useHangData();
   const { log } = useTrainingLog(useApi());
+  const setupCards = usePlanSetupCards();
   const [offset, setOffset] = React.useState(0);
   const [selected, setSelected] = React.useState<CalendarDate>(today);
   const [adding, setAdding] = React.useState(false);
@@ -95,6 +98,13 @@ export function TodayScreen(): React.ReactElement {
     if (request !== null) showRef.current(request);
   }, [request, requestKey]);
 
+  const setupShown = setupCards.length > 0 && request === null;
+  React.useEffect(() => {
+    if (!setupShown) return;
+    target.current = null;
+    scroll.current?.scrollTo({ y: 0, animated: false });
+  }, [setupShown]);
+
   const monday = addDays(weekStart(today), offset * 7);
   const days = trainingWeek(log, monday, today);
   const running = blockGroups(log.plan.blocks, today).current;
@@ -108,7 +118,7 @@ export function TodayScreen(): React.ReactElement {
     <View style={{ flex: 1 }}>
       <ScrollView
         ref={scroll}
-        stickyHeaderIndices={[1]}
+        stickyHeaderIndices={[2]}
         onLayout={(e) => setViewport(e.nativeEvent.layout.height)}
         onContentSizeChange={() => {
           if (target.current !== null) scrollTo(target.current, false);
@@ -123,6 +133,9 @@ export function TodayScreen(): React.ReactElement {
           paddingBottom: BOTTOM,
         }}
       >
+        <View style={{ marginHorizontal: -18 }}>
+          <SetupStack cards={setupCards} total={4} />
+        </View>
         <Label color={colors.gunmetal}>{longDate(today)}</Label>
         <View
           onLayout={(e) => setStrip(e.nativeEvent.layout.height)}

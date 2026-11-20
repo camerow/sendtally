@@ -6,8 +6,10 @@ import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
-import { OnboardingCarousel } from "../features/onboarding/OnboardingCarousel";
+import { WelcomeCard } from "../features/onboarding/WelcomeCard";
 import { Button } from "../features/training/components/Button";
+import { Label } from "../features/training/components/Label";
+import { Title } from "../features/training/components/Title";
 
 export default function Onboarding(): React.ReactElement | null {
   return (
@@ -18,7 +20,13 @@ export default function Onboarding(): React.ReactElement | null {
             <Logo size={24} />
           </View>
 
-          <OnboardingCarousel />
+          <View style={{ flex: 1, justifyContent: "center", gap: 22, paddingHorizontal: 22 }}>
+            <WelcomeCard />
+            <View style={{ gap: 10 }}>
+              <Label color={colors.gunmetal}>{t("onboarding.intro.eyebrow")}</Label>
+              <Title size={27}>{t("onboarding.setup.welcomeTitle")}</Title>
+            </View>
+          </View>
 
           <View style={{ paddingHorizontal: 22, gap: 10 }}>
             <Button

@@ -88,6 +88,7 @@ vi.mock("../library/useLibrary", async (actual) => ({
   useLibrary: () => ({ state: { status: "ready", data: library() }, reload: vi.fn() }),
 }));
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
+vi.mock("./usePlanSetupCards", () => ({ usePlanSetupCards: () => [] }));
 vi.mock("../editor/useMake", () => ({ useMake: () => vi.fn(), usePick: () => vi.fn() }));
 vi.mock("../../components/AccountButton", () => ({ AccountButton: () => null }));
 vi.mock("../data/HangDataContext", () => ({

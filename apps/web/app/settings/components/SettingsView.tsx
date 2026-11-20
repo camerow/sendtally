@@ -2,11 +2,13 @@ import React from "react";
 import { Link } from "react-router";
 import type {
   GradeScalesFeature,
+  OnboardingProgress,
   SettingsVM,
   StravaPostingFeature,
 } from "@sendtally/features/settings";
 import type { MembershipVM } from "@sendtally/features/billing";
 import type { Gym } from "@sendtally/features/gyms";
+import { MenuRow } from "../../components/MenuRow";
 import { GymsSection } from "../../gyms/components/GymsSection";
 import { bodyText, monoMuted, pageTitle, secondaryButton } from "./styles";
 import { t } from "@sendtally/features/i18n";
@@ -34,6 +36,8 @@ export type SettingsViewProps = {
   scales: GradeScalesFeature;
   gyms: Gym[];
   gymsReady: boolean;
+  /** Null until the status loads, which hides the rows' hints. */
+  onboarding: OnboardingProgress | null;
   /** At 375 the tab bar has no room for Moderation, so it is a row here. */
   moderator?: boolean;
 };
@@ -46,6 +50,7 @@ export function SettingsView({
   scales,
   gyms,
   gymsReady,
+  onboarding,
   moderator = false,
 }: SettingsViewProps): React.ReactElement {
   return (
@@ -102,6 +107,34 @@ export function SettingsView({
 
       <Section>
         <MembershipSection membership={membership} />
+      </Section>
+
+      <Section>
+        <span style={sectionLabel}>{t("onboarding.setup.section")}</span>
+        <MenuRow
+          icon="climbs"
+          title={t("onboarding.chooser.historyTitle")}
+          hint={
+            onboarding === null
+              ? undefined
+              : onboarding.sessions
+                ? t("onboarding.setup.historyDoneHint")
+                : t("onboarding.setup.historyHint")
+          }
+          to="/app/start?path=history&from=account"
+        />
+        <MenuRow
+          icon="train"
+          title={t("onboarding.chooser.planTitle")}
+          hint={
+            onboarding === null
+              ? undefined
+              : onboarding.scheduledBlocks
+                ? t("common.done")
+                : t("onboarding.setup.notStarted")
+          }
+          to="/app/start?path=plan&from=account"
+        />
       </Section>
 
       <Section>

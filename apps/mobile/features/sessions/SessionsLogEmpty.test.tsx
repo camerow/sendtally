@@ -12,13 +12,7 @@ jest.mock("expo-router", () => ({
 }));
 jest.mock("../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("../../lib/review", () => ({ maybeAskForReview: () => undefined }));
-jest.mock("../../lib/setupPrompt", () => ({
-  useSetupDismissed: () => ({ dismissed: true, dismiss: () => undefined }),
-}));
 jest.mock("../live-session/startLiveSession", () => ({ startLiveSession: () => mockStart() }));
-jest.mock("../settings/useStravaConnect", () => ({
-  useStravaConnect: () => ({ connect: () => undefined, busy: false, error: null }),
-}));
 jest.mock("../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
     visible ? children : null,
@@ -37,7 +31,6 @@ function mockMemoryStorage(): unknown {
 }
 jest.mock("../../lib/liveSessionStorage", () => ({ liveSessionStorage: mockMemoryStorage() }));
 jest.mock("@sendtally/features/settings", () => ({
-  useSettings: () => ({ ready: false, vm: {}, reload: () => undefined }),
   useGradeScalePrefs: () => ({ scales: { boulder: "v", route: "yds" }, ready: true }),
 }));
 jest.mock("@sendtally/features/gyms", () => ({ useGyms: () => ({ ready: false, gyms: [] }) }));
