@@ -1,14 +1,27 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
 import type { Tally } from "@sendtally/features/log-session";
+import { ComboField } from "../../components/ComboField";
 import { GradeChips } from "../../components/GradeChips";
 import { Segmented } from "../../components/Segmented";
 
 /**
  * Under the set being climbed: Boulder, Route or Circuit, and its grades; a grade adds a climb,
- * clicked as a chip or picked from the keyboard in the select beside the switch.
+ * clicked as a chip or typed and picked in the grade field beside the switch.
  */
 export function GradePicker({ tally }: { tally: Tally }): React.ReactElement {
+  const [typed, setTyped] = React.useState("");
+  const query = typed.trim().toLowerCase();
+  const items = tally.chips
+    .filter((c) => c.label.toLowerCase().startsWith(query))
+    .map((c) => ({
+      key: c.key,
+      label: c.label,
+      onPick: () => {
+        setTyped("");
+        tally.add(c.key);
+      },
+    }));
   return (
     <div className="climb-picker">
       <div className="climb-picker-top">
@@ -23,23 +36,17 @@ export function GradePicker({ tally }: { tally: Tally }): React.ReactElement {
             />
           </span>
         )}
-        <select
-          className="form-input climb-grade-select"
-          aria-label={t("common.grade")}
-          value=""
-          onChange={(e) => {
-            if (e.target.value !== "") tally.add(e.target.value);
-          }}
-        >
-          <option value="" disabled>
-            {t("common.grade")}
-          </option>
-          {tally.chips.map((c) => (
-            <option key={c.key} value={c.key}>
-              {c.label}
-            </option>
-          ))}
-        </select>
+        <span className="climb-grade-field">
+          <ComboField
+            value={typed}
+            items={items}
+            ariaLabel={t("common.grade")}
+            placeholder={t("common.grade")}
+            className="form-input climb-grade-input"
+            inputStyle={{}}
+            onChange={setTyped}
+          />
+        </span>
       </div>
       <GradeChips
         label={t("common.grade")}

@@ -174,10 +174,26 @@ describe("Climbing inside the workout", () => {
     ]);
   });
 
+  it("adds a climb from the keyboard: type in the grade field, arrow, Enter", async () => {
+    await mount(runOf("4x4s", { sets: 1, reps: 2 }));
+    const field = container.querySelector<HTMLInputElement>('input[aria-label="Grade"]')!;
+    await act(async () => field.focus());
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(field, "v1");
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const key = (k: string) =>
+      act(async () => field.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true })));
+    await key("ArrowDown");
+    await key("Enter");
+    expect(byLabel("Climb 1, V10, Sent")).not.toBeNull();
+    expect(field.value).toBe("");
+  });
+
   it("names a climb from the selected row's edit control", async () => {
     await mount(runOf("4x4s", { sets: 1, reps: 2 }));
     await add("V5");
-    expect(button("Edit climb")).toBeUndefined();
+    expect(button("Edit climb")?.hidden).toBe(true);
     await click("Climb 1, V5");
     await click("Edit climb");
     expect(document.querySelector("dialog[open]")).not.toBeNull();

@@ -12,6 +12,7 @@ import type { MoreMenuItem } from "../../components/MoreMenu";
 import type { About } from "../components/AboutButton";
 import { ExerciseBlock } from "../components/ExerciseBlock";
 import { ExerciseHead } from "../components/ExerciseHead";
+import { onControl } from "../components/SetRow";
 import { SET_COLUMNS } from "../components/setColumns";
 import { useSessionTarget } from "../components/sessionTarget";
 import { RestPreview } from "../players/RestPreview";
@@ -43,6 +44,7 @@ function Headings(): React.ReactElement {
       <span className={SET_COLUMNS.position} />
       <span className={SET_COLUMNS.lead}>
         <span className="train-label climb-grade">{t("common.grade")}</span>
+        <span className="climb-edit-space" />
         <span className="train-label climb-attempts">{t("climbs.attempts")}</span>
       </span>
       <span className={`train-label ${SET_COLUMNS.tick}`}>{t("common.sent")}</span>
@@ -69,6 +71,16 @@ export function ClimbCard({
   const ex = tally?.draft?.exercise;
   const left = ex === undefined ? null : wallLeft(ex, tally?.now ?? new Date());
   const selected = tally?.selection?.kind === "row" ? tally.selection.key : null;
+  const clear = tally?.clearSelection;
+  React.useEffect(() => {
+    if (selected === null || clear === undefined) return;
+    const onClick = (e: MouseEvent): void => {
+      if (e.target instanceof Element && !onControl(e.target) && !e.target.closest(".set-item"))
+        clear();
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, [selected, clear]);
   return (
     <ExerciseBlock
       head={

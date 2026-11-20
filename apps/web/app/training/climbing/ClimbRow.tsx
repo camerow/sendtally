@@ -58,17 +58,16 @@ export function ClimbRow({
       >
         <ClimbGrade climb={climb} scales={scales} />
       </button>
-      {selected && (
-        <button
-          type="button"
-          className="climb-edit"
-          aria-label={t("tally.editClimb")}
-          title={t("tally.editClimb")}
-          onClick={onEdit}
-        >
-          <Icon name="pencil" size={16} strokeWidth={1.8} />
-        </button>
-      )}
+      <button
+        type="button"
+        className="climb-edit"
+        aria-label={t("tally.editClimb")}
+        title={t("tally.editClimb")}
+        hidden={!selected}
+        onClick={onEdit}
+      >
+        <Icon name="pencil" size={16} strokeWidth={1.8} />
+      </button>
       <span className="climb-attempts">
         <Stepper
           compact

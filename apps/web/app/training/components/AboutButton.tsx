@@ -15,10 +15,7 @@ export type AboutButtonProps = {
 };
 
 /** An info button beside a name, opening its picture and description in a sheet; none without either. */
-export function AboutButton({
-  about,
-  label,
-}: AboutButtonProps): React.ReactElement | null {
+export function AboutButton({ about, label }: AboutButtonProps): React.ReactElement | null {
   const [open, setOpen] = React.useState(false);
   if (!hasAbout(about)) return null;
   const picture = about.pictures[0];
