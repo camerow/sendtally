@@ -88,6 +88,10 @@ export type ScreenFrameProps = {
   overlay?: React.ReactNode;
   /** A built-in's pictures, as a hero behind the top of the page; none keeps the plain frame. */
   hero?: readonly LibraryPicture[];
+  /** The app's dark ground, as the live tally and the wizard's reveals use. */
+  dark?: boolean;
+  /** Children of the body that stay pinned to its top once scrolled to. */
+  sticky?: number[];
 };
 
 /** A full screen, planning or detail: back, a scrolling body that keeps a field being typed in above the keys, and a footer. */
@@ -100,6 +104,8 @@ export function ScreenFrame({
   footer,
   overlay,
   hero = [],
+  dark = false,
+  sticky,
 }: ScreenFrameProps): React.ReactElement {
   const [keypad, setKeypad] = React.useState(false);
   const [footerHeight, setFooterHeight] = React.useState(0);
@@ -112,9 +118,10 @@ export function ScreenFrame({
   return (
     <SafeAreaView
       edges={pictured ? ["bottom"] : ["top", "bottom"]}
-      style={{ flex: 1, backgroundColor: colors.white }}
+      style={{ flex: 1, backgroundColor: dark ? colors.gunmetal : colors.white }}
     >
       {pictured && focused && <StatusBar style={floating ? "light" : "dark"} />}
+      {dark && focused && <StatusBar style="light" />}
       {header ?? (
         <FloatingBar.Provider value={floating}>
           <View
@@ -153,6 +160,7 @@ export function ScreenFrame({
         ) : (
           <KeypadScrollView
             onKeypadChange={setKeypad}
+            stickyHeaderIndices={sticky}
             contentContainerStyle={{
               gap: 20,
               paddingTop: 8,
@@ -172,7 +180,7 @@ export function ScreenFrame({
               paddingHorizontal: 18,
               paddingBottom: 10,
               borderTopWidth: 1,
-              borderTopColor: colors.lineOnLight,
+              borderTopColor: dark ? "rgba(255,255,255,0.12)" : colors.lineOnLight,
             }}
           >
             {footer}
