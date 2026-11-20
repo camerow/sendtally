@@ -5,13 +5,16 @@ import { useGyms } from "@sendtally/features/gyms";
 import { t } from "@sendtally/features/i18n";
 import {
   historyNextLine,
+  SAMPLE_WEEK,
   setupCardQuery,
   useSettings,
   useSetupPaths,
   type OnboardingPath,
   type SetupPath,
 } from "@sendtally/features/settings";
+import { DarkWeek } from "../../../../components/DarkWeek";
 import { Pyramid } from "../../../../components/Pyramid";
+import { PyramidGhost } from "../../../../components/PyramidGhost";
 import { SamplePyramid } from "../../../../components/SamplePyramid";
 import type { SetupCard } from "../../../../components/SetupStack";
 import { useApi } from "../../../../lib/api";
@@ -19,9 +22,10 @@ import { useSetupDismissed } from "../../../../lib/setupPrompt";
 import { useStravaConnect } from "../../../settings/useStravaConnect";
 import { CircuitsArt } from "./CircuitsArt";
 import { STRAVA_ORANGE, StravaArt } from "./StravaArt";
-import { WeekArt } from "./WeekArt";
 
 const ART_ROWS = 3;
+
+const SAMPLE_DAYS = SAMPLE_WEEK.map((kind) => (kind === null ? null : [kind]));
 
 /** The cards on Plan, in order: the two onboarding paths, then the gym and Strava. */
 export function usePlanSetupCards(): SetupCard[] {
@@ -42,7 +46,6 @@ export function usePlanSetupCards(): SetupCard[] {
   const open = (path: OnboardingPath): void => router.push(`/first-run${setupCardQuery(path)}`);
   const pathCard = ({ path, resume }: SetupPath): SetupCard => {
     const history = path === "history";
-    const ownArt = history && resume && own.length > 0;
     return {
       key: path,
       eyebrow: history
@@ -63,13 +66,15 @@ export function usePlanSetupCards(): SetupCard[] {
             : t("onboarding.plan.setupBody"),
       action: resume ? t("onboarding.firstRun.continue") : t("onboarding.setup.start"),
       art: {
-        background: colors.surfaceSoft,
-        content: ownArt ? (
-          <Pyramid label={t("trends.gradePyramid")} rows={own.slice(0, ART_ROWS)} />
-        ) : history ? (
-          <SamplePyramid rows={ART_ROWS} />
+        background: colors.gunmetal,
+        content: !history ? (
+          <DarkWeek week={SAMPLE_DAYS} />
+        ) : !resume ? (
+          <SamplePyramid rows={ART_ROWS} tone="dark" />
+        ) : own.length > 0 ? (
+          <Pyramid label={t("trends.gradePyramid")} rows={own.slice(0, ART_ROWS)} tone="dark" />
         ) : (
-          <WeekArt />
+          <PyramidGhost />
         ),
       },
       onAction: () => open(path),

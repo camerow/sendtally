@@ -1,7 +1,6 @@
 import type { SendtallyApi } from "@sendtally/api-client";
 import { useClimbingInsights, type PyramidRow } from "@sendtally/features/climbs";
 import { CIRCUIT_HEX, useGyms } from "@sendtally/features/gyms";
-import { weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   historyNextLine,
@@ -15,34 +14,31 @@ import {
 } from "@sendtally/features/settings";
 import { queries, useQuery } from "@sendtally/features/query";
 import { displayGrade } from "@sendtally/features/sessions";
+import { DarkWeek } from "../../components/DarkWeek";
 import { Pyramid } from "../../components/Pyramid";
+import { PyramidGhost } from "../../components/PyramidGhost";
 import type { SetupCard } from "../../components/SetupStack";
 import { useDismissed } from "../../lib/useDismissed";
-import { GridCell } from "../components/GridCell";
 
-const LIGHT = "var(--surface-soft)";
 const STRAVA = "#fc4c02";
 
+const DARK = "var(--bs-gunmetal)";
+
+const SAMPLE_DAYS = SAMPLE_WEEK.map((kind) => (kind === null ? null : [kind]));
+
 const pyramidArt = (rows: readonly PyramidRow[]): SetupCard["art"] => ({
-  background: LIGHT,
-  content: <Pyramid rows={rows} label={t("trends.gradePyramid")} />,
+  background: DARK,
+  content:
+    rows.length === 0 ? (
+      <PyramidGhost />
+    ) : (
+      <Pyramid rows={rows} label={t("trends.gradePyramid")} tone="dark" />
+    ),
 });
 
 const planArt = (): SetupCard["art"] => ({
-  background: LIGHT,
-  content: (
-    <span className="setup-week">
-      {weekdayLetters().map((letter, i) => {
-        const kind = SAMPLE_WEEK[i] ?? null;
-        return (
-          <span key={i} className="setup-week-day">
-            <GridCell kind={kind ?? "strength"} on={kind !== null} label={letter} />
-            <span className="setup-week-letter">{letter}</span>
-          </span>
-        );
-      })}
-    </span>
-  ),
+  background: DARK,
+  content: <DarkWeek week={SAMPLE_DAYS} />,
 });
 
 /** Plan's setup cards in order: the two onboarding paths, then a gym, then Strava. */
@@ -99,7 +95,7 @@ export function usePlanSetupCards(api: SendtallyApi): SetupCard[] {
       action: t("onboarding.firstRun.continue"),
       to,
       onDismiss,
-      art: history ? pyramidArt(own.length > 0 ? own.slice(0, 3) : sample) : planArt(),
+      art: history ? pyramidArt(own.slice(0, 3)) : planArt(),
     };
   };
 
@@ -114,7 +110,7 @@ export function usePlanSetupCards(api: SendtallyApi): SetupCard[] {
       to: "/app/settings/gyms/new",
       onDismiss: gymPrompt.dismiss,
       art: {
-        background: LIGHT,
+        background: "var(--surface-soft)",
         content: (
           <span className="setup-circuits">
             {SETUP_CIRCUITS.map((c) => (

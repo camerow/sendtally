@@ -24,7 +24,7 @@ export function SetupStack({
   if (cards.length === 0) return null;
   return (
     <div className="setup-stack">
-      <span className="setup-eyebrow">
+      <span className="setup-label">
         {t("gyms.setupProgress", { done: total - cards.length, total })}
       </span>
       <div key={cards.map((c) => c.key).join()} className="setup-track">

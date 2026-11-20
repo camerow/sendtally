@@ -3,7 +3,7 @@ import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-na
 import { t } from "@sendtally/features/i18n";
 import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../lib/press";
-import { bodyText, monoMuted, sectionLabel } from "../lib/styles";
+import { bodyText, sectionLabel } from "../lib/styles";
 
 export const ART_HEIGHT = 104;
 
@@ -72,7 +72,9 @@ export function SetupStack({
               </View>
             )}
             <View style={{ flex: 1, justifyContent: "space-between", padding: 16, gap: 6 }}>
-              <Text style={monoMuted}>{card.eyebrow}</Text>
+              <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}>
+                {card.eyebrow}
+              </Text>
               <Text
                 style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.gunmetal }}
               >

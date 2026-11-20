@@ -1,7 +1,17 @@
 .setup-stack {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.setup-label {
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(64, 63, 76, 0.55);
 }
 
 .setup-track {
@@ -56,11 +66,8 @@
 }
 
 .setup-eyebrow {
-  text-transform: uppercase;
   font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  font-size: 11px;
   color: rgba(64, 63, 76, 0.55);
 }
 
@@ -120,37 +127,6 @@
   height: 10px;
 }
 
-.setup-week {
-  width: 100%;
-  max-width: 280px;
-  display: flex;
-  gap: 4px;
-}
-
-.setup-week {
-  justify-content: space-between;
-}
-
-.setup-week-day {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.setup-week-day .grid-cell {
-  width: 32px;
-  height: 32px;
-}
-
-.setup-week-letter {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  color: var(--text-on-white-secondary);
-}
-
 .setup-circuits {
   display: flex;
   gap: 8px;
@@ -189,6 +165,22 @@
 .setup-strava-rpe {
   font-family: var(--font-mono);
   font-size: 12px;
+}
+
+@container (min-width: 560px) {
+  .setup-track {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+}
+
+@container (min-width: 1000px) {
+  .setup-track {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 767px) {
