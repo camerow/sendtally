@@ -30,6 +30,7 @@ import {
   withItem,
   withItemsAdded,
   withMemberOut,
+  withSetRest,
   withSupersetWithNext,
   withUngrouped,
   withoutItem,
@@ -56,6 +57,8 @@ import { YoursTag } from "./components/YoursTag";
 import { setPlanPath, usePlanPath } from "./planPath";
 
 const SUGGESTED = 6;
+
+const NEW_REST_S = 120;
 
 const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
 
@@ -125,7 +128,15 @@ function Builder({
   const added = (picked: Picked | null): void => {
     if (picked === null) return;
     remember([picked]);
-    setState((s) => withItemsAdded(s, [picked], randomUUID, isGrip));
+    setState((s) => {
+      const next = withItemsAdded(s, [picked], randomUUID, isGrip);
+      return {
+        ...next,
+        items: next.items.map((i) =>
+          s.items.includes(i) || i.doses[0]?.setRestS !== undefined ? i : withSetRest(i, NEW_REST_S)
+        ),
+      };
+    });
     setText("");
   };
   const addEntry = (entry: PickerEntry): void => void pick(entry.source).then(added);
@@ -152,6 +163,7 @@ function Builder({
       }
       unit={model.settings.units}
       member={letter}
+      compact
       tag={isYours(item.exercise) ? <YoursTag /> : undefined}
       onChange={(next) => setState((s) => withItem(s, i, next))}
       onRemove={() =>

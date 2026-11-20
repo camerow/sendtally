@@ -159,10 +159,11 @@ export function RevealStep({
       skip={false}
       footer={
         <Button
-          variant="primary"
+          variant="plain"
           height={54}
           label={t("onboarding.firstRun.continue")}
           onPress={() => wizard.next()}
+          style={{ backgroundColor: colors.gold }}
         />
       }
     >
@@ -219,7 +220,7 @@ export function RevealStep({
               <Label small color={darkMeta.color}>
                 {t("onboarding.plan.block.weekByWeek", { name: main.name })}
               </Label>
-              <LoadBars bars={main.bars} height={64} />
+              <LoadBars bars={main.bars} height={26} />
             </View>
           )}
           <View
@@ -249,6 +250,7 @@ export function RevealStep({
               </Text>
             </View>
             <Switch
+              tone="dark"
               checked={on}
               disabled={reminders.settings === null}
               label={t("training.reminders")}
