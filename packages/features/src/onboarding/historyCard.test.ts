@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { ImportSession } from "@sendtally/core/import";
 import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
-import { historyCard, importedInsights, yearDate } from "./historyCard";
+import {
+  cardMeta,
+  historyCard,
+  importedInsights,
+  keepCopy,
+  nextUnlock,
+  revealLine,
+  yearDate,
+} from "./historyCard";
 
 const NOW = new Date("2026-11-20T12:00:00");
 
@@ -76,5 +84,48 @@ describe("yearDate", () => {
 
   it("is today while 1 July is still ahead", () => {
     expect(yearDate(2026, new Date("2026-03-04T12:00:00"))).toBe("2026-03-04");
+  });
+});
+
+describe("the card's words", () => {
+  const card = (climbs: number) =>
+    historyCard(
+      importedInsights(
+        Array.from({ length: climbs }, (_, i) =>
+          day(`${2022 + (i % 2)}-07-01`, [{ v: 3 + i, kind: "send" }])
+        )
+      ),
+      [],
+      SCALES,
+      NOW
+    );
+
+  it("says what the next climbs unlock", () => {
+    expect(nextUnlock(0)).toEqual({ text: "Add a climb and your pyramid starts here." });
+    expect(nextUnlock(1)).toEqual({
+      before: "",
+      more: "2 more",
+      after: " and you get your average send.",
+    });
+    expect(nextUnlock(4)).toMatchObject({ more: "1 more" });
+    expect(nextUnlock(5)).toEqual({ text: "Every climb sharpens it. Keep going, or see it all." });
+  });
+
+  it("counts climbs and years on the card and the reveal", () => {
+    expect(cardMeta(card(3))).toBe("3 climbs · since 2022");
+    expect(revealLine(card(3), false)).toBe("across 5 years · since 2022");
+    expect(revealLine(card(3), true)).toBe("3 sessions · 5 years · since 2022");
+  });
+
+  it("offers to keep the years with the user's own sends", () => {
+    expect(keepCopy(card(3))).toEqual({
+      title: "Keep all 5 years in view.",
+      body: "Join now to start tracking and understanding your climbing history.",
+      rows: [
+        { eyebrow: "Sends by grade", text: "3 sends, V3 to V5" },
+        { eyebrow: "Hardest send by year", text: "V5 in 2022, back to 2022" },
+        { eyebrow: "Every range", text: "A month, a year, all time, on every Stats screen" },
+      ],
+    });
   });
 });
