@@ -136,6 +136,22 @@ describe("the history path", () => {
     });
   });
 
+  it("turns from the import's how-to to adding climbs by hand", () => {
+    const { wizard, capture } = setup();
+    wizard().choose("history", "chooser");
+    wizard().answerLog("kaya");
+    wizard().next();
+    expect(wizard().step).toBe("H2i");
+    wizard().setWay("by_hand");
+    wizard().next({ way: "by_hand" });
+    expect(wizard().step).toBe("H2h");
+    expect(capture).toHaveBeenLastCalledWith("onboarding_step_completed", {
+      path: "history",
+      step: "H2i",
+      way: "by_hand",
+    });
+  });
+
   it("skips the membership offer for a member", () => {
     const { wizard, capture } = setup({ member: true });
     wizard().choose("history", "chooser");

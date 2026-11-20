@@ -150,7 +150,9 @@ export function wizardOf(current: () => WizardState, deps: WizardDeps): Wizard {
       const s = current();
       if (s.path === null) return;
       capture("onboarding_step_completed", { ...extra, path: s.path, step: s.step });
-      const to = s.order[s.order.indexOf(s.step) + 1];
+      const at = s.order.indexOf(s.step);
+      const from = at >= 0 ? at : Math.max(-1, ...s.trail.map((x) => s.order.indexOf(x)));
+      const to = s.order[from + 1];
       if (to !== undefined) update({ ...enter(s, to, capture), trail: [...s.trail, s.step] });
     },
     back: () => {
