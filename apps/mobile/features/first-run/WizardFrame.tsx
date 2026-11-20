@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
-import type { Wizard } from "@sendtally/features/onboarding";
+import type { Wizard } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
 import { ScreenFrame } from "../../components/ScreenFrame";
 import { Button } from "../training/components/Button";
