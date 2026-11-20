@@ -86,6 +86,8 @@ export function HistoryCard({
         <View>
           <Pyramid
             tone="dark"
+            minScale={3}
+            {...(raised ? { rowHeight: 20 } : {})}
             rows={rows}
             label={rows.map((r) => `${r.gradeLabel}: ${r.countLabel}`).join(". ")}
             {...(grow === undefined ? {} : { grow })}
@@ -108,19 +110,22 @@ export function HistoryCard({
         <>
           <View style={{ flexDirection: "row", gap: 6 }}>
             <DarkTile
+              compact={raised}
               value={next && vm.climbs < 3 ? null : stats.avgSend}
               label={t("climbs.avgSendWord")}
             />
             {days ? (
               <DarkTile
+                compact={raised}
                 value={vm.days}
                 label={t("onboarding.history.card.daysWord", { count: vm.days })}
               />
             ) : (
               <DarkTile value={stats.sends} label={t("climbs.sendsWord", { count: stats.sends })} />
             )}
-            <DarkTile value={stats.flashed} label={t("climbs.flashedWord")} />
+            <DarkTile compact={raised} value={stats.flashed} label={t("climbs.flashedWord")} />
             <DarkTile
+              compact={raised}
               value={stats.projects}
               label={t("climbs.projectsWord", { count: stats.projects })}
             />

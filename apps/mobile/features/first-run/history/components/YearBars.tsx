@@ -19,7 +19,10 @@ export function YearBars({ years }: { years: readonly HardestInYear[] }): React.
         style={{ flexDirection: "row", alignItems: "flex-end", gap: 6 }}
       >
         {years.map((y) => (
-          <View key={y.year} style={{ flex: 1, minWidth: 0, alignItems: "center", gap: 4 }}>
+          <View
+            key={y.year}
+            style={{ flex: 1, minWidth: 0, maxWidth: 48, alignItems: "center", gap: 4 }}
+          >
             <Text
               numberOfLines={1}
               style={{ fontFamily: fonts.monoSemiBold, fontSize: 10.5, color: colors.white }}

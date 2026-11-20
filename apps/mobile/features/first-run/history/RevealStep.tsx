@@ -103,6 +103,7 @@ export function RevealStep({ wizard, api }: Parameters<StepComponent>[0]): React
               </View>
               <Pyramid
                 tone="dark"
+                minScale={3}
                 grow={grow}
                 rows={vm.stats.pyramid}
                 label={vm.stats.pyramid.map((r) => `${r.gradeLabel}: ${r.countLabel}`).join(". ")}
@@ -110,7 +111,9 @@ export function RevealStep({ wizard, api }: Parameters<StepComponent>[0]): React
             </View>
           )}
           <View style={{ flexDirection: "row", gap: 6 }}>
-            <DarkTile value={vm.stats.avgSend} label={t("climbs.avgSendWord")} />
+            {(imported || vm.stats.sends >= 3) && (
+              <DarkTile value={vm.stats.avgSend} label={t("climbs.avgSendWord")} />
+            )}
             {imported ? (
               <DarkTile
                 value={vm.days}
@@ -135,7 +138,7 @@ export function RevealStep({ wizard, api }: Parameters<StepComponent>[0]): React
               year={vm.hardestYear}
             />
           )}
-          {vm.byYear.length >= 2 && <YearBars years={vm.byYear} />}
+          {(imported || vm.climbs >= 5) && vm.byYear.length >= 2 && <YearBars years={vm.byYear} />}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Icon name="insights" size={18} strokeWidth={2.2} color={colors.gold} />
             <Text style={[darkMeta, { flex: 1 }]}>

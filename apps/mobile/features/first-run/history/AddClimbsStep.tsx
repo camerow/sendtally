@@ -1,7 +1,13 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
-import type { ClimbPillKind } from "@sendtally/features/climbs";
+import { useAreaClimbSearch, withAreaClimb, withTypedName } from "@sendtally/features/areas";
+import {
+  climbSuggestions,
+  isNewClimb,
+  useClimbs,
+  type ClimbPillKind,
+} from "@sendtally/features/climbs";
 import { formatDate, t } from "@sendtally/features/i18n";
 import {
   disciplineLabel,
@@ -13,14 +19,15 @@ import {
   logClimbOnDay,
   newClimb,
   withClimbDiscipline,
+  withPickedClimb,
   type ClimbDraft,
 } from "@sendtally/features/log-session";
 import { yearDate, useDisplayScales } from "@sendtally/features/settings";
 import { DateTimeField } from "../../../components/DateTimeField";
 import { GradeChips } from "../../../components/GradeChips";
 import { Segmented } from "../../../components/Segmented";
-import { TextInput } from "../../../components/TextInput";
 import { ClimbLogRow } from "../../climbs/ClimbLogRow";
+import { SuggestField } from "../../climbs/SuggestField";
 import { Button } from "../../training/components/Button";
 import { Label } from "../../training/components/Label";
 import { Title } from "../../training/components/Title";
@@ -55,7 +62,7 @@ const fieldLabel = {
 
 /** The climb as the log stores it: Flash and Sent are sends of one try, a Project an attempt kept as one. */
 const asLogged = (climb: ClimbDraft, outcome: Outcome): Omit<ClimbDraft, "key"> => {
-  const { key: _key, ...rest } = climb;
+  const { key: _key, project: _project, ...rest } = climb;
   return {
     ...rest,
     name: climb.name.trim(),
@@ -70,6 +77,8 @@ const asLogged = (climb: ClimbDraft, outcome: Outcome): Omit<ClimbDraft, "key"> 
 export function AddClimbsStep({ wizard, api }: Parameters<StepComponent>[0]): React.ReactElement {
   const scales = useDisplayScales();
   const card = useHistoryCard(api);
+  const { state } = useClimbs(api);
+  const mine = state.status === "ready" ? state.data.climbs : [];
   const fresh = (scale: ClimbDraft["scale"]): ClimbDraft => ({
     ...newClimb("climb-1", scale),
     grade: "",
@@ -83,6 +92,8 @@ export function AddClimbsStep({ wizard, api }: Parameters<StepComponent>[0]): Re
   const [failed, setFailed] = React.useState(false);
   const [added, setAdded] = React.useState<readonly Added[]>([]);
 
+  const areaClimbs = useAreaClimbSearch(api, climb.name, null, true).found;
+  const suggestions = climbSuggestions(climb.name, mine, areaClimbs, null);
   const discipline = disciplineOf(climb.scale);
   const ladder = gradeOptions(climb.scale);
   const at = ladder.indexOf(climb.grade);
@@ -169,29 +180,28 @@ export function AddClimbsStep({ wizard, api }: Parameters<StepComponent>[0]): Re
       </View>
       <View style={{ backgroundColor: colors.white, paddingBottom: 4 }}>
         {card !== null && (
-          <HistoryCard vm={card} label={t("onboarding.history.card.soFar")} max={5} next raised />
+          <HistoryCard vm={card} label={t("onboarding.history.card.soFar")} max={4} next raised />
         )}
       </View>
-      <View style={{ gap: 6 }}>
-        <Text style={fieldLabel}>{t("climbs.climb")}</Text>
-        <TextInput
-          value={climb.name}
-          onChangeText={(name) => setClimb({ ...climb, name })}
-          placeholder={t("climbs.namePlaceholder")}
-          placeholderTextColor={colors.textFaint}
-          accessibilityLabel={t("climbs.climb")}
-          autoCorrect={false}
-          style={{
-            height: 50,
-            paddingHorizontal: 14,
-            borderRadius: 12,
-            backgroundColor: colors.surfaceSoft,
-            fontFamily: fonts.sans,
-            fontSize: 15,
-            color: colors.gunmetal,
-          }}
-        />
-      </View>
+      <SuggestField
+        label={t("climbs.climb")}
+        value={climb.name}
+        placeholder={t("climbs.namePlaceholder")}
+        suggestions={suggestions}
+        isNew={isNewClimb(climb.name, mine, areaClimbs)}
+        onChangeText={(name) => setClimb(withTypedName(climb, name))}
+        onPick={(key) => {
+          const s = suggestions.find((x) => x.key === key);
+          if (s?.kind === "areas") setClimb(withAreaClimb(climb, s.climb));
+          if (s?.kind === "mine")
+            setClimb(
+              withPickedClimb(
+                { ...climb, scale: s.climb.grade?.scale ?? scales[s.climb.discipline] },
+                s.climb
+              )
+            );
+        }}
+      />
       <View style={{ gap: 8 }}>
         <View
           style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
