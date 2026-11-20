@@ -6,7 +6,12 @@ import { colors } from "@sendtally/design/tokens";
 import { eachSideOf, tallyMeasuresOf } from "@sendtally/features/exercises";
 import { useGrips, weekdayLong } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import type { Wizard } from "@sendtally/features/settings";
+import {
+  firstWeekday,
+  sessionsPerWeek,
+  usePlanPath,
+  type Wizard,
+} from "@sendtally/features/settings";
 import { queries, useQuery } from "@sendtally/features/query";
 import { useExercises } from "@sendtally/features/statistics";
 import { usePlan } from "@sendtally/features/training";
@@ -19,8 +24,6 @@ import { startLibraryWorkout } from "../../training/library-detail/startLibraryW
 import { useLibrary, useNextSession } from "../../training/library/useLibrary";
 import { WizardFrame } from "../WizardFrame";
 import { WeekCard } from "./components/WeekCard";
-import { firstWeekday, sessionsPerWeek } from "./planMaths";
-import { usePlanPath } from "./planPath";
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 

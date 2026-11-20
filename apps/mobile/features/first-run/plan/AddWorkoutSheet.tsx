@@ -13,7 +13,7 @@ import { HangSheet } from "../../training/data/HangSheet";
 import { useHangData } from "../../training/data/HangDataContext";
 import { useLibrary } from "../../training/library/useLibrary";
 import { AddWorkoutRow } from "../../training/planning/AddWorkoutRow";
-import { setPlanPath, usePlanPath, type PlanPath } from "./planPath";
+import { setPlanPath, usePlanPath, type PlanPath } from "@sendtally/features/settings";
 
 export type AddWorkoutSheetProps = {
   visible: boolean;

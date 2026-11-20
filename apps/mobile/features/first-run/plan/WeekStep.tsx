@@ -5,7 +5,13 @@ import type { SendtallyApi } from "@sendtally/api-client";
 import type { Weekday, WorkoutKind } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
-import type { Wizard } from "@sendtally/features/settings";
+import {
+  resumedPath,
+  sessionsPerWeek,
+  setPlanPath,
+  usePlanPath,
+  type Wizard,
+} from "@sendtally/features/settings";
 import { newBlock, usePlan } from "@sendtally/features/training";
 import { useWorkouts } from "@sendtally/features/workouts";
 import { Button } from "../../training/components/Button";
@@ -20,8 +26,6 @@ import { WizardFrame } from "../WizardFrame";
 import { AddWorkoutSheet } from "./AddWorkoutSheet";
 import { WeekCard } from "./components/WeekCard";
 import { YoursTag } from "./components/YoursTag";
-import { sessionsPerWeek } from "./planMaths";
-import { resumedPath, setPlanPath, usePlanPath } from "./planPath";
 
 const WEEKDAYS: readonly Weekday[] = [0, 1, 2, 3, 4, 5, 6];
 

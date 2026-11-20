@@ -5,7 +5,17 @@ import { isChecklist, itemIdOf, letterOf, type Dose, type WeekChange } from "@se
 import { colors } from "@sendtally/design/tokens";
 import { hangLoadText, shortDate, weightText } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import type { Wizard } from "@sendtally/features/settings";
+import {
+  nextMonday,
+  resumedPath,
+  setPlanPath,
+  shortcutChanges,
+  shortcutOf,
+  type Shortcuts,
+  usePlanPath,
+  weeklyStepKg,
+  type Wizard,
+} from "@sendtally/features/settings";
 import { clampWeeks, emptyPlanDraft, loadColumns, usePlan } from "@sendtally/features/training";
 import { exerciseName, useWorkouts } from "@sendtally/features/workouts";
 import { press } from "../../../lib/press";
@@ -23,8 +33,6 @@ import { type } from "../../training/type";
 import { DarkCard } from "../components/DarkCard";
 import { WizardFrame } from "../WizardFrame";
 import { LoadBars } from "./components/LoadBars";
-import { nextMonday, shortcutChanges, shortcutOf, weeklyStepKg, type Shortcuts } from "./planMaths";
-import { resumedPath, setPlanPath, usePlanPath } from "./planPath";
 
 const MIN_WEEKS = 2;
 

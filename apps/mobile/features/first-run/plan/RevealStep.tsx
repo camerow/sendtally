@@ -11,8 +11,13 @@ import {
   weightText,
 } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import type { Wizard } from "@sendtally/features/settings";
-import { useTrainingReminders } from "@sendtally/features/settings";
+import {
+  firstWeekday,
+  sessionsPerWeek,
+  usePlanPath,
+  useTrainingReminders,
+  type Wizard,
+} from "@sendtally/features/settings";
 import { KIND_LOOK, usePlan } from "@sendtally/features/training";
 import { exerciseName, type LibraryWorkout } from "@sendtally/features/workouts";
 import { Icon } from "../../../components/Icon";
@@ -28,8 +33,6 @@ import { type } from "../../training/type";
 import { WizardFrame } from "../WizardFrame";
 import { LoadBars, type LoadBar } from "./components/LoadBars";
 import { PlanCalendar } from "./components/PlanCalendar";
-import { firstWeekday, sessionsPerWeek } from "./planMaths";
-import { usePlanPath } from "./planPath";
 
 const COUNT_MS = 900;
 

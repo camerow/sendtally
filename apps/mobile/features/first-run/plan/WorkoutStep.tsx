@@ -14,7 +14,7 @@ import {
   type PickerEntry,
 } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
-import type { Wizard } from "@sendtally/features/settings";
+import { setPlanPath, usePlanPath, type Wizard } from "@sendtally/features/settings";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
   doseMeasureOf,
@@ -54,7 +54,6 @@ import { ItemEditor } from "../../training/workout-editor/ItemEditor";
 import { SupersetEditor } from "../../training/workout-editor/SupersetEditor";
 import { WizardFrame } from "../WizardFrame";
 import { YoursTag } from "./components/YoursTag";
-import { setPlanPath, usePlanPath } from "./planPath";
 
 const SUGGESTED = 6;
 

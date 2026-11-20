@@ -13,7 +13,7 @@ import { Title } from "../../training/components/Title";
 import type { StepComponent } from "../types";
 import { WizardFrame } from "../WizardFrame";
 import { HistoryCard } from "./components/HistoryCard";
-import { useHistoryCard } from "./useHistoryCard";
+import { useHistoryCard } from "@sendtally/features/settings";
 
 /** H6: the log is ready; on to the plan path, a live session today, or the Log. */
 export function DoneStep({ wizard, api }: Parameters<StepComponent>[0]): React.ReactElement {

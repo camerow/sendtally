@@ -4,7 +4,7 @@ import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { disciplineLabel } from "@sendtally/features/log-session";
-import { revealLine } from "@sendtally/features/settings";
+import { revealLine, useHistoryCard } from "@sendtally/features/settings";
 import { useTween } from "@sendtally/features/trends";
 import { Icon } from "../../../components/Icon";
 import { Pyramid } from "../../../components/Pyramid";
@@ -16,7 +16,6 @@ import { WizardFrame } from "../WizardFrame";
 import { DarkTile } from "./components/DarkTile";
 import { HardestSend } from "./components/HardestSend";
 import { YearBars } from "./components/YearBars";
-import { useHistoryCard } from "./useHistoryCard";
 
 /** H4: everything brought in, as one picture on the dark ground; the count runs up and the pyramid grows. */
 export function RevealStep({ wizard, api }: Parameters<StepComponent>[0]): React.ReactElement {
