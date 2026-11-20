@@ -87,7 +87,8 @@ export function AddClimbsStep({ wizard, api }: Parameters<StepComponent>[0]): Re
   const ladder = gradeOptions(climb.scale);
   const at = ladder.indexOf(climb.grade);
   const needsName = outcome === "project" && climb.name.trim() === "";
-  const canAdd = draftGrade(climb.grade, climb.scale) !== undefined && !needsName && !saving;
+  const picked = climb.grade !== "" && draftGrade(climb.grade, climb.scale) !== undefined;
+  const canAdd = picked && !needsName && !saving;
   const years = Array.from({ length: YEARS }, (_, i) => String(now.getFullYear() - i));
 
   const add = (): void => {

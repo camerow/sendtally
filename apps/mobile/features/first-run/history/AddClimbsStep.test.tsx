@@ -91,5 +91,8 @@ describe("adding climbs by hand", () => {
       dated: "year",
     });
     expect(await screen.findByText("Added · 1")).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Add climb" }).props.accessibilityState
+    ).toMatchObject({ disabled: true });
   });
 });
