@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import type { ConnectionStatus, FirstRunStep, SendtallyApi } from "@sendtally/api-client";
 import { queries } from "../query";
-import { remainingSteps } from "./steps";
+import { remainingSteps, stepPosition } from "./steps";
 import type {
   Capture,
   HistoryWay,
@@ -48,7 +48,7 @@ const CHOOSER: WizardState = {
   step: "choose",
   order: [],
   trail: [],
-  memory: { way: null, days: [], membershipShown: false },
+  memory: { way: null, existingLog: null, days: [], membershipShown: false },
 };
 
 function choosePath(
@@ -130,8 +130,7 @@ export function wizardOf(state: WizardState, deps: WizardDeps): Wizard {
     path,
     step,
     canGoBack: trail.length > 0,
-    position:
-      step === "choose" ? { n: 0, total: 0 } : { n: order.indexOf(step) + 1, total: order.length },
+    position: stepPosition(path, step, order),
     memory,
     capture,
     choose: (to, from) => {
@@ -140,7 +139,11 @@ export function wizardOf(state: WizardState, deps: WizardDeps): Wizard {
     },
     answerLog: (existingLog) => {
       send({ step: "log_answered", existingLog });
-      setWay(existingLog === "none" || existingLog === "skipped" ? "by_hand" : "import");
+      const way = existingLog === "none" || existingLog === "skipped" ? "by_hand" : "import";
+      update((s) => {
+        const next = reorder(s, way);
+        return { ...next, memory: { ...next.memory, existingLog } };
+      });
     },
     setWay,
     setDays: (days) => update((s) => ({ ...s, memory: { ...s.memory, days } })),

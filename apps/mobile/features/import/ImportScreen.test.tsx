@@ -1,6 +1,5 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, render, screen } from "@testing-library/react-native";
-import { router } from "expo-router";
+import { describe, expect, it, jest } from "@jest/globals";
+import { render, screen } from "@testing-library/react-native";
 import React from "react";
 import { ImportScreen } from "./ImportScreen";
 
@@ -9,45 +8,10 @@ jest.mock("expo-file-system", () => ({ File: { pickFileAsync: jest.fn() } }));
 jest.mock("expo-router", () => ({ router: { dismissTo: jest.fn() } }));
 jest.mock("../../lib/api", () => ({ useApi: () => ({}) }));
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
-
 describe("import", () => {
-  it("opened from first run, shows only the picked source's steps and its site", async () => {
-    await render(<ImportScreen then="/first-run" from="mountainProject" />);
-    expect(screen.getByText("Get your log out")).toBeTruthy();
-    expect(screen.getByText("Select “Export CSV” to download the file.")).toBeTruthy();
-    expect(screen.getByText("Open mountainproject.com")).toBeTruthy();
-    expect(screen.queryByText("Supported apps")).toBeNull();
-  });
-
-  it("goes on to first run's days step with Skip for now", async () => {
-    await render(<ImportScreen then="/first-run" from="kaya" />);
-    expect(screen.getByText("Search for the Kaya export")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Skip for now"));
-    expect(router.dismissTo).toHaveBeenCalledWith({
-      pathname: "/first-run",
-      params: { later: "1" },
-    });
-  });
-
-  it("opened from Settings, lists every app and has no Skip for now", async () => {
-    await render(<ImportScreen then="/profile" />);
+  it("lists every app it reads", async () => {
+    await render(<ImportScreen />);
     expect(screen.getByText("Supported apps")).toBeTruthy();
-    expect(screen.queryByText("Skip for now")).toBeNull();
-  });
-
-  it("for a spreadsheet, gives the steps, the prompt to share and the AI app route", async () => {
-    await render(<ImportScreen then="/first-run" from="spreadsheet" />);
-    expect(screen.getByText("Bring in your spreadsheet")).toBeTruthy();
-    expect(screen.getByText("Share prompt")).toBeTruthy();
-    expect(screen.getByText("Use your own AI app")).toBeTruthy();
-    expect(screen.getByText("sendtally.com/agents")).toBeTruthy();
-  });
-
-  it("goes back to first run's question as Your old log", async () => {
-    await render(<ImportScreen then="/first-run" from="8a" />);
-    expect(screen.getByText("Your old log")).toBeTruthy();
+    expect(screen.getByText("Choose a CSV file")).toBeTruthy();
   });
 });

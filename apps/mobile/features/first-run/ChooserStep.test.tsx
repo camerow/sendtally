@@ -14,7 +14,7 @@ const wizard: Wizard = {
   step: "choose",
   canGoBack: false,
   position: { n: 0, total: 0 },
-  memory: { way: null, days: [], membershipShown: false },
+  memory: { way: null, existingLog: null, days: [], membershipShown: false },
   choose: jest.fn(),
   answerLog: jest.fn(),
   setWay: jest.fn(),
