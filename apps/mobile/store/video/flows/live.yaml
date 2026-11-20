@@ -1,0 +1,37 @@
+appId: com.sendtally.app
+# Beat 3: a live gym session, tallied climb by climb, then finished and saved.
+---
+- openLink: "com.sendtally.app://sessions"
+- waitForAnimationToEnd
+- tapOn: "Climbing"
+- runFlow: ../../../maestro/helpers/start-live-session.yaml
+- extendedWaitUntil:
+    visible: "Pick a grade to start a climb."
+    timeout: 15000
+- waitForAnimationToEnd
+- startRecording: "live"
+- tapOn: "Gym, .*"
+- tapOn: "Northside Bouldering"
+- waitForAnimationToEnd
+- tapOn: "V3"
+- tapOn: "Sent"
+- tapOn: "V4"
+- tapOn: "Fell"
+- tapOn: "Sent"
+- tapOn: "V5"
+- tapOn: "Fell"
+- tapOn: "Fell"
+- tapOn: "Sent"
+- tapOn: "V6"
+- tapOn: "Fell"
+- tapOn: "Fell"
+- extendedWaitUntil:
+    visible: "hold the frame"
+    timeout: 1500
+    optional: true
+- stopRecording
+- tapOn: "Finish"
+- waitForAnimationToEnd
+- tapOn: "7, .*"
+- tapOn: "Save"
+- waitForAnimationToEnd

@@ -1,0 +1,28 @@
+appId: com.sendtally.app
+# Beat 2: a trip over last week's three outdoor days. capture.sh passes the start date and
+# the end day's label in the native calendar.
+---
+- openLink: "com.sendtally.app://journal/new?kind=trip&date=${TRIP_START}"
+- extendedWaitUntil:
+    visible: "New trip"
+    timeout: 15000
+- startRecording: "trip"
+- tapOn: "Add a title"
+- inputText: "Desert trip"
+- pressKey: Enter
+- tapOn:
+    id: "entry-end-date"
+- waitForAnimationToEnd
+- tapOn: "${TRIP_END_LABEL}"
+- tapOn: "Done"
+- waitForAnimationToEnd
+- scroll
+- tapOn: "Save entry"
+- extendedWaitUntil:
+    visible: "Days climbed"
+    timeout: 20000
+- extendedWaitUntil:
+    visible: "hold the frame"
+    timeout: 2500
+    optional: true
+- stopRecording

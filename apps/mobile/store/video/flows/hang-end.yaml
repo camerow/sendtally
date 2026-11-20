@@ -1,0 +1,11 @@
+appId: com.sendtally.app
+# Ends the timer after the hang beat is recorded and saves the session.
+---
+- tapOn: "End"
+- waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "Save"
+    commands:
+      - tapOn: "Save"
+- waitForAnimationToEnd

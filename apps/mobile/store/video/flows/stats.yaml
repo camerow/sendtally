@@ -1,0 +1,12 @@
+appId: com.sendtally.app
+# Beat 5: Stats on the climbing page, where Sends by grade sits at the top.
+---
+- tapOn: "Stats(, tab.*)?"
+- tapOn: "Climbing"
+- waitForAnimationToEnd
+- startRecording: "stats"
+- extendedWaitUntil:
+    visible: "hold the frame"
+    timeout: 5000
+    optional: true
+- stopRecording

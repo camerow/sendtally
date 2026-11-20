@@ -1,0 +1,19 @@
+appId: com.sendtally.app
+# Beat 4: Max hangs from the library, starting at last session's load, through the first hang.
+---
+- openLink: "com.sendtally.app://workout/max10"
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 15000
+- startRecording: "hang"
+- extendedWaitUntil:
+    visible: "hold the frame"
+    timeout: 1500
+    optional: true
+- tapOn: "Start"
+# Five seconds to get ready, then the first ten second hang.
+- extendedWaitUntil:
+    visible: "hold the frame"
+    timeout: 15000
+    optional: true
+- stopRecording

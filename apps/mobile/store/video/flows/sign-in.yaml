@@ -1,0 +1,37 @@
+appId: com.sendtally.app
+# The demo account, on the Clerk development instance (fixed code 424242). capture.sh
+# wipes the app's keychain and data first, so this always starts signed out.
+---
+- runFlow: ../../../maestro/helpers/open-dev-client.yaml
+- extendedWaitUntil:
+    visible: "Sign in|Account and settings"
+    timeout: 60000
+- runFlow:
+    when:
+      notVisible: "Account and settings"
+    commands:
+      - tapOn: "Sign in"
+      - tapOn: "you@email.com"
+      - inputText: "demo+clerk_test@sendtally.com"
+      - tapOn: "Login"
+      - extendedWaitUntil:
+          visible: "123456"
+          timeout: 20000
+      - tapOn: "123456"
+      - inputText: "424242"
+      - tapOn: "Sign in"
+- extendedWaitUntil:
+    visible: "Account and settings"
+    timeout: 30000
+# The Log tab's setup cards would sit above the live session, so dismiss them before recording.
+- tapOn: "Log(, tab.*)?"
+- tapOn: "Climbing"
+- repeat:
+    times: 2
+    commands:
+      - runFlow:
+          when:
+            visible: "Not now"
+          commands:
+            - tapOn: "Not now"
+- tapOn: "Plan(, tab.*)?"
