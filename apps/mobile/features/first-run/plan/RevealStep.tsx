@@ -14,7 +14,7 @@ import { t } from "@sendtally/features/i18n";
 import type { Wizard } from "@sendtally/features/settings";
 import { useTrainingReminders } from "@sendtally/features/settings";
 import { KIND_LOOK, usePlan } from "@sendtally/features/training";
-import { exerciseName, ON_DARK_SOFT, type LibraryWorkout } from "@sendtally/features/workouts";
+import { exerciseName, type LibraryWorkout } from "@sendtally/features/workouts";
 import { Icon } from "../../../components/Icon";
 import { Switch } from "../../../components/Switch";
 import { Button } from "../../training/components/Button";
@@ -23,6 +23,7 @@ import { Title } from "../../training/components/Title";
 import { useHangData } from "../../training/data/HangDataContext";
 import { useLibrary } from "../../training/library/useLibrary";
 import { requestNotifications } from "../../training/reminders/notifications";
+import { darkMeta } from "../components/DarkCard";
 import { type } from "../../training/type";
 import { WizardFrame } from "../WizardFrame";
 import { LoadBars, type LoadBar } from "./components/LoadBars";
@@ -168,7 +169,7 @@ export function RevealStep({
       {block !== undefined && start !== null && (
         <>
           <View style={{ gap: 6 }}>
-            <Label small color={ON_DARK_SOFT}>
+            <Label small color={darkMeta.color}>
               {t("onboarding.plan.yourPlan")}
             </Label>
             <Title size={38} color={colors.white}>
@@ -182,7 +183,7 @@ export function RevealStep({
                 {t("onboarding.plan.reveal.sessionsWord", { count: total })}
               </Text>
             </View>
-            <Text style={[type.mono, { fontSize: 12, color: ON_DARK_SOFT }]}>
+            <Text style={[type.mono, { fontSize: 12, color: darkMeta.color }]}>
               {t("onboarding.plan.reveal.weeksStart", {
                 count: weeks,
                 date: shortDate(start),
@@ -215,7 +216,7 @@ export function RevealStep({
           </View>
           {main !== null && (
             <View style={{ gap: 8 }}>
-              <Label small color={ON_DARK_SOFT}>
+              <Label small color={darkMeta.color}>
                 {t("onboarding.plan.block.weekByWeek", { name: main.name })}
               </Label>
               <LoadBars bars={main.bars} height={64} />
@@ -241,7 +242,7 @@ export function RevealStep({
                   fontFamily: fonts.sans,
                   fontSize: 12.5,
                   lineHeight: 17,
-                  color: ON_DARK_SOFT,
+                  color: darkMeta.color,
                 }}
               >
                 {t("onboarding.plan.reveal.remindersBody")}

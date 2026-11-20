@@ -108,7 +108,7 @@ export function DoneStep({
   });
 
   return (
-    <WizardFrame wizard={wizard}>
+    <WizardFrame wizard={wizard} bar={false}>
       <Title size={34}>{t("onboarding.plan.done.title")}</Title>
       <WeekCard
         week={week}

@@ -5,7 +5,7 @@ import { colors } from "@sendtally/design/tokens";
 import { weekdayLetters } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { KIND_LOOK } from "@sendtally/features/training";
-import { ON_DARK_SOFT } from "@sendtally/features/workouts";
+import { darkMeta } from "../../components/DarkCard";
 import { type } from "../../../training/type";
 
 export type PlanCalendarProps = {
@@ -28,7 +28,10 @@ export function PlanCalendar({ start, weeks, days }: PlanCalendarProps): React.R
         {DAYS.map((d) => (
           <Text
             key={d}
-            style={[type.mono, { flex: 1, fontSize: 10, color: ON_DARK_SOFT, textAlign: "center" }]}
+            style={[
+              type.mono,
+              { flex: 1, fontSize: 10, color: darkMeta.color, textAlign: "center" },
+            ]}
           >
             {letters[d]}
           </Text>
@@ -36,7 +39,7 @@ export function PlanCalendar({ start, weeks, days }: PlanCalendarProps): React.R
       </View>
       {Array.from({ length: weeks }, (_, w) => (
         <View key={w} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-          <Text style={[type.mono, { width: WEEK_COLUMN, fontSize: 10, color: ON_DARK_SOFT }]}>
+          <Text style={[type.mono, { width: WEEK_COLUMN, fontSize: 10, color: darkMeta.color }]}>
             {t("plan.weekShort", { n: w + 1 })}
           </Text>
           {DAYS.map((d) => {
@@ -56,7 +59,10 @@ export function PlanCalendar({ start, weeks, days }: PlanCalendarProps): React.R
                 }}
               >
                 <Text
-                  style={[type.monoBold, { fontSize: 11, color: on ? colors.white : ON_DARK_SOFT }]}
+                  style={[
+                    type.monoBold,
+                    { fontSize: 11, color: on ? colors.white : darkMeta.color },
+                  ]}
                 >
                   {Number(addDays(start, w * 7 + d).slice(8))}
                 </Text>
