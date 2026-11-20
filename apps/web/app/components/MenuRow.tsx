@@ -1,8 +1,8 @@
 import React from "react";
 import { Link } from "react-router";
 import type { EntryKind } from "@sendtally/features/journal";
-import { Icon, type IconName } from "../../components/Icon";
-import { EntryKindIcon } from "../../journal/components/EntryKindIcon";
+import { Icon, type IconName } from "./Icon";
+import { EntryKindIcon } from "../journal/components/EntryKindIcon";
 
 export type MenuRowProps = {
   icon: IconName | EntryKind;
@@ -37,7 +37,7 @@ export function MenuRow({
         <span className="menu-row-title">{title}</span>
         {hint !== undefined && <span className="menu-row-hint">{hint}</span>}
       </span>
-      <span className="log-row-chevron">
+      <span className="menu-row-chevron">
         <Icon name={external ? "external" : "chevron"} size={external ? 14 : 12} strokeWidth={2} />
       </span>
     </>

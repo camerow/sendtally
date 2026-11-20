@@ -17,97 +17,6 @@
   letter-spacing: -0.03em;
 }
 
-.sessions-setup-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.sessions-setup-track {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-}
-
-.sessions-setup-track::-webkit-scrollbar {
-  display: none;
-}
-
-.sessions-setup {
-  flex: 0 0 min(86%, 400px);
-  scroll-snap-align: start;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 16px;
-  border: 1px solid var(--line-on-light);
-  border-radius: var(--radius-card);
-  background: var(--bs-white);
-}
-
-.sessions-setup-text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  max-width: 62ch;
-}
-
-.sessions-setup-eyebrow {
-  text-transform: uppercase;
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  color: rgba(64, 63, 76, 0.55);
-}
-
-.sessions-setup-title {
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.sessions-setup-body {
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--text-on-white-secondary);
-}
-
-.sessions-setup-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.sessions-setup-connect {
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--bs-gunmetal);
-  background: transparent;
-  border: 1px solid var(--line-on-light-strong);
-  border-radius: var(--radius-control);
-  padding: 8px 14px;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.sessions-setup-later {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: rgba(64, 63, 76, 0.55);
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  text-decoration: underline;
-  white-space: nowrap;
-}
-
 .sessions-rows {
   display: flex;
   flex-direction: column;
@@ -228,14 +137,6 @@
   .session-row-month,
   .session-row-badge {
     display: none;
-  }
-
-  .sessions-setup-stack {
-    margin: 10px 0 14px;
-  }
-
-  .sessions-setup-connect {
-    padding: 11px 14px;
   }
 
   .sessions-rows {
