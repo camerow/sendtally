@@ -65,7 +65,7 @@ export function SetDoneFields({
               <NumberField
                 compact
                 label={named(t("plan.colHeld"))}
-                value={set.reps === 0 ? 0 : (set.onS ?? 0)}
+                value={set.reps === 0 || !set.onS ? null : set.onS}
                 onChange={(onS) => onChange({ ...set, reps: onS > 0 ? 1 : 0, onS })}
                 mode={{ kind: "time", max: SET_TIME_MAX }}
               />
