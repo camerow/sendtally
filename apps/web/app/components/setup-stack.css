@@ -1,0 +1,182 @@
+.setup-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.setup-track {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.setup-track::-webkit-scrollbar {
+  display: none;
+}
+
+.setup {
+  flex: 0 0 min(86%, 400px);
+  scroll-snap-align: start;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line-on-light);
+  border-radius: var(--radius-card);
+  background: var(--bs-white);
+}
+
+.setup-art {
+  flex: none;
+  height: 104px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+}
+
+.setup-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.setup-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 62ch;
+}
+
+.setup-eyebrow {
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(64, 63, 76, 0.55);
+}
+
+.setup-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.setup-body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-on-white-secondary);
+}
+
+.setup-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.setup-connect {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--bs-gunmetal);
+  background: transparent;
+  border: 1px solid var(--line-on-light-strong);
+  border-radius: var(--radius-control);
+  padding: 8px 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.setup-later {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(64, 63, 76, 0.55);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.setup-art .pyramid {
+  width: 100%;
+  max-width: 240px;
+}
+
+.setup-art .pyramid > span {
+  height: 20px;
+  border-bottom: none;
+}
+
+.setup-art .pyramid-bars > span {
+  height: 10px;
+}
+
+.setup-week {
+  width: 100%;
+  max-width: 280px;
+  display: flex;
+  gap: 4px;
+}
+
+.setup-week .day-cell {
+  cursor: default;
+}
+
+.setup-week .day-cell:hover {
+  background: none;
+}
+
+.setup-circuits {
+  display: flex;
+  gap: 8px;
+}
+
+.setup-circuit {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+}
+
+.setup-strava {
+  width: 78%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bs-white);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  color: var(--bs-gunmetal);
+}
+
+.setup-strava-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(64, 63, 76, 0.55);
+}
+
+.setup-strava-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.setup-strava-rpe {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+@media (max-width: 767px) {
+  .setup-connect {
+    padding: 11px 14px;
+  }
+}

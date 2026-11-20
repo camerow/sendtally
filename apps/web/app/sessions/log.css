@@ -34,15 +34,6 @@
   color: rgba(64, 63, 76, 0.55);
 }
 
-.log-page .sessions-setup-stack {
-  margin: 0 0 16px;
-}
-
-.log-page .sessions-setup {
-  flex: 1 1 0;
-  min-width: 0;
-}
-
 .climbing-group-label {
   margin: 0;
   padding: 14px 0 2px;
@@ -322,60 +313,6 @@
   background: var(--data-bar-empty);
 }
 
-.menu-row {
-  min-height: 64px;
-  box-sizing: border-box;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 0 14px;
-  border: none;
-  border-radius: var(--radius-card);
-  background: var(--bs-white);
-  color: var(--bs-gunmetal);
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.menu-row:hover {
-  background: #fbfaf8;
-}
-
-.menu-row-icon {
-  width: 40px;
-  height: 40px;
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 20px;
-  background: var(--surface-soft);
-}
-
-.menu-row-text {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.menu-row-title {
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 15px;
-  line-height: 19px;
-}
-
-.menu-row-hint {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  line-height: 18px;
-  color: rgba(64, 63, 76, 0.55);
-}
-
 .log-empty {
   padding-top: 6px;
 }
@@ -457,10 +394,6 @@
 }
 
 @media (max-width: 767px) {
-  .log-page .sessions-setup {
-    flex: 0 0 86%;
-  }
-
   .log-page-title {
     font-size: 26px;
   }

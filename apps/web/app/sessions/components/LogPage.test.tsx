@@ -180,7 +180,6 @@ function mount(at = "/app", hangSessions: HangHistoryRow[] = []): void {
             element={
               <>
                 <LogPage
-                  status={null}
                   sessions={[evening]}
                   hangSessions={hangSessions}
                   hangParts={[]}
@@ -247,7 +246,6 @@ describe("LogPage", () => {
     const html = renderToString(
       <MemoryRouter initialEntries={["/app"]}>
         <LogPage
-          status={null}
           sessions={[evening]}
           hangSessions={[]}
           hangParts={[]}
