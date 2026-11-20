@@ -1,3 +1,4 @@
+export { errorMessage } from "./errorMessage";
 export { invalidateAfterWrite } from "./invalidate";
 export { createQueryClient } from "./queryClient";
 export { queries, worthPersisting } from "./queries";

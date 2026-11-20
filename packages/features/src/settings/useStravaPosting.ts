@@ -1,7 +1,7 @@
 import React from "react";
 import type { SendtallyApi } from "@sendtally/api-client";
-import { t } from "../i18n";
 import type { SettingsVM } from "./types";
+import { errorMessage } from "../query";
 
 export type StravaPostingFeature = {
   enabled: boolean;
@@ -47,7 +47,7 @@ export function useStravaPosting(
         })
         .catch((err: unknown) => {
           setBusy(false);
-          setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
+          setError(errorMessage(err));
         });
     },
     [onSaved]

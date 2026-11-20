@@ -4,8 +4,7 @@ import type { ClimbSummary, JournalEntry, SendtallyApi, SessionTag } from "@send
 import { stravaState, type StravaState } from "../activities/post";
 import { climbKey, climbsWorkedBefore } from "../climbs/transforms";
 import { draftFromEntry, entryInput } from "../journal/transforms";
-import { t } from "../i18n";
-import { queries, useQuery, type QueryState } from "../query";
+import { errorMessage, queries, type QueryState, useQuery } from "../query";
 import { useGradeScalePrefs } from "../settings/useGradeScales";
 import { sessionClimbRows, sortClimbRows, type SessionClimbRowVM } from "./rows";
 import { climbVMs, filterAndSortClimbs, postingStatus, sessionDetailVM } from "./transforms";
@@ -125,7 +124,7 @@ export function useSessionDetail(api: SendtallyApi, fingerprint: string): Sessio
       })
       .catch((err: unknown) => {
         setPosting(false);
-        setPostError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
+        setPostError(errorMessage(err));
       });
   }, [api, client, fingerprint]);
 

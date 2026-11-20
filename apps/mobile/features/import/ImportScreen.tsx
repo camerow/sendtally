@@ -22,6 +22,7 @@ import { ExportHowTo } from "./ExportHowTo";
 import { ImportReview } from "./ImportReview";
 import { NotRecognized } from "./NotRecognized";
 import { SupportedApps } from "./SupportedApps";
+import { errorMessage } from "@sendtally/features/query";
 
 type Review = {
   fileName: string;
@@ -77,7 +78,7 @@ export function ImportScreen({
       const likely = current.importAnyway ? 0 : current.duplicates.length;
       router.dismissTo({ pathname: then, params: { imported, skipped, likely } });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = errorMessage(error);
       setReview({ ...current, busy: false, error: t("import.failed", { message }) });
     }
   };

@@ -25,7 +25,6 @@ export const settings = {
   "settings.stravaReconnectNeeded": "Neu verbinden nötig",
   "settings.relinkStrava": "Strava neu verbinden",
   "settings.openingStrava": "Strava wird geöffnet…",
-  "settings.stravaUnreachable": "Strava ist nicht erreichbar. Versuch es noch einmal.",
   "settings.embeddedBundle": "Eingebettet",
   "settings.yourData": "Deine Daten",
   "settings.yourDataBody":
