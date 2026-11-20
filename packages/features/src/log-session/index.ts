@@ -48,7 +48,6 @@ export {
   localDate,
   withClimbName,
   withPickedClimb,
-  withQuickClimb,
 } from "./liveSession";
 export {
   FELL_AFTER_START,

@@ -123,7 +123,7 @@ export const hang = {
 
   "hang.date": "Datum",
   "hang.load": "Last",
-  "hang.bw": "KG",
+  "hang.bw": "BW",
   "hang.addedLoadCompleted": "Zusatzgewicht · geschafft",
   "hang.weightCompleted": "Gezogenes Gewicht · geschafft",
   "hang.delta": "{arrow} {value} {unit}",

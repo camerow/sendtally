@@ -8,14 +8,8 @@ import {
   type StoredSessionDraft,
 } from "./draftStore";
 import type { Gym } from "../gyms/types";
-import { gymOfCircuit, newClimbOfKind, type ClimbKind } from "./climbKind";
-import { nextClimbKey } from "./transforms";
-import {
-  DEFAULT_GRADE_PREFS,
-  type ClimbDraft,
-  type GradePrefs,
-  type LogSessionDraft,
-} from "./types";
+import { gymOfCircuit } from "./climbKind";
+import type { ClimbDraft, LogSessionDraft } from "./types";
 
 /** Climbs logged one at a time, as they happen; details are added afterwards. */
 
@@ -48,25 +42,6 @@ export function liveDraft(now: Date): LogSessionDraft {
     rpe: null,
     climbs: [],
   };
-}
-
-/**
- * Each new climb is graded the way the climber last picked, so most taps change nothing. A session
- * without a gym adopts the gym of the first circuit climb.
- */
-export function withQuickClimb(
-  draft: LogSessionDraft | null,
-  now: Date,
-  prefs: GradePrefs = DEFAULT_GRADE_PREFS,
-  gyms: readonly Gym[] = [],
-  kind: ClimbKind = "boulder"
-): { draft: LogSessionDraft; key: string } {
-  const started = draft ?? liveDraft(now);
-  const key = nextClimbKey(started.climbs);
-  const previous = started.climbs[started.climbs.length - 1];
-  const climb = newClimbOfKind(key, kind, prefs, gyms, previous);
-  const next = withGymAdopted({ ...started, climbs: [...started.climbs, climb] }, gyms);
-  return { draft: next, key };
 }
 
 /** A session without a gym adopts the gym of its first circuit climb, however that climb got its circuit. */

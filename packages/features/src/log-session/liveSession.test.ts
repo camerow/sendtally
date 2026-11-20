@@ -10,29 +10,20 @@ import {
   withClimbName,
   withPickedClimb,
   withGymAdopted,
-  withQuickClimb,
+  liveDraft,
 } from "./liveSession";
+import { newClimb } from "./transforms";
 import { DEFAULT_GRADE_PREFS } from "./types";
 
 const EVENING = new Date(2026, 8, 16, 18, 42);
+
+const oneClimb = (now: Date) => ({ ...liveDraft(now), climbs: [newClimb("climb-1", "v")] });
 
 describe("live session", () => {
   it("names the session by time of day and date", () => {
     expect(defaultSessionName(new Date(2026, 8, 12, 9, 0))).toBe("Morning session");
     expect(defaultSessionName(new Date(2026, 8, 12, 14, 0))).toBe("Afternoon session");
     expect(defaultSessionName(EVENING)).toBe("Evening session");
-  });
-
-  it("starts a session at the first climb, leaving its times to add later", () => {
-    const first = withQuickClimb(null, EVENING);
-    expect(first.key).toBe("climb-1");
-    expect(first.draft.startTime).toBe("");
-    expect(first.draft.endTime).toBe("");
-    expect(first.draft.climbs).toHaveLength(1);
-
-    const second = withQuickClimb(first.draft, new Date(2026, 8, 16, 19, 31));
-    expect(second.key).toBe("climb-2");
-    expect(second.draft.climbs[1]?.scale).toBe(first.draft.climbs[0]?.scale);
   });
 
   const gym = {
@@ -46,17 +37,8 @@ describe("live session", () => {
     ],
   };
 
-  it("grades a climb as a boulder until a gym's circuits have been picked", () => {
-    const first = withQuickClimb(null, EVENING, undefined, [gym]);
-    expect(first.draft.gymId).toBeUndefined();
-    expect(first.draft.climbs[0]).toMatchObject({ scale: "v", grade: "V3" });
-    expect(first.draft.climbs[0]?.circuit).toBeUndefined();
-    const route = withQuickClimb(first.draft, EVENING, undefined, [gym], "route");
-    expect(route.draft.climbs[1]).toMatchObject({ scale: "yds", grade: "5.10b" });
-  });
-
   it("adopts the gym of a climb moved onto its circuits, and keeps a gym already picked", () => {
-    const { draft } = withQuickClimb(null, EVENING, undefined, [gym]);
+    const draft = oneClimb(EVENING);
     const onBarn = withClimbKind(draft.climbs[0]!, "g", DEFAULT_GRADE_PREFS, [gym]);
     expect(withGymAdopted({ ...draft, climbs: [onBarn] }, [gym]).gymId).toBe("g");
     expect(withGymAdopted({ ...draft, climbs: [onBarn], gymId: "other" }, [gym]).gymId).toBe(
@@ -66,7 +48,7 @@ describe("live session", () => {
   });
 
   it("switches a climb between disciplines and a gym's circuits", () => {
-    const climb = withQuickClimb(null, EVENING).draft.climbs[0]!;
+    const climb = oneClimb(EVENING).climbs[0]!;
     const onBarn = withClimbKind(climb, "g", DEFAULT_GRADE_PREFS, [gym]);
     expect(onBarn).toMatchObject({ grade: "V1", circuit: { id: "a" } });
     expect(climbKindOf(onBarn, [gym])).toBe("g");
@@ -93,31 +75,6 @@ describe("live session", () => {
     expect(readClimbKind(stored("g"), [])).toBe("boulder");
   });
 
-  it("puts each circuit climb on the previous circuit, or the first, and adopts the gym", () => {
-    const first = withQuickClimb(null, EVENING, undefined, [gym], "g");
-    expect(first.draft.gymId).toBe("g");
-    expect(first.draft.climbs[0]).toMatchObject({ grade: "V1", circuit: { id: "a" } });
-    const moved = {
-      ...first.draft,
-      climbs: first.draft.climbs.map((c) => ({
-        ...c,
-        grade: "V5",
-        circuit: { id: "b", label: "Red", colour: "red" as const },
-      })),
-    };
-    const second = withQuickClimb(moved, EVENING, undefined, [gym], "g");
-    expect(second.draft.climbs[1]).toMatchObject({ grade: "V5", circuit: { id: "b" } });
-    const late = withQuickClimb(
-      withQuickClimb(null, EVENING).draft,
-      EVENING,
-      undefined,
-      [gym],
-      "g"
-    );
-    expect(late.draft.gymId).toBe("g");
-    expect(late.draft.climbs[1]).toMatchObject({ circuit: { id: "a" } });
-  });
-
   function memoryStorage(): DraftStorage {
     let value: string | null = null;
     return draftStorage({
@@ -134,7 +91,7 @@ describe("live session", () => {
   it("keeps a saved session live past midnight until it goes quiet, then drops it", () => {
     const storage = memoryStorage();
     const lateNight = new Date(2026, 8, 16, 23, 50);
-    const draft = withQuickClimb(null, lateNight).draft;
+    const draft = oneClimb(lateNight);
     writeStoredDraft(storage, draft, lateNight, { fingerprint: "manual-1" });
     const afterMidnight = new Date(2026, 8, 17, 0, 20);
     expect(liveStoredDraft(storage, afterMidnight)?.fingerprint).toBe("manual-1");
@@ -145,7 +102,7 @@ describe("live session", () => {
 
   it("keeps a session the server does not have yet live, however old", () => {
     const storage = memoryStorage();
-    const draft = withQuickClimb(null, EVENING).draft;
+    const draft = oneClimb(EVENING);
     writeStoredDraft(storage, draft, EVENING);
     const days = new Date(2026, 8, 19, 9, 0);
     expect(liveStoredDraft(storage, days)?.draft).toEqual(draft);
@@ -153,7 +110,7 @@ describe("live session", () => {
 
   it("takes the details the form saved for the live session, and only for it", () => {
     const storage = memoryStorage();
-    const draft = withQuickClimb(null, EVENING).draft;
+    const draft = oneClimb(EVENING);
     writeStoredDraft(storage, draft, EVENING, { fingerprint: "manual-1" });
     const detailed = { ...draft, startTime: "18:00", endTime: "20:00", rpe: 7, notes: "Good" };
     adoptSavedDetails(storage, "manual-2", detailed, EVENING);
@@ -167,7 +124,7 @@ describe("live session", () => {
   });
 
   it("adopts a known climb's grade on a typed name and keeps it otherwise", () => {
-    const climb = withQuickClimb(null, EVENING).draft.climbs[0]!;
+    const climb = oneClimb(EVENING).climbs[0]!;
     const known: ClimbSummary = {
       id: "orange-crimp-arete",
       slug: "orange-crimp-arete",
