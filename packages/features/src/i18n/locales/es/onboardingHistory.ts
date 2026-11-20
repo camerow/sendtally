@@ -9,7 +9,6 @@ export const onboardingHistory = {
   "onboarding.history.card.more_other": "{count} más",
   "onboarding.history.card.nextAverage": "{more} y tendrás tu encadene medio.",
   "onboarding.history.card.nextYears": "{more} y verás tu encadenamiento más duro, año a año.",
-  "onboarding.history.card.keepGoing": "Cada escalada lo afina. Sigue, o míralo todo.",
   "onboarding.history.card.moreGrades_one": "y {count} grado más",
   "onboarding.history.card.moreGrades_other": "y {count} grados más",
   "onboarding.history.card.hardestSendYear": "Encadenamiento más duro · {year}",

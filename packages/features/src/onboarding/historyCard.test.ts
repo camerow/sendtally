@@ -106,7 +106,7 @@ describe("the card's words", () => {
       after: " and you get your average send.",
     });
     expect(nextUnlock(4)).toMatchObject({ more: "1 more" });
-    expect(nextUnlock(5)).toEqual({ text: "Every climb sharpens it. Keep going, or see it all." });
+    expect(nextUnlock(5)).toBeNull();
   });
 
   it("counts climbs and years on the card and the reveal", () => {

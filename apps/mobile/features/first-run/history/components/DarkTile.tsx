@@ -29,7 +29,6 @@ export function DarkTile({
     >
       <Text
         numberOfLines={1}
-        adjustsFontSizeToFit
         style={{
           fontFamily: fonts.displayHeavy,
           fontSize: compact ? 17 : 20,

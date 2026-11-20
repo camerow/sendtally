@@ -9,7 +9,6 @@ export const onboardingHistory = {
   "onboarding.history.card.more_other": "{count} more",
   "onboarding.history.card.nextAverage": "{more} and you get your average send.",
   "onboarding.history.card.nextYears": "{more} draws your hardest send, year by year.",
-  "onboarding.history.card.keepGoing": "Every climb sharpens it. Keep going, or see it all.",
   "onboarding.history.card.moreGrades_one": "and {count} more grade",
   "onboarding.history.card.moreGrades_other": "and {count} more grades",
   "onboarding.history.card.hardestSendYear": "Hardest send · {year}",

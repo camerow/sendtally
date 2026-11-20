@@ -4,7 +4,12 @@ import type { SharedValue } from "react-native-reanimated";
 import { colors, fonts } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { disciplineLabel } from "@sendtally/features/log-session";
-import { cardMeta, nextUnlock, type HistoryCardVM } from "@sendtally/features/settings";
+import {
+  cardMeta,
+  nextUnlock,
+  type HistoryCardVM,
+  type NextUnlock,
+} from "@sendtally/features/settings";
 import { Pyramid } from "../../../../components/Pyramid";
 import { DarkCard } from "../../components/DarkCard";
 import { DarkTile } from "./DarkTile";
@@ -46,8 +51,7 @@ function Ghost(): React.ReactElement {
   );
 }
 
-function Unlock({ climbs }: { climbs: number }): React.ReactElement {
-  const next = nextUnlock(climbs);
+function Unlock({ next }: { next: NextUnlock }): React.ReactElement {
   if ("text" in next) return <>{next.text}</>;
   return (
     <>
@@ -72,13 +76,14 @@ export function HistoryCard({
   const { stats } = vm;
   const rows = max === undefined ? stats.pyramid : stats.pyramid.slice(0, max);
   const hidden = stats.pyramid.length - rows.length;
+  const unlock = next ? nextUnlock(vm.climbs) : null;
   const showYears = !slim && (!next || vm.climbs >= 5) && vm.byYear.length >= 2;
   return (
     <DarkCard
       label={label}
       meta={cardMeta(vm)}
       raised={raised}
-      {...(next ? { note: <Unlock climbs={vm.climbs} /> } : {})}
+      {...(unlock === null ? {} : { note: <Unlock next={unlock} /> })}
     >
       {rows.length === 0 ? (
         <Ghost />
@@ -139,7 +144,7 @@ export function HistoryCard({
           )}
         </>
       )}
-      {showYears && <YearBars years={vm.byYear} />}
+      {showYears && <YearBars years={vm.byYear} compact={raised} />}
     </DarkCard>
   );
 }

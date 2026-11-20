@@ -6,7 +6,14 @@ import type { HardestInYear } from "@sendtally/features/settings";
 import { darkLabel } from "../../components/DarkCard";
 
 /** Hardest send by year: a gold bar a year, as tall as its grade, the grade over it. */
-export function YearBars({ years }: { years: readonly HardestInYear[] }): React.ReactElement {
+export function YearBars({
+  years,
+  compact = false,
+}: {
+  years: readonly HardestInYear[];
+  /** At most 24pt tall, for a card pinned over a form. */
+  compact?: boolean;
+}): React.ReactElement {
   const ranks = years.map((y) => y.rank);
   const lo = Math.max(0, Math.min(...ranks) - 2);
   const span = Math.max(1, Math.max(...ranks) - lo);
@@ -32,7 +39,9 @@ export function YearBars({ years }: { years: readonly HardestInYear[] }): React.
             <View
               style={{
                 alignSelf: "stretch",
-                height: 14 + ((y.rank - lo) / span) * 46,
+                height: compact
+                  ? 6 + ((y.rank - lo) / span) * 18
+                  : 14 + ((y.rank - lo) / span) * 46,
                 borderTopLeftRadius: 4,
                 borderTopRightRadius: 4,
                 borderBottomLeftRadius: 2,

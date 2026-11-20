@@ -10,8 +10,6 @@ export const onboardingHistory = {
   "onboarding.history.card.nextAverage": "{more} et tu obtiens ta réussite moyenne.",
   "onboarding.history.card.nextYears":
     "{more} et ton enchaînement le plus dur s'affiche, année par année.",
-  "onboarding.history.card.keepGoing":
-    "Chaque voie affine le tableau. Continue, ou regarde le tout.",
   "onboarding.history.card.moreGrades_one": "et {count} cotation de plus",
   "onboarding.history.card.moreGrades_other": "et {count} cotations de plus",
   "onboarding.history.card.hardestSendYear": "Enchaînement le plus dur · {year}",

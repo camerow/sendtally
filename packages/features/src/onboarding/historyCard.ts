@@ -110,12 +110,12 @@ export function cardMeta(card: HistoryCardVM): string {
   return `${formatNumber(card.climbs)} ${t("onboarding.history.reveal.climbsWord", { count: card.climbs })}`;
 }
 
-/** What the next climbs add, split round the count the card draws in bold. */
+/** What the next climbs add, split round the count the card draws in bold; null from five, when all of it shows. */
 export type NextUnlock = { before: string; more: string; after: string } | { text: string };
 
-export function nextUnlock(climbs: number): NextUnlock {
+export function nextUnlock(climbs: number): NextUnlock | null {
   if (climbs === 0) return { text: t("onboarding.history.card.empty") };
-  if (climbs >= 5) return { text: t("onboarding.history.card.keepGoing") };
+  if (climbs >= 5) return null;
   const left = climbs < 3 ? 3 - climbs : 5 - climbs;
   const more = t("onboarding.history.card.more", { count: left });
   const key =
