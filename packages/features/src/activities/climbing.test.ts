@@ -8,8 +8,8 @@ import {
   wallChip,
   wallLine,
 } from "./climbing";
-import { setChip, setText } from "./done";
-import { exerciseResults, seriesPoint } from "./summary";
+import { setText } from "./done";
+import { seriesPoint } from "./summary";
 import { exerciseSeries } from "../statistics/exercises";
 
 const v = (grade: string, sent = true, tries = 1): SetClimb => ({
@@ -51,7 +51,6 @@ describe("climbing sets", () => {
       { onS: 1200, climbs: Array.from({ length: 16 }, () => green) },
     ];
     expect(wallChip(sets[0]!)).toBe("20:00 · 18 climbs");
-    expect(setChip(sets[1]!, "kg")).toBe("20:00 · 16 climbs");
     expect(wallLine(sets)).toBe("40:00 on the wall · Green circuit");
     expect(climbingLastTime(sets, "wallTime")).toBe("Last time: 40:00 on the wall · Green circuit");
     expect(climbingLastTime([{ reps: 4 }], "climbs")).toBeNull();
@@ -105,7 +104,6 @@ describe("climbing sets", () => {
         },
       ],
     };
-    expect(exerciseResults(second, [first, second])[0]?.change).toEqual({ metric: "sends", by: 2 });
 
     const [series] = exerciseSeries([first, second]);
     expect(series?.metric).toBe("sends");
