@@ -22,7 +22,7 @@ export type DoseInputProps = FieldSlot & {
   /** What an unset count or weight reads as. */
   placeholder?: string;
   onChange: (dose: Dose) => void;
-  /** Three to a row. */
+  /** Three counts to a row; a time keeps half a row so it is never cut. */
   compact?: boolean;
 };
 
@@ -41,7 +41,7 @@ export function DoseInput({
     onChange(withFieldRange(dose, field, typed, max, unit));
   const range = fieldRange(field, dose);
   return (
-    <View style={{ flexGrow: 1, flexBasis: compact ? "28%" : "40%" }}>
+    <View style={{ flexGrow: 1, flexBasis: compact && field.measure !== "time" ? "28%" : "40%" }}>
       {field.measure === "time" ? (
         <TimeField {...rest} value={value ?? 0} onChange={set} />
       ) : (

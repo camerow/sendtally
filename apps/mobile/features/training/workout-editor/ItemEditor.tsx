@@ -121,6 +121,16 @@ export function ItemEditor({
     remove,
   ];
 
+  const rest = (
+    <TimeField
+      {...slot("setRest")}
+      label={laps ? t("workouts.lapRest") : t("hang.fieldSetRest")}
+      value={item.doses[0]?.setRestS ?? 0}
+      max={3600}
+      onChange={(seconds) => onChange(withSetRest(item, seconds))}
+    />
+  );
+
   return (
     <View
       style={{
@@ -245,6 +255,7 @@ export function ItemEditor({
       ))}
       {member === undefined && (
         <>
+          {compact && <View style={{ width: "40%" }}>{rest}</View>}
           <View
             style={{
               minHeight: 44,
@@ -266,13 +277,7 @@ export function ItemEditor({
               label={`${t("workouts.alternates")}: ${name}`}
             />
           </View>
-          <TimeField
-            {...slot("setRest")}
-            label={laps ? t("workouts.lapRest") : t("hang.fieldSetRest")}
-            value={item.doses[0]?.setRestS ?? 0}
-            max={3600}
-            onChange={(seconds) => onChange(withSetRest(item, seconds))}
-          />
+          {!compact && rest}
         </>
       )}
     </View>
