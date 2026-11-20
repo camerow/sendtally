@@ -228,6 +228,8 @@ describe("closing the wizard", () => {
     wizard().choose("plan", "end_screen");
     expect(send).toHaveBeenLastCalledWith({ step: "path", path: "plan", from: "end_screen" });
     expect(wizard()).toMatchObject({ path: "plan", step: "P1", position: { n: 1, total: 6 } });
+    wizard().next();
+    expect(wizard().position).toEqual({ n: 2, total: 6 });
 
     for (let i = 0; i < 5; i++) wizard().next();
     expect(wizard().step).toBe("P7");

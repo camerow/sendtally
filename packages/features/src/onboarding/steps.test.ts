@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { historySteps, planSteps, remainingSteps, resumeStep } from "./steps";
+import { historySteps, planSteps, remainingSteps, resumeStep, stepPosition } from "./steps";
 import type { OnboardingProgress } from "./types";
 
 const NONE: OnboardingProgress = {
@@ -100,5 +100,17 @@ describe("resumeStep", () => {
         true
       )
     ).toBe("P5");
+  });
+});
+
+describe("stepPosition on the plan path", () => {
+  const all = ["P1", "P2", "P3", "P4", "P5", "P6", "P7"] as const;
+  const member = ["P1", "P2", "P3", "P4", "P5", "P7"] as const;
+  it("counts six fixed stages, the membership offer the sixth", () => {
+    expect(stepPosition("plan", "P5", all)).toEqual({ n: 5, total: 6 });
+    expect(stepPosition("plan", "P6", all)).toEqual({ n: 6, total: 6 });
+  });
+  it("keeps six for a member who never sees the offer", () => {
+    expect(stepPosition("plan", "P5", member)).toEqual({ n: 5, total: 6 });
   });
 });

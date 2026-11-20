@@ -28,16 +28,33 @@ const HISTORY_STAGE: Partial<Record<StepId, number>> = {
 };
 
 /** Where the frame's progress stands: history's fixed four stages, else the place in the path's order. */
+/** The plan path's six stages; P7 closes it with no bar, and a member who skips P6 still counts six. */
+const PLAN_STAGE: Partial<Record<StepId, number>> = {
+  P1: 1,
+  P2: 2,
+  P3: 3,
+  P4: 4,
+  P5: 5,
+  P6: 6,
+  P7: 6,
+};
+
+const STAGES: Record<OnboardingPath, { table: Partial<Record<StepId, number>>; total: number }> = {
+  history: { table: HISTORY_STAGE, total: 4 },
+  plan: { table: PLAN_STAGE, total: 6 },
+};
+
 export function stepPosition(
   path: OnboardingPath | null,
   step: StepId,
   order: readonly StepId[]
 ): { n: number; total: number } {
   if (step === "choose") return { n: 0, total: 0 };
-  const stage = path === "history" ? HISTORY_STAGE[step] : undefined;
-  return stage === undefined
+  const stages = path === null ? undefined : STAGES[path];
+  const stage = stages?.table[step];
+  return stages === undefined || stage === undefined
     ? { n: order.indexOf(step) + 1, total: order.length }
-    : { n: stage, total: 4 };
+    : { n: stage, total: stages.total };
 }
 
 const END: Record<OnboardingPath, StepId> = { history: "H6", plan: "P7" };
