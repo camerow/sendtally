@@ -178,7 +178,14 @@ export function AddClimbsStep({ wizard, api }: Parameters<StepComponent>[0]): Re
           {t("onboarding.history.add.body")}
         </Text>
       </View>
-      <View style={{ backgroundColor: colors.white, paddingBottom: 4 }}>
+      <View
+        style={{
+          marginHorizontal: -18,
+          paddingHorizontal: 18,
+          paddingBottom: 4,
+          backgroundColor: colors.white,
+        }}
+      >
         {card !== null && (
           <HistoryCard vm={card} label={t("onboarding.history.card.soFar")} max={4} next raised />
         )}
