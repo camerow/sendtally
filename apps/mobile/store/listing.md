@@ -417,7 +417,7 @@ These are store-side and cost nothing, but none of them live in this repo.
 ## App Store privacy
 
 Every data type is "Used for tracking: No".
-Tracking in Apple's sense means linking our data with other companies' data for advertising, or handing it to a data broker, and we do neither: PostHog is our own product analytics and the app carries no advertising SDK.
+Tracking in Apple's sense means linking our data with other companies' data for advertising, or handing it to a data broker, and we do neither: PostHog is our own product analytics, and the two advertising SDKs (Google Analytics for Firebase, and Meta's on iPhone) only measure installs from our own ads, without the advertising identifier.
 Answering "yes" for any type obliges the app to show the App Tracking Transparency prompt, which is what got build 20 rejected under 5.1.2(i).
 
 ## App Review notes

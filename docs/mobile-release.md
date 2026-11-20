@@ -325,6 +325,74 @@ DebugView in the Firebase console shows events from a device in debug mode withi
 
 Each event also prints to the device log in debug mode, as `Logging event: origin, name, params: app, account_created, ...` on iOS and `Logging event` under the `FA` tag in `adb logcat` on Android.
 
+## Install attribution for Meta ads
+
+Meta's app install campaigns for iPhone need the Meta app (`Sendtally`, App ID `1795052648219979`) to report installs, or Ads Manager refuses the "iOS 14+ campaign" switch with "conversion data is missing or partial".
+The iPhone app carries Meta's SDK for that and nothing else, on the same terms as Firebase above: install and app-open measurement, no advertising identifier, no tracking prompt.
+The Android app does not carry it.
+
+### What the app sends
+
+`apps/mobile/modules/meta-install` is a local Expo module, iOS only, with one dependency (`FBSDKCoreKit`, pinned to an exact version in its podspec, because no lockfile holds a generated `ios` directory to one) and one app delegate subscriber that starts the SDK at launch.
+`apps/mobile/plugins/with-meta-install.js` writes the SDK's settings into `Info.plist`.
+No JavaScript calls the SDK, so it logs no event of ours.
+
+With `FacebookAutoLogAppEventsEnabled` on, the SDK reports on its own:
+
+- the install, once per installation (`MOBILE_APP_INSTALL`);
+- each app open and the length of the previous session (`fb_mobile_activate_app`, `fb_mobile_deactivate_app`);
+- its own diagnostics: which SDK settings are on, the tracking permission status, and whether background refresh is available (`fb_sdk_settings_changed`, `fb_mobile_ate_status`, `fb_sdk_background_status_available`).
+
+Each report carries an identifier the SDK generates for that installation, the bundle id, app version, operating system version, device model, language, time zone, mobile carrier, screen size, processor count, storage size, the app's URL schemes, and `advertiser_tracking_enabled=0`.
+Nothing else goes to Meta: no user id, no email address, no logbook data, no purchase.
+
+Three switches in Meta's Events Manager would widen that from Meta's side, so they stay off: automatic in-app purchase logging, Automatic Advanced Matching, and codeless event setup.
+
+### No tracking prompt
+
+- `FacebookAdvertiserIDCollectionEnabled` is `false`, so the SDK never reads the IDFA (Identifier for Advertisers).
+- The app has no `NSUserTrackingUsageDescription` and never asks for App Tracking Transparency, so the SDK reads the status as not allowed and tells Meta so on every report.
+- Meta then measures through Aggregated Event Measurement and Apple's SKAdNetwork, which the SDK registers the app with on its own. Neither needs an identifier for the person or the device.
+
+Meta's SDK ships a privacy manifest that declares tracking and the tracking domain `ep1.facebook.com`.
+iOS blocks that domain for any app without tracking permission, and the SDK sends through Meta's domains for people who have not allowed tracking instead.
+
+### The client token
+
+The SDK needs the Meta app's client token (Meta developer dashboard, App settings, Advanced) next to the App ID.
+The App ID is a constant in the plugin; the token is read at build time from `META_CLIENT_TOKEN` and never committed.
+
+| Where                                      | Value                                                                                     |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| EAS project environment, `production` only | `eas env:create --environment production --name META_CLIENT_TOKEN --visibility sensitive` |
+| A local build, only to test the SDK        | `META_CLIENT_TOKEN=... pnpm --filter @sendtally/mobile ios`                               |
+
+A build without the token still carries the SDK but never starts it: the subscriber checks `Info.plist` for the token first, because the SDK throws on its first request without one.
+That is what development, preview and end-to-end builds do, so they report no installs to Meta.
+A `production` profile build without the token fails in prebuild rather than ship a store build that measures nothing.
+
+The plugin reads the variable while it writes `Info.plist`, not while the app config is evaluated, so the token is not part of the fingerprint and adding or rotating it does not move the runtime version.
+
+### This needs a store build
+
+The module is native code, so the fingerprint moves on both platforms, even though the Android binary does not change: the plugin entry in `app.json` is part of both hashes.
+The first push to `main` after it lands builds and submits a release for both stores.
+
+### One-time setup
+
+1. **Client token.** Add `META_CLIENT_TOKEN` to the EAS `production` environment, as above, before the pull request merges.
+2. **App Store privacy label.** App Store Connect, App Privacy: the label from the Google Ads setup above declares Device ID, Product Interaction and Coarse Location for Analytics and Developer's Advertising or Marketing, which covers what Meta receives.
+   Keep "used to track you" at No for all three: with no tracking permission, nothing the app sends Meta is linked with other companies' data for advertising.
+3. **Events Manager.** In the Meta app's settings, keep automatic in-app purchase logging, Automatic Advanced Matching and codeless events off.
+4. **Check the first store build.** Events Manager shows `Install` and `Activate app` for the iOS app within a day, and the "iOS 14+ campaign" switch in Ads Manager stops complaining about missing conversion data.
+
+### Checking that events arrive
+
+Add `FacebookLoggingBehavior` (an array holding `app_events` and `network_requests`) to the generated `apps/mobile/ios/sendtally/Info.plist` of a local build made with the token.
+The SDK then prints each request to the device log: `xcrun simctl spawn booted log stream --predicate 'process == "sendtally"' | grep -i fbsdk`.
+Remove the simulator's copy of the app first to see the install report again.
+A placeholder token is enough to watch the SDK start and send; Meta answers every request with error 190, "Invalid OAuth access token signature".
+
 ## Store assets
 
 Every store image is generated from artboards vendored out of the Sendtally Marketing Kit design canvas.

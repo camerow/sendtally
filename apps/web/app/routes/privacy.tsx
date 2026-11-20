@@ -19,7 +19,7 @@ export default function Privacy(): React.ReactElement {
   return (
     <LegalPage
       title="Privacy policy"
-      updated="15 NOVEMBER 2026"
+      updated="20 NOVEMBER 2026"
       lede="sendtally holds the climbing sessions you type in and almost nothing else. This page lists every piece of data it keeps, who else touches it, and how to get it all deleted."
     >
       <h2>Who this covers</h2>
@@ -98,6 +98,14 @@ export default function Privacy(): React.ReactElement {
         device&rsquo;s advertising ID, which you can reset or delete in your phone&rsquo;s settings.
         On iPhone it never includes the advertising identifier, and the app never asks to track you.
       </p>
+      <p>
+        The iPhone app also runs Meta&rsquo;s SDK, which tells Meta that the app was installed and
+        each time it is opened, with the device model, operating system, app version, language, time
+        zone, mobile carrier, screen size, storage size and approximate region, against an
+        identifier for that installation of the app. It sends no events of ours, nothing tied to
+        your account identifier or email address, and never the advertising identifier. The Android
+        app does not include it.
+      </p>
 
       <h2>What we never collect</h2>
       <p>
@@ -110,7 +118,7 @@ export default function Privacy(): React.ReactElement {
         collect health data from other apps. We do not sell your data or share it with data brokers.
         The only thing an advertising platform learns from sendtally is whether a store badge tap,
         an install, a new account or a membership followed one of our own ads, as described under
-        Google below.
+        Google and Meta below.
       </p>
 
       <h2>Why we hold it</h2>
@@ -137,7 +145,7 @@ export default function Privacy(): React.ReactElement {
 
       <h2>Who else touches it</h2>
       <p>
-        Six processors, each handling only what it needs, and each processing data on our
+        Seven processors, each handling only what it needs, and each processing data on our
         instructions.
       </p>
       <ul>
@@ -170,6 +178,14 @@ export default function Privacy(): React.ReactElement {
           or personalized ads, and your logbook, email address and account identifier are never
           sent. On iPhone, installs from our ads are reported through Apple&rsquo;s SKAdNetwork,
           which carries no identifier for you or your device.
+        </li>
+        <li>
+          <strong>Meta</strong> - Meta&rsquo;s SDK in the iPhone app, to measure our own ads on
+          Facebook and Instagram. The app reports that it was installed and opened, and Meta counts
+          the installs that followed one of our ads. That is measurement only: the app never asks to
+          track you, so Meta is told on every report that tracking is off, and your logbook, email
+          address, account identifier and advertising identifier are never sent. Installs from our
+          ads are also reported through Apple&rsquo;s SKAdNetwork.
         </li>
         <li>
           <strong>PostHog</strong> - product analytics, session replay and error reports, including
@@ -233,7 +249,8 @@ export default function Privacy(): React.ReactElement {
       <p>
         Google Analytics for Firebase records are not linked to your account, so there is nothing
         there for the purge to find. Google keeps them for two months, after which only aggregate
-        counts remain.
+        counts remain. The install and app-open records the iPhone app sends Meta are not linked to
+        your account either, and Meta keeps them under its own retention rules.
       </p>
       <p>
         Activities already posted to Strava live in your Strava account and stay there. Delete those

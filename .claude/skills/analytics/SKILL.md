@@ -21,4 +21,7 @@ Google Analytics still runs on the marketing pages for aggregate traffic; PostHo
 - Google Analytics for Firebase runs in the mobile app only so Google Ads can attribute installs (`first_open`) and the in-app `account_created` and `membership_started`, named after their PostHog twins.
   It is not a second product analytics tool: no user id, no email, no other events of ours, and on iOS no IDFA, so no tracking prompt.
   Runbook: `docs/mobile-release.md`, "Install attribution for Google Ads".
+- Meta's SDK runs in the iPhone app only so Meta can attribute installs from its ads.
+  It reports the install and app opens on its own and nothing of ours: no JavaScript calls it, so never log an event, a user id or an email through it, and never add the IDFA or a tracking prompt.
+  Runbook: `docs/mobile-release.md`, "Install attribution for Meta ads".
 - Anything added here has to be reflected in `apps/web/app/routes/privacy.tsx`.
