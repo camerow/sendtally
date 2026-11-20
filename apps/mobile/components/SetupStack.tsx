@@ -3,7 +3,7 @@ import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-na
 import { t } from "@sendtally/features/i18n";
 import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { press } from "../lib/press";
-import { bodyText, sectionLabel } from "../lib/styles";
+import { bodyText, monoMuted, sectionLabel } from "../lib/styles";
 
 export const ART_HEIGHT = 104;
 
@@ -62,6 +62,8 @@ export function SetupStack({
                 importantForAccessibility="no-hide-descendants"
                 style={{
                   height: ART_HEIGHT,
+                  borderTopLeftRadius: radius.card - 1,
+                  borderTopRightRadius: radius.card - 1,
                   justifyContent: "center",
                   paddingVertical: 12,
                   paddingHorizontal: 16,
@@ -72,9 +74,7 @@ export function SetupStack({
               </View>
             )}
             <View style={{ flex: 1, justifyContent: "space-between", padding: 16, gap: 6 }}>
-              <Text style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted }}>
-                {card.eyebrow}
-              </Text>
+              <Text style={monoMuted}>{card.eyebrow}</Text>
               <Text
                 style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.gunmetal }}
               >

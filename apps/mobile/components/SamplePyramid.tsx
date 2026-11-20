@@ -9,16 +9,19 @@ import { Pyramid } from "./Pyramid";
 export function SamplePyramid({
   rows = SAMPLE_PYRAMID.length,
   tone,
+  counts = true,
 }: {
   rows?: number;
   tone?: "light" | "dark";
+  /** Off where the pyramid is only a picture of what the user will get. */
+  counts?: boolean;
 }): React.ReactElement {
   const scales = useDisplayScales();
   const sample: PyramidRow[] = SAMPLE_PYRAMID.slice(0, rows).map(({ value, inner, outer }) => ({
     gradeLabel: displayGrade({ scale: "v", value }, scales),
     inner,
     outer,
-    countLabel: `${inner}/${inner + outer}`,
+    countLabel: counts ? `${inner}/${inner + outer}` : "",
   }));
   return <Pyramid label={t("trends.gradePyramid")} rows={sample} tone={tone} />;
 }

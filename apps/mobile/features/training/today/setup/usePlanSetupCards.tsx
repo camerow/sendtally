@@ -48,11 +48,11 @@ export function usePlanSetupCards(): SetupCard[] {
     const history = path === "history";
     return {
       key: path,
-      eyebrow: history
-        ? resume && climbs > 0
+      eyebrow: !history
+        ? t("statistics.training")
+        : resume && climbs > 0
           ? t("onboarding.setup.soFarCount", { count: climbs })
-          : t("onboarding.history.card.soFar")
-        : t("onboarding.plan.yourPlan"),
+          : t("statistics.climbing"),
       title: resume
         ? t("onboarding.setup.finish")
         : history
@@ -70,7 +70,7 @@ export function usePlanSetupCards(): SetupCard[] {
         content: !history ? (
           <DarkWeek week={SAMPLE_DAYS} />
         ) : !resume ? (
-          <SamplePyramid rows={ART_ROWS} tone="dark" />
+          <SamplePyramid rows={ART_ROWS} tone="dark" counts={false} />
         ) : own.length > 0 ? (
           <Pyramid label={t("trends.gradePyramid")} rows={own.slice(0, ART_ROWS)} tone="dark" />
         ) : (

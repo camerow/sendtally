@@ -57,7 +57,7 @@ export function usePlanSetupCards(api: SendtallyApi): SetupCard[] {
     gradeLabel: displayGrade({ scale: "v", value: r.value }, scales),
     inner: r.inner,
     outer: r.outer,
-    countLabel: `${r.inner}/${r.inner + r.outer}`,
+    countLabel: "",
   }));
   const own = vm?.pyramid ?? [];
   const climbs = own.reduce((n, r) => n + r.inner + r.outer, 0);
@@ -74,7 +74,7 @@ export function usePlanSetupCards(api: SendtallyApi): SetupCard[] {
     if (!resume) {
       return {
         key: path,
-        eyebrow: history ? t("onboarding.history.card.soFar") : t("onboarding.plan.yourPlan"),
+        eyebrow: history ? t("statistics.climbing") : t("statistics.training"),
         title: history ? t("onboarding.chooser.historyTitle") : t("onboarding.chooser.planTitle"),
         body: history ? t("onboarding.history.setupBody") : t("onboarding.plan.setupBody"),
         action: t("onboarding.setup.start"),
@@ -85,11 +85,11 @@ export function usePlanSetupCards(api: SendtallyApi): SetupCard[] {
     }
     return {
       key: path,
-      eyebrow: history
-        ? climbs > 0
+      eyebrow: !history
+        ? t("statistics.training")
+        : climbs > 0
           ? t("onboarding.setup.soFarCount", { count: climbs })
-          : t("onboarding.history.card.soFar")
-        : t("onboarding.plan.yourPlan"),
+          : t("statistics.climbing"),
       title: t("onboarding.setup.finish"),
       body: history ? historyNextLine(climbs) : t("onboarding.plan.setupBody"),
       action: t("onboarding.firstRun.continue"),
