@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import type { ConnectionStatus, FirstRunStep, SendtallyApi } from "@sendtally/api-client";
 import { queries } from "../query";
-import { remainingSteps } from "./steps";
+import { remainingSteps, stepPosition } from "./steps";
 import type {
   Capture,
   HistoryWay,
@@ -130,8 +130,7 @@ export function wizardOf(state: WizardState, deps: WizardDeps): Wizard {
     path,
     step,
     canGoBack: trail.length > 0,
-    position:
-      step === "choose" ? { n: 0, total: 0 } : { n: order.indexOf(step) + 1, total: order.length },
+    position: stepPosition(path, step, order),
     memory,
     capture,
     choose: (to, from) => {
