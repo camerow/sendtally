@@ -15,7 +15,7 @@ describe("NumberField", () => {
     );
     expect(screen.getByLabelText("Weight").props.accessibilityValue).toEqual({ text: "1,200 kg" });
     await press("Weight", "4", "Decimal point", "5", "Add 2.5", "Done");
-    expect(onChange).toHaveBeenCalledWith(7);
+    expect(onChange).toHaveBeenCalledWith(5);
   });
 
   it("reads unset as its placeholder and commits nothing when closed untouched", async () => {

@@ -51,9 +51,11 @@ jest.mock("@sendtally/features/activities", () => {
   return {
     ...actual,
     useActivityActions: () => mockActions,
-    useWeightUnit: () => "kg",
   };
 });
+jest.mock("../data/WithWeightUnit", () => ({
+  WithWeightUnit: ({ children }: { children: (unit: "kg") => unknown }) => children("kg"),
+}));
 
 const logged = (post: Partial<ActivityRecord> = {}): ActivityRecord => ({
   ...activityFromDraft("a1", newActivityDraft({}, "2026-10-22")),
