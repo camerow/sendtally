@@ -38,6 +38,7 @@ function rowMeta(session: ImportSession, scales: GradeScales): string {
 /**
  * What the file will add to the log: its numbers, the rows it skips, the
  * sessions that look like ones already there, then every other session newest first.
+ * The wizard gives its own title and file line, and a card drawn from the file under them.
  */
 export function ImportReview({
   fileName,
@@ -47,6 +48,9 @@ export function ImportReview({
   importing,
   importAnyway,
   onImportAnyway,
+  title,
+  meta,
+  card,
 }: {
   fileName: string;
   plan: ImportPlan;
@@ -55,6 +59,9 @@ export function ImportReview({
   importing: ImportSession[];
   importAnyway: boolean;
   onImportAnyway: (value: boolean) => void;
+  title?: string;
+  meta?: string;
+  card?: React.ReactNode;
 }): React.ReactElement {
   const scales = useDisplayScales();
   const stats = planStats(importing, scales);
@@ -70,9 +77,10 @@ export function ImportReview({
               : t("import.formatExport", { service: IMPORT_SERVICES[plan.format] })
           }
           kickerColor={colors.azureInk}
-          title={t("import.reviewTitle")}
-          meta={`${fileName} · ${dayLabel(first.date)} – ${dayLabel(last.date)}`}
+          title={title ?? t("import.reviewTitle")}
+          meta={meta ?? `${fileName} · ${dayLabel(first.date)} – ${dayLabel(last.date)}`}
         />
+        {card}
         <SummaryTiles
           stats={[
             { value: formatNumber(stats.sessions), label: t("import.statSessions") },
