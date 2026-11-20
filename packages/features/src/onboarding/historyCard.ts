@@ -22,7 +22,7 @@ export type HistoryCardVM = {
   sessions: number;
   days: number;
   since: number | null;
-  /** Calendar years from the first climb to this one, counting both. */
+  /** Calendar years from the first climb to the last, counting both. */
   years: number;
   hardestYear: number | null;
   byYear: HardestInYear[];
@@ -52,8 +52,7 @@ function hardestByYear(
 export function historyCard(
   sessions: readonly InsightsSession[],
   climbs: readonly ClimbSummary[],
-  scales: GradeScales,
-  now: Date = new Date()
+  scales: GradeScales
 ): HistoryCardVM {
   const discipline = mainDiscipline(sessions);
   const stats = climbingInsightsVM(sessions, climbs, {
@@ -64,6 +63,7 @@ export function historyCard(
   });
   const climbed = sessions.filter((s) => s.climbs.length > 0);
   const since = climbed.length === 0 ? null : Math.min(...climbed.map(yearOf));
+  const until = climbed.length === 0 ? null : Math.max(...climbed.map(yearOf));
   const byYear = hardestByYear(climbed, discipline, scales);
   const peak = Math.max(-1, ...byYear.map((y) => y.rank));
   return {
@@ -73,7 +73,7 @@ export function historyCard(
     sessions: climbed.length,
     days: new Set(climbed.map((s) => s.start_at.slice(0, 10))).size,
     since,
-    years: since === null ? 0 : now.getFullYear() - since + 1,
+    years: since === null || until === null ? 0 : until - since + 1,
     hardestYear: byYear.find((y) => y.rank === peak)?.year ?? null,
     byYear,
   };

@@ -45,8 +45,7 @@ describe("historyCard", () => {
         ]),
       ]),
       [],
-      SCALES,
-      NOW
+      SCALES
     );
     expect(card).toMatchObject({
       discipline: "boulder",
@@ -54,7 +53,7 @@ describe("historyCard", () => {
       sessions: 3,
       days: 3,
       since: 2022,
-      years: 5,
+      years: 3,
       hardestYear: 2023,
     });
     expect(card.byYear.map((y) => `${y.year} ${y.gradeLabel}`)).toEqual([
@@ -67,7 +66,7 @@ describe("historyCard", () => {
   });
 
   it("is empty with nothing logged", () => {
-    expect(historyCard([], [], SCALES, NOW)).toMatchObject({
+    expect(historyCard([], [], SCALES)).toMatchObject({
       climbs: 0,
       since: null,
       years: 0,
@@ -96,8 +95,7 @@ describe("the card's words", () => {
         )
       ),
       [],
-      SCALES,
-      NOW
+      SCALES
     );
 
   it("says what the next climbs unlock", () => {
@@ -113,13 +111,13 @@ describe("the card's words", () => {
 
   it("counts climbs and years on the card and the reveal", () => {
     expect(cardMeta(card(3))).toBe("3 climbs · since 2022");
-    expect(revealLine(card(3), false)).toBe("across 5 years · since 2022");
-    expect(revealLine(card(3), true)).toBe("3 sessions · 5 years · since 2022");
+    expect(revealLine(card(3), false)).toBe("across 2 years · since 2022");
+    expect(revealLine(card(3), true)).toBe("3 sessions · 2 years · since 2022");
   });
 
   it("offers to keep the years with the user's own sends", () => {
     expect(keepCopy(card(3))).toEqual({
-      title: "Keep all 5 years in view.",
+      title: "Keep all 2 years in view.",
       body: "Join now to start tracking and understanding your climbing history.",
       rows: [
         { eyebrow: "Sends by grade", text: "3 sends, V3 to V5" },
