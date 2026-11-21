@@ -5,6 +5,7 @@ import {
   type ImportPlan,
   type LikelyDuplicate,
 } from "@sendtally/core/import";
+import { Button } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
 import { importAll, importSourceOf } from "@sendtally/features/import";
 import {
@@ -122,7 +123,22 @@ export const ImportStep: StepComponent = ({ wizard, api }) => {
   };
 
   return (
-    <WizardFrame wizard={wizard} footer={usable ? undefined : byHand}>
+    <WizardFrame
+      wizard={wizard}
+      footer={
+        usable ? (
+          <Button
+            variant="azure"
+            disabled={review.busy || importing.length === 0}
+            onClick={() => void confirm()}
+          >
+            {review.busy ? t("import.importing") : t("import.confirm", { count: importing.length })}
+          </Button>
+        ) : (
+          byHand
+        )
+      }
+    >
       <div className="history-head">
         {usable ? (
           <h1 className="wizard-title">
@@ -161,8 +177,6 @@ export const ImportStep: StepComponent = ({ wizard, api }) => {
         importing={importing.length}
         busy={review.busy}
         error={review.error}
-        onConfirm={() => void confirm()}
-        onCancel={() => setReview(null)}
       />
     </WizardFrame>
   );

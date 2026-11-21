@@ -52,8 +52,8 @@ export type ImportReviewProps = {
   };
   busy: boolean;
   error: string | null;
-  onConfirm: () => void;
-  onCancel: () => void;
+  /** Import and Cancel under the review; absent where the page has its own forward button, as the wizard does. */
+  actions?: { onConfirm: () => void; onCancel: () => void };
 };
 
 export function ImportReview({
@@ -67,8 +67,7 @@ export function ImportReview({
   tagging,
   busy,
   error,
-  onConfirm,
-  onCancel,
+  actions,
 }: ImportReviewProps): React.ReactElement {
   const [showAll, setShowAll] = React.useState(false);
   const [allIssues, setAllIssues] = React.useState(false);
@@ -370,21 +369,23 @@ export function ImportReview({
           {t("import.failed", { message: error })}
         </p>
       )}
-      <div style={{ display: "flex", gap: 12, paddingTop: 4 }}>
-        {plan.sessions.length > 0 && (
-          <button
-            type="button"
-            style={goldButton}
-            disabled={busy || importing === 0}
-            onClick={onConfirm}
-          >
-            {busy ? t("import.importing") : t("import.confirm", { count: importing })}
+      {actions !== undefined && (
+        <div style={{ display: "flex", gap: 12, paddingTop: 4 }}>
+          {plan.sessions.length > 0 && (
+            <button
+              type="button"
+              style={goldButton}
+              disabled={busy || importing === 0}
+              onClick={actions.onConfirm}
+            >
+              {busy ? t("import.importing") : t("import.confirm", { count: importing })}
+            </button>
+          )}
+          <button type="button" style={secondaryButton} disabled={busy} onClick={actions.onCancel}>
+            {t("common.cancel")}
           </button>
-        )}
-        <button type="button" style={secondaryButton} disabled={busy} onClick={onCancel}>
-          {t("common.cancel")}
-        </button>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

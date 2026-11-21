@@ -142,8 +142,10 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
           importing={state.plan.sessions.length - heldBack(state).length}
           busy={state.busy}
           error={state.error}
-          onConfirm={() => void confirm()}
-          onCancel={() => setState({ step: "choose" })}
+          actions={{
+            onConfirm: () => void confirm(),
+            onCancel: () => setState({ step: "choose" }),
+          }}
         />
       )}
 
