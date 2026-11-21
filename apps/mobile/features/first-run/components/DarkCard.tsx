@@ -24,6 +24,8 @@ export type DarkCardProps = {
   meta?: string;
   /** Under a rule at the foot: what the next action adds. */
   note?: React.ReactNode;
+  /** Keeps the note's line when it goes, so nothing under the card moves under the finger. */
+  reserveNote?: boolean;
   /** Lifted off the form it is pinned above. */
   raised?: boolean;
   children?: React.ReactNode;
@@ -34,6 +36,7 @@ export function DarkCard({
   label,
   meta,
   note,
+  reserveNote = false,
   raised = false,
   children,
 }: DarkCardProps): React.ReactElement {
@@ -71,16 +74,17 @@ export function DarkCard({
         )}
       </View>
       {children}
-      {note !== undefined && (
+      {(note !== undefined || reserveNote) && (
         <Text
+          accessibilityElementsHidden={note === undefined}
           style={{
             ...darkMeta,
             paddingTop: 10,
             borderTopWidth: 1,
-            borderTopColor: "rgba(255,255,255,0.12)",
+            borderTopColor: note === undefined ? "transparent" : "rgba(255,255,255,0.12)",
           }}
         >
-          {note}
+          {note ?? " "}
         </Text>
       )}
     </View>

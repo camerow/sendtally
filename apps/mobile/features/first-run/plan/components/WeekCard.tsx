@@ -16,7 +16,7 @@ export type WeekCardProps = {
 export function WeekCard({ week, meta, empty }: WeekCardProps): React.ReactElement {
   const any = week.some((d) => d !== null);
   return (
-    <DarkCard label={t("plan.week")} {...(any ? { meta } : { note: empty })}>
+    <DarkCard label={t("plan.week")} reserveNote {...(any ? { meta } : { note: empty })}>
       <DarkWeek week={week} />
     </DarkCard>
   );

@@ -230,6 +230,7 @@ export function BlockStep({
       </View>
       <DarkCard
         raised
+        reserveNote
         label={t("onboarding.plan.block.weekByWeek", { name: exercise })}
         meta={t("calendar.weeks", { count: weeks })}
         note={
