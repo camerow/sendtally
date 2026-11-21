@@ -20,4 +20,13 @@ describe("signed-out onboarding screen", () => {
     const text = texts(screen.toJSON() as unknown as Node).join(" ");
     expect(text).not.toMatch(/\bfree\b|price|no card|trial|member|subscri/i);
   });
+
+  it("draws the sample as a picture: pyramid without counts, no tiles, nothing that says Your", async () => {
+    await render(<Onboarding />);
+    const text = texts(screen.toJSON() as unknown as Node).join(" ");
+    expect(text).toMatch(/V6/);
+    expect(text).not.toMatch(/\d+\/\d+/);
+    expect(text).not.toMatch(/avg send|flashed|\bsends?\b|projects?\b/i);
+    expect(text).not.toMatch(/\bYour\b/);
+  });
 });
