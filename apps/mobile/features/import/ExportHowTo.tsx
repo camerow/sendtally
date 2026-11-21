@@ -15,8 +15,6 @@ import { Button } from "../training/components/Button";
 import { Description } from "../training/components/Description";
 import { Label } from "../training/components/Label";
 import { Title } from "../training/components/Title";
-import { AssistantCard } from "./AssistantCard";
-import { ConvertCard } from "./ConvertCard";
 
 function Head({
   kicker,
@@ -62,10 +60,15 @@ export function ExportHowTo({
           heading={heading}
         />
         <Description
-          text={stepsText([t("import.howToSpreadsheet1"), t("import.howToSpreadsheet2")])}
+          text={stepsText([
+            t("import.howToSpreadsheet1"),
+            t("import.howToSpreadsheet2"),
+            t("import.howToSpreadsheet3"),
+          ])}
         />
-        <ConvertCard />
-        <AssistantCard />
+        <Text style={{ ...bodyText, fontSize: 12.5, lineHeight: 18 }}>
+          {t("import.howToSpreadsheetAi")}
+        </Text>
       </View>
     );
   const url = exportPageUrl(source);
