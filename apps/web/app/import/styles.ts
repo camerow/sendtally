@@ -100,21 +100,6 @@ export const pillMuted: React.CSSProperties = {
   color: "var(--text-on-white-secondary)",
 };
 
-export const goldButton: React.CSSProperties = {
-  fontFamily: "var(--font-sans)",
-  fontWeight: 600,
-  fontSize: 15,
-  color: "var(--bs-gunmetal)",
-  background: "var(--bs-gold)",
-  border: "1px solid transparent",
-  borderRadius: "var(--radius-control)",
-  padding: "14px 22px",
-  cursor: "pointer",
-  textDecoration: "none",
-  display: "inline-flex",
-  alignItems: "center",
-};
-
 export const select: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
   fontWeight: 600,

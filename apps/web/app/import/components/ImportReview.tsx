@@ -1,5 +1,6 @@
 import React from "react";
 import { useDisplayScales } from "@sendtally/features/settings";
+import { Button } from "@sendtally/design";
 import { IMPORT_SERVICES, type ImportPlan, type LikelyDuplicate } from "@sendtally/core/import";
 import {
   issueText,
@@ -17,7 +18,7 @@ import {
   secondaryButton,
   underlineButton,
 } from "../../settings/components/styles";
-import { checkbox, goldButton, pillOk, td, tdMono, th } from "../styles";
+import { checkbox, pillOk, td, tdMono, th } from "../styles";
 import { AssistantCard } from "./AssistantCard";
 import { ConversionPrompt } from "./ConversionPrompt";
 import { dayLabel, ImportSessionRow } from "./ImportSessionRow";
@@ -311,14 +312,9 @@ export function ImportReview({
       {actions !== undefined && (
         <div style={{ display: "flex", gap: 12, paddingTop: 4 }}>
           {plan.sessions.length > 0 && (
-            <button
-              type="button"
-              style={goldButton}
-              disabled={busy || importing === 0}
-              onClick={actions.onConfirm}
-            >
+            <Button variant="azure" disabled={busy || importing === 0} onClick={actions.onConfirm}>
               {busy ? t("import.importing") : t("import.confirm", { count: importing })}
-            </button>
+            </Button>
           )}
           <button type="button" style={secondaryButton} disabled={busy} onClick={actions.onCancel}>
             {t("common.cancel")}
