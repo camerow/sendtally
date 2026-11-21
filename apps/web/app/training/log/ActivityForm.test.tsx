@@ -234,6 +234,7 @@ describe("ActivityForm", () => {
   it("says what it logged once saved, with View to open it", async () => {
     mount();
     await act(async () => save());
+    expect(writes.saveActivity).toHaveBeenCalledOnce();
     expect(document.querySelector(".toast")?.textContent).toContain("Logged Gym, legs");
     expect(document.querySelector(".toast-action")?.textContent).toBe("View");
   });
