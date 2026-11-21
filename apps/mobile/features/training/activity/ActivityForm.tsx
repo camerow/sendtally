@@ -158,7 +158,7 @@ function ActivityFormBody({
     const fingerboard = part && grips && part.body(grips.done, grips.setup);
     const saved = await actions.saveActivity({
       ...activityFromDraft(id, draft),
-      ...(fingerboard !== undefined && { fingerboard }),
+      ...(fingerboard != null && { fingerboard }),
     });
     setSaving(false);
     if (!saved) return;

@@ -9,7 +9,7 @@ import type * as T_hang from "@sendtally/features/hang";
 import { ToastProvider } from "../../components/Toast";
 import { liveRunOf } from "../../lib/useLiveRun";
 import { WithHang } from "../data/testHang";
-import type { IdleEnd } from "@sendtally/features/workouts";
+import type { IdleEnd, PartForm } from "@sendtally/features/workouts";
 import { ActivityForm } from "./ActivityForm";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -81,7 +81,12 @@ afterEach(() => {
   container.remove();
 });
 
-const mount = (live = false, idleEnd: IdleEnd | null = null, initial = review): void =>
+const mount = (
+  live = false,
+  idleEnd: IdleEnd | null = null,
+  initial = review,
+  part?: PartForm
+): void =>
   act(() =>
     root.render(
       <ToastProvider>
@@ -94,6 +99,7 @@ const mount = (live = false, idleEnd: IdleEnd | null = null, initial = review): 
               kindSet
               live={live}
               idleEnd={idleEnd}
+              {...(part !== undefined && { part })}
             />
           </WithHang>
         </MemoryRouter>
@@ -229,6 +235,26 @@ describe("ActivityForm", () => {
     expect(writes.saveActivity).toHaveBeenCalledOnce();
     expect(document.querySelector(".toast")).toBeNull();
     expect(container.querySelector("h1")?.textContent).toBe("Gym, legs");
+  });
+
+  it("saves a workout with no fingerboard part, or a part that held nothing, without a fingerboard", async () => {
+    const sent = (): object => (writes.saveActivity.mock.calls.at(-1) as unknown as [object])[0];
+    mount();
+    await act(async () => save());
+    expect(sent()).not.toHaveProperty("fingerboard");
+    act(() => root.unmount());
+    root = createRoot(container);
+    const empty: PartForm = {
+      done: [],
+      setup: { edgeMm: 20, loadKg: 0 },
+      kind: "hang",
+      planned: [],
+      body: () => null,
+    };
+    mount(false, null, review, empty);
+    await act(async () => save());
+    expect(writes.saveActivity).toHaveBeenCalledTimes(2);
+    expect(sent()).not.toHaveProperty("fingerboard");
   });
 
   it("says what it logged once saved, with View to open it", async () => {
