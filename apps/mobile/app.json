@@ -24,6 +24,10 @@
     "android": {
       "package": "com.sendtally.app",
       "googleServicesFile": "./google-services.json",
+      "blockedPermissions": [
+        "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE",
+        "android.permission.ACCESS_ADSERVICES_TOPICS"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#f9dc5c"
