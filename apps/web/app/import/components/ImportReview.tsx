@@ -9,7 +9,7 @@ import {
   withAddedTags,
 } from "@sendtally/features/import";
 import { sameTagName, type TagOption } from "@sendtally/features/sessions";
-import { formatDate, t } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { Section } from "../../settings/components/Section";
 import {
   bodyText,
@@ -17,24 +17,16 @@ import {
   secondaryButton,
   underlineButton,
 } from "../../settings/components/styles";
-import { checkbox, goldButton, pillMuted, pillOk, td, tdMono, th } from "../styles";
-import { useIsNarrow } from "../../lib/useIsNarrow";
+import { checkbox, goldButton, pillOk, td, tdMono, th } from "../styles";
 import { AssistantCard } from "./AssistantCard";
 import { ConversionPrompt } from "./ConversionPrompt";
+import { dayLabel, ImportSessionRow } from "./ImportSessionRow";
 import { SessionTagBar } from "./SessionTagBar";
 import { Stat } from "./Stat";
 import { sectionLabel } from "../../components/styles";
 
 const PREVIEW_ROWS = 8;
 const ISSUE_ROWS = 20;
-
-const dayLabel = (date: string): string =>
-  formatDate(new Date(`${date}T00:00:00Z`), {
-    timeZone: "UTC",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
 
 export type ImportReviewProps = {
   fileName: string;
@@ -44,13 +36,16 @@ export type ImportReviewProps = {
   importAnyway: number[];
   onImportAnyway: (index: number) => void;
   importing: number;
-  suggestionsFor: (applied: string[]) => TagOption[];
-  onAddTag: (indexes: number[], tag: string) => void;
-  onRemoveTag: (indexes: number[], tag: string) => void;
+  /** Tagging sessions before they land; absent where the review has one job, as in onboarding. */
+  tagging?: {
+    suggestionsFor: (applied: string[]) => TagOption[];
+    onAddTag: (indexes: number[], tag: string) => void;
+    onRemoveTag: (indexes: number[], tag: string) => void;
+  };
   busy: boolean;
   error: string | null;
-  onConfirm: () => void;
-  onCancel: () => void;
+  /** Import and Cancel under the review; absent where the page has its own forward button, as the wizard does. */
+  actions?: { onConfirm: () => void; onCancel: () => void };
 };
 
 export function ImportReview({
@@ -61,13 +56,10 @@ export function ImportReview({
   importAnyway,
   onImportAnyway,
   importing,
-  suggestionsFor,
-  onAddTag,
-  onRemoveTag,
+  tagging,
   busy,
   error,
-  onConfirm,
-  onCancel,
+  actions,
 }: ImportReviewProps): React.ReactElement {
   const [showAll, setShowAll] = React.useState(false);
   const [allIssues, setAllIssues] = React.useState(false);
@@ -75,7 +67,6 @@ export function ImportReview({
   const issues = allIssues ? plan.issues : plan.issues.slice(0, ISSUE_ROWS);
   const scales = useDisplayScales();
   const stats = planStats(plan.sessions, scales);
-  const narrow = useIsNarrow();
   const [selected, setSelected] = React.useState<number[]>([]);
   const tagged = withAddedTags(plan.sessions, added);
   const newestFirst = tagged.map((session, index) => ({ session, index })).reverse();
@@ -230,88 +221,40 @@ export function ImportReview({
               {t("import.showing", { shown: shown.length, total: plan.sessions.length })}
             </span>
           </div>
-          <SessionTagBar
-            names={sessionNames(plan.sessions)}
-            selectedCount={selected.length}
-            total={plan.sessions.length}
-            tags={selectedTags}
-            suggestions={suggestionsFor(selectedTags)}
-            disabled={busy}
-            onSelectNamed={selectNamed}
-            onSelectAll={() => setSelected(plan.sessions.map((_, i) => i))}
-            onClear={() => setSelected([])}
-            onAdd={(tag) => onAddTag(selected, tag)}
-            onRemove={(tag) => onRemoveTag(selected, tag)}
-          />
+          {tagging !== undefined && (
+            <SessionTagBar
+              names={sessionNames(plan.sessions)}
+              selectedCount={selected.length}
+              total={plan.sessions.length}
+              tags={selectedTags}
+              suggestions={tagging.suggestionsFor(selectedTags)}
+              disabled={busy}
+              onSelectNamed={selectNamed}
+              onSelectAll={() => setSelected(plan.sessions.map((_, i) => i))}
+              onClear={() => setSelected([])}
+              onAdd={(tag) => tagging.onAddTag(selected, tag)}
+              onRemove={(tag) => tagging.onRemoveTag(selected, tag)}
+            />
+          )}
           {shown.map(({ session: s, index }, i) => {
-            const sends = s.climbs.filter((c) => c.kind === "send").length;
             const match = matchOf(index);
             const rule = i < shown.length - 1 ? "1px solid var(--line-on-light-soft)" : "none";
             return (
               <React.Fragment key={index}>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14,
-                    padding: "12px 18px",
-                    borderBottom: match === undefined ? rule : "none",
-                    background: selected.includes(index) ? "var(--surface-soft)" : "transparent",
-                    cursor: "pointer",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(index)}
-                    disabled={busy}
-                    aria-label={t("import.selectSession", {
-                      name: sessionTitle(s) ?? t("common.climbingSession"),
-                      date: dayLabel(s.date),
-                    })}
-                    onChange={() => toggle(index)}
-                    style={checkbox}
-                  />
-                  <span
-                    style={{
-                      ...monoMuted,
-                      fontSize: 11,
-                      color: "var(--bs-gunmetal)",
-                      width: narrow ? 52 : 92,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {dayLabel(s.date)}
-                  </span>
-                  <span
-                    style={{
-                      flexGrow: 1,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 2,
-                      minWidth: 0,
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>
-                      {sessionTitle(s) ?? t("common.climbingSession")}
-                    </span>
-                    <span style={monoMuted}>
-                      {t("common.climbCount", { count: s.climbs.length })} ·{" "}
-                      {s.location === "indoor" ? t("common.indoor") : t("common.outdoor")} ·{" "}
-                      {t("import.sendCount", { count: sends })} ·{" "}
-                      {planStats([s], scales).topGrade ?? "–"}
-                    </span>
-                    {s.tags !== undefined && (
-                      <span style={{ ...monoMuted, color: "var(--bs-petal-ink)" }}>
-                        {s.tags.join(" · ")}
-                      </span>
-                    )}
-                  </span>
-                  <span style={pillMuted}>
-                    {s.rpe === undefined
-                      ? t("import.rpeScored")
-                      : t("import.rpeGiven", { rpe: s.rpe })}
-                  </span>
-                </label>
+                <ImportSessionRow
+                  session={s}
+                  scales={scales}
+                  borderBottom={match === undefined ? rule : "none"}
+                  selection={
+                    tagging === undefined
+                      ? undefined
+                      : {
+                          checked: selected.includes(index),
+                          disabled: busy,
+                          onToggle: () => toggle(index),
+                        }
+                  }
+                />
                 {match !== undefined && (
                   <label
                     style={{
@@ -365,21 +308,23 @@ export function ImportReview({
           {t("import.failed", { message: error })}
         </p>
       )}
-      <div style={{ display: "flex", gap: 12, paddingTop: 4 }}>
-        {plan.sessions.length > 0 && (
-          <button
-            type="button"
-            style={goldButton}
-            disabled={busy || importing === 0}
-            onClick={onConfirm}
-          >
-            {busy ? t("import.importing") : t("import.confirm", { count: importing })}
+      {actions !== undefined && (
+        <div style={{ display: "flex", gap: 12, paddingTop: 4 }}>
+          {plan.sessions.length > 0 && (
+            <button
+              type="button"
+              style={goldButton}
+              disabled={busy || importing === 0}
+              onClick={actions.onConfirm}
+            >
+              {busy ? t("import.importing") : t("import.confirm", { count: importing })}
+            </button>
+          )}
+          <button type="button" style={secondaryButton} disabled={busy} onClick={actions.onCancel}>
+            {t("common.cancel")}
           </button>
-        )}
-        <button type="button" style={secondaryButton} disabled={busy} onClick={onCancel}>
-          {t("common.cancel")}
-        </button>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

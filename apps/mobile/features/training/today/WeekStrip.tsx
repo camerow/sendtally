@@ -27,10 +27,8 @@ export function WeekStrip({
   return (
     <View
       style={{
-        gap: 10,
-        paddingTop: 6,
-        paddingHorizontal: 8,
-        paddingBottom: 10,
+        gap: 8,
+        padding: 8,
         borderRadius: 16,
         backgroundColor: colors.surfaceSoft,
       }}

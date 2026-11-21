@@ -13,6 +13,8 @@ export type NameFieldProps = {
   maxLength: number;
   autoFocus?: boolean;
   onSubmit?: () => void;
+  onBlur?: () => void;
+  selectTextOnFocus?: boolean;
   /** Why the name cannot change: shown under it with a lock, and the field is read-only. */
   locked?: string;
   /** What is wrong with the name, in red under it. */
@@ -27,6 +29,8 @@ export function NameField({
   maxLength,
   autoFocus,
   onSubmit,
+  onBlur,
+  selectTextOnFocus,
   locked,
   error,
 }: NameFieldProps): React.ReactElement {
@@ -36,6 +40,8 @@ export function NameField({
         value={value}
         onChangeText={onChange}
         onSubmitEditing={onSubmit}
+        onBlur={onBlur}
+        selectTextOnFocus={selectTextOnFocus}
         placeholder={placeholder}
         placeholderTextColor={colors.textFaint}
         accessibilityLabel={t("hang.name")}

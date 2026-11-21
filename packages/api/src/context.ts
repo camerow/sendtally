@@ -4,6 +4,8 @@ import type { Env } from "./bindings";
 import type { PostResult } from "./lib/posting";
 import { captureUserEvent } from "./lib/posthog";
 
+const PLATFORMS = new Set(["ios", "android", "web"]);
+
 type Vars = { userId: string; hasFeature: (feature: string) => boolean };
 
 export type AppEnv = { Bindings: Env; Variables: Vars };
@@ -23,7 +25,13 @@ export const captureEvent = async (
   distinctId: string | undefined = c.get("userId")
 ): Promise<void> => {
   if (distinctId === undefined) return;
-  const capture = captureUserEvent(c.env, distinctId, event, properties);
+  const platform = c.req.header("X-Sendtally-Client");
+  const capture = captureUserEvent(
+    c.env,
+    distinctId,
+    event,
+    platform !== undefined && PLATFORMS.has(platform) ? { platform, ...properties } : properties
+  );
   try {
     c.executionCtx.waitUntil(
       capture.catch((err: unknown) => console.error(`capture ${event}`, err))

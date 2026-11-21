@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import React from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import { SendtallyApi, type TokenProvider } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
 import { queryOutbox } from "@sendtally/features/outbox";
@@ -18,7 +18,8 @@ const auth: { getToken: TokenProvider } = { getToken: () => Promise.resolve(null
 const api = new SendtallyApi(
   API_URL,
   () => auth.getToken(),
-  (write) => void invalidateAfterWrite(queryClient, write)
+  (write) => void invalidateAfterWrite(queryClient, write),
+  Platform.OS === "android" ? "android" : "ios"
 );
 
 /** Every write the app makes, kept in the signed-in account's own file until the server has it. */

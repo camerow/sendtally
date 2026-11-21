@@ -4,6 +4,8 @@ export const tally = {
   "tally.tryCount_other": "{count} tries",
   "tally.sentCount_one": "{count} sent",
   "tally.sentCount_other": "{count} sent",
+  "tally.attemptedCount_one": "{count} attempted",
+  "tally.attemptedCount_other": "{count} attempted",
   "tally.fallCount_one": "{count} fall",
   "tally.fallCount_other": "{count} falls",
   "tally.pickGrade": "Pick a grade to start a climb.",

@@ -2,7 +2,6 @@ import React from "react";
 import { useSearchParams } from "react-router";
 import type {
   Activity,
-  ConnectionStatus,
   HangHistoryPart,
   HangHistoryRow,
   JournalEntry,
@@ -35,16 +34,13 @@ import { statsYears } from "@sendtally/features/trends";
 import { ClimbingEmpty } from "../../climbs/components/ClimbingEmpty";
 import { AccountButton } from "../../components/AccountButton";
 import { useAppApi } from "../../lib/useAppApi";
-import { useDismissed } from "../../lib/useDismissed";
 import { useQueryUpdate } from "../useQueryUpdate";
 import { ActiveFilters } from "./ActiveFilters";
 import { FilterSheet, type FilterChoices } from "./FilterSheet";
 import { LogList } from "./LogList";
 import { LogMenu } from "./LogMenu";
-import { SetupStack, type SetupCard } from "./SetupStack";
 
 export type LogPageProps = {
-  status: ConnectionStatus | null;
   sessions: SessionRow[];
   hangSessions: HangHistoryRow[];
   hangParts: HangHistoryPart[];
@@ -54,7 +50,6 @@ export type LogPageProps = {
 
 /** The filter lives in the link, so a filtered Log can be shared; search stays on the page. */
 export function LogPage({
-  status,
   sessions,
   hangSessions,
   hangParts,
@@ -63,33 +58,6 @@ export function LogPage({
 }: LogPageProps): React.ReactElement {
   const api = useAppApi();
   const gyms = useGyms(api);
-  const gymPrompt = useDismissed("gym");
-  const stravaPrompt = useDismissed("strava");
-  const stravaConnected = status?.strava?.status === "active";
-  const stravaLapsed = status?.strava != null && !stravaConnected;
-  const setupCards: SetupCard[] = [];
-  if (gyms.ready && gyms.gyms.length === 0 && gymPrompt.dismissed === false) {
-    setupCards.push({
-      key: "gym",
-      eyebrow: t("gyms.gym"),
-      title: t("gyms.setupTitle"),
-      body: t("gyms.setupBody"),
-      action: t("gyms.setupAction"),
-      to: "/app/settings/gyms/new",
-      onDismiss: gymPrompt.dismiss,
-    });
-  }
-  if (status !== null && !stravaConnected && stravaPrompt.dismissed === false) {
-    setupCards.push({
-      key: "strava",
-      eyebrow: stravaLapsed ? t("sessions.setupEyebrowLapsed") : t("sessions.setupEyebrow"),
-      title: stravaLapsed ? t("sessions.setupLapsedTitle") : t("sessions.setupTitle"),
-      body: stravaLapsed ? t("sessions.setupLapsedBody") : t("sessions.setupBody"),
-      action: stravaLapsed ? t("settings.relinkStrava") : t("sessions.connectStrava"),
-      to: "/app/setup",
-      onDismiss: stravaPrompt.dismiss,
-    });
-  }
   const [params] = useSearchParams();
   const updateQuery = useQueryUpdate();
   const [search, setSearch] = React.useState("");
@@ -160,7 +128,6 @@ export function LogPage({
         {!fresh && <LogMenu variant="header" />}
         <AccountButton />
       </div>
-      {!logFilterActive(filter) && <SetupStack cards={setupCards} total={2} />}
       {fresh ? (
         <ClimbingEmpty />
       ) : (

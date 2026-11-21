@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { weekday } from "@sendtally/core/hang";
-import { colors } from "@sendtally/design/tokens";
+import { colors, radius } from "@sendtally/design/tokens";
 import { dayTitle, weekdayShort } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { dayMarks, type TrainingDay, oncePerKind } from "@sendtally/features/training";
@@ -36,8 +36,8 @@ export function DayCell({ day, selected, onPress }: DayCellProps): React.ReactEl
       })}
       style={press({
         flex: 1,
-        height: 58,
-        borderRadius: 12,
+        height: 70,
+        borderRadius: radius.control,
         alignItems: "center",
         justifyContent: "center",
         gap: 5,

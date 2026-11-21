@@ -68,8 +68,6 @@ export const importCsv = {
   "import.showAll": "Alle {total} Sessions anzeigen",
   "import.sendCount_one": "{count} Send",
   "import.sendCount_other": "{count} Sends",
-  "import.rpeGiven": "RPE {rpe} angegeben",
-  "import.rpeScored": "RPE berechnet",
   "import.reviewNote":
     "Sessions ohne RPE werden genauso bewertet wie eine im Formular eingetragene, in Datumsreihenfolge, damit dein Belastungstrend stimmt. Eine bereits aus dieser Datei importierte Session wird übersprungen statt dupliziert. Nichts wird auf Strava gepostet.",
   "import.confirm_one": "{count} Session importieren",
@@ -139,11 +137,9 @@ export const importCsv = {
     "Nur Tabellen mit den sendtally-Spalten werden direkt importiert. Spaltenanleitung und Vorlage findest du auf sendtally.com unter Import.",
   "import.howToSpreadsheet2":
     "Alles andere: Teile den Prompt unten zusammen mit deiner Tabelle mit Claude oder ChatGPT und wähle dann die CSV-Datei, die du zurückbekommst.",
-  "import.skipForNow": "Vorerst überspringen",
   "import.assistantTitle": "Deine eigene KI-App nutzen",
   "import.assistantBody":
     "Verbinde Claude oder ChatGPT mit sendtally und lass die Datei für dich importieren.",
-  "import.backToFirstRun": "Dein altes Logbuch",
   "import.howToSpreadsheetWeb1":
     "Nur Tabellen mit den sendtally-Spalten werden direkt importiert. Spaltenanleitung und Vorlage findest du unten.",
   "import.howToSpreadsheetWeb2":

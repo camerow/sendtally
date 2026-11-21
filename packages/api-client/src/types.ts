@@ -78,6 +78,8 @@ import type {
   LogClimbInput as ClimbInput,
 } from "@sendtally/api/app";
 
+export type ApiClientPlatform = "ios" | "android" | "web";
+
 export type CircuitRef = NonNullable<ClimbInput["circuit"]>;
 
 type Client = ReturnType<typeof hc<AppType>>;

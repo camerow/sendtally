@@ -10,7 +10,7 @@ export async function requireApi(args: Args): Promise<SendtallyApi> {
   const { env } = args.context.get(cloudflareContext);
   const auth = await getAuth(args);
   if (!auth.isAuthenticated || auth.tokenType !== "session_token") throw redirect("/sign-in");
-  return new SendtallyApi(env.API_URL, () => auth.getToken());
+  return new SendtallyApi(env.API_URL, () => auth.getToken(), undefined, "web");
 }
 
 /** A missing row becomes a 404 Response, which survives production error sanitising and reaches the ErrorBoundary as one. */

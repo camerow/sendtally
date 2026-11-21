@@ -1,6 +1,7 @@
 import { CheckoutButton, usePlans } from "@clerk/react/experimental";
 import React from "react";
 import { useRevalidator } from "react-router";
+import { capture } from "../../lib/analytics";
 import { clerkAppearance } from "./clerkAppearance";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { Segmented } from "../../components/Segmented";
@@ -50,8 +51,11 @@ function Price({ plan, period }: { plan: Plan; period: Period }): React.ReactEle
   );
 }
 
-/** The not-a-member strip: price, billing period, and Clerk's checkout behind our own button. */
-export function MembershipCheckout(): React.ReactElement {
+/**
+ * The not-a-member strip: price, billing period, and Clerk's checkout behind our own button.
+ * With `stay`, a new member stays on the page they joined from, as the wizard's offer does.
+ */
+export function MembershipCheckout({ stay = false }: { stay?: boolean }): React.ReactElement {
   const { data, isLoading } = usePlans({ for: "user" });
   const { revalidate } = useRevalidator();
   const [chosen, setPeriod] = React.useState<Period | null>(null);
@@ -99,8 +103,11 @@ export function MembershipCheckout(): React.ReactElement {
         planId={plan.id}
         planPeriod={period}
         checkoutProps={{ appearance: clerkAppearance }}
-        newSubscriptionRedirectUrl={`/app/membership?${SUBSCRIBED_PARAM}=1`}
-        onSubscriptionComplete={() => void revalidate()}
+        {...(stay ? {} : { newSubscriptionRedirectUrl: `/app/membership?${SUBSCRIBED_PARAM}=1` })}
+        onSubscriptionComplete={() => {
+          if (stay) capture("membership_started", { channel: "web" });
+          void revalidate();
+        }}
       >
         <button type="button" style={panelButton}>
           {t("billing.becomeAMember")} →

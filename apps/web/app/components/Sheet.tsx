@@ -32,6 +32,8 @@ export type SheetProps = {
   action?: SheetAction;
   /** Red text under the footer, such as Discard. */
   secondary?: Pick<SheetAction, "label" | "onPress">;
+  /** Top right of the header, such as Done on a list that only adds, so it stays in reach above a long list. */
+  headAction?: Pick<SheetAction, "label" | "onPress">;
   /** Off when the action only closes, such as Done, so Cancel would offer the same thing. */
   cancel?: boolean;
   /** A built-in's picture across the top, with the header on a white card over its bottom edge. */
@@ -58,6 +60,7 @@ function OpenSheet({
   onBack,
   onClose,
   action,
+  headAction,
   secondary,
   cancel = true,
   hero,
@@ -100,6 +103,11 @@ function OpenSheet({
       )}
       <div className="sheet-handle" />
       <div className="sheet-head">
+        {headAction !== undefined && (
+          <button type="button" className="sheet-head-action" onClick={headAction.onPress}>
+            {headAction.label}
+          </button>
+        )}
         {onBack !== undefined && (
           <button
             type="button"

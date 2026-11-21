@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import type { SendtallyApi } from "@sendtally/api-client";
 import {
   likelyDuplicates,
@@ -7,7 +7,7 @@ import {
   type ImportPlan,
   type LikelyDuplicate,
 } from "@sendtally/core/import";
-import { importAll, withAddedTags, withTag, type ImportSource } from "@sendtally/features/import";
+import { importAll, withAddedTags, withTag } from "@sendtally/features/import";
 import { sameTagName, useTagVocabulary } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { BackLink } from "../../components/BackLink";
@@ -16,7 +16,6 @@ import { bodyText, pageTitle, secondaryButton } from "../../settings/components/
 import { sha256Hex } from "../sha256Hex";
 import { goldButton } from "../styles";
 import { DropZone } from "./DropZone";
-import { ExportHowTo } from "./ExportHowTo";
 import { FormatGuide } from "./FormatGuide";
 import { ImportReview } from "./ImportReview";
 import { Stat } from "./Stat";
@@ -40,19 +39,8 @@ type State =
 const heldBack = (state: { duplicates: LikelyDuplicate[]; importAnyway: number[] }): number[] =>
   state.duplicates.map((d) => d.index).filter((i) => !state.importAnyway.includes(i));
 
-export function ImportFlow({
-  api,
-  then,
-  from,
-}: {
-  api: SendtallyApi;
-  /** Where the result goes once imported, as first run takes it back to its next step. */
-  then?: string | undefined;
-  /** The source first run picked: its steps stand in for every app's link. */
-  from?: ImportSource | undefined;
-}): React.ReactElement {
+export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
   const [state, setState] = React.useState<State>({ step: "choose" });
-  const navigate = useNavigate();
   const { suggestionsFor } = useTagVocabulary(api);
 
   const retag = (indexes: number[], change: (tags: string[]) => string[]): void =>
@@ -87,15 +75,7 @@ export function ImportFlow({
       const sessions = withAddedTags(state.plan.sessions, state.added).filter(
         (_, i) => !held.includes(i)
       );
-      const totals = await importAll(api, sessions);
-      if (then !== undefined) {
-        const result = new URLSearchParams({
-          imported: String(totals.imported),
-          skipped: String(totals.skipped),
-          likely: String(held.length),
-        });
-        return void navigate(`${then}?${result}`);
-      }
+      const totals = await importAll(api, sessions, state.plan.format);
       setState({
         step: "done",
         ...totals,
@@ -117,12 +97,7 @@ export function ImportFlow({
 
   return (
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
-      {state.step === "choose" &&
-        (then === undefined ? (
-          <BackLink to="/app/settings">{t("common.settings")}</BackLink>
-        ) : (
-          <BackLink to={then}>{t("import.backToFirstRun")}</BackLink>
-        ))}
+      {state.step === "choose" && <BackLink to="/app/settings">{t("common.settings")}</BackLink>}
       {state.step === "review" && (
         <BackLink onClick={() => setState({ step: "choose" })}>
           {t("import.chooseAnother")}
@@ -135,8 +110,7 @@ export function ImportFlow({
 
       {state.step === "choose" && (
         <>
-          {from !== undefined && <ExportHowTo source={from} />}
-          <DropZone onFile={(file) => void choose(file)} links={from === undefined} />
+          <DropZone onFile={(file) => void choose(file)} />
           <FormatGuide />
         </>
       )}
@@ -146,11 +120,12 @@ export function ImportFlow({
           fileName={state.fileName}
           plan={state.plan}
           added={state.added}
-          suggestionsFor={suggestionsFor}
-          onAddTag={(indexes, tag) => retag(indexes, (tags) => withTag(tags, tag))}
-          onRemoveTag={(indexes, tag) =>
-            retag(indexes, (tags) => tags.filter((t) => !sameTagName(t, tag)))
-          }
+          tagging={{
+            suggestionsFor,
+            onAddTag: (indexes, tag) => retag(indexes, (tags) => withTag(tags, tag)),
+            onRemoveTag: (indexes, tag) =>
+              retag(indexes, (tags) => tags.filter((t) => !sameTagName(t, tag))),
+          }}
           duplicates={state.duplicates}
           importAnyway={state.importAnyway}
           onImportAnyway={(index) =>
@@ -168,8 +143,10 @@ export function ImportFlow({
           importing={state.plan.sessions.length - heldBack(state).length}
           busy={state.busy}
           error={state.error}
-          onConfirm={() => void confirm()}
-          onCancel={() => setState({ step: "choose" })}
+          actions={{
+            onConfirm: () => void confirm(),
+            onCancel: () => setState({ step: "choose" }),
+          }}
         />
       )}
 

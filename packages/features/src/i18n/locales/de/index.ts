@@ -15,6 +15,10 @@ import { importCsv } from "./importCsv";
 import { journal } from "./journal";
 import { logSession } from "./logSession";
 import { onboarding } from "./onboarding";
+import { onboardingHistory } from "./onboardingHistory";
+import { onboardingMembership } from "./onboardingMembership";
+import { onboardingPlan } from "./onboardingPlan";
+import { onboardingSetup } from "./onboardingSetup";
 import { plan } from "./plan";
 import { projects } from "./projects";
 import { sessionDetail } from "./sessionDetail";
@@ -45,6 +49,10 @@ export const de = {
   ...journal,
   ...logSession,
   ...onboarding,
+  ...onboardingHistory,
+  ...onboardingMembership,
+  ...onboardingPlan,
+  ...onboardingSetup,
   ...plan,
   ...projects,
   ...sessionDetail,

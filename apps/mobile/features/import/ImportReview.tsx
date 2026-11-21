@@ -6,7 +6,7 @@ import {
   type ImportSession,
   type LikelyDuplicate,
 } from "@sendtally/core/import";
-import { planStats } from "@sendtally/features/import";
+import { importTally, planStats } from "@sendtally/features/import";
 import type { GradeScales } from "@sendtally/features/sessions";
 import { useDisplayScales } from "@sendtally/features/settings";
 import { formatDate, formatNumber, t } from "@sendtally/features/i18n";
@@ -27,17 +27,13 @@ const dayLabel = (date: string): string =>
   });
 
 function rowMeta(session: ImportSession, scales: GradeScales): string {
-  const sends = session.climbs.filter((c) => c.kind === "send");
-  const top = planStats([{ ...session, climbs: sends }], scales).topGrade;
-  return [
-    t("tally.sentCount", { count: sends.length }),
-    ...(top === null ? [] : [t("sessions.topSend", { grade: top })]),
-  ].join(" · ");
+  return importTally(session, scales).join(" · ");
 }
 
 /**
  * What the file will add to the log: its numbers, the rows it skips, the
  * sessions that look like ones already there, then every other session newest first.
+ * The wizard gives its own title and file line, and a card drawn from the file under them.
  */
 export function ImportReview({
   fileName,
@@ -47,6 +43,9 @@ export function ImportReview({
   importing,
   importAnyway,
   onImportAnyway,
+  title,
+  meta,
+  card,
 }: {
   fileName: string;
   plan: ImportPlan;
@@ -55,6 +54,9 @@ export function ImportReview({
   importing: ImportSession[];
   importAnyway: boolean;
   onImportAnyway: (value: boolean) => void;
+  title?: string;
+  meta?: string;
+  card?: React.ReactNode;
 }): React.ReactElement {
   const scales = useDisplayScales();
   const stats = planStats(importing, scales);
@@ -70,9 +72,10 @@ export function ImportReview({
               : t("import.formatExport", { service: IMPORT_SERVICES[plan.format] })
           }
           kickerColor={colors.azureInk}
-          title={t("import.reviewTitle")}
-          meta={`${fileName} · ${dayLabel(first.date)} – ${dayLabel(last.date)}`}
+          title={title ?? t("import.reviewTitle")}
+          meta={meta ?? `${fileName} · ${dayLabel(first.date)} – ${dayLabel(last.date)}`}
         />
+        {card}
         <SummaryTiles
           stats={[
             { value: formatNumber(stats.sessions), label: t("import.statSessions") },

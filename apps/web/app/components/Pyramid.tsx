@@ -5,14 +5,24 @@ import type { PyramidRow } from "@sendtally/features/climbs";
 export function Pyramid({
   rows,
   label,
+  tone = "light",
+  minScale = 1,
 }: {
   rows: readonly PyramidRow[];
   label: string;
+  /** Gold on the app's dark ground, as the wizard's payoff cards draw it. */
+  tone?: "light" | "dark";
+  /** The fewest climbs a full-width bar stands for, so one climb does not fill the row. */
+  minScale?: number;
 }): React.ReactElement {
-  const widest = Math.max(1, ...rows.map((r) => r.inner + r.outer));
+  const widest = Math.max(minScale, ...rows.map((r) => r.inner + r.outer));
   const share = (n: number): string => `${(n / widest) * 100}%`;
   return (
-    <div className="pyramid" role="img" aria-label={label}>
+    <div
+      className={tone === "dark" ? "pyramid pyramid--dark" : "pyramid"}
+      role="img"
+      aria-label={label}
+    >
       {rows.map((r) => (
         <React.Fragment key={r.gradeLabel}>
           <span className="pyramid-grade">{r.gradeLabel}</span>

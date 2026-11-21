@@ -66,9 +66,30 @@ describe("sessionTallyLabel", () => {
         SCALES
       )
     ).toBe("1h 40m · 6 sent · top V6");
-    expect(sessionTallyLabel(session({ times: "none", top_send_grade: -1 }), SCALES)).toBe(
-      "0 sent"
-    );
+    expect(
+      sessionTallyLabel(session({ times: "none", climb_count: 0, top_send_grade: -1 }), SCALES)
+    ).toBe("0 sent");
+  });
+
+  it("names the attempts of a session with no sends, and keeps sends first once there are any", () => {
+    expect(
+      sessionTallyLabel(session({ times: "none", climb_count: 1, top_send_grade: -1 }), SCALES)
+    ).toBe("1 attempted");
+    expect(
+      sessionTallyLabel(session({ times: "none", climb_count: 3, top_send_grade: -1 }), SCALES)
+    ).toBe("3 attempted");
+    expect(
+      sessionTallyLabel(
+        session({
+          times: "none",
+          climb_count: 5,
+          send_count: 2,
+          top_send_grade: 9,
+          top_send_grade_label: "V9",
+        }),
+        SCALES
+      )
+    ).toBe("2 sent · top V9");
   });
 
   it("leaves out the top send where the row shows it beside", () => {

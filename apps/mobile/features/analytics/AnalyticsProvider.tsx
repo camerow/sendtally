@@ -2,7 +2,9 @@ import { useUser } from "@clerk/clerk-expo";
 import React from "react";
 import { PostHogProvider, usePostHog } from "posthog-react-native";
 import { IS_E2E, POSTHOG_API_KEY, POSTHOG_HOST } from "../../lib/config";
+import type { Capture } from "@sendtally/features/settings";
 import { ScreenTracker } from "./ScreenTracker";
+import { CaptureContext } from "./useCapture";
 
 function IdentifyUser(): null {
   const posthog = usePostHog();
@@ -15,6 +17,21 @@ function IdentifyUser(): null {
   }, [posthog, user, email]);
 
   return null;
+}
+
+export function ProvideCapture({ children }: { children: React.ReactNode }): React.ReactElement {
+  const posthog = usePostHog();
+  const capture = React.useCallback<Capture>(
+    (event, properties) => {
+      try {
+        posthog.capture(event, properties);
+      } catch (error: unknown) {
+        console.warn(`capture ${event} failed`, error);
+      }
+    },
+    [posthog]
+  );
+  return <CaptureContext.Provider value={capture}>{children}</CaptureContext.Provider>;
 }
 
 export function AnalyticsProvider({ children }: { children: React.ReactNode }): React.ReactElement {
@@ -40,7 +57,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }): 
     >
       <IdentifyUser />
       <ScreenTracker />
-      {children}
+      <ProvideCapture>{children}</ProvideCapture>
     </PostHogProvider>
   );
 }
