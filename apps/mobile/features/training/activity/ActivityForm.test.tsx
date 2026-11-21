@@ -21,7 +21,7 @@ jest.mock("../../../components/Sheet", () => ({
 }));
 jest.mock("expo-router", () => ({
   router: {
-    canGoBack: () => true,
+    canGoBack: jest.fn(() => true),
     back: jest.fn(),
     push: jest.fn(),
     dismiss: jest.fn(),
@@ -118,6 +118,7 @@ describe("Log activity", () => {
   it("lands on Today when nothing is under the review, as when the first-run wizard started the workout", async () => {
     jest.mocked(router.dismissAll).mockClear();
     jest.mocked(router.canDismiss).mockReturnValueOnce(false);
+    jest.mocked(router.canGoBack).mockReturnValueOnce(false);
     await render(
       <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={null} />
     );
@@ -125,6 +126,21 @@ describe("Log activity", () => {
     await fireEvent.press(screen.getByText("Save"));
     expect(router.dismissAll).not.toHaveBeenCalled();
     expect(router.replace).toHaveBeenCalledWith("/(tabs)/today");
+  });
+
+  it("goes back to its parent when it cannot dismiss but has a screen under it", async () => {
+    jest.mocked(router.dismissAll).mockClear();
+    jest.mocked(router.back).mockClear();
+    jest.mocked(router.replace).mockClear();
+    jest.mocked(router.canDismiss).mockReturnValueOnce(false);
+    await render(
+      <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={null} />
+    );
+    await fireEvent.press(screen.getByText("Mobility"));
+    await fireEvent.press(screen.getByText("Save"));
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.dismissAll).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
   });
 
   it("stays on the form with what is in it when the save fails", async () => {
