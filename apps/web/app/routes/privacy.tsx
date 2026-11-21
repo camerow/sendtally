@@ -76,17 +76,21 @@ export default function Privacy(): React.ReactElement {
         Adding to Areas and moderating it are recorded as events too, such as an area created, an
         edit suggested, or a report resolved, carrying only the kind of action and a few labels,
         such as whether it was an area or a climb, never what you wrote. When you first sign in, we
-        record once that the two questions were shown, which app you kept a log in, if any, how many
-        days a week you climb, and whether you skipped a question. The app you kept a log in also
-        stays on your PostHog profile, so we can compare people by where they came from. Logging a
-        workout is recorded as whether it was on your plan and whether it is one of
-        sendtally&rsquo;s built-in workouts, never what you logged. When an AI assistant you connect
-        to your account uses it, its connection and each action it takes are recorded as events too,
-        carrying only which action it was, which assistant and model took it, how long it took,
-        whether it failed, the names of the options it set, and a random identifier we give the
-        assistant so the actions of one conversation can be grouped, never what it read or wrote.
-        When the assistant cannot do something you asked, it may send us a short description of what
-        was missing.
+        record which path you chose or that you skipped, which app you kept a log in, if any, which
+        steps you completed, how many climbs, sessions or weeks each step added, whether you dated a
+        climb by year or by day, and the platform you used. The path you chose and the app you kept
+        a log in stay on your PostHog profile, so we can compare people by where they came from.
+        Importing a log is recorded as which app the file came from and how many sessions it held.
+        Creating an exercise, a workout or a training block, and scheduling a block, are recorded as
+        the kind of thing and a few counts, never names or contents. Seeing the membership offer,
+        and whether you joined, are recorded too. Logging a workout is recorded as whether it was on
+        your plan and whether it is one of sendtally&rsquo;s built-in workouts, never what you
+        logged. When an AI assistant you connect to your account uses it, its connection and each
+        action it takes are recorded as events too, carrying only which action it was, which
+        assistant and model took it, how long it took, whether it failed, the names of the options
+        it set, and a random identifier we give the assistant so the actions of one conversation can
+        be grouped, never what it read or wrote. When the assistant cannot do something you asked,
+        it may send us a short description of what was missing.
       </p>
       <p>
         <strong>App installs.</strong> The mobile apps also run Google Analytics for Firebase, which

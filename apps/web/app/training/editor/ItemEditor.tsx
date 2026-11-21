@@ -32,7 +32,10 @@ export type ItemEditorProps = {
   unit: WeightUnit;
   onChange: (item: Item) => void;
   onRemove: () => void;
-  onSwap: () => void;
+  /** Absent where the card offers no swap. */
+  onSwap?: () => void;
+  /** Shown beside the name, such as a Yours tag. */
+  tag?: React.ReactNode;
   /** Only shows the card, as the exercise editor previews it: no move, swap or remove. */
   preview?: boolean;
   /** Absent for the first item. */
@@ -44,6 +47,8 @@ export type ItemEditorProps = {
    * it out of the superset, saying so, rather than out of the workout.
    */
   member?: number;
+  /** The wizard's card: one row of numbers per dose, no target RPE or dose name, and Remove in the menu. */
+  compact?: boolean;
 };
 
 function IconButton({
@@ -80,10 +85,12 @@ export function ItemEditor({
   onMoveDown,
   preview = false,
   member,
+  tag,
+  compact = false,
 }: ItemEditorProps): React.ReactElement {
   const alternating = item.doses.length > 1;
   const fields = doseFieldsFor(kind, measure, item.doses[0]).filter(
-    (f) => member === undefined || f.key !== "sets"
+    (f) => (member === undefined || f.key !== "sets") && !(compact && f.key === "targetRpe")
   );
   const removeLabel =
     member !== undefined
@@ -91,8 +98,9 @@ export function ItemEditor({
       : t("workouts.removeExercise", { name });
   const laps = measure === "laps";
   const lapUnit = item.doses[0]?.onS === undefined ? "moves" : "seconds";
+  const remove = { label: removeLabel, onSelect: onRemove, destructive: member === undefined };
   const menu = [
-    { label: t("workouts.swapExercise"), onSelect: onSwap },
+    ...(onSwap === undefined ? [] : [{ label: t("workouts.swapExercise"), onSelect: onSwap }]),
     ...(item.doses.length < MAX_DOSES
       ? [
           {
@@ -109,14 +117,23 @@ export function ItemEditor({
           },
         ]
       : []),
-    { label: removeLabel, onSelect: onRemove, destructive: member === undefined },
+    remove,
   ];
+  const rest = (
+    <NumberField
+      label={laps ? t("workouts.lapRest") : t("hang.fieldSetRest")}
+      value={item.doses[0]?.setRestS ?? 0}
+      mode={{ kind: "time", max: 3600 }}
+      onChange={(seconds) => onChange(withSetRest(item, seconds))}
+    />
+  );
 
   return (
     <div className="item-editor" aria-hidden={preview || undefined} inert={preview || undefined}>
       <div className="item-editor-head">
         {member !== undefined && <LetterBadge dose={member} plain />}
         <span className="item-editor-name">{name}</span>
+        {tag}
         {onMoveUp !== undefined && (
           <IconButton icon="moveUp" label={t("workouts.moveUp", { name })} onClick={onMoveUp} />
         )}
@@ -127,11 +144,13 @@ export function ItemEditor({
             onClick={onMoveDown}
           />
         )}
-        {preview ? null : alternating ? (
-          <MoreMenu label={t("workouts.exerciseMore")} items={menu} />
+        {preview ? null : alternating || compact ? (
+          <MoreMenu label={t("workouts.exerciseMore")} items={compact ? [remove] : menu} />
         ) : (
           <>
-            <IconButton icon="restart" label={t("workouts.swapExercise")} onClick={onSwap} />
+            {onSwap !== undefined && (
+              <IconButton icon="restart" label={t("workouts.swapExercise")} onClick={onSwap} />
+            )}
             <IconButton icon="remove" label={removeLabel} onClick={onRemove} />
           </>
         )}
@@ -163,6 +182,7 @@ export function ItemEditor({
               return (
                 <DoseInput
                   key={field.key}
+                  compact={compact}
                   field={field}
                   dose={dose}
                   unit={unit}
@@ -172,7 +192,7 @@ export function ItemEditor({
                 />
               );
             })}
-            {alternating && (
+            {alternating && !compact && (
               <label className="dose-name">
                 <span className="train-label">{t("workouts.doseName")}</span>
                 <input
@@ -190,6 +210,7 @@ export function ItemEditor({
       ))}
       {member === undefined && (
         <>
+          {compact && <div className="item-editor-rest--compact">{rest}</div>}
           <div className="item-editor-foot">
             <SwitchField
               label={t("workouts.alternates")}
@@ -197,12 +218,7 @@ export function ItemEditor({
               onChange={(on) => onChange(withAlternates(item, on))}
             />
           </div>
-          <NumberField
-            label={laps ? t("workouts.lapRest") : t("hang.fieldSetRest")}
-            value={item.doses[0]?.setRestS ?? 0}
-            mode={{ kind: "time", max: 3600 }}
-            onChange={(seconds) => onChange(withSetRest(item, seconds))}
-          />
+          {!compact && rest}
         </>
       )}
     </div>

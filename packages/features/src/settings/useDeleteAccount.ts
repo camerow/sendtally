@@ -1,8 +1,8 @@
 import React from "react";
 import type { SendtallyApi } from "@sendtally/api-client";
-import { t } from "../i18n";
 import { deleteConfirmationMatches } from "./transforms";
 import type { DeleteAccountStatus } from "./types";
+import { errorMessage } from "../query";
 
 export type DeleteAccountFeature = {
   status: DeleteAccountStatus;
@@ -44,7 +44,7 @@ export function useDeleteAccount(api: SendtallyApi, onDeleted: () => void): Dele
       })
       .catch((err: unknown) => {
         setStatus("confirming");
-        setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
+        setError(errorMessage(err));
       });
   }, [api, confirmation, onDeleted]);
 

@@ -78,6 +78,8 @@ import type {
   LogClimbInput as ClimbInput,
 } from "@sendtally/api/app";
 
+export type ApiClientPlatform = "ios" | "android" | "web";
+
 export type CircuitRef = NonNullable<ClimbInput["circuit"]>;
 
 type Client = ReturnType<typeof hc<AppType>>;
@@ -246,6 +248,13 @@ export type DuplicateItem = ModerationQueue["duplicates"]["items"][number];
 export type ReportItem = ModerationQueue["reports"]["items"][number];
 
 export type Role = ConnectionStatus["role"];
+
+/** The request never got an answer: offline, or the server could not be reached. */
+export class NetworkError extends Error {
+  constructor(cause: unknown) {
+    super("could not reach the server", { cause });
+  }
+}
 
 export class ApiError extends Error {
   constructor(

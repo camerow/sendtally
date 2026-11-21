@@ -19,7 +19,7 @@ import {
   type LogOption,
 } from "@sendtally/features/journal";
 import { useClimbs } from "@sendtally/features/climbs";
-import { useGradeScalePrefs, useSettings } from "@sendtally/features/settings";
+import { useGradeScalePrefs } from "@sendtally/features/settings";
 import { sessionTagOptions } from "@sendtally/features/sessions";
 import { statsYears } from "@sendtally/features/trends";
 import { t } from "@sendtally/features/i18n";
@@ -33,11 +33,8 @@ import { ActiveFilters } from "./ActiveFilters";
 import { emptyBody } from "./emptyStyles";
 import { FilterSheet, type FilterChoices } from "./FilterSheet";
 import { LogList } from "./LogList";
-import { SetupStack, type SetupCard } from "./SetupStack";
-import { useStravaConnect } from "../settings/useStravaConnect";
 import { useApi } from "../../lib/api";
 import { maybeAskForReview } from "../../lib/review";
-import { useSetupDismissed } from "../../lib/setupPrompt";
 import { useGyms } from "@sendtally/features/gyms";
 import { useTrainingLog } from "@sendtally/features/training";
 
@@ -49,43 +46,7 @@ export function SessionsLog({ link = null }: { link?: string | null }): React.Re
   const hangSessions = sessionLog?.hangSessions ?? null;
   const activities = sessionLog?.activities ?? null;
   const error = log.state.status === "error" || log.refreshFailed ? t("sessions.loadFailed") : null;
-  // ponytail: a second status() read per mount, to know if Strava is live; a Strava-status context across tabs if it ever matters
-  const settings = useSettings(api);
-  const connect = useStravaConnect(api, settings.reload);
   const gyms = useGyms(api);
-  const gymPrompt = useSetupDismissed("gym");
-  const stravaPrompt = useSetupDismissed("strava");
-  const setupCards: SetupCard[] = [];
-  if (gyms.ready && gyms.gyms.length === 0 && gymPrompt.dismissed === false) {
-    setupCards.push({
-      key: "gym",
-      eyebrow: t("gyms.gym"),
-      title: t("gyms.setupTitle"),
-      body: t("gyms.setupBody"),
-      action: t("gyms.setupAction"),
-      onAction: () => router.push({ pathname: "/gym/[id]", params: { id: "new" } }),
-      onDismiss: gymPrompt.dismiss,
-    });
-  }
-  if (settings.ready && !settings.vm.stravaActive && stravaPrompt.dismissed === false) {
-    const lapsed = settings.vm.stravaConnected;
-    setupCards.push({
-      key: "strava",
-      eyebrow: lapsed ? t("sessions.setupEyebrowLapsed") : t("sessions.setupEyebrow"),
-      title: lapsed ? t("sessions.setupLapsedTitle") : t("sessions.setupTitle"),
-      body: lapsed ? t("sessions.setupLapsedBody") : t("sessions.setupBody"),
-      action: connect.busy
-        ? t("settings.openingStrava")
-        : lapsed
-          ? t("settings.relinkStrava")
-          : t("sessions.connectStrava"),
-      busy: connect.busy,
-      error: connect.error,
-      onAction: connect.connect,
-      onDismiss: stravaPrompt.dismiss,
-    });
-  }
-
   const { log: training } = useTrainingLog(api);
   const blocks = React.useMemo(() => logTraining(training, today()), [training]);
   const items = React.useMemo(
@@ -165,12 +126,6 @@ export function SessionsLog({ link = null }: { link?: string | null }): React.Re
     if (sessionCount !== undefined) void maybeAskForReview(sessionCount);
   }, [sessionCount]);
 
-  const header = (
-    <>
-      <SetupStack cards={setupCards} total={2} />
-    </>
-  );
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <ScreenHeader title={t("journal.log")} right={<AccountButton />} />
@@ -189,13 +144,11 @@ export function SessionsLog({ link = null }: { link?: string | null }): React.Re
       )}
       {fresh ? (
         <ScrollView contentContainerStyle={{ paddingBottom: 140 }}>
-          {header}
           <ClimbingEmpty />
         </ScrollView>
       ) : (
         <LogList
           view={view}
-          header={logFilterActive(filter) ? null : header}
           below={
             <ActiveFilters
               pills={pills}

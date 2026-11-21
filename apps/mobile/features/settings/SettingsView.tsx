@@ -16,6 +16,7 @@ import type { CsvExportFeature } from "./useCsvExport";
 import type { Gym } from "@sendtally/features/gyms";
 import { GradeSection } from "./GradeSection";
 import { GymsSection } from "./GymsSection";
+import { SetupSection } from "./SetupSection";
 import { MembershipSection, type MembershipSectionProps } from "./MembershipSection";
 import { StravaPostingSection } from "./StravaPostingSection";
 import { TrainingRemindersSection } from "./TrainingRemindersSection";
@@ -149,6 +150,7 @@ export function SettingsView({
           </View>
         )}
 
+        <SetupSection />
         <DataSection exporter={exporter} onImport={onImport} />
 
         <Pressable

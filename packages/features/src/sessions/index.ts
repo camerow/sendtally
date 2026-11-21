@@ -17,6 +17,7 @@ export {
   sessionDay,
   sessionMetaLabel,
   sessionTallyLabel,
+  tallyLabel,
   type SessionDay,
 } from "./meta";
 export {

@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-query";
 import React from "react";
 import { ApiError } from "@sendtally/api-client";
-import { t } from "../i18n";
+import { errorMessage } from "./errorMessage";
 
 export type QueryState<T> =
   { status: "loading" } | { status: "error"; message: string } | { status: "ready"; data: T };
@@ -22,8 +22,6 @@ export type Query<T> = {
  * alone, so a write refetches only what is on screen, and catch up when their screen comes back.
  */
 export const ScreenFocusContext = React.createContext<() => boolean>(() => true);
-
-const messageOf = (error: Error): string => error.message || t("common.somethingWentWrong");
 
 /**
  * Cached data wins over a failed or in-flight refetch, so a screen never blanks
@@ -43,10 +41,10 @@ export function useQuery<TFn, TData, K extends QueryKey>(
   }, [refetch]);
   const state = React.useMemo((): QueryState<TData> => {
     if (error instanceof ApiError && error.status === 404) {
-      return { status: "error", message: messageOf(error) };
+      return { status: "error", message: errorMessage(error) };
     }
     if (data !== undefined) return { status: "ready", data };
-    if (error !== null) return { status: "error", message: messageOf(error) };
+    if (error !== null) return { status: "error", message: errorMessage(error) };
     return { status: "loading" };
   }, [data, error]);
   return { state, refreshFailed: data !== undefined && error !== null, reload };

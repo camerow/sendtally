@@ -10,6 +10,17 @@ const status: ConnectionStatus = {
   role: "user",
   trainingReminders: { enabled: false, time: "08:00", promptSeen: false },
   firstRun: false,
+  onboarding: {
+    path: null,
+    left: false,
+    progress: {
+      sessions: false,
+      exercises: false,
+      workouts: false,
+      blockMemberships: false,
+      scheduledBlocks: false,
+    },
+  },
   strava: null,
 };
 

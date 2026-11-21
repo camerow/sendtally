@@ -1,7 +1,7 @@
 import { DEFAULT_GRADE_SCALES } from "../settings/transforms";
 import { describe, expect, it } from "vitest";
 import { planImport } from "@sendtally/core/import";
-import { planStats, sessionNames, withAddedTags } from "./transforms";
+import { importTally, planStats, sessionNames, withAddedTags } from "./transforms";
 
 const sendtally = `date,session,location,gym,start_time,end_time,rpe,tags,session_notes,climb,grade,kind,style,tries,climb_notes
 2022-11-22,Moe's Valley,outdoor,,,,8,trip; utah,"Last day, sent!",Lindners Roof,V9,send,redpoint,30,"Foot swap at the crux"
@@ -45,5 +45,30 @@ describe("review helpers", () => {
       ["trip", "utah", "Projecting"],
       undefined,
     ]);
+  });
+});
+
+describe("importTally", () => {
+  const climb = (kind: "send" | "attempt", grade: string) => ({
+    name: "",
+    grade: { scale: "v" as const, value: Number(grade) },
+    kind,
+    tries: 1,
+  });
+  const at = (climbs: ReturnType<typeof climb>[]) => ({
+    date: "2024-10-14",
+    location: "indoor" as const,
+    climbs,
+    rows: [1],
+  });
+  it("reads sends and the top send, or the attempts when nothing was sent", () => {
+    expect(importTally(at([climb("send", "9")]), DEFAULT_GRADE_SCALES)).toEqual([
+      "1 sent",
+      "top V9",
+    ]);
+    expect(importTally(at([climb("attempt", "7")]), DEFAULT_GRADE_SCALES)).toEqual(["1 attempted"]);
+    expect(
+      importTally(at([climb("send", "4"), climb("attempt", "8")]), DEFAULT_GRADE_SCALES)
+    ).toEqual(["1 sent", "top V4"]);
   });
 });

@@ -805,6 +805,82 @@ describe("app", () => {
     expect(await firstRun(imported)).toBe(true);
   });
 
+  it("runs the onboarding wizard's paths: chosen, left and resumed, skipped, completed", async () => {
+    const user = "user_wizard";
+    const headers = { "x-test-user": user, "Content-Type": "application/json" };
+    const status = async (): Promise<{ firstRun: boolean; onboarding: unknown }> =>
+      (await (await testApp().request("/v1/status", { headers }, env)).json()) as {
+        firstRun: boolean;
+        onboarding: unknown;
+      };
+    const step = async (json: unknown): Promise<number> =>
+      (
+        await testApp().request(
+          "/v1/preferences/first-run",
+          { method: "PUT", headers, body: JSON.stringify(json) },
+          env
+        )
+      ).status;
+    const none = {
+      sessions: false,
+      exercises: false,
+      workouts: false,
+      blockMemberships: false,
+      scheduledBlocks: false,
+    };
+    const capture = vi.spyOn(posthog, "captureUserEvent").mockResolvedValue();
+    const identify = vi.spyOn(posthog, "identifyUser").mockResolvedValue();
+    const events = () =>
+      capture.mock.calls
+        .filter(([, , event]) => /^(onboarding_|first_run_)/.test(event))
+        .map(([, , event, properties]) => [event, properties] as const);
+    try {
+      expect(await step({ step: "path", path: "climbing", from: "chooser" })).toBe(400);
+      expect(await step({ step: "skipped", path: null, at: "Z9" })).toBe(400);
+
+      expect(await step({ step: "started" })).toBe(200);
+      expect(await step({ step: "path", path: "history", from: "chooser" })).toBe(200);
+      expect(await step({ step: "log_answered", existingLog: "kaya" })).toBe(200);
+      expect(await step({ step: "log_answered", existingLog: "none" })).toBe(200);
+      expect(await status()).toMatchObject({
+        firstRun: true,
+        onboarding: { path: "history", left: false, progress: none },
+      });
+
+      expect(await step({ step: "left", path: "history" })).toBe(200);
+      expect(await status()).toMatchObject({
+        firstRun: false,
+        onboarding: { path: "history", left: true },
+      });
+
+      expect(
+        await step({ step: "completed", path: "history", outcome: "later", next: "other_path" })
+      ).toBe(200);
+      expect(await step({ step: "path", path: "plan", from: "end_screen" })).toBe(200);
+      expect(await step({ step: "skipped", path: "plan", at: "P2" })).toBe(200);
+      expect(await status()).toMatchObject({
+        firstRun: false,
+        onboarding: { path: null, left: false },
+      });
+
+      expect(events()).toEqual([
+        ["first_run_started", {}],
+        ["onboarding_path_chosen", { path: "history", from: "chooser", second: false }],
+        ["first_run_log_answered", { existing_log: "kaya" }],
+        ["first_run_log_answered", { existing_log: "none" }],
+        ["onboarding_finished", { path: "history", outcome: "later", next: "other_path" }],
+        ["onboarding_path_chosen", { path: "plan", from: "end_screen", second: false }],
+        ["onboarding_skipped", { path: "plan", at: "P2" }],
+      ]);
+      expect(identify.mock.calls.map(([, , properties]) => properties)).toContainEqual({
+        onboarding_path: "plan",
+      });
+    } finally {
+      capture.mockRestore();
+      identify.mockRestore();
+    }
+  });
+
   it("keeps the grade a project was added with", async () => {
     const headers = { "x-test-user": "user_gradedproject", "Content-Type": "application/json" };
     const created = await testApp().request(

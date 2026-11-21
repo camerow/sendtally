@@ -1,4 +1,4 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryObserver } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import { persistQueries, type QueryFiles } from "./queryPersister";
 
@@ -37,6 +37,30 @@ describe("persistQueries", () => {
     });
     expect(restored).toEqual(["a", "b"]);
     expect(network).not.toHaveBeenCalled();
+  });
+
+  it("refetches a restored read that has gone stale, and a refetch that fails offline is not left unhandled", async () => {
+    const files = memoryFiles();
+    await client(files).fetchQuery({ queryKey: ["sessions"], queryFn: () => ["saved"] });
+    await settle();
+
+    const unhandled = vi.fn();
+    process.on("unhandledRejection", unhandled);
+    const network = vi.fn(() => Promise.reject(new Error("could not reach the server")));
+    const relaunched = client(files);
+    const screen = new QueryObserver(relaunched, { queryKey: ["sessions"], queryFn: network });
+    const unmount = screen.subscribe(() => undefined);
+    await vi.waitFor(() => expect(network).toHaveBeenCalledTimes(1));
+    await settle();
+    await settle();
+    unmount();
+    process.off("unhandledRejection", unhandled);
+
+    expect(screen.getCurrentResult()).toMatchObject({
+      data: ["saved"],
+      error: new Error("could not reach the server"),
+    });
+    expect(unhandled).not.toHaveBeenCalled();
   });
 
   it("saves a write made on the phone, so it survives the app closing before it is sent", async () => {

@@ -1,26 +1,43 @@
 import React from "react";
 import type { Entitlements } from "@sendtally/api-client";
 import { membershipPanel } from "@sendtally/features/billing";
-import { MembershipPanel } from "./MembershipPanel";
+import { MembershipPanel, type LedgerRowVM } from "./MembershipPanel";
 import { PurchaseControls } from "./PurchaseControls";
 import { useBilling } from "./useBilling";
 import { usePurchase } from "./usePurchase";
 
-function StorePaywall({ refresh }: { refresh: () => Promise<Entitlements> }): React.ReactElement {
+/** The panel's words in place of the stats pitch, as the wizard's membership moment uses. */
+export type PaywallCopy = {
+  eyebrow?: string;
+  title?: string;
+  body?: string;
+  rows?: readonly LedgerRowVM[];
+};
+
+function StorePaywall({
+  refresh,
+  copy,
+}: {
+  refresh: () => Promise<Entitlements>;
+  copy: Required<Omit<PaywallCopy, "rows">> & Pick<PaywallCopy, "rows">;
+}): React.ReactElement {
   const purchase = usePurchase(refresh);
-  const panel = membershipPanel();
   return (
-    <MembershipPanel eyebrow={panel.eyebrow} title={panel.title} body={panel.body}>
+    <MembershipPanel {...copy}>
       <PurchaseControls purchase={purchase} />
     </MembershipPanel>
   );
 }
 
-export function Paywall(): React.ReactElement {
+export function Paywall({ eyebrow, title, body, rows }: PaywallCopy = {}): React.ReactElement {
   const billing = useBilling();
   const panel = membershipPanel();
-  if (billing === null) {
-    return <MembershipPanel eyebrow={panel.eyebrow} title={panel.title} body={panel.body} />;
-  }
-  return <StorePaywall refresh={billing.membership.refresh} />;
+  const copy = {
+    eyebrow: eyebrow ?? panel.eyebrow,
+    title: title ?? panel.title,
+    body: body ?? panel.body,
+    ...(rows === undefined ? {} : { rows }),
+  };
+  if (billing === null) return <MembershipPanel {...copy} />;
+  return <StorePaywall refresh={billing.membership.refresh} copy={copy} />;
 }

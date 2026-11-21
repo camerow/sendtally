@@ -9,6 +9,7 @@ export {
   type ImportSource,
 } from "./exportSteps";
 export {
+  importTally,
   planStats,
   sessionNames,
   sessionTitle,

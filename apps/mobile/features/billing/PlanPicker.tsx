@@ -81,7 +81,6 @@ export function PlanPicker({
             </Text>
             <Text
               numberOfLines={1}
-              adjustsFontSizeToFit
               style={{
                 fontFamily: fonts.display,
                 fontSize: 26,

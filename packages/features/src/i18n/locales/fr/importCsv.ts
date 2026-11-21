@@ -68,8 +68,6 @@ export const importCsv = {
   "import.showAll": "Afficher les {total} séances",
   "import.sendCount_one": "{count} réussite",
   "import.sendCount_other": "{count} réussites",
-  "import.rpeGiven": "RPE {rpe} indiqué",
-  "import.rpeScored": "RPE calculé",
   "import.reviewNote":
     "Les séances sans RPE sont notées comme une séance saisie dans le formulaire, par ordre de date, pour que ta tendance d'effort soit juste. Une séance déjà importée depuis ce fichier est ignorée plutôt que dupliquée. Rien n'est publié sur Strava.",
   "import.confirm_one": "Importer {count} séance",
@@ -139,11 +137,9 @@ export const importCsv = {
     "Seuls les tableaux aux colonnes sendtally s'importent tels quels. Le guide des colonnes et un modèle sont sur sendtally.com, dans Import.",
   "import.howToSpreadsheet2":
     "Pour le reste : partage le prompt ci-dessous avec Claude ou ChatGPT avec ton tableau, puis choisis le CSV qu'il te renvoie.",
-  "import.skipForNow": "Passer pour l'instant",
   "import.assistantTitle": "Utilise ta propre app d'IA",
   "import.assistantBody":
     "Connecte Claude ou ChatGPT à sendtally et demande-lui d'importer le fichier pour toi.",
-  "import.backToFirstRun": "Ton ancien carnet",
   "import.howToSpreadsheetWeb1":
     "Seuls les tableaux aux colonnes sendtally s'importent tels quels. Le guide des colonnes et un modèle sont ci-dessous.",
   "import.howToSpreadsheetWeb2":

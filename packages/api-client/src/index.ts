@@ -1,8 +1,9 @@
 import { hc } from "hono/client";
 import type { AppType } from "@sendtally/api/app";
-import { ApiError } from "./types";
+import { ApiError, NetworkError } from "./types";
 import type {
   ActivityInput,
+  ApiClientPlatform,
   ActivityRecord,
   Area,
   Block,
@@ -104,10 +105,17 @@ export class SendtallyApi {
   private readonly client: ReturnType<typeof hc<AppType>>;
 
   /** `onWrite` runs after every successful non-GET request, which is how a client cache learns which reads are stale. */
-  constructor(baseUrl: string, getToken: TokenProvider, onWrite?: (write: ApiWrite) => void) {
+  constructor(
+    baseUrl: string,
+    getToken: TokenProvider,
+    onWrite?: (write: ApiWrite) => void,
+    client?: ApiClientPlatform
+  ) {
     this.client = hc<AppType>(baseUrl, {
       fetch: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-        const response = await fetch(input, init);
+        const response = await fetch(input, init).catch((cause: unknown) => {
+          throw init?.signal?.aborted === true ? cause : new NetworkError(cause);
+        });
         const method = init?.method ?? "GET";
         if (response.ok && method !== "GET") {
           const url = input instanceof Request ? input.url : input.toString();
@@ -118,7 +126,10 @@ export class SendtallyApi {
       headers: async () => {
         const token = await getToken();
         if (token === null) throw new ApiError(401, "not signed in");
-        return { Authorization: `Bearer ${token}` };
+        return {
+          Authorization: `Bearer ${token}`,
+          ...(client === undefined ? {} : { "X-Sendtally-Client": client }),
+        };
       },
     });
   }

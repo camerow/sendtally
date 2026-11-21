@@ -88,6 +88,7 @@ export const common = {
   "common.decimalPoint": "Virgule décimale",
   "common.changeRefused": "Une modification n’a pas pu être enregistrée, elle a été annulée.",
   "common.offline": "Hors ligne",
+  "common.unreachable": "Impossible de joindre sendtally. Vérifie ta connexion.",
   "common.addedTo": "Ajouté à « {name} »",
   "common.view": "Voir",
   "common.copied": "Copié",

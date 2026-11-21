@@ -8,9 +8,16 @@ export type SwitchProps = {
   onChange: (value: boolean) => void;
   disabled: boolean;
   label: string;
+  tone?: "light" | "dark";
 };
 
-export function Switch({ checked, onChange, disabled, label }: SwitchProps): React.ReactElement {
+export function Switch({
+  checked,
+  onChange,
+  disabled,
+  label,
+  tone,
+}: SwitchProps): React.ReactElement {
   return (
     <Pressable
       accessibilityRole="switch"
@@ -21,7 +28,7 @@ export function Switch({ checked, onChange, disabled, label }: SwitchProps): Rea
       hitSlop={10}
       style={press({})}
     >
-      <SwitchTrack checked={checked} disabled={disabled} />
+      <SwitchTrack checked={checked} disabled={disabled} tone={tone} />
     </Pressable>
   );
 }

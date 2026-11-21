@@ -13,6 +13,8 @@ import { type } from "../type";
 
 export type SupersetEditorProps = {
   group: ItemGroup;
+  /** Its heading; Superset unless given. */
+  title?: string;
   onChange: (change: Partial<Omit<ItemGroup, "id">>) => void;
   onUngroup: () => void;
   /** Absent once it holds as many members as a superset can. */
@@ -30,6 +32,7 @@ const MAX_ROUNDS = 100;
 /** A superset in the editor: its rounds, its two rests, its members, + Add to superset and Ungroup. */
 export function SupersetEditor({
   group,
+  title = t("workouts.superset"),
   onChange,
   onUngroup,
   onAdd,
@@ -52,7 +55,7 @@ export function SupersetEditor({
     >
       <View style={{ minHeight: 36, flexDirection: "row", alignItems: "center", gap: 6 }}>
         <Text style={[type.bodyBold, { flex: 1, fontSize: 16, color: colors.gunmetal }]}>
-          {t("workouts.superset")}
+          {title}
         </Text>
         {onMoveUp !== undefined && (
           <IconButton

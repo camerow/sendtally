@@ -35,6 +35,12 @@ import {
 import { syncActivityToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 import { withDerivedKind } from "./lib/workoutKind";
+import {
+  captureBlockCreated,
+  captureBlockScheduled,
+  captureValueEvent,
+  captureWorkoutCreated,
+} from "./valueEvents";
 import { captureWorkoutLogged } from "./workoutLogged";
 
 // Training other than climbing and hangboarding. The app generates every id,
@@ -132,7 +138,10 @@ export const blocks = new Hono<AppEnv>()
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
       await repo.ensureUser(c.env.DB, userId);
-      const row = await repo.saveBlock(c.env.DB, userId, { id, ...c.req.valid("json") });
+      const body = c.req.valid("json");
+      const created = (await repo.getBlock(c.env.DB, userId, id)) === null;
+      const row = await repo.saveBlock(c.env.DB, userId, { id, ...body });
+      if (created) await captureBlockCreated(c, body);
       return c.json({ block: blockOf(row) });
     }
   )
@@ -176,7 +185,9 @@ export const memberships = new Hono<AppEnv>()
         return c.json({ error: "no such block" }, 400);
       }
       await repo.ensureUser(c.env.DB, userId);
+      const created = (await repo.getMembership(c.env.DB, userId, id)) === null;
       const row = await repo.saveMembership(c.env.DB, userId, { id, ...body });
+      if (created && body.blockId !== null) await captureBlockScheduled(c, body);
       return c.json({ membership: membershipOf(row) });
     }
   )
@@ -277,10 +288,11 @@ export const workouts = new Hono<AppEnv>()
       const userId = c.get("userId");
       await repo.ensureUser(c.env.DB, userId);
       const body = c.req.valid("json");
-      const saved =
-        body.kind === undefined ? (await repo.getWorkout(c.env.DB, userId, id))?.kind : undefined;
+      const existing = await repo.getWorkout(c.env.DB, userId, id);
+      const saved = body.kind === undefined ? existing?.kind : undefined;
       const { workout, isGrip } = await withDerivedKind(c.env.DB, userId, body, saved);
       const row = await repo.saveWorkout(c.env.DB, userId, { id, ...workout }, isGrip);
+      if (existing === undefined) await captureWorkoutCreated(c, workout);
       return c.json({ workout: workoutOf(row) });
     }
   )
@@ -297,21 +309,23 @@ export async function saveExercise(
   userId: string,
   id: string,
   body: ExerciseInput
-): Promise<{ exercise: Exercise; taken: boolean }> {
+): Promise<{ exercise: Exercise; taken: boolean; created: boolean }> {
   const [taken, row] = await Promise.all([
     repo.findExerciseByName(db, userId, body.name),
     repo.getExercise(db, userId, id),
   ]);
   if (taken !== null && taken.id !== id) {
-    if (row !== null || !taken.archived) return { exercise: exerciseOf(taken), taken: true };
-    return { exercise: exerciseOf(await repo.restoreExercise(db, userId, taken)), taken: false };
+    if (row !== null || !taken.archived)
+      return { exercise: exerciseOf(taken), taken: true, created: false };
+    const restored = await repo.restoreExercise(db, userId, taken);
+    return { exercise: exerciseOf(restored), taken: false, created: false };
   }
   await repo.ensureUser(db, userId);
   const saved =
     row === null
       ? await repo.createExercise(db, userId, id, body)
       : await repo.updateExercise(db, userId, row, body);
-  return { exercise: exerciseOf(saved), taken: false };
+  return { exercise: exerciseOf(saved), taken: false, created: row === null };
 }
 
 /** Deleted when nothing uses it; archived when a workout or log names it; null when the user has no such exercise. */
@@ -341,13 +355,14 @@ export const exercises = new Hono<AppEnv>()
     zValidator("json", exerciseBody, invalidBody),
     async (c) => {
       const { id } = c.req.valid("param");
-      const { exercise, taken } = await saveExercise(
-        c.env.DB,
-        c.get("userId"),
-        id,
-        c.req.valid("json")
-      );
+      const body = c.req.valid("json");
+      const { exercise, taken, created } = await saveExercise(c.env.DB, c.get("userId"), id, body);
       if (taken) return c.json({ error: "name taken", exercise }, 409);
+      if (created)
+        await captureValueEvent(c, "exercise_created", {
+          kind: exercise.kind,
+          measure: exercise.measure,
+        });
       return c.json({ exercise });
     }
   )
