@@ -103,12 +103,12 @@ export default function Privacy(): React.ReactElement {
         On iPhone it never includes the advertising identifier, and the app never asks to track you.
       </p>
       <p>
-        The iPhone app also runs Meta&rsquo;s SDK, which tells Meta that the app was installed and
+        The mobile apps also run Meta&rsquo;s SDK, which tells Meta that the app was installed and
         each time it is opened, with the device model, operating system, app version, language, time
         zone, mobile carrier, screen size, storage size and approximate region, against an
         identifier for that installation of the app. It sends no events of ours, nothing tied to
-        your account identifier or email address, and never the advertising identifier. The Android
-        app does not include it.
+        your account identifier or email address, and never the advertising identifier, on iPhone or
+        on Android.
       </p>
 
       <h2>What we never collect</h2>
@@ -184,12 +184,14 @@ export default function Privacy(): React.ReactElement {
           which carries no identifier for you or your device.
         </li>
         <li>
-          <strong>Meta</strong> - Meta&rsquo;s SDK in the iPhone app, to measure our own ads on
+          <strong>Meta</strong> - Meta&rsquo;s SDK in the mobile apps, to measure our own ads on
           Facebook and Instagram. The app reports that it was installed and opened, and Meta counts
-          the installs that followed one of our ads. That is measurement only: the app never asks to
-          track you, so Meta is told on every report that tracking is off, and your logbook, email
-          address, account identifier and advertising identifier are never sent. Installs from our
-          ads are also reported through Apple&rsquo;s SKAdNetwork.
+          the installs that followed one of our ads. That is measurement only: your logbook, email
+          address, account identifier and advertising identifier are never sent. On iPhone the app
+          never asks to track you, so Meta is told on every report that tracking is off, and
+          installs from our ads are also reported through Apple&rsquo;s SKAdNetwork. On Android the
+          app passes on the install referrer Google Play gives it when the install came from one of
+          Meta&rsquo;s ads.
         </li>
         <li>
           <strong>PostHog</strong> - product analytics, session replay and error reports, including
@@ -253,7 +255,7 @@ export default function Privacy(): React.ReactElement {
       <p>
         Google Analytics for Firebase records are not linked to your account, so there is nothing
         there for the purge to find. Google keeps them for two months, after which only aggregate
-        counts remain. The install and app-open records the iPhone app sends Meta are not linked to
+        counts remain. The install and app-open records the mobile apps send Meta are not linked to
         your account either, and Meta keeps them under its own retention rules.
       </p>
       <p>

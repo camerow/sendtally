@@ -196,7 +196,7 @@ Check a change to a workout screen against it, for every kind, before building.
 
 ## Analytics
 
-PostHog is the product analytics tool; Google Analytics only covers marketing-page traffic and mobile install attribution, and Meta's SDK in the iPhone app only counts installs from Meta ads.
+PostHog is the product analytics tool; Google Analytics only covers marketing-page traffic and mobile install attribution, and Meta's SDK in the mobile apps only counts installs from Meta ads.
 Load the `analytics` skill before adding, renaming, or removing an event, an identify call, or a tracking SDK.
 The logbook itself never goes to PostHog - event properties stay counts and enum-ish strings.
 Anything added here has to be reflected in `apps/web/app/routes/privacy.tsx`.

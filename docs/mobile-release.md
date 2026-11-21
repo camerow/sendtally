@@ -328,13 +328,14 @@ Each event also prints to the device log in debug mode, as `Logging event: origi
 ## Install attribution for Meta ads
 
 Meta's app install campaigns for iPhone need the Meta app (`Sendtally`, App ID `1795052648219979`) to report installs, or Ads Manager refuses the "iOS 14+ campaign" switch with "conversion data is missing or partial".
-The iPhone app carries Meta's SDK for that and nothing else, on the same terms as Firebase above: install and app-open measurement, no advertising identifier, no tracking prompt.
-The Android app does not carry it.
+Both apps carry Meta's SDK for that and nothing else: install and app-open measurement, no advertising identifier on either platform, no tracking prompt.
+The Android app carries it so Meta can count installs from the Android campaign too.
 
 ### What the app sends
 
-`apps/mobile/modules/meta-install` is a local Expo module, iOS only, with one dependency (`FBSDKCoreKit`, pinned to an exact version in its podspec, because no lockfile holds a generated `ios` directory to one) and one app delegate subscriber that starts the SDK at launch.
-`apps/mobile/plugins/with-meta-install.js` writes the SDK's settings into `Info.plist`.
+`apps/mobile/modules/meta-install` is a local Expo module with one dependency per platform, each pinned to an exact version because no lockfile holds a generated native project to one: `FBSDKCoreKit` in its podspec and `com.facebook.android:facebook-core` in its `build.gradle`.
+On iOS one app delegate subscriber starts the SDK at launch; on Android the SDK starts itself from the manifest, so the module has no Kotlin.
+`apps/mobile/plugins/with-meta-install.js` writes the SDK's settings into `Info.plist` and into the Android manifest and `strings.xml`.
 No JavaScript calls the SDK, so it logs no event of ours.
 
 With `FacebookAutoLogAppEventsEnabled` on, the SDK reports on its own:
@@ -357,6 +358,13 @@ Three switches in Meta's Events Manager would widen that from Meta's side, so th
 Meta's SDK ships a privacy manifest that declares tracking and the tracking domain `ep1.facebook.com`.
 iOS blocks that domain for any app without tracking permission, and the SDK sends through Meta's domains for people who have not allowed tracking instead.
 
+### Android
+
+- `com.facebook.sdk.AdvertiserIDCollectionEnabled` is `false`, so the SDK never sends the advertising ID. This is stricter than Firebase on Android, which does read it.
+- Without it Meta attributes an Android install from the Google Play install referrer, which the SDK passes on when it names Facebook. That covers a tap on an ad that leads to the Play Store; it can miss an install Meta would only have matched by advertising ID.
+  If the Android campaign undercounts, the switch is that one manifest value in the plugin, plus a sentence on the privacy page. It needs a store build.
+- Meta's SDK manifest asks for four Privacy Sandbox permissions. `app.json` blocks the two that exist for ad targeting, `ACCESS_ADSERVICES_CUSTOM_AUDIENCE` and `ACCESS_ADSERVICES_TOPICS`, and keeps the attribution one.
+
 ### The client token
 
 The SDK needs the Meta app's client token (Meta developer dashboard, App settings, Advanced) next to the App ID.
@@ -367,15 +375,17 @@ The App ID is a constant in the plugin; the token is read at build time from `ME
 | EAS project environment, `production` only | `eas env:create --environment production --name META_CLIENT_TOKEN --visibility sensitive` |
 | A local build, only to test the SDK        | `META_CLIENT_TOKEN=... pnpm --filter @sendtally/mobile ios`                               |
 
-A build without the token still carries the SDK but never starts it: the subscriber checks `Info.plist` for the token first, because the SDK throws on its first request without one.
+A build without the token still carries the SDK but never starts it.
+On iOS the subscriber checks `Info.plist` for the token first, because the SDK throws on its first request without one.
+On Android the SDK refuses to start without a client token and logs "Failed to auto initialize the Facebook SDK" once at launch.
 That is what development, preview and end-to-end builds do, so they report no installs to Meta.
 A `production` profile build without the token fails in prebuild rather than ship a store build that measures nothing.
 
-The plugin reads the variable while it writes `Info.plist`, not while the app config is evaluated, so the token is not part of the fingerprint and adding or rotating it does not move the runtime version.
+The plugin reads the variable while it writes the native files, not while the app config is evaluated, so the token is not part of the fingerprint and adding or rotating it does not move the runtime version.
 
 ### This needs a store build
 
-The module is native code, so the fingerprint moves on both platforms, even though the Android binary does not change: the plugin entry in `app.json` is part of both hashes.
+The module is native code on both platforms, so both fingerprints move.
 The first push to `main` after it lands builds and submits a release for both stores.
 
 ### One-time setup
@@ -383,8 +393,10 @@ The first push to `main` after it lands builds and submits a release for both st
 1. **Client token.** Add `META_CLIENT_TOKEN` to the EAS `production` environment, as above, before the pull request merges.
 2. **App Store privacy label.** App Store Connect, App Privacy: the label from the Google Ads setup above declares Device ID, Product Interaction and Coarse Location for Analytics and Developer's Advertising or Marketing, which covers what Meta receives.
    Keep "used to track you" at No for all three: with no tracking permission, nothing the app sends Meta is linked with other companies' data for advertising.
-3. **Events Manager.** In the Meta app's settings, keep automatic in-app purchase logging, Automatic Advanced Matching and codeless events off.
-4. **Check the first store build.** Events Manager shows `Install` and `Activate app` for the iOS app within a day, and the "iOS 14+ campaign" switch in Ads Manager stops complaining about missing conversion data.
+3. **Play data safety.** Device or other IDs, App interactions and Approximate location are declared from the Google Ads setup above, for Analytics and Advertising or marketing, which covers what Meta receives.
+   The Advertising ID declaration stays Yes because Firebase reads it; Meta's SDK does not.
+4. **Events Manager.** In the Meta app's settings, add the Android platform (package `com.sendtally.app`) next to iOS, and keep automatic in-app purchase logging, Automatic Advanced Matching and codeless events off.
+5. **Check the first store builds.** Events Manager shows `Install` and `Activate app` for each platform within a day, and the "iOS 14+ campaign" switch in Ads Manager stops complaining about missing conversion data.
 
 ### Checking that events arrive
 
@@ -392,6 +404,9 @@ Add `FacebookLoggingBehavior` (an array holding `app_events` and `network_reques
 The SDK then prints each request to the device log: `xcrun simctl spawn booted log stream --predicate 'process == "sendtally"' | grep -i fbsdk`.
 Remove the simulator's copy of the app first to see the install report again.
 A placeholder token is enough to watch the SDK start and send; Meta answers every request with error 190, "Invalid OAuth access token signature".
+
+On Android, build with the token and read `adb logcat | grep com.facebook`.
+The SDK logs each answer from Meta as `com.facebook.GraphResponse`, and a build without the token logs "Failed to auto initialize the Facebook SDK" instead.
 
 ## Store assets
 
