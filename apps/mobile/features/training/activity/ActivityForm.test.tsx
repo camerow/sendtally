@@ -24,8 +24,9 @@ jest.mock("expo-router", () => ({
     back: jest.fn(),
     push: jest.fn(),
     dismiss: jest.fn(),
+    replace: jest.fn(),
     dismissAll: jest.fn(),
-    canDismiss: () => true,
+    canDismiss: jest.fn(() => true),
   },
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "w-new" }));
@@ -111,6 +112,18 @@ describe("Log activity", () => {
     expect(router.dismissAll).toHaveBeenCalled();
     expect(router.back).not.toHaveBeenCalled();
     expect(justLogged.read()).toEqual({ id: "a1", name: "Mobility" });
+  });
+
+  it("lands on Today when nothing is under the review, as when the first-run wizard started the workout", async () => {
+    jest.mocked(router.dismissAll).mockClear();
+    jest.mocked(router.canDismiss).mockReturnValueOnce(false);
+    await render(
+      <ActivityForm id="a1" initial={newActivityDraft({}, "2026-10-22")} logged={null} />
+    );
+    await fireEvent.press(screen.getByText("Mobility"));
+    await fireEvent.press(screen.getByText("Save"));
+    expect(router.dismissAll).not.toHaveBeenCalled();
+    expect(router.replace).toHaveBeenCalledWith("/(tabs)/today");
   });
 
   it("stays on the form with what is in it when the save fails", async () => {
