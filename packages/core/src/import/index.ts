@@ -4,3 +4,16 @@ export { detectFormat, exportPageUrl, gradeFromText, IMPORT_SERVICES, planImport
 export { SENDTALLY_COLUMNS } from "./records";
 export type { LikelyDuplicate, LoggedSession } from "./duplicates";
 export type * from "./types";
+export {
+  ambiguousDate,
+  applyMatch,
+  dateIn,
+  dateOrderOf,
+  firstValue,
+  MATCH_SAMPLE_ROWS,
+  matchSample,
+  sheetOf,
+  unusedColumns,
+  usedColumns,
+  type Sheet,
+} from "./match";

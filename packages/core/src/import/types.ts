@@ -1,5 +1,5 @@
 import type { ClimbKind, ClimbStyle } from "../effort";
-import type { Grade } from "../grades";
+import type { Grade, GradeScale } from "../grades";
 
 export type ImportFormat = "kaya" | "8a" | "mountainProject" | "sendage" | "theCrag" | "sendtally";
 
@@ -58,3 +58,22 @@ export type ImportPlan = {
   sessions: ImportSession[];
   issues: ImportIssue[];
 };
+
+export type ClimbResult = "send" | "attempt" | "flash" | "onsight" | "redpoint";
+
+export type GradeColumn = { column: string; scale: GradeScale | null };
+
+// Which of a spreadsheet's columns holds each of our fields, by header name, as the
+// column-matching endpoint answers it and the user edits it.
+export type ColumnMatch = {
+  date: string;
+  climb: string | null;
+  grade: GradeColumn;
+  otherGrade: GradeColumn | null;
+  result: { column: string; values: { value: string; means: ClimbResult }[] } | null;
+  tries: string | null;
+  where: { column: string; kind: "gym" | "crag" } | null;
+  notes: string | null;
+};
+
+export type DateOrder = "dmy" | "mdy";
