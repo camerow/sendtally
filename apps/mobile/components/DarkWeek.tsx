@@ -11,9 +11,12 @@ import { darkMeta } from "../features/first-run/components/DarkCard";
 export function DarkWeek({
   week,
   onToggle,
+  dim = [],
 }: {
   week: readonly (readonly WorkoutKind[] | null)[];
   onToggle?: (day: Weekday) => void;
+  /** Days drawn quieter that still work, such as those the user did not say they can train. */
+  dim?: readonly Weekday[];
 }): React.ReactElement {
   const letters = weekdayLetters();
   return (
@@ -33,7 +36,10 @@ export function DarkWeek({
               accessibilityState={{ checked: kinds !== null }}
               hitSlop={4}
               onPress={() => onToggle(i as Weekday)}
-              style={press([cell(kinds !== null), { height: 46 }])}
+              style={press([
+                cell(kinds !== null),
+                { height: 46, opacity: dim.includes(i as Weekday) ? 0.45 : 1 },
+              ])}
             >
               {kinds?.map((k, j) => (
                 <DayMark key={j} kind={k} filled onDark />

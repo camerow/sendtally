@@ -1,9 +1,8 @@
 import { randomUUID } from "expo-crypto";
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import type { SendtallyApi } from "@sendtally/api-client";
-import type { Weekday, WorkoutKind } from "@sendtally/core/hang";
-import { colors } from "@sendtally/design/tokens";
+import type { Weekday } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   resumedPath,
@@ -17,15 +16,11 @@ import { useWorkouts } from "@sendtally/features/workouts";
 import { Button } from "../../training/components/Button";
 import { Title } from "../../training/components/Title";
 import { useHangData } from "../../training/data/HangDataContext";
-import { CategoryMark } from "../../training/library/CategoryMark";
 import { useLibrary } from "../../training/library/useLibrary";
 import { usePlanActions } from "../../training/plan/usePlanActions";
-import { WeekdayChips } from "../../training/planning/WeekdayChips";
-import { type } from "../../training/type";
 import { WizardFrame } from "../WizardFrame";
 import { AddWorkoutSheet } from "./AddWorkoutSheet";
-import { WeekCard } from "./components/WeekCard";
-import { YoursTag } from "./components/YoursTag";
+import { WorkoutWeeks } from "./components/WorkoutWeeks";
 
 const WEEKDAYS: readonly Weekday[] = [0, 1, 2, 3, 4, 5, 6];
 
@@ -55,13 +50,6 @@ export function WeekStep({
   const workout = (id: string) => (state.status === "ready" ? state.data.workout(id) : undefined);
   const daysOf = (id: string): readonly Weekday[] => path.days[id] ?? [];
   const sessions = sessionsPerWeek(path.days);
-  const week = WEEKDAYS.map((d) => {
-    const kinds = path.workouts
-      .filter((id) => daysOf(id).includes(d))
-      .map((id) => workout(id)?.kind)
-      .filter((k): k is WorkoutKind => k !== undefined);
-    return kinds.length === 0 ? null : kinds;
-  });
   const free = wizard.memory.days;
   const dim = free.length === 0 ? [] : WEEKDAYS.filter((d) => !free.includes(d));
 
@@ -101,7 +89,6 @@ export function WeekStep({
   return (
     <WizardFrame
       wizard={wizard}
-      sticky={[1]}
       footer={
         <Button
           variant="primary"
@@ -113,31 +100,21 @@ export function WeekStep({
       }
     >
       <Title size={34}>{t("onboarding.plan.week.title")}</Title>
-      <WeekCard
-        week={week}
-        meta={t("onboarding.plan.week.perWeek", { count: sessions })}
-        empty={t("onboarding.plan.week.empty")}
-      />
-      <View style={{ gap: 14 }}>
-        {path.workouts.map((id) => {
+      <WorkoutWeeks
+        workouts={path.workouts.map((id) => {
           const w = workout(id);
-          return (
-            <View key={id} style={{ gap: 8 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                {w !== undefined && <CategoryMark kind={w.kind} />}
-                <Text
-                  numberOfLines={1}
-                  style={[type.bodyBold, { flex: 1, fontSize: 15, color: colors.gunmetal }]}
-                >
-                  {w?.name ?? ""}
-                </Text>
-                {w?.source === "mine" && <YoursTag />}
-              </View>
-              <WeekdayChips days={daysOf(id)} dim={dim} onToggle={(d) => toggle(id, d)} />
-            </View>
-          );
+          return {
+            id,
+            name: w?.name ?? "",
+            kind: w?.kind,
+            mine: w?.source === "mine",
+            days: daysOf(id),
+          };
         })}
-      </View>
+        meta={sessions > 0 ? t("onboarding.plan.week.perWeek", { count: sessions }) : ""}
+        dim={dim}
+        onToggle={toggle}
+      />
       <View style={{ flexDirection: "row" }}>
         <Button
           variant="outline"

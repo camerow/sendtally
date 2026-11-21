@@ -7,9 +7,12 @@ import { DayMark } from "../training/plan-week/DayMark";
 export function DarkWeek({
   week,
   onToggle,
+  dim = [],
 }: {
   week: readonly (readonly WorkoutKind[] | null)[];
   onToggle?: (day: Weekday) => void;
+  /** Days drawn quieter that still work, such as those the user did not say they can train. */
+  dim?: readonly Weekday[];
 }): React.ReactElement {
   const letters = weekdayLetters();
   return (
@@ -28,6 +31,7 @@ export function DarkWeek({
               aria-label={weekdayLong(i)}
               aria-pressed={kinds !== null}
               onClick={() => onToggle(i as Weekday)}
+              style={dim.includes(i as Weekday) ? { opacity: 0.45 } : undefined}
               className={
                 kinds === null ? "dark-week-cell is-button" : "dark-week-cell is-button is-on"
               }

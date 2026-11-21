@@ -64,12 +64,6 @@
   text-transform: uppercase;
 }
 
-.plan-path-workouts {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
 .plan-path-workout {
   display: flex;
   flex-direction: column;
@@ -271,19 +265,6 @@
   width: 8px;
   height: 8px;
   border-radius: 4px;
-}
-
-.plan-path-lives {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-}
-
-.plan-path-lives svg {
-  flex: none;
-  color: var(--bs-gold);
 }
 
 .plan-path-link {

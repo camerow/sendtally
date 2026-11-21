@@ -1,5 +1,5 @@
 import React from "react";
-import type { Weekday, WorkoutKind } from "@sendtally/core/hang";
+import type { Weekday } from "@sendtally/core/hang";
 import { Button } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -10,16 +10,13 @@ import {
 } from "@sendtally/features/settings";
 import { newBlock, usePlan } from "@sendtally/features/training";
 import { useWorkouts } from "@sendtally/features/workouts";
-import { CategoryMark } from "../../training/components/CategoryMark";
 import { useHangData } from "../../training/data/HangDataContext";
 import { usePlanActions } from "../../training/data/usePlanActions";
 import { useLibrary } from "../../training/library/useLibrary";
-import { WeekdayChips } from "../../training/schedule/WeekdayChips";
 import type { StepComponent } from "../types";
 import { WizardFrame } from "../WizardFrame";
 import { AddWorkoutSheet } from "./components/AddWorkoutSheet";
-import { WeekCard } from "./components/WeekCard";
-import { YoursTag } from "./components/YoursTag";
+import { WorkoutWeeks } from "./components/WorkoutWeeks";
 
 const WEEKDAYS: readonly Weekday[] = [0, 1, 2, 3, 4, 5, 6];
 
@@ -45,13 +42,6 @@ export const WeekStep: StepComponent = ({ wizard, api }) => {
   const workout = (id: string) => (state.status === "ready" ? state.data.workout(id) : undefined);
   const daysOf = (id: string): readonly Weekday[] => path.days[id] ?? [];
   const sessions = sessionsPerWeek(path.days);
-  const week = WEEKDAYS.map((d) => {
-    const kinds = path.workouts
-      .filter((id) => daysOf(id).includes(d))
-      .map((id) => workout(id)?.kind)
-      .filter((k): k is WorkoutKind => k !== undefined);
-    return kinds.length === 0 ? null : kinds;
-  });
   const free = wizard.memory.days;
   const dim = free.length === 0 ? [] : WEEKDAYS.filter((d) => !free.includes(d));
 
@@ -98,29 +88,21 @@ export const WeekStep: StepComponent = ({ wizard, api }) => {
       }
     >
       <h1 className="wizard-title">{t("onboarding.plan.week.title")}</h1>
-      <div className="plan-path-sticky">
-        <WeekCard
-          steady
-          week={week}
-          meta={t("onboarding.plan.week.perWeek", { count: sessions })}
-          empty={t("onboarding.plan.week.empty")}
-        />
-      </div>
-      <div className="plan-path-workouts">
-        {path.workouts.map((id) => {
+      <WorkoutWeeks
+        workouts={path.workouts.map((id) => {
           const w = workout(id);
-          return (
-            <div key={id} className="plan-path-workout">
-              <div className="plan-path-workout-head">
-                {w !== undefined && <CategoryMark kind={w.kind} size={28} />}
-                <span className="plan-path-workout-name">{w?.name ?? ""}</span>
-                {w?.source === "mine" && <YoursTag />}
-              </div>
-              <WeekdayChips days={daysOf(id)} dim={dim} onToggle={(d) => toggle(id, d)} />
-            </div>
-          );
+          return {
+            id,
+            name: w?.name ?? "",
+            kind: w?.kind,
+            mine: w?.source === "mine",
+            days: daysOf(id),
+          };
         })}
-      </div>
+        meta={sessions > 0 ? t("onboarding.plan.week.perWeek", { count: sessions }) : ""}
+        dim={dim}
+        onToggle={toggle}
+      />
       <div>
         <Button variant="ghostOnLight" onClick={() => setAdding(true)}>
           + {t("onboarding.plan.week.addWorkout")}
