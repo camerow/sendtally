@@ -250,16 +250,6 @@
   color: var(--text-on-white-secondary);
 }
 
-.library-card-foot {
-  margin-top: auto;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-on-white-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .phase-bar {
   display: flex;
   align-items: flex-end;

@@ -6,7 +6,6 @@ import { colors } from "@sendtally/design/tokens";
 import { doseProtocol, intervalsOf, sessionItems } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import { durationLabel } from "@sendtally/features/sessions";
-import { t } from "@sendtally/features/i18n";
 import {
   bodySummary,
   workoutMinutes,
@@ -32,7 +31,7 @@ export type LibraryCardProps = {
   width?: number;
 };
 
-/** A workout in the library: its kind, name, length, what it holds, and how much it ran. */
+/** A workout in the library: its kind, name, length, and what it holds. */
 export function LibraryCard({
   workout,
   use,
@@ -46,10 +45,6 @@ export function LibraryCard({
   const items = sessionItems(workout.items, use?.count ?? 0);
   const [first] = items;
   const timed = items.length > 0 && items.every((i) => i.dose.onS !== undefined);
-  const foot =
-    use === undefined || use.count === 0
-      ? t("workouts.notUsed")
-      : t("workouts.usedTimes", { count: use.count });
   return (
     <Pressable
       onPress={onPress}
@@ -90,12 +85,6 @@ export function LibraryCard({
           <IntervalsBar intervals={intervalsOf(items)} height={12} />
         </View>
       )}
-      <Text
-        numberOfLines={1}
-        style={[type.mono, { marginTop: "auto", fontSize: 12, color: colors.textSecondary }]}
-      >
-        {foot}
-      </Text>
     </Pressable>
   );
 }
