@@ -7,15 +7,22 @@ import {
 } from "@sendtally/core/import";
 import { Button } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
-import { importAll, importSourceOf } from "@sendtally/features/import";
+import {
+  columnsMatchedEvent,
+  importAll,
+  importSourceOf,
+  matchedCsv,
+  requestColumns,
+  sheetMeta,
+  type ColumnsReview,
+} from "@sendtally/features/import";
 import {
   firstRunSourceLabel,
   historyCard,
   importedInsights,
   useDisplayScales,
 } from "@sendtally/features/settings";
-import { AssistantCard } from "../../import/components/AssistantCard";
-import { ConversionPrompt } from "../../import/components/ConversionPrompt";
+import { ColumnMatch } from "../../import/components/ColumnMatch";
 import { DropZone } from "../../import/components/DropZone";
 import { ExportHowTo } from "../../import/components/ExportHowTo";
 import { ImportReview } from "../../import/components/ImportReview";
@@ -50,15 +57,18 @@ const yearsIn = (plan: ImportPlan): number => {
 export const ImportStep: StepComponent = ({ wizard, api }) => {
   const scales = useDisplayScales();
   const [review, setReview] = React.useState<Review | null>(null);
+  const [columns, setColumns] = React.useState<ColumnsReview | null>(null);
+  const [matching, setMatching] = React.useState(false);
   const answer = wizard.memory.existingLog;
   const source = answer === null ? undefined : importSourceOf(answer);
 
-  const choose = async (file: File): Promise<void> => {
-    const plan = planImport(await file.text(), Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const read = async (fileName: string, text: string): Promise<void> => {
+    const plan = planImport(text, Intl.DateTimeFormat().resolvedOptions().timeZone);
     const log = await api.sessionsWithClimbs();
     const duplicates = await likelyDuplicates(plan.sessions, log.sessions, sha256Hex);
+    setColumns(null);
     setReview({
-      fileName: file.name,
+      fileName,
       plan,
       duplicates,
       importAnyway: [],
@@ -71,6 +81,19 @@ export const ImportStep: StepComponent = ({ wizard, api }) => {
       issues: plan.issues.length,
       duplicates: duplicates.length,
     });
+  };
+
+  const choose = async (file: File): Promise<void> => {
+    const text = await file.text();
+    const plan = planImport(text, "UTC");
+    if (plan.sessions.length === 0 && plan.issues[0]?.code === "noHeader") {
+      setMatching(true);
+      const matched = await requestColumns(api, text, file.name).finally(() => setMatching(false));
+      if (matched !== null) {
+        setReview(null);
+        setColumns(matched);
+      } else await read(file.name, text);
+    } else await read(file.name, text);
     if (wizard.step === "H2i") wizard.next({ way: "import" });
   };
 
@@ -87,6 +110,31 @@ export const ImportStep: StepComponent = ({ wizard, api }) => {
     </button>
   );
 
+  if (wizard.step !== "H2i" && columns !== null)
+    return (
+      <WizardFrame
+        wizard={wizard}
+        footer={
+          <Button
+            variant="azure"
+            onClick={() => {
+              wizard.capture("import_columns_matched", columnsMatchedEvent(columns, "matched"));
+              void read(columns.fileName, matchedCsv(columns));
+            }}
+          >
+            {t("import.match.confirm")}
+          </Button>
+        }
+      >
+        <div className="history-head">
+          <span className="history-kicker">{firstRunSourceLabel("spreadsheet")}</span>
+          <h1 className="wizard-title">{t("import.match.title")}</h1>
+          <span className="history-meta">{sheetMeta(columns)}</span>
+        </div>
+        <ColumnMatch review={columns} onChange={setColumns} />
+      </WizardFrame>
+    );
+
   if (wizard.step === "H2i" || review === null)
     return (
       <WizardFrame wizard={wizard} footer={byHand}>
@@ -98,13 +146,13 @@ export const ImportStep: StepComponent = ({ wizard, api }) => {
         </div>
         <WhatYouGet />
         {source !== undefined && <ExportHowTo source={source} />}
-        {source === "spreadsheet" && (
-          <>
-            <ConversionPrompt />
-            <AssistantCard />
-          </>
+        {matching ? (
+          <p className="history-lede" role="status">
+            {t("import.match.matching")}
+          </p>
+        ) : (
+          <DropZone onFile={(file) => void choose(file)} links={source === undefined} />
         )}
-        <DropZone onFile={(file) => void choose(file)} links={source === undefined} />
       </WizardFrame>
     );
 
