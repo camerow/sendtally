@@ -41,7 +41,8 @@ export function usePlanPath(): PlanPath {
 
 /**
  * The walk as the saved data has it when memory holds none, after a kill: the newest
- * unscheduled block with workouts in it, else the newest workout of the user's own.
+ * unscheduled block with workouts in it, else the newest scheduled one (a walk past P4),
+ * else the newest workout of the user's own.
  */
 export function resumedPath(
   p: PlanPath,
@@ -49,11 +50,10 @@ export function resumedPath(
   mine: readonly Pick<WorkoutRecord, "id" | "updatedAt">[]
 ): PlanPath {
   if (p.workouts.length > 0) return p;
-  const block = plan.blocks
-    .filter((b) => b.start === null)
+  const filled = plan.blocks
     .map((b) => ({ b, members: plan.memberships.filter((m) => m.blockId === b.id) }))
-    .filter(({ members }) => members.length > 0)
-    .at(-1);
+    .filter(({ members }) => members.length > 0);
+  const block = filled.filter(({ b }) => b.start === null).at(-1) ?? filled.at(-1);
   if (block !== undefined) {
     const members = [...block.members].sort((a, b) => a.position - b.position);
     return {
