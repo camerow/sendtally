@@ -68,8 +68,6 @@ export const importCsv = {
   "import.showAll": "Mostrar las {total} sesiones",
   "import.sendCount_one": "{count} encadene",
   "import.sendCount_other": "{count} encadenes",
-  "import.rpeGiven": "RPE {rpe} indicado",
-  "import.rpeScored": "RPE calculado",
   "import.reviewNote":
     "Las sesiones sin RPE se puntúan igual que una registrada en el formulario, por orden de fecha, para que tu tendencia de esfuerzo sea correcta. Una sesión ya importada desde este archivo se omite en lugar de duplicarse. No se publica nada en Strava.",
   "import.confirm_one": "Importar {count} sesión",

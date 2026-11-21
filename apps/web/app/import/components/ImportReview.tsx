@@ -9,7 +9,7 @@ import {
   withAddedTags,
 } from "@sendtally/features/import";
 import { sameTagName, type TagOption } from "@sendtally/features/sessions";
-import { formatDate, t } from "@sendtally/features/i18n";
+import { t } from "@sendtally/features/i18n";
 import { Section } from "../../settings/components/Section";
 import {
   bodyText,
@@ -17,24 +17,16 @@ import {
   secondaryButton,
   underlineButton,
 } from "../../settings/components/styles";
-import { checkbox, goldButton, pillMuted, pillOk, td, tdMono, th } from "../styles";
-import { useIsNarrow } from "../../lib/useIsNarrow";
+import { checkbox, goldButton, pillOk, td, tdMono, th } from "../styles";
 import { AssistantCard } from "./AssistantCard";
 import { ConversionPrompt } from "./ConversionPrompt";
+import { dayLabel, ImportSessionRow } from "./ImportSessionRow";
 import { SessionTagBar } from "./SessionTagBar";
 import { Stat } from "./Stat";
 import { sectionLabel } from "../../components/styles";
 
 const PREVIEW_ROWS = 8;
 const ISSUE_ROWS = 20;
-
-const dayLabel = (date: string): string =>
-  formatDate(new Date(`${date}T00:00:00Z`), {
-    timeZone: "UTC",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
 
 export type ImportReviewProps = {
   fileName: string;
@@ -75,7 +67,6 @@ export function ImportReview({
   const issues = allIssues ? plan.issues : plan.issues.slice(0, ISSUE_ROWS);
   const scales = useDisplayScales();
   const stats = planStats(plan.sessions, scales);
-  const narrow = useIsNarrow();
   const [selected, setSelected] = React.useState<number[]>([]);
   const tagged = withAddedTags(plan.sessions, added);
   const newestFirst = tagged.map((session, index) => ({ session, index })).reverse();
@@ -246,76 +237,24 @@ export function ImportReview({
             />
           )}
           {shown.map(({ session: s, index }, i) => {
-            const sends = s.climbs.filter((c) => c.kind === "send").length;
             const match = matchOf(index);
             const rule = i < shown.length - 1 ? "1px solid var(--line-on-light-soft)" : "none";
             return (
               <React.Fragment key={index}>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14,
-                    padding: "12px 18px",
-                    borderBottom: match === undefined ? rule : "none",
-                    background: selected.includes(index) ? "var(--surface-soft)" : "transparent",
-                    cursor: tagging === undefined ? "default" : "pointer",
-                  }}
-                >
-                  {tagging !== undefined && (
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(index)}
-                      disabled={busy}
-                      aria-label={t("import.selectSession", {
-                        name: sessionTitle(s) ?? t("common.climbingSession"),
-                        date: dayLabel(s.date),
-                      })}
-                      onChange={() => toggle(index)}
-                      style={checkbox}
-                    />
-                  )}
-                  <span
-                    style={{
-                      ...monoMuted,
-                      fontSize: 11,
-                      color: "var(--bs-gunmetal)",
-                      width: narrow ? 52 : 92,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {dayLabel(s.date)}
-                  </span>
-                  <span
-                    style={{
-                      flexGrow: 1,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 2,
-                      minWidth: 0,
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>
-                      {sessionTitle(s) ?? t("common.climbingSession")}
-                    </span>
-                    <span style={monoMuted}>
-                      {t("common.climbCount", { count: s.climbs.length })} ·{" "}
-                      {s.location === "indoor" ? t("common.indoor") : t("common.outdoor")} ·{" "}
-                      {t("import.sendCount", { count: sends })} ·{" "}
-                      {planStats([s], scales).topGrade ?? "–"}
-                    </span>
-                    {s.tags !== undefined && (
-                      <span style={{ ...monoMuted, color: "var(--bs-petal-ink)" }}>
-                        {s.tags.join(" · ")}
-                      </span>
-                    )}
-                  </span>
-                  <span style={pillMuted}>
-                    {s.rpe === undefined
-                      ? t("import.rpeScored")
-                      : t("import.rpeGiven", { rpe: s.rpe })}
-                  </span>
-                </label>
+                <ImportSessionRow
+                  session={s}
+                  scales={scales}
+                  borderBottom={match === undefined ? rule : "none"}
+                  selection={
+                    tagging === undefined
+                      ? undefined
+                      : {
+                          checked: selected.includes(index),
+                          disabled: busy,
+                          onToggle: () => toggle(index),
+                        }
+                  }
+                />
                 {match !== undefined && (
                   <label
                     style={{

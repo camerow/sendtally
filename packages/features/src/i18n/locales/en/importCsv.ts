@@ -65,8 +65,6 @@ export const importCsv = {
   "import.showAll": "Show all {total} sessions",
   "import.sendCount_one": "{count} send",
   "import.sendCount_other": "{count} sends",
-  "import.rpeGiven": "RPE {rpe} given",
-  "import.rpeScored": "RPE scored",
   "import.reviewNote":
     "Sessions without an RPE are scored the same way as one logged in the form, in date order, so your effort trend reads correctly. A session already imported from this file is skipped rather than duplicated. Nothing is posted to Strava.",
   "import.confirm_one": "Import {count} session",
