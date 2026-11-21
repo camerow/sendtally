@@ -40,7 +40,9 @@ jest.mock("../../../components/Sheet", () => {
     },
   };
 });
-jest.mock("expo-router", () => ({ router: { back: jest.fn(), push: jest.fn() } }));
+jest.mock("expo-router", () => ({
+  router: { canGoBack: () => true, back: jest.fn(), push: jest.fn() },
+}));
 jest.mock("expo-crypto", () => ({ randomUUID: jest.fn() }));
 jest.mock("@sendtally/features/workouts", () => ({
   ...jest.requireActual<typeof Workouts>("@sendtally/features/workouts"),

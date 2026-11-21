@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React from "react";
 import { useExerciseList } from "@sendtally/features/exercises";
 import { Text, View } from "react-native";
@@ -30,6 +29,7 @@ import { type } from "../type";
 import { AddWorkoutsSheet } from "./AddWorkoutsSheet";
 import { OngoingWorkouts } from "./OngoingWorkouts";
 import { usePlanDraft } from "./usePlanDraft";
+import { goBack } from "../../../lib/goBack";
 
 export type OngoingScreenProps = {
   /** Where back goes, as that screen is called. */
@@ -71,7 +71,7 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
     draft.save();
     if (members.length === 0) {
       release();
-      router.back();
+      goBack();
     }
   };
 

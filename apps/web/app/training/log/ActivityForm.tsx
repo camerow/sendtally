@@ -134,7 +134,11 @@ export function ActivityForm({
       return;
     }
     setSaving(true);
-    const saved = await actions.saveActivity(activityFromDraft(id, draft));
+    const fingerboard = part && grips && part.body(grips.done, grips.setup);
+    const saved = await actions.saveActivity({
+      ...activityFromDraft(id, draft),
+      ...(fingerboard != null && { fingerboard }),
+    });
     setSaving(false);
     if (!saved) return;
     if (logged === null)
@@ -142,11 +146,6 @@ export function ActivityForm({
         message: justLoggedText({ id, name: draft.title.trim() || kindLabel(draft.kind) }),
         action: { label: t("common.view"), onPress: () => void navigate(activityPath(id)) },
       });
-    const fingerboard = part && grips && part.body(grips.done, grips.setup);
-    void actions.saveActivity({
-      ...activityFromDraft(id, draft),
-      ...(fingerboard !== undefined && { fingerboard }),
-    });
     leave();
   };
   const saveAsWorkout = (): void => {

@@ -99,7 +99,6 @@ export function ExercisePicker({
   const metaOf = (entry: PickerEntry): string => {
     if ("grip" in entry.source)
       return gripMeta(model.sessions, entry.source.grip.id, today, model.settings.units, true);
-    if (entry.uses > 0) return t("workouts.timesUsed", { count: entry.uses });
     if (entry.library) return t("workouts.fromLibrary");
     if (!("exercise" in entry.source)) return "";
     return measureLabel(entry.source.exercise.measure, entry.source.exercise.kind);

@@ -11,7 +11,9 @@ jest.mock("../../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
     visible ? children : null,
 }));
-jest.mock("expo-router", () => ({ router: { back: jest.fn(), dismiss: jest.fn() } }));
+jest.mock("expo-router", () => ({
+  router: { canGoBack: () => true, back: jest.fn(), dismiss: jest.fn() },
+}));
 
 const session: HangSessionRecord = {
   id: "h1",

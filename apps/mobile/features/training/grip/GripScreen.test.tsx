@@ -7,7 +7,9 @@ import type { WorkoutRecord } from "@sendtally/api-client";
 import { aHang, hangData, renderWithHang } from "../data/renderWithHang";
 import { GripScreen } from "./GripScreen";
 
-jest.mock("expo-router", () => ({ router: { push: jest.fn(), back: jest.fn() } }));
+jest.mock("expo-router", () => ({
+  router: { canGoBack: () => true, push: jest.fn(), back: jest.fn() },
+}));
 jest.mock("../../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
     visible ? children : null,

@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React from "react";
 import { KeyboardAvoidingView, Platform, Text } from "react-native";
 import type { HangSessionRecord } from "@sendtally/api-client";
@@ -24,6 +23,7 @@ import { type } from "../type";
 import { hangCount } from "@sendtally/features/activities";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { Toast } from "../../../components/Toast";
+import { goBack } from "../../../lib/goBack";
 
 export type HangSessionFormProps = { session: HangSessionRecord };
 
@@ -63,7 +63,7 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
       pct: result.pct,
       misses: result.misses,
     });
-    router.back();
+    goBack();
   };
 
   return (
@@ -71,7 +71,7 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <EditorHeader title={t("summary.editWorkout")} onCancel={() => router.back()} onSave={save} />
+      <EditorHeader title={t("summary.editWorkout")} onCancel={() => goBack()} onSave={save} />
       <KeypadScrollView
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 4, paddingBottom: 32, gap: 18 }}
       >

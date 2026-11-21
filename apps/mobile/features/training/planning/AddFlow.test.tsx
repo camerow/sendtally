@@ -33,7 +33,7 @@ jest.mock("../../../components/Sheet", () => ({
     visible ? children : null,
 }));
 jest.mock("expo-router", () => ({
-  router: { push: jest.fn(), back: jest.fn(), dismissTo: jest.fn() },
+  router: { canGoBack: () => true, push: jest.fn(), back: jest.fn(), dismissTo: jest.fn() },
   useFocusEffect: jest.fn(),
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "m-new" }));

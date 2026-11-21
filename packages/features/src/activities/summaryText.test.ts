@@ -6,6 +6,6 @@ describe("effortTile", () => {
     expect(effortTile(7, 8)).toEqual({ value: "RPE 7", label: "Target RPE 8/10" });
     expect(effortTile(null, 8)).toEqual({ value: "RPE –", label: "Target RPE 8/10" });
     expect(effortTile(7, null)).toEqual({ value: "RPE 7", label: "Hard" });
-    expect(effortTile(null, null)).toEqual({ value: "RPE –", label: "not rated" });
+    expect(effortTile(null, null)).toEqual({ value: "RPE –", label: "Not rated" });
   });
 });

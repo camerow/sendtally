@@ -1,15 +1,15 @@
-import { router } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { t } from "@sendtally/features/i18n";
 import { colors, fonts } from "@sendtally/design/tokens";
+import { goBack } from "../lib/goBack";
 import { press } from "../lib/press";
 import { FLOATING, FloatingBar } from "./FloatingBar";
 import { Icon } from "./Icon";
 
 export function BackButton({
   label,
-  onPress = () => router.back(),
+  onPress = () => goBack(),
 }: {
   label?: string;
   onPress?: () => void;

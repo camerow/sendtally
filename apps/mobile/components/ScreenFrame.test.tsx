@@ -2,12 +2,15 @@ import { describe, expect, it, jest } from "@jest/globals";
 import React from "react";
 import { Text } from "react-native";
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { router } from "expo-router";
 import { ScreenFrame } from "./ScreenFrame";
 import { Toast } from "./Toast";
 import { TimeField } from "./TimeField";
 import { useFieldOrder } from "./useFieldOrder";
 
-jest.mock("expo-router", () => ({ router: { back: () => undefined } }));
+jest.mock("expo-router", () => ({
+  router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
+}));
 
 async function press(...keys: string[]): Promise<void> {
   for (const key of keys) await fireEvent.press(screen.getByLabelText(key));
@@ -28,6 +31,20 @@ function Rests({
 }
 
 describe("ScreenFrame", () => {
+  it("goes Back to the screen under it, or to Today when a flow replaced its way here and left none", async () => {
+    await render(
+      <ScreenFrame>
+        <Text>Session</Text>
+      </ScreenFrame>
+    );
+    await fireEvent.press(screen.getByText("Back"));
+    expect(router.back).toHaveBeenCalledTimes(1);
+    jest.mocked(router.canGoBack).mockReturnValueOnce(false);
+    await fireEvent.press(screen.getByText("Back"));
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.replace).toHaveBeenCalledWith("/(tabs)/today");
+  });
+
   it("hides its pinned footer while the keypad is up", async () => {
     await render(<Rests onChange={() => undefined} />);
     expect(screen.getByText("Start")).toBeTruthy();

@@ -178,7 +178,7 @@ describe("WorkoutPage", () => {
     expect(container.querySelector("h1")?.textContent).toBe("Gym, legs");
     expect(container.textContent).toContain("Heavy lower body.");
     const tiles = [...container.querySelectorAll(".detail-tile")].map((t) => t.textContent);
-    expect(tiles).toEqual(["length50 min", "Target RPE8/10"]);
+    expect(tiles).toEqual(["Length50 min", "Target RPE8/10"]);
     expect(container.textContent).not.toContain("Used");
     const names = [...container.querySelectorAll(".exercise-head-name")].map((r) => r.textContent);
     expect(names).toEqual(["Back squat", "Deadlift"]);

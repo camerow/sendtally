@@ -1,6 +1,6 @@
 export const summary = {
-  "summary.length": "length",
-  "summary.climbs": "climbs",
+  "summary.length": "Length",
+  "summary.climbs": "Climbs",
   "summary.sent": "sent",
   "summary.same": "Same",
   "summary.repsUp_one": "+{count} rep",
@@ -36,5 +36,5 @@ export const summary = {
   "summary.lapsDown_other": "−{count} laps vs last",
   "summary.sentOf": "{sent} of {of} sent",
   "summary.laps": "Laps",
-  "summary.notRated": "not rated",
+  "summary.notRated": "Not rated",
 } as const;

@@ -1,9 +1,9 @@
-import { router } from "expo-router";
 import React from "react";
 import { t } from "@sendtally/features/i18n";
 import { Button } from "../components/Button";
 import type { AddFlow } from "@sendtally/features/training";
 import { useAddTo } from "./useAddTo";
+import { goBack } from "../../../lib/goBack";
 
 export type AddButtonProps = { flow: AddFlow; workoutId: string };
 
@@ -16,7 +16,7 @@ export function AddButton({ flow, workoutId }: AddButtonProps): React.ReactEleme
       label={there ? (flow.date !== null ? t("plan.onDay") : t("plan.inBlock")) : t("hang.add")}
       onPress={() => {
         addTo.add(workoutId);
-        router.back();
+        goBack();
       }}
       disabled={there}
       variant="primary"

@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { colors, radius } from "@sendtally/design/tokens";
 import type { Stat } from "@sendtally/features/activities";
+import { Label } from "../components/Label";
 import { type } from "../type";
 
 export type SummaryTilesProps = { stats: readonly Stat[] };
@@ -22,9 +23,9 @@ export function SummaryTiles({ stats }: SummaryTilesProps): React.ReactElement {
             backgroundColor: colors.surfaceSoft,
           }}
         >
-          <Text style={[type.body, { fontSize: 11.5, color: colors.textSecondary }]}>
+          <Label small color={colors.textSecondary}>
             {s.label}
-          </Text>
+          </Label>
           <Text
             style={[type.display, { fontSize: 22, color: colors.gunmetal }]}
             numberOfLines={1}

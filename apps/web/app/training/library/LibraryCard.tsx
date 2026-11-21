@@ -29,7 +29,7 @@ export type LibraryCardProps = {
   showKind?: boolean;
 };
 
-/** A workout in the library: its kind, name, length, what it holds, and how much it ran. */
+/** A workout in the library: its kind, name, length, and what it holds. */
 export function LibraryCard({
   workout,
   use,
@@ -68,9 +68,6 @@ export function LibraryCard({
       </span>
       {summary !== null && <span className="library-card-summary">{summary}</span>}
       {phases !== null && <PhaseBar phases={phases} height={12} />}
-      <span className="library-card-foot">
-        {count === 0 ? t("workouts.notUsed") : t("workouts.usedTimes", { count })}
-      </span>
     </Link>
   );
 }

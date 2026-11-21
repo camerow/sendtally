@@ -32,7 +32,9 @@ jest.mock("../../../components/Sheet", () => ({
   Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
     visible ? children : null,
 }));
-jest.mock("expo-router", () => ({ router: { push: jest.fn(), back: jest.fn() } }));
+jest.mock("expo-router", () => ({
+  router: { canGoBack: () => true, push: jest.fn(), back: jest.fn() },
+}));
 
 let strava: Strava = { status: "active" };
 

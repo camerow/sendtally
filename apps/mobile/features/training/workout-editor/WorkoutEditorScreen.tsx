@@ -1,5 +1,4 @@
 import { randomUUID } from "expo-crypto";
-import { router } from "expo-router";
 import React from "react";
 import { Alert, KeyboardAvoidingView, Platform, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -69,6 +68,7 @@ import { useDiscardGuard } from "../../../lib/useDiscardGuard";
 import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { TimeField } from "../../../components/TimeField";
 import { GapRest } from "./GapRest";
+import { goBack } from "../../../lib/goBack";
 
 const MAX_MINUTES = 600;
 
@@ -188,14 +188,14 @@ function Editor({
     release();
     void actions.saveWorkout(saved, draftOfEditor(state));
     if (adding !== undefined && id === undefined) addTo.add(saved);
-    router.back();
+    goBack();
   };
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
       <EditorHeader
         title={id === undefined ? t("workouts.newWorkout") : t("hang.editWorkout")}
-        onCancel={() => router.back()}
+        onCancel={() => goBack()}
         onSave={save}
       />
       <KeyboardAvoidingView

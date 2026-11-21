@@ -12,7 +12,7 @@ const mockApi = { saveExercise: jest.fn<(...args: unknown[]) => Promise<unknown>
 
 jest.mock("../../../lib/api", () => ({ useApi: () => mockApi }));
 jest.mock("expo-router", () => ({
-  router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() },
+  router: { canGoBack: () => true, push: jest.fn(), back: jest.fn(), replace: jest.fn() },
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "new-id" }));
 
