@@ -35,14 +35,13 @@ export type PickerRowProps = {
 function metaOf(entry: PickerEntry, { model, today }: HangData): string {
   if ("grip" in entry.source)
     return gripMeta(model.sessions, entry.source.grip.id, today, model.settings.units, true);
-  if (entry.uses > 0) return t("workouts.timesUsed", { count: entry.uses });
   if (entry.library) return t("workouts.fromLibrary");
   if (!("exercise" in entry.source)) return "";
   const { measure, kind } = entry.source.exercise;
   return measureLabel(measure, kind);
 }
 
-/** One exercise the picker offers: how often it was used, and whether the workout already has it. */
+/** One exercise the picker offers: what it measures, and whether the workout already has it. */
 export function PickerRow({
   entry,
   ticked,

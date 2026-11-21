@@ -101,8 +101,6 @@ export const workouts = {
   "workouts.searchExercises": "Übungen suchen",
   "workouts.allCategories": "Alle",
   "workouts.mostUsed": "Am häufigsten",
-  "workouts.timesUsed_one": "Einmal",
-  "workouts.timesUsed_other": "{count}-mal",
   "workouts.fromLibrary": "Bibliothek",
   "workouts.inWorkout": "Im Workout",
   "workouts.noExerciseCalled": "Keine Übung namens {name}",

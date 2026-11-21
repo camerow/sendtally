@@ -100,8 +100,6 @@ export const workouts = {
   "workouts.searchExercises": "Search exercises",
   "workouts.allCategories": "All",
   "workouts.mostUsed": "Most used",
-  "workouts.timesUsed_one": "Once",
-  "workouts.timesUsed_other": "{count} times",
   "workouts.fromLibrary": "Library",
   "workouts.inWorkout": "In workout",
   "workouts.noExerciseCalled": "No exercise called {name}",
