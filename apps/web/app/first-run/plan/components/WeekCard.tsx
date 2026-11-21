@@ -10,13 +10,20 @@ export type WeekCardProps = {
   /** The line beside the label once a day is on, and the prompt while none is. */
   meta: string;
   empty: string;
+  /** Where days are being picked: the prompt's line keeps its height once a day is on, so the chips below stay put. */
+  steady?: boolean;
 };
 
 /** "Your week": seven days, lit where the user can train, with each workout's mark on its days. */
-export function WeekCard({ week, meta, empty }: WeekCardProps): React.ReactElement {
+export function WeekCard({ week, meta, empty, steady = false }: WeekCardProps): React.ReactElement {
   const any = week.some((d) => d !== null);
   return (
-    <DarkCard label={t("plan.week")} {...(any ? { meta } : { note: empty })}>
+    <DarkCard
+      label={t("plan.week")}
+      meta={any ? meta : undefined}
+      note={any && !steady ? undefined : empty}
+      noteShown={!any}
+    >
       <DarkWeek week={week} />
     </DarkCard>
   );

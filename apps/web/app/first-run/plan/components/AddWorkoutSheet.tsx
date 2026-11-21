@@ -45,8 +45,7 @@ export function AddWorkoutSheet({
       kicker={t("onboarding.plan.yourPlan")}
       title={t("onboarding.plan.week.addWorkout")}
       onClose={onClose}
-      action={{ label: t("common.done"), onPress: onClose }}
-      cancel={false}
+      headAction={{ label: t("common.done"), onPress: onClose }}
     >
       <span className="train-label">{t("workouts.fromLibrary")}</span>
       <div className="plan-path-rows">

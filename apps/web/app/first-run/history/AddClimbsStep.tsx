@@ -85,12 +85,20 @@ export const AddClimbsStep: StepComponent = ({ wizard, api }) => {
   const canAdd = picked && !needsName && !saving;
   const years = Array.from({ length: YEARS }, (_, i) => String(now.getFullYear() - i));
 
+  const cardRef = React.useRef<HTMLDivElement>(null);
+  const showCard = (): void => {
+    if (!window.matchMedia("(max-width: 767px)").matches) return;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    cardRef.current?.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+  };
+
   const add = (): void => {
     if (!canAdd) return;
     setSaving(true);
     setFailed(false);
     logClimbOnDay(api, asLogged(climb, outcome), day ?? yearDate(year, now), []).then(
       () => {
+        showCard();
         wizard.capture("climb_added", {
           kind: discipline,
           outcome,
@@ -152,7 +160,7 @@ export const AddClimbsStep: StepComponent = ({ wizard, api }) => {
         <p className="history-lede">{t("onboarding.history.add.body")}</p>
       </div>
       <div className="add-climbs">
-        <div className="add-climbs-card">
+        <div ref={cardRef} className="add-climbs-card">
           {card !== null && (
             <HistoryCard vm={card} label={t("onboarding.history.card.soFar")} max={4} next raised />
           )}

@@ -85,6 +85,8 @@ const press = async (text: string): Promise<void> => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.matchMedia = vi.fn(() => ({ matches: true })) as unknown as typeof window.matchMedia;
+  Element.prototype.scrollIntoView = vi.fn();
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -122,6 +124,10 @@ describe("adding climbs by hand", () => {
     });
     await settle();
     expect(container.textContent).toContain("Added · 1");
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({
+      behavior: "auto",
+      block: "start",
+    });
     expect(button("Add climb").disabled).toBe(true);
   });
 });

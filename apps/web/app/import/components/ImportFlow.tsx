@@ -119,11 +119,12 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
           fileName={state.fileName}
           plan={state.plan}
           added={state.added}
-          suggestionsFor={suggestionsFor}
-          onAddTag={(indexes, tag) => retag(indexes, (tags) => withTag(tags, tag))}
-          onRemoveTag={(indexes, tag) =>
-            retag(indexes, (tags) => tags.filter((t) => !sameTagName(t, tag)))
-          }
+          tagging={{
+            suggestionsFor,
+            onAddTag: (indexes, tag) => retag(indexes, (tags) => withTag(tags, tag)),
+            onRemoveTag: (indexes, tag) =>
+              retag(indexes, (tags) => tags.filter((t) => !sameTagName(t, tag))),
+          }}
           duplicates={state.duplicates}
           importAnyway={state.importAnyway}
           onImportAnyway={(index) =>

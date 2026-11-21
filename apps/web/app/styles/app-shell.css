@@ -326,9 +326,25 @@
 }
 
 .sheet-head {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.sheet-head-action {
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  height: 44px;
+  padding: 0 8px;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--bs-azure-ink);
+  cursor: pointer;
 }
 
 .sheet--hero {

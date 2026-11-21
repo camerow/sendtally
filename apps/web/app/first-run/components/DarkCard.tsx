@@ -6,6 +6,8 @@ export type DarkCardProps = {
   meta?: string;
   /** Under a rule at the foot: what the next action adds. */
   note?: React.ReactNode;
+  /** Off once the note has done its job; its line keeps its height so nothing under the card moves. */
+  noteShown?: boolean;
   /** Lifted off the form it sits beside or above. */
   raised?: boolean;
   children?: React.ReactNode;
@@ -16,6 +18,7 @@ export function DarkCard({
   label,
   meta,
   note,
+  noteShown = true,
   raised = false,
   children,
 }: DarkCardProps): React.ReactElement {
@@ -26,7 +29,15 @@ export function DarkCard({
         {meta !== undefined && meta !== "" && <span className="dark-meta">{meta}</span>}
       </div>
       {children}
-      {note !== undefined && <p className="dark-meta dark-card-note">{note}</p>}
+      {note !== undefined && (
+        <p
+          className="dark-meta dark-card-note"
+          aria-hidden={!noteShown || undefined}
+          style={noteShown ? undefined : { visibility: "hidden" }}
+        >
+          {note}
+        </p>
+      )}
     </section>
   );
 }

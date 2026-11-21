@@ -100,6 +100,7 @@ export const WeekStep: StepComponent = ({ wizard, api }) => {
       <h1 className="wizard-title">{t("onboarding.plan.week.title")}</h1>
       <div className="plan-path-sticky">
         <WeekCard
+          steady
           week={week}
           meta={t("onboarding.plan.week.perWeek", { count: sessions })}
           empty={t("onboarding.plan.week.empty")}

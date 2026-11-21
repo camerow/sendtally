@@ -6,8 +6,7 @@ import {
   type LikelyDuplicate,
 } from "@sendtally/core/import";
 import { t } from "@sendtally/features/i18n";
-import { importAll, importSourceOf, withAddedTags, withTag } from "@sendtally/features/import";
-import { sameTagName, useTagVocabulary } from "@sendtally/features/sessions";
+import { importAll, importSourceOf } from "@sendtally/features/import";
 import {
   firstRunSourceLabel,
   historyCard,
@@ -28,7 +27,6 @@ import { WhatYouGet } from "./components/WhatYouGet";
 type Review = {
   fileName: string;
   plan: ImportPlan;
-  added: string[][];
   duplicates: LikelyDuplicate[];
   importAnyway: number[];
   busy: boolean;
@@ -49,7 +47,6 @@ const yearsIn = (plan: ImportPlan): number => {
  */
 export const ImportStep: StepComponent = ({ wizard, api }) => {
   const scales = useDisplayScales();
-  const { suggestionsFor } = useTagVocabulary(api);
   const [review, setReview] = React.useState<Review | null>(null);
   const answer = wizard.memory.existingLog;
   const source = answer === null ? undefined : importSourceOf(answer);
@@ -61,7 +58,6 @@ export const ImportStep: StepComponent = ({ wizard, api }) => {
     setReview({
       fileName: file.name,
       plan,
-      added: plan.sessions.map(() => []),
       duplicates,
       importAnyway: [],
       busy: false,
@@ -114,19 +110,10 @@ export const ImportStep: StepComponent = ({ wizard, api }) => {
   const importing = review.plan.sessions.filter((_, i) => !held.includes(i));
   const usable = review.plan.sessions.length > 0;
 
-  const retag = (indexes: number[], change: (tags: string[]) => string[]): void =>
-    setReview({
-      ...review,
-      added: review.added.map((tags, i) => (indexes.includes(i) ? change(tags) : tags)),
-    });
-
   const confirm = async (): Promise<void> => {
     setReview({ ...review, busy: true, error: null });
     try {
-      const sessions = withAddedTags(review.plan.sessions, review.added).filter(
-        (_, i) => !held.includes(i)
-      );
-      await importAll(api, sessions, review.plan.format);
+      await importAll(api, importing, review.plan.format);
       wizard.next();
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -160,12 +147,7 @@ export const ImportStep: StepComponent = ({ wizard, api }) => {
       <ImportReview
         fileName={review.fileName}
         plan={review.plan}
-        added={review.added}
-        suggestionsFor={suggestionsFor}
-        onAddTag={(indexes, tag) => retag(indexes, (tags) => withTag(tags, tag))}
-        onRemoveTag={(indexes, tag) =>
-          retag(indexes, (tags) => tags.filter((x) => !sameTagName(x, tag)))
-        }
+        added={review.plan.sessions.map(() => [])}
         duplicates={review.duplicates}
         importAnyway={review.importAnyway}
         onImportAnyway={(index) =>

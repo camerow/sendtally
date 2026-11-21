@@ -207,11 +207,8 @@ export const BlockStep: StepComponent = ({ wizard, api }) => {
           raised
           label={t("onboarding.plan.block.weekByWeek", { name: exercise })}
           meta={t("calendar.weeks", { count: weeks })}
-          note={
-            anyShortcut
-              ? undefined
-              : t("onboarding.plan.block.sameSoFar", { build: t("onboarding.plan.block.build") })
-          }
+          note={t("onboarding.plan.block.sameSoFar", { build: t("onboarding.plan.block.build") })}
+          noteShown={!anyShortcut}
         >
           <LoadBars bars={bars} />
         </DarkCard>

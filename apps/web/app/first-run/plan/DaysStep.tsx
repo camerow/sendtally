@@ -29,6 +29,7 @@ export const DaysStep: StepComponent = ({ wizard }) => {
     >
       <h1 className="wizard-title">{t("onboarding.plan.days.title")}</h1>
       <WeekCard
+        steady
         week={Array.from({ length: 7 }, (_, i) => (days.includes(i as Weekday) ? [] : null))}
         meta={t("onboarding.plan.days.perWeek", { count: days.length })}
         empty={t("onboarding.plan.days.empty")}

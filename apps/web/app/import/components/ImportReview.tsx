@@ -44,9 +44,12 @@ export type ImportReviewProps = {
   importAnyway: number[];
   onImportAnyway: (index: number) => void;
   importing: number;
-  suggestionsFor: (applied: string[]) => TagOption[];
-  onAddTag: (indexes: number[], tag: string) => void;
-  onRemoveTag: (indexes: number[], tag: string) => void;
+  /** Tagging sessions before they land; absent where the review has one job, as in onboarding. */
+  tagging?: {
+    suggestionsFor: (applied: string[]) => TagOption[];
+    onAddTag: (indexes: number[], tag: string) => void;
+    onRemoveTag: (indexes: number[], tag: string) => void;
+  };
   busy: boolean;
   error: string | null;
   onConfirm: () => void;
@@ -61,9 +64,7 @@ export function ImportReview({
   importAnyway,
   onImportAnyway,
   importing,
-  suggestionsFor,
-  onAddTag,
-  onRemoveTag,
+  tagging,
   busy,
   error,
   onConfirm,
@@ -230,19 +231,21 @@ export function ImportReview({
               {t("import.showing", { shown: shown.length, total: plan.sessions.length })}
             </span>
           </div>
-          <SessionTagBar
-            names={sessionNames(plan.sessions)}
-            selectedCount={selected.length}
-            total={plan.sessions.length}
-            tags={selectedTags}
-            suggestions={suggestionsFor(selectedTags)}
-            disabled={busy}
-            onSelectNamed={selectNamed}
-            onSelectAll={() => setSelected(plan.sessions.map((_, i) => i))}
-            onClear={() => setSelected([])}
-            onAdd={(tag) => onAddTag(selected, tag)}
-            onRemove={(tag) => onRemoveTag(selected, tag)}
-          />
+          {tagging !== undefined && (
+            <SessionTagBar
+              names={sessionNames(plan.sessions)}
+              selectedCount={selected.length}
+              total={plan.sessions.length}
+              tags={selectedTags}
+              suggestions={tagging.suggestionsFor(selectedTags)}
+              disabled={busy}
+              onSelectNamed={selectNamed}
+              onSelectAll={() => setSelected(plan.sessions.map((_, i) => i))}
+              onClear={() => setSelected([])}
+              onAdd={(tag) => tagging.onAddTag(selected, tag)}
+              onRemove={(tag) => tagging.onRemoveTag(selected, tag)}
+            />
+          )}
           {shown.map(({ session: s, index }, i) => {
             const sends = s.climbs.filter((c) => c.kind === "send").length;
             const match = matchOf(index);
@@ -257,20 +260,22 @@ export function ImportReview({
                     padding: "12px 18px",
                     borderBottom: match === undefined ? rule : "none",
                     background: selected.includes(index) ? "var(--surface-soft)" : "transparent",
-                    cursor: "pointer",
+                    cursor: tagging === undefined ? "default" : "pointer",
                   }}
                 >
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(index)}
-                    disabled={busy}
-                    aria-label={t("import.selectSession", {
-                      name: sessionTitle(s) ?? t("common.climbingSession"),
-                      date: dayLabel(s.date),
-                    })}
-                    onChange={() => toggle(index)}
-                    style={checkbox}
-                  />
+                  {tagging !== undefined && (
+                    <input
+                      type="checkbox"
+                      checked={selected.includes(index)}
+                      disabled={busy}
+                      aria-label={t("import.selectSession", {
+                        name: sessionTitle(s) ?? t("common.climbingSession"),
+                        date: dayLabel(s.date),
+                      })}
+                      onChange={() => toggle(index)}
+                      style={checkbox}
+                    />
+                  )}
                   <span
                     style={{
                       ...monoMuted,
