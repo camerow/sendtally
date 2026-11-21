@@ -45,6 +45,35 @@ describe("DetailFrame", () => {
     expect(container.textContent).toBe("the list");
   });
 
+  it("draws an editor's Cancel neutral, and as destructive only when asked", () => {
+    const cancel = (): HTMLButtonElement =>
+      container.querySelector<HTMLButtonElement>(".editor-bar-cancel")!;
+    act(() =>
+      root.render(
+        <MemoryRouter>
+          <DetailFrame backTo="/list" editor={{ title: "New workout", onSave: () => {} }}>
+            body
+          </DetailFrame>
+        </MemoryRouter>
+      )
+    );
+    expect(cancel().classList.contains("editor-bar-cancel--danger")).toBe(false);
+    act(() =>
+      root.render(
+        <MemoryRouter>
+          <DetailFrame
+            backTo="/list"
+            backLabel="Discard"
+            editor={{ title: "Log workout", onSave: () => {}, cancelDestructive: true }}
+          >
+            body
+          </DetailFrame>
+        </MemoryRouter>
+      )
+    );
+    expect(cancel().classList.contains("editor-bar-cancel--danger")).toBe(true);
+  });
+
   it("runs onBack instead of going back when given", () => {
     const onBack = vi.fn();
     act(() =>

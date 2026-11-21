@@ -171,6 +171,7 @@ export function ActivityForm({
       backLabel={logged === null ? t("hang.discard") : t("common.cancel")}
       {...(live && { onBack: () => setDiscarding(true) })}
       editor={{
+        cancelDestructive: live,
         title:
           logged !== null
             ? t("summary.editWorkout")

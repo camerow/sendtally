@@ -11,6 +11,7 @@ export function EditorBar({
   saveDisabled = false,
   solid = false,
   heading = false,
+  cancelDestructive = false,
 }: EditorBarProps & { cancelLabel: string; onCancel: () => void }): React.ReactElement {
   const top = React.useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = React.useState(false);
@@ -29,7 +30,13 @@ export function EditorBar({
     <>
       <div ref={top} aria-hidden />
       <div className={scrolled ? "editor-bar editor-bar--scrolled" : "editor-bar"}>
-        <button type="button" className="editor-bar-cancel" onClick={onCancel}>
+        <button
+          type="button"
+          className={
+            cancelDestructive ? "editor-bar-cancel editor-bar-cancel--danger" : "editor-bar-cancel"
+          }
+          onClick={onCancel}
+        >
           {cancelLabel}
         </button>
         {heading ? (
