@@ -76,7 +76,7 @@ export const importCsv = {
   "import.failed": "Import fehlgeschlagen: {message}",
   "import.doneTitle": "Importiert",
   "import.statAdded": "Sessions hinzugefügt",
-  "import.statAlreadyThere": "schon vorhanden",
+  "import.statAlreadyThere": "Schon vorhanden",
   "import.doneBody":
     "Trends und Projekte enthalten die importierten Sessions sofort. Öffne eine davon, um RPE, Tags oder Notizen zu ergänzen.",
   "import.openLog": "Log öffnen",
