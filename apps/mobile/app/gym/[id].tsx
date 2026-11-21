@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { ActivityIndicator, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,6 +7,7 @@ import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
 import { GymEditor } from "../../features/gyms/GymEditor";
 import { useApi } from "../../lib/api";
+import { goBack } from "../../lib/goBack";
 
 /** `/gym/new` creates; `/gym/<id>` edits. Saving returns to wherever the user came from. */
 export default function GymScreen(): React.ReactElement {
@@ -38,7 +39,7 @@ export default function GymScreen(): React.ReactElement {
         circuits: draft.circuits,
         walls: draft.walls,
       })
-      .then(() => router.back())
+      .then(() => goBack())
       .catch(() => setError(t("gyms.saveFailed")))
       .finally(() => setSaving(false));
   };
@@ -54,7 +55,7 @@ export default function GymScreen(): React.ReactElement {
         existing === null
           ? null
           : () => {
-              void gyms.remove(existing.id).then(() => router.back());
+              void gyms.remove(existing.id).then(() => goBack());
             }
       }
     />

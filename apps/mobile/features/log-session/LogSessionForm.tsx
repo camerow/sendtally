@@ -67,6 +67,7 @@ import { TimeField } from "../../components/TimeField";
 import { keypadFieldLabel } from "../../components/KeypadField";
 import { press, tap } from "../../lib/press";
 import { BackButton } from "../../components/BackButton";
+import { goBack } from "../../lib/goBack";
 
 function LabelText({ children }: { children: React.ReactNode }): React.ReactElement {
   return <Text style={keypadFieldLabel}>{children}</Text>;
@@ -235,12 +236,12 @@ export function LogSessionForm({
   /** Cancel abandons the draft, so it only leaves one behind after a confirmation. */
   function cancel(): void {
     if (autosave.savedAt === null) {
-      router.back();
+      goBack();
       return;
     }
     confirmDiscardDraft({ draft, savedAt: autosave.savedAt }, () => {
       autosave.clear();
-      router.back();
+      goBack();
     });
   }
 

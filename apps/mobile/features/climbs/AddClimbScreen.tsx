@@ -44,6 +44,7 @@ import { useApi } from "../../lib/api";
 import { Button } from "../training/components/Button";
 import { ResultFields } from "../log-session/ResultFields";
 import { SuggestField } from "./SuggestField";
+import { goBack } from "../../lib/goBack";
 
 type Area = { id: string; name: string };
 
@@ -197,7 +198,7 @@ export function AddClimbScreen(): React.ReactElement {
           { area: place }
         )
       )
-      .then(() => router.back(), fail);
+      .then(() => goBack(), fail);
   };
 
   const dateRow = (
@@ -228,12 +229,7 @@ export function AddClimbScreen(): React.ReactElement {
           paddingHorizontal: 2,
         }}
       >
-        <Button
-          label={t("common.cancel")}
-          onPress={() => router.back()}
-          variant="danger"
-          height={44}
-        />
+        <Button label={t("common.cancel")} onPress={() => goBack()} variant="danger" height={44} />
         <Text
           accessibilityRole="header"
           numberOfLines={1}

@@ -254,6 +254,8 @@ Store listing copy lives in `apps/mobile/store/listing.md` and should match what
 - Components generic to a feature (used by several of its screens/sections but nowhere else) live in a `components/` directory inside that feature.
 - When a component is used across many features, move it up to the highest relevant directory - the app-level `components/`, or `@sendtally/design` if it belongs to the design system.
 - Tests co-located as `<Component>.test.tsx` / `<module>.test.ts`.
+- Mobile screens leave with `goBack()` from `apps/mobile/lib/goBack.ts`, never `router.back()`: a screen the first-run wizard replaced its way to has nothing under it, and `goBack` lands on Today there.
+  ESLint enforces it.
 
 ### Formatting
 
