@@ -2,7 +2,6 @@ import React from "react";
 import type { Weekday } from "@sendtally/core/hang";
 import { Button } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
-import { WeekdayChips } from "../../training/schedule/WeekdayChips";
 import type { StepComponent } from "../types";
 import { WizardFrame } from "../WizardFrame";
 import { WeekCard } from "./components/WeekCard";
@@ -33,8 +32,8 @@ export const DaysStep: StepComponent = ({ wizard }) => {
         week={Array.from({ length: 7 }, (_, i) => (days.includes(i as Weekday) ? [] : null))}
         meta={t("onboarding.plan.days.perWeek", { count: days.length })}
         empty={t("onboarding.plan.days.empty")}
+        onToggle={toggle}
       />
-      <WeekdayChips days={days} onToggle={toggle} />
     </WizardFrame>
   );
 };
