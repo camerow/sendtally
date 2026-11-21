@@ -26,6 +26,7 @@ import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { alias, type SQLiteColumn } from "drizzle-orm/sqlite-core";
 import {
   activities,
+  aiUsage,
   areaClimbs,
   areas,
   boardConnections,
@@ -1609,6 +1610,19 @@ export async function deleteGym(db: D1Database, userId: string, id: string): Pro
   return result.meta.changes > 0;
 }
 
+/** Counts one more AI request for the user on the day and answers the day's total. */
+export async function countAiUse(db: D1Database, userId: string, day: string): Promise<number> {
+  const [row] = await drizzle(db)
+    .insert(aiUsage)
+    .values({ user_id: userId, day, count: 1 })
+    .onConflictDoUpdate({
+      target: [aiUsage.user_id, aiUsage.day],
+      set: { count: sql`${aiUsage.count} + 1` },
+    })
+    .returning({ count: aiUsage.count });
+  return row?.count ?? 1;
+}
+
 export async function deleteUserData(db: D1Database, userId: string): Promise<void> {
   const d = drizzle(db);
   await d.batch([
@@ -1638,6 +1652,7 @@ export async function deleteUserData(db: D1Database, userId: string): Promise<vo
     d.delete(sessions).where(eq(sessions.user_id, userId)),
     d.delete(stravaConnections).where(eq(stravaConnections.user_id, userId)),
     d.delete(storeEntitlements).where(eq(storeEntitlements.user_id, userId)),
+    d.delete(aiUsage).where(eq(aiUsage.user_id, userId)),
     // Legacy Aurora rows still hold an encrypted board token for the users who
     // connected one before the integration was discontinued. Deleting the
     // account has to take them too, ahead of the tables being dropped.

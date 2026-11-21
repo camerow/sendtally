@@ -38,6 +38,8 @@ import type {
   HangSessionRecord,
   HangSettings,
   ImportBody,
+  MatchBody,
+  ColumnMatch,
   ImportResult,
   LogSessionInput,
   Membership,
@@ -174,6 +176,11 @@ export class SendtallyApi {
 
   importSessions(input: ImportBody): Promise<ImportResult> {
     return body(this.client.v1.sessions.import.$post({ json: input }));
+  }
+
+  /** Which columns of a spreadsheet hold what, from its header and first rows; 429 past the day's limit. */
+  matchColumns(input: MatchBody): Promise<{ match: ColumnMatch | null }> {
+    return body(this.client.v1.import.match.$post({ json: input }));
   }
 
   async exportCsv(): Promise<string> {

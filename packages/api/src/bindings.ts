@@ -7,6 +7,8 @@ export type Env = {
   DB: D1Database;
   MEDIA: R2Bucket;
   CONNECTOR_RATE_LIMITER: RateLimit;
+  IMPORT_MATCH_RATE_LIMITER: RateLimit;
+  AI: Ai;
   TOKEN_KEY: string;
   CLERK_SECRET_KEY: string;
   CLERK_PUBLISHABLE_KEY: string;

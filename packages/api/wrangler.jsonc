@@ -20,12 +20,20 @@
   // Library pictures, created in infra/terraform/r2.tf and served from MEDIA_URL. Locally
   // wrangler keeps the bucket on disk and the Worker serves it under /media.
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "sendtally-media-dev" }],
-  // Per user, on connector tool calls. Each environment counts in its own namespace.
+  // Workers AI, for matching an import's columns. Environments do not inherit it.
+  "ai": { "binding": "AI" },
+  // Per user: connector tool calls, and bursts of column matches. Each environment counts in
+  // its own namespace.
   "ratelimits": [
     {
       "name": "CONNECTOR_RATE_LIMITER",
       "namespace_id": "1000",
       "simple": { "limit": 60, "period": 60 },
+    },
+    {
+      "name": "IMPORT_MATCH_RATE_LIMITER",
+      "namespace_id": "1010",
+      "simple": { "limit": 3, "period": 60 },
     },
   ],
   "vars": {
@@ -45,11 +53,17 @@
         },
       ],
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "sendtally-media-staging" }],
+      "ai": { "binding": "AI" },
       "ratelimits": [
         {
           "name": "CONNECTOR_RATE_LIMITER",
           "namespace_id": "1001",
           "simple": { "limit": 60, "period": 60 },
+        },
+        {
+          "name": "IMPORT_MATCH_RATE_LIMITER",
+          "namespace_id": "1011",
+          "simple": { "limit": 3, "period": 60 },
         },
       ],
       "vars": {
@@ -76,11 +90,17 @@
         },
       ],
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "sendtally-media-production" }],
+      "ai": { "binding": "AI" },
       "ratelimits": [
         {
           "name": "CONNECTOR_RATE_LIMITER",
           "namespace_id": "1002",
           "simple": { "limit": 60, "period": 60 },
+        },
+        {
+          "name": "IMPORT_MATCH_RATE_LIMITER",
+          "namespace_id": "1012",
+          "simple": { "limit": 3, "period": 60 },
         },
       ],
       "vars": {
