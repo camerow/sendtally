@@ -24,7 +24,7 @@ const mockRun = jest.fn();
 const mockConnect = jest.fn();
 
 jest.mock("expo-router", () => ({
-  router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() },
+  router: { canGoBack: () => true, push: jest.fn(), back: jest.fn(), replace: jest.fn() },
   useLocalSearchParams: () => ({ fingerprint: "manual-1" }),
 }));
 jest.mock("../../lib/api", () => ({ useApi: () => mockApi }));

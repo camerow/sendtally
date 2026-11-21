@@ -1,5 +1,5 @@
-import { router } from "expo-router";
 import { t } from "@sendtally/features/i18n";
+import { goBack } from "../../../lib/goBack";
 import { confirmDestructive, type ConfirmDestructive } from "../../../lib/confirmDestructive";
 import type { DetailMenuRow } from "./types";
 
@@ -20,7 +20,7 @@ export function deleteRow({ title, confirm, onDelete }: DeleteRow): DetailMenuRo
         ...confirm,
         action: confirm.action ?? t("common.delete"),
         onConfirm: () => {
-          router.back();
+          goBack();
           onDelete();
         },
       }),

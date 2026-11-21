@@ -36,6 +36,7 @@ import { KeypadScrollView } from "../../../components/KeypadScrollView";
 import { Toast } from "../../../components/Toast";
 import { TimeField } from "../../../components/TimeField";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
+import { goBack } from "../../../lib/goBack";
 import { landOnTabRoot } from "../../../lib/landOnTabRoot";
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
@@ -162,7 +163,7 @@ function ActivityFormBody({
     setSaving(false);
     if (!saved) return;
     if (live) liveRun.clear();
-    if (logged !== null) return router.back();
+    if (logged !== null) return goBack();
     justLogged.tell({ id, name: draft.title.trim() || kindLabel(draft.kind) });
     landOnTabRoot();
   };
@@ -172,7 +173,7 @@ function ActivityFormBody({
       body: discardRunBody(liveRun.read()),
       action: t("hang.discard"),
       onConfirm: () => {
-        router.back();
+        goBack();
         liveRun.clear();
       },
     });
@@ -237,7 +238,7 @@ function ActivityFormBody({
         }
         cancelLabel={logged === null ? t("hang.discard") : t("common.cancel")}
         cancelDestructive={live}
-        onCancel={live ? discard : () => router.back()}
+        onCancel={live ? discard : () => goBack()}
         onSave={() => void save()}
         saveDisabled={saving}
       />

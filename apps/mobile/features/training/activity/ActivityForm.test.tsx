@@ -21,6 +21,7 @@ jest.mock("../../../components/Sheet", () => ({
 }));
 jest.mock("expo-router", () => ({
   router: {
+    canGoBack: () => true,
     back: jest.fn(),
     push: jest.fn(),
     dismiss: jest.fn(),

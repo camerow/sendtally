@@ -32,7 +32,13 @@ jest.mock("../../../components/Sheet", () => ({
 }));
 jest.mock("expo-router", () => ({
   useFocusEffect: jest.fn(),
-  router: { push: jest.fn(), back: jest.fn(), replace: jest.fn(), dismiss: jest.fn() },
+  router: {
+    canGoBack: () => true,
+    push: jest.fn(),
+    back: jest.fn(),
+    replace: jest.fn(),
+    dismiss: jest.fn(),
+  },
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "b-new" }));
 
