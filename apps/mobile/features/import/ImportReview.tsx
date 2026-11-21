@@ -6,7 +6,7 @@ import {
   type ImportSession,
   type LikelyDuplicate,
 } from "@sendtally/core/import";
-import { planStats } from "@sendtally/features/import";
+import { importTally, planStats } from "@sendtally/features/import";
 import type { GradeScales } from "@sendtally/features/sessions";
 import { useDisplayScales } from "@sendtally/features/settings";
 import { formatDate, formatNumber, t } from "@sendtally/features/i18n";
@@ -27,12 +27,7 @@ const dayLabel = (date: string): string =>
   });
 
 function rowMeta(session: ImportSession, scales: GradeScales): string {
-  const sends = session.climbs.filter((c) => c.kind === "send");
-  const top = planStats([{ ...session, climbs: sends }], scales).topGrade;
-  return [
-    t("tally.sentCount", { count: sends.length }),
-    ...(top === null ? [] : [t("sessions.topSend", { grade: top })]),
-  ].join(" · ");
+  return importTally(session, scales).join(" · ");
 }
 
 /**

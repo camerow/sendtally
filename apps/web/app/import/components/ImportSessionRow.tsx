@@ -1,6 +1,6 @@
 import React from "react";
 import type { ImportSession } from "@sendtally/core/import";
-import { planStats, sessionTitle } from "@sendtally/features/import";
+import { importTally, sessionTitle } from "@sendtally/features/import";
 import type { GradeScales } from "@sendtally/features/sessions";
 import { formatDate, formatNumber, t } from "@sendtally/features/i18n";
 import { monoMuted } from "../../settings/components/styles";
@@ -15,13 +15,7 @@ export const dayLabel = (date: string): string =>
   });
 
 function rowMeta(session: ImportSession, scales: GradeScales): string {
-  const sends = session.climbs.filter((c) => c.kind === "send");
-  const top = planStats([{ ...session, climbs: sends }], scales).topGrade;
-  return [
-    dayLabel(session.date),
-    t("tally.sentCount", { count: sends.length }),
-    ...(top === null ? [] : [t("sessions.topSend", { grade: top })]),
-  ].join(" · ");
+  return [dayLabel(session.date), ...importTally(session, scales)].join(" · ");
 }
 
 const oneLine: React.CSSProperties = {
