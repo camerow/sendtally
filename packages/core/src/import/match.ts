@@ -3,7 +3,11 @@ import { planImport } from "./plan";
 import { SENDTALLY_COLUMNS, type Column, type Line } from "./records";
 import type { ClimbResult, ColumnMatch, DateOrder, GradeColumn, ImportPlan } from "./types";
 
+// What the column-matching endpoint accepts, which the client trims its sample to.
 export const MATCH_SAMPLE_ROWS = 20;
+export const MATCH_MAX_COLUMNS = 80;
+export const MATCH_CELL_MAX = 200;
+export const MATCH_SAMPLE_MAX = 20_000;
 
 // A spreadsheet in any layout: its first non-blank line is the header.
 export type Sheet = { header: string[]; headerRow: number; rows: Line[] };
@@ -14,13 +18,39 @@ export function sheetOf(text: string): Sheet | null {
     .filter(({ cells }) => cells.some((c) => c.trim() !== ""));
   const [head, ...rows] = lines;
   if (head === undefined) return null;
-  return { header: head.cells.map((h) => h.trim()), headerRow: head.row, rows };
+  return { header: uniqueNames(head.cells), headerRow: head.row, rows };
 }
 
-export const matchSample = (sheet: Sheet): { header: string[]; rows: string[][] } => ({
-  header: sheet.header,
-  rows: sheet.rows.slice(0, MATCH_SAMPLE_ROWS).map((r) => r.cells),
-});
+// A column is found by its name, so a repeated name gets a number: Grade, Grade (2).
+function uniqueNames(cells: string[]): string[] {
+  const seen = new Set<string>();
+  return cells.map((cell) => {
+    const name = cell.trim().slice(0, MATCH_CELL_MAX - 5);
+    let unique = name;
+    for (let n = 2; name !== "" && seen.has(unique); n++) unique = `${name} (${n})`;
+    seen.add(unique);
+    return unique;
+  });
+}
+
+const sampleSize = (header: string[], rows: string[][]): number => toCsv([header, ...rows]).length;
+
+/**
+ * The header and first rows as the endpoint takes them: long cells cut, columns past the
+ * limit left out, and rows dropped from the end until the whole fits. The import itself
+ * always reads every cell in full.
+ */
+export function matchSample(sheet: Sheet): { header: string[]; rows: string[][] } {
+  const header = sheet.header.slice(0, MATCH_MAX_COLUMNS);
+  const rows = sheet.rows
+    .slice(0, MATCH_SAMPLE_ROWS)
+    .map((r) => header.map((_, j) => (r.cells[j] ?? "").slice(0, MATCH_CELL_MAX)));
+  while (rows.length > 0 && sampleSize(header, rows) > MATCH_SAMPLE_MAX) rows.pop();
+  return { header, rows };
+}
+
+export const sampleFits = (header: string[], rows: string[][]): boolean =>
+  sampleSize(header, rows) <= MATCH_SAMPLE_MAX;
 
 const cellOf =
   (sheet: Sheet) =>

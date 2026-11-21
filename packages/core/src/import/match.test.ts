@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { applyMatch, dateIn, dateOrderOf, matchSample, sheetOf, unusedColumns } from "./match";
+import {
+  applyMatch,
+  dateIn,
+  dateOrderOf,
+  MATCH_CELL_MAX,
+  MATCH_MAX_COLUMNS,
+  matchSample,
+  sampleFits,
+  sheetOf,
+  unusedColumns,
+} from "./match";
 import { planImport } from "./plan";
 import type { ColumnMatch } from "./types";
 
@@ -127,5 +137,42 @@ describe("matchSample", () => {
     const sample = matchSample(sheetOf(text)!);
     expect(sample.header).toEqual(["a", "b"]);
     expect(sample.rows).toHaveLength(20);
+  });
+
+  it("cuts long cells and extra columns, and drops rows until the sample fits", () => {
+    const note = "n".repeat(5000);
+    const wide = Array.from({ length: 100 }, (_, i) => `c${i}`);
+    const text = [
+      ["Date", "Grade", "Notes", ...wide].join(","),
+      ...Array.from({ length: 20 }, () => ["2024-01-01", "V3", note, ...wide].join(",")),
+    ].join("\n");
+    const sheet = sheetOf(text)!;
+    const sample = matchSample(sheet);
+    expect(sample.header).toHaveLength(MATCH_MAX_COLUMNS);
+    expect(sample.rows.every((r) => r.every((c) => c.length <= MATCH_CELL_MAX))).toBe(true);
+    expect(sample.rows.length).toBeGreaterThan(0);
+    expect(sampleFits(sample.header, sample.rows)).toBe(true);
+    const match: ColumnMatch = {
+      ...none,
+      date: "Date",
+      grade: { column: "Grade", scale: null },
+      notes: "Notes",
+    };
+    const plan = planImport(applyMatch(sheet, match, "dmy"), "UTC");
+    expect(plan.sessions[0]!.climbs[0]!.note).toHaveLength(2000);
+  });
+});
+
+describe("sheetOf", () => {
+  it("numbers a repeated column name so each column can be picked", () => {
+    const sheet = sheetOf("Date,Grade,Grade,Grade\n2024-01-01,,V4,5.10a\n")!;
+    expect(sheet.header).toEqual(["Date", "Grade", "Grade (2)", "Grade (3)"]);
+    const match: ColumnMatch = {
+      ...none,
+      date: "Date",
+      grade: { column: "Grade (2)", scale: null },
+    };
+    const plan = planImport(applyMatch(sheet, match, "dmy"), "UTC");
+    expect(plan.sessions[0]!.climbs[0]!.grade).toEqual({ scale: "v", value: 4 });
   });
 });
