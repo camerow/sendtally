@@ -31,11 +31,19 @@ export const importMatch = new Hono<AppEnv>().post(
         model: MATCH_MODEL,
       });
 
-    const { success } = await c.env.IMPORT_MATCH_RATE_LIMITER.limit({ key: userId });
-    const day = new Date().toISOString().slice(0, 10);
-    if (!success || (await repo.countAiUse(c.env.DB, userId, day)) > MATCHES_PER_DAY) {
+    const limited = async (): Promise<Response> => {
       await requested("limited");
       return c.json({ error: "column matching limit reached" as const }, 429);
+    };
+    const { success } = await c.env.IMPORT_MATCH_RATE_LIMITER.limit({ key: userId });
+    if (!success) return limited();
+    // Counted before the call so two at once cannot both pass the limit; given back when the
+    // model did not answer, so a failure on our side never spends one of the user's matches.
+    const day = new Date().toISOString().slice(0, 10);
+    const release = (): Promise<void> => repo.uncountAiUse(c.env.DB, userId, day);
+    if ((await repo.countAiUse(c.env.DB, userId, day)) > MATCHES_PER_DAY) {
+      await release();
+      return limited();
     }
 
     let output: { response?: unknown; usage?: Usage } | undefined;
@@ -50,6 +58,7 @@ export const importMatch = new Hono<AppEnv>().post(
       console.error(`column match failed: ${err instanceof Error ? err.name : "unknown"}`);
     }
     const match = matchOf(output?.response, body.header);
+    if (match === null) await release();
     if (match === null || match === "no_match") {
       await requested(match === null ? "invalid" : "no_match", output?.usage);
       return c.json({ match: null });

@@ -1623,6 +1623,14 @@ export async function countAiUse(db: D1Database, userId: string, day: string): P
   return row?.count ?? 1;
 }
 
+/** Gives back a request counted by countAiUse that the model never answered. */
+export async function uncountAiUse(db: D1Database, userId: string, day: string): Promise<void> {
+  await drizzle(db)
+    .update(aiUsage)
+    .set({ count: sql`max(${aiUsage.count} - 1, 0)` })
+    .where(and(eq(aiUsage.user_id, userId), eq(aiUsage.day, day)));
+}
+
 export async function deleteUserData(db: D1Database, userId: string): Promise<void> {
   const d = drizzle(db);
   await d.batch([

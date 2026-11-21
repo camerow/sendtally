@@ -1,15 +1,21 @@
-import { MATCH_SAMPLE_ROWS, toCsv, type ColumnMatch } from "@sendtally/core/import";
+import {
+  MATCH_CELL_MAX,
+  MATCH_MAX_COLUMNS,
+  MATCH_SAMPLE_ROWS,
+  sampleFits,
+  toCsv,
+  type ColumnMatch,
+} from "@sendtally/core/import";
 import { z } from "zod";
 
 export const MATCH_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 export const MATCHES_PER_DAY = 20;
 
-const MAX_COLUMNS = 80;
+const cells = z.array(z.string().max(MATCH_CELL_MAX)).max(MATCH_MAX_COLUMNS);
 
-export const matchBody = z.object({
-  header: z.array(z.string().max(200)).min(1).max(MAX_COLUMNS),
-  rows: z.array(z.array(z.string().max(500)).max(MAX_COLUMNS)).max(MATCH_SAMPLE_ROWS),
-});
+export const matchBody = z
+  .object({ header: cells.min(1), rows: z.array(cells).max(MATCH_SAMPLE_ROWS) })
+  .refine((body) => sampleFits(body.header, body.rows), "sample too large");
 
 export type MatchBody = z.infer<typeof matchBody>;
 

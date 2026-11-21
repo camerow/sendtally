@@ -87,6 +87,26 @@ describe("POST /v1/import/match", () => {
     }
   });
 
+  it("refuses a sample over the size limit before counting it or calling the model", async () => {
+    const calls: unknown[] = [];
+    const cell = "x".repeat(200);
+    const header = Array.from({ length: 80 }, (_, i) => `c${i}`);
+    const rows = Array.from({ length: 20 }, () => header.map(() => cell));
+    const res = await post("user_match_big", withModel(answer, calls), { header, rows });
+    expect(res.status).toBe(400);
+    expect(calls).toHaveLength(0);
+    const used = await env.DB.prepare("select count(*) as n from ai_usage where user_id = ?")
+      .bind("user_match_big")
+      .first<{ n: number }>();
+    expect(used?.n).toBe(0);
+  });
+
+  it("does not spend a match the model never answered", async () => {
+    const failing = withModel(new Error("upstream"));
+    for (let i = 0; i < 25; i++) await post("user_match_fail", failing);
+    expect((await post("user_match_fail", withModel(answer))).status).toBe(200);
+  });
+
   it("refuses more than 20 rows", async () => {
     const rows = Array.from({ length: 21 }, () => ["2024-01-01", "x", "V1", "y", ""]);
     const res = await post("user_match_rows", withModel(answer), { ...body, rows });
