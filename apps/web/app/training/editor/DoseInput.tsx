@@ -16,6 +16,8 @@ export type DoseInputProps = {
   label: string;
   /** What an unset count or weight reads as. */
   placeholder?: string;
+  /** Three to a row, as the wizard's compact card lays them out; a time keeps its width. */
+  compact?: boolean;
   onChange: (dose: Dose) => void;
 };
 
@@ -26,13 +28,18 @@ export function DoseInput({
   unit,
   label,
   placeholder,
+  compact = false,
   onChange,
 }: DoseInputProps): React.ReactElement {
   const set = (typed: number, max?: number): void =>
     onChange(withFieldRange(dose, field, typed, max, unit));
   const range = fieldRange(field, dose);
   return (
-    <div className="dose-input">
+    <div
+      className={
+        compact && field.measure !== "time" ? "dose-input dose-input--compact" : "dose-input"
+      }
+    >
       <NumberField
         label={label}
         value={

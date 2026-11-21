@@ -511,6 +511,16 @@
   min-width: 0;
 }
 
+.add-row-open {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 .add-row-there {
   font-family: var(--font-mono);
   font-size: 12px;

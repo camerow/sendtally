@@ -6,13 +6,16 @@ export function Pyramid({
   rows,
   label,
   tone = "light",
+  minScale = 1,
 }: {
   rows: readonly PyramidRow[];
   label: string;
   /** Gold on the app's dark ground, as the wizard's payoff cards draw it. */
   tone?: "light" | "dark";
+  /** The fewest climbs a full-width bar stands for, so one climb does not fill the row. */
+  minScale?: number;
 }): React.ReactElement {
-  const widest = Math.max(1, ...rows.map((r) => r.inner + r.outer));
+  const widest = Math.max(minScale, ...rows.map((r) => r.inner + r.outer));
   const share = (n: number): string => `${(n / widest) * 100}%`;
   return (
     <div

@@ -6,6 +6,8 @@ import { NumberField } from "../../components/NumberField";
 
 export type SupersetEditorProps = {
   group: ItemGroup;
+  /** Its heading; Superset unless given. */
+  title?: string;
   onChange: (change: Partial<Omit<ItemGroup, "id">>) => void;
   onUngroup: () => void;
   /** Absent once it holds as many members as a superset can. */
@@ -23,6 +25,7 @@ const MAX_ROUNDS = 100;
 /** A superset in the editor: its rounds, its two rests, its members, + Add to superset and Ungroup. */
 export function SupersetEditor({
   group,
+  title = t("workouts.superset"),
   onChange,
   onUngroup,
   onAdd,
@@ -34,7 +37,7 @@ export function SupersetEditor({
   return (
     <div className="superset-editor">
       <div className="item-editor-head">
-        <span className="item-editor-name">{t("workouts.superset")}</span>
+        <span className="item-editor-name">{title}</span>
         {onMoveUp !== undefined && (
           <button
             type="button"

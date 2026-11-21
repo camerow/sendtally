@@ -46,7 +46,12 @@ export const panelGhostButton: React.CSSProperties = {
   borderColor: "rgba(64,63,76,0.3)",
 };
 
-function LedgerRow({ row, link }: { row: MembershipPanelRow; link: boolean }): React.ReactElement {
+/** A line of what membership keeps: its own words beside a small chart. */
+export type LedgerRowVM = { eyebrow: string; text: string };
+
+type DrawnRow = LedgerRowVM & Pick<MembershipPanelRow, "bars" | "peak">;
+
+function LedgerRow({ row, link }: { row: DrawnRow; link: boolean }): React.ReactElement {
   const bars = (
     <span style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 24 }}>
       {row.bars.map((value, i) => (
@@ -67,7 +72,7 @@ function LedgerRow({ row, link }: { row: MembershipPanelRow; link: boolean }): R
   const text = (
     <span style={{ display: "flex", flexDirection: "column", gap: 1 }}>
       <span style={{ ...panelEyebrow, fontSize: 9 }}>{row.eyebrow}</span>
-      <span style={{ fontSize: 13, lineHeight: 1.45 }}>{row.line}</span>
+      <span style={{ fontSize: 13, lineHeight: 1.45 }}>{row.text}</span>
     </span>
   );
   const style: React.CSSProperties = {
@@ -101,6 +106,8 @@ export type MembershipPanelProps = {
   eyebrow: string;
   title: string;
   body?: string;
+  /** In place of the stats rows; each borrows the chart of the default row in its place. */
+  rows?: readonly LedgerRowVM[];
   /** Members get the ledger rows as links into the stats they unlock. */
   linkRows?: boolean;
   /** The action strip at the bottom: price and checkout, or status and manage. */
@@ -112,9 +119,17 @@ export function MembershipPanel({
   eyebrow,
   title,
   body,
+  rows,
   linkRows = false,
   children,
 }: MembershipPanelProps): React.ReactElement {
+  const charts = membershipPanel().rows;
+  const drawn: DrawnRow[] = (rows ?? charts.map((r) => ({ eyebrow: r.eyebrow, text: r.line }))).map(
+    (row, i) => {
+      const chart = charts[i % charts.length]!;
+      return { ...row, bars: chart.bars, peak: chart.peak };
+    }
+  );
   return (
     <div
       id={MEMBERSHIP_PANEL_ID}
@@ -158,8 +173,8 @@ export function MembershipPanel({
         </p>
       )}
       <div className="upgrade-ledger">
-        {membershipPanel().rows.map((row) => (
-          <LedgerRow key={row.metric} row={row} link={linkRows} />
+        {drawn.map((row) => (
+          <LedgerRow key={row.eyebrow} row={row} link={linkRows} />
         ))}
       </div>
       <div

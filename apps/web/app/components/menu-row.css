@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 0 14px;
+  padding: 10px 14px;
   border: none;
   border-radius: var(--radius-card);
   background: var(--bs-white);
