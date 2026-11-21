@@ -19,7 +19,7 @@ export default function Privacy(): React.ReactElement {
   return (
     <LegalPage
       title="Privacy policy"
-      updated="15 NOVEMBER 2026"
+      updated="20 NOVEMBER 2026"
       lede="sendtally holds the climbing sessions you type in and almost nothing else. This page lists every piece of data it keeps, who else touches it, and how to get it all deleted."
     >
       <h2>Who this covers</h2>
@@ -158,7 +158,11 @@ export default function Privacy(): React.ReactElement {
         </li>
         <li>
           <strong>Cloudflare</strong> - hosting, the database that stores your logbook, and network
-          protection for both the site and the API.
+          protection for both the site and the API. When you import a spreadsheet in a layout
+          sendtally does not already read, its column names and first 20 rows go to Cloudflare
+          Workers AI to match its columns to ours. Cloudflare does not keep that sample or use it to
+          train models, and we do not store it either; the rest of the file never leaves your device
+          until you confirm the import.
         </li>
         <li>
           <strong>Strava</strong> - only if you connect it, and only to post the activities you have
