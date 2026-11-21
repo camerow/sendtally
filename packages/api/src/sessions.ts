@@ -1,6 +1,7 @@
 import type { Context } from "hono";
 import type { Env } from "./bindings";
 import { type AppEnv, captureEvent, postAfterResponse } from "./context";
+import { captureValueEvent } from "./valueEvents";
 import { isOpen, isRegion } from "./lib/areas";
 import {
   applyProjectFlags,
@@ -10,7 +11,7 @@ import {
   placeLoggedClimbs,
   withClimbNotes,
 } from "./lib/climbs";
-import { importFingerprint } from "@sendtally/core/import";
+import { importFingerprint, type ImportFormat } from "@sendtally/core/import";
 import { manualBodyOf, sha256Hex, type ImportSessionBody } from "./lib/import";
 import {
   buildManualSession,
@@ -232,8 +233,9 @@ export const writeManualSession = async (
       .then(() => applyProjectFlags(db, userId, form.climbs)),
     repo.setClimbNotes(db, userId, fingerprint, climbNotesOf(form.climbs)),
   ]);
-  await captureEvent(c, created ? "manual_session_created" : "manual_session_updated", {
+  await captureValueEvent(c, created ? "manual_session_created" : "manual_session_updated", {
     session_source: "manual",
+    climb_count: form.climbs.length,
   });
   // A climbing session counts as a workout only when it completes a planned day.
   if (created && form.membershipId != null) await captureWorkoutLogged(c, form);
@@ -244,7 +246,8 @@ export const writeManualSession = async (
 // nothing. Never posted to Strava.
 export const importSessions = async (
   c: Context<AppEnv>,
-  sessions: ImportSessionBody[]
+  sessions: ImportSessionBody[],
+  format?: ImportFormat
 ): Promise<{ imported: number; skipped: number }> => {
   const userId = c.get("userId");
   await repo.ensureUser(c.env.DB, userId);
@@ -276,9 +279,10 @@ export const importSessions = async (
     if (scored !== null) history.push(scored);
     imported++;
   }
-  await captureEvent(c, "sessions_imported", {
+  await captureValueEvent(c, "sessions_imported", {
     imported: String(imported),
     skipped: String(skipped),
+    ...(format === undefined ? {} : { format }),
   });
   return { imported, skipped };
 };

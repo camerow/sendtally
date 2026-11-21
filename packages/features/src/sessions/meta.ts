@@ -32,23 +32,35 @@ export function sessionMetaLabel(session: SessionRow): string {
 }
 
 /** The log row's line: how long, how many sent, and the hardest send unless shown beside it. */
+/** What a session's climbs came to: its sends and top send, or, with no sends, how many it attempted. */
+export function tallyLabel(
+  { sends, attempts, top }: { sends: number; attempts: number; top: string | null },
+  withTop = true
+): string[] {
+  if (sends === 0 && attempts > 0) return [t("tally.attemptedCount", { count: attempts })];
+  return [
+    t("tally.sentCount", { count: sends }),
+    ...(withTop && top !== null ? [t("sessions.topSend", { grade: top })] : []),
+  ];
+}
+
 export function sessionTallyLabel(
   session: SessionRow,
   scales: GradeScales,
   withTop = true
 ): string {
   const top =
-    !withTop || session.top_send_grade < 0
-      ? []
-      : [
-          t("sessions.topSend", {
-            grade: sessionGradeLabel(session.top_send_grade_label, session.top_send_grade, scales),
-          }),
-        ];
+    session.top_send_grade < 0
+      ? null
+      : sessionGradeLabel(session.top_send_grade_label, session.top_send_grade, scales);
+  const tally = {
+    sends: session.send_count,
+    attempts: session.climb_count - session.send_count,
+    top,
+  };
   return [
     ...lengthLabel(session),
-    t("tally.sentCount", { count: session.send_count }),
-    ...top,
+    ...tallyLabel(tally, withTop),
     ...(isUnscored(session) ? [t("sessions.unscored")] : []),
   ].join(" · ");
 }

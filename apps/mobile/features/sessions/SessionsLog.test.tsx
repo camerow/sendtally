@@ -58,13 +58,7 @@ const mockBare = { ...mockSession("s2", "", "2026-10-12T10:00:00.000Z"), rpe_sou
 jest.mock("expo-router", () => ({ router: { push: jest.fn(), setParams: jest.fn() } }));
 jest.mock("../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("../../lib/review", () => ({ maybeAskForReview: () => undefined }));
-jest.mock("../../lib/setupPrompt", () => ({
-  useSetupDismissed: () => ({ dismissed: true, dismiss: () => undefined }),
-}));
 jest.mock("../live-session/startLiveSession", () => ({ startLiveSession: () => undefined }));
-jest.mock("../settings/useStravaConnect", () => ({
-  useStravaConnect: () => ({ connect: () => undefined, busy: false, error: null }),
-}));
 jest.mock("../../components/Sheet", () => ({
   Sheet: ({
     visible,
@@ -132,7 +126,6 @@ const mockHang = {
   updatedAt: "2026-10-19T19:00:00.000Z",
 };
 jest.mock("@sendtally/features/settings", () => ({
-  useSettings: () => ({ ready: false, vm: {}, reload: () => undefined }),
   useGradeScalePrefs: () => ({ scales: mockScales, ready: true }),
   useDisplayScales: () => mockScales,
 }));

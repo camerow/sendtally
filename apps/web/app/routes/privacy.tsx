@@ -19,7 +19,7 @@ export default function Privacy(): React.ReactElement {
   return (
     <LegalPage
       title="Privacy policy"
-      updated="15 NOVEMBER 2026"
+      updated="20 NOVEMBER 2026"
       lede="sendtally holds the climbing sessions you type in and almost nothing else. This page lists every piece of data it keeps, who else touches it, and how to get it all deleted."
     >
       <h2>Who this covers</h2>
@@ -76,17 +76,21 @@ export default function Privacy(): React.ReactElement {
         Adding to Areas and moderating it are recorded as events too, such as an area created, an
         edit suggested, or a report resolved, carrying only the kind of action and a few labels,
         such as whether it was an area or a climb, never what you wrote. When you first sign in, we
-        record once that the two questions were shown, which app you kept a log in, if any, how many
-        days a week you climb, and whether you skipped a question. The app you kept a log in also
-        stays on your PostHog profile, so we can compare people by where they came from. Logging a
-        workout is recorded as whether it was on your plan and whether it is one of
-        sendtally&rsquo;s built-in workouts, never what you logged. When an AI assistant you connect
-        to your account uses it, its connection and each action it takes are recorded as events too,
-        carrying only which action it was, which assistant and model took it, how long it took,
-        whether it failed, the names of the options it set, and a random identifier we give the
-        assistant so the actions of one conversation can be grouped, never what it read or wrote.
-        When the assistant cannot do something you asked, it may send us a short description of what
-        was missing.
+        record which path you chose or that you skipped, which app you kept a log in, if any, which
+        steps you completed, how many climbs, sessions or weeks each step added, whether you dated a
+        climb by year or by day, and the platform you used. The path you chose and the app you kept
+        a log in stay on your PostHog profile, so we can compare people by where they came from.
+        Importing a log is recorded as which app the file came from and how many sessions it held.
+        Creating an exercise, a workout or a training block, and scheduling a block, are recorded as
+        the kind of thing and a few counts, never names or contents. Seeing the membership offer,
+        and whether you joined, are recorded too. Logging a workout is recorded as whether it was on
+        your plan and whether it is one of sendtally&rsquo;s built-in workouts, never what you
+        logged. When an AI assistant you connect to your account uses it, its connection and each
+        action it takes are recorded as events too, carrying only which action it was, which
+        assistant and model took it, how long it took, whether it failed, the names of the options
+        it set, and a random identifier we give the assistant so the actions of one conversation can
+        be grouped, never what it read or wrote. When the assistant cannot do something you asked,
+        it may send us a short description of what was missing.
       </p>
       <p>
         <strong>App installs.</strong> The mobile apps also run Google Analytics for Firebase, which
@@ -97,6 +101,14 @@ export default function Privacy(): React.ReactElement {
         of this is tied to your account identifier or email address. On Android it includes the
         device&rsquo;s advertising ID, which you can reset or delete in your phone&rsquo;s settings.
         On iPhone it never includes the advertising identifier, and the app never asks to track you.
+      </p>
+      <p>
+        The mobile apps also run Meta&rsquo;s SDK, which tells Meta that the app was installed and
+        each time it is opened, with the device model, operating system, app version, language, time
+        zone, mobile carrier, screen size, storage size and approximate region, against an
+        identifier for that installation of the app. It sends no events of ours, nothing tied to
+        your account identifier or email address, and never the advertising identifier, on iPhone or
+        on Android.
       </p>
 
       <h2>What we never collect</h2>
@@ -110,7 +122,7 @@ export default function Privacy(): React.ReactElement {
         collect health data from other apps. We do not sell your data or share it with data brokers.
         The only thing an advertising platform learns from sendtally is whether a store badge tap,
         an install, a new account or a membership followed one of our own ads, as described under
-        Google below.
+        Google and Meta below.
       </p>
 
       <h2>Why we hold it</h2>
@@ -137,7 +149,7 @@ export default function Privacy(): React.ReactElement {
 
       <h2>Who else touches it</h2>
       <p>
-        Six processors, each handling only what it needs, and each processing data on our
+        Seven processors, each handling only what it needs, and each processing data on our
         instructions.
       </p>
       <ul>
@@ -170,6 +182,16 @@ export default function Privacy(): React.ReactElement {
           or personalized ads, and your logbook, email address and account identifier are never
           sent. On iPhone, installs from our ads are reported through Apple&rsquo;s SKAdNetwork,
           which carries no identifier for you or your device.
+        </li>
+        <li>
+          <strong>Meta</strong> - Meta&rsquo;s SDK in the mobile apps, to measure our own ads on
+          Facebook and Instagram. The app reports that it was installed and opened, and Meta counts
+          the installs that followed one of our ads. That is measurement only: your logbook, email
+          address, account identifier and advertising identifier are never sent. On iPhone the app
+          never asks to track you, so Meta is told on every report that tracking is off, and
+          installs from our ads are also reported through Apple&rsquo;s SKAdNetwork. On Android the
+          app passes on the install referrer Google Play gives it when the install came from one of
+          Meta&rsquo;s ads.
         </li>
         <li>
           <strong>PostHog</strong> - product analytics, session replay and error reports, including
@@ -233,7 +255,8 @@ export default function Privacy(): React.ReactElement {
       <p>
         Google Analytics for Firebase records are not linked to your account, so there is nothing
         there for the purge to find. Google keeps them for two months, after which only aggregate
-        counts remain.
+        counts remain. The install and app-open records the mobile apps send Meta are not linked to
+        your account either, and Meta keeps them under its own retention rules.
       </p>
       <p>
         Activities already posted to Strava live in your Strava account and stay there. Delete those

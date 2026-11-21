@@ -4,6 +4,8 @@ export const tally = {
   "tally.tryCount_other": "{count} essais",
   "tally.sentCount_one": "{count} enchaînée",
   "tally.sentCount_other": "{count} enchaînées",
+  "tally.attemptedCount_one": "{count} tentée",
+  "tally.attemptedCount_other": "{count} tentées",
   "tally.fallCount_one": "{count} chute",
   "tally.fallCount_other": "{count} chutes",
   "tally.pickGrade": "Choisis une cotation pour commencer une voie.",

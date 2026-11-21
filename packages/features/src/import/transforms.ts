@@ -1,6 +1,7 @@
 import { effortGrade, type Grade } from "@sendtally/core";
 import type { ImportSession } from "@sendtally/core/import";
 import { displayGrade, type GradeScales } from "../sessions/grades";
+import { tallyLabel } from "../sessions/meta";
 import { sameTagName } from "../sessions/tags";
 
 export type PlanStats = {
@@ -62,4 +63,11 @@ export function withAddedTags(
     const tags = extra.reduce(withTag, s.tags ?? []);
     return { ...s, tags: tags.slice(0, MAX_SESSION_TAGS) };
   });
+}
+
+/** An imported session's row tally, read as the Log row reads a logged one. */
+export function importTally(session: ImportSession, scales: GradeScales): string[] {
+  const sends = session.climbs.filter((c) => c.kind === "send");
+  const top = planStats([{ ...session, climbs: sends }], scales).topGrade;
+  return tallyLabel({ sends: sends.length, attempts: session.climbs.length - sends.length, top });
 }

@@ -37,6 +37,7 @@ export const users = sqliteTable("users", {
   training_reminder_time: text("training_reminder_time").notNull().default("08:00"),
   training_reminder_prompt_seen: integer("training_reminder_prompt_seen").notNull().default(0),
   first_run_step: integer("first_run_step").notNull().default(0),
+  onboarding_path: text("onboarding_path", { enum: ["history", "plan"] }),
 });
 
 export const boardConnections = sqliteTable(

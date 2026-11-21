@@ -27,7 +27,8 @@ export function useClientApi(apiUrl: string): SendtallyApi {
   const api = new SendtallyApi(
     apiUrl,
     () => bound.getToken(),
-    (write) => bound.onWrite(write)
+    (write) => bound.onWrite(write),
+    "web"
   );
   clients.set(key, api);
   return api;

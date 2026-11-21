@@ -20,6 +20,7 @@ import {
 } from "@sendtally/features/training";
 import { AccountButton } from "../../components/AccountButton";
 import { PageAction } from "../../components/PageAction";
+import { SetupStack } from "../../components/SetupStack";
 import { useAppApi } from "../../lib/useAppApi";
 import { BlockRow } from "../blocks/BlockRow";
 import { useScheduledToast } from "../blocks/useScheduledToast";
@@ -29,6 +30,7 @@ import { CalendarMonth } from "../plan-calendar/CalendarMonth";
 import { CALENDAR_PATH } from "../plan-calendar/paths";
 import { AddWorkoutsSheet } from "./AddWorkoutsSheet";
 import { DaySection } from "./DaySection";
+import { usePlanSetupCards } from "./usePlanSetupCards";
 import { WeekStrip } from "./WeekStrip";
 import { useImportResultToast } from "../../import/useImportResultToast";
 
@@ -44,7 +46,9 @@ const UNDER_STRIP = 12;
  */
 export function PlanPage(): React.ReactElement {
   const { today } = useHangData();
-  const { log } = useTrainingLog(useAppApi());
+  const api = useAppApi();
+  const { log } = useTrainingLog(api);
+  const setupCards = usePlanSetupCards(api);
   const [params] = useSearchParams();
   const asked = params.get("date");
   const start = asked !== null && isCalendarDate(asked) ? asked : today;
@@ -94,6 +98,13 @@ export function PlanPage(): React.ReactElement {
     };
   }, [offset, scrollTo]);
 
+  const setupShown = setupCards.length > 0 && asked === null;
+  React.useEffect(() => {
+    if (!setupShown) return;
+    target.current = null;
+    window.scrollTo({ top: 0 });
+  }, [setupShown]);
+
   const [month, setMonth] = React.useState(() => monthStart(start));
   const show = (date: CalendarDate): void => {
     const next = weekOffset(today, date);
@@ -134,6 +145,7 @@ export function PlanPage(): React.ReactElement {
           </Link>
           <AccountButton />
         </div>
+        <SetupStack cards={setupCards} total={4} />
         <span className="plan-label">{longDate(today)}</span>
         <div className="plan-strip" ref={strip}>
           <WeekStrip

@@ -13,7 +13,9 @@ export type AddWorkoutRowProps = {
   meta: string | null;
   /** The built-in's first picture, as its tile. */
   picture?: LibraryPicture;
-  to: string;
+  /** Where the row opens; `onOpen` instead runs an action here. */
+  to?: string;
+  onOpen?: () => void;
   state: AddState;
   thereLabel: string;
   onAdd: () => void;
@@ -27,6 +29,7 @@ export function AddWorkoutRow({
   meta,
   picture,
   to,
+  onOpen,
   state,
   thereLabel,
   onAdd,
@@ -34,9 +37,15 @@ export function AddWorkoutRow({
 }: AddWorkoutRowProps): React.ReactElement {
   return (
     <div className="add-row">
-      <div className="add-row-main">
-        <CategoryRow kind={kind} name={name} meta={meta} picture={picture} to={to} />
-      </div>
+      {to === undefined && onOpen !== undefined ? (
+        <button type="button" className="add-row-main add-row-open" onClick={onOpen}>
+          <CategoryRow kind={kind} name={name} meta={meta} picture={picture} />
+        </button>
+      ) : (
+        <div className="add-row-main">
+          <CategoryRow kind={kind} name={name} meta={meta} picture={picture} to={to} />
+        </div>
+      )}
       {state === "there" ? (
         <span className="add-row-there">{thereLabel}</span>
       ) : state === "added" ? (

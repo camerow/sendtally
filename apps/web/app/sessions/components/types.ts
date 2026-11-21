@@ -1,6 +1,6 @@
 import type { ClimbLogRowVM } from "@sendtally/features/climbs";
 import type { LogItem } from "@sendtally/features/journal";
-import type { MenuRowProps } from "./MenuRow";
+import type { MenuRowProps } from "../../components/MenuRow";
 
 /** A made-up row in an empty log's preview. */
 export type ExampleRowData = { daysAgo: number; title: string; meta: string };

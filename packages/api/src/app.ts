@@ -91,6 +91,7 @@ import { activityOf } from "./lib/activities";
 import { hangHistory } from "./lib/hang";
 import { dedupedWalls, gymBody, gymOf, newGymBody } from "./lib/gyms";
 import { importBody } from "./lib/import";
+import { onboardingSteps } from "./lib/onboarding";
 import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
   climbNoteBody,
@@ -205,15 +206,53 @@ const saveEntry = async (
   return { entry: await entryResponse(c.env, userId, id) };
 };
 
-/** Step 1 answered, by any way out of it; its event and the person property are set once. */
+/** The log question answered: once by an old build's first run, every time by the wizard's H1. */
 const answerFirstRunLog = async (
   c: Context<AppEnv>,
-  existingLog: z.output<typeof firstRunLog>
+  existingLog: z.output<typeof firstRunLog>,
+  inWizard = false
 ): Promise<void> => {
   const userId = c.get("userId");
-  if (!(await repo.reachFirstRunStep(c.env.DB, userId, 2))) return;
+  if (!(await repo.reachFirstRunStep(c.env.DB, userId, 2)) && !inWizard) return;
   await identifyUser(c.env, userId, { existing_log: existingLog });
   await captureEvent(c, "first_run_log_answered", { existing_log: existingLog });
+};
+
+const pathDone = (progress: repo.OnboardingProgress, path: repo.OnboardingPath): boolean =>
+  path === "history" ? progress.sessions : progress.scheduledBlocks;
+
+type OnboardingStep = Exclude<
+  z.output<typeof firstRunBody>,
+  { step: "started" | "log_answered" | "finished" }
+>;
+
+const moveOnboarding = async (c: Context<AppEnv>, form: OnboardingStep): Promise<void> => {
+  const userId = c.get("userId");
+  const db = c.env.DB;
+  if (form.step === "path") {
+    const other = form.path === "history" ? "plan" : "history";
+    const second = pathDone(await repo.onboardingProgress(db, userId), other);
+    await repo.reachFirstRunStep(db, userId, 2);
+    await repo.setOnboardingPath(db, userId, form.path);
+    await identifyUser(c.env, userId, { onboarding_path: form.path });
+    await captureEvent(c, "onboarding_path_chosen", { path: form.path, from: form.from, second });
+  } else if (form.step === "left") {
+    await repo.reachFirstRunStep(db, userId, 3);
+  } else if (form.step === "skipped") {
+    await repo.reachFirstRunStep(db, userId, 3);
+    await repo.setOnboardingPath(db, userId, null);
+    await captureEvent(c, "onboarding_skipped", { path: form.path ?? "none", at: form.at });
+  } else {
+    if (form.next !== "other_path") {
+      await repo.reachFirstRunStep(db, userId, 3);
+      await repo.setOnboardingPath(db, userId, null);
+    }
+    await captureEvent(c, "onboarding_finished", {
+      path: form.path,
+      outcome: form.outcome,
+      next: form.next,
+    });
+  }
 };
 
 const saveGym = async (c: Context<AppEnv>, id: string, form: z.output<typeof gymBody>) => {
@@ -663,6 +702,8 @@ const firstRunLog = z.enum([
 const firstRunBody = z.discriminatedUnion("step", [
   z.object({ step: z.literal("started") }),
   z.object({ step: z.literal("log_answered"), existingLog: firstRunLog }),
+  ...onboardingSteps,
+  // An app build from before the wizard ends first run this way; drop it after the next forced store build.
   z.object({
     step: z.literal("finished"),
     climbingDays: z.number().int().min(0).max(7),
@@ -807,6 +848,7 @@ const app = new Hono<AppEnv>()
         "Content-Type",
         "X-POSTHOG-DISTINCT-ID",
         "X-POSTHOG-SESSION-ID",
+        "X-Sendtally-Client",
       ],
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     })(c, next)
@@ -2023,7 +2065,7 @@ const app = new Hono<AppEnv>()
 
   // A batch of sessions from a CSV.
   .post("/v1/sessions/import", zValidator("json", importBody, invalidBody), async (c) =>
-    c.json(await importSessions(c, c.req.valid("json").sessions), 201)
+    c.json(await importSessions(c, c.req.valid("json").sessions, c.req.valid("json").format), 201)
   )
 
   // Everything the user logged, one row per climb, in the importer's format.
@@ -2148,6 +2190,11 @@ const app = new Hono<AppEnv>()
       role: user?.role ?? "user",
       trainingReminders: repo.trainingRemindersOf(user),
       firstRun: await repo.showsFirstRun(c.env.DB, userId, user),
+      onboarding: {
+        path: user?.onboarding_path ?? null,
+        left: user !== null && user.first_run_step >= 3 && user.onboarding_path !== null,
+        progress: await repo.onboardingProgress(c.env.DB, userId),
+      },
       strava:
         strava === null
           ? null
@@ -2212,7 +2259,10 @@ const app = new Hono<AppEnv>()
       if (await repo.reachFirstRunStep(c.env.DB, userId, 1))
         await captureEvent(c, "first_run_started");
     } else if (form.step === "log_answered") {
-      await answerFirstRunLog(c, form.existingLog);
+      const user = await repo.getUser(c.env.DB, userId);
+      await answerFirstRunLog(c, form.existingLog, user?.onboarding_path != null);
+    } else if (form.step !== "finished") {
+      await moveOnboarding(c, form);
     } else {
       await answerFirstRunLog(c, "skipped");
       if (await repo.reachFirstRunStep(c.env.DB, userId, 3))

@@ -1,7 +1,6 @@
 import React from "react";
 import type { GradeScales, SendtallyApi } from "@sendtally/api-client";
-import { t } from "../i18n";
-import { queries, useQuery } from "../query";
+import { errorMessage, queries, useQuery } from "../query";
 import { DEFAULT_GRADE_SCALES } from "./transforms";
 import type { SettingsVM } from "./types";
 
@@ -36,7 +35,7 @@ export function useGradeScales(
         })
         .catch((err: unknown) => {
           setBusy(false);
-          setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
+          setError(errorMessage(err));
         });
     },
     [api, onSaved]

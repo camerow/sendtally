@@ -88,6 +88,7 @@ export const common = {
   "common.decimalPoint": "Dezimalkomma",
   "common.changeRefused": "Eine Änderung ließ sich nicht speichern und wurde zurückgenommen.",
   "common.offline": "Offline",
+  "common.unreachable": "sendtally ist nicht erreichbar. Prüfe deine Verbindung.",
   "common.addedTo": "Zu „{name}“ hinzugefügt",
   "common.view": "Ansehen",
   "common.copied": "Kopiert",

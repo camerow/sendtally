@@ -326,9 +326,25 @@
 }
 
 .sheet-head {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.sheet-head-action {
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  height: 44px;
+  padding: 0 8px;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--bs-azure-ink);
+  cursor: pointer;
 }
 
 .sheet--hero {
@@ -1010,6 +1026,94 @@
   font-size: 11px;
   color: rgba(64, 63, 76, 0.72);
   white-space: nowrap;
+}
+
+.pyramid--dark > span {
+  border-bottom-color: transparent;
+}
+
+.pyramid--dark .pyramid-grade {
+  color: var(--bs-white);
+}
+
+.pyramid--dark .pyramid-inner {
+  background: var(--bs-gold);
+}
+
+.pyramid--dark .pyramid-side {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.pyramid--dark .pyramid-count {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.pyramid-ghost {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 0;
+}
+
+.pyramid-ghost > i {
+  display: block;
+  height: 12px;
+  box-sizing: border-box;
+  border-radius: 3px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.3);
+}
+
+.dark-week {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.dark-week-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.dark-week-cell {
+  width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 10px;
+  background: rgba(238, 211, 248, 0.16);
+}
+
+.dark-week-cell.is-button {
+  height: 46px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.dark-week-cell.is-button:focus-visible {
+  outline: 2px solid var(--bs-gold);
+  outline-offset: 2px;
+}
+
+.dark-week-cell.is-on {
+  background: rgba(249, 220, 92, 0.18);
+  border: 1.5px solid var(--bs-gold);
+}
+
+.dark-week-letter {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-on-dark-secondary);
 }
 
 .chip {

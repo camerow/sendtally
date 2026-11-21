@@ -1,4 +1,4 @@
-import type { ImportSession } from "@sendtally/core/import";
+import type { ImportFormat, ImportSession } from "@sendtally/core/import";
 import { z } from "zod";
 import { manualSessionShape, sessionTooLong, type ManualSessionBody } from "./manual";
 
@@ -21,8 +21,19 @@ export const importSessionShape = manualSessionShape
     });
   });
 
+export const importFormat = z.enum([
+  "kaya",
+  "8a",
+  "mountainProject",
+  "sendage",
+  "theCrag",
+  "sendtally",
+] satisfies ImportFormat[]);
+
 export const importBody = z.object({
   sessions: z.array(importSessionShape).min(1).max(IMPORT_BATCH_MAX),
+  // Older app builds send none.
+  format: importFormat.optional(),
 });
 
 export type ImportSessionBody = z.infer<typeof importSessionShape>;

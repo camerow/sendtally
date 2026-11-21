@@ -5,10 +5,15 @@ import { colors } from "@sendtally/design/tokens";
 import { weekdayLetters, weekdayLong } from "@sendtally/features/hang";
 import { type } from "../type";
 
-export type WeekdayChipsProps = { days: readonly Weekday[]; onToggle: (day: Weekday) => void };
+export type WeekdayChipsProps = {
+  days: readonly Weekday[];
+  onToggle: (day: Weekday) => void;
+  /** Days drawn faint, still pressable. */
+  dim?: readonly Weekday[];
+};
 
 /** A chip per weekday, Monday first, each on or off. */
-export function WeekdayChips({ days, onToggle }: WeekdayChipsProps): React.ReactElement {
+export function WeekdayChips({ days, onToggle, dim = [] }: WeekdayChipsProps): React.ReactElement {
   return (
     <View style={{ flexDirection: "row", gap: 5 }}>
       {weekdayLetters().map((letter, i) => {
@@ -28,6 +33,7 @@ export function WeekdayChips({ days, onToggle }: WeekdayChipsProps): React.React
               alignItems: "center",
               justifyContent: "center",
               backgroundColor: on ? colors.gunmetal : colors.surfaceSoft,
+              opacity: dim.includes(day) ? 0.35 : 1,
             }}
           >
             <Text style={[type.label, { color: on ? colors.white : colors.gunmetal }]}>
