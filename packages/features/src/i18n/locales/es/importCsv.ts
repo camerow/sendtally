@@ -133,15 +133,47 @@ export const importCsv = {
   "import.howToTheCrag2": "En el menú «{menu}», elige «{export}».",
   "import.howToTheCrag3": "El archivo se abre en el navegador: guárdalo como archivo .csv.",
   "import.howToSpreadsheetTitle": "Trae tu hoja de cálculo",
-  "import.howToSpreadsheet1":
-    "Solo las hojas con las columnas de sendtally se importan tal cual. La guía de columnas y una plantilla están en sendtally.com, en Importar.",
-  "import.howToSpreadsheet2":
-    "Para todo lo demás: comparte el prompt de abajo con Claude o ChatGPT junto con tu hoja y luego elige el CSV que te devuelva.",
   "import.assistantTitle": "Usa tu propia app de IA",
   "import.assistantBody":
     "Conecta Claude o ChatGPT a sendtally y pídele que importe el archivo por ti.",
-  "import.howToSpreadsheetWeb1":
-    "Solo las hojas con las columnas de sendtally se importan tal cual. La guía de columnas y una plantilla están abajo.",
-  "import.howToSpreadsheetWeb2":
-    "Para todo lo demás: copia el prompt de abajo en Claude o ChatGPT junto con tu hoja y luego elige el CSV que te devuelva.",
+  "import.howToSpreadsheet1":
+    "Guarda tu hoja como archivo CSV. Cualquier columna, en cualquier orden.",
+  "import.howToSpreadsheet2":
+    "Elígelo aquí. sendtally lee tus columnas y las empareja con las suyas.",
+  "import.howToSpreadsheet3":
+    "Revisas el emparejamiento y luego cada sesión antes de guardar nada.",
+  "import.howToSpreadsheetAi":
+    "Para emparejar las columnas, un modelo de IA que gestiona sendtally lee sus nombres y las primeras 20 filas. No se guarda ni se usa para entrenar nada.",
+  "import.match.title": "Hemos emparejado tus columnas.",
+  "import.match.check": "Revisa cada una y cambia las que estén mal.",
+  "import.match.matching": "Emparejando tus columnas",
+  "import.match.rows_one": "{count} fila",
+  "import.match.rows_other": "{count} filas",
+  "import.match.columns_one": "{count} columna",
+  "import.match.columns_other": "{count} columnas",
+  "import.match.date": "Fecha",
+  "import.match.climb": "Vía o bloque",
+  "import.match.grade": "Grado",
+  "import.match.boulderGrade": "Grado de bloque",
+  "import.match.routeGrade": "Grado de vía",
+  "import.match.result": "Encadenado o intento",
+  "import.match.tries": "Intentos",
+  "import.match.where": "Lugar",
+  "import.match.notes": "Notas",
+  "import.match.none": "No está en este archivo",
+  "import.match.noneOption": "Ninguna",
+  "import.match.means": "{value} es {means}",
+  "import.match.meansSend": "encadenado",
+  "import.match.meansAttempt": "intento",
+  "import.match.meansFlash": "flash",
+  "import.match.meansOnsight": "a vista",
+  "import.match.meansRedpoint": "redpoint",
+  "import.match.ambiguous": "{date} puede ser el {dayFirst} o el {monthFirst}.",
+  "import.match.dateOrder": "Orden de la fecha",
+  "import.match.dayFirst": "Día primero",
+  "import.match.monthFirst": "Mes primero",
+  "import.match.gym": "Rocódromo",
+  "import.match.crag": "Roca",
+  "import.match.unused": "No importado: {columns}.",
+  "import.match.confirm": "Está bien",
 } as const;

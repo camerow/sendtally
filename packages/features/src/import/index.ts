@@ -20,3 +20,18 @@ export {
 } from "./transforms";
 export { importAll, issueText } from "./upload";
 export { importResultText, readImportResult } from "./importResultText";
+export {
+  ambiguousDateText,
+  columnChoices,
+  columnsMatchedEvent,
+  matchedCsv,
+  matchRows,
+  requestColumns,
+  sheetMeta,
+  unusedText,
+  withColumn,
+  withWhereKind,
+  type ColumnsReview,
+  type MatchField,
+  type MatchRow,
+} from "./columnMatch";

@@ -133,15 +133,47 @@ export const importCsv = {
   "import.howToTheCrag2": "Dans le menu « {menu} », choisis « {export} ».",
   "import.howToTheCrag3": "Le fichier s'ouvre dans le navigateur : enregistre-le en fichier .csv.",
   "import.howToSpreadsheetTitle": "Importe ton tableur",
-  "import.howToSpreadsheet1":
-    "Seuls les tableaux aux colonnes sendtally s'importent tels quels. Le guide des colonnes et un modèle sont sur sendtally.com, dans Import.",
-  "import.howToSpreadsheet2":
-    "Pour le reste : partage le prompt ci-dessous avec Claude ou ChatGPT avec ton tableau, puis choisis le CSV qu'il te renvoie.",
   "import.assistantTitle": "Utilise ta propre app d'IA",
   "import.assistantBody":
     "Connecte Claude ou ChatGPT à sendtally et demande-lui d'importer le fichier pour toi.",
-  "import.howToSpreadsheetWeb1":
-    "Seuls les tableaux aux colonnes sendtally s'importent tels quels. Le guide des colonnes et un modèle sont ci-dessous.",
-  "import.howToSpreadsheetWeb2":
-    "Pour le reste : copie le prompt ci-dessous dans Claude ou ChatGPT avec ton tableau, puis choisis le CSV qu'il te renvoie.",
+  "import.howToSpreadsheet1":
+    "Enregistre ton tableur en fichier CSV. N'importe quelles colonnes, dans n'importe quel ordre.",
+  "import.howToSpreadsheet2":
+    "Choisis-le ici. sendtally lit tes colonnes et les fait correspondre aux siennes.",
+  "import.howToSpreadsheet3":
+    "Tu vérifies la correspondance, puis chaque séance avant que rien ne soit enregistré.",
+  "import.howToSpreadsheetAi":
+    "Pour établir la correspondance, les noms de tes colonnes et les 20 premières lignes sont lus par un modèle d'IA que sendtally fait tourner. Rien n'est conservé ni utilisé pour entraîner quoi que ce soit.",
+  "import.match.title": "Tes colonnes sont reconnues.",
+  "import.match.check": "Vérifie chacune et corrige celles qui sont fausses.",
+  "import.match.matching": "Lecture de tes colonnes",
+  "import.match.rows_one": "{count} ligne",
+  "import.match.rows_other": "{count} lignes",
+  "import.match.columns_one": "{count} colonne",
+  "import.match.columns_other": "{count} colonnes",
+  "import.match.date": "Date",
+  "import.match.climb": "Voie ou bloc",
+  "import.match.grade": "Cotation",
+  "import.match.boulderGrade": "Cotation bloc",
+  "import.match.routeGrade": "Cotation voie",
+  "import.match.result": "Réussi ou essai",
+  "import.match.tries": "Essais",
+  "import.match.where": "Lieu",
+  "import.match.notes": "Notes",
+  "import.match.none": "Absent du fichier",
+  "import.match.noneOption": "Aucune",
+  "import.match.means": "{value} veut dire {means}",
+  "import.match.meansSend": "réussi",
+  "import.match.meansAttempt": "essai",
+  "import.match.meansFlash": "flash",
+  "import.match.meansOnsight": "à vue",
+  "import.match.meansRedpoint": "après travail",
+  "import.match.ambiguous": "{date} peut être le {dayFirst} ou le {monthFirst}.",
+  "import.match.dateOrder": "Ordre de la date",
+  "import.match.dayFirst": "Jour d'abord",
+  "import.match.monthFirst": "Mois d'abord",
+  "import.match.gym": "Salle",
+  "import.match.crag": "Falaise",
+  "import.match.unused": "Non importé : {columns}.",
+  "import.match.confirm": "C'est bon",
 } as const;

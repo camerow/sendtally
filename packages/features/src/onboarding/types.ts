@@ -30,6 +30,16 @@ export type OnboardingEvent =
       };
     }
   | {
+      event: "import_columns_matched";
+      properties: {
+        columns: Count;
+        matched: Count;
+        asked: Count;
+        edited: Count;
+        outcome: "matched" | "fallback";
+      };
+    }
+  | {
       event: "import_reviewed";
       properties: { format: string; sessions: Count; issues: Count; duplicates: Count };
     }
