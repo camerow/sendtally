@@ -156,7 +156,7 @@ describe("Climbing session detail", () => {
     expect(screen.getByText("Tuesday night session")).toBeTruthy();
     expect(screen.getByText("Tue 21 Oct · 19:00 · 2h")).toBeTruthy();
     for (const [value, label] of [
-      ["14", "climbs"],
+      ["14", "Climbs"],
       ["RPE 7", "Hard"],
       ["9", "sent"],
     ]) {

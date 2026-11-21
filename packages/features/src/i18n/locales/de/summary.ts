@@ -36,5 +36,5 @@ export const summary = {
   "summary.lapsDown_other": "−{count} Durchgänge ggü. letztem Mal",
   "summary.sentOf": "{sent} von {of} geschafft",
   "summary.laps": "Durchgänge",
-  "summary.notRated": "nicht bewertet",
+  "summary.notRated": "Nicht bewertet",
 } as const;

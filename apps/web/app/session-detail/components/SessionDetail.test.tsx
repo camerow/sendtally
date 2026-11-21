@@ -115,7 +115,7 @@ describe("SessionDetail", () => {
     expect(container.querySelector("h1")?.textContent).toBe("Tuesday night session");
     expect(container.textContent).toContain("The Depot");
     const tiles = [...container.querySelectorAll(".detail-tile")].map((t) => t.textContent);
-    expect(tiles).toEqual(["climbs3", "HardRPE 7", "sent2"]);
+    expect(tiles).toEqual(["Climbs3", "HardRPE 7", "sent2"]);
     expect(container.textContent).toContain("SentAttempted");
   });
 
