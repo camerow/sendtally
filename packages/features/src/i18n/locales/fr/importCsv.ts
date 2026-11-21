@@ -139,11 +139,9 @@ export const importCsv = {
     "Seuls les tableaux aux colonnes sendtally s'importent tels quels. Le guide des colonnes et un modèle sont sur sendtally.com, dans Import.",
   "import.howToSpreadsheet2":
     "Pour le reste : partage le prompt ci-dessous avec Claude ou ChatGPT avec ton tableau, puis choisis le CSV qu'il te renvoie.",
-  "import.skipForNow": "Passer pour l'instant",
   "import.assistantTitle": "Utilise ta propre app d'IA",
   "import.assistantBody":
     "Connecte Claude ou ChatGPT à sendtally et demande-lui d'importer le fichier pour toi.",
-  "import.backToFirstRun": "Ton ancien carnet",
   "import.howToSpreadsheetWeb1":
     "Seuls les tableaux aux colonnes sendtally s'importent tels quels. Le guide des colonnes et un modèle sont ci-dessous.",
   "import.howToSpreadsheetWeb2":

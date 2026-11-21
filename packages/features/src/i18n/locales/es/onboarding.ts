@@ -7,8 +7,6 @@ export const onboarding = {
   "onboarding.firstRun.firstLog": "No, es mi primero",
   "onboarding.firstRun.importFrom": "Importar desde {source}",
   "onboarding.firstRun.importSpreadsheet": "Importar una hoja de cálculo",
-  "onboarding.firstRun.later": "Más tarde",
-  "onboarding.firstRun.daysQuestion": "¿Qué días sueles escalar?",
   "onboarding.firstRun.continue": "Continuar",
   "onboarding.chooser.title": "¿Por dónde quieres empezar?",
   "onboarding.chooser.historyTitle": "Traer mi historial de escalada",

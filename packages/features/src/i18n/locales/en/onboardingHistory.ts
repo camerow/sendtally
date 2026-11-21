@@ -26,11 +26,9 @@ export const onboardingHistory = {
   "onboarding.history.how.effort": "Your effort",
   "onboarding.history.how.effortBody":
     "Each session scored 1 to 10, so your trend starts on day one.",
-  "onboarding.history.how.sheetStep1": "Save your sheet as a CSV file. Any columns, any order.",
   "onboarding.history.how.byHand": "Add a few climbs by hand instead",
   "onboarding.history.review.title_one": "{count} year of climbing, found.",
   "onboarding.history.review.title_other": "{count} years of climbing, found.",
-  "onboarding.history.review.yourSpreadsheet": "Your spreadsheet",
   "onboarding.history.review.fileSpan": "{file} · {from} to {to}",
   "onboarding.history.add.title": "Add climbs that meant something to you.",
   "onboarding.history.add.body":

@@ -21,7 +21,3 @@ export function firstRunDue(
   const slow = new Promise<boolean>((resolve) => setTimeout(resolve, waitMs, false));
   return Promise.race([status().then((s) => s.firstRun === true), slow]).catch(() => false);
 }
-
-/** Whether an import page was opened from first run, which takes it back there. */
-export const fromFirstRun = (search: string): boolean =>
-  new URLSearchParams(search).get("then") === "/app/start";

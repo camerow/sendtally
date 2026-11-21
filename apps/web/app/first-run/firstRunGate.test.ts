@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { firstRunGate, fromFirstRun } from "./firstRunGate";
+import { firstRunGate } from "./firstRunGate";
 
 const at = (path: string): URL => new URL(path, "https://sendtally.com");
 
@@ -18,10 +18,5 @@ describe("firstRunGate", () => {
 
   it("lets a finished account reopen the wizard onto a path", () => {
     expect(firstRunGate(at("/app/start?path=plan&from=account"), false)).toBeNull();
-  });
-
-  it("knows an import page opened from first run by where it goes back to", () => {
-    expect(fromFirstRun("?then=%2Fapp%2Fstart&from=8a")).toBe(true);
-    expect(fromFirstRun("")).toBe(false);
   });
 });

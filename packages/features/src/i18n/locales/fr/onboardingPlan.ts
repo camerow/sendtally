@@ -46,6 +46,5 @@ export const onboardingPlan = {
   "onboarding.plan.week.perWeek_one": "{count} séance par semaine",
   "onboarding.plan.week.perWeek_other": "{count} séances par semaine",
   "onboarding.plan.block.namePlaceholder": "Base d'hiver",
-  "onboarding.plan.workout.newExercise": "Nouvel exercice",
   "onboarding.plan.workout.exercises": "Exercices",
 } as const;

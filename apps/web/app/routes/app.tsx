@@ -7,7 +7,7 @@ import { t } from "@sendtally/features/i18n";
 import { ErrorPage } from "../components/ErrorPage";
 import { Icon, type IconName } from "../components/Icon";
 import { requireApi } from "../lib/api.server";
-import { firstRunDue, firstRunGate, fromFirstRun } from "../first-run/firstRunGate";
+import { firstRunDue, firstRunGate } from "../first-run/firstRunGate";
 import { cloudflareContext } from "../lib/cloudflare-context";
 import { AccountButton } from "../components/AccountButton";
 import { LiveBar } from "../components/LiveBar";
@@ -171,9 +171,9 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
 export default function AppLayout(): React.ReactElement {
   const api = useAppApi();
   const { userId } = useAuth();
-  const { pathname, search } = useLocation();
-  // First run and the import it opens draw their own frame, as the phone's are full screens.
-  const bare = pathname === "/app/start" || (pathname === "/app/import" && fromFirstRun(search));
+  const { pathname } = useLocation();
+  // The wizard draws its own frame, as the phone's is a full screen.
+  const bare = pathname === "/app/start";
   return (
     <GradeScalesProvider api={api}>
       <LibraryProvider api={api}>

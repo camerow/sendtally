@@ -135,11 +135,9 @@ export const importCsv = {
     "Only sheets in the sendtally columns import as they are. The column guide and a template are on sendtally.com, under Import.",
   "import.howToSpreadsheet2":
     "Anything else: share the prompt below with Claude or ChatGPT along with your sheet, then choose the CSV it gives back.",
-  "import.skipForNow": "Skip for now",
   "import.assistantTitle": "Use your own AI app",
   "import.assistantBody":
     "Connect Claude or ChatGPT to sendtally and ask it to import the file for you.",
-  "import.backToFirstRun": "Your old log",
   "import.howToSpreadsheetWeb1":
     "Only sheets in the sendtally columns import as they are. The column guide and a template are below.",
   "import.howToSpreadsheetWeb2":
