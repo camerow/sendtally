@@ -98,14 +98,18 @@ export function Button({
     ...rest,
   };
   if (href !== undefined) {
-    return (
+    return disabled ? (
+      <a role="link" aria-disabled="true" {...shared} onClick={undefined}>
+        {children}
+      </a>
+    ) : (
       <a href={href} {...shared}>
         {children}
       </a>
     );
   }
   return (
-    <button type="button" {...shared}>
+    <button type="button" disabled={disabled} {...shared}>
       {children}
     </button>
   );
