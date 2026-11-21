@@ -1,6 +1,6 @@
 module.exports = {
   preset: "jest-expo",
   setupFiles: ["<rootDir>/jest.setup.ts"],
-  testMatch: ["<rootDir>/{app,components,features,lib}/**/*.test.{ts,tsx}"],
+  testMatch: ["<rootDir>/{app,components,features,lib,plugins}/**/*.test.{ts,tsx}"],
   testTimeout: 20000,
 };

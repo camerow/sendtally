@@ -236,6 +236,7 @@ function ActivityFormBody({
               : t("activities.logActivity")
         }
         cancelLabel={logged === null ? t("hang.discard") : t("common.cancel")}
+        cancelDestructive={live}
         onCancel={live ? discard : () => router.back()}
         onSave={() => void save()}
         saveDisabled={saving}
