@@ -29,7 +29,7 @@ jest.mock("../../../components/Sheet", () => ({
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "new" }));
 jest.mock("expo-router", () => ({
-  router: { push: jest.fn(), replace: jest.fn(), back: jest.fn() },
+  router: { canGoBack: () => true, push: jest.fn(), replace: jest.fn(), back: jest.fn() },
 }));
 
 const exercises = [

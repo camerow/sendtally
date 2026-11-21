@@ -35,6 +35,7 @@ import { LoadTable } from "./LoadTable";
 import { LoadSection } from "./LoadSection";
 import { usePlanDraft } from "./usePlanDraft";
 import { WeekDaysGrid } from "./WeekDaysGrid";
+import { goBack } from "../../../lib/goBack";
 
 export type LadderScreenProps = {
   id: string;
@@ -102,7 +103,7 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
       action: t("plan.removeAction"),
       onConfirm: () => {
         void actions.deleteMembership(m.id);
-        router.back();
+        goBack();
       },
     });
 

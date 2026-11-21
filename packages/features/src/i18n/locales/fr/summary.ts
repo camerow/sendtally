@@ -1,6 +1,6 @@
 export const summary = {
-  "summary.length": "durée",
-  "summary.climbs": "voies",
+  "summary.length": "Durée",
+  "summary.climbs": "Voies",
   "summary.sent": "enchaînées",
   "summary.same": "Pareil",
   "summary.repsUp_one": "+{count} rép.",
@@ -36,5 +36,5 @@ export const summary = {
   "summary.lapsDown_other": "−{count} boucles vs la dernière fois",
   "summary.sentOf": "{sent} enchaînées sur {of}",
   "summary.laps": "Boucles",
-  "summary.notRated": "non évalué",
+  "summary.notRated": "Non évalué",
 } as const;

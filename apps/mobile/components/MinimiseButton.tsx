@@ -1,7 +1,7 @@
-import { router } from "expo-router";
 import React from "react";
 import { Pressable, View, type ViewStyle } from "react-native";
 import { t } from "@sendtally/features/i18n";
+import { goBack } from "../lib/goBack";
 import { press } from "../lib/press";
 import { Icon } from "./Icon";
 
@@ -17,8 +17,7 @@ export const LIVE_HEADER = {
 
 /** Leaves a live screen for the one under it, or the tabs when it was opened on its own. */
 export function leaveLiveScreen(): void {
-  if (router.canGoBack()) router.back();
-  else router.replace("/(tabs)/sessions");
+  goBack("/(tabs)/sessions");
 }
 
 /** A chevron pointing down, which slides a live screen into the live bar with its run going on. */

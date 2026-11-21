@@ -95,7 +95,8 @@ describe("WorkoutLibrary", () => {
     expect(container.querySelector(".library-shelves")).toBeNull();
     const cards = container.querySelectorAll(".library-card");
     expect(cards).toHaveLength(1);
-    expect(cards[0]?.textContent).toContain("Used 2 times");
+    expect(cards[0]?.textContent).toContain("Gym, legs");
+    expect(cards[0]?.textContent).not.toContain("Used");
     search("zzzz");
     expect(container.querySelector(".dashed-panel")).not.toBeNull();
   });

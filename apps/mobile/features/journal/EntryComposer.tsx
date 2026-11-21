@@ -20,6 +20,7 @@ import { primaryButton, primaryButtonLabel } from "../../lib/styles";
 import { SessionPicker } from "./SessionPicker";
 import { SeverityPicker } from "./SeverityPicker";
 import { TripPreview } from "./TripPreview";
+import { goBack } from "../../lib/goBack";
 
 const label = {
   fontFamily: fonts.monoMedium,
@@ -79,7 +80,7 @@ export function EntryComposer({
   const onSaved = React.useCallback(
     (entry: JournalEntry) => {
       if (editing !== undefined || entry.parent_id !== null) {
-        router.back();
+        goBack();
         return;
       }
       router.replace({ pathname: "/journal/[id]", params: { id: entry.id } });

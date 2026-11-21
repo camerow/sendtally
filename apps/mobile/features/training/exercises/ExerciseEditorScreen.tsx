@@ -38,6 +38,7 @@ import type { ExerciseForm } from "./types";
 type Measure = ExerciseForm["measure"];
 import { useMakeExercise } from "./useMakeExercise";
 import { useMergeExercise } from "./useMergeExercise";
+import { goBack } from "../../../lib/goBack";
 
 export type ExerciseEditorScreenProps = {
   /** The category it is made in; an edited exercise keeps its own. */
@@ -122,7 +123,7 @@ function Form({
       header={
         <EditorHeader
           title={editing ? t("workouts.editExercise") : t("workouts.newExercise")}
-          onCancel={() => router.back()}
+          onCancel={() => goBack()}
           onSave={save}
           saveDisabled={trimmed === "" || error !== undefined}
         />
@@ -236,7 +237,7 @@ function NewExercise({ kind, name = "", ret }: ExerciseEditorScreenProps): React
     const opener = openerOf(ret);
     if (opener !== undefined) {
       release();
-      router.back();
+      goBack();
       opener(form);
       return;
     }
@@ -245,7 +246,7 @@ function NewExercise({ kind, name = "", ret }: ExerciseEditorScreenProps): React
       release();
       if ("exercise" in made)
         router.replace({ pathname: "/exercise/[id]", params: { id: made.exercise.id } });
-      else router.back();
+      else goBack();
     });
   };
   return <Form initial={initial} editing={false} logged={false} onSave={save} />;
@@ -268,7 +269,7 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
     release: () => void
   ): void => {
     release();
-    router.back();
+    goBack();
     void api
       .saveExercise(exercise.id, {
         name,
@@ -310,7 +311,7 @@ function EditGrip({ id }: { id: string }): React.ReactElement | null {
 
   const save = (form: ExerciseForm, release: () => void): void => {
     release();
-    router.back();
+    goBack();
     const picked = GRIP_MEASURES.find((m) => m === form.measure) ?? measure;
     if (form.name !== grip.name || picked !== measure)
       void actions.saveGrip({ ...grip, name: form.name, measure: picked });

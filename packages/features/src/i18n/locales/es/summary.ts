@@ -1,6 +1,6 @@
 export const summary = {
-  "summary.length": "duración",
-  "summary.climbs": "escaladas",
+  "summary.length": "Duración",
+  "summary.climbs": "Escaladas",
   "summary.sent": "encadenadas",
   "summary.same": "Igual",
   "summary.repsUp_one": "+{count} rep.",
@@ -36,5 +36,5 @@ export const summary = {
   "summary.lapsDown_other": "−{count} vueltas vs. la última vez",
   "summary.sentOf": "{sent} de {of} encadenadas",
   "summary.laps": "Vueltas",
-  "summary.notRated": "sin valorar",
+  "summary.notRated": "Sin valorar",
 } as const;

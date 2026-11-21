@@ -5,6 +5,7 @@ import React from "react";
 import { useDeleteAccount } from "@sendtally/features/settings";
 import { AccountView } from "../features/settings/AccountView";
 import { useApi } from "../lib/api";
+import { goBack } from "../lib/goBack";
 
 function versionLabel(): string {
   const version = Application.nativeApplicationVersion ?? "";
@@ -27,7 +28,7 @@ export default function Account(): React.ReactElement {
       email={user?.primaryEmailAddress?.emailAddress ?? ""}
       version={versionLabel()}
       deletion={deletion}
-      onBack={router.back}
+      onBack={() => goBack()}
       onSignOut={signOut}
     />
   );

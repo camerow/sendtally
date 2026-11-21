@@ -77,6 +77,23 @@ export default tseslint.config(
     },
   },
   {
+    // A screen the first-run wizard replaced its way to has nothing under it, where
+    // router.back does nothing; goBack lands on Today instead.
+    files: ["apps/mobile/**/*.ts", "apps/mobile/**/*.tsx"],
+    ignores: ["apps/mobile/lib/goBack.ts", "apps/mobile/**/*.test.ts", "apps/mobile/**/*.test.tsx"],
+    rules: {
+      "no-restricted-properties": [
+        "error",
+        {
+          object: "router",
+          property: "back",
+          message:
+            "Use goBack from apps/mobile/lib/goBack, which lands on Today when nothing is under the screen.",
+        },
+      ],
+    },
+  },
+  {
     files: ["**/*.ts", "**/*.tsx"],
     ignores: [
       "packages/core/**",

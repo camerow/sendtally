@@ -24,7 +24,7 @@ const mockRun = jest.fn();
 const mockConnect = jest.fn();
 
 jest.mock("expo-router", () => ({
-  router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() },
+  router: { canGoBack: () => true, push: jest.fn(), back: jest.fn(), replace: jest.fn() },
   useLocalSearchParams: () => ({ fingerprint: "manual-1" }),
 }));
 jest.mock("../../lib/api", () => ({ useApi: () => mockApi }));
@@ -156,7 +156,7 @@ describe("Climbing session detail", () => {
     expect(screen.getByText("Tuesday night session")).toBeTruthy();
     expect(screen.getByText("Tue 21 Oct · 19:00 · 2h")).toBeTruthy();
     for (const [value, label] of [
-      ["14", "climbs"],
+      ["14", "Climbs"],
       ["RPE 7", "Hard"],
       ["9", "sent"],
     ]) {

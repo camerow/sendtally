@@ -12,6 +12,7 @@ import { logConversion } from "../features/analytics/conversions";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
 import { press } from "../lib/press";
 import { Button } from "../features/training/components/Button";
+import { goBack } from "../lib/goBack";
 
 export default function SignIn(): React.ReactElement | null {
   const params = useLocalSearchParams<{ intent?: string }>();
@@ -56,7 +57,7 @@ export default function SignIn(): React.ReactElement | null {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
               {router.canGoBack() && (
                 <Pressable
-                  onPress={() => router.back()}
+                  onPress={() => goBack()}
                   accessibilityRole="button"
                   accessibilityLabel={t("auth.back")}
                   hitSlop={12}
