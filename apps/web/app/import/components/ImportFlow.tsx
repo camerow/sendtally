@@ -1,6 +1,7 @@
 import React from "react";
-import { Link } from "react-router";
+import { useNavigate } from "react-router";
 import type { SendtallyApi } from "@sendtally/api-client";
+import { Button } from "@sendtally/design";
 import {
   likelyDuplicates,
   planImport,
@@ -14,7 +15,6 @@ import { BackLink } from "../../components/BackLink";
 import { Section } from "../../settings/components/Section";
 import { bodyText, pageTitle, secondaryButton } from "../../settings/components/styles";
 import { sha256Hex } from "../sha256Hex";
-import { goldButton } from "../styles";
 import { DropZone } from "./DropZone";
 import { FormatGuide } from "./FormatGuide";
 import { ImportReview } from "./ImportReview";
@@ -41,6 +41,7 @@ const heldBack = (state: { duplicates: LikelyDuplicate[]; importAnyway: number[]
 
 export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
   const [state, setState] = React.useState<State>({ step: "choose" });
+  const navigate = useNavigate();
   const { suggestionsFor } = useTagVocabulary(api);
 
   const retag = (indexes: number[], change: (tags: string[]) => string[]): void =>
@@ -166,9 +167,9 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
             <p style={bodyText}>{t("import.doneBody")}</p>
           </Section>
           <div style={{ display: "flex", gap: 12 }}>
-            <Link to="/app" style={goldButton}>
+            <Button variant="azure" onClick={() => void navigate("/app")}>
               {t("import.openLog")}
-            </Link>
+            </Button>
             <button
               type="button"
               style={secondaryButton}
