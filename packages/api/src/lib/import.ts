@@ -28,6 +28,7 @@ export const importFormat = z.enum([
   "sendage",
   "theCrag",
   "sendtally",
+  "spreadsheet",
 ] satisfies ImportFormat[]);
 
 export const importBody = z.object({
