@@ -29,12 +29,9 @@ export const onboardingHistory = {
   "onboarding.history.how.effort": "Deine Anstrengung",
   "onboarding.history.how.effortBody":
     "Jede Session mit 1 bis 10 bewertet, so beginnt dein Verlauf am ersten Tag.",
-  "onboarding.history.how.sheetStep1":
-    "Speichere deine Tabelle als CSV-Datei. Beliebige Spalten, beliebige Reihenfolge.",
   "onboarding.history.how.byHand": "Lieber ein paar Klettereien von Hand eintragen",
   "onboarding.history.review.title_one": "{count} Jahr Klettern gefunden.",
   "onboarding.history.review.title_other": "{count} Jahre Klettern gefunden.",
-  "onboarding.history.review.yourSpreadsheet": "Deine Tabelle",
   "onboarding.history.review.fileSpan": "{file} · {from} bis {to}",
   "onboarding.history.add.title": "Trag die Klettereien ein, die dir etwas bedeutet haben.",
   "onboarding.history.add.body":

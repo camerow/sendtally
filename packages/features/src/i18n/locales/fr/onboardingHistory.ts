@@ -27,12 +27,9 @@ export const onboardingHistory = {
   "onboarding.history.how.effort": "Ton effort",
   "onboarding.history.how.effortBody":
     "Chaque séance notée de 1 à 10, pour que ta courbe commence dès le premier jour.",
-  "onboarding.history.how.sheetStep1":
-    "Enregistre ton tableau en fichier CSV. Toutes les colonnes, dans n'importe quel ordre.",
   "onboarding.history.how.byHand": "Ajouter plutôt quelques voies à la main",
   "onboarding.history.review.title_one": "{count} an de grimpe, trouvé.",
   "onboarding.history.review.title_other": "{count} ans de grimpe, trouvés.",
-  "onboarding.history.review.yourSpreadsheet": "Ton tableau",
   "onboarding.history.review.fileSpan": "{file} · de {from} à {to}",
   "onboarding.history.add.title": "Ajoute les voies qui ont compté pour toi.",
   "onboarding.history.add.body":

@@ -1358,6 +1358,15 @@
   flex: 0 1 calc(50% - 4px);
 }
 
+.dose-input--compact,
+.dose-input--compact:last-child:nth-child(odd) {
+  flex: 1 1 28%;
+}
+
+.item-editor-rest--compact {
+  width: 40%;
+}
+
 .dose-name {
   flex: 1 1 30%;
   display: flex;

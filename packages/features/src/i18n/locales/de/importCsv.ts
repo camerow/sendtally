@@ -139,11 +139,9 @@ export const importCsv = {
     "Nur Tabellen mit den sendtally-Spalten werden direkt importiert. Spaltenanleitung und Vorlage findest du auf sendtally.com unter Import.",
   "import.howToSpreadsheet2":
     "Alles andere: Teile den Prompt unten zusammen mit deiner Tabelle mit Claude oder ChatGPT und wähle dann die CSV-Datei, die du zurückbekommst.",
-  "import.skipForNow": "Vorerst überspringen",
   "import.assistantTitle": "Deine eigene KI-App nutzen",
   "import.assistantBody":
     "Verbinde Claude oder ChatGPT mit sendtally und lass die Datei für dich importieren.",
-  "import.backToFirstRun": "Dein altes Logbuch",
   "import.howToSpreadsheetWeb1":
     "Nur Tabellen mit den sendtally-Spalten werden direkt importiert. Spaltenanleitung und Vorlage findest du unten.",
   "import.howToSpreadsheetWeb2":

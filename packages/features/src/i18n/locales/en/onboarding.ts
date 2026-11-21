@@ -7,8 +7,6 @@ export const onboarding = {
   "onboarding.firstRun.firstLog": "No, this is my first",
   "onboarding.firstRun.importFrom": "Import from {source}",
   "onboarding.firstRun.importSpreadsheet": "Import a spreadsheet",
-  "onboarding.firstRun.later": "Later",
-  "onboarding.firstRun.daysQuestion": "Which days do you usually climb?",
   "onboarding.firstRun.continue": "Continue",
   "onboarding.chooser.title": "Where do you want to start?",
   "onboarding.chooser.historyTitle": "Bring in my climbing",

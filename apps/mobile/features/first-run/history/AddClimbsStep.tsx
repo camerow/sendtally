@@ -22,7 +22,7 @@ import {
   withPickedClimb,
   type ClimbDraft,
 } from "@sendtally/features/log-session";
-import { yearDate, useDisplayScales } from "@sendtally/features/settings";
+import { useDisplayScales, useHistoryCard, yearDate } from "@sendtally/features/settings";
 import { DateTimeField } from "../../../components/DateTimeField";
 import { GradeChips } from "../../../components/GradeChips";
 import { Segmented } from "../../../components/Segmented";
@@ -35,7 +35,6 @@ import { AMBER } from "../../training/components/tints";
 import type { StepComponent } from "../types";
 import { WizardFrame } from "../WizardFrame";
 import { HistoryCard } from "./components/HistoryCard";
-import { useHistoryCard } from "./useHistoryCard";
 
 type Outcome = "flash" | "send" | "project";
 

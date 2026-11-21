@@ -26,12 +26,9 @@ export const onboardingHistory = {
   "onboarding.history.how.effort": "Tu esfuerzo",
   "onboarding.history.how.effortBody":
     "Cada sesión puntuada del 1 al 10, para que tu tendencia empiece desde el primer día.",
-  "onboarding.history.how.sheetStep1":
-    "Guarda tu hoja como archivo CSV. Cualquier columna, en cualquier orden.",
   "onboarding.history.how.byHand": "Mejor añadir unas pocas escaladas a mano",
   "onboarding.history.review.title_one": "{count} año de escalada, encontrado.",
   "onboarding.history.review.title_other": "{count} años de escalada, encontrados.",
-  "onboarding.history.review.yourSpreadsheet": "Tu hoja de cálculo",
   "onboarding.history.review.fileSpan": "{file} · de {from} a {to}",
   "onboarding.history.add.title": "Añade las escaladas que significaron algo para ti.",
   "onboarding.history.add.body":

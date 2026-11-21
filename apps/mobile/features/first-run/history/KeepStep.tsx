@@ -2,13 +2,12 @@ import React from "react";
 import { ActivityIndicator } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { formatDate, t } from "@sendtally/features/i18n";
-import { keepCopy } from "@sendtally/features/settings";
+import { keepCopy, useHistoryCard } from "@sendtally/features/settings";
 import { useBilling } from "../../billing/useBilling";
 import { Paywall } from "../../billing/Paywall";
 import { Button } from "../../training/components/Button";
 import type { StepComponent } from "../types";
 import { WizardFrame } from "../WizardFrame";
-import { useHistoryCard } from "./useHistoryCard";
 
 /** H5: membership, once per wizard, offered with the user's own counts and the trial's end (T25 option A). */
 export function KeepStep({ wizard, api }: Parameters<StepComponent>[0]): React.ReactElement {
