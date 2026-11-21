@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { historySteps, planSteps, remainingSteps, resumeStep, stepPosition } from "./steps";
+import { historySteps, remainingSteps, resumeStep, stepPosition } from "./steps";
 import type { OnboardingProgress } from "./types";
 
 const NONE: OnboardingProgress = {
@@ -24,15 +24,17 @@ describe("historySteps", () => {
   });
 });
 
-describe("planSteps", () => {
-  it("is P1 to P7", () => {
-    expect(planSteps()).toEqual(["P1", "P2", "P3", "P4", "P5", "P6", "P7"]);
-  });
-});
-
 describe("remainingSteps", () => {
   it("is the whole path for a new user", () => {
-    expect(remainingSteps("plan", null, NONE, FRESH, false)).toEqual(planSteps());
+    expect(remainingSteps("plan", null, NONE, FRESH, false)).toEqual([
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5",
+      "P6",
+      "P7",
+    ]);
     expect(remainingSteps("history", "import", NONE, FRESH, false)).toEqual(historySteps("import"));
   });
 

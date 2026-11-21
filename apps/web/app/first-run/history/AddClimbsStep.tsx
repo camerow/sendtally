@@ -1,13 +1,12 @@
 import React from "react";
 import { Button } from "@sendtally/design";
 import { useAreaClimbSearch, withAreaClimb, withTypedName } from "@sendtally/features/areas";
-import { climbSuggestions, useClimbs, type ClimbPillKind } from "@sendtally/features/climbs";
-import { formatDate, t } from "@sendtally/features/i18n";
+import { climbSuggestions, useClimbs } from "@sendtally/features/climbs";
+import { t } from "@sendtally/features/i18n";
 import {
   disciplineLabel,
   disciplineOf,
   draftGrade,
-  draftGradeLabel,
   gradeOptions,
   localDate,
   logClimbOnDay,
@@ -16,7 +15,21 @@ import {
   withPickedClimb,
   type ClimbDraft,
 } from "@sendtally/features/log-session";
-import { useDisplayScales, useHistoryCard, yearDate } from "@sendtally/features/settings";
+import {
+  ADD_OUTCOMES,
+  addedClimb,
+  addOutcomeLabel,
+  addOutcomePill,
+  asLogged,
+  climbAddedEvent,
+  needsClimbName,
+  sendsAdded,
+  useDisplayScales,
+  useHistoryCard,
+  yearDate,
+  type AddedClimb,
+  type AddOutcome,
+} from "@sendtally/features/settings";
 import { ClimbLogRow } from "../../climbs/components/ClimbLogRow";
 import { ComboField } from "../../components/ComboField";
 import { GradeChips } from "../../components/GradeChips";
@@ -27,35 +40,7 @@ import type { StepComponent } from "../types";
 import { WizardFrame } from "../WizardFrame";
 import { HistoryCard } from "./components/HistoryCard";
 
-type Outcome = "flash" | "send" | "project";
-
-type Added = { key: string; gradeLabel: string; name: string; when: string; outcome: Outcome };
-
 const YEARS = 12;
-
-const OUTCOMES = ["flash", "send", "project"] as const;
-
-const PILL: Record<Outcome, ClimbPillKind> = { flash: "flash", send: "sent", project: "project" };
-
-const outcomeLabel = (o: Outcome): string =>
-  o === "flash"
-    ? t("logSession.styleFlash")
-    : o === "send"
-      ? t("common.sent")
-      : t("common.project");
-
-/** The climb as the log stores it: Flash and Sent are sends of one try, a Project an attempt kept as one. */
-const asLogged = (climb: ClimbDraft, outcome: Outcome): Omit<ClimbDraft, "key"> => {
-  const { key: _key, project: _project, ...rest } = climb;
-  return {
-    ...rest,
-    name: climb.name.trim(),
-    kind: outcome === "project" ? "attempt" : "send",
-    style: outcome === "flash" ? "flash" : "redpoint",
-    tries: 1,
-    ...(outcome === "project" ? { project: true } : {}),
-  };
-};
 
 /** H2h: past climbs that mattered, each saved on its own Add, the card beside them growing with them. */
 export const AddClimbsStep: StepComponent = ({ wizard, api }) => {
@@ -67,20 +52,20 @@ export const AddClimbsStep: StepComponent = ({ wizard, api }) => {
     ...newClimb("climb-1", scales.boulder),
     grade: "",
   }));
-  const [outcome, setOutcome] = React.useState<Outcome>("send");
+  const [outcome, setOutcome] = React.useState<AddOutcome>("send");
   const [now] = React.useState(() => new Date());
   const [year, setYear] = React.useState(now.getFullYear());
   const [day, setDay] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
   const [failed, setFailed] = React.useState(false);
-  const [added, setAdded] = React.useState<readonly Added[]>([]);
+  const [added, setAdded] = React.useState<readonly AddedClimb[]>([]);
 
   const areaClimbs = useAreaClimbSearch(api, climb.name, null, true).found;
   const suggestions = climbSuggestions(climb.name, mine, areaClimbs, null);
   const discipline = disciplineOf(climb.scale);
   const ladder = gradeOptions(climb.scale);
   const at = ladder.indexOf(climb.grade);
-  const needsName = outcome === "project" && climb.name.trim() === "";
+  const needsName = needsClimbName(climb, outcome);
   const picked = climb.grade !== "" && draftGrade(climb.grade, climb.scale) !== undefined;
   const canAdd = picked && !needsName && !saving;
   const years = Array.from({ length: YEARS }, (_, i) => String(now.getFullYear() - i));
@@ -99,27 +84,9 @@ export const AddClimbsStep: StepComponent = ({ wizard, api }) => {
     logClimbOnDay(api, asLogged(climb, outcome), day ?? yearDate(year, now), []).then(
       () => {
         showCard();
-        wizard.capture("climb_added", {
-          kind: discipline,
-          outcome,
-          dated: day === null ? "year" : "day",
-        });
+        wizard.capture("climb_added", climbAddedEvent(climb, outcome, day));
         setAdded((list) => [
-          {
-            key: `${list.length}`,
-            gradeLabel: draftGradeLabel(climb, scales),
-            name: climb.name.trim() === "" ? disciplineLabel(discipline) : climb.name.trim(),
-            when:
-              day === null
-                ? String(year)
-                : formatDate(new Date(`${day}T00:00:00Z`), {
-                    timeZone: "UTC",
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  }),
-            outcome,
-          },
+          addedClimb(`${list.length}`, climb, outcome, { year, day }, scales),
           ...list,
         ]);
         setClimb({ ...climb, name: "", grade: "" });
@@ -145,7 +112,7 @@ export const AddClimbsStep: StepComponent = ({ wizard, api }) => {
             total > 0 &&
             wizard.next({
               count: added.length,
-              sends: added.filter((a) => a.outcome !== "project").length,
+              sends: sendsAdded(added),
             })
           }
         >
@@ -218,7 +185,7 @@ export const AddClimbsStep: StepComponent = ({ wizard, api }) => {
             <Segmented
               soft
               label={t("onboarding.history.add.howItWent")}
-              options={OUTCOMES.map((o) => ({ value: o, label: outcomeLabel(o) }))}
+              options={ADD_OUTCOMES.map((o) => ({ value: o, label: addOutcomeLabel(o) }))}
               value={outcome}
               onChange={setOutcome}
             />
@@ -279,7 +246,7 @@ export const AddClimbsStep: StepComponent = ({ wizard, api }) => {
                     gradeLabel: a.gradeLabel,
                     name: a.name,
                     meta: a.when,
-                    pill: { kind: PILL[a.outcome], label: outcomeLabel(a.outcome) },
+                    pill: addOutcomePill(a.outcome),
                   }}
                   onPress={null}
                 />

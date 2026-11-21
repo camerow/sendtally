@@ -1,25 +1,20 @@
 import React from "react";
-import { AccessibilityInfo, Alert, Text, View } from "react-native";
-import type { Plan, SendtallyApi } from "@sendtally/api-client";
-import { itemIdOf, type Dose, type WeightUnit } from "@sendtally/core/hang";
+import { Alert, Text, View } from "react-native";
+import { useReducedMotion } from "react-native-reanimated";
+import type { SendtallyApi } from "@sendtally/api-client";
 import { colors, fonts } from "@sendtally/design/tokens";
-import {
-  hangLoadText,
-  shortDate,
-  useGrips,
-  weekdayLong,
-  weightText,
-} from "@sendtally/features/hang";
+import { shortDate, useGrips, weekdayLong } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   firstWeekday,
   sessionsPerWeek,
   usePlanPath,
   useTrainingReminders,
+  weekBars,
   type Wizard,
 } from "@sendtally/features/settings";
 import { KIND_LOOK, usePlan } from "@sendtally/features/training";
-import { exerciseName, type LibraryWorkout } from "@sendtally/features/workouts";
+import { useTween } from "@sendtally/features/trends";
 import { Icon } from "../../../components/Icon";
 import { Switch } from "../../../components/Switch";
 import { Button } from "../../training/components/Button";
@@ -31,71 +26,8 @@ import { requestNotifications } from "../../training/reminders/notifications";
 import { darkMeta } from "../components/DarkCard";
 import { type } from "../../training/type";
 import { WizardFrame } from "../WizardFrame";
-import { LoadBars, type LoadBar } from "./components/LoadBars";
+import { LoadBars } from "./components/LoadBars";
 import { PlanCalendar } from "./components/PlanCalendar";
-
-const COUNT_MS = 900;
-
-function useCountUp(target: number): number {
-  const [shown, setShown] = React.useState(0);
-  React.useEffect(() => {
-    let frame = 0;
-    let live = true;
-    void AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
-      if (!live) return;
-      if (reduce) return setShown(target);
-      const begin = Date.now();
-      const tick = (): void => {
-        const p = Math.min(1, (Date.now() - begin) / COUNT_MS);
-        setShown(Math.round(target * (1 - (1 - p) ** 3)));
-        if (p < 1) frame = requestAnimationFrame(tick);
-      };
-      frame = requestAnimationFrame(tick);
-    });
-    return () => {
-      live = false;
-      cancelAnimationFrame(frame);
-    };
-  }, [target]);
-  return shown;
-}
-
-function weekBars(
-  workout: LibraryWorkout,
-  membershipId: string,
-  weeks: number,
-  changes: Plan["weekChanges"],
-  unit: WeightUnit,
-  gripName: (id: string) => string
-): { name: string; bars: LoadBar[] } | null {
-  const index = Math.max(
-    0,
-    workout.items.findIndex((i) => (i.doses[0]?.weightKg ?? 0) > 0)
-  );
-  const item = workout.items[index];
-  const written = item?.doses[0];
-  if (item === undefined || written === undefined) return null;
-  const itemId = itemIdOf(item, index);
-  const doses = Array.from({ length: weeks }, (_, w): Dose => {
-    const c = changes.find(
-      (x) =>
-        x.membershipId === membershipId && x.week === w + 1 && x.dose === 0 && x.itemId === itemId
-    );
-    return { ...written, ...c?.change };
-  });
-  const volume = (d: Dose): number =>
-    d.sets * (d.reps ?? 1) * ((d.weightKg ?? 0) > 0 ? (d.weightKg ?? 0) : 10);
-  const load = workout.kind === "hangboard" ? hangLoadText : weightText;
-  const bars = doses.map((d, w) => ({
-    label:
-      (d.weightKg ?? 0) > 0
-        ? load(d.weightKg ?? 0, unit)
-        : t("statistics.repsValue", { count: d.reps ?? 0 }),
-    value: volume(d),
-    deload: w === weeks - 1 && w > 0 && volume(d) < volume(doses[w - 1] ?? d),
-  }));
-  return { name: exerciseName(item.exercise, gripName), bars };
-}
 
 /** P5: the whole block on a calendar, its session count running up, and reminders one switch away. */
 export function RevealStep({
@@ -127,7 +59,14 @@ export function RevealStep({
   const days = Object.fromEntries(members.map((m) => [m.id, m.weekdays]));
   const total = sessionsPerWeek(days) * weeks;
   const first = firstWeekday(days);
-  const shown = useCountUp(total);
+  const reduceMotion = useReducedMotion();
+  const [run, setRun] = React.useState(false);
+  React.useEffect(() => {
+    const frame = requestAnimationFrame(() => setRun(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  const counted = Math.round(useTween(run && block !== undefined ? total : null, 900) ?? 0);
+  const shown = reduceMotion ? total : counted;
   const on = reminders.settings?.enabled === true;
 
   const viewed = React.useRef(false);

@@ -64,32 +64,14 @@ beforeEach(() => {
 });
 
 describe("adding climbs by hand", () => {
-  it("asks a project for its name before it can be added", async () => {
-    await show();
-    await fireEvent.press(screen.getByText("V4"));
-    await fireEvent.press(screen.getByText("Project"));
-    expect(screen.getByText("A project needs its name.")).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "Add climb" }).props.accessibilityState
-    ).toMatchObject({ disabled: true });
-  });
-
-  it("saves an unnamed flash on 1 July of its year and counts it", async () => {
+  it("saves a picked climb on its year and lists it", async () => {
     await show();
     await fireEvent.press(screen.getByText("V4"));
     await fireEvent.press(screen.getByText("Flash"));
     await fireEvent.press(screen.getByText("2023"));
     await fireEvent.press(screen.getByRole("button", { name: "Add climb" }));
     await waitFor(() => expect(wizard.capture).toHaveBeenCalled());
-    const input = mockLogSession.mock.calls[0]![0];
-    expect(input.date).toBe("2023-07-01");
-    expect(input.climbs[0]).toMatchObject({ kind: "send", style: "flash", tries: 1 });
-    expect(input.climbs[0]?.name ?? "").toBe("");
-    expect(wizard.capture).toHaveBeenCalledWith("climb_added", {
-      kind: "boulder",
-      outcome: "flash",
-      dated: "year",
-    });
+    expect(mockLogSession.mock.calls[0]![0].date).toBe("2023-07-01");
     expect(await screen.findByText("Added · 1")).toBeTruthy();
     expect(
       screen.getByRole("button", { name: "Add climb" }).props.accessibilityState

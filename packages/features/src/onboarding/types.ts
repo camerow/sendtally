@@ -1,14 +1,15 @@
 import type { ConnectionStatus, FirstRunStep } from "@sendtally/api-client";
+import type { Shortcut } from "./planMaths";
 
 export type OnboardingStatus = ConnectionStatus["onboarding"];
 export type OnboardingProgress = OnboardingStatus["progress"];
 export type OnboardingPath = NonNullable<OnboardingStatus["path"]>;
 export type StepId = Extract<FirstRunStep, { step: "skipped" }>["at"];
 export type PathFrom = Extract<FirstRunStep, { step: "path" }>["from"];
-export type CompletedNext = Extract<FirstRunStep, { step: "completed" }>["next"];
-export type MembershipOutcome = Extract<FirstRunStep, { step: "completed" }>["outcome"];
+type CompletedNext = Extract<FirstRunStep, { step: "completed" }>["next"];
+type MembershipOutcome = Extract<FirstRunStep, { step: "completed" }>["outcome"];
 
-export type ExistingLog = Extract<FirstRunStep, { step: "log_answered" }>["existingLog"];
+type ExistingLog = Extract<FirstRunStep, { step: "log_answered" }>["existingLog"];
 
 /** How path history goes on from H1: an export to import, or climbs typed in by hand. */
 export type HistoryWay = "import" | "by_hand";
@@ -25,7 +26,7 @@ export type OnboardingEvent =
         count?: Count;
         sends?: Count;
         way?: HistoryWay;
-        shortcut?: "step_up" | "deload" | "both" | "none";
+        shortcut?: Shortcut;
       };
     }
   | {

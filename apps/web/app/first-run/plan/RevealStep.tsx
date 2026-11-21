@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@sendtally/design";
 import { shortDate, useGrips, weekdayLong } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { firstWeekday, sessionsPerWeek, usePlanPath } from "@sendtally/features/settings";
+import { firstWeekday, sessionsPerWeek, usePlanPath, weekBars } from "@sendtally/features/settings";
 import { KIND_LOOK, usePlan } from "@sendtally/features/training";
 import { useTween } from "@sendtally/features/trends";
 import { Icon } from "../../components/Icon";
@@ -12,7 +12,6 @@ import type { StepComponent } from "../types";
 import { WizardFrame } from "../WizardFrame";
 import { LoadBars } from "./components/LoadBars";
 import { PlanCalendar } from "./components/PlanCalendar";
-import { weekBars } from "./components/weekBars";
 
 /** P5: the whole block on a calendar, with its session count running up. */
 export const RevealStep: StepComponent = ({ wizard, api }) => {

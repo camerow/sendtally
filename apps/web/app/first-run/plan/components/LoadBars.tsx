@@ -1,6 +1,6 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
-import type { LoadBar } from "./types";
+import type { LoadBar } from "@sendtally/features/settings";
 
 export type LoadBarsProps = {
   bars: readonly LoadBar[];

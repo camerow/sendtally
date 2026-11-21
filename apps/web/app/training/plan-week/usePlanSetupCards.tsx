@@ -1,22 +1,20 @@
 import type { SendtallyApi } from "@sendtally/api-client";
-import { useClimbingInsights, type PyramidRow } from "@sendtally/features/climbs";
+import { useClimbingInsights } from "@sendtally/features/climbs";
 import { CIRCUIT_HEX, useGyms } from "@sendtally/features/gyms";
 import { t } from "@sendtally/features/i18n";
 import {
-  historyNextLine,
-  SAMPLE_PYRAMID,
+  pathCardCopy,
   SAMPLE_WEEK,
   SETUP_CIRCUITS,
   setupCardQuery,
-  useDisplayScales,
   useSetupPaths,
   type OnboardingPath,
 } from "@sendtally/features/settings";
 import { queries, useQuery } from "@sendtally/features/query";
-import { displayGrade } from "@sendtally/features/sessions";
 import { DarkWeek } from "../../components/DarkWeek";
 import { Pyramid } from "../../components/Pyramid";
 import { PyramidGhost } from "../../components/PyramidGhost";
+import { SamplePyramid } from "../../components/SamplePyramid";
 import type { SetupCard } from "../../components/SetupStack";
 import { useDismissed } from "../../lib/useDismissed";
 
@@ -26,78 +24,42 @@ const DARK = "var(--bs-gunmetal)";
 
 const SAMPLE_DAYS = SAMPLE_WEEK.map((kind) => (kind === null ? null : [kind]));
 
-const pyramidArt = (rows: readonly PyramidRow[]): SetupCard["art"] => ({
-  background: DARK,
-  content:
-    rows.length === 0 ? (
-      <PyramidGhost />
-    ) : (
-      <Pyramid rows={rows} label={t("trends.gradePyramid")} tone="dark" />
-    ),
-});
-
-const planArt = (): SetupCard["art"] => ({
-  background: DARK,
-  content: <DarkWeek week={SAMPLE_DAYS} />,
-});
-
 /** Plan's setup cards in order: the two onboarding paths, then a gym, then Strava. */
 export function usePlanSetupCards(api: SendtallyApi): SetupCard[] {
   const prompt = { history: useDismissed("history"), plan: useDismissed("plan") };
   const { paths, skip } = useSetupPaths(api, (p) => prompt[p].dismissed !== false);
   const { vm } = useClimbingInsights(api, "all");
-  const scales = useDisplayScales();
   const gyms = useGyms(api);
   const gymPrompt = useDismissed("gym");
   const stravaPrompt = useDismissed("strava");
   const { state } = useQuery(queries.status(api));
   const status = state.status === "ready" ? state.data : null;
 
-  const sample = SAMPLE_PYRAMID.map((r) => ({
-    gradeLabel: displayGrade({ scale: "v", value: r.value }, scales),
-    inner: r.inner,
-    outer: r.outer,
-    countLabel: "",
-  }));
   const own = vm?.pyramid ?? [];
   const climbs = own.reduce((n, r) => n + r.inner + r.outer, 0);
 
-  const pathCard = (path: OnboardingPath, resume: boolean): SetupCard => {
-    const history = path === "history";
-    const to = `/app/start${setupCardQuery(path)}`;
-    const onDismiss = resume
-      ? () => {
-          skip(path);
-          prompt[path].dismiss();
-        }
-      : prompt[path].dismiss;
-    if (!resume) {
-      return {
-        key: path,
-        eyebrow: history ? t("statistics.climbing") : t("statistics.training"),
-        title: history ? t("onboarding.chooser.historyTitle") : t("onboarding.chooser.planTitle"),
-        body: history ? t("onboarding.history.setupBody") : t("onboarding.plan.setupBody"),
-        action: t("onboarding.setup.start"),
-        to,
-        onDismiss,
-        art: history ? pyramidArt(sample) : planArt(),
-      };
-    }
-    return {
-      key: path,
-      eyebrow: !history
-        ? t("statistics.training")
-        : climbs > 0
-          ? t("onboarding.setup.soFarCount", { count: climbs })
-          : t("statistics.climbing"),
-      title: t("onboarding.setup.finish"),
-      body: history ? historyNextLine(climbs) : t("onboarding.plan.setupBody"),
-      action: t("onboarding.firstRun.continue"),
-      to,
-      onDismiss,
-      art: history ? pyramidArt(own.slice(0, 3)) : planArt(),
-    };
-  };
+  const pathCard = (path: OnboardingPath, resume: boolean): SetupCard => ({
+    key: path,
+    ...pathCardCopy(path, resume, climbs),
+    to: `/app/start${setupCardQuery(path)}`,
+    onDismiss: () => {
+      if (resume) skip(path);
+      prompt[path].dismiss();
+    },
+    art: {
+      background: DARK,
+      content:
+        path === "plan" ? (
+          <DarkWeek week={SAMPLE_DAYS} />
+        ) : !resume ? (
+          <SamplePyramid tone="dark" />
+        ) : own.length > 0 ? (
+          <Pyramid rows={own.slice(0, 3)} label={t("trends.gradePyramid")} tone="dark" />
+        ) : (
+          <PyramidGhost />
+        ),
+    },
+  });
 
   const cards = paths.map((p) => pathCard(p.path, p.resume));
   if (gyms.ready && gyms.gyms.length === 0 && gymPrompt.dismissed === false) {

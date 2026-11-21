@@ -6,7 +6,7 @@ import { queries } from "../query";
 import { nextUnlock } from "./historyCard";
 import { resumeStep } from "./steps";
 import type { OnboardingPath, OnboardingProgress, OnboardingStatus } from "./types";
-import { patchStatus } from "./useWizard";
+import { patchStatus } from "./wizardState";
 
 /** A path's card on Plan: Start, or Finish setting up for a path left mid-way. */
 export type SetupPath = { path: OnboardingPath; resume: boolean };
@@ -45,6 +45,31 @@ export function historyNextLine(climbs: number): string {
   const next = nextUnlock(climbs);
   if (next === null) return t("onboarding.setup.historyMore");
   return "text" in next ? next.text : `${next.before}${next.more}${next.after}`;
+}
+
+/** The text of a path's card on Plan, Start or Finish setting up, with the climbs logged so far. */
+export type PathCardCopy = { eyebrow: string; title: string; body: string; action: string };
+
+export function pathCardCopy(path: OnboardingPath, resume: boolean, climbs: number): PathCardCopy {
+  const history = path === "history";
+  return {
+    eyebrow: !history
+      ? t("statistics.training")
+      : resume && climbs > 0
+        ? t("onboarding.setup.soFarCount", { count: climbs })
+        : t("statistics.climbing"),
+    title: resume
+      ? t("onboarding.setup.finish")
+      : history
+        ? t("onboarding.chooser.historyTitle")
+        : t("onboarding.chooser.planTitle"),
+    body: !history
+      ? t("onboarding.plan.setupBody")
+      : resume
+        ? historyNextLine(climbs)
+        : t("onboarding.history.setupBody"),
+    action: resume ? t("onboarding.firstRun.continue") : t("onboarding.setup.start"),
+  };
 }
 
 const PATHS: readonly OnboardingPath[] = ["history", "plan"];

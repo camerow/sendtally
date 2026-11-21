@@ -4,7 +4,7 @@ import { useClimbingInsights } from "@sendtally/features/climbs";
 import { useGyms } from "@sendtally/features/gyms";
 import { t } from "@sendtally/features/i18n";
 import {
-  historyNextLine,
+  pathCardCopy,
   SAMPLE_WEEK,
   setupCardQuery,
   useSettings,
@@ -44,30 +44,13 @@ export function usePlanSetupCards(): SetupCard[] {
   const stravaPrompt = useSetupDismissed("strava");
 
   const open = (path: OnboardingPath): void => router.push(`/first-run${setupCardQuery(path)}`);
-  const pathCard = ({ path, resume }: SetupPath): SetupCard => {
-    const history = path === "history";
-    return {
-      key: path,
-      eyebrow: !history
-        ? t("statistics.training")
-        : resume && climbs > 0
-          ? t("onboarding.setup.soFarCount", { count: climbs })
-          : t("statistics.climbing"),
-      title: resume
-        ? t("onboarding.setup.finish")
-        : history
-          ? t("onboarding.chooser.historyTitle")
-          : t("onboarding.chooser.planTitle"),
-      body:
-        history && resume
-          ? historyNextLine(climbs)
-          : history
-            ? t("onboarding.history.setupBody")
-            : t("onboarding.plan.setupBody"),
-      action: resume ? t("onboarding.firstRun.continue") : t("onboarding.setup.start"),
-      art: {
-        background: colors.gunmetal,
-        content: !history ? (
+  const pathCard = ({ path, resume }: SetupPath): SetupCard => ({
+    key: path,
+    ...pathCardCopy(path, resume, climbs),
+    art: {
+      background: colors.gunmetal,
+      content:
+        path === "plan" ? (
           <DarkWeek week={SAMPLE_DAYS} />
         ) : !resume ? (
           <SamplePyramid rows={ART_ROWS} tone="dark" counts={false} />
@@ -76,14 +59,13 @@ export function usePlanSetupCards(): SetupCard[] {
         ) : (
           <PyramidGhost />
         ),
-      },
-      onAction: () => open(path),
-      onDismiss: () => {
-        if (resume) skip(path);
-        prompts[path].dismiss();
-      },
-    };
-  };
+    },
+    onAction: () => open(path),
+    onDismiss: () => {
+      if (resume) skip(path);
+      prompts[path].dismiss();
+    },
+  });
 
   const cards = paths.map(pathCard);
   if (gyms.ready && gyms.gyms.length === 0 && gymPrompt.dismissed === false) {

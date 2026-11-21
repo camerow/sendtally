@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ConnectionStatus, FirstRunStep } from "@sendtally/api-client";
 import { DEFAULT_GRADE_SCALES } from "../settings/transforms";
 import type { Capture, OnboardingProgress, OnboardingStatus, PathFrom } from "./types";
-import { announceOpen, openWizard, patchStatus, paywallOnEnter, wizardOf } from "./useWizard";
+import { announceOpen, openWizard, patchStatus, paywallOnEnter, wizardOf } from "./wizardState";
 
 const NONE: OnboardingProgress = {
   sessions: false,

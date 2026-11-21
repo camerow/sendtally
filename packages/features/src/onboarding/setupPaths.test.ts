@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { historyNextLine, setupPaths } from "./setupPaths";
+import { t } from "../i18n";
+import { historyNextLine, pathCardCopy, setupPaths } from "./setupPaths";
 import type { OnboardingProgress, OnboardingStatus } from "./types";
 
 const NONE: OnboardingProgress = {
@@ -62,5 +63,51 @@ describe("historyNextLine", () => {
     expect(historyNextLine(1)).toBe("2 more and you get your average send.");
     expect(historyNextLine(4)).toBe("1 more draws your hardest send, year by year.");
     expect(historyNextLine(5)).toBe("Add more climbs, or see it all.");
+  });
+});
+
+describe("pathCardCopy", () => {
+  const start = { action: t("onboarding.setup.start") };
+  const finish = { title: t("onboarding.setup.finish"), action: t("onboarding.firstRun.continue") };
+
+  it("invites a path not started yet", () => {
+    expect(pathCardCopy("history", false, 4)).toEqual({
+      ...start,
+      eyebrow: t("statistics.climbing"),
+      title: t("onboarding.chooser.historyTitle"),
+      body: t("onboarding.history.setupBody"),
+    });
+    expect(pathCardCopy("plan", false, 0)).toEqual({
+      ...start,
+      eyebrow: t("statistics.training"),
+      title: t("onboarding.chooser.planTitle"),
+      body: t("onboarding.plan.setupBody"),
+    });
+  });
+
+  it("counts the climbs so far on a resumed history and says what the next ones unlock", () => {
+    expect(pathCardCopy("history", true, 0)).toEqual({
+      ...finish,
+      eyebrow: t("statistics.climbing"),
+      body: "Add a climb and your pyramid starts here.",
+    });
+    expect(pathCardCopy("history", true, 3)).toEqual({
+      ...finish,
+      eyebrow: t("onboarding.setup.soFarCount", { count: 3 }),
+      body: historyNextLine(3),
+    });
+    expect(pathCardCopy("history", true, 7)).toEqual({
+      ...finish,
+      eyebrow: t("onboarding.setup.soFarCount", { count: 7 }),
+      body: "Add more climbs, or see it all.",
+    });
+  });
+
+  it("keeps the plan's eyebrow and body on a resumed plan", () => {
+    expect(pathCardCopy("plan", true, 9)).toEqual({
+      ...finish,
+      eyebrow: t("statistics.training"),
+      body: t("onboarding.plan.setupBody"),
+    });
   });
 });

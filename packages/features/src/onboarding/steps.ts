@@ -63,10 +63,6 @@ export function historySteps(way: HistoryWay | null): StepId[] {
   return way === null ? ["H1"] : [...HISTORY[way]];
 }
 
-export function planSteps(): StepId[] {
-  return [...PLAN];
-}
-
 function pathSteps(
   path: OnboardingPath,
   way: HistoryWay | null,
@@ -74,7 +70,7 @@ function pathSteps(
 ): StepId[] {
   if (path === "plan") {
     const done = PLAN_DONE_BY.flatMap(([fact, steps]) => (progress[fact] ? steps : []));
-    return planSteps().filter((step) => !done.includes(step));
+    return PLAN.filter((step) => !done.includes(step));
   }
   if (!progress.sessions) return historySteps(way);
   const byHand = historySteps("by_hand");

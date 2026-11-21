@@ -1,12 +1,12 @@
-export { historySteps, planSteps, remainingSteps, resumeStep } from "./steps";
 export {
   historyNextLine,
+  pathCardCopy,
   pathDone,
+  type PathCardCopy,
   SAMPLE_PYRAMID,
   SAMPLE_WEEK,
   SETUP_CIRCUITS,
   setupCardQuery,
-  setupPaths,
   useSetupPaths,
   type SetupPath,
 } from "./setupPaths";
@@ -30,9 +30,24 @@ export {
   sessionsPerWeek,
   shortcutChanges,
   shortcutOf,
+  weekBars,
   weeklyStepKg,
-  type Shortcut,
+  type LoadBar,
   type Shortcuts,
 } from "./planMaths";
-export { EMPTY_PATH, resumedPath, setPlanPath, usePlanPath, type PlanPath } from "./planPath";
+export { resumedPath, setPlanPath, usePlanPath, type PlanPath } from "./planPath";
 export { useHistoryCard } from "./useHistoryCard";
+export {
+  ADD_OUTCOMES,
+  addedClimb,
+  addOutcomeLabel,
+  addOutcomePill,
+  asLogged,
+  climbAddedEvent,
+  needsClimbName,
+  sendsAdded,
+  type AddedClimb,
+  type AddedWhen,
+  type AddOutcome,
+} from "./addClimb";
+export { useBlockStep, type BlockStepState } from "./useBlockStep";

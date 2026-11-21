@@ -2,9 +2,8 @@ import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
+import type { LoadBar } from "@sendtally/features/settings";
 import { darkMeta } from "../../components/DarkCard";
-
-export type LoadBar = { label: string; value: number; deload: boolean };
 
 export type LoadBarsProps = {
   bars: readonly LoadBar[];

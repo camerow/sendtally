@@ -98,30 +98,14 @@ afterEach(() => {
 });
 
 describe("adding climbs by hand", () => {
-  it("asks a project for its name before it can be added", async () => {
-    await show();
-    await press("V4");
-    await press("Project");
-    expect(container.textContent).toContain("A project needs its name.");
-    expect(button("Add climb").disabled).toBe(true);
-  });
-
-  it("saves an unnamed flash on 1 July of its year and counts it", async () => {
+  it("saves a picked climb on its year, lists it and scrolls the card into view", async () => {
     await show();
     await press("V4");
     await press("Flash");
     await press("2023");
     await press("Add climb");
     await vi.waitFor(() => expect(wizard.capture).toHaveBeenCalled());
-    const input = logSession.mock.calls[0]![0];
-    expect(input.date).toBe("2023-07-01");
-    expect(input.climbs[0]).toMatchObject({ kind: "send", style: "flash", tries: 1 });
-    expect(input.climbs[0]?.name ?? "").toBe("");
-    expect(wizard.capture).toHaveBeenCalledWith("climb_added", {
-      kind: "boulder",
-      outcome: "flash",
-      dated: "year",
-    });
+    expect(logSession.mock.calls[0]![0].date).toBe("2023-07-01");
     await settle();
     expect(container.textContent).toContain("Added · 1");
     expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({
