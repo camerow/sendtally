@@ -36,6 +36,7 @@ export const onboardingHistory = {
     "sendtally t'aide à suivre ton volume de grimpe et ta pyramide. Pas de souci si les dates ne sont pas exactes, tu pourras les modifier plus tard.",
   "onboarding.history.add.howItWent": "Comment ça s'est passé",
   "onboarding.history.add.needsName": "Un projet a besoin d'un nom.",
+  "onboarding.history.add.needsGrade": "Choisis sa cotation.",
   "onboarding.history.add.whenRoughly": "Quand, à peu près",
   "onboarding.history.add.pickDay": "Choisir le jour",
   "onboarding.history.add.addedCount": "Ajoutées · {n}",

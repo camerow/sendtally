@@ -66,6 +66,7 @@ export function BlockStep({
     exercise,
     name,
     setName,
+    keepName,
     weeks,
     resize,
     alt,
@@ -111,7 +112,6 @@ export function BlockStep({
           height={54}
           label={t("plan.scheduleFrom", { day: shortDate(start) })}
           onPress={schedule}
-          disabled={name.trim() === ""}
         />
       }
     >
@@ -134,12 +134,17 @@ export function BlockStep({
       >
         <LoadBars bars={bars} />
       </DarkCard>
-      <NameField
-        value={name}
-        onChange={setName}
-        placeholder={t("onboarding.plan.block.namePlaceholder")}
-        maxLength={80}
-      />
+      <View style={{ gap: 4 }}>
+        <Label color={colors.textSecondary}>{t("onboarding.plan.block.nameLabel")}</Label>
+        <NameField
+          value={name}
+          onChange={setName}
+          onBlur={keepName}
+          selectTextOnFocus
+          placeholder=""
+          maxLength={80}
+        />
+      </View>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
           {t("plan.weeks")}

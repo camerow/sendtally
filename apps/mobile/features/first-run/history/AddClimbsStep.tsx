@@ -7,7 +7,6 @@ import { t } from "@sendtally/features/i18n";
 import {
   disciplineLabel,
   disciplineOf,
-  draftGrade,
   gradeOptions,
   localDate,
   logClimbOnDay,
@@ -18,12 +17,13 @@ import {
 } from "@sendtally/features/log-session";
 import {
   ADD_OUTCOMES,
+  addClimbHint,
   addedClimb,
   addOutcomeLabel,
   addOutcomePill,
   asLogged,
   climbAddedEvent,
-  needsClimbName,
+  gradePicked,
   sendsAdded,
   useDisplayScales,
   useHistoryCard,
@@ -78,9 +78,8 @@ export function AddClimbsStep({ wizard, api }: Parameters<StepComponent>[0]): Re
   const discipline = disciplineOf(climb.scale);
   const ladder = gradeOptions(climb.scale);
   const at = ladder.indexOf(climb.grade);
-  const needsName = needsClimbName(climb, outcome);
-  const picked = climb.grade !== "" && draftGrade(climb.grade, climb.scale) !== undefined;
-  const canAdd = picked && !needsName && !saving;
+  const hint = addClimbHint(climb, outcome);
+  const canAdd = gradePicked(climb) && hint !== "needsName" && !saving;
   const years = Array.from({ length: YEARS }, (_, i) => String(now.getFullYear() - i));
 
   const add = (): void => {
@@ -199,6 +198,11 @@ export function AddClimbsStep({ wizard, api }: Parameters<StepComponent>[0]): Re
             onPick={(grade) => setClimb({ ...climb, grade })}
           />
         </View>
+        {hint === "needsGrade" && (
+          <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: AMBER }}>
+            {t("onboarding.history.add.needsGrade")}
+          </Text>
+        )}
       </View>
       <View style={{ gap: 8 }}>
         <Text style={fieldLabel}>{t("onboarding.history.add.howItWent")}</Text>
@@ -212,7 +216,7 @@ export function AddClimbsStep({ wizard, api }: Parameters<StepComponent>[0]): Re
             onPress: () => setOutcome(o),
           }))}
         />
-        {needsName && (
+        {hint === "needsName" && (
           <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: AMBER }}>
             {t("onboarding.history.add.needsName")}
           </Text>

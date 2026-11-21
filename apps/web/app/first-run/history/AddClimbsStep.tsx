@@ -6,7 +6,6 @@ import { t } from "@sendtally/features/i18n";
 import {
   disciplineLabel,
   disciplineOf,
-  draftGrade,
   gradeOptions,
   localDate,
   logClimbOnDay,
@@ -17,12 +16,13 @@ import {
 } from "@sendtally/features/log-session";
 import {
   ADD_OUTCOMES,
+  addClimbHint,
   addedClimb,
   addOutcomeLabel,
   addOutcomePill,
   asLogged,
   climbAddedEvent,
-  needsClimbName,
+  gradePicked,
   sendsAdded,
   useDisplayScales,
   useHistoryCard,
@@ -65,9 +65,8 @@ export const AddClimbsStep: StepComponent = ({ wizard, api }) => {
   const discipline = disciplineOf(climb.scale);
   const ladder = gradeOptions(climb.scale);
   const at = ladder.indexOf(climb.grade);
-  const needsName = needsClimbName(climb, outcome);
-  const picked = climb.grade !== "" && draftGrade(climb.grade, climb.scale) !== undefined;
-  const canAdd = picked && !needsName && !saving;
+  const hint = addClimbHint(climb, outcome);
+  const canAdd = gradePicked(climb) && hint !== "needsName" && !saving;
   const years = Array.from({ length: YEARS }, (_, i) => String(now.getFullYear() - i));
 
   const cardRef = React.useRef<HTMLDivElement>(null);
@@ -179,6 +178,9 @@ export const AddClimbsStep: StepComponent = ({ wizard, api }) => {
               startIndex={Math.max(0, at)}
               onPick={(grade) => setClimb({ ...climb, grade })}
             />
+            {hint === "needsGrade" && (
+              <span className="add-climbs-warn">{t("onboarding.history.add.needsGrade")}</span>
+            )}
           </div>
           <div className="field">
             <span className="field-label">{t("onboarding.history.add.howItWent")}</span>
@@ -189,7 +191,7 @@ export const AddClimbsStep: StepComponent = ({ wizard, api }) => {
               value={outcome}
               onChange={setOutcome}
             />
-            {needsName && (
+            {hint === "needsName" && (
               <span className="add-climbs-warn">{t("onboarding.history.add.needsName")}</span>
             )}
           </div>

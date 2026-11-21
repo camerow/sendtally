@@ -4,10 +4,12 @@ import type { ClimbDraft } from "../log-session/types";
 import { DEFAULT_GRADE_SCALES as SCALES } from "../settings/transforms";
 import {
   ADD_OUTCOMES,
+  addClimbHint,
   addedClimb,
   addOutcomePill,
   asLogged,
   climbAddedEvent,
+  gradePicked,
   needsClimbName,
   sendsAdded,
 } from "./addClimb";
@@ -62,5 +64,17 @@ describe("a past climb added by hand", () => {
       addedClimb(`${i}`, v4("Roof"), o, { year: 2023, day: null }, SCALES)
     );
     expect(sendsAdded(added)).toBe(2);
+  });
+
+  it("asks for a grade once a name is typed, a project for its name, and nothing untouched", () => {
+    const blank: ClimbDraft = { ...v4(), grade: "" };
+    expect(addClimbHint(blank, "send")).toBeNull();
+    expect(addClimbHint({ ...blank, name: "Roof" }, "send")).toBe("needsGrade");
+    expect(addClimbHint({ ...blank, name: "Roof" }, "project")).toBe("needsGrade");
+    expect(addClimbHint(v4("Roof"), "send")).toBeNull();
+    expect(addClimbHint(v4(), "project")).toBe("needsName");
+    expect(addClimbHint(blank, "project")).toBe("needsName");
+    expect(gradePicked(blank)).toBe(false);
+    expect(gradePicked(v4())).toBe(true);
   });
 });

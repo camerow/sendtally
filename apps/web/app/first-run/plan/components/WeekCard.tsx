@@ -29,7 +29,7 @@ export function WeekCard({
     <DarkCard
       label={t("plan.week")}
       meta={any ? meta : undefined}
-      note={any && !steady ? undefined : empty}
+      note={onToggle === undefined || (any && !steady) ? undefined : empty}
       noteShown={!any}
     >
       <DarkWeek week={week} {...(onToggle === undefined ? {} : { onToggle })} />

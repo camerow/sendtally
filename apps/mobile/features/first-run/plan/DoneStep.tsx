@@ -66,6 +66,7 @@ export function DoneStep({
     return kinds.length > 0 ? kinds : null;
   });
 
+  const openPlan = (): void => wizard.complete(outcome, "plan");
   const rows: (MenuRowProps & { key: string })[] = [];
   if (workout !== undefined) {
     const minutes = workoutMinutes(workout) ?? estimatedMinutes(workout);
@@ -107,11 +108,11 @@ export function DoneStep({
     ...(first === null
       ? {}
       : { hint: t("onboarding.plan.done.dayFirst", { day: weekdayLong(first) }) }),
-    onPress: () => wizard.complete(outcome, "plan"),
+    onPress: openPlan,
   });
 
   return (
-    <WizardFrame wizard={wizard} bar={false}>
+    <WizardFrame wizard={wizard} bar={false} onClose={openPlan}>
       <Title size={34}>{t("onboarding.plan.done.title")}</Title>
       <WeekCard
         week={week}

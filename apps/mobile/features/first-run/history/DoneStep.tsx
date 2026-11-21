@@ -25,6 +25,7 @@ export function DoneStep({ wizard, api }: Parameters<StepComponent>[0]): React.R
   const endsAt =
     membership?.state.status === "ready" ? membership.state.data.trial.endsAt : undefined;
   const planDone = status?.onboarding.progress.scheduledBlocks === true;
+  const openLog = (): void => wizard.complete(outcome, "log");
   const rows = [
     ...(planDone
       ? []
@@ -55,11 +56,11 @@ export function DoneStep({ wizard, api }: Parameters<StepComponent>[0]): React.R
         wizard.memory.way === "import"
           ? t("sessions.sessionCount", { count: vm?.sessions ?? 0 })
           : `${formatNumber(vm?.climbs ?? 0)} ${t("onboarding.history.reveal.climbsWord", { count: vm?.climbs ?? 0 })}`,
-      onPress: () => wizard.complete(outcome, "log"),
+      onPress: openLog,
     },
   ];
   return (
-    <WizardFrame wizard={wizard} bar={false}>
+    <WizardFrame wizard={wizard} bar={false} onClose={openLog}>
       <Title size={34}>{t("onboarding.history.done.title")}</Title>
       {vm !== null && (
         <HistoryCard vm={vm} label={t("onboarding.history.card.soFar")} slim max={4} />

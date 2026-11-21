@@ -17,8 +17,13 @@ export type WeekCardProps = {
 /** "Your week": seven days, lit where the user can train, with each workout's mark on its days. */
 export function WeekCard({ week, meta, empty, onToggle }: WeekCardProps): React.ReactElement {
   const any = week.some((d) => d !== null);
+  const control = onToggle !== undefined;
   return (
-    <DarkCard label={t("plan.week")} reserveNote {...(any ? { meta } : { note: empty })}>
+    <DarkCard
+      label={t("plan.week")}
+      reserveNote={control}
+      {...(any ? { meta } : control ? { note: empty } : {})}
+    >
       <DarkWeek week={week} {...(onToggle === undefined ? {} : { onToggle })} />
     </DarkCard>
   );

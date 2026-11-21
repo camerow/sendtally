@@ -38,6 +38,7 @@ export const onboardingHistory = {
     "sendtally zeigt dir dein Klettervolumen und deine Pyramide. Keine Sorge, wenn die Daten nicht genau stimmen, du kannst sie später ändern.",
   "onboarding.history.add.howItWent": "Wie lief es?",
   "onboarding.history.add.needsName": "Ein Projekt braucht einen Namen.",
+  "onboarding.history.add.needsGrade": "Wähle seinen Grad.",
   "onboarding.history.add.whenRoughly": "Wann, ungefähr",
   "onboarding.history.add.pickDay": "Tag wählen",
   "onboarding.history.add.addedCount": "Eingetragen · {n}",

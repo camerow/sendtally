@@ -8,7 +8,12 @@ export const onboardingPlan = {
   "onboarding.plan.workout.title": "Crée une séance que tu fais déjà.",
   "onboarding.plan.workout.body":
     "Tu peux régler les temps de repos, enchaîner tes exercices en superset et même alterner les séances avec différents schémas de séries et de répétitions. Les minuteurs sont intégrés et la progression de chaque exercice est suivie dans le temps.",
-  "onboarding.plan.workout.namePlaceholder": "Salle du mardi",
+  "onboarding.plan.workout.nameLabel": "Nom de la séance",
+  "onboarding.plan.workout.defaultStrength": "Séance de renforcement",
+  "onboarding.plan.workout.defaultHangboard": "Séance de poutre",
+  "onboarding.plan.workout.defaultClimbing": "Séance d'escalade",
+  "onboarding.plan.workout.defaultMobility": "Séance de mobilité",
+  "onboarding.plan.workout.defaultOther": "Séance",
   "onboarding.plan.workout.searchPlaceholder": "Cherche un exercice, ou nomme le tien",
   "onboarding.plan.workout.newExerciseNamed": "Nouvel exercice : {name}",
   "onboarding.plan.workout.supersetPair": "Superset · {first} + {second}",
@@ -44,6 +49,7 @@ export const onboardingPlan = {
   "onboarding.plan.yours": "À toi",
   "onboarding.plan.week.perWeek_one": "{count} séance par semaine",
   "onboarding.plan.week.perWeek_other": "{count} séances par semaine",
-  "onboarding.plan.block.namePlaceholder": "Base d'hiver",
+  "onboarding.plan.block.nameLabel": "Nom du bloc",
+  "onboarding.plan.block.defaultName": "Bloc de {month}",
   "onboarding.plan.workout.exercises": "Exercices",
 } as const;

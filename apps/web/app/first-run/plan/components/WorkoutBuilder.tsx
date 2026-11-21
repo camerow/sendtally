@@ -13,7 +13,13 @@ import {
   type PickerEntry,
 } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
-import { setPlanPath, type Wizard } from "@sendtally/features/settings";
+import {
+  defaultWorkoutName,
+  keptName,
+  nameOr,
+  setPlanPath,
+  type Wizard,
+} from "@sendtally/features/settings";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
   doseMeasureOf,
@@ -75,6 +81,9 @@ export function WorkoutBuilder({
   const pick = usePick();
   const make = useMake();
   const [text, setText] = React.useState("");
+  const [typedName, setTypedName] = React.useState<string | null>(() =>
+    initial.name.trim() === "" ? null : initial.name
+  );
   const world = usePickerWorld(api, model, [], "all");
   const isGrip = isGripOf(world);
   const kindIn = exerciseKindIn(world);
@@ -167,9 +176,14 @@ export function WorkoutBuilder({
 
   const minutes = estimatedMinutes(state) ?? 0;
   const count = state.items.length;
-  const ready = state.name.trim() !== "" && count > 0;
+  const ready = count > 0;
+  const first = state.items[0];
+  const name = nameOr(
+    typedName,
+    defaultWorkoutName(first === undefined ? undefined : kindIn(first.exercise))
+  );
   const save = (): void => {
-    void actions.saveWorkout(id, draftOfEditor(state));
+    void actions.saveWorkout(id, draftOfEditor({ ...state, name }));
     setPlanPath((p) => ({
       ...p,
       building: id,
@@ -193,13 +207,20 @@ export function WorkoutBuilder({
         <h1 className="wizard-title">{t("onboarding.plan.workout.title")}</h1>
         <p className="plan-path-body">{t("onboarding.plan.workout.body")}</p>
       </div>
-      <NameField
-        label={t("hang.name")}
-        value={state.name}
-        maxLength={80}
-        placeholder={t("onboarding.plan.workout.namePlaceholder")}
-        onChange={(name) => setState((s) => ({ ...s, name }))}
-      />
+      <div
+        className="field"
+        onFocus={(e) => e.target instanceof HTMLTextAreaElement && e.target.select()}
+        onBlur={() => setTypedName(keptName)}
+      >
+        <span className="train-label">{t("onboarding.plan.workout.nameLabel")}</span>
+        <NameField
+          label={t("onboarding.plan.workout.nameLabel")}
+          value={typedName ?? name}
+          maxLength={80}
+          placeholder=""
+          onChange={setTypedName}
+        />
+      </div>
       <div className="plan-path-section">
         <span className="train-label">{t("onboarding.plan.workout.exercises")}</span>
         {state.items.map((item, i) => {

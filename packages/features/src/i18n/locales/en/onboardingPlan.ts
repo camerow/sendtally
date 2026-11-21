@@ -8,7 +8,12 @@ export const onboardingPlan = {
   "onboarding.plan.workout.title": "Build a workout you already do.",
   "onboarding.plan.workout.body":
     "You can customize rest times, superset your exercises and even alternate session rep x set protocols. We have built-in timers and keep track of each exercise's progress over time.",
-  "onboarding.plan.workout.namePlaceholder": "Tuesday gym",
+  "onboarding.plan.workout.nameLabel": "Workout name",
+  "onboarding.plan.workout.defaultStrength": "Strength workout",
+  "onboarding.plan.workout.defaultHangboard": "Hangboard workout",
+  "onboarding.plan.workout.defaultClimbing": "Climbing workout",
+  "onboarding.plan.workout.defaultMobility": "Mobility workout",
+  "onboarding.plan.workout.defaultOther": "Workout",
   "onboarding.plan.workout.searchPlaceholder": "Search exercises, or name your own",
   "onboarding.plan.workout.newExerciseNamed": "New exercise: {name}",
   "onboarding.plan.workout.supersetPair": "Superset · {first} + {second}",
@@ -43,6 +48,7 @@ export const onboardingPlan = {
   "onboarding.plan.yours": "Yours",
   "onboarding.plan.week.perWeek_one": "{count} session a week",
   "onboarding.plan.week.perWeek_other": "{count} sessions a week",
-  "onboarding.plan.block.namePlaceholder": "Winter base",
+  "onboarding.plan.block.nameLabel": "Block name",
+  "onboarding.plan.block.defaultName": "{month} block",
   "onboarding.plan.workout.exercises": "Exercises",
 } as const;

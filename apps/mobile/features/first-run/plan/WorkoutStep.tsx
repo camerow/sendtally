@@ -14,7 +14,14 @@ import {
   type PickerEntry,
 } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
-import { setPlanPath, usePlanPath, type Wizard } from "@sendtally/features/settings";
+import {
+  defaultWorkoutName,
+  keptName,
+  nameOr,
+  setPlanPath,
+  usePlanPath,
+  type Wizard,
+} from "@sendtally/features/settings";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
   doseMeasureOf,
@@ -97,6 +104,9 @@ function Builder({
   const pick = usePick();
   const make = useMakeExercise();
   const [text, setText] = React.useState("");
+  const [typedName, setTypedName] = React.useState<string | null>(() =>
+    initial.name.trim() === "" ? null : initial.name
+  );
   const world = usePickerWorld([], "all");
   const isGrip = isGripOf(world);
   const kindIn = exerciseKindIn(world);
@@ -173,9 +183,14 @@ function Builder({
 
   const minutes = estimatedMinutes(state) ?? 0;
   const count = state.items.length;
-  const ready = state.name.trim() !== "" && count > 0;
+  const ready = count > 0;
+  const first = state.items[0];
+  const name = nameOr(
+    typedName,
+    defaultWorkoutName(first === undefined ? undefined : kindIn(first.exercise))
+  );
   const save = (): void => {
-    void actions.saveWorkout(id, draftOfEditor(state));
+    void actions.saveWorkout(id, draftOfEditor({ ...state, name }));
     setPlanPath((p) => ({
       ...p,
       building: id,
@@ -207,12 +222,17 @@ function Builder({
           {t("onboarding.plan.workout.body")}
         </Text>
       </View>
-      <NameField
-        value={state.name}
-        onChange={(name) => setState((s) => ({ ...s, name }))}
-        placeholder={t("onboarding.plan.workout.namePlaceholder")}
-        maxLength={80}
-      />
+      <View style={{ gap: 4 }}>
+        <Label color={colors.textSecondary}>{t("onboarding.plan.workout.nameLabel")}</Label>
+        <NameField
+          value={typedName ?? name}
+          onChange={setTypedName}
+          onBlur={() => setTypedName(keptName)}
+          selectTextOnFocus
+          placeholder=""
+          maxLength={80}
+        />
+      </View>
       <View style={{ gap: 10 }}>
         <Label color={colors.gunmetal}>{t("onboarding.plan.workout.exercises")}</Label>
         {state.items.map((item, i) => {

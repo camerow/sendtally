@@ -39,15 +39,19 @@ export { resumedPath, setPlanPath, usePlanPath, type PlanPath } from "./planPath
 export { useHistoryCard } from "./useHistoryCard";
 export {
   ADD_OUTCOMES,
+  addClimbHint,
   addedClimb,
   addOutcomeLabel,
   addOutcomePill,
   asLogged,
   climbAddedEvent,
+  gradePicked,
   needsClimbName,
   sendsAdded,
+  type AddClimbHint,
   type AddedClimb,
   type AddedWhen,
   type AddOutcome,
 } from "./addClimb";
 export { useBlockStep, type BlockStepState } from "./useBlockStep";
+export { defaultBlockName, defaultWorkoutName, keptName, nameOr } from "./defaultNames";

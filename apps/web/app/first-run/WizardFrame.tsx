@@ -14,6 +14,8 @@ export type WizardFrameProps = {
   skip?: boolean;
   /** Off for a closing screen with no back, progress or Skip. */
   bar?: boolean;
+  /** With the bar off, an X at the trailing edge of the bar's row that leaves the wizard. */
+  onClose?: () => void;
   /** A wider column, for a step that sets two panels side by side on a wide screen. */
   wide?: boolean;
   /** Short content sits midway between the bar and the footer, as the reveals want. */
@@ -30,6 +32,7 @@ export function WizardFrame({
   bar = true,
   wide = false,
   center = false,
+  onClose,
 }: WizardFrameProps): React.ReactElement {
   const inPath = wizard.step !== "choose";
   const { n, total } = wizard.position;
@@ -69,6 +72,17 @@ export function WizardFrame({
             ) : (
               <span className="wizard-bar-end" />
             ))}
+          {!bar && onClose !== undefined && (
+            <button
+              type="button"
+              className="wizard-back"
+              aria-label={t("common.close")}
+              onClick={onClose}
+              style={{ marginLeft: "auto" }}
+            >
+              <Icon name="x" size={22} strokeWidth={2.2} />
+            </button>
+          )}
         </header>
         <main className={center ? "wizard-body wizard-body--center" : "wizard-body"}>
           {children}

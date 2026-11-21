@@ -19,6 +19,7 @@ import { exerciseName } from "../workouts/library";
 import type { LibraryWorkout } from "../workouts/types";
 import type { WorkoutLibraryQuery } from "../workouts/useWorkoutLibrary";
 import { useWorkouts } from "../workouts/useWorkouts";
+import { defaultBlockName, keptName, nameOr } from "./defaultNames";
 import { nextMonday, shortcutChanges, shortcutOf, type LoadBar, type Shortcuts } from "./planMaths";
 import { resumedPath, setPlanPath, usePlanPath } from "./planPath";
 import type { Wizard } from "./types";
@@ -120,6 +121,7 @@ export type BlockStepState =
       exercise: string;
       name: string;
       setName: (name: string) => void;
+      keepName: () => void;
       weeks: number;
       resize: (by: 1 | -1) => void;
       alt: boolean;
@@ -182,7 +184,8 @@ export function useBlockStep({
     return { status: "loading", start };
 
   const weeks = stepped ?? clampWeeks(block.weeks, MIN_WEEKS);
-  const name = typed ?? block.name;
+  const fallback = nameOr(block.name, defaultBlockName(start));
+  const name = typed ?? fallback;
   const alt = item.doses.length > 1;
   const dose = alt ? shown : 0;
   const written = item.doses[dose] ?? item.doses[0] ?? { sets: 1 };
@@ -223,7 +226,7 @@ export function useBlockStep({
       });
     void actions.saveDraft({
       ...emptyPlanDraft,
-      block: { ...block, name: name.trim(), weeks, start },
+      block: { ...block, name: nameOr(typed, fallback), weeks, start },
       weekChanges: weekChangesOf(members, doses, itemId),
     });
     memberships
@@ -239,6 +242,7 @@ export function useBlockStep({
     exercise: exerciseName(item.exercise, model.gripName),
     name,
     setName: setTyped,
+    keepName: () => setTyped(keptName),
     weeks,
     resize,
     alt,

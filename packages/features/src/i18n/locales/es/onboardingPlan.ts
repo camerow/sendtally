@@ -8,7 +8,12 @@ export const onboardingPlan = {
   "onboarding.plan.workout.title": "Crea un entreno que ya haces.",
   "onboarding.plan.workout.body":
     "Puedes ajustar los descansos, hacer superseries con tus ejercicios e incluso alternar sesiones con distintos esquemas de series y repeticiones. Los temporizadores vienen incluidos y seguimos el progreso de cada ejercicio con el tiempo.",
-  "onboarding.plan.workout.namePlaceholder": "Gimnasio del martes",
+  "onboarding.plan.workout.nameLabel": "Nombre del entreno",
+  "onboarding.plan.workout.defaultStrength": "Entreno de fuerza",
+  "onboarding.plan.workout.defaultHangboard": "Entreno de multipresa",
+  "onboarding.plan.workout.defaultClimbing": "Entreno de escalada",
+  "onboarding.plan.workout.defaultMobility": "Entreno de movilidad",
+  "onboarding.plan.workout.defaultOther": "Entreno",
   "onboarding.plan.workout.searchPlaceholder": "Busca ejercicios o ponle nombre al tuyo",
   "onboarding.plan.workout.newExerciseNamed": "Nuevo ejercicio: {name}",
   "onboarding.plan.workout.supersetPair": "Superserie · {first} + {second}",
@@ -44,6 +49,7 @@ export const onboardingPlan = {
   "onboarding.plan.yours": "Tuyo",
   "onboarding.plan.week.perWeek_one": "{count} sesión por semana",
   "onboarding.plan.week.perWeek_other": "{count} sesiones por semana",
-  "onboarding.plan.block.namePlaceholder": "Base de invierno",
+  "onboarding.plan.block.nameLabel": "Nombre del bloque",
+  "onboarding.plan.block.defaultName": "Bloque de {month}",
   "onboarding.plan.workout.exercises": "Ejercicios",
 } as const;

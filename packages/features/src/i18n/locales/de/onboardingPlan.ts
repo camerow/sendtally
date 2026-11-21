@@ -8,7 +8,12 @@ export const onboardingPlan = {
   "onboarding.plan.workout.title": "Bau ein Workout, das du schon machst.",
   "onboarding.plan.workout.body":
     "Du kannst Pausen anpassen, Übungen zu Supersätzen kombinieren und sogar zwischen Einheiten mit verschiedenen Satz- und Wiederholungsschemata wechseln. Die Timer sind eingebaut, und der Fortschritt jeder Übung wird mit der Zeit festgehalten.",
-  "onboarding.plan.workout.namePlaceholder": "Dienstag im Gym",
+  "onboarding.plan.workout.nameLabel": "Name des Workouts",
+  "onboarding.plan.workout.defaultStrength": "Kraft-Workout",
+  "onboarding.plan.workout.defaultHangboard": "Fingerboard-Workout",
+  "onboarding.plan.workout.defaultClimbing": "Kletter-Workout",
+  "onboarding.plan.workout.defaultMobility": "Mobilitäts-Workout",
+  "onboarding.plan.workout.defaultOther": "Workout",
   "onboarding.plan.workout.searchPlaceholder": "Übungen suchen oder eigene benennen",
   "onboarding.plan.workout.newExerciseNamed": "Neue Übung: {name}",
   "onboarding.plan.workout.supersetPair": "Supersatz · {first} + {second}",
@@ -44,6 +49,7 @@ export const onboardingPlan = {
   "onboarding.plan.yours": "Deins",
   "onboarding.plan.week.perWeek_one": "{count} Einheit pro Woche",
   "onboarding.plan.week.perWeek_other": "{count} Einheiten pro Woche",
-  "onboarding.plan.block.namePlaceholder": "Winterbasis",
+  "onboarding.plan.block.nameLabel": "Name des Blocks",
+  "onboarding.plan.block.defaultName": "{month}-Block",
   "onboarding.plan.workout.exercises": "Übungen",
 } as const;

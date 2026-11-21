@@ -1,6 +1,6 @@
 import type { ClimbPillKind } from "../climbs/log";
 import { formatDate, t } from "../i18n";
-import { disciplineOf, draftGradeLabel } from "../log-session/transforms";
+import { disciplineOf, draftGrade, draftGradeLabel } from "../log-session/transforms";
 import { disciplineLabel, type ClimbDraft, type Discipline } from "../log-session/types";
 import type { GradeScales } from "../sessions/grades";
 
@@ -38,6 +38,19 @@ export const addOutcomePill = (o: AddOutcome): { kind: ClimbPillKind; label: str
 
 export const needsClimbName = (climb: ClimbDraft, outcome: AddOutcome): boolean =>
   outcome === "project" && climb.name.trim() === "";
+
+export const gradePicked = (climb: ClimbDraft): boolean =>
+  climb.grade !== "" && draftGrade(climb.grade, climb.scale) !== undefined;
+
+export type AddClimbHint = "needsGrade" | "needsName";
+
+/** What the form says is missing: a project's name, or a grade once a name is typed. Nothing while untouched. */
+export const addClimbHint = (climb: ClimbDraft, outcome: AddOutcome): AddClimbHint | null =>
+  needsClimbName(climb, outcome)
+    ? "needsName"
+    : climb.name.trim() !== "" && !gradePicked(climb)
+      ? "needsGrade"
+      : null;
 
 /** The climb as the log stores it: Flash and Sent are sends of one try, a Project an attempt kept as one. */
 export const asLogged = (climb: ClimbDraft, outcome: AddOutcome): Omit<ClimbDraft, "key"> => {

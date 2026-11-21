@@ -50,6 +50,7 @@ export const BlockStep: StepComponent = ({ wizard, api }) => {
     exercise,
     name,
     setName,
+    keepName,
     weeks,
     resize,
     alt,
@@ -82,11 +83,7 @@ export const BlockStep: StepComponent = ({ wizard, api }) => {
     <WizardFrame
       wizard={wizard}
       footer={
-        <Button
-          variant="azure"
-          disabled={name.trim() === ""}
-          onClick={() => name.trim() !== "" && schedule()}
-        >
+        <Button variant="azure" onClick={schedule}>
           {scheduleLabel}
         </Button>
       }
@@ -106,13 +103,20 @@ export const BlockStep: StepComponent = ({ wizard, api }) => {
           <LoadBars bars={bars} />
         </DarkCard>
       </div>
-      <NameField
-        label={t("hang.name")}
-        value={name}
-        maxLength={80}
-        placeholder={t("onboarding.plan.block.namePlaceholder")}
-        onChange={setName}
-      />
+      <div
+        className="field"
+        onFocus={(e) => e.target instanceof HTMLTextAreaElement && e.target.select()}
+        onBlur={keepName}
+      >
+        <span className="train-label">{t("onboarding.plan.block.nameLabel")}</span>
+        <NameField
+          label={t("onboarding.plan.block.nameLabel")}
+          value={name}
+          maxLength={80}
+          placeholder=""
+          onChange={setName}
+        />
+      </div>
       <div className="plan-path-between">
         <span className="plan-path-strong">{t("plan.weeks")}</span>
         <Stepper

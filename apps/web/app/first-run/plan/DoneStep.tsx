@@ -38,13 +38,14 @@ export const DoneStep: StepComponent = ({ wizard, api }) => {
   const workout = placed[0]?.workout;
   const noSessions = status.status === "ready" && !status.data.onboarding.progress.sessions;
 
+  const openPlan = (): void => wizard.complete(outcome, "plan");
   const week = DAYS.map((d) => {
     const kinds = placed.filter(({ m }) => m.weekdays.includes(d)).map(({ workout: w }) => w.kind);
     return kinds.length > 0 ? kinds : null;
   });
 
   return (
-    <WizardFrame wizard={wizard} bar={false}>
+    <WizardFrame wizard={wizard} bar={false} onClose={openPlan}>
       <h1 className="wizard-title">{t("onboarding.plan.done.title")}</h1>
       <WeekCard
         week={week}
@@ -72,7 +73,7 @@ export const DoneStep: StepComponent = ({ wizard, api }) => {
           {...(first === null
             ? {}
             : { hint: t("onboarding.plan.done.dayFirst", { day: weekdayLong(first) }) })}
-          onPress={() => wizard.complete(outcome, "plan")}
+          onPress={openPlan}
         />
       </div>
     </WizardFrame>
