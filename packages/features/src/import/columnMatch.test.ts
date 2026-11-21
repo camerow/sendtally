@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "@sendtally/api-client";
-import { planImport, type ColumnMatch } from "@sendtally/core/import";
+import type { ColumnMatch } from "@sendtally/core/import";
 import {
   ambiguousDateText,
   columnsMatchedEvent,
-  matchedCsv,
+  matchedPlan,
   matchRows,
   requestColumns,
   unusedText,
@@ -56,7 +56,8 @@ describe("requestColumns", () => {
       ["Climb notes", null, ""],
     ]);
     expect(unusedText(review)).toBe("Not imported: Partner.");
-    const plan = planImport(matchedCsv(review), "UTC");
+    const plan = matchedPlan(review, "UTC");
+    expect(plan.format).toBe("spreadsheet");
     expect(plan.sessions.map((s) => [s.date, s.climbs.length])).toEqual([["2022-04-03", 2]]);
   });
 

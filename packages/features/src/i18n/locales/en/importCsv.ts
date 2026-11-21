@@ -171,4 +171,5 @@ export const importCsv = {
   "import.match.crag": "Crag",
   "import.match.unused": "Not imported: {columns}.",
   "import.match.confirm": "Looks right",
+  "import.formatSpreadsheet": "Your spreadsheet",
 } as const;

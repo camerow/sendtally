@@ -176,4 +176,5 @@ export const importCsv = {
   "import.match.crag": "Falaise",
   "import.match.unused": "Non importé : {columns}.",
   "import.match.confirm": "C'est bon",
+  "import.formatSpreadsheet": "Ton tableur",
 } as const;

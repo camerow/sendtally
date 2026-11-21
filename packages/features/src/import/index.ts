@@ -9,6 +9,7 @@ export {
   type ImportSource,
 } from "./exportSteps";
 export {
+  importFormatLabel,
   importTally,
   planStats,
   sessionNames,
@@ -24,7 +25,7 @@ export {
   ambiguousDateText,
   columnChoices,
   columnsMatchedEvent,
-  matchedCsv,
+  matchedPlan,
   matchRows,
   requestColumns,
   sheetMeta,

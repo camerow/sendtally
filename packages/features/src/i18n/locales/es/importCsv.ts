@@ -176,4 +176,5 @@ export const importCsv = {
   "import.match.crag": "Roca",
   "import.match.unused": "No importado: {columns}.",
   "import.match.confirm": "Está bien",
+  "import.formatSpreadsheet": "Tu hoja de cálculo",
 } as const;

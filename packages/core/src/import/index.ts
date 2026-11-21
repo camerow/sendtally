@@ -12,6 +12,7 @@ export {
   firstValue,
   MATCH_SAMPLE_ROWS,
   matchSample,
+  planMatched,
   sheetOf,
   unusedColumns,
   usedColumns,

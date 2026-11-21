@@ -176,4 +176,5 @@ export const importCsv = {
   "import.match.crag": "Fels",
   "import.match.unused": "Nicht importiert: {columns}.",
   "import.match.confirm": "Passt so",
+  "import.formatSpreadsheet": "Deine Tabelle",
 } as const;

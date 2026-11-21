@@ -1,6 +1,7 @@
 import { parseCsv, toCsv } from "./csv";
+import { planImport } from "./plan";
 import { SENDTALLY_COLUMNS, type Column, type Line } from "./records";
-import type { ClimbResult, ColumnMatch, DateOrder, GradeColumn } from "./types";
+import type { ClimbResult, ColumnMatch, DateOrder, GradeColumn, ImportPlan } from "./types";
 
 export const MATCH_SAMPLE_ROWS = 20;
 
@@ -159,3 +160,14 @@ export function applyMatch(sheet: Sheet, match: ColumnMatch, order: DateOrder): 
   }
   return toCsv(out);
 }
+
+/** The whole sheet read through the match, by the same rules as a file in our own columns. */
+export const planMatched = (
+  sheet: Sheet,
+  match: ColumnMatch,
+  order: DateOrder,
+  timeZone: string
+): ImportPlan => ({
+  ...planImport(applyMatch(sheet, match, order), timeZone),
+  format: "spreadsheet",
+});

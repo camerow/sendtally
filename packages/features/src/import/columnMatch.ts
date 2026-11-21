@@ -2,17 +2,18 @@ import type { SendtallyApi } from "@sendtally/api-client";
 import { disciplineOf } from "@sendtally/core";
 import {
   ambiguousDate,
-  applyMatch,
   dateIn,
   dateOrderOf,
   firstValue,
   matchSample,
+  planMatched,
   sheetOf,
   unusedColumns,
   usedColumns,
   type ClimbResult,
   type ColumnMatch,
   type DateOrder,
+  type ImportPlan,
   type Sheet,
 } from "@sendtally/core/import";
 import { formatDate, t, type MessageKey } from "../i18n";
@@ -197,9 +198,9 @@ export function ambiguousDateText(review: ColumnsReview): string | null {
   });
 }
 
-/** The whole file in our own columns, for planImport. */
-export const matchedCsv = (review: ColumnsReview): string =>
-  applyMatch(review.sheet, review.match, review.order);
+/** The whole file read through the approved match, ready for the review. */
+export const matchedPlan = (review: ColumnsReview, timeZone: string): ImportPlan =>
+  planMatched(review.sheet, review.match, review.order, timeZone);
 
 export function columnsMatchedEvent(
   review: ColumnsReview,
