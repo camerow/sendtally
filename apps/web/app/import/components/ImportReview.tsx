@@ -1,8 +1,9 @@
 import React from "react";
 import { useDisplayScales } from "@sendtally/features/settings";
 import { Button } from "@sendtally/design";
-import { IMPORT_SERVICES, type ImportPlan, type LikelyDuplicate } from "@sendtally/core/import";
+import type { ImportPlan, LikelyDuplicate } from "@sendtally/core/import";
 import {
+  importFormatLabel,
   issueText,
   planStats,
   sessionNames,
@@ -116,13 +117,7 @@ export function ImportReview({
             >
               {fileName}
             </span>
-            {!unrecognised && (
-              <span style={pillOk}>
-                {plan.format === "sendtally"
-                  ? t("import.formatSendtally")
-                  : t("import.formatExport", { service: IMPORT_SERVICES[plan.format] })}
-              </span>
-            )}
+            {!unrecognised && <span style={pillOk}>{importFormatLabel(plan.format)}</span>}
           </span>
           {first !== undefined && last !== undefined && (
             <span style={{ ...monoMuted, whiteSpace: "nowrap" }}>

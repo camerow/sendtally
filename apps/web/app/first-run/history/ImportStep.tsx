@@ -11,7 +11,7 @@ import {
   columnsMatchedEvent,
   importAll,
   importSourceOf,
-  matchedCsv,
+  matchedPlan,
   requestColumns,
   sheetMeta,
   type ColumnsReview,
@@ -42,6 +42,8 @@ type Review = {
   error: string | null;
 };
 
+const timeZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
 const heldBack = (review: Review): number[] =>
   review.duplicates.map((d) => d.index).filter((i) => !review.importAnyway.includes(i));
 
@@ -62,8 +64,7 @@ export const ImportStep: StepComponent = ({ wizard, api }) => {
   const answer = wizard.memory.existingLog;
   const source = answer === null ? undefined : importSourceOf(answer);
 
-  const read = async (fileName: string, text: string): Promise<void> => {
-    const plan = planImport(text, Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const read = async (fileName: string, plan: ImportPlan): Promise<void> => {
     const log = await api.sessionsWithClimbs();
     const duplicates = await likelyDuplicates(plan.sessions, log.sessions, sha256Hex);
     setColumns(null);
@@ -85,15 +86,15 @@ export const ImportStep: StepComponent = ({ wizard, api }) => {
 
   const choose = async (file: File): Promise<void> => {
     const text = await file.text();
-    const plan = planImport(text, "UTC");
+    const plan = planImport(text, timeZone());
     if (plan.sessions.length === 0 && plan.issues[0]?.code === "noHeader") {
       setMatching(true);
       const matched = await requestColumns(api, text, file.name).finally(() => setMatching(false));
       if (matched !== null) {
         setReview(null);
         setColumns(matched);
-      } else await read(file.name, text);
-    } else await read(file.name, text);
+      } else await read(file.name, plan);
+    } else await read(file.name, plan);
     if (wizard.step === "H2i") wizard.next({ way: "import" });
   };
 
@@ -119,7 +120,7 @@ export const ImportStep: StepComponent = ({ wizard, api }) => {
             variant="azure"
             onClick={() => {
               wizard.capture("import_columns_matched", columnsMatchedEvent(columns, "matched"));
-              void read(columns.fileName, matchedCsv(columns));
+              void read(columns.fileName, matchedPlan(columns, timeZone()));
             }}
           >
             {t("import.match.confirm")}

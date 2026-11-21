@@ -13,7 +13,7 @@ import {
 import {
   CSV_TYPES,
   importAll,
-  matchedCsv,
+  matchedPlan,
   requestColumns,
   type ColumnsReview,
 } from "@sendtally/features/import";
@@ -66,8 +66,9 @@ export function useImportReview(): ImportReviewFeature {
   const [matching, setMatching] = React.useState(false);
   const { unflagged, importing } = split(review);
 
-  const read = async (fileName: string, text: string): Promise<Review> => {
-    const plan = planImport(text, getCalendars()[0]?.timeZone ?? "UTC");
+  const timeZone = (): string => getCalendars()[0]?.timeZone ?? "UTC";
+
+  const read = async (fileName: string, plan: ImportPlan): Promise<Review> => {
     const log = await api.sessionsWithClimbs();
     const duplicates = await likelyDuplicates(plan.sessions, log.sessions, (s) =>
       digestStringAsync(CryptoDigestAlgorithm.SHA256, s)
@@ -90,18 +91,18 @@ export function useImportReview(): ImportReviewFeature {
     if (picked.canceled) return null;
     const { name } = picked.result;
     const text = await picked.result.text();
-    const plan = planImport(text, "UTC");
-    if (plan.sessions.length > 0 || plan.issues[0]?.code !== "noHeader") return read(name, text);
+    const plan = planImport(text, timeZone());
+    if (plan.sessions.length > 0 || plan.issues[0]?.code !== "noHeader") return read(name, plan);
     setMatching(true);
     const matched = await requestColumns(api, text, name).finally(() => setMatching(false));
-    if (matched === null) return read(name, text);
+    if (matched === null) return read(name, plan);
     setReview(null);
     setColumns(matched);
     return matched;
   };
 
   const applyColumns = async (): Promise<Review | null> =>
-    columns === null ? null : read(columns.fileName, matchedCsv(columns));
+    columns === null ? null : read(columns.fileName, matchedPlan(columns, timeZone()));
 
   const confirm = (done: (result: ImportResult & { likely: number }) => void): void => {
     if (review === null || review.busy) return;

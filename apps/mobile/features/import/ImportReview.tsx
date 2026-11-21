@@ -1,12 +1,7 @@
 import React from "react";
 import { View } from "react-native";
-import {
-  IMPORT_SERVICES,
-  type ImportPlan,
-  type ImportSession,
-  type LikelyDuplicate,
-} from "@sendtally/core/import";
-import { importTally, planStats } from "@sendtally/features/import";
+import { type ImportPlan, type ImportSession, type LikelyDuplicate } from "@sendtally/core/import";
+import { importFormatLabel, importTally, planStats } from "@sendtally/features/import";
 import type { GradeScales } from "@sendtally/features/sessions";
 import { useDisplayScales } from "@sendtally/features/settings";
 import { formatDate, formatNumber, t } from "@sendtally/features/i18n";
@@ -66,11 +61,7 @@ export function ImportReview({
     <>
       <View style={{ gap: 10 }}>
         <ImportHero
-          kicker={
-            plan.format === "sendtally"
-              ? t("import.formatSendtally")
-              : t("import.formatExport", { service: IMPORT_SERVICES[plan.format] })
-          }
+          kicker={importFormatLabel(plan.format)}
           kickerColor={colors.azureInk}
           title={title ?? t("import.reviewTitle")}
           meta={meta ?? `${fileName} · ${dayLabel(first.date)} – ${dayLabel(last.date)}`}

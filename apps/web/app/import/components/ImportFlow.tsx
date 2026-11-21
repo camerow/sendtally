@@ -11,7 +11,7 @@ import {
 import {
   columnsMatchedEvent,
   importAll,
-  matchedCsv,
+  matchedPlan,
   requestColumns,
   sheetMeta,
   withAddedTags,
@@ -48,6 +48,8 @@ type State =
     }
   | { step: "done"; imported: number; skipped: number; likely: number; skippedRows: number };
 
+const timeZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
 const heldBack = (state: { duplicates: LikelyDuplicate[]; importAnyway: number[] }): number[] =>
   state.duplicates.map((d) => d.index).filter((i) => !state.importAnyway.includes(i));
 
@@ -63,9 +65,7 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
         : s
     );
 
-  const read = async (fileName: string, text: string): Promise<void> => {
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const plan = planImport(text, timeZone);
+  const read = async (fileName: string, plan: ImportPlan): Promise<void> => {
     const log = await api.sessionsWithClimbs();
     const duplicates = await likelyDuplicates(plan.sessions, log.sessions, sha256Hex);
     setState({
@@ -82,12 +82,12 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
 
   const choose = async (file: File): Promise<void> => {
     const text = await file.text();
-    const plan = planImport(text, "UTC");
+    const plan = planImport(text, timeZone());
     if (plan.sessions.length > 0 || plan.issues[0]?.code !== "noHeader")
-      return read(file.name, text);
+      return read(file.name, plan);
     setState({ step: "choose", matching: true });
     const columns = await requestColumns(api, text, file.name);
-    if (columns === null) return read(file.name, text);
+    if (columns === null) return read(file.name, plan);
     setState({ step: "columns", columns });
   };
 
@@ -172,7 +172,7 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
               variant="azure"
               onClick={() => {
                 capture("import_columns_matched", columnsMatchedEvent(state.columns, "matched"));
-                void read(state.columns.fileName, matchedCsv(state.columns));
+                void read(state.columns.fileName, matchedPlan(state.columns, timeZone()));
               }}
             >
               {t("import.match.confirm")}
