@@ -92,6 +92,8 @@ export type ScreenFrameProps = {
   dark?: boolean;
   /** Children of the body that stay pinned to its top once scrolled to. */
   sticky?: number[];
+  /** Short content sits midway between the header and the footer; long content scrolls as ever. */
+  center?: boolean;
 };
 
 /** A full screen, planning or detail: back, a scrolling body that keeps a field being typed in above the keys, and a footer. */
@@ -106,6 +108,7 @@ export function ScreenFrame({
   hero = [],
   dark = false,
   sticky,
+  center = false,
 }: ScreenFrameProps): React.ReactElement {
   const [keypad, setKeypad] = React.useState(false);
   const [footerHeight, setFooterHeight] = React.useState(0);
@@ -166,6 +169,7 @@ export function ScreenFrame({
               paddingTop: 8,
               paddingHorizontal: 18,
               paddingBottom: 24,
+              ...(center ? { flexGrow: 1, justifyContent: "center" } : {}),
             }}
           >
             {children}

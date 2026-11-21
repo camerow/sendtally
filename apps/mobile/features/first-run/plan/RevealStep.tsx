@@ -3,10 +3,9 @@ import { Alert, Text, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import type { SendtallyApi } from "@sendtally/api-client";
 import { colors, fonts } from "@sendtally/design/tokens";
-import { shortDate, useGrips, weekdayLong } from "@sendtally/features/hang";
+import { shortDate, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
-  firstWeekday,
   sessionsPerWeek,
   usePlanPath,
   useTrainingReminders,
@@ -15,7 +14,6 @@ import {
 } from "@sendtally/features/settings";
 import { KIND_LOOK, usePlan } from "@sendtally/features/training";
 import { useTween } from "@sendtally/features/trends";
-import { Icon } from "../../../components/Icon";
 import { Switch } from "../../../components/Switch";
 import { Button } from "../../training/components/Button";
 import { Label } from "../../training/components/Label";
@@ -58,7 +56,6 @@ export function RevealStep({
   const weeks = block?.weeks ?? 0;
   const days = Object.fromEntries(members.map((m) => [m.id, m.weekdays]));
   const total = sessionsPerWeek(days) * weeks;
-  const first = firstWeekday(days);
   const reduceMotion = useReducedMotion();
   const [run, setRun] = React.useState(false);
   React.useEffect(() => {
@@ -98,6 +95,7 @@ export function RevealStep({
     <WizardFrame
       wizard={wizard}
       dark
+      center
       skip={false}
       footer={
         <Button
@@ -201,14 +199,6 @@ export function RevealStep({
               }
             />
           </View>
-          {first !== null && (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Icon name="today" size={18} strokeWidth={2.2} color={colors.gold} />
-              <Text style={[type.mono, { flex: 1, fontSize: 12, color: colors.white }]}>
-                {t("onboarding.plan.reveal.livesOnPlan", { day: weekdayLong(first) })}
-              </Text>
-            </View>
-          )}
         </>
       )}
     </WizardFrame>

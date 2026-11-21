@@ -349,13 +349,6 @@
   }
 }
 
-.reveal-lives {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--bs-gold);
-}
-
 .done-rows {
   display: flex;
   flex-direction: column;

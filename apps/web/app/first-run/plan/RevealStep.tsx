@@ -1,11 +1,10 @@
 import React from "react";
 import { Button } from "@sendtally/design";
-import { shortDate, useGrips, weekdayLong } from "@sendtally/features/hang";
+import { shortDate, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { firstWeekday, sessionsPerWeek, usePlanPath, weekBars } from "@sendtally/features/settings";
+import { sessionsPerWeek, usePlanPath, weekBars } from "@sendtally/features/settings";
 import { KIND_LOOK, usePlan } from "@sendtally/features/training";
 import { useTween } from "@sendtally/features/trends";
-import { Icon } from "../../components/Icon";
 import { useHangData } from "../../training/data/HangDataContext";
 import { useLibrary } from "../../training/library/useLibrary";
 import type { StepComponent } from "../types";
@@ -35,7 +34,6 @@ export const RevealStep: StepComponent = ({ wizard, api }) => {
   const weeks = block?.weeks ?? 0;
   const days = Object.fromEntries(members.map((m) => [m.id, m.weekdays]));
   const total = sessionsPerWeek(days) * weeks;
-  const first = firstWeekday(days);
   const shown = Math.round(useTween(block === undefined ? null : total, 900) ?? 0);
 
   const viewed = React.useRef(false);
@@ -59,6 +57,7 @@ export const RevealStep: StepComponent = ({ wizard, api }) => {
 
   return (
     <WizardFrame
+      center
       wizard={wizard}
       dark
       skip={false}
@@ -104,12 +103,6 @@ export const RevealStep: StepComponent = ({ wizard, api }) => {
                 {t("onboarding.plan.block.weekByWeek", { name: main.name })}
               </span>
               <LoadBars bars={main.bars} height={26} />
-            </div>
-          )}
-          {first !== null && (
-            <div className="plan-path-lives">
-              <Icon name="today" size={18} strokeWidth={2.2} />
-              <span>{t("onboarding.plan.reveal.livesOnPlan", { day: weekdayLong(first) })}</span>
             </div>
           )}
         </>

@@ -16,6 +16,8 @@ export type WizardFrameProps = {
   bar?: boolean;
   /** A wider column, for a step that sets two panels side by side on a wide screen. */
   wide?: boolean;
+  /** Short content sits midway between the bar and the footer, as the reveals want. */
+  center?: boolean;
 };
 
 /** Every wizard step: Back and the path's progress once a path is chosen, Skip top right. */
@@ -27,6 +29,7 @@ export function WizardFrame({
   skip = true,
   bar = true,
   wide = false,
+  center = false,
 }: WizardFrameProps): React.ReactElement {
   const inPath = wizard.step !== "choose";
   const { n, total } = wizard.position;
@@ -67,7 +70,9 @@ export function WizardFrame({
               <span className="wizard-bar-end" />
             ))}
         </header>
-        <main className="wizard-body">{children}</main>
+        <main className={center ? "wizard-body wizard-body--center" : "wizard-body"}>
+          {children}
+        </main>
         {footer !== undefined && <div className="wizard-foot">{footer}</div>}
       </div>
     </div>

@@ -20,6 +20,8 @@ export type WizardFrameProps = {
   bar?: boolean;
   /** Children of the body that stay pinned to the top once scrolled to. */
   sticky?: number[];
+  /** Short content sits midway between the bar and the footer, as the reveals want. */
+  center?: boolean;
 };
 
 /** Every wizard step: Back and the path's progress once a path is chosen, Skip top right. */
@@ -31,6 +33,7 @@ export function WizardFrame({
   skip = true,
   bar = true,
   sticky,
+  center = false,
 }: WizardFrameProps): React.ReactElement {
   const inPath = wizard.step !== "choose";
   const { n, total } = wizard.position;
@@ -40,6 +43,7 @@ export function WizardFrame({
       footer={footer}
       dark={dark}
       {...(sticky === undefined ? {} : { sticky })}
+      center={center}
       header={
         <View
           style={{

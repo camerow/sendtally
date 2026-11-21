@@ -35,7 +35,6 @@ export const onboardingPlan = {
   "onboarding.plan.reveal.weeksStart_other": "{count} semaines · à partir du {date}",
   "onboarding.plan.reveal.remindersBody":
     "Reçois une notification les jours où tu as prévu de t'entraîner ou de grimper.",
-  "onboarding.plan.reveal.livesOnPlan": "Tout est dans l'onglet Plan. Premier jour : {day}.",
   "onboarding.plan.done.title": "Ton plan est prêt.",
   "onboarding.plan.done.startNow": "Lancer {name} maintenant",
   "onboarding.plan.done.startHint": "~{minutes} min, repos chronométrés pour toi",

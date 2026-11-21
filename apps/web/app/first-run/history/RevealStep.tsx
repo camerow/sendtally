@@ -4,7 +4,6 @@ import { formatNumber, t } from "@sendtally/features/i18n";
 import { disciplineLabel } from "@sendtally/features/log-session";
 import { revealLine, useHistoryCard } from "@sendtally/features/settings";
 import { useTween } from "@sendtally/features/trends";
-import { Icon } from "../../components/Icon";
 import { Pyramid } from "../../components/Pyramid";
 import { PyramidLegend } from "../../components/PyramidLegend";
 import type { StepComponent } from "../types";
@@ -36,6 +35,7 @@ export const RevealStep: StepComponent = ({ wizard, api }) => {
 
   return (
     <WizardFrame
+      center
       wizard={wizard}
       dark
       skip={false}
@@ -100,10 +100,6 @@ export const RevealStep: StepComponent = ({ wizard, api }) => {
             />
           )}
           {(imported || vm.climbs >= 5) && vm.byYear.length >= 2 && <YearBars years={vm.byYear} />}
-          <div className="reveal-lives">
-            <Icon name="insights" size={18} strokeWidth={2.2} />
-            <span className="dark-meta">{t("onboarding.history.reveal.livesOnStats")}</span>
-          </div>
         </>
       )}
     </WizardFrame>

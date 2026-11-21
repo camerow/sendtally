@@ -34,7 +34,6 @@ export const onboardingPlan = {
   "onboarding.plan.reveal.weeksStart_other": "{count} weeks · starts {date}",
   "onboarding.plan.reveal.remindersBody":
     "Get notified on the days you have planned to train or climb.",
-  "onboarding.plan.reveal.livesOnPlan": "It lives on your Plan tab. {day} is first.",
   "onboarding.plan.done.title": "Your plan is ready.",
   "onboarding.plan.done.startNow": "Start {name} now",
   "onboarding.plan.done.startHint": "~{minutes} min, rests timed for you",

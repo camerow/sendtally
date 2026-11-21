@@ -49,8 +49,6 @@ export const onboardingHistory = {
   "onboarding.history.reveal.yearsSince_one": "{count} an · depuis {year}",
   "onboarding.history.reveal.yearsSince_other": "{count} ans · depuis {year}",
   "onboarding.history.reveal.andCounting": "et ça continue",
-  "onboarding.history.reveal.livesOnStats":
-    "Tout est dans l'onglet Statistiques, et ça grandit à chaque séance.",
   "onboarding.history.done.title": "Ton carnet est prêt.",
   "onboarding.history.done.planHint": "Tes jours, ta séance, les semaines planifiées",
   "onboarding.history.done.logToday": "Enregistrer la séance du jour",

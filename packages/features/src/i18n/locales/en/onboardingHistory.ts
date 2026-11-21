@@ -48,8 +48,6 @@ export const onboardingHistory = {
   "onboarding.history.reveal.yearsSince_one": "{count} year · since {year}",
   "onboarding.history.reveal.yearsSince_other": "{count} years · since {year}",
   "onboarding.history.reveal.andCounting": "and counting",
-  "onboarding.history.reveal.livesOnStats":
-    "It lives on your Stats tab, and grows with every session.",
   "onboarding.history.done.title": "Your log is ready.",
   "onboarding.history.done.planHint": "Your days, your workout, the weeks laid out",
   "onboarding.history.done.logToday": "Log today's session",

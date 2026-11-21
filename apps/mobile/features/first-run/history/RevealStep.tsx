@@ -6,7 +6,6 @@ import { formatNumber, t } from "@sendtally/features/i18n";
 import { disciplineLabel } from "@sendtally/features/log-session";
 import { revealLine, useHistoryCard } from "@sendtally/features/settings";
 import { useTween } from "@sendtally/features/trends";
-import { Icon } from "../../../components/Icon";
 import { Pyramid } from "../../../components/Pyramid";
 import { PyramidLegend } from "../../../components/PyramidLegend";
 import { Button } from "../../training/components/Button";
@@ -44,6 +43,7 @@ export function RevealStep({ wizard, api }: Parameters<StepComponent>[0]): React
     <WizardFrame
       wizard={wizard}
       dark
+      center
       skip={false}
       footer={
         <Button
@@ -138,12 +138,6 @@ export function RevealStep({ wizard, api }: Parameters<StepComponent>[0]): React
             />
           )}
           {(imported || vm.climbs >= 5) && vm.byYear.length >= 2 && <YearBars years={vm.byYear} />}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Icon name="insights" size={18} strokeWidth={2.2} color={colors.gold} />
-            <Text style={[darkMeta, { flex: 1 }]}>
-              {t("onboarding.history.reveal.livesOnStats")}
-            </Text>
-          </View>
         </>
       )}
     </WizardFrame>
