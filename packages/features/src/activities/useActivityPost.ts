@@ -6,8 +6,7 @@ import type {
   HangSessionRecord,
   SendtallyApi,
 } from "@sendtally/api-client";
-import { t } from "../i18n";
-import { queries, useQuery } from "../query";
+import { errorMessage, queries, useQuery } from "../query";
 import { postingStatus } from "../session-detail/transforms";
 import { stravaState, type StravaState } from "./post";
 
@@ -57,7 +56,7 @@ export function useActivityPost(api: SendtallyApi, target: PostTarget): Activity
       })
       .catch((err: unknown) => {
         setBusy(false);
-        setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
+        setError(errorMessage(err));
       });
   }, [api, client, id, kind]);
 
