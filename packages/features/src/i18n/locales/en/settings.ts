@@ -23,7 +23,6 @@ export const settings = {
   "settings.stravaReconnectNeeded": "Reconnect needed",
   "settings.relinkStrava": "Re-link Strava",
   "settings.openingStrava": "Opening Strava…",
-  "settings.stravaUnreachable": "Could not reach Strava. Try again.",
   "settings.embeddedBundle": "Embedded",
   "settings.yourData": "Your data",
   "settings.yourDataBody":

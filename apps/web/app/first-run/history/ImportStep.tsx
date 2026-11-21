@@ -24,6 +24,7 @@ import type { StepComponent } from "../types";
 import { WizardFrame } from "../WizardFrame";
 import { HistoryCard } from "./components/HistoryCard";
 import { WhatYouGet } from "./components/WhatYouGet";
+import { errorMessage } from "@sendtally/features/query";
 
 type Review = {
   fileName: string;
@@ -117,7 +118,7 @@ export const ImportStep: StepComponent = ({ wizard, api }) => {
       await importAll(api, importing, review.plan.format);
       wizard.next();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = errorMessage(error);
       setReview({ ...review, busy: false, error: message });
     }
   };

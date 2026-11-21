@@ -82,7 +82,7 @@ export const WeekStep: StepComponent = ({ wizard, api }) => {
     <WizardFrame
       wizard={wizard}
       footer={
-        <Button variant="azure" disabled={sessions === 0} onClick={() => sessions > 0 && save()}>
+        <Button variant="azure" disabled={sessions === 0} onClick={save}>
           {t("onboarding.firstRun.continue")}
         </Button>
       }

@@ -20,6 +20,7 @@ import { FormatGuide } from "./FormatGuide";
 import { ImportReview } from "./ImportReview";
 import { Stat } from "./Stat";
 import { Steps } from "./Steps";
+import { errorMessage } from "@sendtally/features/query";
 
 type State =
   | { step: "choose" }
@@ -82,7 +83,7 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
         skippedRows: state.plan.issues.length,
       });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = errorMessage(error);
       setState({ ...state, busy: false, error: message });
     }
   };

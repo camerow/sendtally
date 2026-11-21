@@ -13,6 +13,7 @@ import {
 import { CSV_TYPES, importAll } from "@sendtally/features/import";
 import { t } from "@sendtally/features/i18n";
 import { useApi } from "../../lib/api";
+import { errorMessage } from "@sendtally/features/query";
 
 export type Review = {
   fileName: string;
@@ -79,7 +80,7 @@ export function useImportReview(): ImportReviewFeature {
         done({ ...result, likely: current.importAnyway ? 0 : current.duplicates.length });
       },
       (error: unknown) => {
-        const message = error instanceof Error ? error.message : String(error);
+        const message = errorMessage(error);
         setReview({ ...current, busy: false, error: t("import.failed", { message }) });
       }
     );

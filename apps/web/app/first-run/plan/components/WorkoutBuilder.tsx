@@ -196,7 +196,7 @@ export function WorkoutBuilder({
     <WizardFrame
       wizard={wizard}
       footer={
-        <Button variant="azure" disabled={!ready} onClick={() => ready && save()}>
+        <Button variant="azure" disabled={!ready} onClick={save}>
           {count === 0
             ? t("onboarding.firstRun.continue")
             : t("onboarding.plan.workout.continue", { count, minutes })}

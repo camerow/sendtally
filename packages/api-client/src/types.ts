@@ -249,6 +249,13 @@ export type ReportItem = ModerationQueue["reports"]["items"][number];
 
 export type Role = ConnectionStatus["role"];
 
+/** The request never got an answer: offline, or the server could not be reached. */
+export class NetworkError extends Error {
+  constructor(cause: unknown) {
+    super("could not reach the server", { cause });
+  }
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,

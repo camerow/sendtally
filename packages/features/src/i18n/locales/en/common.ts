@@ -88,6 +88,7 @@ export const common = {
   "common.decimalPoint": "Decimal point",
   "common.changeRefused": "A change could not be saved, so it was undone.",
   "common.offline": "Offline",
+  "common.unreachable": "Could not reach sendtally. Check your connection.",
   "common.addedTo": "Added to {name}",
   "common.view": "View",
   "common.copied": "Copied",

@@ -1,6 +1,6 @@
 import { hc } from "hono/client";
 import type { AppType } from "@sendtally/api/app";
-import { ApiError } from "./types";
+import { ApiError, NetworkError } from "./types";
 import type {
   ActivityInput,
   ApiClientPlatform,
@@ -113,7 +113,9 @@ export class SendtallyApi {
   ) {
     this.client = hc<AppType>(baseUrl, {
       fetch: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-        const response = await fetch(input, init);
+        const response = await fetch(input, init).catch((cause: unknown) => {
+          throw init?.signal?.aborted === true ? cause : new NetworkError(cause);
+        });
         const method = init?.method ?? "GET";
         if (response.ok && method !== "GET") {
           const url = input instanceof Request ? input.url : input.toString();
