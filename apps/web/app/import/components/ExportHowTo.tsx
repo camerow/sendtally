@@ -10,6 +10,7 @@ import {
 } from "@sendtally/features/import";
 import { firstRunSourceLabel } from "@sendtally/features/settings";
 import { Section } from "../../settings/components/Section";
+import { bodyText } from "../../settings/components/styles";
 import { Description } from "../../training/components/Description";
 import { linkStyle } from "../styles";
 
@@ -20,8 +21,13 @@ export function ExportHowTo({ source }: { source: ImportSource }): React.ReactEl
       <Section>
         <Label on="light">{firstRunSourceLabel(source)}</Label>
         <Description
-          text={stepsText([t("import.howToSpreadsheetWeb1"), t("import.howToSpreadsheetWeb2")])}
+          text={stepsText([
+            t("import.howToSpreadsheet1"),
+            t("import.howToSpreadsheet2"),
+            t("import.howToSpreadsheet3"),
+          ])}
         />
+        <p style={{ ...bodyText, fontSize: 12.5 }}>{t("import.howToSpreadsheetAi")}</p>
       </Section>
     );
   const steps = exportSteps(source);

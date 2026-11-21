@@ -166,7 +166,13 @@ export default function Privacy(): React.ReactElement {
         </li>
         <li>
           <strong>Cloudflare</strong> - hosting, the database that stores your logbook, and network
-          protection for both the site and the API.
+          protection for both the site and the API. When you import a spreadsheet in a layout
+          sendtally does not already read, its column names and first 20 rows go to Cloudflare
+          Workers AI to match its columns to ours. Cloudflare states that it does not use content
+          processed by Workers AI to train AI models, and that it does not retain the inputs or
+          outputs of a request like this once they are no longer needed to answer it. We do not log
+          or store the sample. The rest of the file stays on your device; only the sessions you
+          confirm in the review are sent to us.
         </li>
         <li>
           <strong>Strava</strong> - only if you connect it, and only to post the activities you have

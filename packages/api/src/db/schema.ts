@@ -854,3 +854,14 @@ export const libraryChanges = sqliteTable(
   },
   (t) => [index("idx_library_changes_item").on(t.item_type, t.item_id, t.changed_at)]
 );
+
+// Column matches asked of Workers AI, per user per UTC day, for the daily limit.
+export const aiUsage = sqliteTable(
+  "ai_usage",
+  {
+    user_id: text("user_id").notNull(),
+    day: text("day").notNull(),
+    count: integer("count").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.user_id, t.day] })]
+);

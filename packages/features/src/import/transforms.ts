@@ -1,5 +1,6 @@
 import { effortGrade, type Grade } from "@sendtally/core";
-import type { ImportSession } from "@sendtally/core/import";
+import { IMPORT_SERVICES, type ImportFormat, type ImportSession } from "@sendtally/core/import";
+import { t } from "../i18n";
 import { displayGrade, type GradeScales } from "../sessions/grades";
 import { tallyLabel } from "../sessions/meta";
 import { sameTagName } from "../sessions/tags";
@@ -71,3 +72,11 @@ export function importTally(session: ImportSession, scales: GradeScales): string
   const top = planStats([{ ...session, climbs: sends }], scales).topGrade;
   return tallyLabel({ sends: sends.length, attempts: session.climbs.length - sends.length, top });
 }
+
+/** What kind of file a review is reading, as its kicker names it. */
+export const importFormatLabel = (format: ImportFormat): string =>
+  format === "sendtally"
+    ? t("import.formatSendtally")
+    : format === "spreadsheet"
+      ? t("import.formatSpreadsheet")
+      : t("import.formatExport", { service: IMPORT_SERVICES[format] });

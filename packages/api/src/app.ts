@@ -104,6 +104,7 @@ import {
 } from "./lib/manual";
 import { allowedOrigin } from "./lib/origins";
 import { getPostHog, identifyUser } from "./lib/posthog";
+import { importMatch } from "./importMatch";
 import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 import { RevenueCatClient, webhookBody, webhookUserIds } from "./lib/revenuecat";
@@ -2319,6 +2320,7 @@ const app = new Hono<AppEnv>()
     return c.json({ deleted: true });
   })
 
+  .route("/v1/import", importMatch)
   .route("/v1/hang", hang)
   .route("/v1/activities", activities)
   .route("/v1/plan", plan)
@@ -2415,6 +2417,8 @@ export type {
 } from "./lib/plan";
 export type { LogClimbInput, LogSessionInput } from "./lib/manual";
 export type { ImportBody } from "./lib/import";
+export type { MatchBody } from "./lib/importMatch";
+export type { ColumnMatch } from "@sendtally/core/import";
 
 export { app };
 

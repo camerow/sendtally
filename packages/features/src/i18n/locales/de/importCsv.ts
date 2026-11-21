@@ -133,15 +133,48 @@ export const importCsv = {
   "import.howToTheCrag2": "Wähle im Menü „{menu}“ den Eintrag „{export}“.",
   "import.howToTheCrag3": "Die Datei öffnet sich im Browser: Speichere sie als .csv-Datei.",
   "import.howToSpreadsheetTitle": "Deine Tabelle übernehmen",
-  "import.howToSpreadsheet1":
-    "Nur Tabellen mit den sendtally-Spalten werden direkt importiert. Spaltenanleitung und Vorlage findest du auf sendtally.com unter Import.",
-  "import.howToSpreadsheet2":
-    "Alles andere: Teile den Prompt unten zusammen mit deiner Tabelle mit Claude oder ChatGPT und wähle dann die CSV-Datei, die du zurückbekommst.",
   "import.assistantTitle": "Deine eigene KI-App nutzen",
   "import.assistantBody":
     "Verbinde Claude oder ChatGPT mit sendtally und lass die Datei für dich importieren.",
-  "import.howToSpreadsheetWeb1":
-    "Nur Tabellen mit den sendtally-Spalten werden direkt importiert. Spaltenanleitung und Vorlage findest du unten.",
-  "import.howToSpreadsheetWeb2":
-    "Alles andere: Kopiere den Prompt unten zusammen mit deiner Tabelle in Claude oder ChatGPT und wähle dann die CSV-Datei, die du zurückbekommst.",
+  "import.howToSpreadsheet1":
+    "Speichere deine Tabelle als CSV-Datei. Beliebige Spalten, beliebige Reihenfolge.",
+  "import.howToSpreadsheet2":
+    "Wähle sie hier aus. sendtally liest deine Spalten und ordnet sie seinen eigenen zu.",
+  "import.howToSpreadsheet3":
+    "Du prüfst die Zuordnung und dann jede Session, bevor etwas gespeichert wird.",
+  "import.howToSpreadsheetAi":
+    "Für die Zuordnung liest ein KI-Modell, das sendtally betreibt, deine Spaltennamen und die ersten 20 Zeilen. Nichts davon wird gespeichert oder zum Training verwendet.",
+  "import.match.title": "Wir haben deine Spalten zugeordnet.",
+  "import.match.check": "Prüfe jede und ändere, was nicht stimmt.",
+  "import.match.matching": "Spalten werden zugeordnet",
+  "import.match.rows_one": "{count} Zeile",
+  "import.match.rows_other": "{count} Zeilen",
+  "import.match.columns_one": "{count} Spalte",
+  "import.match.columns_other": "{count} Spalten",
+  "import.match.date": "Datum",
+  "import.match.climb": "Route oder Boulder",
+  "import.match.grade": "Grad",
+  "import.match.boulderGrade": "Bouldergrad",
+  "import.match.routeGrade": "Routengrad",
+  "import.match.result": "Durchstieg oder Versuch",
+  "import.match.tries": "Versuche",
+  "import.match.where": "Ort",
+  "import.match.notes": "Notizen",
+  "import.match.none": "Nicht in dieser Datei",
+  "import.match.noneOption": "Keine",
+  "import.match.means": "{value} ist {means}",
+  "import.match.meansSend": "ein Durchstieg",
+  "import.match.meansAttempt": "ein Versuch",
+  "import.match.meansFlash": "ein Flash",
+  "import.match.meansOnsight": "ein Onsight",
+  "import.match.meansRedpoint": "ein Rotpunkt",
+  "import.match.ambiguous": "{date} kann {dayFirst} oder {monthFirst} sein.",
+  "import.match.dateOrder": "Datumsformat",
+  "import.match.dayFirst": "Tag zuerst",
+  "import.match.monthFirst": "Monat zuerst",
+  "import.match.gym": "Halle",
+  "import.match.crag": "Fels",
+  "import.match.unused": "Nicht importiert: {columns}.",
+  "import.match.confirm": "Passt so",
+  "import.formatSpreadsheet": "Deine Tabelle",
 } as const;

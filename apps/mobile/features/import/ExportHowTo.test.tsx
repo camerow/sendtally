@@ -19,11 +19,11 @@ describe("ExportHowTo", () => {
     expect(screen.getByText("Search for the Kaya export")).toBeTruthy();
   });
 
-  it("for a spreadsheet, gives the steps, the prompt to share and the AI app route", async () => {
+  it("for a spreadsheet, gives the steps and says what the AI model reads", async () => {
     await render(<ExportHowTo source="spreadsheet" />);
     expect(screen.getByText("Bring in your spreadsheet")).toBeTruthy();
-    expect(screen.getByText("Share prompt")).toBeTruthy();
-    expect(screen.getByText("Use your own AI app")).toBeTruthy();
+    expect(screen.getByText(/the first 20 rows are read by an AI model/)).toBeTruthy();
+    expect(screen.queryByText("Share prompt")).toBeNull();
   });
 
   it("puts a given heading on top, the steps' title under it", async () => {

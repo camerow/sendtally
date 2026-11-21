@@ -19,6 +19,8 @@ export default defineWorkersConfig(async () => {
       poolOptions: {
         workers: {
           singleWorker: true,
+          // Workers AI has no local runtime; tests stub the binding and never reach the account.
+          remoteBindings: false,
           wrangler: { configPath: "./wrangler.jsonc" },
           miniflare: {
             bindings: {

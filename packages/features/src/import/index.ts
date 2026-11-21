@@ -9,6 +9,7 @@ export {
   type ImportSource,
 } from "./exportSteps";
 export {
+  importFormatLabel,
   importTally,
   planStats,
   sessionNames,
@@ -20,3 +21,18 @@ export {
 } from "./transforms";
 export { importAll, issueText } from "./upload";
 export { importResultText, readImportResult } from "./importResultText";
+export {
+  ambiguousDateText,
+  columnChoices,
+  columnsMatchedEvent,
+  matchedPlan,
+  matchRows,
+  requestColumns,
+  sheetMeta,
+  unusedText,
+  withColumn,
+  withWhereKind,
+  type ColumnsReview,
+  type MatchField,
+  type MatchRow,
+} from "./columnMatch";

@@ -39,6 +39,8 @@ export type {
   HangSettings,
   HangWorkout,
   ImportBody,
+  MatchBody,
+  ColumnMatch,
   Item,
   ItemDone,
   LibraryEntry,

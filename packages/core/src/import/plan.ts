@@ -42,8 +42,12 @@ function gradeAsWritten(s: string): Grade | undefined {
   return parseGrade(scale, s);
 }
 
+// The formats read by their header; a spreadsheet is read through a column match instead.
+type ReadFormat = Exclude<ImportFormat, "spreadsheet">;
+type ExportFormat = Exclude<ReadFormat, "sendtally">;
+
 // The service each export format comes from, a proper noun in every locale.
-export const IMPORT_SERVICES: { [F in Exclude<ImportFormat, "sendtally">]: string } = {
+export const IMPORT_SERVICES: { [F in ExportFormat]: string } = {
   kaya: "Kaya",
   "8a": "8a.nu",
   mountainProject: "Mountain Project",
@@ -67,7 +71,7 @@ export function exportPageUrl(format: keyof typeof IMPORT_SERVICES): string {
   );
 }
 
-const HEADERS: [Exclude<ImportFormat, "sendtally">, string[]][] = [
+const HEADERS: [ExportFormat, string[]][] = [
   ["kaya", ["date", "ascent_type", "grade", "climb_name"]],
   ["8a", ["route_boulder", "date", "type", "difficulty"]],
   ["mountainProject", ["date", "route", "rating", "location", "style", "lead_style"]],
@@ -75,7 +79,7 @@ const HEADERS: [Exclude<ImportFormat, "sendtally">, string[]][] = [
   ["theCrag", ["route_name", "ascent_type", "route_grade", "crag_name", "ascent_date"]],
 ];
 
-export function detectFormat(header: string[]): ImportFormat | null {
+export function detectFormat(header: string[]): ReadFormat | null {
   const names = header.map(normaliseHeader);
   const found = HEADERS.find(([, columns]) => columns.every((h) => names.includes(h)));
   if (found !== undefined) return found[0];
@@ -126,7 +130,7 @@ function sendtallyRecords(header: string[], rows: Line[]): Record[] {
 }
 
 const RECORDS: {
-  [F in ImportFormat]: (header: string[], rows: Line[], timeZone: string) => Record[];
+  [F in ReadFormat]: (header: string[], rows: Line[], timeZone: string) => Record[];
 } = {
   kaya: kayaRecords,
   "8a": eightARecords,

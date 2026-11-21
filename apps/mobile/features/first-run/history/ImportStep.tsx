@@ -2,7 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { formatDate, t } from "@sendtally/features/i18n";
-import { importSourceOf } from "@sendtally/features/import";
+import { columnsMatchedEvent, importSourceOf } from "@sendtally/features/import";
 import {
   historyCard,
   importedInsights,
@@ -10,6 +10,7 @@ import {
   useDisplayScales,
 } from "@sendtally/features/settings";
 import { messageText } from "../../../lib/styles";
+import { ColumnMatch } from "../../import/ColumnMatch";
 import { ExportHowTo } from "../../import/ExportHowTo";
 import { ImportReview } from "../../import/ImportReview";
 import { NotRecognized } from "../../import/NotRecognized";
@@ -42,15 +43,19 @@ export function ImportStep({ wizard }: Parameters<StepComponent>[0]): React.Reac
   const answer = wizard.memory.existingLog;
   const source = answer === null ? undefined : importSourceOf(answer);
 
+  const reviewed = (read: Review | null): void => {
+    if (read === null) return;
+    wizard.capture("import_reviewed", {
+      format: read.plan.format,
+      sessions: read.plan.sessions.length,
+      issues: read.plan.issues.length,
+      duplicates: read.duplicates.length,
+    });
+  };
   const choose = (): void => {
     void importer.pick().then((read) => {
       if (read === null) return;
-      wizard.capture("import_reviewed", {
-        format: read.plan.format,
-        sessions: read.plan.sessions.length,
-        issues: read.plan.issues.length,
-        duplicates: read.duplicates.length,
-      });
+      if ("plan" in read) reviewed(read);
       if (wizard.step === "H2i") wizard.next({ way: "import" });
     });
   };
@@ -64,6 +69,26 @@ export function ImportStep({ wizard }: Parameters<StepComponent>[0]): React.Reac
       }}
     />
   );
+
+  const { columns } = importer;
+  if (wizard.step !== "H2i" && columns !== null)
+    return (
+      <WizardFrame
+        wizard={wizard}
+        footer={
+          <Button
+            variant="primary"
+            label={t("import.match.confirm")}
+            onPress={() => {
+              wizard.capture("import_columns_matched", columnsMatchedEvent(columns, "matched"));
+              void importer.applyColumns().then(reviewed);
+            }}
+          />
+        }
+      >
+        <ColumnMatch review={columns} onChange={importer.setColumns} />
+      </WizardFrame>
+    );
 
   if (wizard.step === "H2i" || review === null) {
     const heading = (
@@ -82,7 +107,12 @@ export function ImportStep({ wizard }: Parameters<StepComponent>[0]): React.Reac
         wizard={wizard}
         footer={
           <View style={{ gap: 6 }}>
-            <Button variant="primary" label={t("import.chooseFile")} onPress={choose} />
+            <Button
+              variant="primary"
+              label={importer.matching ? t("import.match.matching") : t("import.chooseFile")}
+              disabled={importer.matching}
+              onPress={choose}
+            />
             {byHand}
           </View>
         }

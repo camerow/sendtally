@@ -8,13 +8,24 @@ import {
   type ImportPlan,
   type LikelyDuplicate,
 } from "@sendtally/core/import";
-import { importAll, withAddedTags, withTag } from "@sendtally/features/import";
+import {
+  columnsMatchedEvent,
+  importAll,
+  matchedPlan,
+  requestColumns,
+  sheetMeta,
+  withAddedTags,
+  withTag,
+  type ColumnsReview,
+} from "@sendtally/features/import";
 import { sameTagName, useTagVocabulary } from "@sendtally/features/sessions";
 import { t } from "@sendtally/features/i18n";
 import { BackLink } from "../../components/BackLink";
+import { capture } from "../../lib/analytics";
 import { Section } from "../../settings/components/Section";
-import { bodyText, pageTitle, secondaryButton } from "../../settings/components/styles";
+import { bodyText, monoMuted, pageTitle, secondaryButton } from "../../settings/components/styles";
 import { sha256Hex } from "../sha256Hex";
+import { ColumnMatch } from "./ColumnMatch";
 import { DropZone } from "./DropZone";
 import { FormatGuide } from "./FormatGuide";
 import { ImportReview } from "./ImportReview";
@@ -23,7 +34,8 @@ import { Steps } from "./Steps";
 import { errorMessage } from "@sendtally/features/query";
 
 type State =
-  | { step: "choose" }
+  | { step: "choose"; matching?: boolean }
+  | { step: "columns"; columns: ColumnsReview }
   | {
       step: "review";
       fileName: string;
@@ -35,6 +47,8 @@ type State =
       error: string | null;
     }
   | { step: "done"; imported: number; skipped: number; likely: number; skippedRows: number };
+
+const timeZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const heldBack = (state: { duplicates: LikelyDuplicate[]; importAnyway: number[] }): number[] =>
   state.duplicates.map((d) => d.index).filter((i) => !state.importAnyway.includes(i));
@@ -51,14 +65,12 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
         : s
     );
 
-  const choose = async (file: File): Promise<void> => {
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const plan = planImport(await file.text(), timeZone);
+  const read = async (fileName: string, plan: ImportPlan): Promise<void> => {
     const log = await api.sessionsWithClimbs();
     const duplicates = await likelyDuplicates(plan.sessions, log.sessions, sha256Hex);
     setState({
       step: "review",
-      fileName: file.name,
+      fileName,
       plan,
       added: plan.sessions.map(() => []),
       duplicates,
@@ -66,6 +78,17 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
       busy: false,
       error: null,
     });
+  };
+
+  const choose = async (file: File): Promise<void> => {
+    const text = await file.text();
+    const plan = planImport(text, timeZone());
+    if (plan.sessions.length > 0 || plan.issues[0]?.code !== "noHeader")
+      return read(file.name, plan);
+    setState({ step: "choose", matching: true });
+    const columns = await requestColumns(api, text, file.name);
+    if (columns === null) return read(file.name, plan);
+    setState({ step: "columns", columns });
   };
 
   const confirm = async (): Promise<void> => {
@@ -92,9 +115,11 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
   const title =
     state.step === "choose"
       ? t("import.title")
-      : state.step === "review"
-        ? t("import.reviewTitle")
-        : t("import.doneTitle");
+      : state.step === "columns"
+        ? t("import.match.title")
+        : state.step === "review"
+          ? t("import.reviewTitle")
+          : t("import.doneTitle");
 
   return (
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -104,15 +129,55 @@ export function ImportFlow({ api }: { api: SendtallyApi }): React.ReactElement {
           {t("import.chooseAnother")}
         </BackLink>
       )}
+      {state.step === "columns" && (
+        <BackLink
+          onClick={() => {
+            capture("import_columns_matched", columnsMatchedEvent(state.columns, "fallback"));
+            setState({ step: "choose" });
+          }}
+        >
+          {t("import.chooseAnother")}
+        </BackLink>
+      )}
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <h1 style={{ ...pageTitle, fontSize: 36 }}>{title}</h1>
-        <Steps current={state.step} />
+        {state.step === "columns" ? (
+          <span style={monoMuted}>{sheetMeta(state.columns)}</span>
+        ) : (
+          <Steps current={state.step} />
+        )}
       </div>
 
       {state.step === "choose" && (
         <>
-          <DropZone onFile={(file) => void choose(file)} />
+          {state.matching === true ? (
+            <p style={bodyText} role="status">
+              {t("import.match.matching")}
+            </p>
+          ) : (
+            <DropZone onFile={(file) => void choose(file)} />
+          )}
           <FormatGuide />
+        </>
+      )}
+
+      {state.step === "columns" && (
+        <>
+          <ColumnMatch
+            review={state.columns}
+            onChange={(columns) => setState({ step: "columns", columns })}
+          />
+          <div>
+            <Button
+              variant="azure"
+              onClick={() => {
+                capture("import_columns_matched", columnsMatchedEvent(state.columns, "matched"));
+                void read(state.columns.fileName, matchedPlan(state.columns, timeZone()));
+              }}
+            >
+              {t("import.match.confirm")}
+            </Button>
+          </div>
         </>
       )}
 
