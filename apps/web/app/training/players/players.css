@@ -453,10 +453,13 @@
 }
 
 .climb-set-label {
+  width: 100%;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  gap: 8px;
   padding-top: 8px;
+  white-space: nowrap;
 }
 
 .climb-picker {
