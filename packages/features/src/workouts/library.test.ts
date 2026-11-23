@@ -257,7 +257,7 @@ describe("summaries", () => {
     expect(bodySummary(byId("h-mine"))).toBe("6 × 7s on / 3s off · 3 sets · 3:00 rest");
     expect(bodySummary(byId("climb-limit"))).toBe("5 sets");
     expect(bodySummary(byId("climb-4x4"))).toBe("4 sets of 4 climbs");
-    expect(bodySummary(byId("climb-arc"))).toBe("2 × 20:00 on the wall");
+    expect(bodySummary(byId("climb-arc"))).toBe("2 × 20:00 min");
     expect(bodySummary({ kind: "climbing", items: [] })).toBeNull();
     expect(
       bodySummary({
@@ -418,7 +418,19 @@ describe("targetText", () => {
       "5 sets × 1 hang · 10s",
     ],
     ["climbs per set", [{ sets: 3, reps: 4 }, "climbs", "kg"], "3 sets × 4 climbs"],
-    ["time on the wall", [{ sets: 3, onS: 600 }, "wallTime", "kg"], "3 sets × 10:00 on the wall"],
+    ["time on the wall", [{ sets: 3, onS: 600 }, "wallTime", "kg"], "3 × 10:00 min"],
+    ["one set of time on the wall", [{ sets: 1, onS: 2700 }, "wallTime", "kg"], "45:00 min"],
+    [
+      "a range of wall sets",
+      [{ sets: 1, setsMax: 2, onS: 2700 }, "wallTime", "kg"],
+      "1-2 × 45:00 min",
+    ],
+    [
+      "a climbing range",
+      [{ sets: 3, setsMax: 4, reps: 4, repsMax: 6 }, "climbs", "kg"],
+      "3-4 sets × 4-6 climbs",
+    ],
+    ["a range of laps", [{ sets: 3, setsMax: 4, reps: 30 }, "laps", "kg"], "3-4 laps × 30 moves"],
     ["laps of moves", [{ sets: 4, reps: 40 }, "laps", "kg"], "4 laps × 40 moves"],
     ["sets alone", [{ sets: 3 }, "strength", "kg"], "3 sets"],
   ])("says %s with every number's word", (_, args, work) => {

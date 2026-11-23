@@ -72,6 +72,6 @@ export function climbedKeys(draft: LogSessionDraft | null): string[] {
   });
 }
 
-/** "At Crux Boulders" in a climbing workout's title line, or "No gym" when none is set. */
+/** "At Crux Boulders" under a climbing workout's Target RPE, or "Select a gym" when none is set. */
 export const gymLine = (name: string | undefined): string =>
-  name === undefined ? t("gyms.noGym") : t("workouts.atGym", { gym: name });
+  name === undefined ? t("gyms.selectGym") : t("workouts.atGym", { gym: name });

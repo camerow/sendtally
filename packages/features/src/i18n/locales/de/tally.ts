@@ -31,7 +31,6 @@ export const tally = {
   "tally.lapOf": "Durchgang {set} von {sets}",
   "tally.allSetsDone": "Alle Sätze geschafft",
   "tally.lapLabel": "Runde {lap}",
-  "tally.onTheWall": "In der Wand",
   "tally.addLap": "Runde hinzufügen",
   "tally.startRest": "Pause starten",
   "tally.removeLapOf": "Runde {lap} entfernen",

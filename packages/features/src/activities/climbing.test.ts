@@ -51,15 +51,19 @@ describe("climbing sets", () => {
       { onS: 1200, climbs: Array.from({ length: 16 }, () => green) },
     ];
     expect(wallChip(sets[0]!)).toBe("20:00 · 18 climbs");
-    expect(wallLine(sets)).toBe("40:00 on the wall · Green circuit");
-    expect(climbingLastTime(sets, "wallTime")).toBe("Last time: 40:00 on the wall · Green circuit");
+    expect(wallLine(sets)).toBe("40:00 min · Green circuit");
+    expect(climbingLastTime(sets, "wallTime")).toBe("Last time: 40:00 min · Green circuit");
     expect(climbingLastTime([{ reps: 4 }], "climbs")).toBeNull();
   });
 
   it("states a climbing dose without grades", () => {
     expect(climbingDoseLine({ sets: 4, reps: 4 }, "climbs")).toBe("4 sets of 4 climbs");
     expect(climbingDoseLine({ sets: 1 }, "climbs")).toBe("1 set");
-    expect(climbingDoseLine({ sets: 2, onS: 1200 }, "wallTime")).toBe("2 × 20:00 on the wall");
+    expect(climbingDoseLine({ sets: 2, onS: 1200 }, "wallTime")).toBe("2 × 20:00 min");
+    expect(climbingDoseLine({ sets: 1, onS: 2700 }, "wallTime")).toBe("45:00 min");
+    expect(climbingDoseLine({ sets: 3, setsMax: 4, reps: 4, repsMax: 6 }, "climbs")).toBe(
+      "3-4 sets of 4-6 climbs"
+    );
   });
 
   it("states circuit laps in moves or time, and counts the clean ones", () => {

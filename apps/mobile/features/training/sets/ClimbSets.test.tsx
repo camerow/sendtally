@@ -89,7 +89,7 @@ describe("Climbing inside the workout", () => {
 
   it("adds a row per climb, steps its attempts, ticks it sent, and ends the set at its last climb", async () => {
     await renderWithHang(<SetsScreen run={fours} />, hangData());
-    expect(screen.getByText("No gym")).toBeTruthy();
+    expect(screen.getByText("Select a gym")).toBeTruthy();
     expect(router.push).not.toHaveBeenCalled();
 
     await add("V5");

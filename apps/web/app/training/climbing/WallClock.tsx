@@ -32,13 +32,12 @@ export function WallClock({
   }, [running, left]);
   const clock = elapsedClock(targetS - left);
   const of = t("activities.holdOf", { time: elapsedClock(targetS) });
-  const word = t("tally.onTheWall");
   const share = targetS > 0 ? (targetS - left) / targetS : 0;
   return (
     <div
       className="player-row player-row--hold wall-clock"
       role="timer"
-      aria-label={`${word} ${clock} ${of}`}
+      aria-label={`${clock} ${of}`}
     >
       <span
         className="player-row-fill player-row-fill--hold"
@@ -47,7 +46,6 @@ export function WallClock({
       <span className="player-row-gap" />
       <span className="player-row-text">
         <span className="player-row-line">
-          <span className="player-row-word">{word}</span>
           <span className="player-row-clock">{clock}</span>
           <span className="player-row-of">{of}</span>
         </span>

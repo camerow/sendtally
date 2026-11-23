@@ -155,7 +155,7 @@ afterEach(() => {
 describe("Climbing inside the workout", () => {
   it("adds a row per climb, steps its attempts, ticks it sent, and ends the set at its last climb", async () => {
     await mount(runOf("4x4s", { sets: 2, reps: 3, setRestS: 240 }));
-    expect(texts(".player-gym")).toEqual(["No gym"]);
+    expect(texts(".player-gym")).toEqual(["Select a gym"]);
     await add("V5");
     for (let i = 0; i < 2; i++) await click("Increase Climb 1, V5 · Attempts");
     await tick("Climb 1, V5, Sent");
@@ -229,7 +229,7 @@ describe("Climbing inside the workout", () => {
   it("runs a time set's clock only from its own button", async () => {
     await mount(runOf("ARC", { sets: 2, onS: 60, setRestS: 30 }));
     await add("V1");
-    expect(byLabel("On the wall 0:00 of 1:00")).not.toBeNull();
+    expect(byLabel("0:00 of 1:00")).not.toBeNull();
     await click("Start");
     expect(button("Pause")).toBeDefined();
     await click("Pause");

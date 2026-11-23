@@ -31,7 +31,6 @@ export const tally = {
   "tally.lapOf": "Lap {set} of {sets}",
   "tally.allSetsDone": "All sets done",
   "tally.lapLabel": "Lap {lap}",
-  "tally.onTheWall": "On the wall",
   "tally.addLap": "Add lap",
   "tally.startRest": "Start rest",
   "tally.removeLapOf": "Remove lap {lap}",

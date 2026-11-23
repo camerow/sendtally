@@ -1,3 +1,4 @@
+import { countText } from "../hang/format";
 import { clock, type Dose, type SetClimb, type SetDone } from "@sendtally/core/hang";
 import type { TallyMeasure } from "../exercises/types";
 import { t } from "../i18n";
@@ -66,12 +67,12 @@ export const wallChip = (set: SetDone): string =>
     t("common.climbCount", { count: set.climbs?.length ?? 0 }),
   ].join(" · ");
 
-/** "40:00 on the wall · Green circuit": the time over every set, and the circuits climbed. */
+/** "40:00 min · Green circuit": the time over every set, and the circuits climbed. */
 export function wallLine(sets: readonly SetDone[]): string {
   const seconds = sets.reduce((n, s) => n + (s.onS ?? 0), 0);
   const circuits = [...new Set(climbsOf(sets).flatMap((c) => c.circuit?.label ?? []))];
   return [
-    t("activities.onTheWall", { time: clock(seconds, true) }),
+    t("activities.wallTime", { time: clock(seconds, true) }),
     ...circuits.map((name) => t("activities.circuitNamed", { name })),
   ].join(" · ");
 }
@@ -80,20 +81,34 @@ export function wallLine(sets: readonly SetDone[]): string {
 export const climbingSetText = (set: SetDone): string =>
   set.onS !== undefined ? wallChip(set) : climbsLine([set]);
 
-/** "4 sets of 4 climbs", "2 × 20:00 on the wall", or "1 set" when a set runs until Done. */
+/** "45:00 min" for one set of time on the wall, and "2 × 45:00 min" or "1-2 × 45:00 min" for more. */
+export function wallDoseLine(dose: Pick<Dose, "sets" | "setsMax" | "onS">): string {
+  const time = t("activities.wallTime", { time: clock(dose.onS ?? 0, true) });
+  return dose.sets === 1 && dose.setsMax === undefined
+    ? time
+    : `${countText(dose.sets, dose.setsMax)} × ${time}`;
+}
+
+/** "4 sets of 4 climbs", "2 × 20:00 min", or "1 set" when a set runs until the next one starts. */
 export function climbingDoseLine(dose: Dose, measure: TallyMeasure): string {
   if (measure === "laps") {
     const plan = lapPlanOf(dose);
     return t("activities.lapsOf", {
-      count: dose.sets,
+      count: dose.setsMax ?? dose.sets,
+      n: countText(dose.sets, dose.setsMax),
       amount: enduranceAmountLabel({ ...plan, laps: [] }, plan.target),
     });
   }
-  if (measure === "wallTime")
-    return `${dose.sets} × ${t("activities.onTheWall", { time: clock(dose.onS ?? 0, true) })}`;
+  if (measure === "wallTime") return wallDoseLine(dose);
   return dose.reps === undefined
-    ? t("activities.setCount", { count: dose.sets })
-    : t("activities.setsOfClimbs", { count: dose.sets, climbs: dose.reps });
+    ? dose.setsMax === undefined
+      ? t("activities.setCount", { count: dose.sets })
+      : t("workouts.targetSets", { count: dose.setsMax, n: countText(dose.sets, dose.setsMax) })
+    : t("activities.setsOfClimbs", {
+        count: dose.setsMax ?? dose.sets,
+        n: countText(dose.sets, dose.setsMax),
+        climbs: countText(dose.reps, dose.repsMax),
+      });
 }
 
 /** "Last time: 16 climbs · 13 sent · top V4", or null before there was a last time. */

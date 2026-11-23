@@ -37,6 +37,7 @@ export const gyms = {
   "gyms.setupProgress": "Configuration {done}/{total}",
   "gyms.gym": "Salle",
   "gyms.noGym": "Aucune salle",
+  "gyms.selectGym": "Choisir une salle",
   "gyms.circuit": "Circuit",
   "gyms.wall": "Mur - ajoutez des murs dans les réglages",
   "gyms.noWall": "N’importe où",

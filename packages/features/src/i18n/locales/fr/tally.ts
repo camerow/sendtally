@@ -31,7 +31,6 @@ export const tally = {
   "tally.lapOf": "Boucle {set} sur {sets}",
   "tally.allSetsDone": "Toutes les séries faites",
   "tally.lapLabel": "Tour {lap}",
-  "tally.onTheWall": "Sur le mur",
   "tally.addLap": "Ajouter un tour",
   "tally.startRest": "Lancer le repos",
   "tally.removeLapOf": "Retirer le tour {lap}",

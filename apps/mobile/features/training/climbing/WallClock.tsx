@@ -35,12 +35,11 @@ export function WallClock({
   }, [running, left, play]);
   const clock = elapsedClock(targetS - left);
   const of = t("activities.holdOf", { time: elapsedClock(targetS) });
-  const word = t("tally.onTheWall");
   return (
     <ClockRow
       share={targetS > 0 ? (targetS - left) / targetS : 0}
-      accessibilityLabel={`${word} ${clock} ${of}`}
-      word={word}
+      accessibilityLabel={`${clock} ${of}`}
+      word={null}
       clock={clock}
       of={of}
     >

@@ -31,7 +31,6 @@ export const tally = {
   "tally.lapOf": "Vuelta {set} de {sets}",
   "tally.allSetsDone": "Todas las series hechas",
   "tally.lapLabel": "Vuelta {lap}",
-  "tally.onTheWall": "En la pared",
   "tally.addLap": "Añadir vuelta",
   "tally.startRest": "Empezar descanso",
   "tally.removeLapOf": "Quitar la vuelta {lap}",

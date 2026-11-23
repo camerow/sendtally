@@ -18,7 +18,7 @@ import {
   type WorkoutKind,
   FOCI,
 } from "@sendtally/core/hang";
-import { climbingDoseLine } from "../activities/climbing";
+import { climbingDoseLine, wallDoseLine } from "../activities/climbing";
 import { tallyMeasuresOf } from "../exercises/measure";
 import type { TallyMeasure } from "../exercises/types";
 import { weightText } from "../hang/weights";
@@ -191,12 +191,10 @@ export function targetText(
         : dose.reps === undefined
           ? null
           : counted("workouts.targetMoves", dose.reps);
-    if (kind === "wallTime")
-      return dose.onS === undefined
-        ? null
-        : t("activities.onTheWall", { time: clock(dose.onS, true) });
     if (kind === "climbs" || kind === "climbing")
-      return dose.reps === undefined ? null : counted("workouts.targetClimbs", dose.reps);
+      return dose.reps === undefined
+        ? null
+        : counted("workouts.targetClimbs", dose.reps, dose.repsMax);
     if (kind === "hangboard") {
       const hangs = counted("workouts.targetHangs", dose.reps ?? 1);
       const on = dose.onS === undefined ? null : time(dose.onS);
@@ -221,7 +219,14 @@ export function targetText(
     dose.sets,
     dose.setsMax
   );
-  const main = round ? per : per === null ? sets : `${sets} × ${per}`;
+  const main =
+    kind === "wallTime" && dose.onS !== undefined
+      ? wallDoseLine(dose)
+      : round
+        ? per
+        : per === null
+          ? sets
+          : `${sets} × ${per}`;
   return {
     work: [main, load].filter((x) => x !== null).join(" · "),
     rpe: dose.targetRpe === sessionRpe ? undefined : exerciseTargetLine(dose),

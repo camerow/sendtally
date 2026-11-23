@@ -82,6 +82,6 @@ describe("the sets a climbing card has behind it", () => {
 describe("where a climbing workout is climbed", () => {
   it("names the gym it is at, or says there is none", () => {
     expect(gymLine("Crux Boulders")).toBe("At Crux Boulders");
-    expect(gymLine(undefined)).toBe("No gym");
+    expect(gymLine(undefined)).toBe("Select a gym");
   });
 });
