@@ -1,7 +1,9 @@
 import React from "react";
 import type { SessionItem, WeightUnit } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { setClimbOf, wallLeft, type Tally } from "@sendtally/features/log-session";
+import { wallLeft, type ClimbDraft, type Tally } from "@sendtally/features/log-session";
+import { elapsedClock } from "@sendtally/features/sessions";
+import { useDisplayScales } from "@sendtally/features/settings";
 import {
   exerciseName,
   targetText,
@@ -16,7 +18,7 @@ import { onControl } from "../components/SetRow";
 import { SET_COLUMNS } from "../components/setColumns";
 import { useSessionTarget } from "../components/sessionTarget";
 import { RestPreview } from "../players/RestPreview";
-import { ClimbReadRow } from "./ClimbReadRow";
+import { climbGradeText } from "./ClimbGrade";
 import { ClimbRow } from "./ClimbRow";
 import { GradePicker } from "./GradePicker";
 import { WallClock } from "./WallClock";
@@ -26,8 +28,16 @@ export type ClimbCardProps = {
   plan: ClimbPlan;
   rows: readonly ClimbSet[];
   unit: WeightUnit;
-  /** The tally, while it is on this card; its current set takes the grades picked. */
-  tally: Tally | null;
+  /** The workout tally: every climb's row changes on it, whichever card it is on. */
+  tally: Tally;
+  /** The grade picker is on this card, under its picked set. */
+  picking: boolean;
+  /** A press on the card outside its controls moves the grade picker to it. */
+  onPress: () => void;
+  onPressSet: (set: number) => void;
+  onAddSet: () => void;
+  /** A climb taken out, for its Undo, with its grade as the climber reads it. */
+  onRemoved: (climb: ClimbDraft, grade: string) => void;
   /** The rest a set's end started, under it while it runs. */
   restUnder: (set: number) => React.ReactNode;
   about?: About | undefined;
@@ -52,13 +62,18 @@ function Headings(): React.ReactElement {
   );
 }
 
-/** A climbing exercise: a row per climb in each set, the grades under the set being climbed. */
+/** A climbing exercise: a row per climb in every set, the grades under the set they go to. */
 export function ClimbCard({
   item,
   plan,
   rows,
   unit,
   tally,
+  picking,
+  onPress,
+  onPressSet,
+  onAddSet,
+  onRemoved,
   restUnder,
   about,
   history,
@@ -68,12 +83,13 @@ export function ClimbCard({
 }: ClimbCardProps): React.ReactElement {
   const sessionRpe = useSessionTarget();
   const restS = item.dose.setRestS ?? 0;
-  const ex = tally?.draft?.exercise;
-  const left = ex === undefined ? null : wallLeft(ex, tally?.now ?? new Date());
-  const selected = tally?.selection?.kind === "row" ? tally.selection.key : null;
-  const clear = tally?.clearSelection;
+  const ex = picking ? tally.draft?.exercise : undefined;
+  const left = ex === undefined ? null : wallLeft(ex, tally.now);
+  const selected = tally.selection?.kind === "row" ? tally.selection.key : null;
+  const scales = useDisplayScales();
+  const clear = tally.clearSelection;
   React.useEffect(() => {
-    if (selected === null || clear === undefined) return;
+    if (selected === null) return;
     const onClick = (e: MouseEvent): void => {
       if (e.target instanceof Element && !onControl(e.target) && !e.target.closest(".set-item"))
         clear();
@@ -81,46 +97,56 @@ export function ClimbCard({
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
   }, [selected, clear]);
+  const headed = rows.find((r) => r.climbs.length > 0)?.set;
+  const name = exerciseName(item.exercise);
   return (
-    <ExerciseBlock
-      head={
-        <ExerciseHead
-          name={exerciseName(item.exercise)}
-          target={targetText(item.dose, plan.onS === undefined ? "climbs" : "wallTime", unit, {
-            sessionRpe,
-          })}
-          about={about}
-          {...(history !== undefined && { history })}
-          onFold={onFold}
-          menu={menu}
-        />
-      }
+    <div
+      className="climb-card"
+      onClick={(e) => {
+        if (!onControl(e.target)) onPress();
+      }}
     >
-      {rows.map((row, i) => {
-        const live = tally !== null && row.state === "current";
-        const rest =
-          restUnder(row.set - 1) ||
-          (i < rows.length - 1 && restS > 0 && <RestPreview seconds={restS} />);
-        return (
-          <React.Fragment key={row.set}>
-            <div className="climb-set-head">
-              <span className="train-label">{t("tally.setLabel", { set: row.set })}</span>
-              {live ? (
-                <button
-                  type="button"
-                  className="text-button climb-end-set"
-                  aria-label={t("workouts.endSet", { set: row.set })}
-                  onClick={tally.endSet}
-                >
-                  {t("tally.endSet")}
-                </button>
-              ) : (
-                row.state === "done" && <span className="climb-set-done">{t("common.done")}</span>
-              )}
-            </div>
-            {live ? (
+      <ExerciseBlock
+        head={
+          <ExerciseHead
+            name={name}
+            target={targetText(item.dose, plan.onS === undefined ? "climbs" : "wallTime", unit, {
+              sessionRpe,
+            })}
+            about={about}
+            {...(history !== undefined && { history })}
+            onFold={onFold}
+            menu={menu}
+          />
+        }
+        add={{
+          label: t("activities.addSet"),
+          accessibilityLabel: t("activities.addSetTo", { exercise: name }),
+          onPress: onAddSet,
+        }}
+      >
+        {rows.map((row, i) => {
+          const rest =
+            restUnder(row.set - 1) ||
+            (i < rows.length - 1 && restS > 0 && <RestPreview seconds={restS} />);
+          return (
+            <React.Fragment key={row.set}>
+              <button
+                type="button"
+                className="climb-set-head"
+                aria-label={t("workouts.climbInSet", { set: row.set })}
+                onClick={() => onPressSet(row.set)}
+              >
+                <span className="train-label">{t("tally.setLabel", { set: row.set })}</span>
+                {row.state === "done" &&
+                  (row.onS === null ? (
+                    <span className="climb-set-done">{t("common.done")}</span>
+                  ) : (
+                    <span className="climb-set-time">{`${elapsedClock(row.onS)} · ${t("common.done")}`}</span>
+                  ))}
+              </button>
               <div>
-                {row.climbs.length > 0 && <Headings />}
+                {row.set === headed && <Headings />}
                 {row.climbs.map((c, n) => (
                   <ClimbRow
                     key={c.key}
@@ -128,33 +154,33 @@ export function ClimbCard({
                     climb={c}
                     selected={selected === c.key}
                     onSelect={() => tally.toggleRow(c.key)}
-                    onRemove={() => tally.remove(c.key)}
+                    onRemove={() => {
+                      tally.remove(c.key);
+                      onRemoved(c, climbGradeText(c, scales));
+                    }}
                     onTries={(tries) => tally.setTries(c.key, tries)}
                     onFlip={() => tally.flip(c.key)}
                     onEdit={() => onEdit(c.key)}
                   />
                 ))}
-                <GradePicker tally={tally} />
+                {picking && row.picked && <GradePicker tally={tally} />}
               </div>
-            ) : (
-              <div>
-                {row.climbs.map((c, n) => (
-                  <ClimbReadRow key={c.key} position={n + 1} climb={setClimbOf(c)} />
-                ))}
-              </div>
-            )}
-            {live && plan.onS !== undefined && left !== null && (
-              <WallClock
-                targetS={plan.onS}
-                left={left}
-                running={ex?.setStartedAt !== undefined}
-                onToggle={tally.toggleWall}
-              />
-            )}
-            {rest}
-          </React.Fragment>
-        );
-      })}
-    </ExerciseBlock>
+              {ex !== undefined &&
+                row.state === "current" &&
+                plan.onS !== undefined &&
+                left !== null && (
+                  <WallClock
+                    targetS={plan.onS}
+                    left={left}
+                    running={ex.setStartedAt !== undefined}
+                    onToggle={tally.toggleWall}
+                  />
+                )}
+              {rest}
+            </React.Fragment>
+          );
+        })}
+      </ExerciseBlock>
+    </div>
   );
 }

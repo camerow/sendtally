@@ -1,168 +1,115 @@
 import React from "react";
-import { t } from "../i18n";
-import { elapsedClock } from "../sessions/years";
 import { MORE_REST_S, type Rest } from "../workouts/restCountdown";
 import type { RestClock } from "../workouts/useLiveRun";
-import { enduranceLapValueLabel, FELL_AFTER_START, isCleanLap } from "./endurance";
 import {
-  allLapsDone,
-  lapClockLabel,
   lapElapsed,
-  lapLine,
   lapsClimb,
-  lapRemovable,
-  lapsPlanned,
-  withLapAdded,
-  withLapRemoved,
+  withLapChanged,
   withLapLogged,
+  withLapRemoved,
   withLapRest,
   withLapStarted,
+  withLapUnlogged,
 } from "./exerciseLaps";
-import type { ClimbDraft, LogSessionDraft } from "./types";
+import { withSetAdded } from "./exerciseTally";
+import type { LogSessionDraft } from "./types";
 import type { LiveSession } from "./useLiveSession";
 
-/** One lap done: how far it got, as a share of its target, and the rest it took after. */
-export type LapRow = {
-  label: string;
-  value: string;
-  share: number;
-  clean: boolean;
-  /** "1:30 rest", once its rest is over. */
-  took: string;
-};
-
 export type LapsTally = {
-  /** "Lap 3 of 5" style clock and the line under it. */
-  clock: string;
-  line: string;
-  /** The circuit climb the laps log on, which the climb editor opens. */
-  circuit: ClimbDraft | undefined;
-  rows: LapRow[];
-  /** The laps asked for, or more once + Add lap went past them. */
-  planned: number;
+  /** How far each lap logged got, in moves or seconds, oldest first. */
+  laps: number[];
+  timed: boolean;
+  /** Seconds the lap on the wall has run, none before its row is first pressed. */
+  elapsed: number | null;
   /** The rest after the last lap: running, waiting for play, or none. */
   rest: { running: Rest; left: number } | { seconds: number } | null;
-  /** The lap to go, none once all are done: Start for a time lap not yet going, else what it shows. */
-  next: { label: string; startable: boolean; text: string } | null;
-  timed: boolean;
-  done: boolean;
-  /** Fell and Sent are off. */
-  off: boolean;
-  sent: () => void;
-  /** Ends the lap where it fell; true when the climber should say how far it got. */
-  fell: () => boolean;
-  /** Ends a moves lap as an attempt that got this far. */
-  attemptAt: (moves: number) => void;
+  /** Logs the lap on the wall: this far in moves, or a time lap at its clock, its target before it starts. */
+  tick: (moves: number) => void;
+  /** A time lap's clock starts with the first press on its row. */
   startLap: () => void;
+  change: (lap: number, value: number) => void;
+  untick: (lap: number) => void;
   startRest: () => void;
   moreRest: () => void;
   skipRest: () => void;
   addLap: () => void;
-  /** Takes back a lap that holds nothing yet, none once one is left or every lap is done. */
+  /** Takes back a lap that holds nothing yet, none once one is left. */
   removeLap: (() => void) | null;
 };
 
 const restKey = (lap: number): string => `lap-${lap}`;
 
 /**
- * A workout's circuit laps as they happen, one line per lap like sets: how far each got and the
- * rest after it, which starts on play. A moves lap ends on Sent, or Fell and how far it got; a
- * time lap counts on the wall and goes clean at its target, Fell keeping the time so far.
+ * A circuit item's laps, on the tally or off it: a row per lap ticked off the wall, moves preset to
+ * the target, and the rest after the last, which starts on play. `on` puts the tally on the item.
  */
 export function useLapsTally(
-  draft: LogSessionDraft,
+  draft: LogSessionDraft | null,
+  item: number,
+  /** The laps it asks for now, after any Add lap or −. */
+  planned: number,
+  on: () => LogSessionDraft,
   live: LiveSession,
   rest: RestClock,
   now: Date
-): LapsTally | null {
-  const ex = draft.exercise;
+): LapsTally {
+  const ex = draft?.exercise?.item === item ? draft.exercise : undefined;
   const timed = ex?.lap?.unit === "seconds";
   const elapsed = ex === undefined ? null : lapElapsed(ex, now);
   const target = ex?.lap?.target ?? 0;
   const timeUp = timed && elapsed !== null && elapsed >= target;
   React.useEffect(() => {
-    if (timeUp) live.replace(withLapLogged(draft, target));
+    if (timeUp && draft !== null) live.replace(withLapLogged(draft, target));
   }, [timeUp, draft, live, target]);
 
-  if (ex?.lap === undefined) return null;
-  const circuit = lapsClimb(draft.climbs, ex.item);
-  const e = circuit?.endurance;
-  const laps = e?.laps ?? [];
-  const done = allLapsDone(draft);
+  const laps = (draft === null ? undefined : lapsClimb(draft.climbs, item))?.endurance?.laps ?? [];
   const last = laps.length - 1;
-  const restS = ex.restS;
+  const restS = ex?.restS ?? 0;
   const running = rest.rest !== null && rest.rest.at === restKey(last) ? rest.rest : null;
-
   /** A rest still running when the next lap goes keeps the time it took so far. */
   const endRest = (d: LogSessionDraft): LogSessionDraft => {
     if (running === null) return d;
     rest.skip();
     return withLapRest(d, last, running.seconds - rest.left);
   };
-  const log = (value: number): void => live.replace(withLapLogged(endRest(draft), value));
+  const edit = (f: (d: LogSessionDraft) => LogSessionDraft): void => live.replace(f(on()));
 
   return {
-    clock: lapClockLabel(draft),
-    line: lapLine(draft),
-    circuit,
-    planned: lapsPlanned(draft),
-    rows:
-      e === undefined
-        ? []
-        : laps.map((lap, i) => {
-            const took = ex.rests?.[i];
-            return {
-              label: t("tally.lapLabel", { lap: i + 1 }),
-              value: enduranceLapValueLabel(e, i),
-              share: Math.min(lap, e.target) / e.target,
-              clean: isCleanLap(e, i),
-              took:
-                took === undefined || (i === last && running !== null)
-                  ? ""
-                  : t("tally.restTook", { time: elapsedClock(took) }),
-            };
-          }),
+    laps,
+    timed,
+    elapsed,
     rest:
-      done || laps.length === 0 || restS === 0
+      ex === undefined || laps.length === 0 || restS === 0
         ? null
         : running !== null
           ? { running, left: rest.left }
-          : ex.rests?.[last] === undefined
+          : ex.rests?.[last] === undefined && laps.length < planned
             ? { seconds: restS }
             : null,
-    next: done
-      ? null
-      : {
-          label: t("tally.lapLabel", { lap: laps.length + 1 }),
-          startable: timed && elapsed === null,
-          text: timed
-            ? `${elapsedClock(elapsed ?? 0)} / ${elapsedClock(target)}`
-            : t("tally.onTheWall"),
-        },
-    timed,
-    done,
-    off: done || (timed && elapsed === null),
-    sent: () => log(target),
-    fell: () => {
-      if (timed) {
-        log(elapsed ?? 0);
-        return false;
-      }
-      log(FELL_AFTER_START);
-      return true;
-    },
-    attemptAt: log,
-    startLap: () => live.replace(withLapStarted(endRest(draft), new Date())),
+    tick: (moves) =>
+      edit((d) => {
+        const lapS = d.exercise === undefined ? null : lapElapsed(d.exercise, new Date());
+        const unit = d.exercise?.lap;
+        const value = unit?.unit === "seconds" ? (lapS ?? unit.target) : moves;
+        return withLapLogged(endRest(d), value);
+      }),
+    startLap: () => edit((d) => withLapStarted(endRest(d), new Date())),
+    change: (lap, value) => edit((d) => withLapChanged(d, item, lap, value)),
+    untick: (lap) => edit((d) => withLapUnlogged(d, item, lap)),
     startRest: () => {
+      if (ex === undefined || draft === null) return;
       rest.tick(restKey(last), restS);
       live.replace(withLapRest(draft, last, restS));
     },
     moreRest: () => {
+      if (ex === undefined || draft === null) return;
       rest.more();
       live.replace(withLapRest(draft, last, (ex.rests?.[last] ?? restS) + MORE_REST_S));
     },
-    skipRest: () => live.replace(endRest(draft)),
-    addLap: () => live.replace(withLapAdded(draft)),
-    removeLap: lapRemovable(draft) ? () => live.replace(withLapRemoved(draft)) : null,
+    skipRest: () => {
+      if (draft !== null) live.replace(endRest(draft));
+    },
+    addLap: () => edit(withSetAdded),
+    removeLap: planned > 1 && laps.length < planned ? () => edit(withLapRemoved) : null,
   };
 }

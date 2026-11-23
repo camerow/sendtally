@@ -87,9 +87,7 @@ export type Tally = {
   now: Date;
   /** A logged climb pressed the wrong way, sent or attempt, turned the other way. */
   flip: (key: string) => void;
-  /** Ends the set being climbed now. */
-  endSet: () => void;
-  /** A workout set's row per climb: a grade picked adds a climb at it, one attempt, not sent. */
+  /** A workout set's row per climb: a grade picked adds a climb at it, one attempt, not sent; the climb that meets the set's target ends it. */
   add: (chip: string) => void;
   setTries: (key: string, tries: number) => void;
   remove: (key: string) => void;
@@ -125,7 +123,7 @@ export function useTally({
   const [onCircuit, setOnCircuit] = React.useState(true);
   const draft = live.stored?.draft ?? null;
   const set = draft?.exercise?.set;
-  const selection = held.set === set ? held.selection : null;
+  const selection = held.selection?.kind === "row" || held.set === set ? held.selection : null;
   const setSelection = (next: TallySelection, of: number | undefined = set): void =>
     setHeld({ set: of, selection: next });
 
@@ -253,15 +251,12 @@ export function useTally({
     flip: (key) => {
       if (draft !== null) live.replace(withClimbFlipped(draft, key));
     },
-    endSet: () => {
-      if (draft?.exercise !== undefined) live.replace(end(draft, new Date()));
-    },
     add: (chip) => {
       const choice = choiceOf(chip);
       if (draft === null || choice === null) return;
       rest.skip();
       setSelection(null);
-      live.replace(withSetClimbAdded(draft, choice));
+      live.replace(settle(withSetClimbAdded(draft, choice), new Date()));
     },
     setTries: (key, tries) => {
       if (draft !== null) live.replace(withClimbTries(draft, key, tries));

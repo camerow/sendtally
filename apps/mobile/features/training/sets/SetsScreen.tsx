@@ -11,7 +11,7 @@ import { climbingDoseLine, foldedLine, useActivities } from "@sendtally/features
 import { exerciseAbout } from "@sendtally/features/exercises";
 import { useGrips } from "@sendtally/features/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import { useLiveSession, withLapBack } from "@sendtally/features/log-session";
+import { useLiveSession, withClimbBack, withLapBack } from "@sendtally/features/log-session";
 import { useExercises } from "@sendtally/features/statistics";
 import {
   climbRows,
@@ -34,7 +34,6 @@ import { exerciseTallyStorage } from "../../../lib/exerciseTallyStorage";
 import { GymSheet } from "../../live-session/GymSheet";
 import { LiveClimbEditor } from "../../live-session/LiveClimbEditor";
 import { liveRun } from "../../live-session/liveRun";
-import { UndoSnackbar } from "../../live-session/UndoSnackbar";
 import { ClimbCard } from "../climbing/ClimbCard";
 import { LapsCard } from "../climbing/LapsCard";
 import { useWorkoutTally } from "../climbing/useWorkoutTally";
@@ -105,6 +104,10 @@ function SetsScreenBody({
     lap: number;
   } | null>(null);
   const draft = climbs.draft;
+  const draftNow = React.useRef(draft);
+  React.useEffect(() => {
+    draftNow.current = draft;
+  });
   const editingClimb = draft?.climbs.find((c) => c.key === editing) ?? null;
   const climbing = items.some((_, i) => player.tallyOf(i) !== null);
 
@@ -205,15 +208,6 @@ function SetsScreenBody({
     ...g.members.map((m) => removeRow(m, t("workouts.removeExercise", { name: nameOf(m) }))),
   ];
   const menu = (i: number): DetailMenuRow[] => [
-    ...(player.canClimbOn(i)
-      ? [
-          {
-            icon: "climb" as const,
-            title: t("workouts.climbNow"),
-            onPress: () => player.climbOn(i),
-          },
-        ]
-      : []),
     { icon: "skip", title: t("workouts.skipForNow"), onPress: () => player.skip(i) },
     ...(player.canMove(i, -1)
       ? [
@@ -361,9 +355,9 @@ function SetsScreenBody({
                       <LapsCard
                         item={i}
                         at={item}
-                        logged={player.climbedSets(i)}
-                        planned={player.lapsPlanned(i)}
+                        planned={player.setsPlanned(i)}
                         draft={draft}
+                        on={() => player.tallyOn(i)}
                         live={tally}
                         rest={rest}
                         now={climbs.now}
@@ -378,9 +372,23 @@ function SetsScreenBody({
                       <ClimbCard
                         item={item}
                         plan={player.climbPlan(i)}
-                        rows={climbRows(draft, i, player.climbPlan(i), climbs.now)}
+                        rows={climbRows(draft, i, player.climbPlan(i))}
                         unit={unit}
-                        tally={player.climbAt === i ? climbs : null}
+                        tally={climbs}
+                        picking={player.climbAt === i}
+                        onPress={() => player.climbOn(i)}
+                        onPressSet={(set) => player.pressSet(i, set)}
+                        onAddSet={() => player.addSet(i)}
+                        onRemoved={(c, grade) => {
+                          const at = draft?.climbs.indexOf(c) ?? 0;
+                          setRemoved({
+                            message: `${nameOf(i)} · ${t("tally.climbRemoved", { grade })}`,
+                            undo: () => {
+                              const now = draftNow.current;
+                              if (now !== null) tally.replace(withClimbBack(now, c, at));
+                            },
+                          });
+                        }}
                         restUnder={(set) => restAt(setKey({ item: i, set }))}
                         about={about}
                         onHistory={openExerciseHistory(mine, item.exercise)}
@@ -478,15 +486,6 @@ function SetsScreenBody({
               </Pressable>
             </SessionTargetContext.Provider>
           </KeypadScrollView>
-          {climbs.snack !== null && (
-            <UndoSnackbar
-              id={climbs.snack.id}
-              message={climbs.snack.message}
-              bottom={12}
-              onUndo={climbs.undo}
-              onExpire={climbs.clearSnack}
-            />
-          )}
           {lapRemoved !== null && (
             <Toast
               message={`${lapRemoved.name} · ${t("tally.lapRemoved", { lap: lapRemoved.lap })}`}

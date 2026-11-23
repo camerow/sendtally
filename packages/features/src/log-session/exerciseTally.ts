@@ -17,12 +17,15 @@ export const nextSet = (climbs: readonly ClimbDraft[], item: number): number =>
 
 export const allSetsDone = (ex: ExerciseTally): boolean => ex.set > ex.sets;
 
-/** The set a climb logged now goes in: the current one, or the last once every set is done. */
-export const climbingSet = (ex: ExerciseTally): number => Math.min(ex.set, ex.sets);
+/** The set a climb logged now goes in: an ended set pressed again, the current one, or the last once every set is done. */
+export const climbingSet = (ex: ExerciseTally): number => ex.pick ?? Math.min(ex.set, ex.sets);
 
-/** The climbs of the set being climbed. */
+const climbsIn = (draft: LogSessionDraft, item: number, set: number): ClimbDraft[] =>
+  climbsOfItem(draft.climbs, item).filter((c) => setOf(c) === set);
+
+/** The climbs of the set the grades picked go to. */
 export const setClimbs = (draft: LogSessionDraft, ex: ExerciseTally): ClimbDraft[] =>
-  climbsOfItem(draft.climbs, ex.item).filter((c) => setOf(c) === climbingSet(ex));
+  climbsIn(draft, ex.item, climbingSet(ex));
 
 /**
  * The tally scoped to one exercise, on the set it resumes at, its clock from now. Climbs
@@ -117,7 +120,7 @@ export function timeUp(draft: LogSessionDraft, now: Date): boolean {
 export function setOver(draft: LogSessionDraft, now: Date): boolean {
   const ex = draft.exercise;
   if (ex === undefined || allSetsDone(ex)) return false;
-  if (ex.climbs !== undefined) return setClimbs(draft, ex).length >= ex.climbs;
+  if (ex.climbs !== undefined) return climbsIn(draft, ex.item, ex.set).length >= ex.climbs;
   return timeUp(draft, now);
 }
 
@@ -128,6 +131,64 @@ function wallTimesAt(draft: LogSessionDraft, now: Date): WallTime[] | undefined 
   if (ex?.onS === undefined || !wallRan(ex) || left === null) return draft.wallTimes;
   return [...(draft.wallTimes ?? []), { item: ex.item, set: ex.set, onS: ex.onS - left }];
 }
+
+/**
+ * A set's line pressed: an ended set takes the grades picked, the set being climbed takes them
+ * back, and a set still to come ends every set before it, the rest starting after the last.
+ */
+export function withSetPressed(
+  draft: LogSessionDraft,
+  set: number,
+  now: Date
+): { draft: LogSessionDraft; rest: { set: number; seconds: number } | null } {
+  const ex = draft.exercise;
+  if (ex === undefined) return { draft, rest: null };
+  const { pick: _pick, ...unpicked } = ex;
+  if (set < Math.min(ex.set, ex.sets))
+    return { draft: { ...draft, exercise: { ...ex, pick: set } }, rest: null };
+  let next: LogSessionDraft = { ...draft, exercise: unpicked };
+  let rest: { set: number; seconds: number } | null = null;
+  while ((next.exercise?.set ?? set) < set) {
+    const ended = next.exercise?.set ?? set;
+    const out = withSetEnded(next, now);
+    next = out.draft;
+    rest = out.restS > 0 ? { set: ended, seconds: out.restS } : null;
+  }
+  return { draft: next, rest };
+}
+
+/** Undo of a climb's Remove: it goes back where it was. */
+export function withClimbBack(
+  draft: LogSessionDraft,
+  climb: ClimbDraft,
+  at: number
+): LogSessionDraft {
+  const climbs = [...draft.climbs];
+  climbs.splice(Math.min(at, climbs.length), 0, climb);
+  return { ...draft, climbs };
+}
+
+/** Add set or Add lap: one more than the exercise asks for or has done, which the tally goes on to. */
+export function withSetAdded(draft: LogSessionDraft): LogSessionDraft {
+  const ex = draft.exercise;
+  if (ex === undefined) return draft;
+  const { pick: _pick, ...rest } = ex;
+  const done =
+    ex.lap === undefined
+      ? nextSet(draft.climbs, ex.item) - 1
+      : (draft.climbs.find((c) => c.item === ex.item && c.endurance !== undefined)?.endurance?.laps
+          .length ?? 0);
+  const sets = Math.max(ex.sets, done) + 1;
+  return {
+    ...draft,
+    setsPlanned: { ...draft.setsPlanned, [ex.item]: sets },
+    exercise: { ...rest, sets },
+  };
+}
+
+/** The sets or laps a climbing item asks for now: as changed during the run, else as the workout asks. */
+export const setsPlannedFor = (draft: LogSessionDraft, item: number, asked: number): number =>
+  draft.setsPlanned?.[item] ?? asked;
 
 /** The set after, and the rest before it: none after the last. */
 export function withSetEnded(

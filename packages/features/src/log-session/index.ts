@@ -138,24 +138,27 @@ export {
   withExerciseDone,
   withSetEnded,
   withWallStarted,
+  withSetPressed,
+  climbingSet,
+  withSetAdded,
+  withClimbBack,
+  setsPlannedFor,
   type ExerciseTallyStart,
 } from "./exerciseTally";
 export {
   allLapsDone,
-  lapClockLabel,
   lapElapsed,
-  lapLine,
   lapsClimb,
   lapsDone,
   lapSets,
   lapsPlanned,
-  lapsPlannedFor,
-  withLapAdded,
   withLapBack,
   withLapRemoved,
   withLapLogged,
   withLapRest,
   withLapStarted,
+  withLapChanged,
+  withLapUnlogged,
   type LapPlan,
 } from "./exerciseLaps";
 export type {
@@ -197,7 +200,7 @@ export {
   type TallyStep,
   type TallyUndo,
 } from "./tallySelection";
-export { useLapsTally, type LapRow, type LapsTally } from "./useLapsTally";
+export { useLapsTally, type LapsTally } from "./useLapsTally";
 export {
   useTally,
   type Tally,

@@ -14,7 +14,10 @@ import {
   withExerciseClimb,
   withExerciseDone,
   withSetClimbAdded,
+  withClimbBack,
+  withSetAdded,
   withSetEnded,
+  withSetPressed,
   withWallStarted,
   withWallToggled,
   type ExerciseTallyStart,
@@ -199,5 +202,40 @@ describe("exercise tally", () => {
   it("logs the planned time for a set with no time on the wall kept, as a draft from before did", () => {
     const draft = climb(startExercise(null, arc, NOW), "V1");
     expect(exerciseSets(draft, 1, 1200, at(60)).map((s) => s.onS)).toEqual([1200]);
+  });
+
+  it("sends the grades to an ended set pressed again, never ending the set being climbed", () => {
+    let draft = climb(
+      climb(climb(climb(startExercise(null, fourByFours, NOW), "V4"), "V4"), "V4"),
+      "V4"
+    );
+    draft = withSetEnded(draft, NOW).draft;
+    draft = withSetPressed(draft, 1, NOW).draft;
+    draft = climb(draft, "V5");
+    expect(draft.climbs.map((c) => c.set)).toEqual([1, 1, 1, 1, 1]);
+    expect(setOver(draft, NOW)).toBe(false);
+    expect(withSetPressed(draft, 2, NOW).draft.exercise?.pick).toBeUndefined();
+  });
+
+  it("ends every set before a set to come whose line is pressed, resting after the last", () => {
+    const out = withSetPressed(climb(startExercise(null, fourByFours, NOW), "V4"), 3, NOW);
+    expect(out.draft.exercise).toMatchObject({ set: 3 });
+    expect(out.rest).toEqual({ set: 2, seconds: 240 });
+  });
+
+  it("adds a set past the plan, which the tally goes on to once every set is done", () => {
+    let draft = startExercise(null, { ...fourByFours, sets: 1, climbs: 1 }, NOW);
+    draft = withSetEnded(climb(draft, "V4"), NOW).draft;
+    expect(allSetsDone(draft.exercise!)).toBe(true);
+    const more = withSetAdded(draft);
+    expect(more.exercise).toMatchObject({ set: 2, sets: 2 });
+    expect(more.setsPlanned).toEqual({ 0: 2 });
+  });
+
+  it("puts a removed climb back where it was", () => {
+    const draft = climb(climb(startExercise(null, fourByFours, NOW), "V4"), "V5");
+    const [first, second] = draft.climbs;
+    const back = withClimbBack({ ...draft, climbs: [second!] }, first!, 0);
+    expect(back.climbs.map((c) => c.grade)).toEqual(["V4", "V5"]);
   });
 });

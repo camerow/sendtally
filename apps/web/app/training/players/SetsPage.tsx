@@ -4,7 +4,12 @@ import { useNavigate } from "react-router";
 import { restAfterItem } from "@sendtally/core/hang";
 import { climbingDoseLine, foldedLine, useActivities } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import { useLiveSession, withLapBack } from "@sendtally/features/log-session";
+import {
+  useLiveSession,
+  withClimbBack,
+  withLapBack,
+  type ClimbDraft,
+} from "@sendtally/features/log-session";
 import { exerciseAbout } from "@sendtally/features/exercises";
 import { useGrips } from "@sendtally/features/hang";
 import { useExercises } from "@sendtally/features/statistics";
@@ -97,22 +102,16 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
   const [editing, setEditing] = React.useState<string | null>(null);
   const [pickingGym, setPickingGym] = React.useState(false);
   const editingClimb = draft?.climbs.find((c) => c.key === editing) ?? null;
-  const undo = React.useRef(climbs.undo);
   const lapBack = React.useRef((_item: number) => {});
+  const climbBack = React.useRef((_climb: ClimbDraft, _at: number) => {});
   React.useEffect(() => {
-    undo.current = climbs.undo;
     lapBack.current = (item) => {
       if (draft !== null) tally.replace(withLapBack(draft, item));
     };
+    climbBack.current = (climb, at) => {
+      if (draft !== null) tally.replace(withClimbBack(draft, climb, at));
+    };
   });
-  const snack = climbs.snack;
-  React.useEffect(() => {
-    if (snack !== null)
-      toast.show({
-        message: snack.message,
-        action: { label: t("tally.undo"), onPress: () => undo.current() },
-      });
-  }, [snack, toast]);
   const [picking, setPicking] = React.useState(false);
   const [removing, setRemoving] = React.useState<number | null>(null);
   const removeSet = (at: SetAt): void => {
@@ -145,9 +144,6 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
     })),
   ];
   const menu = (i: number): MoreMenuItem[] => [
-    ...(player.canClimbOn(i)
-      ? [{ label: t("workouts.climbNow"), onSelect: () => player.climbOn(i) }]
-      : []),
     { label: t("workouts.skipForNow"), onSelect: () => player.skip(i) },
     ...(player.canMove(i, -1)
       ? [{ label: t("workouts.moveUpShort"), onSelect: () => player.move(i, -1) }]
@@ -341,9 +337,9 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                 <LapsCard
                   item={i}
                   at={item}
-                  logged={player.climbedSets(i)}
-                  planned={player.lapsPlanned(i)}
+                  planned={player.setsPlanned(i)}
                   draft={draft}
+                  on={() => player.tallyOn(i)}
                   live={tally}
                   rest={rest}
                   now={climbs.now}
@@ -363,9 +359,20 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                 <ClimbCard
                   item={item}
                   plan={player.climbPlan(i)}
-                  rows={climbRows(draft, i, player.climbPlan(i), climbs.now)}
+                  rows={climbRows(draft, i, player.climbPlan(i))}
                   unit={unit}
-                  tally={player.climbAt === i ? climbs : null}
+                  tally={climbs}
+                  picking={player.climbAt === i}
+                  onPress={() => player.climbOn(i)}
+                  onPressSet={(set) => player.pressSet(i, set)}
+                  onAddSet={() => player.addSet(i)}
+                  onRemoved={(c, grade) => {
+                    const at = draft?.climbs.indexOf(c) ?? 0;
+                    toast.show({
+                      message: `${nameOf(i)} · ${t("tally.climbRemoved", { grade })}`,
+                      action: { label: t("tally.undo"), onPress: () => climbBack.current(c, at) },
+                    });
+                  }}
                   restUnder={(set) => restAt(setKey({ item: i, set }))}
                   about={exerciseAbout(mine, item.exercise, nameOf(i))}
                   history={exerciseHistoryPath(mine, item.exercise)}

@@ -153,21 +153,24 @@ afterEach(() => {
 });
 
 describe("Climbing inside the workout", () => {
-  it("adds a row per climb, steps its attempts, ticks it sent, and ends the set only on End set", async () => {
-    await mount(runOf("4x4s", { sets: 2, reps: 2, setRestS: 240 }));
+  it("adds a row per climb, steps its attempts, ticks it sent, and ends the set at its last climb", async () => {
+    await mount(runOf("4x4s", { sets: 2, reps: 3, setRestS: 240 }));
     expect(texts(".player-gym")).toEqual(["No gym"]);
     await add("V5");
     for (let i = 0; i < 2; i++) await click("Increase Climb 1, V5 · Attempts");
     await tick("Climb 1, V5, Sent");
     expect(byLabel("Climb 1, V5, Sent")).toHaveProperty("checked", true);
-    for (const g of ["V6", "V4", "V6"]) await add(g);
-    expect(byLabel("Rest, 4:00 left")).toBeNull();
-    await click("Climb 4, V6");
+    await add("V6");
+    await click("Climb 2, V6");
     await click("Remove V6");
-    expect(byLabel("Climb 4, V6")).toBeNull();
-    await click("End set 1");
+    expect(byLabel("Climb 2, V6")).toBeNull();
+    expect(document.body.textContent).toContain("4x4s · V6 removed");
+    await click("Undo");
+    expect(byLabel("Climb 2, V6")).not.toBeNull();
+    expect(byLabel("Rest, 4:00 left")).toBeNull();
+    await add("V4");
     expect(byLabel("Rest, 4:00 left")).not.toBeNull();
-    expect(texts(".climb-line")).toContain("3 attempts · sent");
+    expect(button("End set 1")).toBeUndefined();
     const done = (await finished()) as { sets: { climbs: unknown[] }[] }[];
     expect(done[0]?.sets[0]?.climbs).toEqual([
       { grade: "V5", scale: "v", tries: 3, sent: true, style: "redpoint" },
@@ -233,27 +236,25 @@ describe("Climbing inside the workout", () => {
     expect(button("Start")).toBeDefined();
   });
 
-  it("logs a lap Sent, an Attempt lap as far as it got, and takes back a lap with its −", async () => {
+  it("ticks a lap at its moves, lowers them for a fall, and takes back a lap with its −", async () => {
     await mount(runOf("Circuit laps", { sets: 2, reps: 40 }));
-    await click("Sent");
-    await click("Attempt");
-    for (let i = 0; i < 3; i++) await click("More moves");
-    expect(texts(".lap-step-value")).toEqual(["3/40"]);
-    await click("Save");
+    await tick("Lap 1");
+    for (let i = 0; i < 3; i++) await click("Lap 2 · Fewer moves");
+    await tick("Lap 2");
     await act(async () =>
       container.querySelector<HTMLButtonElement>("button.player-card--folded")!.click()
     );
     await click("Add lap");
-    expect(texts(".climb-line")).toEqual(["40 moves", "3 moves"]);
-    await click("3");
-    await click("Remove lap 3");
-    expect(button("Remove lap 3")).toBeUndefined();
-    expect(document.body.textContent).toContain("Circuit laps · Lap 3 removed");
+    await click("Add lap");
+    await click("4");
+    await click("Remove lap 4");
+    expect(button("Remove lap 4")).toBeUndefined();
+    expect(document.body.textContent).toContain("Circuit laps · Lap 4 removed");
     await click("Undo");
-    await click("3");
-    await click("Remove lap 3");
+    await click("4");
+    await click("Remove lap 4");
     expect(await finished()).toEqual([
-      { item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 3 }] },
+      { item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 37 }] },
     ]);
   });
 
@@ -263,8 +264,8 @@ describe("Climbing inside the workout", () => {
       ...run,
       items: [...run.items, { exercise: "4x4s", dose: { sets: 1, reps: 2 } }],
     });
-    await click("Sent");
-    await click("Sent");
+    await tick("Lap 1");
+    await tick("Lap 2");
     await click("3");
     await click("Remove lap 3");
     expect(container.querySelector("button.player-card--folded")?.textContent).toContain(
@@ -272,44 +273,45 @@ describe("Climbing inside the workout", () => {
     );
     await click("Undo");
     expect(container.querySelector("button.player-card--folded")).toBeNull();
-    expect(texts(".climb-line")).toEqual(["40 moves", "40 moves"]);
+    expect(byLabel("Lap 2")).toHaveProperty("checked", true);
   });
 
-  it("never moves the tally from a click in a block; only the block's menu does", async () => {
+  it("moves the picker to a block clicked, and to a set from its line", async () => {
     const two = runOf("4x4s", { sets: 2, reps: 2 });
     await mount({ ...two, items: [...two.items, { exercise: "ARC", dose: { sets: 1, onS: 60 } }] });
     await add("V4");
     await act(async () => (block("ARC") as HTMLElement).click());
-    expect(block("ARC").querySelector(".climb-picker")).toBeNull();
-    expect(block("4x4s").querySelector(".climb-picker")).not.toBeNull();
-  });
-
-  it("offers Climb this now only on a block the tally is not on", async () => {
-    const one = runOf("4x4s", { sets: 1, reps: 1 });
-    await mount({ ...one, items: [...one.items, { exercise: "ARC", dose: { sets: 1, onS: 60 } }] });
-    await add("V4");
-    const menuOf = async (name: string): Promise<string[]> => {
+    expect(block("ARC").querySelector(".climb-picker")).not.toBeNull();
+    expect(block("4x4s").querySelector(".climb-picker")).toBeNull();
+    await act(async () =>
+      block("4x4s").querySelector<HTMLButtonElement>('[aria-label="Climb in set 2"]')!.click()
+    );
+    await add("V3");
+    expect(block("4x4s").textContent).toContain("Done");
+    const menu = async (): Promise<string[]> => {
       await act(async () =>
-        block(name)
+        block("ARC")
           .querySelector<HTMLButtonElement>('[aria-label="More for this exercise"]')!
           .click()
       );
       return [...document.querySelectorAll('[role="menuitem"]')].map((m) => m.textContent ?? "");
     };
-    expect(await menuOf("ARC")).toContain("Climb this now");
-    await click("Climb this now");
-    expect(await menuOf("ARC")).not.toContain("Climb this now");
+    expect(await menu()).not.toContain("Climb this now");
   });
 
-  it("moves the tally to a block from its menu", async () => {
-    const two = runOf("4x4s", { sets: 1, reps: 2 });
-    await mount({ ...two, items: [...two.items, { exercise: "ARC", dose: { sets: 1, onS: 60 } }] });
+  it("keeps every climb editable and the picker on hand once both exercises are done", async () => {
+    const one = runOf("4x4s", { sets: 1, reps: 1 });
+    await mount({
+      ...one,
+      items: [...one.items, { exercise: "ARC", dose: { sets: 1, reps: 1 } }],
+    });
+    await add("V3");
+    await add("V5");
     await act(async () =>
-      block("ARC")
-        .querySelector<HTMLButtonElement>('[aria-label="More for this exercise"]')!
-        .click()
+      container.querySelector<HTMLButtonElement>("button.player-card--folded")!.click()
     );
-    await click("Climb this now");
-    expect(block("ARC").querySelector(".climb-picker")).not.toBeNull();
+    await click("Increase Climb 1, V3 · Attempts");
+    await add("V4");
+    expect(byLabel("Climb 2, V4")).not.toBeNull();
   });
 });
