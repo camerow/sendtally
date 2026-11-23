@@ -26,8 +26,6 @@ export const tally = {
   "tally.record": "Registrar",
   "tally.stillGoing": "{name} sigue en marcha",
   "tally.setLabel": "Serie {set}",
-  "tally.lapCount_one": "{count} vuelta",
-  "tally.lapCount_other": "{count} vueltas",
   "tally.lapOf": "Vuelta {set} de {sets}",
   "tally.allSetsDone": "Todas las series hechas",
   "tally.lapLabel": "Vuelta {lap}",

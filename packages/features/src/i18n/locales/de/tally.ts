@@ -26,8 +26,6 @@ export const tally = {
   "tally.record": "Aufzeichnen",
   "tally.stillGoing": "{name} läuft noch",
   "tally.setLabel": "Satz {set}",
-  "tally.lapCount_one": "{count} Durchgang",
-  "tally.lapCount_other": "{count} Durchgänge",
   "tally.lapOf": "Durchgang {set} von {sets}",
   "tally.allSetsDone": "Alle Sätze geschafft",
   "tally.lapLabel": "Runde {lap}",

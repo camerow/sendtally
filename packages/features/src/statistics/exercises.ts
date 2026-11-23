@@ -20,11 +20,11 @@ import { gradeFormatter, type GradeFormatter, type GradeScales } from "../sessio
 
 /**
  * What an exercise's best set is judged on: the heaviest load, the longest hold, or the most
- * reps. A climbing exercise logged on the tally counts its sends, or its laps on the wall,
+ * reps. A climbing exercise logged on the tally counts its sends, or its climbs on the wall,
  * over the whole session, reads the average or highest grade it sent, or its volume score.
  */
 export type ExerciseMetric =
-  "load" | "seconds" | "reps" | "sends" | "laps" | "volume" | GradeMetric;
+  "load" | "seconds" | "reps" | "sends" | "climbs" | "volume" | GradeMetric;
 
 export type GradeMetric = "averageGrade" | "topGrade";
 
@@ -33,7 +33,7 @@ export const isGradeMetric = (metric: ExerciseMetric): metric is GradeMetric =>
 
 /** A metric counted over every set of a session rather than taken from its best one. */
 export const isClimbingMetric = (metric: ExerciseMetric): boolean =>
-  metric === "sends" || metric === "laps" || metric === "volume" || isGradeMetric(metric);
+  metric === "sends" || metric === "climbs" || metric === "volume" || isGradeMetric(metric);
 
 /** A metric whose session value is read over the whole session, never from its best set. */
 const isSessionMetric = (metric: ExerciseMetric): boolean =>
@@ -150,7 +150,7 @@ export function valueOf(set: SetDone, metric: ExerciseMetric): number | undefine
   if (metric === "load") return set.weightKg;
   if (metric === "seconds") return set.onS;
   if (metric === "sends") return set.climbs?.filter((c) => c.sent).length;
-  return metric === "laps" ? set.climbs?.length : set.reps;
+  return metric === "climbs" ? set.climbs?.length : set.reps;
 }
 
 /** The metric over every set: what a climbing exercise's session counts. */
@@ -212,7 +212,7 @@ function sessionOf(
 
 export function metricOf(sets: readonly SetDone[]): ExerciseMetric {
   if (sets.some((s) => s.climbs !== undefined))
-    return sets.some((s) => s.onS !== undefined) ? "laps" : "sends";
+    return sets.some((s) => s.onS !== undefined) ? "climbs" : "sends";
   if (sets.some((s) => s.weightKg !== undefined)) return "load";
   return sets.some((s) => s.onS !== undefined) ? "seconds" : "reps";
 }

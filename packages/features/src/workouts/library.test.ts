@@ -430,6 +430,7 @@ describe("targetText", () => {
       [{ sets: 3, setsMax: 4, reps: 4, repsMax: 6 }, "climbs", "kg"],
       "3-4 sets × 4-6 climbs",
     ],
+    ["timed laps", [{ sets: 3, onS: 270 }, "laps", "kg"], "3 laps × 4:30 min"],
     ["a range of laps", [{ sets: 3, setsMax: 4, reps: 30 }, "laps", "kg"], "3-4 laps × 30 moves"],
     ["laps of moves", [{ sets: 4, reps: 40 }, "laps", "kg"], "4 laps × 40 moves"],
     ["sets alone", [{ sets: 3 }, "strength", "kg"], "3 sets"],

@@ -18,7 +18,7 @@ import {
   type WorkoutKind,
   FOCI,
 } from "@sendtally/core/hang";
-import { climbingDoseLine, wallDoseLine } from "../activities/climbing";
+import { climbingDoseLine, wallDoseLine, wallTimeText } from "../activities/climbing";
 import { tallyMeasuresOf } from "../exercises/measure";
 import type { TallyMeasure } from "../exercises/types";
 import { weightText } from "../hang/weights";
@@ -187,7 +187,7 @@ export function targetText(
   const per = ((): string | null => {
     if (kind === "laps")
       return dose.onS !== undefined
-        ? clock(dose.onS, true)
+        ? wallTimeText(dose.onS)
         : dose.reps === undefined
           ? null
           : counted("workouts.targetMoves", dose.reps);

@@ -121,6 +121,6 @@ describe("climbing sets", () => {
     const laps = exerciseSeries([
       { ...first, done: [{ item: 0, exercise: "ARC", sets: [{ onS: 1200, climbs: [green] }] }] },
     ]);
-    expect(laps[0]?.metric).toBe("laps");
+    expect(laps[0]?.metric).toBe("climbs");
   });
 });
