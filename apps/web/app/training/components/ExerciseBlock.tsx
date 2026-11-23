@@ -1,5 +1,6 @@
 import React from "react";
 import { Icon } from "../../components/Icon";
+import { onControl } from "./SetRow";
 
 export type ExerciseBlockProps = {
   /** Its `ExerciseHead`, or a superset's head and member list. */
@@ -7,12 +8,28 @@ export type ExerciseBlockProps = {
   children?: React.ReactNode;
   /** Add set or Add round, under its rows. */
   add?: { label: string; accessibilityLabel?: string; onPress: () => void };
+  /** A click on the block outside its controls, such as a climbing card taking the grade picker. */
+  onPress?: () => void;
 };
 
 /** One exercise, or one superset, on every screen and for every kind: a frame, a head, its rows. */
-export function ExerciseBlock({ head, children, add }: ExerciseBlockProps): React.ReactElement {
+export function ExerciseBlock({
+  head,
+  children,
+  add,
+  onPress,
+}: ExerciseBlockProps): React.ReactElement {
   return (
-    <section className="exercise-block">
+    <section
+      className="exercise-block"
+      onClick={
+        onPress === undefined
+          ? undefined
+          : (e) => {
+              if (!onControl(e.target)) onPress();
+            }
+      }
+    >
       {head}
       {children}
       {add !== undefined && (

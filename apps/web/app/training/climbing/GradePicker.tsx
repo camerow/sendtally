@@ -1,6 +1,6 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
-import type { Tally } from "@sendtally/features/log-session";
+import type { GradePickerModel } from "@sendtally/features/workouts";
 import { ComboField } from "../../components/ComboField";
 import { GradeChips } from "../../components/GradeChips";
 import { Segmented } from "../../components/Segmented";
@@ -9,7 +9,7 @@ import { Segmented } from "../../components/Segmented";
  * Under the set being climbed: Boulder, Route or Circuit, and its grades; a grade adds a climb,
  * clicked as a chip or typed and picked in the grade field beside the switch.
  */
-export function GradePicker({ tally }: { tally: Tally }): React.ReactElement {
+export function GradePicker({ tally }: { tally: GradePickerModel }): React.ReactElement {
   const [typed, setTyped] = React.useState("");
   const query = typed.trim().toLowerCase();
   const items = tally.chips

@@ -285,3 +285,45 @@ describe("ActivityForm", () => {
     expect(rows()).toHaveLength(0);
   });
 });
+
+describe("a logged climbing exercise in review", () => {
+  it("edits as the run drew it: attempts, Sent, a grade picked, Add set", () => {
+    const climb = {
+      grade: "V3",
+      scale: "v" as const,
+      tries: 1,
+      sent: true,
+      style: "flash" as const,
+    };
+    mount(false, null, {
+      ...review,
+      kind: "climbing",
+      done: [{ item: 0, exercise: "Crimp crawls", sets: [{ climbs: [climb] }] }],
+    });
+    const button = (label: string): Element | undefined =>
+      [...container.querySelectorAll("button")].find(
+        (b) => b.getAttribute("aria-label") === label || b.textContent === label
+      );
+    click(button("Increase Climb 1, V3 · Attempts"));
+    click(button("V5"));
+    click(container.querySelector('[aria-label="Climb 2, V5, Sent"]'));
+    click(button("Add set"));
+    click(button("V4"));
+    save();
+    expect(saved()).toEqual([
+      {
+        item: 0,
+        exercise: "Crimp crawls",
+        sets: [
+          {
+            climbs: [
+              { grade: "V3", scale: "v", tries: 2, sent: true, style: "redpoint" },
+              { grade: "V5", scale: "v", tries: 1, sent: true, style: "flash" },
+            ],
+          },
+          { climbs: [{ grade: "V4", scale: "v", tries: 1, sent: false }] },
+        ],
+      },
+    ]);
+  });
+});

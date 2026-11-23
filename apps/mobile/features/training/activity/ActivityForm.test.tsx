@@ -442,7 +442,7 @@ describe("Log activity", () => {
     expect(screen.queryByText("Add set")).toBeNull();
   });
 
-  it("keeps an exercise with nothing ticked, its planned sets there to tick", async () => {
+  it("keeps a climbing exercise with nothing logged, its planned sets there to climb in", async () => {
     const done = [{ item: 0, exercise: "Volume climbing", sets: [{ onS: 600 }, { onS: 600 }] }];
     const initial = newActivityDraft(
       { kind: "climbing", workoutId: "w6", done: JSON.stringify(done), off: '["0:0","0:1"]' },
@@ -461,7 +461,43 @@ describe("Log activity", () => {
     );
     expect(screen.queryByText("Not started")).toBeNull();
     expect(screen.getByText("2 sets")).toBeTruthy();
-    expect(screen.getAllByRole("checkbox", { checked: false })).toHaveLength(2);
+    expect(screen.getByLabelText("Climb in set 2")).toBeTruthy();
+    expect(screen.getAllByLabelText("V3")).toHaveLength(1);
+  });
+
+  it("edits a logged climbing exercise as the run drew it: attempts, Sent, a grade picked, Add set", async () => {
+    const climb = { grade: "V3", scale: "v", tries: 1, sent: true, style: "flash" };
+    const done = [{ item: 0, exercise: "Crimp crawls", sets: [{ climbs: [climb] }] }];
+    const initial = newActivityDraft(
+      { kind: "climbing", workoutId: "w6", done: JSON.stringify(done), off: "[]" },
+      "2026-11-22"
+    );
+    await render(<ActivityForm id="a1" initial={initial} logged={null} />);
+    await fireEvent.press(screen.getByLabelText("Increase Climb 1, V3 · Attempts"));
+    await fireEvent.press(screen.getByLabelText("V5"));
+    await fireEvent.press(screen.getByLabelText("Climb 2, V5, Sent"));
+    await fireEvent.press(screen.getByText("Add set"));
+    await fireEvent.press(screen.getByLabelText("V4"));
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        done: [
+          {
+            item: 0,
+            exercise: "Crimp crawls",
+            sets: [
+              {
+                climbs: [
+                  { grade: "V3", scale: "v", tries: 2, sent: true, style: "redpoint" },
+                  { grade: "V5", scale: "v", tries: 1, sent: true, style: "flash" },
+                ],
+              },
+              { climbs: [{ grade: "V4", scale: "v", tries: 1, sent: false }] },
+            ],
+          },
+        ],
+      })
+    );
   });
 
   it("reviews a run: its target once in the head, no short line, and Discard ends the run once confirmed", async () => {

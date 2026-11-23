@@ -75,3 +75,4 @@ export {
   supersetRoundsTitle,
   type RunGroup,
 } from "./groups";
+export { useGradePicker, type GradePickerModel } from "./useGradePicker";

@@ -43,6 +43,19 @@ export function climbsTotal(sets: readonly SetDone[]): ClimbsTotal {
   };
 }
 
+/** A logged climb's attempts, at least one, a send styled by them: flash at one, redpoint above. */
+export function withClimbTries(climb: SetClimb, tries: number): SetClimb {
+  const { style: _style, ...rest } = climb;
+  const next = Math.min(99, Math.max(1, tries));
+  if (!climb.sent) return { ...rest, tries: next };
+  const style = next > 1 ? "redpoint" : climb.style === "onsight" ? "onsight" : "flash";
+  return { ...rest, tries: next, style };
+}
+
+/** A logged climb turned from a send to an attempt, or back. */
+export const withClimbSent = (climb: SetClimb): SetClimb =>
+  withClimbTries({ ...climb, sent: !climb.sent }, climb.tries);
+
 /** "2 attempts · sent": one climb of a set, as its row reads. */
 export const climbLine = (climb: SetClimb): string =>
   [

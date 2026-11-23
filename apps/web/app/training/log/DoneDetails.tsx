@@ -4,6 +4,7 @@ import {
   heldSet,
   type Dose,
   type ItemDone,
+  type SetClimb,
   type SetDone,
   type WeightUnit,
 } from "@sendtally/core/hang";
@@ -14,12 +15,20 @@ import {
   removeSet,
   setKeyOf,
   withLineToggled,
+  withSetClimbs,
 } from "@sendtally/features/activities";
+import { useDisplayScales } from "@sendtally/features/settings";
 import type { TallyMeasure } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
-import { supersetHeadAt, targetText, type SetAt } from "@sendtally/features/workouts";
+import {
+  supersetHeadAt,
+  targetText,
+  useGradePicker,
+  type SetAt,
+} from "@sendtally/features/workouts";
 import { Sheet } from "../../components/Sheet";
-import { ClimbSetsRead } from "../climbing/ClimbSetsRead";
+import { climbGradeText } from "../climbing/ClimbGrade";
+import { ClimbSetsEdit, type ClimbAt } from "../climbing/ClimbSetsEdit";
 import { ChecklistCard } from "../components/ChecklistCard";
 import { ExerciseBlock } from "../components/ExerciseBlock";
 import { ExerciseHead } from "../components/ExerciseHead";
@@ -78,6 +87,7 @@ export function DoneDetails({
   flat = false,
 }: DoneDetailsProps): React.ReactElement {
   const sessionRpe = useSessionTarget();
+  const scales = useDisplayScales();
   const [selected, setSelected] = React.useState<SetAt | null>(null);
   const [lastOf, setLastOf] = React.useState<ItemDone | null>(null);
   const rated = (d: ItemDone): boolean =>
@@ -110,6 +120,24 @@ export function DoneDetails({
   }, [selected]);
 
   const exercises = done.filter((d) => d.checklist === undefined);
+  const climbing = (d: ItemDone): boolean =>
+    measure(d.exercise) !== "laps" &&
+    (measure(d.exercise) !== null || d.sets.some((s) => s.climbs !== undefined));
+  const [pickAt, setPickAt] = React.useState<{ item: number; set: number } | null>(null);
+  const lastClimbing = exercises.filter(climbing).at(-1);
+  const at =
+    pickAt ??
+    (lastClimbing === undefined
+      ? null
+      : { item: lastClimbing.item, set: Math.max(0, lastClimbing.sets.length - 1) });
+  const [climbSelected, setClimbSelected] = React.useState<({ item: number } & ClimbAt) | null>(
+    null
+  );
+  const climbsAt = (item: number, set: number, f: (c: SetClimb[]) => SetClimb[]): void =>
+    onChange(withSetClimbs(done, item, set, f), offWithoutKey(off, item, set));
+  const picker = useGradePicker(scales, (climb) => {
+    if (at !== null) climbsAt(at.item, at.set, (c) => [...c, climb]);
+  });
   return (
     <>
       {done.map(
@@ -135,9 +163,35 @@ export function DoneDetails({
                 (kind === "strength" && d.sets.every((s) => s.onS === undefined)));
             const head = supersetHeadAt(exercises, index);
             const oneHang = hangs && dose?.reps === 1;
-            const climbs = !lap && d.sets.some((s) => s.climbs !== undefined);
+            const climbs = climbing(d);
             const rows = climbs ? (
-              <ClimbSetsRead sets={d.sets} />
+              <ClimbSetsEdit
+                sets={d.sets}
+                picking={at?.item === d.item ? at.set : null}
+                picker={picker}
+                selected={climbSelected?.item === d.item ? climbSelected : null}
+                onSelect={(c) =>
+                  setClimbSelected((was) =>
+                    was?.item === d.item && was.set === c.set && was.index === c.index
+                      ? null
+                      : { item: d.item, ...c }
+                  )
+                }
+                onPressSet={(set) => setPickAt({ item: d.item, set })}
+                onChange={(c, climb) =>
+                  climbsAt(d.item, c.set, (all) => all.map((x, i) => (i === c.index ? climb : x)))
+                }
+                onRemove={(c) => {
+                  const removed = d.sets[c.set]?.climbs?.[c.index];
+                  setClimbSelected(null);
+                  climbsAt(d.item, c.set, (all) => all.filter((_, i) => i !== c.index));
+                  if (removed !== undefined)
+                    onRemoved?.(
+                      `${d.exercise} · ${t("tally.climbRemoved", { grade: climbGradeText(removed, scales) })}`,
+                      () => onChange([...done], [...off])
+                    );
+                }}
+              />
             ) : (
               <>
                 {index === 0 && setup}
@@ -208,6 +262,10 @@ export function DoneDetails({
                   </div>
                 ) : (
                   <ExerciseBlock
+                    {...(climbs && {
+                      onPress: () =>
+                        setPickAt({ item: d.item, set: Math.max(0, d.sets.length - 1) }),
+                    })}
                     head={
                       <ExerciseHead
                         name={d.exercise}
@@ -222,13 +280,14 @@ export function DoneDetails({
                           })}
                       />
                     }
-                    {...(!climbs && {
-                      add: {
-                        label: lap ? t("tally.addLap") : t("activities.addSet"),
-                        accessibilityLabel: t("activities.addSetTo", { exercise: d.exercise }),
-                        onPress: () => onChange(addSet(done, d.item), [...off]),
+                    add={{
+                      label: lap ? t("tally.addLap") : t("activities.addSet"),
+                      accessibilityLabel: t("activities.addSetTo", { exercise: d.exercise }),
+                      onPress: () => {
+                        onChange(addSet(done, d.item), [...off]);
+                        if (climbs) setPickAt({ item: d.item, set: d.sets.length });
                       },
-                    })}
+                    }}
                   >
                     {rows}
                   </ExerciseBlock>
