@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ActivityDraft } from "@sendtally/features/activities";
 import type * as Activities from "@sendtally/features/activities";
 import type * as Workouts from "@sendtally/features/workouts";
@@ -18,6 +19,7 @@ HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogEleme
   this.setAttribute("open", "");
 };
 
+const logbook = vi.hoisted(() => ({ climbs: [] as unknown[] }));
 const writes = vi.hoisted(() => ({
   saveActivity: vi.fn(async (): Promise<boolean> => true),
   deleteActivity: vi.fn(async () => undefined),
@@ -38,7 +40,9 @@ vi.mock("@sendtally/features/hang", async (actual) => ({
   useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),
 }));
 vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
-vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
+vi.mock("../../lib/useAppApi", () => ({
+  useAppApi: () => ({ climbs: async () => ({ climbs: logbook.climbs }) }),
+}));
 vi.mock("@sendtally/features/activities", async (actual) => ({
   ...(await actual<typeof Activities>()),
   useActivityActions: () => writes,
@@ -89,21 +93,23 @@ const mount = (
 ): void =>
   act(() =>
     root.render(
-      <ToastProvider>
-        <MemoryRouter>
-          <WithHang>
-            <ActivityForm
-              id="a1"
-              initial={initial}
-              logged={null}
-              kindSet
-              live={live}
-              idleEnd={idleEnd}
-              {...(part !== undefined && { part })}
-            />
-          </WithHang>
-        </MemoryRouter>
-      </ToastProvider>
+      <QueryClientProvider client={new QueryClient()}>
+        <ToastProvider>
+          <MemoryRouter>
+            <WithHang>
+              <ActivityForm
+                id="a1"
+                initial={initial}
+                logged={null}
+                kindSet
+                live={live}
+                idleEnd={idleEnd}
+                {...(part !== undefined && { part })}
+              />
+            </WithHang>
+          </MemoryRouter>
+        </ToastProvider>
+      </QueryClientProvider>
     )
   );
 
@@ -339,5 +345,31 @@ describe("a logged climbing exercise in review", () => {
     expect(saved()).toEqual([
       { item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 7 }] },
     ]);
+  });
+
+  it("opens the picker at the grade the climber logs most, as the run does", async () => {
+    logbook.climbs = [8, 8, 8].map((value, i) => ({
+      id: `c${i}`,
+      name: `Climb ${i}`,
+      grade: { scale: "v", value },
+      discipline: "boulder",
+    }));
+    mount(false, null, {
+      ...review,
+      kind: "climbing",
+      done: [{ item: 0, exercise: "Crimp crawls", sets: [{ climbs: [] }] }],
+    });
+    await act(async () => new Promise((r) => setTimeout(r, 0)));
+    const segment = (name: string): HTMLElement =>
+      [
+        ...container.querySelectorAll<HTMLElement>(
+          ".climb-picker button, .climb-picker [role=radio]"
+        ),
+      ].find((b) => b.textContent === name)!;
+    click(segment("Route"));
+    click(segment("Boulder"));
+    const row = container.querySelector<HTMLElement>(".climb-picker .grade-chips")!;
+    expect(row.scrollLeft).toBe(7 * 64);
+    logbook.climbs = [];
   });
 });

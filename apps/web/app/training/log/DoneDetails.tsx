@@ -18,7 +18,9 @@ import {
   withLineToggled,
   withSetClimbs,
 } from "@sendtally/features/activities";
+import { useClimbVocabulary } from "@sendtally/features/climbs";
 import { useDisplayScales } from "@sendtally/features/settings";
+import { useAppApi } from "../../lib/useAppApi";
 import type { TallyMeasure } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import {
@@ -137,7 +139,8 @@ export function DoneDetails({
   );
   const climbsAt = (item: number, set: number, f: (c: SetClimb[]) => SetClimb[]): void =>
     onChange(withSetClimbs(done, item, set, f), offWithoutKey(off, item, set));
-  const picker = useGradePicker(scales, (climb) => {
+  const { climbs } = useClimbVocabulary(useAppApi());
+  const picker = useGradePicker(scales, climbs, (climb) => {
     if (at !== null) climbsAt(at.item, at.set, (c) => [...c, climb]);
   });
   return (

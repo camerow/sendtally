@@ -13,7 +13,9 @@ import {
   withLineToggled,
   withSetClimbs,
 } from "@sendtally/features/activities";
+import { useClimbVocabulary } from "@sendtally/features/climbs";
 import { useDisplayScales } from "@sendtally/features/settings";
+import { useApi } from "../../../lib/api";
 import { heldSet } from "@sendtally/core/hang";
 import {
   supersetHeadAt,
@@ -155,7 +157,8 @@ export function DoneDetails({
   );
   const climbsAt = (item: number, set: number, f: (c: SetClimb[]) => SetClimb[]): void =>
     onChange(withSetClimbs(done, item, set, f), offWithoutKey(off, item, set));
-  const picker = useGradePicker(scales, (climb) => {
+  const { climbs } = useClimbVocabulary(useApi());
+  const picker = useGradePicker(scales, climbs, (climb) => {
     if (at !== null) climbsAt(at.item, at.set, (c) => [...c, climb]);
   });
   return (

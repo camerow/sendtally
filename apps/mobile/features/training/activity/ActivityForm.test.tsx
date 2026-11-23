@@ -1,5 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, render, screen, within } from "@testing-library/react-native";
+import { act, fireEvent, render as rtlRender, screen, within } from "@testing-library/react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 import React from "react";
@@ -8,6 +9,9 @@ import type * as Activities from "@sendtally/features/activities";
 import { activityFromDraft, justLogged, newActivityDraft } from "@sendtally/features/activities";
 import { readingOrder } from "../data/renderWithHang";
 import { ActivityForm } from "./ActivityForm";
+
+const render = (ui: React.ReactElement): ReturnType<typeof rtlRender> =>
+  rtlRender(<QueryClientProvider client={new QueryClient()}>{ui}</QueryClientProvider>);
 
 const mockActions = {
   saveActivity: jest.fn(async (): Promise<boolean> => true),
@@ -35,7 +39,8 @@ jest.mock("@sendtally/features/workouts", () => ({
   ...jest.requireActual<object>("@sendtally/features/workouts"),
   useWorkoutActions: () => mockWorkouts,
 }));
-jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
+const mockApi = { climbs: () => Promise.resolve({ climbs: [] }) };
+jest.mock("../../../lib/api", () => ({ useApi: () => mockApi }));
 jest.mock("@sendtally/features/hang", () => ({
   ...jest.requireActual<object>("@sendtally/features/hang"),
   useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),

@@ -4,7 +4,10 @@ import type { ActivityRecord, WorkoutRecord } from "@sendtally/api-client";
 import { anExercise, hangData, renderWithHang } from "../data/renderWithHang";
 import { WorkoutEditScreen } from "./WorkoutEditScreen";
 
-const mockApi = { sessions: () => new Promise(() => undefined) };
+const mockApi = {
+  sessions: () => new Promise(() => undefined),
+  climbs: () => Promise.resolve({ climbs: [] }),
+};
 jest.mock("../../../lib/api", () => ({ useApi: () => mockApi }));
 jest.mock("expo-router", () => ({
   router: { canGoBack: () => true, push: jest.fn(), back: jest.fn(), replace: jest.fn() },
