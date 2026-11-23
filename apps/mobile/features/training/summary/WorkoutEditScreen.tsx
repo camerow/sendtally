@@ -3,7 +3,7 @@ import { ActivityIndicator, View } from "react-native";
 import type { ActivityRecord, HangPart, HangSessionRecord } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { draftFromActivity, useActivities } from "@sendtally/features/activities";
-import { loggedPartForm } from "@sendtally/features/workouts";
+import { loggedPartForm, useLoggedPrescription } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import { ActivityForm } from "../activity/ActivityForm";
 import { useHangData } from "../data/HangDataContext";
@@ -19,9 +19,15 @@ type Found =
  */
 export function WorkoutEditScreen({ id }: { id: string }): React.ReactElement {
   const { model } = useHangData();
-  const { state } = useActivities(useApi());
+  const api = useApi();
+  const { state } = useActivities(api);
   const activity = state.status === "ready" ? state.data.find((a) => a.id === id) : undefined;
   const hang = model.data.sessions.find((s) => s.id === id);
+  const planned = useLoggedPrescription(api, {
+    workoutId: activity?.workoutId ?? null,
+    membershipId: activity?.membershipId ?? null,
+    week: activity?.week ?? null,
+  });
   const [kept, setKept] = React.useState<Found | null>(null);
   if (kept === null && activity !== undefined)
     setKept({
@@ -38,6 +44,7 @@ export function WorkoutEditScreen({ id }: { id: string }): React.ReactElement {
         id={kept.record.id}
         initial={draftFromActivity(kept.record)}
         logged={activity ?? kept.record}
+        planned={planned}
         {...(kept.part !== undefined && {
           part: loggedPartForm(kept.part),
           gripName: model.gripName,

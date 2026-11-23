@@ -43,7 +43,7 @@ export * from "./runParams";
 export * from "./climbRows";
 export * from "./runCards";
 export * from "./setsRun";
-export { usePrescribed } from "./usePrescribed";
+export { useLoggedPrescription, usePrescribed } from "./usePrescribed";
 export * from "./workoutStart";
 export type { Picked } from "./types";
 export { usePlannedRun, type PlannedItem, type PlannedRun } from "./usePlannedRun";
