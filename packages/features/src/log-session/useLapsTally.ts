@@ -18,7 +18,6 @@ import type { LiveSession } from "./useLiveSession";
 export type LapsTally = {
   /** How far each lap logged got, in moves or seconds, oldest first. */
   laps: number[];
-  timed: boolean;
   /** Seconds the lap on the wall has run, none before its row is first pressed. */
   elapsed: number | null;
   /** The rest after the last lap: running, waiting for play, or none. */
@@ -76,7 +75,6 @@ export function useLapsTally(
 
   return {
     laps,
-    timed,
     elapsed,
     rest:
       ex === undefined || laps.length === 0 || restS === 0

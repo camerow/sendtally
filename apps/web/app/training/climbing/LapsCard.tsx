@@ -172,7 +172,7 @@ export function LapsCard({
           }}
           removeLabel={t("tally.removeLapOf", { lap: i + 1 })}
         >
-          {laps.timed ? (
+          {plan.unit === "seconds" ? (
             <LapTime seconds={value} plan={plan} />
           ) : (
             <Moves

@@ -87,7 +87,7 @@ function Moves({
 /** A timed lap's time, out of the lap's. */
 function LapTime({ seconds, plan }: { seconds: number; plan: LapPlan }): React.ReactElement {
   return (
-    <Text style={[type.monoBold, { flex: 1, fontSize: 14, color: colors.gunmetal }]}>
+    <Text style={[type.monoBold, { fontSize: 14, color: colors.gunmetal }]}>
       {elapsedClock(seconds)}
       <Text style={[type.mono, { fontSize: 13, color: colors.textSecondary }]}>
         {` ${t("activities.holdOf", { time: elapsedClock(plan.target) })}`}
@@ -173,7 +173,7 @@ export function LapsCard({
           }}
           removeLabel={t("tally.removeLapOf", { lap: i + 1 })}
         >
-          {laps.timed ? (
+          {plan.unit === "seconds" ? (
             <LapTime seconds={value} plan={plan} />
           ) : (
             <Moves

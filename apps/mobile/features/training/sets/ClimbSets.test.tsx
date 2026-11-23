@@ -182,6 +182,21 @@ describe("Climbing inside the workout", () => {
     ]);
   });
 
+  it("reads a timed lap as its time on the tally or off it", async () => {
+    const timed: WorkoutRun = {
+      ...laps,
+      items: [
+        { exercise: "Circuit laps", dose: { sets: 2, onS: 270 } },
+        { exercise: "4x4s", dose: { sets: 1, reps: 2 } },
+      ],
+    };
+    await renderWithHang(<SetsScreen run={timed} />, hangData(), { exercises });
+    await fireEvent.press(screen.getByLabelText("Lap 1"));
+    await fireEvent.press(screen.getByLabelText("Climb in set 1"));
+    expect(screen.getByText("4:30 of 4:30")).toBeTruthy();
+    expect(screen.queryByLabelText("Lap 1 · Fewer moves")).toBeNull();
+  });
+
   it("runs a time set's clock only from its own button, and ends the set at its time", async () => {
     const arc = runOf("ARC", { sets: 2, onS: 60, setRestS: 30 });
     await renderWithHang(<SetsScreen run={arc} />, hangData(), {
