@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import React from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { KeyboardAvoider } from "../../components/KeyboardAvoider";
 import { TextInput } from "../../components/TextInput";
 import type { JournalEntry, SendtallyApi, SessionRow } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
@@ -97,10 +98,7 @@ export function EntryComposer({
   const update = isUpdateDraft(draft);
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <KeyboardAvoider>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 32, gap: 20 }}
@@ -248,6 +246,6 @@ export function EntryComposer({
           <Text style={primaryButtonLabel}>{saving ? t("common.saving") : saveLabel}</Text>
         </Pressable>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }

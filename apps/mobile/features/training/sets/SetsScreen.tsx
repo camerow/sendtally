@@ -3,7 +3,8 @@ import { WithWeightUnit } from "../data/WithWeightUnit";
 import type { WeightUnit } from "@sendtally/core/hang";
 import React from "react";
 import { restAfterItem } from "@sendtally/core/hang";
-import { Alert, KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
+import { KeyboardAvoider } from "../../../components/KeyboardAvoider";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import { climbingDoseLine, foldedLine, useActivities } from "@sendtally/features/activities";
@@ -237,10 +238,7 @@ function SetsScreenBody({
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: colors.white }}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoider>
         <View style={{ flex: 1 }}>
           <KeypadScrollView
             onKeypadChange={setKeypad}
@@ -567,7 +565,7 @@ function SetsScreenBody({
             <Button label={t("activities.finish")} onPress={finish} variant="primary" height={54} />
           </View>
         )}
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
     </SafeAreaView>
   );
 }

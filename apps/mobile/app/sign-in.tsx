@@ -1,7 +1,8 @@
 import * as AppleAuthentication from "expo-apple-authentication";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
+import { KeyboardAvoider } from "../components/KeyboardAvoider";
 import { TextInput } from "../components/TextInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GoogleMark, useSignInFlow } from "@sendtally/auth-native";
@@ -49,10 +50,7 @@ export default function SignIn(): React.ReactElement | null {
   return (
     <SignedOutOnly>
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={{ flex: 1 }}
-        >
+        <KeyboardAvoider>
           <View style={{ flex: 1, paddingHorizontal: 22, paddingTop: 32, gap: 16 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
               {router.canGoBack() && (
@@ -265,7 +263,7 @@ export default function SignIn(): React.ReactElement | null {
               {t("auth.stravaNote")}
             </Text>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </SafeAreaView>
     </SignedOutOnly>
   );

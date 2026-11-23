@@ -1,14 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import {
-  AppState,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { AppState, Pressable, ScrollView, Text, View } from "react-native";
+import { KeyboardAvoider } from "../../components/KeyboardAvoider";
 import { TextInput } from "../../components/TextInput";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbFormFromDraft, withAreaClimb, type ClimbFormValues } from "@sendtally/features/areas";
@@ -261,14 +254,10 @@ export function LogSessionForm({
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "android" ? "padding" : undefined}
-    >
+    <KeyboardAvoider>
       <ScrollView
         ref={scroll}
         keyboardShouldPersistTaps="handled"
-        automaticallyAdjustKeyboardInsets
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 24, gap: 14 }}
       >
         <BackButton
@@ -683,6 +672,6 @@ export function LogSessionForm({
           </Text>
         )}
       </View>
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }

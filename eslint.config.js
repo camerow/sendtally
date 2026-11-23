@@ -54,9 +54,11 @@ export default tseslint.config(
   {
     // The app's TextInput tells the root tap observer a tap was on a text input, so moving
     // between inputs keeps the keyboard up; React Native's own would dismiss it.
+    // KeyboardAvoider pads on Android too, where the edge-to-edge window no longer resizes.
     files: ["apps/mobile/**/*.ts", "apps/mobile/**/*.tsx"],
     ignores: [
       "apps/mobile/components/TextInput.tsx",
+      "apps/mobile/components/KeyboardAvoider.tsx",
       "apps/mobile/**/*.test.ts",
       "apps/mobile/**/*.test.tsx",
       "apps/mobile/jest.setup.ts",
@@ -70,6 +72,11 @@ export default tseslint.config(
               name: "react-native",
               importNames: ["TextInput"],
               message: "Use TextInput from apps/mobile/components/TextInput.",
+            },
+            {
+              name: "react-native",
+              importNames: ["KeyboardAvoidingView"],
+              message: "Use KeyboardAvoider from apps/mobile/components/KeyboardAvoider.",
             },
           ],
         },

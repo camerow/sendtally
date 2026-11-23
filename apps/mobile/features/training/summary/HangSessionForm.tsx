@@ -1,5 +1,6 @@
 import React from "react";
-import { KeyboardAvoidingView, Platform, Text } from "react-native";
+import { Text } from "react-native";
+import { KeyboardAvoider } from "../../../components/KeyboardAvoider";
 import type { HangSessionRecord } from "@sendtally/api-client";
 import { colors } from "@sendtally/design/tokens";
 import { hangEditResult, hangEditSets, shortDate } from "@sendtally/features/hang";
@@ -67,10 +68,7 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <KeyboardAvoider>
       <EditorHeader title={t("summary.editWorkout")} onCancel={() => goBack()} onSave={save} />
       <KeypadScrollView
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 4, paddingBottom: 32, gap: 18 }}
@@ -147,6 +145,6 @@ export function HangSessionForm({ session }: HangSessionFormProps): React.ReactE
         onPick={(gripId) => update({ gripId })}
         onClose={() => setPicker(false)}
       />
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }

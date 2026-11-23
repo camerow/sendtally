@@ -141,7 +141,9 @@ Red (watermelon) is only for destructive actions, and those use the `danger` red
 A call to action that is not destructive (Become a member, Create account, Save) uses the blue `azure` Button, never a red fill.
 
 Mobile form standard: a focused input always stays visible when the keyboard comes up.
-Wrap the screen's scroll view in `KeyboardAvoidingView` (`behavior="padding"` on iOS) and give the scroll view `keyboardShouldPersistTaps="handled"`; `GymEditor` and `EntryComposer` are the reference.
+Wrap the screen's scroll view in `KeyboardAvoider` (`apps/mobile/components/KeyboardAvoider.tsx`) and give the scroll view `keyboardShouldPersistTaps="handled"`; `ScreenFrame` already does both, and `GymEditor` and `EntryComposer` are the reference for a screen without it.
+`KeyboardAvoider` pads on Android as well as iOS: Android draws edge to edge, so the window no longer resizes for the keyboard and a screen that avoids it only on iOS leaves the field under the keys.
+ESLint bans importing `KeyboardAvoidingView` anywhere else.
 Design work (Claude-generated or otherwise) targets the token vocabulary; each platform implements idiomatically.
 
 ### Screen design rules

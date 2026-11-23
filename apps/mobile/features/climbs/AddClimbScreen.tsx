@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
+import { Keyboard, ScrollView, Text, View } from "react-native";
+import { KeyboardAvoider } from "../../components/KeyboardAvoider";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { ClimbSummary } from "@sendtally/api-client";
 import {
@@ -244,10 +245,7 @@ export function AddClimbScreen(): React.ReactElement {
         </Text>
         <View style={{ minWidth: 80 }} />
       </View>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoider>
         <ScrollView
           ref={scroll}
           keyboardShouldPersistTaps="handled"
@@ -381,7 +379,7 @@ export function AddClimbScreen(): React.ReactElement {
             disabled={!valid || saving}
           />
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
     </SafeAreaView>
   );
 }
