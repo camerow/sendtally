@@ -7,6 +7,7 @@ export type {
   IntentSwap,
   Phase,
   SignInFlow,
+  SignInFailure,
   SignInFlowOptions,
   SignInOutcome,
 } from "./types";

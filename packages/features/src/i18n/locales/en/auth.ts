@@ -8,7 +8,8 @@ export const auth = {
   "auth.signUpBody": "Enter your email to get started.",
   "auth.secondFactorOnWeb":
     "This account needs another sign-in step the app can't do yet. Sign in at sendtally.com to finish.",
-  "auth.googleIncomplete": "Google sign-in didn't complete. Try again.",
+  "auth.googleIncomplete": "Google sign-in didn't finish. Try again, or use your email below.",
+  "auth.appleIncomplete": "Apple sign-in didn't finish. Try again, or use your email below.",
   "auth.invalidEmail": "Enter a valid email address.",
   "auth.emailCodeDisabled": "Email code sign-in is not enabled for this account.",
   "auth.noAccount": "No account for that email yet. Check the address, or create an account below.",
