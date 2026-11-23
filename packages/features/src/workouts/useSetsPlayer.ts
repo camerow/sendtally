@@ -9,13 +9,7 @@ import {
   type SetDone,
 } from "@sendtally/core/hang";
 import type { Activity, Exercise } from "@sendtally/api-client";
-import {
-  climbingLastTime,
-  climbsLine,
-  lapPlanOf,
-  lapsLine,
-  wallLine,
-} from "../activities/climbing";
+import { climbingLastTime, climbsLine, lapPlanOf, lapsLine } from "../activities/climbing";
 import { addSet, changeSet, previousSets } from "../activities/done";
 import { tallyMeasuresOf } from "../exercises/measure";
 import type { TallyMeasure } from "../exercises/types";
@@ -497,9 +491,7 @@ export function useSetsPlayer({
           ? null
           : measure === "laps"
             ? lapsLine(logged, at.dose)
-            : measure === "wallTime"
-              ? wallLine(logged)
-              : climbsLine(logged),
+            : climbsLine(logged),
     };
   };
 

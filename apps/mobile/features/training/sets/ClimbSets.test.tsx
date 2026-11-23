@@ -197,6 +197,18 @@ describe("Climbing inside the workout", () => {
     expect(screen.queryByLabelText("Lap 1 · Fewer moves")).toBeNull();
   });
 
+  it("folds a finished time set to its climbs line, as any climbing card", async () => {
+    const arc = runOf("ARC", { sets: 1, onS: 60 });
+    await renderWithHang(<SetsScreen run={arc} />, hangData(), {
+      exercises: [anExercise("e2", "ARC", "climbing", { measure: "seconds" })],
+    });
+    await add("V1");
+    await fireEvent.press(screen.getByLabelText("Climb 1, V1, Sent"));
+    await fireEvent.press(screen.getByLabelText("Start"));
+    await advance(61_000);
+    expect(screen.getByLabelText("Open ARC, 1 climb · 1 sent · top V1")).toBeTruthy();
+  });
+
   it("runs a time set's clock only from its own button, and ends the set at its time", async () => {
     const arc = runOf("ARC", { sets: 2, onS: 60, setRestS: 30 });
     await renderWithHang(<SetsScreen run={arc} />, hangData(), {
