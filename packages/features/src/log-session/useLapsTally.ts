@@ -54,7 +54,13 @@ export function useLapsTally(
 ): LapsTally {
   const ex = draft?.exercise?.item === item ? draft.exercise : undefined;
   const timed = ex?.lap?.unit === "seconds";
-  const elapsed = ex === undefined ? null : lapElapsed(ex, now);
+  const kept = draft?.lapStartedAt?.[item];
+  const elapsed =
+    ex !== undefined
+      ? lapElapsed(ex, now)
+      : kept === undefined
+        ? null
+        : Math.max(0, Math.floor((now.getTime() - Date.parse(kept)) / 1000));
   const target = ex?.lap?.target ?? 0;
   const timeUp = timed && elapsed !== null && elapsed >= target;
   React.useEffect(() => {

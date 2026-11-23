@@ -209,6 +209,25 @@ describe("Climbing inside the workout", () => {
     expect(screen.getByLabelText("Open ARC, 1 climb · 1 sent · top V1")).toBeTruthy();
   });
 
+  it("keeps a timed lap's clock running while another card has the grades", async () => {
+    const timed: WorkoutRun = {
+      ...laps,
+      items: [
+        { exercise: "Circuit laps", dose: { sets: 2, onS: 270 } },
+        { exercise: "4x4s", dose: { sets: 1, reps: 2 } },
+      ],
+    };
+    await renderWithHang(<SetsScreen run={timed} />, hangData(), { exercises });
+    await fireEvent.press(screen.getByLabelText("Lap 1, Start"));
+    await advance(20_000);
+    await fireEvent.press(screen.getByLabelText("Climb in set 1"));
+    await advance(10_000);
+    expect(screen.getByText("0:30 of 4:30")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Lap 1"));
+    const done = (await finished()) as { sets: { onS?: number }[] }[];
+    expect(done[0]?.sets).toEqual([{ onS: 30 }]);
+  });
+
   it("runs a time set's clock only from its own button, and ends the set at its time", async () => {
     const arc = runOf("ARC", { sets: 2, onS: 60, setRestS: 30 });
     await renderWithHang(<SetsScreen run={arc} />, hangData(), {

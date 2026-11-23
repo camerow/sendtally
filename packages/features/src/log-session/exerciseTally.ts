@@ -37,10 +37,18 @@ export function startExercise(
   now: Date
 ): LogSessionDraft {
   const base = draft === null ? tallyDraft(now) : withExerciseDone(draft, now);
+  const { [start.item]: lapStartedAt, ...running } = base.lapStartedAt ?? {};
   return {
     ...base,
+    ...(base.lapStartedAt !== undefined && { lapStartedAt: running }),
     startedAt: now.toISOString(),
-    exercise: { ...start, set: nextSet(base.climbs, start.item) },
+    exercise: {
+      ...start,
+      set: nextSet(base.climbs, start.item),
+      ...(lapStartedAt === undefined || start.lap?.unit !== "seconds"
+        ? {}
+        : { setStartedAt: lapStartedAt }),
+    },
   };
 }
 
@@ -211,14 +219,20 @@ export function withSetEnded(
 }
 
 /**
- * Done: the tally stops being the exercise's, keeping its climbs and the time the set being
- * climbed spent on the wall. A set left part way counts as done, so the next Start resumes at
- * the one after it.
+ * Done: the tally stops being the exercise's, keeping its climbs, the time the set being
+ * climbed spent on the wall, and a timed lap's clock, which runs on until the tally comes back.
+ * A set left part way counts as done, so the next Start resumes at the one after it.
  */
 export const withExerciseDone = (draft: LogSessionDraft, now: Date): LogSessionDraft => {
-  const { exercise: _done, ...rest } = draft;
+  const { exercise: ex, ...rest } = draft;
   const wallTimes = wallTimesAt(draft, now);
-  return wallTimes === undefined ? rest : { ...rest, wallTimes };
+  const lapClock = ex?.lap?.unit === "seconds" ? ex.setStartedAt : undefined;
+  return {
+    ...rest,
+    ...(wallTimes === undefined ? {} : { wallTimes }),
+    ...(ex !== undefined &&
+      lapClock !== undefined && { lapStartedAt: { ...rest.lapStartedAt, [ex.item]: lapClock } }),
+  };
 };
 
 /** A tally climb as a set keeps it. */

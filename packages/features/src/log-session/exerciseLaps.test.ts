@@ -14,7 +14,7 @@ import {
   withLapStarted,
 } from "./exerciseLaps";
 import { parseStoredDraft } from "./draftStore";
-import { setsPlannedFor, withExerciseDone, withSetAdded } from "./exerciseTally";
+import { setsPlannedFor, startExercise, withExerciseDone, withSetAdded } from "./exerciseTally";
 import { tallyDraft } from "./tally";
 import type { LogSessionDraft } from "./types";
 
@@ -101,5 +101,25 @@ describe("circuit laps", () => {
     expect(lapsDone(withLapChanged(two, 1, 0, 33))).toEqual([33, 28]);
     expect(lapsDone(withLapChanged(two, 1, 1, 99))).toEqual([40, 40]);
     expect(lapsDone(withLapUnlogged(two, 1, 0))).toEqual([28]);
+  });
+
+  it("keeps a timed lap's clock running while the tally is on another card", () => {
+    const lap = {
+      item: 1,
+      name: "Circuit laps",
+      sets: 2,
+      restS: 0,
+      lap: { unit: "seconds" as const, target: 240 },
+    };
+    const started = withLapStarted(startExercise(null, lap, at), at);
+    const away = startExercise(
+      started,
+      { item: 0, name: "4x4s", sets: 1, climbs: 4, restS: 0 },
+      at
+    );
+    expect(away.lapStartedAt).toEqual({ 1: at.toISOString() });
+    const back = startExercise(away, lap, new Date(at.getTime() + 60_000));
+    expect(lapElapsed(back.exercise!, new Date(at.getTime() + 95_000))).toBe(95);
+    expect(back.lapStartedAt).toEqual({});
   });
 });
