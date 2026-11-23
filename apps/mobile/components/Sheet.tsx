@@ -12,6 +12,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { LibraryPicture } from "@sendtally/core/hang";
 import { colors, radius } from "@sendtally/design/tokens";
 import { DetailHero } from "./DetailHero";
+import { useKeepFocusedAboveKeys } from "./useKeepFocusedAboveKeys";
+import { useKeyboardShown } from "./useKeyboardShown";
 
 export type SheetProps = {
   visible: boolean;
@@ -52,6 +54,7 @@ const footerFrame = {
 function footerComponentFor(id: string): React.FC<BottomSheetFooterProps> {
   return function SheetFooter(props: BottomSheetFooterProps): React.ReactElement {
     const insets = useSafeAreaInsets();
+    const typing = useKeyboardShown();
     const content = React.useSyncExternalStore(
       (notify) => {
         footerStore(id).listeners.add(notify);
@@ -59,6 +62,7 @@ function footerComponentFor(id: string): React.FC<BottomSheetFooterProps> {
       },
       () => footerStore(id).footer
     );
+    if (typing) return <></>;
     return (
       <BottomSheetFooter {...props}>
         <View style={[footerFrame, { paddingBottom: Math.max(insets.bottom, 16) }]}>{content}</View>
@@ -85,7 +89,9 @@ function useFooterComponent(footer: React.ReactNode): React.FC<BottomSheetFooter
 /**
  * A bottom sheet sized to its content, dismissed by a drag down, a tap on the scrim or the
  * hardware back button. It rides the keyboard so a focused field stays above the keys; text
- * fields inside it should be `BottomSheetTextInput` for that to hold across focus changes.
+ * fields inside it should be `BottomSheetTextInput` for that to hold across focus changes. The
+ * footer steps aside while the keyboard is up, as it would otherwise cover the field, and the
+ * body scrolls a focused field above the keys when the sheet is already as tall as it goes.
  * Opening dismisses the keyboard, so a sheet opened from a form is never half under the keys.
  *
  * Every open mounts a fresh modal (the `key`): a modal presented again after a dismiss can
@@ -110,6 +116,7 @@ export function Sheet({
   const [generation, setGeneration] = React.useState(0);
   const [wasVisible, setWasVisible] = React.useState(false);
   const FooterComponent = useFooterComponent(footer);
+  const { scrollProps } = useKeepFocusedAboveKeys();
   if (visible !== wasVisible) {
     setWasVisible(visible);
     if (visible) setGeneration((g) => g + 1);
@@ -156,6 +163,7 @@ export function Sheet({
       handleComponent={pictured ? null : undefined}
     >
       <BottomSheetScrollView
+        {...scrollProps}
         keyboardShouldPersistTaps="handled"
         enableFooterMarginAdjustment={footer !== undefined}
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) }}

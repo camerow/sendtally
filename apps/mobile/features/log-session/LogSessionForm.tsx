@@ -1,14 +1,8 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import {
-  AppState,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { AppState, Pressable, ScrollView, Text, View } from "react-native";
+import { KeyboardAvoider } from "../../components/KeyboardAvoider";
+import { useKeepFocusedAboveKeys } from "../../components/useKeepFocusedAboveKeys";
 import { TextInput } from "../../components/TextInput";
 import type { ClimbSummary } from "@sendtally/api-client";
 import { climbFormFromDraft, withAreaClimb, type ClimbFormValues } from "@sendtally/features/areas";
@@ -166,7 +160,7 @@ export function LogSessionForm({
   // scale once, per discipline and only where no grade has been typed yet. A draft picked
   // back up, and anything already graded, keeps the scale it was written in.
   const adopted = React.useRef(editing !== undefined);
-  const scroll = React.useRef<ScrollView>(null);
+  const { scrollProps } = useKeepFocusedAboveKeys();
   const resumeDraft = React.useCallback((resumed: LogSessionDraft) => {
     adopted.current = true;
     setDraft(resumed);
@@ -261,14 +255,10 @@ export function LogSessionForm({
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "android" ? "padding" : undefined}
-    >
+    <KeyboardAvoider>
       <ScrollView
-        ref={scroll}
+        {...scrollProps}
         keyboardShouldPersistTaps="handled"
-        automaticallyAdjustKeyboardInsets
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 24, gap: 14 }}
       >
         <BackButton
@@ -683,6 +673,6 @@ export function LogSessionForm({
           </Text>
         )}
       </View>
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }

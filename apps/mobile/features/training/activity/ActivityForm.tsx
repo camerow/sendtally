@@ -6,7 +6,8 @@ import { useExercises } from "@sendtally/features/statistics";
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import React from "react";
-import { Alert, KeyboardAvoidingView, Platform, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
+import { KeyboardAvoider } from "../../../components/KeyboardAvoider";
 import { TextInput } from "../../../components/TextInput";
 import type { ActivityRecord } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
@@ -224,10 +225,7 @@ function ActivityFormBody({
   );
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <KeyboardAvoider>
       <EditorHeader
         title={
           logged !== null
@@ -395,6 +393,6 @@ function ActivityFormBody({
           onHide={() => setRemoved(null)}
         />
       )}
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }
