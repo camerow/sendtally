@@ -21,7 +21,7 @@ export function KeypadScrollView({
   children,
   ...props
 }: KeypadScrollViewProps): React.ReactElement {
-  const { scrollRef, onScroll, reveal, room } = useKeepAboveKeypad();
+  const { scrollProps, reveal, room } = useKeepAboveKeypad();
   const [request, setRequest] = React.useState<KeypadRequest | null>(null);
   const [openId, setOpenId] = React.useState<string | null>(null);
   const current = React.useRef<KeypadRequest | null>(null);
@@ -54,13 +54,7 @@ export function KeypadScrollView({
 
   return (
     <KeypadHostContext.Provider value={host}>
-      <ScrollView
-        {...props}
-        ref={scrollRef}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView {...props} {...scrollProps} keyboardShouldPersistTaps="handled">
         {children}
         {open && <View testID="keypad-room" style={{ height: room }} />}
       </ScrollView>

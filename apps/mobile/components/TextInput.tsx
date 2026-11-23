@@ -5,6 +5,14 @@ import { outsideTap } from "./outsideTap";
 
 export type { TextInputProps };
 
+const focusListeners = new Set<() => void>();
+
+/** Told whenever one of the app's text inputs takes focus. */
+export function onInputFocus(listener: () => void): () => void {
+  focusListeners.add(listener);
+  return () => void focusListeners.delete(listener);
+}
+
 /**
  * The app's text input. Inside a bottom sheet it is the sheet's own, so the sheet rides the
  * keyboard; anywhere else it is the plain one, which a sheet input would crash outside a sheet.
@@ -15,6 +23,10 @@ export function TextInput(props: TextInputProps): React.ReactElement {
   return (
     <Input
       {...props}
+      onFocus={(e) => {
+        focusListeners.forEach((listener) => listener());
+        props.onFocus?.(e);
+      }}
       onTouchStart={(e) => {
         outsideTap.onTextInput();
         props.onTouchStart?.(e);

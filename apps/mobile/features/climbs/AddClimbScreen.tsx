@@ -1,7 +1,8 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { Keyboard, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { KeyboardAvoider } from "../../components/KeyboardAvoider";
+import { useKeepFocusedAboveKeys } from "../../components/useKeepFocusedAboveKeys";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { ClimbSummary } from "@sendtally/api-client";
 import {
@@ -93,14 +94,7 @@ export function AddClimbScreen(): React.ReactElement {
   const [area, setArea] = React.useState<Area | null>(null);
   const [saving, setSaving] = React.useState(false);
   const [failed, setFailed] = React.useState(false);
-  const scroll = React.useRef<ScrollView>(null);
-  const revealNotes = (): void => {
-    if (Keyboard.isVisible()) return scroll.current?.scrollToEnd();
-    const shown = Keyboard.addListener("keyboardDidShow", () => {
-      shown.remove();
-      scroll.current?.scrollToEnd();
-    });
-  };
+  const { scrollProps } = useKeepFocusedAboveKeys();
 
   const areaClimbs = useAreaClimbSearch(api, climb.name, area?.id ?? null, true).found;
   const areas = useAreaSearch(api, area === null ? areaText : "", null, {
@@ -247,7 +241,7 @@ export function AddClimbScreen(): React.ReactElement {
       </View>
       <KeyboardAvoider>
         <ScrollView
-          ref={scroll}
+          {...scrollProps}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ gap: 16, padding: 18, paddingTop: 12, paddingBottom: 32 }}
         >
@@ -340,7 +334,6 @@ export function AddClimbScreen(): React.ReactElement {
                 <TextInput
                   value={climb.note}
                   onChangeText={(note) => setClimb({ ...climb, note })}
-                  onFocus={revealNotes}
                   multiline
                   placeholder={t("climbs.notesPlaceholder")}
                   placeholderTextColor={colors.textFaint}

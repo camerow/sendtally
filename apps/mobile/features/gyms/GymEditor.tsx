@@ -2,6 +2,7 @@ import { useBottomSheetInternal } from "@gorhom/bottom-sheet";
 import React from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { KeyboardAvoider } from "../../components/KeyboardAvoider";
+import { useKeepFocusedAboveKeys } from "../../components/useKeepFocusedAboveKeys";
 import { TextInput } from "../../components/TextInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -69,6 +70,7 @@ export function GymEditor({
   const [wall, setWall] = React.useState("");
   const [problem, setProblem] = React.useState<string | null>(null);
   const inSheet = useBottomSheetInternal(true) !== null;
+  const { scrollProps } = useKeepFocusedAboveKeys();
 
   const setCircuits = (circuits: Circuit[]): void => setDraft((d) => ({ ...d, circuits }));
   const changeMode = (next: CircuitMode): void => {
@@ -284,6 +286,7 @@ export function GymEditor({
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
       <KeyboardAvoider>
         <ScrollView
+          {...scrollProps}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 18, paddingBottom: 48, gap: 18 }}
         >

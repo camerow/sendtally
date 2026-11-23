@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { KeyboardAvoider } from "../../components/KeyboardAvoider";
+import { useKeepFocusedAboveKeys } from "../../components/useKeepFocusedAboveKeys";
 import { TextInput } from "../../components/TextInput";
 import type { JournalEntry, SendtallyApi, SessionRow } from "@sendtally/api-client";
 import { t } from "@sendtally/features/i18n";
@@ -96,10 +97,12 @@ export function EntryComposer({
   });
   const spanning = spansDates(draft.kind);
   const update = isUpdateDraft(draft);
+  const { scrollProps } = useKeepFocusedAboveKeys();
 
   return (
     <KeyboardAvoider>
       <ScrollView
+        {...scrollProps}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 32, gap: 20 }}
       >
