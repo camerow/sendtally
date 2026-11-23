@@ -453,7 +453,9 @@
 }
 
 .climb-set-label {
-  display: block;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   padding-top: 8px;
 }
 

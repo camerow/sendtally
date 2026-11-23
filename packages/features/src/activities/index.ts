@@ -49,6 +49,7 @@ export {
   wallChip,
   wallLine,
   type ClimbsTotal,
+  wallTimeText,
   withClimbSent,
   withClimbTries,
 } from "./climbing";

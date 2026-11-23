@@ -80,12 +80,16 @@ export const wallChip = (set: SetDone): string =>
     t("common.climbCount", { count: set.climbs?.length ?? 0 }),
   ].join(" · ");
 
+/** "45:00 min": a time on the wall. */
+export const wallTimeText = (seconds: number): string =>
+  t("activities.wallTime", { time: clock(seconds, true) });
+
 /** "40:00 min · Green circuit": the time over every set, and the circuits climbed. */
 export function wallLine(sets: readonly SetDone[]): string {
   const seconds = sets.reduce((n, s) => n + (s.onS ?? 0), 0);
   const circuits = [...new Set(climbsOf(sets).flatMap((c) => c.circuit?.label ?? []))];
   return [
-    t("activities.wallTime", { time: clock(seconds, true) }),
+    wallTimeText(seconds),
     ...circuits.map((name) => t("activities.circuitNamed", { name })),
   ].join(" · ");
 }
@@ -96,7 +100,7 @@ export const climbingSetText = (set: SetDone): string =>
 
 /** "45:00 min" for one set of time on the wall, and "2 × 45:00 min" or "1-2 × 45:00 min" for more. */
 export function wallDoseLine(dose: Pick<Dose, "sets" | "setsMax" | "onS">): string {
-  const time = t("activities.wallTime", { time: clock(dose.onS ?? 0, true) });
+  const time = wallTimeText(dose.onS ?? 0);
   return dose.sets === 1 && dose.setsMax === undefined
     ? time
     : `${countText(dose.sets, dose.setsMax)} × ${time}`;

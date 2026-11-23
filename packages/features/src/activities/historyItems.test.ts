@@ -34,6 +34,28 @@ describe("exerciseItems", () => {
     const [series] = exerciseSeries([activity]);
     const items = series === undefined ? [] : exerciseItems(series, [activity], "kg");
     expect(items[0]?.meta).toBe("4 climbs · 3 sent · top V5");
+    const wall = {
+      ...activity,
+      done: [
+        {
+          item: 0,
+          exercise: "Capacity boulders",
+          sets: [{ onS: 2700, climbs: [climb("V7", false), climb("V5"), climb("V6")] }],
+        },
+      ],
+    } as unknown as ActivityRecord;
+    const [wallSeries] = exerciseSeries([wall]);
+    expect(
+      wallSeries === undefined ? undefined : exerciseItems(wallSeries, [wall], "kg")[0]?.meta
+    ).toBe("45:00 min · 3 climbs · top V6");
+    const model = {
+      gripName: (id: string): string => id,
+      settings: { units: "kg" } as HangSettings,
+      data: { sessions: [] } as unknown as Parameters<typeof workoutHistory>[1]["data"],
+    };
+    expect(
+      workoutHistory([{ ...wall, workoutId: "w" } as ActivityRecord], model, "w")[0]?.meta
+    ).toBe("3 climbs · 2 sent · top V6 · 60 min");
   });
 });
 
