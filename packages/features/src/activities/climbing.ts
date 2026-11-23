@@ -11,6 +11,17 @@ export const lapPlanOf = (dose: Dose): { unit: "moves" | "seconds"; target: numb
     ? { unit: "seconds", target: dose.onS }
     : { unit: "moves", target: dose.reps ?? 0 };
 
+/** What a logged circuit's laps were measured against: its dose, else the laps themselves. */
+export const lapPlanFor = (
+  dose: Dose | undefined,
+  laps: readonly Pick<SetDone, "reps" | "onS">[]
+): { unit: "moves" | "seconds"; target: number } =>
+  dose !== undefined
+    ? lapPlanOf(dose)
+    : laps.some((l) => l.onS !== undefined)
+      ? { unit: "seconds", target: Math.max(0, ...laps.map((l) => l.onS ?? 0)) }
+      : { unit: "moves", target: Math.max(0, ...laps.map((l) => l.reps ?? 0)) };
+
 /** "3 laps · 2 clean": laps logged as sets, each clean when it reached the lap's target. */
 export function lapsLine(sets: readonly SetDone[], dose: Dose): string {
   const { unit, target } = lapPlanOf(dose);

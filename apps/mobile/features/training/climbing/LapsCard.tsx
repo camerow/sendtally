@@ -1,26 +1,21 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
 import type { SessionItem, WeightUnit } from "@sendtally/core/hang";
-import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
-  enduranceAmountLabel,
   useLapsTally,
   type LiveSession,
   type LogSessionDraft,
 } from "@sendtally/features/log-session";
 import { lapPlanOf } from "@sendtally/features/activities";
-import { elapsedClock } from "@sendtally/features/sessions";
 import { exerciseName, targetText, type RestClock } from "@sendtally/features/workouts";
 import type { About } from "../components/AboutButton";
-import { Stepper } from "../components/Stepper";
 import type { DetailMenuRow } from "../components/types";
 import { RestRow } from "../rest/RestRow";
 import { ExerciseBlock } from "../sets/ExerciseBlock";
 import { ExerciseHead } from "../sets/ExerciseHead";
 import { SetRow, type SetRowProps } from "../sets/SetRow";
-import { type } from "../type";
 import { useSessionTarget } from "../sets/sessionTarget";
+import { LapValue } from "./LapValue";
 
 export type LapsCardProps = {
   item: number;
@@ -41,60 +36,6 @@ export type LapsCardProps = {
   /** A lap was taken out, for its Undo. */
   onLapRemoved: (lap: number) => void;
 };
-
-type LapPlan = ReturnType<typeof lapPlanOf>;
-
-/** "28 moves", "4:30": what one lap was. */
-const lapAmount = (plan: LapPlan, value: number): string =>
-  enduranceAmountLabel({ ...plan, laps: [] }, value);
-
-/** A lap's moves on − and +, out of the circuit's. */
-function Moves({
-  label,
-  value,
-  plan,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  plan: LapPlan;
-  onChange: (moves: number) => void;
-}): React.ReactElement {
-  const clamp = (n: number): number => Math.min(plan.target, Math.max(0, n));
-  return (
-    <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 6 }}>
-      <Stepper
-        compact
-        label={t("workouts.dose.moves")}
-        accessibilityLabel={`${label} · ${t("workouts.dose.moves")}`}
-        value={value}
-        min={0}
-        max={plan.target}
-        step={1}
-        onChange={(n) => onChange(clamp(n))}
-        onStep={(d) => onChange(clamp(value + d))}
-        decreaseLabel={`${label} · ${t("tally.fewerMoves")}`}
-        increaseLabel={`${label} · ${t("tally.moreMoves")}`}
-        surface="plain"
-      />
-      <Text style={[type.mono, { fontSize: 13, color: colors.textSecondary }]}>
-        {t("activities.holdOf", { time: lapAmount(plan, plan.target) })}
-      </Text>
-    </View>
-  );
-}
-
-/** A timed lap's time, out of the lap's. */
-function LapTime({ seconds, plan }: { seconds: number; plan: LapPlan }): React.ReactElement {
-  return (
-    <Text style={[type.monoBold, { fontSize: 14, color: colors.gunmetal }]}>
-      {elapsedClock(seconds)}
-      <Text style={[type.mono, { fontSize: 13, color: colors.textSecondary }]}>
-        {` ${t("activities.holdOf", { time: elapsedClock(plan.target) })}`}
-      </Text>
-    </Text>
-  );
-}
 
 /**
  * A circuit exercise as a row per lap, on the tally or off it: each lap ticked when off the wall,
@@ -173,16 +114,12 @@ export function LapsCard({
           }}
           removeLabel={t("tally.removeLapOf", { lap: i + 1 })}
         >
-          {plan.unit === "seconds" ? (
-            <LapTime seconds={value} plan={plan} />
-          ) : (
-            <Moves
-              label={label(i + 1)}
-              value={value}
-              plan={plan}
-              onChange={(n) => laps.change(i, n)}
-            />
-          )}
+          <LapValue
+            label={label(i + 1)}
+            value={value}
+            plan={plan}
+            onChange={(n) => laps.change(i, n)}
+          />
         </SetRow>
       ))}
       {laps.rest !== null &&
@@ -205,23 +142,13 @@ export function LapsCard({
           removeLabel={t("tally.removeLapOf", { lap: done + 1 })}
           {...removable(done + 1)}
         >
-          {plan.unit === "seconds" ? (
-            <Pressable
-              style={{ flex: 1, minHeight: 44, justifyContent: "center" }}
-              onPress={laps.elapsed === null ? laps.startLap : undefined}
-              accessibilityRole="button"
-              accessibilityLabel={`${label(done + 1)}, ${t("hang.start")}`}
-            >
-              <LapTime seconds={laps.elapsed ?? 0} plan={plan} />
-            </Pressable>
-          ) : (
-            <Moves
-              label={label(done + 1)}
-              value={nextMoves}
-              plan={plan}
-              onChange={(n) => setMoves({ lap: done, n })}
-            />
-          )}
+          <LapValue
+            label={label(done + 1)}
+            value={plan.unit === "seconds" ? (laps.elapsed ?? 0) : nextMoves}
+            plan={plan}
+            onChange={(n) => setMoves({ lap: done, n })}
+            {...(laps.elapsed === null && { onStart: laps.startLap })}
+          />
         </SetRow>
       )}
       {Array.from({ length: Math.max(0, planned - done - 1) }, (_, i) => done + i + 2).map((n) => (

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { SetClimb, SetDone } from "@sendtally/core/hang";
 import {
   climbingDoseLine,
+  lapPlanFor,
   climbingLastTime,
   climbLine,
   climbsLine,
@@ -122,5 +123,14 @@ describe("climbing sets", () => {
       { ...first, done: [{ item: 0, exercise: "ARC", sets: [{ onS: 1200, climbs: [green] }] }] },
     ]);
     expect(laps[0]?.metric).toBe("climbs");
+  });
+
+  it("measures a logged circuit against its dose, else its own laps", () => {
+    expect(lapPlanFor({ sets: 3, reps: 40 }, [{ reps: 8 }])).toEqual({ unit: "moves", target: 40 });
+    expect(lapPlanFor(undefined, [{ reps: 30 }, { reps: 12 }])).toEqual({
+      unit: "moves",
+      target: 30,
+    });
+    expect(lapPlanFor(undefined, [{ onS: 270 }])).toEqual({ unit: "seconds", target: 270 });
   });
 });

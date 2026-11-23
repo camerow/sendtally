@@ -326,4 +326,18 @@ describe("a logged climbing exercise in review", () => {
       },
     ]);
   });
+
+  it("reviews a circuit's laps as the run's lap rows: moves on − and +, no headings", () => {
+    mount(false, null, {
+      ...review,
+      kind: "climbing",
+      done: [{ item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 8 }] }],
+    });
+    expect(container.textContent).not.toContain("Done");
+    click(container.querySelector('[aria-label="Lap 2 · Fewer moves"]'));
+    save();
+    expect(saved()).toEqual([
+      { item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 7 }] },
+    ]);
+  });
 });

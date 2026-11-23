@@ -363,7 +363,7 @@ describe("Log activity", () => {
     ).toBeNull();
   });
 
-  it("states a circuit's target as laps of moves, its sets as laps", async () => {
+  it("states a circuit's target as laps of moves, its laps as the run's lap rows", async () => {
     const done = [{ item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 8 }] }];
     const initial = newActivityDraft(
       { kind: "climbing", workoutId: "w4", done: JSON.stringify(done) },
@@ -382,7 +382,9 @@ describe("Log activity", () => {
     );
     expect(screen.getByText("3 laps × 40 moves")).toBeTruthy();
     expect(screen.queryByText("8 of 40 moves")).toBeNull();
-    expect(screen.getByText("Lap")).toBeTruthy();
+    expect(screen.queryByText("Lap")).toBeNull();
+    expect(screen.getAllByText("of 40 moves")).toHaveLength(2);
+    expect(screen.getByLabelText("Lap 2 · Fewer moves")).toBeTruthy();
     expect(screen.getByText("Add lap")).toBeTruthy();
     expect(screen.queryByText("Remove lap")).toBeNull();
     expect(screen.queryByText("Add set")).toBeNull();

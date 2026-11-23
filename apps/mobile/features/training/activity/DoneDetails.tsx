@@ -6,6 +6,7 @@ import { colors } from "@sendtally/design/tokens";
 import {
   addSet,
   changeSet,
+  lapPlanFor,
   offWithout,
   removeSet,
   setKeyOf,
@@ -26,6 +27,7 @@ import { useFieldOrder } from "../../../components/useFieldOrder";
 import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { climbGradeText } from "../climbing/ClimbGrade";
 import { ClimbSetsEdit, type ClimbAt } from "../climbing/ClimbSetsEdit";
+import { LapValue } from "../climbing/LapValue";
 import { ChecklistCard } from "../sets/ChecklistCard";
 import { ExerciseBlock } from "../sets/ExerciseBlock";
 import { ExerciseHead } from "../sets/ExerciseHead";
@@ -215,6 +217,40 @@ export function DoneDetails({
                     );
                 }}
               />
+            ) : lap ? (
+              d.sets.map((set, i) => {
+                const plan = lapPlanFor(
+                  dose !== undefined && "sets" in dose ? dose : undefined,
+                  d.sets
+                );
+                const label = t("tally.lapLabel", { lap: i + 1 });
+                return (
+                  <SetRow
+                    key={i}
+                    position={String(i + 1)}
+                    label={label}
+                    ticked={!off.includes(setKeyOf(d.item, i))}
+                    onToggle={() => toggle(d.item, i)}
+                    selected={selected?.item === d.item && selected.set === i}
+                    onSelect={() => select(d.item, i)}
+                    onRemove={() => remove(d, i)}
+                    removeLabel={t("tally.removeLapOf", { lap: i + 1 })}
+                    testID="review-set"
+                  >
+                    <LapValue
+                      label={label}
+                      value={plan.unit === "seconds" ? (set.onS ?? 0) : (set.reps ?? 0)}
+                      plan={plan}
+                      onChange={(reps) =>
+                        onChange(
+                          changeSet(done, d.item, i, { ...set, reps }),
+                          offWithoutKey(off, d.item, i)
+                        )
+                      }
+                    />
+                  </SetRow>
+                );
+              })
             ) : (
               <>
                 {index === 0 && setup}
