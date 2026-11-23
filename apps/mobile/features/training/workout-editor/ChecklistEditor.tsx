@@ -73,7 +73,7 @@ export function ChecklistEditor({
       </View>
       {lines.map((line, i) => (
         <View key={keys[i]} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Text style={[type.monoBold, { width: 22, fontSize: 14, color: colors.textSecondary }]}>
+          <Text style={[type.monoBold, { width: 28, fontSize: 14, color: colors.textSecondary }]}>
             {`${i + 1}.`}
           </Text>
           <TextInput
