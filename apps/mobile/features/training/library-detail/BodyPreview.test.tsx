@@ -49,3 +49,29 @@ describe("A workout's body with a superset", () => {
     expect(screen.getAllByText("Superset · 3 rounds")).toHaveLength(1);
   });
 });
+
+describe("A workout's body with a checklist", () => {
+  it("draws each line as its own row, with no tick", async () => {
+    await render(
+      <BodyPreview
+        items={sessionItems(
+          [
+            {
+              exercise: "Checklist",
+              doses: [{ sets: 1 }],
+              checklist: { lines: ["Inchworms", "20 lateral squats"] },
+            },
+          ],
+          0
+        )}
+        exerciseRestS={90}
+        unit="kg"
+        kindOf={() => "strength"}
+        eachSide={() => false}
+      />
+    );
+    expect(screen.getByText("Inchworms")).toBeTruthy();
+    expect(screen.getByText("20 lateral squats")).toBeTruthy();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+  });
+});

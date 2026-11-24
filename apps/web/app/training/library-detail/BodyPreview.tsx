@@ -14,6 +14,7 @@ import {
   type TargetKind,
   type TargetText,
 } from "@sendtally/features/workouts";
+import { ChecklistCard } from "../components/ChecklistCard";
 import { ExerciseBlock } from "../components/ExerciseBlock";
 import { ExerciseHead } from "../components/ExerciseHead";
 import { PhaseBar } from "../components/PhaseBar";
@@ -55,13 +56,11 @@ export function BodyPreview({
 }: BodyPreviewProps): React.ReactElement {
   const sessionRpe = useSessionTarget();
   const target = (item: SessionItem, round = false): TargetText =>
-    item.checklist === undefined
-      ? targetText(item.dose, kindOf(item.exercise), unit, {
-          eachSide: eachSide(item.exercise),
-          round,
-          sessionRpe,
-        })
-      : { work: item.checklist.lines.join(" · "), rpe: undefined };
+    targetText(item.dose, kindOf(item.exercise), unit, {
+      eachSide: eachSide(item.exercise),
+      round,
+      sessionRpe,
+    });
   const timed = items.length > 0 && items.every((item) => item.dose.onS !== undefined);
   const history = (item: SessionItem): string | undefined =>
     item.checklist === undefined ? historyOf(item.exercise) : undefined;
@@ -81,7 +80,9 @@ export function BodyPreview({
         return (
           <React.Fragment key={first}>
             {b > 0 && <RestPreview seconds={restAfterItem(items, first - 1, exerciseRestS)} />}
-            {group === undefined ? (
+            {item.checklist !== undefined && group === undefined ? (
+              <ChecklistCard lines={item.checklist.lines} ticked={() => false} read />
+            ) : group === undefined ? (
               <ExerciseBlock
                 head={
                   <ExerciseHead
