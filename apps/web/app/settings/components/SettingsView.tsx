@@ -38,7 +38,7 @@ export type SettingsViewProps = {
   gymsReady: boolean;
   /** Null until the status loads, which hides the rows' hints. */
   onboarding: OnboardingProgress | null;
-  /** At 375 the tab bar has no room for Moderation, so it is a row here. */
+  /** At 375 the tab bar has no room for Admin, so it is a row here. */
   moderator?: boolean;
 };
 
@@ -181,13 +181,13 @@ export function SettingsView({
 
       {moderator && (
         <Link
-          to="/app/moderation"
+          to="/app/admin"
           className="narrow-only"
           style={{ textDecoration: "none", color: "inherit" }}
         >
           <Section>
             <ChevronRow>
-              <span style={sectionLabel}>Moderation</span>
+              <span style={sectionLabel}>Admin</span>
             </ChevronRow>
           </Section>
         </Link>

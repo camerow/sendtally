@@ -7,7 +7,7 @@ import {
   entryKicker,
   filterCounts,
   libraryGroups,
-  libraryTabCount,
+  libraryGapCount,
   pictureSummary,
 } from "./moderation";
 import { TEST_LIBRARY } from "./testLibrary";
@@ -70,7 +70,7 @@ describe("moderation library", () => {
       noPicture: offered - 1,
       retired: 1,
     });
-    expect(libraryTabCount(library)).toBe(offered - 1);
+    expect(libraryGapCount(library)).toBe(offered - 1);
     const half = library.grips.find((g) => g.id === "half")!;
     expect(pictureSummary(half)).toBe("2 pictures");
     expect(pictureSummary(library.grips[1]!)).toBe("No picture");

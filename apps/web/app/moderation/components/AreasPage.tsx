@@ -1,7 +1,6 @@
 import React from "react";
 import { useSearchParams } from "react-router";
 import type { ModerationQueue, SendtallyApi } from "@sendtally/api-client";
-import { Logo } from "@sendtally/design";
 import {
   MODERATION_TABS,
   moderationTabLabel,
@@ -9,21 +8,21 @@ import {
   type ModerationTab,
 } from "@sendtally/features/areas";
 import { formatNumber } from "@sendtally/features/i18n";
-import { libraryTabCount } from "@sendtally/features/library";
-import { queries, useQuery } from "@sendtally/features/query";
 import { useClientApi } from "../../lib/useClientApi";
+import { AdminFrame } from "./AdminFrame";
 import { CreationsPanel } from "./CreationsPanel";
 import { DuplicateCard } from "./DuplicateCard";
-import { LibraryPanel } from "./LibraryPanel";
 import { ReportCard } from "./ReportCard";
 import { RevisionCard } from "./RevisionCard";
 
 const tabOf = (value: string | null): ModerationTab =>
   MODERATION_TABS.find((tab) => tab === value) ?? "creations";
 
-type QueueTab = Exclude<ModerationTab, "library">;
-
-function itemsOf(api: SendtallyApi, queue: ModerationQueue, tab: QueueTab): React.ReactElement[] {
+function itemsOf(
+  api: SendtallyApi,
+  queue: ModerationQueue,
+  tab: ModerationTab
+): React.ReactElement[] {
   switch (tab) {
     case "creations":
       return [<CreationsPanel key="creations" api={api} />];
@@ -40,29 +39,16 @@ function itemsOf(api: SendtallyApi, queue: ModerationQueue, tab: QueueTab): Reac
   }
 }
 
-export function ModerationPage({ apiUrl }: { apiUrl: string }): React.ReactElement {
-  const api = useClientApi(apiUrl);
+function Queues({ api }: { api: SendtallyApi }): React.ReactElement {
   const { state } = useModerationQueue(api);
-  const { state: library } = useQuery(queries.library(api));
   const [params, setParams] = useSearchParams();
   const tab = tabOf(params.get("tab"));
   const queue = state.status === "ready" ? state.data : null;
-  const current = queue === null || tab === "library" ? null : queue[tab];
-  const count = (value: ModerationTab): number | null => {
-    if (value !== "library") return queue?.[value].count ?? null;
-    return library.status === "ready" ? libraryTabCount(library.data) : null;
-  };
+  const current = queue?.[tab] ?? null;
 
   return (
-    <div className="mod-page">
-      <div className="sessions-head">
-        <span className="sessions-head-mark">
-          <Logo variant="mark" size={22} />
-        </span>
-        <h1 className="sessions-title">Moderation</h1>
-      </div>
-
-      <div className="mod-tabs" role="tablist" aria-label="Moderation queues">
+    <>
+      <div className="mod-tabs" role="tablist" aria-label="Areas queues">
         {MODERATION_TABS.map((value) => (
           <button
             key={value}
@@ -75,35 +61,19 @@ export function ModerationPage({ apiUrl }: { apiUrl: string }): React.ReactEleme
             }
           >
             {moderationTabLabel(value)}
-            {count(value) !== null && (
-              <span className="mod-tab-count">{formatNumber(count(value) ?? 0)}</span>
+            {queue !== null && (
+              <span className="mod-tab-count">{formatNumber(queue[value].count)}</span>
             )}
           </button>
         ))}
       </div>
 
       <div role="tabpanel" className="mod-list" data-tab={tab}>
-        {tab === "library" && library.status === "ready" && (
-          <LibraryPanel
-            api={api}
-            library={library.data}
-            item={params.get("item")}
-            onOpen={(item) =>
-              setParams(item === null ? { tab } : { tab, item }, { replace: item === null })
-            }
-          />
+        {state.status === "loading" && <span className="area-meta">Loading…</span>}
+        {state.status === "error" && (
+          <span className="area-meta">Could not load the moderation queue.</span>
         )}
-        {(tab === "library" ? library : state).status === "loading" && (
-          <span className="area-meta">Loading…</span>
-        )}
-        {(tab === "library" ? library : state).status === "error" && (
-          <span className="area-meta">
-            {tab === "library"
-              ? "Could not load the library."
-              : "Could not load the moderation queue."}
-          </span>
-        )}
-        {queue !== null && current !== null && tab !== "library" && (
+        {queue !== null && current !== null && (
           <>
             {current.count === 0 && tab !== "creations" && (
               <p className="area-empty">Nothing waiting here.</p>
@@ -117,6 +87,16 @@ export function ModerationPage({ apiUrl }: { apiUrl: string }): React.ReactEleme
           </>
         )}
       </div>
-    </div>
+    </>
+  );
+}
+
+/** Areas moderation: new areas and climbs, suggested edits, duplicates and reports. */
+export function AreasPage({ apiUrl }: { apiUrl: string }): React.ReactElement {
+  const api = useClientApi(apiUrl);
+  return (
+    <AdminFrame title="Areas" back={{ to: "/app/admin", label: "Admin" }}>
+      <Queues api={api} />
+    </AdminFrame>
   );
 }

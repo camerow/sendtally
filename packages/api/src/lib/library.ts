@@ -7,13 +7,16 @@ import {
   LIBRARY_TYPES,
   TRANSLATED_LOCALES,
   WORKOUT_KINDS,
+  measuresFor,
+  type BuiltInExerciseSpec,
   type BuiltInLibrary,
+  type BuiltInWorkoutSpec,
   type LibraryEntry,
   type LibraryPicture,
   type LibraryTranslations,
 } from "@sendtally/core/hang";
 import type { libraryItems, libraryMedia } from "../db/schema";
-import { description, dose, title } from "./plan";
+import { description, dose, rpe, title } from "./plan";
 
 const text = z.object({ name: z.string().optional(), description: z.string().optional() });
 
@@ -58,6 +61,91 @@ export const libraryEditBody = z.object({
 });
 
 export type LibraryEdit = z.infer<typeof libraryEditBody>;
+
+/**
+ * A new built-in exercise or workout: its English text, other names, and what it holds. The
+ * spec is parsed by type in `createdSpec`.
+ */
+export const libraryCreateBody = z.object({
+  name: title,
+  description,
+  names: libraryEditBody.shape.names,
+  spec: z.unknown(),
+});
+
+export type CreatedSpec = BuiltInExerciseSpec | BuiltInWorkoutSpec;
+
+const count = (max: number) => z.number().int().min(1).max(max);
+
+// Creation writes a spec every user gets, so its numbers are bounded tighter than the read
+// shapes, which stay as they are for the rows already stored. The seeds fit inside these.
+const createdDose = z.object({
+  sets: count(50),
+  setsMax: count(50).optional(),
+  reps: count(500).optional(),
+  repsMax: count(500).optional(),
+  onS: count(3600).optional(),
+  offS: count(3600).optional(),
+  setRestS: count(3600).optional(),
+  weightKg: z.number().min(0).max(500).optional(),
+  targetRpe: rpe.optional(),
+});
+
+const createdDoses = z.array(createdDose).min(1).max(10);
+
+const createdExerciseSpec = exerciseSpec.extend({ dose: createdDose.optional() });
+
+const createdWorkoutSpec = workoutSpec.extend({
+  minutes: count(600).nullable(),
+  targetRpe: rpe.nullable(),
+  items: z
+    .array(
+      z.union([
+        z.object({ grip: z.enum(BUILT_IN_GRIPS), doses: createdDoses }),
+        z.object({ exercise: z.string(), doses: createdDoses }),
+        z.object({ step: z.enum(["hard", "easy"]), doses: createdDoses }),
+      ])
+    )
+    .min(1)
+    .max(30),
+});
+
+const problem = (what: string, error: z.ZodError): { error: string } => {
+  const issue = error.issues[0];
+  return {
+    error: `invalid ${what}: ${issue?.path.join(".") ?? ""} ${issue?.message ?? ""}`.trim(),
+  };
+};
+
+/**
+ * The spec a new built-in of `type` holds, or why it cannot: an exercise's measure fits its kind;
+ * a workout's items are grips when it is hangboard and built-in exercises or steps otherwise.
+ */
+export function createdSpec(
+  type: "exercise" | "workout",
+  spec: unknown,
+  exerciseIds: ReadonlySet<string>
+): { spec: CreatedSpec } | { error: string } {
+  if (type === "exercise") {
+    const parsed = createdExerciseSpec.safeParse(spec);
+    if (!parsed.success) return problem("exercise spec", parsed.error);
+    if (!measuresFor(parsed.data.kind).includes(parsed.data.measure))
+      return { error: `${parsed.data.measure} does not fit ${parsed.data.kind}` };
+    return { spec: parsed.data };
+  }
+  const parsed = createdWorkoutSpec.safeParse(spec);
+  if (!parsed.success) return problem("workout spec", parsed.error);
+  const { kind, items } = parsed.data;
+  for (const item of items) {
+    if ((kind === "hangboard") !== "grip" in item)
+      return {
+        error: kind === "hangboard" ? "hangboard items are grips" : "grips are hangboard only",
+      };
+    if ("exercise" in item && !exerciseIds.has(item.exercise))
+      return { error: `no built-in exercise ${item.exercise}` };
+  }
+  return { spec: parsed.data };
+}
 
 /** A picture's text and place, which a change records and Restore writes back. */
 export type MediaState = { id: string; alt: string; credit: string };

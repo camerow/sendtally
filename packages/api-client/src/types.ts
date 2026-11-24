@@ -97,6 +97,11 @@ type LibraryItemRoutes = Client["v1"]["moderation"]["library"][":type"][":id"];
 /** A moderator's edit to a built-in's text and status. */
 export type LibraryEdit = InferRequestType<LibraryItemRoutes["$put"]>["json"];
 
+/** A new built-in exercise or workout, as a moderator creates it. */
+export type LibraryCreate = InferRequestType<
+  Client["v1"]["moderation"]["library"][":type"]["$post"]
+>["json"];
+
 /** One logged edit to a built-in, by whom, with the state before and after it. */
 type LibraryItemView = Extract<Ok<LibraryItemRoutes["$get"]>, { changes: unknown }>;
 

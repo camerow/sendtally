@@ -238,7 +238,7 @@ Store listing copy lives in `apps/mobile/store/listing.md` and should match what
 - Never call `t()` at module scope: the locale is set after modules load on mobile and per request on the web Worker (`AsyncLocalStorage` in `entry.server.tsx`), so a module-level constant freezes to English. Keep module-level data as plain values or keys and resolve the text in a function (`trendRangeLabel(range)`, `memberBenefits()`).
 - Locale is the device language on mobile (`expo-localization`) and `Accept-Language` on the web; the marketing landing is additionally served per locale at `/de`, `/fr`, `/es` from `apps/web/app/landing/copy.<locale>.ts` with hreflang alternates.
   Terms, privacy, support, API error bodies, and the Strava activity description stay English.
-- Moderation tooling (`/app/moderation`, `apps/web/app/moderation/`, `packages/features/src/areas/moderation.ts`) is internal and English only: plain string literals, no `t()`, no catalog keys.
+- Moderation tooling (`/app/admin` and its Library and Areas pages, `apps/web/app/moderation/`, `packages/features/src/areas/moderation.ts`) is internal and English only: plain string literals, no `t()`, no catalog keys.
   It is also never indexed or crawled - the route sets `noindex` and `robots.txt` disallows `/app/`.
 - Grades follow the user's grade scales everywhere; the rule and its functions are under Session flow, Invariants.
 - Weights follow the user's weight unit everywhere.
