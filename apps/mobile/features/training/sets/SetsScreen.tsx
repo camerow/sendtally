@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { WithWeightUnit } from "../data/WithWeightUnit";
+import { useHangData } from "../data/HangDataContext";
 import type { WeightUnit } from "@sendtally/core/hang";
 import React from "react";
 import { restAfterItem } from "@sendtally/core/hang";
@@ -9,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import { climbingDoseLine, foldedLine, useActivities } from "@sendtally/features/activities";
 import { exerciseAbout } from "@sendtally/features/exercises";
-import { useGrips, useHang } from "@sendtally/features/hang";
+import { useGrips } from "@sendtally/features/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { useLiveSession } from "@sendtally/features/log-session";
 import { useExercises } from "@sendtally/features/statistics";
@@ -80,8 +81,7 @@ function SetsScreenBody({
   const tally = useLiveSession(exerciseTallyStorage);
   const [keypad, setKeypad] = React.useState(false);
   const grips = useGrips(api);
-  const hang = useHang(api).state;
-  const model = hang.status === "ready" ? hang.data : null;
+  const { model } = useHangData();
   const [removed, setRemoved] = React.useState<{ message: string; undo: () => void } | null>(null);
   const runWorkout = useRunWorkout(run.workoutId);
   const player = useSetsPlayer({
@@ -91,9 +91,7 @@ function SetsScreenBody({
     activities: activities.status === "ready" ? activities.data : null,
     exercises: mine,
     isGrip: grips.isGrip,
-    ...(model !== null && {
-      gripSetup: (g) => model.setup(g.workout, g.workout.grip, g.dose),
-    }),
+    gripSetup: (g) => model.setup(g.workout, g.workout.grip, g.dose),
   });
   const { part } = player;
   const { shown, ticked, rest, hold, nameOf, items, order } = player;
@@ -153,12 +151,12 @@ function SetsScreenBody({
     const k = part?.places.indexOf(i) ?? -1;
     const planned = part?.planned.items[k];
     if (part === null || planned === undefined) return undefined;
-    const setup = model?.setup(planned.workout, planned.workout.grip, planned.dose);
+    const setup = part.setup(i) ?? model.setup(planned.workout, planned.workout.grip, planned.dose);
     const timer = part.timer(i);
     return {
       name: grips.gripName(planned.workout.grip),
-      edgeMm: setup?.edgeMm ?? 0,
-      loadKg: setup?.loadKg ?? 0,
+      edgeMm: setup.edgeMm,
+      loadKg: setup.loadKg,
       timer:
         timer === null
           ? null
@@ -436,6 +434,7 @@ function SetsScreenBody({
                         {between}
                       </React.Fragment>
                     );
+                  const grip = gripOf(i);
                   return (
                     <React.Fragment key={i}>
                       {player.folded(i) ? (
@@ -444,7 +443,7 @@ function SetsScreenBody({
                           line={
                             skipped
                               ? t("plan.skipped")
-                              : foldedLine(d.sets, unit, gripOf(i) ? "hangboard" : "strength")
+                              : foldedLine(d.sets, unit, grip ? "hangboard" : "strength")
                           }
                           done={
                             !skipped &&
@@ -473,10 +472,10 @@ function SetsScreenBody({
                           onAddSet={() => player.addSet(i)}
                           onFold={() => player.fold(i)}
                           menu={menu(i)}
-                          {...(gripOf(i) === undefined
+                          {...(grip === undefined
                             ? { onHistory: openExerciseHistory(mine, item.exercise) }
                             : {
-                                grip: gripOf(i),
+                                grip,
                                 onHistory: () =>
                                   router.push({
                                     pathname: "/grip/[id]",

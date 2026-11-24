@@ -4,7 +4,8 @@ import { router } from "expo-router";
 import React from "react";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
 import { anExercise, hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
-import type { WorkoutRun } from "@sendtally/features/workouts";
+import { partTimerStart, type WorkoutRun } from "@sendtally/features/workouts";
+import { protocolOf, startWorkoutRun, tick } from "@sendtally/core/hang";
 import { liveRun } from "../../live-session/liveRun";
 import { useLiveHold } from "../hold/useLiveHold";
 import { SetsScreen } from "./SetsScreen";
@@ -553,7 +554,7 @@ describe("Sets player", () => {
               ],
             },
           ],
-          setups: [{ edgeMm: 20, loadKg: 0 }],
+          setups: [{ edgeMm: 25, loadKg: 5 }],
           planned: {
             items: [
               {
@@ -579,8 +580,15 @@ describe("Sets player", () => {
       },
     });
     await renderWithHang(<SetsScreen run={mix} />);
-    expect(screen.getByLabelText("Open Half crimp, 2 sets × 3 hangs · 7s")).toBeTruthy();
     expect(screen.queryByText(/Start timer|Resume timer/)).toBeNull();
+    const merged = liveRun.read()?.state;
+    expect(merged?.player === "sets" && merged).toMatchObject({
+      ticked: expect.arrayContaining(["0:0", "0:1"]),
+      gripSetups: { "0": { edgeMm: 25, loadKg: 5 } },
+    });
+    expect(merged?.player === "sets" && merged.fingers).toBeUndefined();
+    await fireEvent.press(screen.getByLabelText("Open Half crimp, 2 sets × 3 hangs · 7s"));
+    expect(screen.getByText(/25 mm edge/)).toBeTruthy();
     await fireEvent.press(screen.getByText("Finish"));
     const [[{ params }]] = (router.replace as jest.Mock).mock.calls.slice(-1) as [
       [{ params: { done: string } }],
@@ -589,7 +597,44 @@ describe("Sets player", () => {
     const saved = liveRun.read()?.state;
     expect(saved?.player === "sets" && saved.fingers).toMatchObject({
       done: [{ item: 0, exercise: "half", sets: [{ reps: 3 }, { reps: 2 }] }],
+      setups: [{ edgeMm: 25, loadKg: 5 }],
     });
+  });
+
+  it("never counts a rest under a grip while its timer is on a set", async () => {
+    const mix: WorkoutRun = {
+      ...run,
+      title: "Fingers and pull",
+      items: [
+        { exercise: "half", dose: { sets: 2, reps: 3, onS: 7, offS: 3, setRestS: 120 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    };
+    const view = await renderWithHang(<SetsScreen run={mix} />);
+    await fireEvent.press(screen.getByLabelText("Half crimp, set 1"));
+    expect(screen.getByLabelText(/^Rest, /)).toBeTruthy();
+    await view.unmount();
+    const live = liveRun.read();
+    if (live === null || live.state.player !== "sets") throw new Error("no live run");
+    const start = partTimerStart(mix, () => true, undefined, { item: 0, set: 1 });
+    if (start === null) throw new Error("no timer");
+    const protocols = start.planned.items.map((i) => protocolOf(i.workout));
+    const onSet = tick(startWorkoutRun(protocols, [], Date.now() - 6_000), Date.now());
+    liveRun.writeAsIs({
+      ...live,
+      state: {
+        ...live.state,
+        fingers: {
+          run: onSet,
+          setups: [{ edgeMm: 20, loadKg: 0 }],
+          planned: start.planned,
+          at: { item: 0, set: 1 },
+        },
+      },
+    });
+    await renderWithHang(<SetsScreen run={mix} />);
+    expect(screen.queryByLabelText(/^Rest, /)).toBeNull();
+    expect(liveRun.read()?.rest).toBeUndefined();
   });
   it("counts the exercise after a finished fingerboard part while the warm-up checklist is still open", async () => {
     const warm = { exercise: "Checklist", dose: { sets: 1 }, checklist: { lines: ["Jog"] } };

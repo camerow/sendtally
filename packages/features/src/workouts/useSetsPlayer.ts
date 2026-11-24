@@ -38,6 +38,7 @@ import {
   partOfRows,
   partPlaces,
   partPlanned,
+  partSetups,
   timerWrites,
   withTimerWrites,
   type FingersPart,
@@ -101,7 +102,7 @@ export type SetsPlayerInputs = {
   /** Which items name grips: together they are the run's fingerboard part. */
   isGrip: (exercise: string) => boolean;
   /** A grip's edge and load as the user last set them, which its save starts from. */
-  gripSetup?: (item: PlannedRun["items"][number]) => HangSetup;
+  gripSetup: (item: PlannedRun["items"][number]) => HangSetup;
 };
 
 /** A mix's grips in the player: each its own card, and the hang timer that writes their rows. */
@@ -111,6 +112,8 @@ export type PartInPlayer = {
   planned: PlannedRun;
   /** The hang timer's run, none until one starts. */
   state: FingersPart | undefined;
+  /** A grip's edge and load as its timer last set them; null for one it never ran. */
+  setup: (item: number) => HangSetup | null;
   /** A grip card's timer button, none once its every set is ticked. */
   timer: (item: number) => GripTimer | null;
 };
@@ -216,7 +219,7 @@ export function useSetsPlayer({
   activities,
   exercises,
   isGrip,
-  gripSetup = () => ({ edgeMm: 0, loadKg: 0 }),
+  gripSetup,
 }: SetsPlayerInputs): SetsPlayer {
   const [resumed] = React.useState(() => {
     const live = store.resumed("/workout/sets", run.workoutId);
@@ -239,6 +242,7 @@ export function useSetsPlayer({
     () => resumed?.done ?? doneAsPrescribed(run.items)
   );
   const [ticked, setTicked] = React.useState<ReadonlySet<string>>(() => new Set(resumed?.ticked));
+  const [gripSetups, setGripSetups] = React.useState(() => resumed?.gripSetups ?? {});
   const [tickedAt, setLastTickAt] = React.useState(resumed?.lastTickAt);
   const [cards, setCards] = React.useState<RunCards>(() =>
     cardsFrom(resumed?.cards, run.items.length)
@@ -250,7 +254,7 @@ export function useSetsPlayer({
   const logged = climbs.length + climbs.reduce((n, c) => n + (c.endurance?.laps.length ?? 0), 0);
   const lastTickAt = ticked.size === 0 && logged === 0 ? undefined : tickedAt;
   const lastRemoved = useLatest(removed);
-  const latest = useLatest({ done, ticked });
+  const latest = useLatest({ done, ticked, gripSetups });
   const rest = useRest(store);
   // Kept by value: grips load after the run opens, and a new list each render would write each render.
   const placesKey = partPlaces(run.items, isGrip).join(",");
@@ -284,36 +288,50 @@ export function useSetsPlayer({
         cards,
         ...(part && { fingers: part }),
         ...(places.length > 0 && { grips: places }),
+        ...(Object.keys(gripSetups).length > 0 && { gripSetups }),
         ...(climbed.length > 0 && { climbed }),
       },
     });
-  }, [store, run, startedAt, lastTickAt, done, ticked, cards, places, climbed]);
+  }, [store, run, startedAt, lastTickAt, done, ticked, cards, places, gripSetups, climbed]);
   const planned = partPlanned(run, places);
   const inPart = (item: number): boolean => places.includes(item);
   // Finish leaves the part's rows in `fingers` for the review, which no merge may take back.
   const finishing = React.useRef(false);
+  // The timer's sets, ticks and setups land in the rows and the store in one write, so a run
+  // killed between the two never loses them.
   const merge = useLatest((): void => {
     if (fingers === undefined || finishing.current) return;
+    const was = latest.current;
     const writes = timerWrites(fingers, places);
-    const after = withTimerWrites(latest.current.done, latest.current.ticked, writes);
-    if (after !== null) {
-      setDone(after.done);
-      setTicked(after.ticked);
-      const ended = writes.filter((w) => w.ended && !latest.current.ticked.has(setKey(w.at)));
-      const last = ended.at(-1);
-      if (last !== undefined) {
-        setLastTickAt(Date.now());
-        const timer = "run" in fingers ? fingers.run : null;
-        if (timer !== null && timer.finished === null && !isWork(currentPhase(timer).kind))
-          rest.tick(setKey(last.at), Math.round(remainingInPhase(timer, Date.now())));
-      }
-    }
-    // A timer that ended, or rows saved before grips had their own, are in the rows now.
-    if (!("run" in fingers) || fingers.run.finished !== null) {
-      const now = store.resumed("/workout/sets", run.workoutId);
-      if (now?.state.player === "sets")
-        store.writeAsIs({ ...now, state: { ...now.state, fingers: undefined } });
-    }
+    const after = withTimerWrites(was.done, was.ticked, writes);
+    const setups = { ...was.gripSetups, ...partSetups(fingers, places) };
+    const newSetups = JSON.stringify(setups) !== JSON.stringify(was.gripSetups);
+    const consumed = !("run" in fingers) || fingers.run.finished !== null;
+    const timer = "run" in fingers && fingers.run.finished === null ? fingers.run : null;
+    if (timer !== null && isWork(currentPhase(timer).kind) && rest.rest !== null) rest.skip();
+    if (after === null && !newSetups && !consumed) return;
+    const done = after?.done ?? was.done;
+    const ticked = after?.ticked ?? was.ticked;
+    const now = store.resumed("/workout/sets", run.workoutId);
+    if (now?.state.player === "sets")
+      store.writeAsIs({
+        ...now,
+        state: {
+          ...now.state,
+          done,
+          ticked: [...ticked],
+          gripSetups: setups,
+          fingers: consumed ? undefined : now.state.fingers,
+        },
+      });
+    setDone(done);
+    setTicked(ticked);
+    setGripSetups(setups);
+    const last = writes.filter((w) => w.ended && !was.ticked.has(setKey(w.at))).at(-1);
+    if (last === undefined) return;
+    setLastTickAt(Date.now());
+    if (timer !== null && !isWork(currentPhase(timer).kind))
+      rest.tick(setKey(last.at), Math.round(remainingInPhase(timer, Date.now())));
   });
   React.useEffect(() => merge.current(), [fingers, merge]);
   const items = [...run.items.slice(0, cards.base), ...cards.added];
@@ -706,7 +724,8 @@ export function useSetsPlayer({
       finishing.current = true;
       const now = store.resumed("/workout/sets", run.workoutId);
       if (planned !== null && now?.state.player === "sets") {
-        const rows = partOfRows(done, ticked, places, planned, planned.items.map(gripSetup));
+        const setups = planned.items.map((it, k) => gripSetups[String(places[k])] ?? gripSetup(it));
+        const rows = partOfRows(done, ticked, places, planned, setups);
         store.writeAsIs({ ...now, state: { ...now.state, fingers: rows } });
       }
       const each = shown.flatMap((d) => (inPart(d.item) ? [] : [{ d, sets: climbedOf(d) }]));
@@ -730,6 +749,7 @@ export function useSetsPlayer({
             places,
             planned,
             state: fingers,
+            setup: (item) => gripSetups[String(item)] ?? null,
             timer: (item) => gripTimer(item, live[item]?.dose.sets ?? 0, ticked, fingers, places),
           },
   };

@@ -24,10 +24,11 @@ export function phaseLabel(run: Run): string {
 }
 
 /**
- * Every word the timer shows for where the run is now. `sets` is the current item's;
+ * Every word the timer shows for where the run is now. `sets` is the current item's, after
+ * `before` already done outside the timer, which its set numbers count on from;
  * a Get ready after the first item is the rest between exercises.
  */
-export function timerText(run: Run, secondsLeft: number, sets = run.sets): TimerText {
+export function timerText(run: Run, secondsLeft: number, sets = run.sets, before = 0): TimerText {
   const phase = currentPhase(run);
   const paused = run.pausedAt !== null;
   const pull = phase.taps > 0;
@@ -37,6 +38,6 @@ export function timerText(run: Run, secondsLeft: number, sets = run.sets): Timer
     setLine:
       phase.kind === "ready"
         ? t("hang.setsAhead", { count: sets })
-        : t("hang.setOf", { set: phase.set, sets }),
+        : t("hang.setOf", { set: phase.set + before, sets: sets + before }),
   };
 }

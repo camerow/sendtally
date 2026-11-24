@@ -86,7 +86,7 @@ export function SetsCard({
     eachSide,
     sessionRpe,
   });
-  const edge = grip === undefined ? undefined : t("hang.edgeMm", { n: grip.edgeMm });
+  const edge = grip === undefined ? undefined : t("hang.edgeLine", { n: grip.edgeMm });
   const tickedSets = done.sets.flatMap((_, i) =>
     ticked.has(setKey({ item: done.item, set: i })) ? [String(i)] : []
   );

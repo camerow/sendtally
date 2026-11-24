@@ -1,4 +1,5 @@
 import { currentPhase, type HangSetup, type ItemDone, type Run } from "@sendtally/core/hang";
+import { builtInGripName } from "../hang/names";
 import { phaseLabel } from "../hang/timerText";
 import { t } from "../i18n";
 import { exerciseName } from "./library";
@@ -17,9 +18,11 @@ export type RunState =
       done: ItemDone[];
       ticked: string[];
       cards?: RunCards;
-      /** A mix's fingerboard part, and its grips' places in `done`, which are no sets to tick. */
+      /** The hang timer on a grip, and the grips' places in `done`. */
       fingers?: FingersPart;
       grips?: number[];
+      /** Each grip's edge and load as its timer last set them, by its place in `done`. */
+      gripSetups?: Record<string, HangSetup>;
       /** A climbing card's sets climbed so far, which its rows end on their own, by set key. */
       climbed?: string[];
     }
@@ -164,24 +167,29 @@ export function liveRunWhere({ state, params }: LiveRun): { name: string | null;
     state.fingers.run.finished === null
   ) {
     const { set } = currentPhase(state.fingers.run);
+    const { at } = state.fingers;
+    const row = at === undefined ? undefined : state.done.find((d) => d.item === at.item);
+    if (at === undefined || row === undefined)
+      return {
+        name: t("workouts.fingerboard"),
+        where: t("hang.setOf", { set, sets: state.fingers.run.sets }),
+      };
     return {
-      name: t("workouts.fingerboard"),
-      where: t("hang.setOf", { set, sets: state.fingers.run.sets }),
+      name: builtInGripName(row.exercise),
+      where: t("hang.setOf", { set: at.set + set, sets: row.sets.length }),
     };
   }
   const order = state.cards?.order ?? state.done.map((d) => d.item);
   const grips = state.grips ?? [];
   const over = [...state.ticked, ...(state.climbed ?? [])];
   const lines = readWorkoutRun(params)?.items;
-  for (const d of order.flatMap((key) =>
-    state.done.filter((x) => x.item === key && !grips.includes(x.item))
-  )) {
+  for (const d of order.flatMap((key) => state.done.filter((x) => x.item === key))) {
     const set = d.sets.findIndex((_, s) => !over.includes(`${d.item}:${s}`));
     const line = set === -1 ? undefined : lines?.[d.item]?.checklist?.lines[set];
     if (line !== undefined) return { name: null, where: line };
     if (set !== -1)
       return {
-        name: exerciseName(d.exercise),
+        name: grips.includes(d.item) ? builtInGripName(d.exercise) : exerciseName(d.exercise),
         where: t("hang.setOf", { set: set + 1, sets: d.sets.length }),
       };
   }

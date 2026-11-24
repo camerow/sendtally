@@ -37,9 +37,9 @@ export function tallyMeasuresOf(
     const key = exerciseKey(name);
     const e =
       exercises.find((x) => exerciseKey(x.name) === key) ??
-      currentLibrary()
-        .exercises.filter((b) => b.id === name || entryNames(b).some((n) => exerciseKey(n) === key))
-        .map((b) => b.spec)[0];
+      currentLibrary().exercises.find(
+        (b) => b.id === name || entryNames(b).some((n) => exerciseKey(n) === key)
+      )?.spec;
     return e === undefined && workoutKind === "climbing" ? "climbs" : tallyMeasureOf(e);
   };
 }

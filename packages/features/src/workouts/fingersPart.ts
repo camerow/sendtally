@@ -21,6 +21,7 @@ import { hangWorkoutFromItem, type HangModel } from "../hang/model";
 import { t } from "../i18n";
 import { NO_PLAN } from "../training/planLinkParams";
 import type { LiveRun, LiveRunStore } from "./liveRun";
+import type { Rest } from "./restCountdown";
 import { hangReview, hangReviewDraft, hangSessionOf } from "./hangReview";
 import { hangRunDone, type SetLoads } from "./timerView";
 import type { TimerRun, WorkoutRun } from "./runParams";
@@ -155,17 +156,14 @@ export const partDoses = (planned: PlannedRun): Dose[] =>
 /** What discarding a live run loses: nothing logged, and the hangs its grips' ticked sets held when any. */
 export function discardRunBody(run: Pick<LiveRun, "state"> | null): string {
   const state = run?.state;
-  const grips = state?.player === "sets" ? (state.grips ?? []) : [];
-  const hangs =
-    state?.player !== "sets"
-      ? 0
-      : state.done
-          .filter((d) => grips.includes(d.item))
-          .flatMap((d) =>
-            d.sets.filter((_, set) => state.ticked.includes(setKey({ item: d.item, set })))
-          )
-          .reduce((n, s) => n + Math.max(0, s.reps ?? 1), 0);
-  return hangs > 0 ? t("workouts.discardPartBody", { n: hangs }) : t("hang.discardRunBody");
+  if (state?.player !== "sets") return t("hang.discardRunBody");
+  const grips = state.grips ?? [];
+  const hangs = state.done
+    .filter((d) => grips.includes(d.item))
+    .flatMap((d) => d.sets.filter((_, set) => state.ticked.includes(setKey({ item: d.item, set }))))
+    .reduce((n, s) => n + Math.max(0, s.reps ?? 1), 0);
+  if (hangs === 0) return t("hang.discardRunBody");
+  return t("workouts.discardPartBody", { n: hangs });
 }
 
 /** A fingerboard part as a review or edit holds it, and what it saves as. */
@@ -209,6 +207,24 @@ export function loggedPartForm(part: HangPart): PartForm {
       return { gripId: part.gripId, ...setup, pct, misses, protocol: part.protocol, done: saved };
     },
   };
+}
+
+/** Each grip's setup as the part last set it, by the grip's place in the run's rows. */
+export function partSetups(
+  part: FingersPart,
+  places: readonly number[]
+): Record<string, HangSetup> {
+  return Object.fromEntries(
+    part.setups.flatMap((setup, k) => {
+      const at =
+        "run" in part
+          ? rowOf(part, places, k, 0)
+          : places[k] === undefined
+            ? undefined
+            : { item: places[k] };
+      return at === undefined ? [] : [[String(at.item), setup]];
+    })
+  );
 }
 
 /** A set the timer reached, as the run's rows take it: where, what it held, and whether it is over. */
@@ -337,14 +353,17 @@ export function partTimerStart(
   run: PartOf,
   isGrip: (exercise: string) => boolean,
   fingers: FingersPart | undefined,
-  start: SetAt | null
+  start: SetAt | null,
+  rest: Pick<Rest, "endsAt"> | null = null,
+  now = Date.now()
 ): PartTimerStart | null {
   const places = partPlaces(run.items, isGrip);
   if (start === null) {
     if (fingers === undefined || !("run" in fingers) || fingers.run.finished !== null) return null;
     const planned = fingers.planned ?? partPlanned(run, places);
     if (planned === null) return null;
-    return { planned, resumed: fingers, ...(fingers.at !== undefined && { at: fingers.at }) };
+    const resumed = { ...fingers, run: restFrom(fingers.run, rest, now) };
+    return { planned, resumed, ...(fingers.at !== undefined && { at: fingers.at }) };
   }
   const item = run.items[start.item];
   if (item === undefined || !places.includes(start.item)) return null;
@@ -355,6 +374,22 @@ export function partTimerStart(
   );
   const planned = partPlanned({ ...run, items }, [start.item]);
   return planned === null ? null : { planned, resumed: null, at: start };
+}
+
+/**
+ * A paused timer in a rest picks up from the run's rest row, which kept counting while it was
+ * minimised: one clock for the rest, whichever screen shows it.
+ */
+function restFrom(
+  run: Run<HangPhase>,
+  rest: Pick<Rest, "endsAt"> | null,
+  now: number
+): Run<HangPhase> {
+  const phase = currentPhase(run);
+  if (rest === null || run.pausedAt === null || isWork(phase.kind) || phase.kind === "ready")
+    return run;
+  const left = Math.min(phase.seconds, Math.max(0, (rest.endsAt - now) / 1000));
+  return { ...run, pausedAt: now, phaseStartedAt: now - (phase.seconds - left) * 1000 };
 }
 
 /** Minimising the hang timer pauses it where it is, so the rows show where it stopped. */

@@ -101,7 +101,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
     const k = part?.places.indexOf(i) ?? -1;
     const planned = part?.planned.items[k];
     if (part === null || planned === undefined) return undefined;
-    const setup = model.setup(planned.workout, planned.workout.grip, planned.dose);
+    const setup = part.setup(i) ?? model.setup(planned.workout, planned.workout.grip, planned.dose);
     const timer = part.timer(i);
     return {
       name: grips.gripName(planned.workout.grip),
@@ -274,6 +274,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
           }
           const climbItem = player.climbing(i);
           const skipped = player.skipped(i);
+          const grip = gripOf(i);
           const between =
             at < order.length - 1 &&
             (restAt(afterKey(i)) || (
@@ -372,7 +373,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                   line={
                     skipped
                       ? t("plan.skipped")
-                      : foldedLine(d.sets, unit, gripOf(i) ? "hangboard" : "strength")
+                      : foldedLine(d.sets, unit, grip ? "hangboard" : "strength")
                   }
                   done={
                     !skipped &&
@@ -396,9 +397,9 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                   go={(set) => go({ item: i, set })}
                   restUnder={(set) => restAt(setKey({ item: i, set }))}
                   about={exerciseAbout(mine, item.exercise, nameOf(i))}
-                  {...(gripOf(i) === undefined
+                  {...(grip === undefined
                     ? { history: exerciseHistoryPath(mine, item.exercise) }
-                    : { grip: gripOf(i), history: `/app/train/grip/${item.exercise}` })}
+                    : { grip, history: `/app/train/grip/${item.exercise}` })}
                   onSelect={(set) => player.select({ item: i, set })}
                   onRemoveSet={(set) => removeSet({ item: i, set })}
                   onAddSet={() => player.addSet(i)}

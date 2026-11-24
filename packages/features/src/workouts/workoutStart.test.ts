@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { LibraryWorkout } from "./types";
 import { builtInWorkouts } from "./builtIns";
 import { playerRoute, workoutStart } from "./workoutStart";
+import { tallyMeasuresOf } from "../exercises/measure";
 
 const climbing = {
   id: "w-arc",
@@ -60,6 +61,29 @@ describe("starting a climbing workout", () => {
     const day = builtInWorkouts().find((w) => w.id === "climb-session");
     const run = { link: PLAN, session: 0, items: [] };
     expect(day && workoutStart(day, "2026-10-30", run, () => false).open).toBe("liveSession");
+  });
+});
+
+describe("starting an all-timed workout of another kind", () => {
+  it("still plays strength or mobility measured in time in the intervals player", () => {
+    const library = [
+      { name: "Plank", kind: "other", measure: "seconds" },
+      { name: "Pigeon", kind: "mobility", measure: "seconds" },
+      { name: "Lock-offs", kind: "strength", measure: "secondsWeight" },
+    ] as const;
+    for (const kind of ["strength", "mobility"] as const) {
+      const w = { ...climbing, kind } as LibraryWorkout;
+      const items = library.map((e) => ({ exercise: e.name, dose: { sets: 2, onS: 30 } }));
+      const tally = tallyMeasuresOf(library, kind, () => false);
+      const start = workoutStart(
+        w,
+        "2026-10-30",
+        { link: PLAN, session: 0, items },
+        () => false,
+        tally
+      );
+      expect(start.open).toBe("intervals");
+    }
   });
 });
 

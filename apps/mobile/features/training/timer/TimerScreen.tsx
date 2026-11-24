@@ -57,7 +57,10 @@ function Timer({
   end,
   onFinish,
   write,
+  setsBefore = 0,
 }: {
+  /** Sets of its grip done before it opened, which its set numbers count on from. */
+  setsBefore?: number;
   planned: PlannedRun;
   today: ForToday;
   setups: HangSetup[];
@@ -92,7 +95,7 @@ function Timer({
   });
   const timer = useTimer(player);
   const { run, secondsLeft, progress } = timer;
-  const view = timerView(run, secondsLeft, { planned, grips, setups });
+  const view = timerView(run, secondsLeft, { planned, grips, setups, setsBefore });
   const kg = loadNow(loads, run);
 
   return (
@@ -193,7 +196,8 @@ export function PartTimerScreen({
     const live = liveRun.resumed("/workout/sets", workoutId);
     const run = live === null ? null : readWorkoutRun(live.params);
     const fingers = live?.state.player === "sets" ? live.state.fingers : undefined;
-    return run === null ? null : partTimerStart(run, isGrip, fingers, start);
+    const rest = liveRun.read()?.rest ?? null;
+    return run === null ? null : partTimerStart(run, isGrip, fingers, start, rest);
   });
   React.useEffect(() => () => pausePartTimer(liveRun, workoutId, Date.now()), [workoutId]);
   if (opened === null) return null;
@@ -208,6 +212,7 @@ export function PartTimerScreen({
       session={0}
       resumed={resumed}
       end={false}
+      setsBefore={at?.set ?? 0}
       write={(timerRun, now, loads) => {
         const live = liveRun.resumed("/workout/sets", workoutId);
         if (live?.state.player !== "sets") return;

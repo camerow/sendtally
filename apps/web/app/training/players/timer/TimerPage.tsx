@@ -54,6 +54,8 @@ type TimerProps = {
   onFinish: (review: DoneParams) => void;
   /** Keeps the run in a mix's live run, for its fingerboard part. */
   write?: (run: Run<HangPhase>, setups: HangSetup[], loads: SetLoads | undefined) => void;
+  /** Sets of its grip done before it opened, which its set numbers count on from. */
+  setsBefore?: number;
 };
 
 function Timer({
@@ -66,6 +68,7 @@ function Timer({
   end,
   onFinish,
   write,
+  setsBefore = 0,
 }: TimerProps): React.ReactElement {
   const { model } = useHangData();
   const unit = model.settings.units;
@@ -85,7 +88,7 @@ function Timer({
     ...(write !== undefined && { write }),
   });
   const { run, secondsLeft } = timer;
-  const view = timerView(run, secondsLeft, { planned, grips, setups });
+  const view = timerView(run, secondsLeft, { planned, grips, setups, setsBefore });
   const kg = loadNow(loads, run);
   const load = t("hang.load");
 
@@ -192,7 +195,8 @@ export function PartTimerPage({
     const live = store.resumed("/workout/sets", workoutId);
     const run = live === null ? null : readWorkoutRun(live.params);
     const fingers = live?.state.player === "sets" ? live.state.fingers : undefined;
-    return run === null ? null : partTimerStart(run, isGrip, fingers, start);
+    const rest = store.read()?.rest ?? null;
+    return run === null ? null : partTimerStart(run, isGrip, fingers, start, rest);
   });
   React.useEffect(() => () => pausePartTimer(store, workoutId, Date.now()), [store, workoutId]);
   if (opened === null) return null;
@@ -207,6 +211,7 @@ export function PartTimerPage({
       session={0}
       resumed={resumed}
       end={false}
+      setsBefore={at?.set ?? 0}
       write={(timerRun, now, loads) => {
         const live = store.resumed("/workout/sets", workoutId);
         if (live?.state.player !== "sets") return;
