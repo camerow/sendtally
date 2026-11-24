@@ -113,7 +113,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
           : {
               label: gripTimerLabel(timer),
               onPress: () => {
-                rest.skip();
+                if (!timer.resume) rest.skip();
                 void navigate(
                   `/app/workout/timer?${new URLSearchParams({
                     workoutId: run.workoutId,

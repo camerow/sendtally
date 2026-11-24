@@ -375,7 +375,7 @@ describe("a mix's fingerboard part", () => {
     const now = 200_000;
     const start = partTimerStart(run, isGrip, paused, null, { endsAt: now + 30_000 }, now);
     expect(remainingInPhase(start!.resumed!.run, now)).toBe(30);
-    expect(remainingInPhase(start!.resumed!.run, now + 60_000)).toBe(30);
+    expect(remainingInPhase(start!.resumed!.run, now + 10_000)).toBe(20);
   });
 
   it("numbers a timer opened at set 2 by the grip's rows", () => {

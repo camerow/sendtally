@@ -163,7 +163,7 @@ function SetsScreenBody({
           : {
               label: gripTimerLabel(timer),
               onPress: () => {
-                rest.skip();
+                if (!timer.resume) rest.skip();
                 router.push({
                   pathname: "/workout/timer",
                   params: {

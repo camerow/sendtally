@@ -378,7 +378,7 @@ export function partTimerStart(
 
 /**
  * A paused timer in a rest picks up from the run's rest row, which kept counting while it was
- * minimised: one clock for the rest, whichever screen shows it.
+ * minimised, and runs on to the same end: one clock for the rest, whichever screen shows it.
  */
 function restFrom(
   run: Run<HangPhase>,
@@ -389,7 +389,7 @@ function restFrom(
   if (rest === null || run.pausedAt === null || isWork(phase.kind) || phase.kind === "ready")
     return run;
   const left = Math.min(phase.seconds, Math.max(0, (rest.endsAt - now) / 1000));
-  return { ...run, pausedAt: now, phaseStartedAt: now - (phase.seconds - left) * 1000 };
+  return { ...run, pausedAt: null, phaseStartedAt: now - (phase.seconds - left) * 1000 };
 }
 
 /** Minimising the hang timer pauses it where it is, so the rows show where it stopped. */

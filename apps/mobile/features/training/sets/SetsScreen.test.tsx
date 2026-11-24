@@ -5,7 +5,7 @@ import React from "react";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
 import { anExercise, hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
 import { partTimerStart, type WorkoutRun } from "@sendtally/features/workouts";
-import { protocolOf, startWorkoutRun, tick } from "@sendtally/core/hang";
+import { protocolOf, startWorkoutRun, tick, togglePause } from "@sendtally/core/hang";
 import { liveRun } from "../../live-session/liveRun";
 import { useLiveHold } from "../hold/useLiveHold";
 import { SetsScreen } from "./SetsScreen";
@@ -598,6 +598,48 @@ describe("Sets player", () => {
     expect(saved?.player === "sets" && saved.fingers).toMatchObject({
       done: [{ item: 0, exercise: "half", sets: [{ reps: 3 }, { reps: 2 }] }],
       setups: [{ edgeMm: 25, loadKg: 5 }],
+    });
+  });
+
+  it("resumes a grip's timer in its rest from the run's rest row, which Resume leaves running", async () => {
+    const mix: WorkoutRun = {
+      ...run,
+      title: "Fingers and pull",
+      items: [
+        { exercise: "half", dose: { sets: 2, reps: 3, onS: 7, offS: 3, setRestS: 120 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    };
+    const view = await renderWithHang(<SetsScreen run={mix} />);
+    await view.unmount();
+    const live = liveRun.read();
+    if (live === null || live.state.player !== "sets") throw new Error("no live run");
+    const start = partTimerStart(mix, () => true, undefined, { item: 0, set: 0 });
+    if (start === null) throw new Error("no timer");
+    const protocols = start.planned.items.map((i) => protocolOf(i.workout));
+    const t0 = Date.now() - 40_000;
+    const resting = togglePause(tick(startWorkoutRun(protocols, [], t0), t0 + 36_000), t0 + 36_000);
+    liveRun.writeAsIs({
+      ...live,
+      state: {
+        ...live.state,
+        fingers: {
+          run: resting,
+          setups: [{ edgeMm: 20, loadKg: 0 }],
+          planned: start.planned,
+          at: { item: 0, set: 0 },
+        },
+      },
+    });
+    await renderWithHang(<SetsScreen run={mix} />);
+    await act(async () => {
+      liveRun.writeRest({ at: "0:0", next: null, seconds: 120, endsAt: Date.now() + 90_000 });
+    });
+    await fireEvent.press(screen.getByText("Resume timer"));
+    expect(liveRun.read()?.rest).toMatchObject({ at: "0:0" });
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/workout/timer",
+      params: { workoutId: "w1", gripId: "half", part: "1" },
     });
   });
 
