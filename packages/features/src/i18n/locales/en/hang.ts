@@ -6,6 +6,7 @@ export const hang = {
   "hang.minutes": "{n} min",
   "hang.underTension": "{time} under tension",
   "hang.edgeMm": "{n}\u00A0mm",
+  "hang.edgeLine": "{n} mm edge",
 
   "hang.summaryRepeats": "{reps} × {on} on / {off} off",
   "hang.summarySingle": "{on} hang",
@@ -89,7 +90,6 @@ export const hang = {
   "hang.phaseRest": "Rest",
   "hang.phaseSetRest": "Set rest",
   "hang.phaseLift": "Lift",
-  "hang.phaseClimb": "Climb",
   "hang.paused": "Paused",
   "hang.setsAhead_one": "{count} set ahead",
   "hang.setsAhead_other": "{count} sets ahead",
@@ -100,6 +100,9 @@ export const hang = {
   "hang.skipInterval": "Skip to next interval",
   "hang.pause": "Pause",
   "hang.resume": "Resume",
+  "hang.startTimer": "Start timer",
+  "hang.startTimerAt": "Start timer at set {n}",
+  "hang.resumeTimer": "Resume timer",
   "hang.lifted": "Lifted",
   "hang.logLift": "Log a lift",
 

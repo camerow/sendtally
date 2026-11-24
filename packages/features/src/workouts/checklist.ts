@@ -1,4 +1,4 @@
-import { isChecklist, type Item, type SessionItem } from "@sendtally/core/hang";
+import { isChecklist, type SessionItem } from "@sendtally/core/hang";
 import { t } from "../i18n";
 import { exerciseName } from "./library";
 
@@ -18,14 +18,6 @@ export const itemTitle = (
   item: Pick<SessionItem, "exercise" | "checklist">,
   name: (exercise: string) => string = exerciseName
 ): string => (isChecklist(item) ? t("workouts.checklist") : name(item.exercise));
-
-/** A run's items as workout items, a checklist kept one, for the exercise picker. */
-export const runItems = (items: readonly SessionItem[]): Item[] =>
-  items.map(({ exercise, dose, checklist }) => ({
-    exercise,
-    doses: [dose],
-    ...(checklist !== undefined && { checklist }),
-  }));
 
 /** A workout body's heading: "Exercises", or "In this workout" once a checklist is in it. */
 export const bodyHeading = (items: readonly { checklist?: unknown }[]): string =>

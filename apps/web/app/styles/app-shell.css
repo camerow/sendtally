@@ -680,6 +680,7 @@
 .number-field-unit {
   font-family: var(--font-mono);
   font-size: 13px;
+  white-space: nowrap;
   color: rgba(64, 63, 76, 0.72);
 }
 

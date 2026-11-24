@@ -17,24 +17,21 @@ import {
   type SetAt,
   type WorkoutRun,
   checklistLine,
-  runItems,
+  gripTimerLabel,
   supersetMembers,
   supersetRoundsTitle,
   type RunGroup,
 } from "@sendtally/features/workouts";
-import { Icon } from "../../components/Icon";
 import { type MoreMenuItem } from "../../components/MoreMenu";
 import { Sheet } from "../../components/Sheet";
 import { useToast } from "../../components/Toast";
 import { useAppApi } from "../../lib/useAppApi";
-import { ExercisePicker } from "../editor/ExercisePicker";
 import { useExerciseTallyStorage, useLiveRunStore } from "../../lib/useLiveRun";
 import { GymSheet } from "../../live-session/components/GymSheet";
 import { LiveClimbEditor } from "../../live-session/components/LiveClimbEditor";
 import { ClimbCard } from "../climbing/ClimbCard";
 import { LapsCard } from "../climbing/LapsCard";
 import { useWorkoutTally } from "../climbing/useWorkoutTally";
-import { FingersCard } from "./FingersCard";
 import { ChecklistCard } from "../components/ChecklistCard";
 import { onControl } from "../components/SetRow";
 import { SET_COLUMNS } from "../components/setColumns";
@@ -48,7 +45,7 @@ import { HoldRow } from "./HoldRow";
 import { PlayerFrame } from "./PlayerFrame";
 import { RestPreview } from "./RestPreview";
 import { RestRow } from "./RestRow";
-import { SetsCard } from "./SetsCard";
+import { SetsCard, type GripCardProps } from "./SetsCard";
 import { useFinishRun } from "./useFinishRun";
 
 /**
@@ -59,7 +56,8 @@ import { useFinishRun } from "./useFinishRun";
 export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React.ReactElement {
   const navigate = useNavigate();
   const api = useAppApi();
-  const unit = useHangData().model.settings.units;
+  const { model } = useHangData();
+  const unit = model.settings.units;
   const activities = useActivities(api).state;
   const exercises = useExercises(api).state;
   const mine = exercises.status === "ready" ? exercises.data : null;
@@ -73,6 +71,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
     tally,
     activities: activities.status === "ready" ? activities.data : null,
     exercises: mine,
+    gripSetup: (g) => model.setup(g.workout, g.workout.grip, g.dose),
   });
   const { shown, ticked, rest, hold, nameOf, items, order, part, selected } = player;
   const workout = workoutIn(useLibrary())(run.workoutId);
@@ -97,8 +96,37 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
   const [editing, setEditing] = React.useState<string | null>(null);
   const [pickingGym, setPickingGym] = React.useState(false);
   const editingClimb = draft?.climbs.find((c) => c.key === editing) ?? null;
-  const [picking, setPicking] = React.useState(false);
   const [removing, setRemoving] = React.useState<number | null>(null);
+  const gripOf = (i: number): GripCardProps | undefined => {
+    const k = part?.places.indexOf(i) ?? -1;
+    const planned = part?.planned.items[k];
+    if (part === null || planned === undefined) return undefined;
+    const setup = part.setup(i) ?? model.setup(planned.workout, planned.workout.grip, planned.dose);
+    const timer = part.timer(i);
+    return {
+      name: grips.gripName(planned.workout.grip),
+      edgeMm: setup.edgeMm,
+      loadKg: setup.loadKg,
+      timer:
+        timer === null
+          ? null
+          : {
+              label: gripTimerLabel(timer),
+              onPress: () => {
+                if (!timer.resume) rest.skip();
+                void navigate(
+                  `/app/workout/timer?${new URLSearchParams({
+                    workoutId: run.workoutId,
+                    gripId: planned.workout.grip,
+                    part: "1",
+                    ...(!timer.resume && { item: String(i), set: String(timer.set) }),
+                  })}`
+                );
+              },
+            },
+    };
+  };
+  const titleOf = (i: number): string => gripOf(i)?.name ?? nameOf(i);
   const removeSet = (at: SetAt): void => {
     player.removeSet(at);
     toast.show({
@@ -194,32 +222,6 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
           const item = items[i];
           const d = shown.find((x) => x.item === i);
           if (item === undefined || d === undefined) return null;
-          if (part !== null && part.places.includes(i)) {
-            const last = part.places[part.places.length - 1] ?? i;
-            return (
-              i === part.places[0] && (
-                <React.Fragment key={i}>
-                  <FingersCard
-                    part={part}
-                    unit={unit}
-                    gripName={grips.gripName}
-                    onStart={() =>
-                      void navigate(
-                        `/app/workout/timer?${new URLSearchParams({ workoutId: run.workoutId, part: "1" })}`
-                      )
-                    }
-                    onRemoved={(message, undo) =>
-                      toast.show({ message, action: { label: t("tally.undo"), onPress: undo } })
-                    }
-                  />
-                  {at < order.length - 1 &&
-                    (restAt(afterKey(last)) || (
-                      <RestPreview seconds={restAfterItem(items, last, run.exerciseRestS)} />
-                    ))}
-                </React.Fragment>
-              )
-            );
-          }
           const g = player.groups.find((x) => x.members.includes(i));
           if (g !== undefined) {
             if (g.members[0] !== i) return null;
@@ -272,6 +274,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
           }
           const climbItem = player.climbing(i);
           const skipped = player.skipped(i);
+          const grip = gripOf(i);
           const between =
             at < order.length - 1 &&
             (restAt(afterKey(i)) || (
@@ -366,8 +369,12 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                 />
               ) : player.folded(i) ? (
                 <FoldedSetsCard
-                  name={nameOf(i)}
-                  line={skipped ? t("plan.skipped") : foldedLine(d.sets, unit)}
+                  name={titleOf(i)}
+                  line={
+                    skipped
+                      ? t("plan.skipped")
+                      : foldedLine(d.sets, unit, grip ? "hangboard" : "strength")
+                  }
                   done={
                     !skipped &&
                     d.sets.length > 0 &&
@@ -390,7 +397,9 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                   go={(set) => go({ item: i, set })}
                   restUnder={(set) => restAt(setKey({ item: i, set }))}
                   about={exerciseAbout(mine, item.exercise, nameOf(i))}
-                  history={exerciseHistoryPath(mine, item.exercise)}
+                  {...(grip === undefined
+                    ? { history: exerciseHistoryPath(mine, item.exercise) }
+                    : { grip, history: `/app/train/grip/${item.exercise}` })}
                   onSelect={(set) => player.select({ item: i, set })}
                   onRemoveSet={(set) => removeSet({ item: i, set })}
                   onAddSet={() => player.addSet(i)}
@@ -402,24 +411,6 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
             </React.Fragment>
           );
         })}
-        {run.items.length > 0 && (
-          <button
-            type="button"
-            className="outline-button player-add-exercise"
-            onClick={() => setPicking(true)}
-          >
-            <Icon name="plus" size={16} strokeWidth={2.4} />
-            {t("workouts.addExercise")}
-          </button>
-        )}
-        {picking && (
-          <ExercisePicker
-            items={runItems(items)}
-            multi
-            onPick={(picked) => picked.forEach(player.addExercise)}
-            onClose={() => setPicking(false)}
-          />
-        )}
         <Sheet
           open={removing !== null}
           title={t("workouts.removeExercise", { name: removing === null ? "" : nameOf(removing) })}

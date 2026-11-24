@@ -6,6 +6,7 @@ export const hang = {
   "hang.minutes": "{n} min",
   "hang.underTension": "{time} sous tension",
   "hang.edgeMm": "{n}\u00A0mm",
+  "hang.edgeLine": "réglette de {n} mm",
 
   "hang.summaryRepeats": "{reps} × {on} on / {off} off",
   "hang.summarySingle": "Suspension de {on}",
@@ -89,7 +90,6 @@ export const hang = {
   "hang.phaseRest": "Repos",
   "hang.phaseSetRest": "Repos série",
   "hang.phaseLift": "Tirage",
-  "hang.phaseClimb": "Grimpe",
   "hang.paused": "En pause",
   "hang.setsAhead_one": "Encore {count} série",
   "hang.setsAhead_other": "Encore {count} séries",
@@ -100,6 +100,9 @@ export const hang = {
   "hang.skipInterval": "Passer à l'intervalle suivant",
   "hang.pause": "Pause",
   "hang.resume": "Reprendre",
+  "hang.startTimer": "Lancer le minuteur",
+  "hang.startTimerAt": "Lancer le minuteur à la série {n}",
+  "hang.resumeTimer": "Reprendre le minuteur",
   "hang.lifted": "Tiré",
   "hang.logLift": "Enregistrer un tirage",
 

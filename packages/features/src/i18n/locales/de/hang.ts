@@ -6,6 +6,7 @@ export const hang = {
   "hang.minutes": "{n} Min",
   "hang.underTension": "{time} unter Spannung",
   "hang.edgeMm": "{n}\u00A0mm",
+  "hang.edgeLine": "{n}-mm-Leiste",
 
   "hang.summaryRepeats": "{reps} × {on} an / {off} Pause",
   "hang.summarySingle": "{on} hängen",
@@ -90,7 +91,6 @@ export const hang = {
   "hang.phaseRest": "Pause",
   "hang.phaseSetRest": "Satzpause",
   "hang.phaseLift": "Ziehen",
-  "hang.phaseClimb": "Klettern",
   "hang.paused": "Pausiert",
   "hang.setsAhead_one": "Noch {count} Satz",
   "hang.setsAhead_other": "Noch {count} Sätze",
@@ -101,6 +101,9 @@ export const hang = {
   "hang.skipInterval": "Zum nächsten Intervall springen",
   "hang.pause": "Pause",
   "hang.resume": "Fortsetzen",
+  "hang.startTimer": "Timer starten",
+  "hang.startTimerAt": "Timer ab Satz {n} starten",
+  "hang.resumeTimer": "Timer fortsetzen",
   "hang.lifted": "Gezogen",
   "hang.logLift": "Zug eintragen",
 

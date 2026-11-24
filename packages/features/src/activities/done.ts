@@ -62,14 +62,23 @@ export function setReadText(set: SetDone, unit: WeightUnit): string {
 }
 
 /** A finished exercise on one line in the target's words, its top set's reps or time and load: "5 sets × 5 reps · 60 kg". */
-export function foldedLine(sets: readonly SetDone[], unit: WeightUnit): string {
+export function foldedLine(
+  sets: readonly SetDone[],
+  unit: WeightUnit,
+  kind: "strength" | "hangboard" = "strength"
+): string {
   const top = sets.reduce<SetDone | undefined>(
     (best, s) => (best === undefined || (s.weightKg ?? 0) > (best.weightKg ?? 0) ? s : best),
     undefined
   );
   return targetText(
-    { sets: sets.length, reps: top?.reps, onS: top?.onS, weightKg: top?.weightKg },
-    "strength",
+    {
+      sets: sets.length,
+      reps: top?.reps,
+      onS: top?.onS,
+      ...(kind === "hangboard" ? { offS: top?.offS } : { weightKg: top?.weightKg }),
+    },
+    kind,
     unit
   ).work;
 }

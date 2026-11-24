@@ -34,8 +34,7 @@ export function IntervalsPlayer({
   const playSound = useTimerSounds();
   const timer = useTimer(useIntervalsPlayer({ workout, store: liveRun, playSound, end, onFinish }));
   const { run, secondsLeft } = timer;
-  const climbing = workout.kind === "climbing";
-  const view = intervalsView(run, body, secondsLeft, unit, climbing);
+  const view = intervalsView(run, body, secondsLeft, unit);
 
   return (
     <TimerFrame timer={timer} controls={{ color: view.look.fill, primary: view.primary }}>

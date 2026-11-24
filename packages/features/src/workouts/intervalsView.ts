@@ -15,7 +15,7 @@ export type IntervalsView = {
   /** Done on a counted step, Pause or Resume otherwise. */
   primary: string;
   step: StepText;
-  /** Round 2 of 3, or Lap 2 of 3 on a climb. */
+  /** Round 2 of 3. */
   round: string;
   upNext: UpNextItem[];
 };
@@ -25,21 +25,17 @@ export function intervalsView(
   run: Run<IntervalPhase>,
   body: Intervals,
   secondsLeft: number,
-  unit: WeightUnit,
-  climbing: boolean
+  unit: WeightUnit
 ): IntervalsView {
   const phase = currentPhase(run);
   const tapped = phase.taps > 0;
   const working = isWork(phase.kind);
   const paused = run.pausedAt !== null;
-  const sets = { set: phase.set, sets: body.rounds };
   return {
     look: phaseLook(working, phase.kind === "ready"),
     primary: tapped ? t("common.done") : paused ? t("hang.resume") : t("hang.pause"),
-    step: stepText(run, body, secondsLeft, unit, climbing),
-    round: climbing
-      ? t("tally.lapOf", sets)
-      : t("activities.roundOf", { round: phase.set, rounds: body.rounds }),
+    step: stepText(run, body, secondsLeft, unit),
+    round: t("activities.roundOf", { round: phase.set, rounds: body.rounds }),
     upNext: upNext(run, body),
   };
 }
