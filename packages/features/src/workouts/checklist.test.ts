@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { isChecklist } from "@sendtally/core/hang";
 import { setLocale } from "../i18n";
-import { bodyHeading, checklistLine, checklistTitle, itemTitle, runItems } from "./checklist";
+import { bodyHeading, checklistLine, checklistTitle, itemTitle } from "./checklist";
 
 afterEach(() => setLocale("en"));
 
@@ -37,14 +36,5 @@ describe("an item's title wherever it is named", () => {
     setLocale("de");
     expect(itemTitle({ exercise: "Checklist", checklist: { lines: ["Jog"] } })).toBe("Checkliste");
     expect(itemTitle({ exercise: "Pull-ups" }, (e) => `my ${e}`)).toBe("my Pull-ups");
-  });
-});
-
-describe("a run's items handed to the exercise picker", () => {
-  it("keeps a checklist a checklist, so the picker can leave it out", () => {
-    const list = { exercise: "Checklist", dose: { sets: 1 }, checklist: { lines: ["Jog"] } };
-    const row = { exercise: "Row", dose: { sets: 3, reps: 8 } };
-    expect(runItems([list, row]).map(isChecklist)).toEqual([true, false]);
-    expect(runItems([row])).toEqual([{ exercise: "Row", doses: [{ sets: 3, reps: 8 }] }]);
   });
 });

@@ -133,7 +133,6 @@ export const workouts = {
   "workouts.dose.moves": "Mouvements",
   "workouts.lapRest": "Repos entre les tours",
   "workouts.exerciseOf": "Exercice {n} sur {of}",
-  "workouts.addExercise": "Ajouter un exercice",
   "workouts.skipForNow": "Passer pour l'instant",
   "workouts.moveUpShort": "Monter",
   "workouts.moveDownShort": "Descendre",

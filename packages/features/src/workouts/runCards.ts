@@ -70,12 +70,6 @@ export const withCardRemoved = (cards: RunCards, key: number): RunCards => ({
   skipped: without(cards.skipped, key),
 });
 
-export const withCardAdded = (cards: RunCards, item: SessionItem): RunCards => ({
-  ...cards,
-  order: [...cards.order, cards.base + cards.added.length],
-  added: [...cards.added, item],
-});
-
 /** Folded or opened by hand, or null to go back to folding when it is done. */
 export const withCardFold = (cards: RunCards, key: number, fold: boolean | null): RunCards => ({
   ...cards,
