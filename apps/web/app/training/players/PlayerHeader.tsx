@@ -43,24 +43,24 @@ export function PlayerHeader({
         {kindLabel(kind)}
       </span>
       <h1 className="train-title player-title">{title}</h1>
-      {(target !== null || position !== null || gym !== undefined) && (
+      {(target !== null || position !== null) && (
         <span className="player-target">
           {target !== null && <span className="player-target-rpe">{target}</span>}
           {position !== null && (
             <span>{t("workouts.exerciseOf", { n: position.at, of: position.of })}</span>
           )}
-          {gym !== undefined && (
-            <button
-              type="button"
-              className="player-gym"
-              aria-label={`${t("gyms.gym")}, ${gym.name ?? t("gyms.noGym")}`}
-              onClick={gym.onPick}
-            >
-              {gymLine(gym.name)}
-              <Icon name="chevron" size={12} strokeWidth={2} />
-            </button>
-          )}
         </span>
+      )}
+      {gym !== undefined && (
+        <button
+          type="button"
+          className="player-gym"
+          aria-label={`${t("gyms.gym")}, ${gymLine(gym.name)}`}
+          onClick={gym.onPick}
+        >
+          {gymLine(gym.name)}
+          <Icon name="chevron" size={12} strokeWidth={2} />
+        </button>
       )}
       {workout !== undefined && (
         <Description key={workout.id} text={workout.description} fold={3} startOpen={bare} />

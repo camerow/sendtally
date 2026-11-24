@@ -92,7 +92,7 @@ export function ActivitySummary({
             <ExerciseBlock
               head={<ExerciseHead name={d.exercise} {...(history !== undefined && { history })} />}
             >
-              {isClimbingSets(d.sets) && d.sets.every((set) => set.onS === undefined) ? (
+              {isClimbingSets(d.sets) ? (
                 <ClimbSetsRead sets={d.sets} />
               ) : (
                 d.sets.map((set, n) => (

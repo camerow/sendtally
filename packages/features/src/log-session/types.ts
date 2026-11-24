@@ -76,6 +76,8 @@ export type ExerciseTally = {
   restS: number;
   /** The set being climbed, from 1; past the last once every set is done. */
   set: number;
+  /** An ended set pressed again, which the grades picked go to instead of the set being climbed. */
+  pick?: number;
   /** When the set's clock last started, while it runs. */
   setStartedAt?: string;
   /** The set's time on the wall before its clock was last paused. */
@@ -126,8 +128,10 @@ export type LogSessionDraft = {
   exercise?: ExerciseTally;
   /** The time each set of a timed exercise spent on the wall, kept once the set ends. */
   wallTimes?: WallTime[];
-  /** Each circuit item's laps once + Add lap or − changed them, kept when the tally moves on. */
-  lapsPlanned?: Record<number, number>;
+  /** Each climbing item's sets or laps once Add set, Add lap or − changed them, kept when the tally moves on. */
+  setsPlanned?: Record<number, number>;
+  /** A timed lap still on the wall when the tally moved to another card: its clock, by item. */
+  lapClocks?: Record<number, Pick<ExerciseTally, "setStartedAt" | "setOnS">>;
 };
 
 /** How long one set of a timed exercise was on the wall. */

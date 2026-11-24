@@ -87,9 +87,9 @@ describe("Climbing inside the workout", () => {
     jest.clearAllMocks();
   });
 
-  it("adds a row per climb, steps its attempts, ticks it sent, and ends the set only on End set", async () => {
+  it("adds a row per climb, steps its attempts, ticks it sent, and ends the set at its last climb", async () => {
     await renderWithHang(<SetsScreen run={fours} />, hangData());
-    expect(screen.getByText("No gym")).toBeTruthy();
+    expect(screen.getByText("Select a gym")).toBeTruthy();
     expect(router.push).not.toHaveBeenCalled();
 
     await add("V5");
@@ -99,16 +99,19 @@ describe("Climbing inside the workout", () => {
     expect(screen.getByLabelText("Climb 1, V5, Sent").props.accessibilityState).toMatchObject({
       checked: true,
     });
-    for (const g of ["V6", "V4", "V6"]) await add(g);
+    for (const g of ["V6", "V4"]) await add(g);
     expect(screen.queryByLabelText("Rest, 4:00 left")).toBeNull();
 
-    await fireEvent.press(screen.getByLabelText("Climb 4, V6"));
-    await fireEvent.press(screen.getByLabelText("Remove V6"));
-    expect(screen.queryByLabelText("Climb 4, V6")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Climb 3, V4"));
+    await fireEvent.press(screen.getByLabelText("Remove V4"));
+    expect(screen.queryByLabelText("Climb 3, V4")).toBeNull();
+    expect(screen.getByText("4x4s · V4 removed")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Undo"));
+    expect(screen.getByLabelText("Climb 3, V4")).toBeTruthy();
 
-    await fireEvent.press(screen.getByLabelText("End set 1"));
+    await add("V6");
     expect(screen.getByLabelText("Rest, 4:00 left")).toBeTruthy();
-    expect(screen.getByText("3 attempts · sent")).toBeTruthy();
+    expect(screen.getByLabelText("Climb 1, V5, Sent")).toBeTruthy();
     await advance(60_000);
     expect(screen.getByLabelText("Rest, 3:00 left")).toBeTruthy();
 
@@ -117,6 +120,7 @@ describe("Climbing inside the workout", () => {
       { grade: "V5", scale: "v", tries: 3, sent: true, style: "redpoint" },
       { grade: "V6", scale: "v", tries: 1, sent: false },
       { grade: "V4", scale: "v", tries: 1, sent: false },
+      { grade: "V6", scale: "v", tries: 1, sent: false },
     ]);
   });
 
@@ -157,28 +161,163 @@ describe("Climbing inside the workout", () => {
     });
   });
 
-  it("logs a lap Sent, an Attempt lap as far as it got, and takes back a lap with its −", async () => {
+  it("ticks a lap at its moves, lowers them for a fall, and takes back a lap with its −", async () => {
     await renderWithHang(<SetsScreen run={laps} />, hangData(), { exercises });
-    await fireEvent.press(screen.getByText("Sent"));
-    await fireEvent.press(screen.getByText("Attempt"));
-    for (let i = 0; i < 3; i++) await fireEvent.press(screen.getByLabelText("More moves"));
-    expect(screen.getByText("3/40")).toBeTruthy();
-    await fireEvent.press(screen.getByText("Save"));
+    await fireEvent.press(screen.getByLabelText("Lap 1"));
+    for (let i = 0; i < 3; i++) await fireEvent.press(screen.getByLabelText("Lap 2 · Fewer moves"));
+    await fireEvent.press(screen.getByLabelText("Lap 2"));
     await fireEvent.press(screen.getByLabelText(/^Open Circuit laps/));
     await fireEvent.press(screen.getByText("Add lap"));
-    expect(screen.getByText("40 moves")).toBeTruthy();
-    expect(screen.getByText("3 moves")).toBeTruthy();
-    await fireEvent.press(screen.getByText("3"));
-    await fireEvent.press(screen.getByLabelText("Remove lap 3"));
-    expect(screen.queryByLabelText("Remove lap 3")).toBeNull();
-    expect(screen.getByText("Circuit laps · Lap 3 removed")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Add lap"));
+    await fireEvent.press(screen.getByText("4"));
+    await fireEvent.press(screen.getByLabelText("Remove lap 4"));
+    expect(screen.queryByLabelText("Remove lap 4")).toBeNull();
+    expect(screen.getByText("Circuit laps · Lap 4 removed")).toBeTruthy();
     await fireEvent.press(screen.getByText("Undo"));
-    await fireEvent.press(screen.getByText("3"));
-    await fireEvent.press(screen.getByLabelText("Remove lap 3"));
+    await fireEvent.press(screen.getByText("4"));
+    await fireEvent.press(screen.getByLabelText("Remove lap 4"));
 
     expect(await finished()).toEqual([
-      { item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 3 }] },
+      { item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 37 }] },
     ]);
+  });
+
+  it("draws every planned lap's row from the start, and a later lap ticked logs the laps up to it", async () => {
+    const four = runOf("Circuit laps", { sets: 4, reps: 40 });
+    await renderWithHang(<SetsScreen run={four} />, hangData(), { exercises });
+    expect(screen.getAllByText("of 40 moves")).toHaveLength(4);
+    for (let i = 0; i < 2; i++) await fireEvent.press(screen.getByLabelText("Lap 3 · Fewer moves"));
+    await fireEvent.press(screen.getByLabelText("Lap 2 · Fewer moves"));
+    await fireEvent.press(screen.getByLabelText("Lap 3"));
+    expect(screen.getByLabelText("Lap 3").props.accessibilityState).toMatchObject({
+      checked: true,
+    });
+    expect(screen.getByLabelText("Lap 4").props.accessibilityState).toMatchObject({
+      checked: false,
+    });
+
+    expect(await finished()).toEqual([
+      {
+        item: 0,
+        exercise: "Circuit laps",
+        sets: [{ reps: 40 }, { reps: 39 }, { reps: 38 }],
+      },
+    ]);
+  });
+
+  it("draws a timed circuit's later laps at 0:00 of their time, each with its tick", async () => {
+    const timed = runOf("Circuit laps", { sets: 3, onS: 270 });
+    await renderWithHang(<SetsScreen run={timed} />, hangData(), { exercises });
+    expect(screen.getAllByText("0:00 of 4:30")).toHaveLength(3);
+    expect(screen.getByLabelText("Lap 3")).toBeTruthy();
+  });
+
+  it("pauses a timed lap from its row's play and pause, and runs on from its time", async () => {
+    const timed = runOf("Circuit laps", { sets: 3, onS: 270 });
+    await renderWithHang(<SetsScreen run={timed} />, hangData(), { exercises });
+    await fireEvent.press(screen.getByLabelText("Lap 1, Start"));
+    await advance(20_000);
+    await fireEvent.press(screen.getByLabelText("Lap 1, Pause"));
+    await advance(60_000);
+    expect(screen.getByText("0:20 of 4:30")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Lap 1, Start"));
+    await advance(10_000);
+    await fireEvent.press(screen.getByLabelText("Lap 1"));
+    const done = (await finished()) as { sets: { onS?: number }[] }[];
+    expect(done[0]?.sets).toEqual([{ onS: 30 }]);
+  });
+
+  it("starts a later lap's clock from its own row, ending the running lap at its time", async () => {
+    const timed = runOf("Circuit laps", { sets: 3, onS: 270 });
+    await renderWithHang(<SetsScreen run={timed} />, hangData(), { exercises });
+    await fireEvent.press(screen.getByLabelText("Lap 1, Start"));
+    await advance(40_000);
+    await fireEvent.press(screen.getByLabelText("Lap 2, Start"));
+    await advance(15_000);
+    expect(screen.getByText("0:40 of 4:30")).toBeTruthy();
+    expect(screen.getByText("0:15 of 4:30")).toBeTruthy();
+    expect(screen.getByLabelText("Lap 2, Pause")).toBeTruthy();
+    const done = (await finished()) as { sets: { onS?: number }[] }[];
+    expect(done[0]?.sets).toEqual([{ onS: 40 }]);
+  });
+
+  it("reads a timed lap as its time on the tally or off it", async () => {
+    const timed: WorkoutRun = {
+      ...laps,
+      items: [
+        { exercise: "Circuit laps", dose: { sets: 2, onS: 270 } },
+        { exercise: "4x4s", dose: { sets: 1, reps: 2 } },
+      ],
+    };
+    await renderWithHang(<SetsScreen run={timed} />, hangData(), { exercises });
+    await fireEvent.press(screen.getByLabelText("Lap 1"));
+    await fireEvent.press(screen.getByLabelText("Climb in set 1"));
+    expect(screen.getByText("4:30 of 4:30")).toBeTruthy();
+    expect(screen.queryByLabelText("Lap 1 · Fewer moves")).toBeNull();
+  });
+
+  it("folds a finished time set to its climbs line, as any climbing card", async () => {
+    const arc = runOf("ARC", { sets: 1, onS: 60 });
+    await renderWithHang(<SetsScreen run={arc} />, hangData(), {
+      exercises: [anExercise("e2", "ARC", "climbing", { measure: "seconds" })],
+    });
+    await add("V1");
+    await fireEvent.press(screen.getByLabelText("Climb 1, V1, Sent"));
+    await fireEvent.press(screen.getByLabelText("Start"));
+    await advance(61_000);
+    expect(screen.getByLabelText("Open ARC, 1 climb · 1 sent · top V1")).toBeTruthy();
+  });
+
+  it("keeps a timed lap's clock running while another card has the grades", async () => {
+    const timed: WorkoutRun = {
+      ...laps,
+      items: [
+        { exercise: "Circuit laps", dose: { sets: 2, onS: 270 } },
+        { exercise: "4x4s", dose: { sets: 1, reps: 2 } },
+      ],
+    };
+    await renderWithHang(<SetsScreen run={timed} />, hangData(), { exercises });
+    await fireEvent.press(screen.getByLabelText("Lap 1, Start"));
+    await advance(20_000);
+    await fireEvent.press(screen.getByLabelText("Climb in set 1"));
+    await advance(10_000);
+    expect(screen.getByText("0:30 of 4:30")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Lap 1"));
+    const done = (await finished()) as { sets: { onS?: number }[] }[];
+    expect(done[0]?.sets).toEqual([{ onS: 30 }]);
+  });
+
+  it("ends a timed lap at its time, logged once, while another card has the grades", async () => {
+    const timed: WorkoutRun = {
+      ...laps,
+      items: [
+        { exercise: "Circuit laps", dose: { sets: 2, onS: 270 } },
+        { exercise: "4x4s", dose: { sets: 1, reps: 2 } },
+      ],
+    };
+    await renderWithHang(<SetsScreen run={timed} />, hangData(), { exercises });
+    await fireEvent.press(screen.getByLabelText("Lap 1, Start"));
+    await fireEvent.press(screen.getByLabelText("Climb in set 1"));
+    await advance(300_000);
+    expect(screen.queryByText("5:00 of 4:30")).toBeNull();
+    expect(screen.getByText("4:30 of 4:30")).toBeTruthy();
+    expect(screen.getByLabelText("Lap 2, Start")).toBeTruthy();
+    const done = (await finished()) as { sets: { onS?: number }[] }[];
+    expect(done[0]?.sets).toEqual([{ onS: 270 }]);
+  });
+
+  it("logs a lap ticked on a card off the tally without moving the grades from the card that has them", async () => {
+    const both: WorkoutRun = {
+      ...laps,
+      items: [...laps.items, { exercise: "4x4s", dose: { sets: 1, reps: 2 } }],
+    };
+    await renderWithHang(<SetsScreen run={both} />, hangData(), { exercises });
+    await fireEvent.press(screen.getByLabelText("Climb in set 1"));
+    await fireEvent.press(screen.getByLabelText("Lap 1"));
+    await add("V5");
+    expect(screen.getByLabelText("Climb 1, V5")).toBeTruthy();
+    const done = (await finished()) as { sets: { reps?: number; climbs?: unknown[] }[] }[];
+    expect(done[0]?.sets).toEqual([{ reps: 40 }]);
   });
 
   it("runs a time set's clock only from its own button, and ends the set at its time", async () => {
@@ -202,14 +341,23 @@ describe("Climbing inside the workout", () => {
     expect(done[0]?.sets[0]).toMatchObject({ onS: 60 });
   });
 
-  it("ends an open set on End set", async () => {
+  it("keeps a set with no target open until the next set's line, and adds to an ended set from its line", async () => {
     const open = runOf("Limit bouldering", { sets: 2 });
     await renderWithHang(<SetsScreen run={open} />, hangData());
     await add("V6");
     await add("V6");
     expect(screen.getByLabelText("Climb 2, V6")).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText("End set 1"));
-    expect(screen.getByLabelText("End set 2")).toBeTruthy();
+    expect(screen.queryByText("Done")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Climb in set 2"));
+    expect(screen.getByText("Done")).toBeTruthy();
+    await add("V4");
+    await fireEvent.press(screen.getByLabelText("Climb in set 1"));
+    await add("V3");
+    const done = (await finished()) as { sets: { climbs: { grade: string }[] }[] }[];
+    expect(done[0]?.sets.map((x) => x.climbs.map((c) => c.grade))).toEqual([
+      ["V6", "V6", "V3"],
+      ["V4"],
+    ]);
   });
 
   it("keeps the rest a run from the last build left running on its old tally", async () => {
@@ -260,7 +408,7 @@ describe("Climbing inside the workout", () => {
       items: [...laps.items, { exercise: "4x4s", dose: { sets: 1, reps: 2 } }],
     };
     await renderWithHang(<SetsScreen run={both} />, hangData(), { exercises });
-    await fireEvent.press(screen.getByText("Sent"));
+    await fireEvent.press(screen.getByLabelText("Lap 1"));
     await fireEvent.press(screen.getByText("2"));
     await fireEvent.press(screen.getByLabelText("Remove lap 2"));
     expect(screen.getByLabelText(/^Open Circuit laps/)).toBeTruthy();
@@ -289,7 +437,7 @@ describe("Climbing inside the workout", () => {
     expect(JSON.parse(params.off ?? "[]")).toEqual(["1:0", "1:1"]);
   });
 
-  it("moves the tally to a card from its menu, and edits a climb from VoiceOver's actions", async () => {
+  it("moves the grades to a card pressed, and edits a climb from VoiceOver's actions", async () => {
     const two: WorkoutRun = {
       ...fours,
       items: [...fours.items, { exercise: "ARC", dose: { sets: 1, onS: 60 } }],
@@ -300,42 +448,26 @@ describe("Climbing inside the workout", () => {
     await add("V5");
     const row = screen.getByLabelText("Climb 1, V5");
     expect(row.props.accessibilityActions).toEqual([{ name: "longpress", label: "Edit climb" }]);
-    await fireEvent.press(screen.getAllByLabelText("More for this exercise")[1]!);
-    await fireEvent.press(screen.getByText("Climb this now"));
-    expect(screen.getByText("On the wall")).toBeTruthy();
-    expect(screen.getByText("1 attempt")).toBeTruthy();
-  });
-
-  it("never moves the tally from a tap in a row; only the card's menu does", async () => {
-    const two: WorkoutRun = {
-      ...fours,
-      items: [...fours.items, { exercise: "ARC", dose: { sets: 1, onS: 60 } }],
-    };
-    await renderWithHang(<SetsScreen run={two} />, hangData(), {
-      exercises: [anExercise("e2", "ARC", "climbing", { measure: "seconds" })],
-    });
-    await add("V5");
-    await fireEvent.press(screen.getAllByText("Set 1")[1]!);
+    expect(screen.queryAllByLabelText("Start")).toHaveLength(0);
+    await fireEvent.press(screen.getAllByLabelText("Climb in set 1")[1]!);
+    expect(screen.getByLabelText("Start")).toBeTruthy();
     expect(screen.getByLabelText("Climb 1, V5")).toBeTruthy();
+    expect(screen.queryByText("Climb this now")).toBeNull();
   });
 
-  it("offers Climb this now only on a card with climbing still to do", async () => {
+  it("keeps every climb editable and the picker on hand once both exercises are done", async () => {
     const one = runOf("4x4s", { sets: 1, reps: 1 });
     const two: WorkoutRun = {
       ...one,
-      items: [...one.items, { exercise: "ARC", dose: { sets: 1, onS: 60 } }],
+      items: [...one.items, { exercise: "Crimp crawls", dose: { sets: 1, reps: 1 } }],
     };
-    await renderWithHang(<SetsScreen run={two} />, hangData(), {
-      exercises: [anExercise("e2", "ARC", "climbing", { measure: "seconds" })],
-    });
+    await renderWithHang(<SetsScreen run={two} />, hangData());
+    await add("V3");
     await add("V5");
-    await fireEvent.press(screen.getByLabelText("End set 1"));
-    const more = (n: number) => screen.getAllByLabelText("More for this exercise")[n]!;
-    await fireEvent.press(screen.getByText("4x4s"));
-    await fireEvent.press(more(1));
-    await fireEvent.press(screen.getByText("Climb this now"));
-    await fireEvent.press(more(0));
-    expect(screen.getAllByText("Skip for now").length).toBeGreaterThan(0);
-    expect(screen.queryByText("Climb this now")).toBeNull();
+    await fireEvent.press(screen.getByLabelText(/^Open 4x4s/));
+    await fireEvent.press(screen.getByLabelText("Increase Climb 1, V3 · Attempts"));
+    expect(screen.getByLabelText("Climb 1, V3, Sent")).toBeTruthy();
+    await add("V4");
+    expect(screen.getByLabelText("Climb 2, V4")).toBeTruthy();
   });
 });

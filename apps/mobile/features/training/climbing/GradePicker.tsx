@@ -1,11 +1,11 @@
 import React from "react";
 import { View } from "react-native";
-import type { Tally } from "@sendtally/features/log-session";
+import type { GradePickerModel } from "@sendtally/features/workouts";
 import { GradeChips } from "../../../components/GradeChips";
 import { Segmented } from "../components/Segmented";
 
 /** Under the set being climbed: Boulder, Route or Circuit, and its grades; a grade adds a climb. */
-export function GradePicker({ tally }: { tally: Tally }): React.ReactElement {
+export function GradePicker({ tally }: { tally: GradePickerModel }): React.ReactElement {
   return (
     <View style={{ gap: 8, paddingTop: 6, paddingBottom: 2 }}>
       {tally.segments.length > 1 && (

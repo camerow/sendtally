@@ -17,8 +17,8 @@ export function changeText({ metric, by }: SetChange, unit: WeightUnit): string 
   const count = Math.abs(by);
   if (metric === "sends")
     return by > 0 ? t("summary.sentUp", { count }) : t("summary.sentDown", { count });
-  if (metric === "laps")
-    return by > 0 ? t("summary.lapsUp", { count }) : t("summary.lapsDown", { count });
+  if (metric === "climbs")
+    return by > 0 ? t("summary.climbsUp", { count }) : t("summary.climbsDown", { count });
   return by > 0 ? t("summary.repsUp", { count }) : t("summary.repsDown", { count });
 }
 

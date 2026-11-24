@@ -335,32 +335,42 @@
 }
 
 .player-gym {
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  padding: 0;
+  padding: 2px 0 0;
   border: none;
   background: none;
-  font: inherit;
-  color: inherit;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-on-white-secondary);
   cursor: pointer;
 }
 
 .player-gym svg {
-  transform: rotate(90deg);
+  transform: rotate(-90deg);
 }
 
 .climb-set-head {
+  width: 100%;
   min-height: 40px;
-  padding-top: 6px;
+  padding: 6px 0 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
-.climb-end-set {
-  align-self: auto;
-  min-height: 40px;
+.climb-set-time {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-on-white-secondary);
 }
 
 .climb-set-done {
@@ -443,8 +453,13 @@
 }
 
 .climb-set-label {
-  display: block;
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   padding-top: 8px;
+  white-space: nowrap;
 }
 
 .climb-picker {
@@ -462,24 +477,11 @@
   width: 100%;
 }
 
-.climb-goes {
-  display: flex;
-  gap: 8px;
-  padding: 2px 0 6px;
-}
-
-.climb-goes > button {
-  flex: 1;
-  height: 44px;
-  min-height: 0;
-  margin: 0;
-}
-
 .wall-clock {
   margin-top: 8px;
 }
 
-.wall-clock-button {
+.clock-toggle {
   width: 40px;
   height: 40px;
   flex: none;
@@ -493,41 +495,41 @@
   cursor: pointer;
 }
 
-.wall-clock-button:disabled {
+.clock-toggle:disabled {
   opacity: var(--opacity-disabled);
   cursor: default;
 }
 
-.lap-attempt {
-  font-size: 13px;
-  color: var(--text-on-white-secondary);
-}
-
-.lap-now {
-  flex: 1;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--text-on-white-secondary);
-}
-
-.lap-step {
+.lap-moves {
   flex: 1;
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: 6px;
 }
 
-.lap-step-value {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 15px;
+.lap-moves .number-field-box {
+  width: 44px;
 }
 
-.lap-go {
-  height: 40px;
-  min-height: 0;
+.lap-time .number-field-box {
   width: auto;
-  margin: 0;
-  padding: 0 12px;
+}
+
+.lap-of {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-on-white-secondary);
+}
+
+.lap-clock {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
 }
 
 .superset-round {

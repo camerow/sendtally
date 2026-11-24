@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ActivityDraft } from "@sendtally/features/activities";
 import type * as Activities from "@sendtally/features/activities";
 import type * as Workouts from "@sendtally/features/workouts";
@@ -18,6 +19,7 @@ HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogEleme
   this.setAttribute("open", "");
 };
 
+const logbook = vi.hoisted(() => ({ climbs: [] as unknown[] }));
 const writes = vi.hoisted(() => ({
   saveActivity: vi.fn(async (): Promise<boolean> => true),
   deleteActivity: vi.fn(async () => undefined),
@@ -38,7 +40,9 @@ vi.mock("@sendtally/features/hang", async (actual) => ({
   useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),
 }));
 vi.mock("@clerk/react-router", () => ({ useAuth: () => ({ userId: "u1" }) }));
-vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
+vi.mock("../../lib/useAppApi", () => ({
+  useAppApi: () => ({ climbs: async () => ({ climbs: logbook.climbs }) }),
+}));
 vi.mock("@sendtally/features/activities", async (actual) => ({
   ...(await actual<typeof Activities>()),
   useActivityActions: () => writes,
@@ -89,21 +93,23 @@ const mount = (
 ): void =>
   act(() =>
     root.render(
-      <ToastProvider>
-        <MemoryRouter>
-          <WithHang>
-            <ActivityForm
-              id="a1"
-              initial={initial}
-              logged={null}
-              kindSet
-              live={live}
-              idleEnd={idleEnd}
-              {...(part !== undefined && { part })}
-            />
-          </WithHang>
-        </MemoryRouter>
-      </ToastProvider>
+      <QueryClientProvider client={new QueryClient()}>
+        <ToastProvider>
+          <MemoryRouter>
+            <WithHang>
+              <ActivityForm
+                id="a1"
+                initial={initial}
+                logged={null}
+                kindSet
+                live={live}
+                idleEnd={idleEnd}
+                {...(part !== undefined && { part })}
+              />
+            </WithHang>
+          </MemoryRouter>
+        </ToastProvider>
+      </QueryClientProvider>
     )
   );
 
@@ -283,5 +289,111 @@ describe("ActivityForm", () => {
     expect(rows()).toHaveLength(1);
     click(document.querySelector(".sheet-action--danger"));
     expect(rows()).toHaveLength(0);
+  });
+});
+
+describe("a logged climbing exercise in review", () => {
+  it("edits as the run drew it: attempts, Sent, a grade picked, Add set", () => {
+    const climb = {
+      grade: "V3",
+      scale: "v" as const,
+      tries: 1,
+      sent: true,
+      style: "flash" as const,
+    };
+    mount(false, null, {
+      ...review,
+      kind: "climbing",
+      done: [{ item: 0, exercise: "Crimp crawls", sets: [{ climbs: [climb] }] }],
+    });
+    const button = (label: string): Element | undefined =>
+      [...container.querySelectorAll("button")].find(
+        (b) => b.getAttribute("aria-label") === label || b.textContent === label
+      );
+    click(button("Increase Climb 1, V3 · Attempts"));
+    click(button("V5"));
+    click(container.querySelector('[aria-label="Climb 2, V5, Sent"]'));
+    click(button("Add set"));
+    click(button("V4"));
+    save();
+    expect(saved()).toEqual([
+      {
+        item: 0,
+        exercise: "Crimp crawls",
+        sets: [
+          {
+            climbs: [
+              { grade: "V3", scale: "v", tries: 2, sent: true, style: "redpoint" },
+              { grade: "V5", scale: "v", tries: 1, sent: true, style: "flash" },
+            ],
+          },
+          { climbs: [{ grade: "V4", scale: "v", tries: 1, sent: false }] },
+        ],
+      },
+    ]);
+  });
+
+  it("corrects a timed lap's time in its row", () => {
+    mount(false, null, {
+      ...review,
+      kind: "climbing",
+      done: [{ item: 0, exercise: "Circuit laps", sets: [{ onS: 270 }, { onS: 200 }] }],
+    });
+    const label = [...container.querySelectorAll("label")].find(
+      (l) => l.textContent === "Lap 2 · Time"
+    );
+    const field = label === undefined ? null : (label.control as HTMLInputElement | null);
+    expect(field).not.toBeNull();
+    act(() => {
+      field!.focus();
+      const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+      set?.call(field, "300");
+      field!.dispatchEvent(new Event("input", { bubbles: true }));
+      field!.blur();
+    });
+    save();
+    expect(saved()).toEqual([
+      { item: 0, exercise: "Circuit laps", sets: [{ onS: 270 }, { onS: 180 }] },
+    ]);
+  });
+
+  it("reviews a circuit's laps as the run's lap rows: moves on − and +, no headings", () => {
+    mount(false, null, {
+      ...review,
+      kind: "climbing",
+      done: [{ item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 8 }] }],
+    });
+    expect(container.textContent).not.toContain("Done");
+    click(container.querySelector('[aria-label="Lap 2 · Fewer moves"]'));
+    save();
+    expect(saved()).toEqual([
+      { item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 7 }] },
+    ]);
+  });
+
+  it("opens the picker at the grade the climber logs most, as the run does", async () => {
+    logbook.climbs = [8, 8, 8].map((value, i) => ({
+      id: `c${i}`,
+      name: `Climb ${i}`,
+      grade: { scale: "v", value },
+      discipline: "boulder",
+    }));
+    mount(false, null, {
+      ...review,
+      kind: "climbing",
+      done: [{ item: 0, exercise: "Crimp crawls", sets: [{ climbs: [] }] }],
+    });
+    await act(async () => new Promise((r) => setTimeout(r, 0)));
+    const segment = (name: string): HTMLElement =>
+      [
+        ...container.querySelectorAll<HTMLElement>(
+          ".climb-picker button, .climb-picker [role=radio]"
+        ),
+      ].find((b) => b.textContent === name)!;
+    click(segment("Route"));
+    click(segment("Boulder"));
+    const row = container.querySelector<HTMLElement>(".climb-picker .grade-chips")!;
+    expect(row.scrollLeft).toBe(7 * 64);
+    logbook.climbs = [];
   });
 });

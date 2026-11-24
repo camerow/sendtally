@@ -26,7 +26,7 @@ export type PlayerHeaderProps = {
   position?: { at: number; of: number } | null;
   /** The workout has no exercises, so its description is the body and opens unfolded. */
   bare?: boolean;
-  /** Where a workout with climbing in it is climbed: "At Crux ⌄" or "No gym ⌄", which picks another. */
+  /** Where a workout with climbing in it is climbed, on its own line: "At Crux" or "Select a gym", which picks another. */
   gym?: { name: string | undefined; onPick: () => void } | undefined;
 };
 
@@ -66,7 +66,7 @@ export function PlayerHeader({
       <View style={{ gap: 4 }}>
         <Label color={KIND_LOOK[kind].ink}>{kindLabel(kind)}</Label>
         <Title size={32}>{title}</Title>
-        {(target !== null || line.length > 0 || gym !== undefined) && (
+        {(target !== null || line.length > 0) && (
           <View
             style={{
               flexDirection: "row",
@@ -85,23 +85,29 @@ export function PlayerHeader({
                 {line.join(" · ")}
               </Text>
             )}
-            {gym !== undefined && (
-              <Pressable
-                onPress={gym.onPick}
-                accessibilityRole="button"
-                accessibilityLabel={`${t("gyms.gym")}, ${gym.name ?? t("gyms.noGym")}`}
-                hitSlop={{ top: 12, bottom: 12 }}
-                style={press({ flexDirection: "row", alignItems: "center", gap: 2 })}
-              >
-                <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>
-                  {gymLine(gym.name)}
-                </Text>
-                <View style={{ transform: [{ rotate: "90deg" }] }}>
-                  <Icon name="chevron" size={12} strokeWidth={2} color={colors.textSecondary} />
-                </View>
-              </Pressable>
-            )}
           </View>
+        )}
+        {gym !== undefined && (
+          <Pressable
+            onPress={gym.onPick}
+            accessibilityRole="button"
+            accessibilityLabel={`${t("gyms.gym")}, ${gymLine(gym.name)}`}
+            hitSlop={{ top: 12, bottom: 12 }}
+            style={press({
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 2,
+              alignSelf: "flex-start",
+              paddingTop: 2,
+            })}
+          >
+            <Text style={[type.mono, { fontSize: 13, color: colors.textSecondary }]}>
+              {gymLine(gym.name)}
+            </Text>
+            <View style={{ transform: [{ rotate: "-90deg" }] }}>
+              <Icon name="chevron" size={12} strokeWidth={2} color={colors.textSecondary} />
+            </View>
+          </Pressable>
         )}
       </View>
       {workout !== undefined && (

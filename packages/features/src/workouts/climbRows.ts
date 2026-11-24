@@ -1,24 +1,21 @@
 import { t } from "../i18n";
 import { setKeyOf } from "../activities/done";
-import { nextSet, wallLeft } from "../log-session/exerciseTally";
+import { climbingSet, nextSet } from "../log-session/exerciseTally";
 import type { ClimbDraft, LogSessionDraft } from "../log-session/types";
-import { elapsedClock } from "../sessions/years";
 
 /** What a climbing item asks of each set: how many, and the climbs or time that end one. */
 export type ClimbPlan = { sets: number; climbs?: number; onS?: number };
 
-/** One set of a climbing card: its climbs, whether it is done, being climbed or to come. */
+/** One set of a climbing card: its climbs, whether it ended, is being climbed or is to come. */
 export type ClimbRow = {
   set: number;
   climbs: ClimbDraft[];
   state: "done" | "current" | "waiting";
-  /** "1 of 4 climbs", "9:49 left", "4 climbs", or "-" for a set with nothing to say yet. */
-  note: string;
-  /** How much of a running time set is behind it, for the bar across its row; null otherwise. */
-  fill: number | null;
+  /** The grades picked go to this set. */
+  picked: boolean;
+  /** A time set that ended: its time on the wall. */
+  onS: number | null;
 };
-
-const count = (n: number): string => t("common.climbCount", { count: n });
 
 /**
  * A climbing item's sets as rows: from the tally while it is on this item, else from the climbs
@@ -27,40 +24,30 @@ const count = (n: number): string => t("common.climbCount", { count: n });
 export function climbRows(
   draft: LogSessionDraft | null,
   item: number,
-  plan: ClimbPlan,
-  now: Date
+  plan: ClimbPlan
 ): ClimbRow[] {
   const climbs = (draft?.climbs ?? []).filter((c) => c.item === item);
   const ex = draft?.exercise?.item === item ? draft.exercise : undefined;
-  const current = ex?.set ?? null;
   const next = nextSet(climbs, item);
+  const current = ex?.set ?? next;
   const sets = Math.max(ex?.sets ?? plan.sets, next - 1);
   const wall = (set: number): number | undefined =>
     draft?.wallTimes?.find((w) => w.item === item && w.set === set)?.onS;
   return Array.from({ length: sets }, (_, i) => {
     const set = i + 1;
-    const mine = climbs.filter((c) => (c.set ?? 1) === set);
     const state =
-      set === current ? "current" : set < (current ?? next) ? "done" : ("waiting" as const);
-    const note = (): string => {
-      if (plan.onS !== undefined) {
-        const left = state === "current" && ex !== undefined ? wallLeft(ex, now) : null;
-        if (left !== null && ex?.setStartedAt !== undefined)
-          return t("tally.timeLeft", { time: elapsedClock(left) });
-        return elapsedClock(state === "done" ? (wall(set) ?? plan.onS) : plan.onS);
-      }
-      if (plan.climbs !== undefined) {
-        if (state === "done") return "";
-        return state === "current" && mine.length > 0
-          ? t("tally.climbsOfSet", { n: mine.length, of: plan.climbs })
-          : count(plan.climbs);
-      }
-      return state === "waiting" ? "-" : count(mine.length);
+      set === current && ex !== undefined
+        ? "current"
+        : set < current
+          ? "done"
+          : ("waiting" as const);
+    return {
+      set,
+      climbs: climbs.filter((c) => (c.set ?? 1) === set),
+      state,
+      picked: ex !== undefined && climbingSet(ex) === set,
+      onS: state === "done" && plan.onS !== undefined ? (wall(set) ?? plan.onS) : null,
     };
-    const left =
-      state === "current" && ex?.setStartedAt !== undefined && plan.onS ? wallLeft(ex, now) : null;
-    const fill = left === null || !plan.onS ? null : (plan.onS - left) / plan.onS;
-    return { set, climbs: mine, state, note: note(), fill };
   });
 }
 
@@ -85,6 +72,6 @@ export function climbedKeys(draft: LogSessionDraft | null): string[] {
   });
 }
 
-/** "At Crux Boulders" in a climbing workout's title line, or "No gym" when none is set. */
+/** "At Crux Boulders" under a climbing workout's Target RPE, or "Select a gym" when none is set. */
 export const gymLine = (name: string | undefined): string =>
-  name === undefined ? t("gyms.noGym") : t("workouts.atGym", { gym: name });
+  name === undefined ? t("gyms.selectGym") : t("workouts.atGym", { gym: name });

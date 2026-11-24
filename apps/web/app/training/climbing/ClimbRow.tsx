@@ -1,6 +1,6 @@
 import React from "react";
 import { t } from "@sendtally/features/i18n";
-import type { ClimbDraft } from "@sendtally/features/log-session";
+import type { SetClimb } from "@sendtally/core/hang";
 import { useDisplayScales } from "@sendtally/features/settings";
 import { Icon } from "../../components/Icon";
 import { NumberField } from "../../components/NumberField";
@@ -10,18 +10,18 @@ import { ClimbGrade, climbGradeText } from "./ClimbGrade";
 
 export type ClimbRowProps = {
   position: number;
-  climb: ClimbDraft;
+  climb: SetClimb;
   selected: boolean;
   onSelect: () => void;
   onRemove: () => void;
   onTries: (tries: number) => void;
   /** The Sent tick. */
   onFlip: () => void;
-  /** Opens the climb's editor, to name it; shown on the selected row. */
-  onEdit: () => void;
+  /** Opens the climb's editor, to name it; shown on the selected row, where it has one. */
+  onEdit?: (() => void) | undefined;
 };
 
-/** One climb of the set being climbed: its grade, its attempts on − and +, and a Sent tick. */
+/** One climb of a set: its grade, its attempts on − and +, and a Sent tick. */
 export function ClimbRow({
   position,
   climb,
@@ -34,7 +34,7 @@ export function ClimbRow({
 }: ClimbRowProps): React.ReactElement {
   const scales = useDisplayScales();
   const grade = climbGradeText(climb, scales);
-  const name = climb.name.trim();
+  const name = climb.name ?? "";
   const label = t("tally.climbOfSet", { n: position, grade });
   const attempts = `${label} · ${t("climbs.attempts")}`;
   return (
@@ -42,7 +42,7 @@ export function ClimbRow({
       position={String(position)}
       {...(name === "" ? {} : { name })}
       label={`${label}, ${t("common.sent")}`}
-      ticked={climb.kind === "send"}
+      ticked={climb.sent}
       onToggle={onFlip}
       selected={selected}
       onSelect={onSelect}
@@ -63,7 +63,7 @@ export function ClimbRow({
         className="climb-edit"
         aria-label={t("tally.editClimb")}
         title={t("tally.editClimb")}
-        hidden={!selected}
+        hidden={!selected || onEdit === undefined}
         onClick={onEdit}
       >
         <Icon name="pencil" size={16} strokeWidth={1.8} />

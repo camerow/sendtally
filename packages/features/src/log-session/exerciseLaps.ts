@@ -1,6 +1,5 @@
 import type { SetDone } from "@sendtally/core/hang";
-import { t } from "../i18n";
-import { enduranceAmountLabel, type Endurance, type EnduranceUnit } from "./endurance";
+import type { Endurance, EnduranceUnit } from "./endurance";
 import { newClimb, nextClimbKey } from "./transforms";
 import type { ClimbDraft, ExerciseTally, LogSessionDraft } from "./types";
 
@@ -28,7 +27,7 @@ export const allLapsDone = (draft: LogSessionDraft): boolean =>
 export function withLapLogged(draft: LogSessionDraft, done: number): LogSessionDraft {
   const ex = draft.exercise;
   if (ex?.lap === undefined) return draft;
-  const { setStartedAt: _ended, ...exercise } = ex;
+  const { setStartedAt: _ended, setOnS: _spent, ...exercise } = ex;
   const existing = lapsClimb(draft.climbs, ex.item);
   const endurance: Endurance = {
     unit: ex.lap.unit,
@@ -54,29 +53,21 @@ export function withLapLogged(draft: LogSessionDraft, done: number): LogSessionD
   return { ...draft, climbs, exercise };
 }
 
-/** The laps a circuit item asks for now: as changed during the run, else as the workout asks. */
-export const lapsPlannedFor = (draft: LogSessionDraft, item: number, asked: number): number =>
-  draft.lapsPlanned?.[item] ?? asked;
-
 /** The exercise's circuit asking for `sets` laps, remembered for its item. */
 function withLaps(draft: LogSessionDraft, sets: number): LogSessionDraft {
   const ex = draft.exercise;
   if (ex === undefined) return draft;
-  const lapsPlanned = { ...draft.lapsPlanned, [ex.item]: sets };
-  return { ...draft, lapsPlanned, exercise: { ...ex, sets } };
+  const setsPlanned = { ...draft.setsPlanned, [ex.item]: sets };
+  return { ...draft, setsPlanned, exercise: { ...ex, sets } };
 }
-
-/** + Add lap: one more than the exercise asks for. */
-export const withLapAdded = (draft: LogSessionDraft): LogSessionDraft =>
-  withLaps(draft, lapsPlanned(draft) + 1);
 
 /** Undo of a lap's −: the item asks for one lap more, whether or not the tally is still on it. */
 export function withLapBack(draft: LogSessionDraft, item: number): LogSessionDraft {
-  if (draft.exercise?.item === item) return withLapAdded(draft);
-  const laps = draft.lapsPlanned?.[item];
+  if (draft.exercise?.item === item) return withLaps(draft, lapsPlanned(draft) + 1);
+  const laps = draft.setsPlanned?.[item];
   return laps === undefined
     ? draft
-    : { ...draft, lapsPlanned: { ...draft.lapsPlanned, [item]: laps + 1 } };
+    : { ...draft, setsPlanned: { ...draft.setsPlanned, [item]: laps + 1 } };
 }
 
 /** A lap's −: a lap that holds nothing yet goes, down to one. */
@@ -88,18 +79,57 @@ export const lapRemovable = (draft: LogSessionDraft): boolean =>
 export const withLapRemoved = (draft: LogSessionDraft): LogSessionDraft =>
   lapRemovable(draft) ? withLaps(draft, lapsPlanned(draft) - 1) : draft;
 
-/** A time lap's clock starts. */
-export function withLapStarted(draft: LogSessionDraft, now: Date): LogSessionDraft {
-  const ex = draft.exercise;
-  if (ex === undefined || ex.setStartedAt !== undefined) return draft;
-  return { ...draft, exercise: { ...ex, setStartedAt: now.toISOString() } };
+/** A logged lap of an item changed to how far it got. */
+export function withLapChanged(
+  draft: LogSessionDraft,
+  item: number,
+  lap: number,
+  done: number
+): LogSessionDraft {
+  const circuit = lapsClimb(draft.climbs, item);
+  const e = circuit?.endurance;
+  if (circuit === undefined || e === undefined || e.laps[lap] === undefined) return draft;
+  const laps = e.laps.map((v, i) => (i === lap ? Math.min(e.target, Math.max(0, done)) : v));
+  return {
+    ...draft,
+    climbs: draft.climbs.map((c) => (c === circuit ? { ...c, endurance: { ...e, laps } } : c)),
+  };
 }
 
-/** Seconds a time lap has been on the wall, none before it starts. */
-export function lapElapsed(ex: ExerciseTally, now: Date): number | null {
-  const started = Date.parse(ex.setStartedAt ?? "");
-  if (Number.isNaN(started)) return null;
-  return Math.max(0, Math.floor((now.getTime() - started) / 1000));
+/** A logged lap's tick taken off: it is no longer logged, and the laps after it move up. */
+export function withLapUnlogged(
+  draft: LogSessionDraft,
+  item: number,
+  lap: number
+): LogSessionDraft {
+  const circuit = lapsClimb(draft.climbs, item);
+  const e = circuit?.endurance;
+  if (circuit === undefined || e === undefined) return draft;
+  const laps = e.laps.filter((_, i) => i !== lap);
+  return {
+    ...draft,
+    climbs: draft.climbs.map((c) => (c === circuit ? { ...c, endurance: { ...e, laps } } : c)),
+  };
+}
+
+/** A time lap's clock: when it last started while it runs, and its time before it was last paused. */
+export type LapClock = Pick<ExerciseTally, "setStartedAt" | "setOnS">;
+
+/** A time lap's clock started, or paused with its time so far kept. */
+export function withLapToggled(draft: LogSessionDraft, now: Date): LogSessionDraft {
+  const ex = draft.exercise;
+  if (ex?.lap?.unit !== "seconds") return draft;
+  if (ex.setStartedAt === undefined)
+    return { ...draft, exercise: { ...ex, setStartedAt: now.toISOString() } };
+  const { setStartedAt: _paused, ...rest } = ex;
+  return { ...draft, exercise: { ...rest, setOnS: lapElapsed(ex, now) ?? 0 } };
+}
+
+/** Seconds a time lap has been on the wall, across its pauses, none before it starts. */
+export function lapElapsed(clock: LapClock, now: Date): number | null {
+  const started = Date.parse(clock.setStartedAt ?? "");
+  if (Number.isNaN(started)) return clock.setOnS ?? null;
+  return (clock.setOnS ?? 0) + Math.max(0, Math.floor((now.getTime() - started) / 1000));
 }
 
 /** The rest taken after a lap, shown beside it. */
@@ -109,19 +139,6 @@ export function withLapRest(draft: LogSessionDraft, lap: number, seconds: number
   const rests = [...(ex.rests ?? [])];
   rests[lap] = seconds;
   return { ...draft, exercise: { ...ex, rests } };
-}
-
-/** "Lap 3 of 3", or "All laps done". */
-export const lapClockLabel = (draft: LogSessionDraft): string =>
-  allLapsDone(draft)
-    ? t("tally.allLapsDone")
-    : t("tally.lapOf", { set: lapsDone(draft).length + 1, sets: lapsPlanned(draft) });
-
-/** "Circuit laps · 40 moves" */
-export function lapLine(draft: LogSessionDraft): string {
-  const ex = draft.exercise;
-  if (ex?.lap === undefined) return "";
-  return `${ex.name} · ${enduranceAmountLabel({ ...ex.lap, laps: [] }, ex.lap.target)}`;
 }
 
 /** An item's laps as the sets it keeps, each holding how far it got in moves or seconds. */
