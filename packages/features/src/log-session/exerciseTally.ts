@@ -1,4 +1,5 @@
 import type { SetClimb, SetDone } from "@sendtally/core/hang";
+import { lapsClimb } from "./exerciseLaps";
 import { newTallyClimb, tallyDraft, type TallyChoice } from "./tally";
 import { withTries } from "./transforms";
 import type { ClimbDraft, ExerciseTally, LogSessionDraft, WallTime } from "./types";
@@ -184,8 +185,7 @@ export function withSetAdded(draft: LogSessionDraft): LogSessionDraft {
   const done =
     ex.lap === undefined
       ? nextSet(draft.climbs, ex.item) - 1
-      : (draft.climbs.find((c) => c.item === ex.item && c.endurance !== undefined)?.endurance?.laps
-          .length ?? 0);
+      : (lapsClimb(draft.climbs, ex.item)?.endurance?.laps.length ?? 0);
   const sets = Math.max(ex.sets, done) + 1;
   return {
     ...draft,
