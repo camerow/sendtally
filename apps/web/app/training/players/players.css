@@ -511,6 +511,10 @@
   width: 44px;
 }
 
+.lap-time .number-field-box {
+  width: auto;
+}
+
 .lap-of {
   font-family: var(--font-mono);
   font-weight: 400;

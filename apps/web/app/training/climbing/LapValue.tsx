@@ -74,7 +74,7 @@ function Time({
   onChange: (seconds: number) => void;
 }): React.ReactElement {
   return (
-    <span className="lap-moves">
+    <span className="lap-moves lap-time">
       <NumberField
         compact
         label={`${label} · ${t("workouts.dose.time")}`}
