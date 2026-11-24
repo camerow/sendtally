@@ -11,7 +11,7 @@ import { climbingDoseLine, foldedLine, useActivities } from "@sendtally/features
 import { exerciseAbout } from "@sendtally/features/exercises";
 import { useGrips } from "@sendtally/features/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import { useLiveSession, withClimbBack, withLapBack } from "@sendtally/features/log-session";
+import { useLiveSession } from "@sendtally/features/log-session";
 import { useExercises } from "@sendtally/features/statistics";
 import {
   climbRows,
@@ -104,10 +104,6 @@ function SetsScreenBody({
     lap: number;
   } | null>(null);
   const draft = climbs.draft;
-  const draftNow = React.useRef(draft);
-  React.useEffect(() => {
-    draftNow.current = draft;
-  });
   const editingClimb = draft?.climbs.find((c) => c.key === editing) ?? null;
   const climbing = items.some((_, i) => player.tallyOf(i) !== null);
 
@@ -379,16 +375,12 @@ function SetsScreenBody({
                         onPress={() => player.climbOn(i)}
                         onPressSet={(set) => player.pressSet(i, set)}
                         onAddSet={() => player.addSet(i)}
-                        onRemoved={(c, grade) => {
-                          const at = draft?.climbs.indexOf(c) ?? 0;
+                        onRemoved={(c, grade) =>
                           setRemoved({
                             message: `${nameOf(i)} · ${t("tally.climbRemoved", { grade })}`,
-                            undo: () => {
-                              const now = draftNow.current;
-                              if (now !== null) tally.replace(withClimbBack(now, c, at));
-                            },
-                          });
-                        }}
+                            undo: player.climbRemoved(c),
+                          })
+                        }
                         restUnder={(set) => restAt(setKey({ item: i, set }))}
                         about={about}
                         onHistory={openExerciseHistory(mine, item.exercise)}
@@ -491,9 +483,7 @@ function SetsScreenBody({
               message={`${lapRemoved.name} · ${t("tally.lapRemoved", { lap: lapRemoved.lap })}`}
               action={{
                 label: t("tally.undo"),
-                onPress: () => {
-                  if (draft !== null) tally.replace(withLapBack(draft, lapRemoved.item));
-                },
+                onPress: () => player.lapBack(lapRemoved.item),
               }}
               onHide={() => setLapRemoved(null)}
               bottom={12}

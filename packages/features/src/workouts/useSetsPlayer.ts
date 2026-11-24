@@ -14,18 +14,19 @@ import { addSet, changeSet, previousSets } from "../activities/done";
 import { tallyMeasuresOf } from "../exercises/measure";
 import type { TallyMeasure } from "../exercises/types";
 import { eachSideOf } from "../exercises/sides";
-import { allLapsDone, lapSets } from "../log-session/exerciseLaps";
+import { allLapsDone, lapSets, withLapBack } from "../log-session/exerciseLaps";
 import {
   allSetsDone,
   exerciseSets,
   nextSet,
   setsPlannedFor,
   startExercise,
+  withClimbBack,
   withSetAdded,
   withSetPressed,
 } from "../log-session/exerciseTally";
 import { tallyDraft } from "../log-session/tally";
-import type { LogSessionDraft } from "../log-session/types";
+import type { ClimbDraft, LogSessionDraft } from "../log-session/types";
 import { climbedKeys, type ClimbPlan } from "./climbRows";
 import type { LiveSession } from "../log-session/useLiveSession";
 import { partPlaces, partPlanned, type FingersPart } from "./fingersPart";
@@ -167,6 +168,10 @@ export type SetsPlayer = {
   climbAt: number | null;
   /** The draft with the tally on a climbing card, which a change on it builds on; it moves no focus. */
   draftOn: (item: number) => LogSessionDraft;
+  /** The Undo of a climb removed from the tally, which puts it back where it was. */
+  climbRemoved: (climb: ClimbDraft) => () => void;
+  /** The Undo of a lap's −, wherever the tally is by then. */
+  lapBack: (item: number) => void;
   /** What a climbing item asks of each set, for its rows. */
   climbPlan: (item: number) => ClimbPlan;
   /** The sets or laps a climbing item asks for now, after any Add set, Add lap or −. */
@@ -444,6 +449,7 @@ export function useSetsPlayer({
     setChosen(item);
     return draftOn(item);
   };
+  const draftNow = useLatest(draft);
   const onClimbAt =
     on !== undefined &&
     on.item === climbAt &&
@@ -635,6 +641,17 @@ export function useSetsPlayer({
     climbAt,
     climbPlan,
     draftOn,
+    climbRemoved: (climb) => {
+      const at = draft?.climbs.indexOf(climb) ?? 0;
+      return () => {
+        const now = draftNow.current;
+        if (now !== null) tally.replace(withClimbBack(now, climb, at));
+      };
+    },
+    lapBack: (item) => {
+      const now = draftNow.current;
+      if (now !== null) tally.replace(withLapBack(now, item));
+    },
     setsPlanned,
     climbOn: (item) => {
       if (climbAt !== item || on?.item !== item) tally.replace(tallyOn(item));

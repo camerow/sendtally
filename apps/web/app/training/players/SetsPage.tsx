@@ -4,12 +4,7 @@ import { useNavigate } from "react-router";
 import { restAfterItem } from "@sendtally/core/hang";
 import { climbingDoseLine, foldedLine, useActivities } from "@sendtally/features/activities";
 import { formatNumber, t } from "@sendtally/features/i18n";
-import {
-  useLiveSession,
-  withClimbBack,
-  withLapBack,
-  type ClimbDraft,
-} from "@sendtally/features/log-session";
+import { useLiveSession } from "@sendtally/features/log-session";
 import { exerciseAbout } from "@sendtally/features/exercises";
 import { useGrips } from "@sendtally/features/hang";
 import { useExercises } from "@sendtally/features/statistics";
@@ -102,16 +97,6 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
   const [editing, setEditing] = React.useState<string | null>(null);
   const [pickingGym, setPickingGym] = React.useState(false);
   const editingClimb = draft?.climbs.find((c) => c.key === editing) ?? null;
-  const lapBack = React.useRef((_item: number) => {});
-  const climbBack = React.useRef((_climb: ClimbDraft, _at: number) => {});
-  React.useEffect(() => {
-    lapBack.current = (item) => {
-      if (draft !== null) tally.replace(withLapBack(draft, item));
-    };
-    climbBack.current = (climb, at) => {
-      if (draft !== null) tally.replace(withClimbBack(draft, climb, at));
-    };
-  });
   const [picking, setPicking] = React.useState(false);
   const [removing, setRemoving] = React.useState<number | null>(null);
   const removeSet = (at: SetAt): void => {
@@ -351,7 +336,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                   onLapRemoved={(lap) =>
                     toast.show({
                       message: `${nameOf(i)} · ${t("tally.lapRemoved", { lap })}`,
-                      action: { label: t("tally.undo"), onPress: () => lapBack.current(i) },
+                      action: { label: t("tally.undo"), onPress: () => player.lapBack(i) },
                     })
                   }
                 />
@@ -366,13 +351,12 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                   onPress={() => player.climbOn(i)}
                   onPressSet={(set) => player.pressSet(i, set)}
                   onAddSet={() => player.addSet(i)}
-                  onRemoved={(c, grade) => {
-                    const at = draft?.climbs.indexOf(c) ?? 0;
+                  onRemoved={(c, grade) =>
                     toast.show({
                       message: `${nameOf(i)} · ${t("tally.climbRemoved", { grade })}`,
-                      action: { label: t("tally.undo"), onPress: () => climbBack.current(c, at) },
-                    });
-                  }}
+                      action: { label: t("tally.undo"), onPress: player.climbRemoved(c) },
+                    })
+                  }
                   restUnder={(set) => restAt(setKey({ item: i, set }))}
                   about={exerciseAbout(mine, item.exercise, nameOf(i))}
                   history={exerciseHistoryPath(mine, item.exercise)}
