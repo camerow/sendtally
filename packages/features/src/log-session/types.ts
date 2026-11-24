@@ -130,8 +130,8 @@ export type LogSessionDraft = {
   wallTimes?: WallTime[];
   /** Each climbing item's sets or laps once Add set, Add lap or − changed them, kept when the tally moves on. */
   setsPlanned?: Record<number, number>;
-  /** A timed lap still on the wall when the tally moved to another card: when its clock started, by item. */
-  lapStartedAt?: Record<number, string>;
+  /** A timed lap still on the wall when the tally moved to another card: its clock, by item. */
+  lapClocks?: Record<number, Pick<ExerciseTally, "setStartedAt" | "setOnS">>;
 };
 
 /** How long one set of a timed exercise was on the wall. */

@@ -38,17 +38,15 @@ export function startExercise(
   now: Date
 ): LogSessionDraft {
   const base = draft === null ? tallyDraft(now) : withExerciseDone(draft, now);
-  const { [start.item]: lapStartedAt, ...running } = base.lapStartedAt ?? {};
+  const { [start.item]: clock, ...running } = base.lapClocks ?? {};
   return {
     ...base,
-    ...(base.lapStartedAt !== undefined && { lapStartedAt: running }),
+    ...(base.lapClocks !== undefined && { lapClocks: running }),
     startedAt: now.toISOString(),
     exercise: {
       ...start,
       set: nextSet(base.climbs, start.item),
-      ...(lapStartedAt === undefined || start.lap?.unit !== "seconds"
-        ? {}
-        : { setStartedAt: lapStartedAt }),
+      ...(start.lap?.unit === "seconds" && clock),
     },
   };
 }
@@ -220,18 +218,27 @@ export function withSetEnded(
 
 /**
  * Done: the tally stops being the exercise's, keeping its climbs, the time the set being
- * climbed spent on the wall, and a timed lap's clock, which runs on until the tally comes back.
+ * climbed spent on the wall, and a timed lap's clock, which runs on, or stays paused, until the tally comes back.
  * A set left part way counts as done, so the next Start resumes at the one after it.
  */
 export const withExerciseDone = (draft: LogSessionDraft, now: Date): LogSessionDraft => {
   const { exercise: ex, ...rest } = draft;
   const wallTimes = wallTimesAt(draft, now);
-  const lapClock = ex?.lap?.unit === "seconds" ? ex.setStartedAt : undefined;
+  const kept =
+    ex?.lap?.unit === "seconds" && (ex.setStartedAt !== undefined || ex.setOnS !== undefined);
   return {
     ...rest,
     ...(wallTimes === undefined ? {} : { wallTimes }),
     ...(ex !== undefined &&
-      lapClock !== undefined && { lapStartedAt: { ...rest.lapStartedAt, [ex.item]: lapClock } }),
+      kept && {
+        lapClocks: {
+          ...rest.lapClocks,
+          [ex.item]: {
+            ...(ex.setStartedAt !== undefined && { setStartedAt: ex.setStartedAt }),
+            ...(ex.setOnS !== undefined && { setOnS: ex.setOnS }),
+          },
+        },
+      }),
   };
 };
 

@@ -10,7 +10,7 @@ import {
   withLapLogged,
   withLapRemoved,
   withLapRest,
-  withLapStarted,
+  withLapToggled,
   withLapUnlogged,
 } from "./exerciseLaps";
 import { withSetAdded } from "./exerciseTally";
@@ -20,14 +20,19 @@ import type { LiveSession } from "./useLiveSession";
 export type LapsTally = {
   /** How far each lap logged got, in moves or seconds, oldest first. */
   laps: number[];
-  /** Seconds the lap on the wall has run, up to its time, none before its row is first pressed. */
+  /** Seconds the lap on the wall has run, up to its time, none before its clock first starts. */
   elapsed: number | null;
+  /** The lap on the wall's clock is running. */
+  running: boolean;
   /** The rest after the last lap: running, waiting for play, or none. */
   rest: { running: Rest; left: number } | { seconds: number } | null;
-  /** Logs the lap on the wall: this far in moves, or a time lap at its clock, its target before it starts. */
-  tick: (moves: number) => void;
-  /** A time lap's clock starts with the first press on its row. */
-  startLap: () => void;
+  /**
+   * Logs the lap on the wall and each after it up to the one ticked, laps being climbed in order:
+   * each this far in moves, or a time lap at its clock, its target before it starts or after the first.
+   */
+  tick: (moves: readonly number[]) => void;
+  /** Starts or pauses the lap on the wall's clock, or, from a later lap, logs the laps before it, as `tick`, and starts its. */
+  toggleLap: (before: readonly number[]) => void;
   change: (lap: number, value: number) => void;
   untick: (lap: number) => void;
   startRest: () => void;
@@ -58,13 +63,8 @@ export function useLapsTally(
 ): LapsTally {
   const ex = draft?.exercise?.item === item ? draft.exercise : undefined;
   const timed = plan.unit === "seconds";
-  const kept = draft?.lapStartedAt?.[item];
-  const ran =
-    ex !== undefined
-      ? lapElapsed(ex, now)
-      : kept === undefined
-        ? null
-        : Math.max(0, Math.floor((now.getTime() - Date.parse(kept)) / 1000));
+  const clock = ex ?? draft?.lapClocks?.[item];
+  const ran = clock === undefined ? null : lapElapsed(clock, now);
   const timeUp = timed && ran !== null && ran >= plan.target;
   const elapsed = ran === null || !timed ? ran : Math.min(ran, plan.target);
   const endLap = useLatest((): void => live.replace(withLapLogged(on(), plan.target)));
@@ -83,10 +83,23 @@ export function useLapsTally(
     return withLapRest(d, last, running.seconds - rest.left);
   };
   const edit = (f: (d: LogSessionDraft) => LogSessionDraft): void => live.replace(f(on()));
+  const logged = (d: LogSessionDraft, moves: readonly number[]): LogSessionDraft => {
+    const lap = d.exercise?.lap;
+    const lapS = d.exercise === undefined ? null : lapElapsed(d.exercise, new Date());
+    return moves.reduce(
+      (x, m, i) =>
+        withLapLogged(
+          x,
+          lap?.unit !== "seconds" ? m : i === 0 && lapS !== null ? lapS : lap.target
+        ),
+      endRest(d)
+    );
+  };
 
   return {
     laps,
     elapsed,
+    running: clock?.setStartedAt !== undefined,
     rest:
       ex === undefined || laps.length === 0 || restS === 0
         ? null
@@ -95,14 +108,8 @@ export function useLapsTally(
           : ex.rests?.[last] === undefined && laps.length < planned
             ? { seconds: restS }
             : null,
-    tick: (moves) =>
-      edit((d) => {
-        const lapS = d.exercise === undefined ? null : lapElapsed(d.exercise, new Date());
-        const unit = d.exercise?.lap;
-        const value = unit?.unit === "seconds" ? (lapS ?? unit.target) : moves;
-        return withLapLogged(endRest(d), value);
-      }),
-    startLap: () => edit((d) => withLapStarted(endRest(d), new Date())),
+    tick: (moves) => edit((d) => logged(d, moves)),
+    toggleLap: (before) => edit((d) => withLapToggled(logged(d, before), new Date())),
     change: (lap, value) => edit((d) => withLapChanged(d, item, lap, value)),
     untick: (lap) => edit((d) => withLapUnlogged(d, item, lap)),
     startRest: () => {

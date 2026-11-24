@@ -258,6 +258,64 @@ describe("Climbing inside the workout", () => {
     ]);
   });
 
+  it("draws every planned lap's row from the start, and a later lap ticked logs the laps up to it", async () => {
+    await mount(runOf("Circuit laps", { sets: 4, reps: 40 }));
+    expect(texts(".lap-of").filter((x) => x === "of 40 moves")).toHaveLength(4);
+    for (let i = 0; i < 2; i++) await click("Lap 3 · Fewer moves");
+    await click("Lap 2 · Fewer moves");
+    await tick("Lap 3");
+    expect(byLabel("Lap 3")).toHaveProperty("checked", true);
+    expect(byLabel("Lap 4")).toHaveProperty("checked", false);
+    expect(await finished()).toEqual([
+      { item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 39 }, { reps: 38 }] },
+    ]);
+  });
+
+  describe("a timed circuit", () => {
+    const timed = runOf("Circuit laps", { sets: 3, onS: 270 });
+    const advance = (ms: number): void =>
+      act(() => {
+        vi.advanceTimersByTime(ms);
+      });
+    beforeEach(() => {
+      vi.useRealTimers();
+      vi.useFakeTimers({ now: new Date(2026, 10, 17, 18, 0), shouldAdvanceTime: true });
+    });
+
+    it("draws its later laps at 0:00 of their time, each with its tick", async () => {
+      await mount(timed);
+      expect(texts(".climb-line")).toEqual(["0:00 of 4:30", "0:00 of 4:30", "0:00 of 4:30"]);
+      expect(byLabel("Lap 3")).not.toBeNull();
+    });
+
+    it("pauses a lap from its row's play and pause, and runs on from its time", async () => {
+      await mount(timed);
+      await click("Lap 1, Start");
+      advance(20_000);
+      await click("Lap 1, Pause");
+      advance(60_000);
+      expect(texts(".climb-line")[0]).toBe("0:20 of 4:30");
+      await click("Lap 1, Start");
+      advance(10_000);
+      await tick("Lap 1");
+      const done = (await finished()) as { sets: { onS?: number }[] }[];
+      expect(done[0]?.sets).toEqual([{ onS: 30 }]);
+    });
+
+    it("starts a later lap's clock from its own row, ending the running lap at its time", async () => {
+      await mount(timed);
+      await click("Lap 1, Start");
+      advance(40_000);
+      await click("Lap 2, Start");
+      advance(15_000);
+      expect(texts(".climb-line")[0]).toBe("0:40 of 4:30");
+      expect(button("Lap 2, Pause")).toBeDefined();
+      await tick("Lap 2");
+      const done = (await finished()) as { sets: { onS?: number }[] }[];
+      expect(done[0]?.sets).toEqual([{ onS: 40 }, { onS: 15 }]);
+    });
+  });
+
   it("finishes a circuit when its last lap still to climb is taken out, and keeps it finished", async () => {
     const run = runOf("Circuit laps", { sets: 3, reps: 40 });
     await mount({

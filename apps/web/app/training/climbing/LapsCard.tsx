@@ -64,26 +64,32 @@ export function LapsCard({
   const sessionRpe = useSessionTarget();
   const plan = lapPlanOf(at.dose);
   const laps = useLapsTally(draft, item, plan, planned, on, live, rest, now);
-  const [moves, setMoves] = React.useState<{ lap: number; n: number } | null>(null);
+  /** Moves set on the laps not logged yet, from the lap on the wall; the target where none is. */
+  const [open, setOpen] = React.useState<readonly (number | undefined)[]>([]);
   const [selected, setSelected] = React.useState<number | null>(null);
   const done = laps.laps.length;
-  const nextMoves = moves?.lap === done ? moves.n : plan.target;
+  const toGo = Math.max(0, planned - done);
+  const movesAt = (k: number): number => open[k] ?? plan.target;
+  const upTo = (k: number): number[] => Array.from({ length: k }, (_, i) => movesAt(i));
+  const without = (k: number): (number | undefined)[] =>
+    Array.from({ length: toGo }, (_, i) => open[i]).filter((_, i) => i !== k);
   const label = (n: number): string => t("tally.lapLabel", { lap: n });
   const select =
     (n: number): (() => void) =>
     () =>
       setSelected(selected === n ? null : n);
   const removeLap = laps.removeLap;
-  const removable = (n: number): Removable =>
+  const removable = (k: number): Removable =>
     removeLap === null
       ? {}
       : {
-          selected: selected === n,
-          onSelect: select(n),
+          selected: selected === done + k + 1,
+          onSelect: select(done + k + 1),
           onRemove: () => {
             removeLap();
+            setOpen(without(k));
             setSelected(null);
-            onLapRemoved(n);
+            onLapRemoved(done + k + 1);
           },
         };
   return (
@@ -134,34 +140,34 @@ export function LapsCard({
         ) : (
           <IdleRestRow seconds={laps.rest.seconds} onStart={laps.startRest} />
         ))}
-      {done < planned && (
+      {Array.from({ length: toGo }, (_, k) => (
         <SetRow
-          position={String(done + 1)}
-          label={label(done + 1)}
+          key={`open${done + k}`}
+          position={String(done + k + 1)}
+          label={label(done + k + 1)}
           ticked={false}
-          onToggle={() => laps.tick(nextMoves)}
-          removeLabel={t("tally.removeLapOf", { lap: done + 1 })}
-          {...removable(done + 1)}
+          onToggle={() => {
+            laps.tick(upTo(k + 1));
+            setOpen(open.slice(k + 1));
+          }}
+          removeLabel={t("tally.removeLapOf", { lap: done + k + 1 })}
+          {...removable(k)}
         >
           <LapValue
-            label={label(done + 1)}
-            value={plan.unit === "seconds" ? (laps.elapsed ?? 0) : nextMoves}
+            label={label(done + k + 1)}
+            value={plan.unit === "seconds" ? (k === 0 ? (laps.elapsed ?? 0) : 0) : movesAt(k)}
             plan={plan}
-            onChange={(n) => setMoves({ lap: done, n })}
-            {...(laps.elapsed === null && { onStart: laps.startLap })}
+            onChange={(n) =>
+              setOpen(Array.from({ length: toGo }, (_, i) => (i === k ? n : open[i])))
+            }
+            clock={{
+              running: k === 0 && laps.running,
+              onToggle: () => {
+                laps.toggleLap(upTo(k));
+                setOpen(open.slice(k));
+              },
+            }}
           />
-        </SetRow>
-      )}
-      {Array.from({ length: Math.max(0, planned - done - 1) }, (_, i) => done + i + 2).map((n) => (
-        <SetRow
-          key={`wait${n}`}
-          position={String(n)}
-          label={label(n)}
-          removeLabel={t("tally.removeLapOf", { lap: n })}
-          trailing={null}
-          {...removable(n)}
-        >
-          {null}
         </SetRow>
       ))}
     </ExerciseBlock>

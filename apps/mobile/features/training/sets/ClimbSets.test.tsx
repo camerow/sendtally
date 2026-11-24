@@ -182,6 +182,65 @@ describe("Climbing inside the workout", () => {
     ]);
   });
 
+  it("draws every planned lap's row from the start, and a later lap ticked logs the laps up to it", async () => {
+    const four = runOf("Circuit laps", { sets: 4, reps: 40 });
+    await renderWithHang(<SetsScreen run={four} />, hangData(), { exercises });
+    expect(screen.getAllByText("of 40 moves")).toHaveLength(4);
+    for (let i = 0; i < 2; i++) await fireEvent.press(screen.getByLabelText("Lap 3 · Fewer moves"));
+    await fireEvent.press(screen.getByLabelText("Lap 2 · Fewer moves"));
+    await fireEvent.press(screen.getByLabelText("Lap 3"));
+    expect(screen.getByLabelText("Lap 3").props.accessibilityState).toMatchObject({
+      checked: true,
+    });
+    expect(screen.getByLabelText("Lap 4").props.accessibilityState).toMatchObject({
+      checked: false,
+    });
+
+    expect(await finished()).toEqual([
+      {
+        item: 0,
+        exercise: "Circuit laps",
+        sets: [{ reps: 40 }, { reps: 39 }, { reps: 38 }],
+      },
+    ]);
+  });
+
+  it("draws a timed circuit's later laps at 0:00 of their time, each with its tick", async () => {
+    const timed = runOf("Circuit laps", { sets: 3, onS: 270 });
+    await renderWithHang(<SetsScreen run={timed} />, hangData(), { exercises });
+    expect(screen.getAllByText("0:00 of 4:30")).toHaveLength(3);
+    expect(screen.getByLabelText("Lap 3")).toBeTruthy();
+  });
+
+  it("pauses a timed lap from its row's play and pause, and runs on from its time", async () => {
+    const timed = runOf("Circuit laps", { sets: 3, onS: 270 });
+    await renderWithHang(<SetsScreen run={timed} />, hangData(), { exercises });
+    await fireEvent.press(screen.getByLabelText("Lap 1, Start"));
+    await advance(20_000);
+    await fireEvent.press(screen.getByLabelText("Lap 1, Pause"));
+    await advance(60_000);
+    expect(screen.getByText("0:20 of 4:30")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Lap 1, Start"));
+    await advance(10_000);
+    await fireEvent.press(screen.getByLabelText("Lap 1"));
+    const done = (await finished()) as { sets: { onS?: number }[] }[];
+    expect(done[0]?.sets).toEqual([{ onS: 30 }]);
+  });
+
+  it("starts a later lap's clock from its own row, ending the running lap at its time", async () => {
+    const timed = runOf("Circuit laps", { sets: 3, onS: 270 });
+    await renderWithHang(<SetsScreen run={timed} />, hangData(), { exercises });
+    await fireEvent.press(screen.getByLabelText("Lap 1, Start"));
+    await advance(40_000);
+    await fireEvent.press(screen.getByLabelText("Lap 2, Start"));
+    await advance(15_000);
+    expect(screen.getByText("0:40 of 4:30")).toBeTruthy();
+    expect(screen.getByText("0:15 of 4:30")).toBeTruthy();
+    expect(screen.getByLabelText("Lap 2, Pause")).toBeTruthy();
+    const done = (await finished()) as { sets: { onS?: number }[] }[];
+    expect(done[0]?.sets).toEqual([{ onS: 40 }]);
+  });
+
   it("reads a timed lap as its time on the tally or off it", async () => {
     const timed: WorkoutRun = {
       ...laps,

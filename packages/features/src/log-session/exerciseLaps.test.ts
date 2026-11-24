@@ -11,7 +11,7 @@ import {
   withLapUnlogged,
   withLapLogged,
   withLapRemoved,
-  withLapStarted,
+  withLapToggled,
 } from "./exerciseLaps";
 import { parseStoredDraft } from "./draftStore";
 import { setsPlannedFor, startExercise, withExerciseDone, withSetAdded } from "./exerciseTally";
@@ -68,13 +68,25 @@ describe("circuit laps", () => {
   });
 
   it("times a lap from its start and keeps no more than its target", () => {
-    const started = withLapStarted(circuit("seconds", 240), at);
+    const started = withLapToggled(circuit("seconds", 240), at);
     const ex = started.exercise;
     if (ex === undefined) throw new Error("no exercise");
     expect(lapElapsed(ex, new Date(at.getTime() + 95_000))).toBe(95);
     const logged = withLapLogged(started, 300);
     expect(logged.exercise?.setStartedAt).toBeUndefined();
     expect(lapSets(logged.climbs, 1)).toEqual([{ onS: 240 }]);
+  });
+
+  it("pauses a lap's clock with its time kept, and runs on from it when started again", () => {
+    const paused = withLapToggled(
+      withLapToggled(circuit("seconds", 240), at),
+      new Date(at.getTime() + 30_000)
+    );
+    expect(paused.exercise?.setStartedAt).toBeUndefined();
+    expect(lapElapsed(paused.exercise!, new Date(at.getTime() + 90_000))).toBe(30);
+    const again = withLapToggled(paused, new Date(at.getTime() + 90_000));
+    expect(lapElapsed(again.exercise!, new Date(at.getTime() + 100_000))).toBe(40);
+    expect(withLapLogged(again, 40).exercise?.setOnS).toBeUndefined();
   });
 
   it("reads a draft from the build before inline climbing that still carries plannedSets", () => {
@@ -111,15 +123,22 @@ describe("circuit laps", () => {
       restS: 0,
       lap: { unit: "seconds" as const, target: 240 },
     };
-    const started = withLapStarted(startExercise(null, lap, at), at);
+    const started = withLapToggled(startExercise(null, lap, at), at);
     const away = startExercise(
       started,
       { item: 0, name: "4x4s", sets: 1, climbs: 4, restS: 0 },
       at
     );
-    expect(away.lapStartedAt).toEqual({ 1: at.toISOString() });
+    expect(away.lapClocks).toEqual({ 1: { setStartedAt: at.toISOString() } });
     const back = startExercise(away, lap, new Date(at.getTime() + 60_000));
     expect(lapElapsed(back.exercise!, new Date(at.getTime() + 95_000))).toBe(95);
-    expect(back.lapStartedAt).toEqual({});
+    expect(back.lapClocks).toEqual({});
+
+    const paused = withLapToggled(back, new Date(at.getTime() + 100_000));
+    const left = withExerciseDone(paused, at);
+    expect(lapElapsed(left.lapClocks![1]!, new Date(at.getTime() + 999_000))).toBe(100);
+    const resumed = startExercise(left, lap, at);
+    expect(resumed.exercise).toMatchObject({ setOnS: 100 });
+    expect(resumed.exercise?.setStartedAt).toBeUndefined();
   });
 });

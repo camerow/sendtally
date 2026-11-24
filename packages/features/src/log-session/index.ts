@@ -156,7 +156,7 @@ export {
   withLapRemoved,
   withLapLogged,
   withLapRest,
-  withLapStarted,
+  withLapToggled,
   withLapChanged,
   withLapUnlogged,
   type LapPlan,

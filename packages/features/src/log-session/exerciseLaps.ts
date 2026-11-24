@@ -27,7 +27,7 @@ export const allLapsDone = (draft: LogSessionDraft): boolean =>
 export function withLapLogged(draft: LogSessionDraft, done: number): LogSessionDraft {
   const ex = draft.exercise;
   if (ex?.lap === undefined) return draft;
-  const { setStartedAt: _ended, ...exercise } = ex;
+  const { setStartedAt: _ended, setOnS: _spent, ...exercise } = ex;
   const existing = lapsClimb(draft.climbs, ex.item);
   const endurance: Endurance = {
     unit: ex.lap.unit,
@@ -112,18 +112,24 @@ export function withLapUnlogged(
   };
 }
 
-/** A time lap's clock starts. */
-export function withLapStarted(draft: LogSessionDraft, now: Date): LogSessionDraft {
+/** A time lap's clock: when it last started while it runs, and its time before it was last paused. */
+export type LapClock = Pick<ExerciseTally, "setStartedAt" | "setOnS">;
+
+/** A time lap's clock started, or paused with its time so far kept. */
+export function withLapToggled(draft: LogSessionDraft, now: Date): LogSessionDraft {
   const ex = draft.exercise;
-  if (ex === undefined || ex.setStartedAt !== undefined) return draft;
-  return { ...draft, exercise: { ...ex, setStartedAt: now.toISOString() } };
+  if (ex?.lap?.unit !== "seconds") return draft;
+  if (ex.setStartedAt === undefined)
+    return { ...draft, exercise: { ...ex, setStartedAt: now.toISOString() } };
+  const { setStartedAt: _paused, ...rest } = ex;
+  return { ...draft, exercise: { ...rest, setOnS: lapElapsed(ex, now) ?? 0 } };
 }
 
-/** Seconds a time lap has been on the wall, none before it starts. */
-export function lapElapsed(ex: ExerciseTally, now: Date): number | null {
-  const started = Date.parse(ex.setStartedAt ?? "");
-  if (Number.isNaN(started)) return null;
-  return Math.max(0, Math.floor((now.getTime() - started) / 1000));
+/** Seconds a time lap has been on the wall, across its pauses, none before it starts. */
+export function lapElapsed(clock: LapClock, now: Date): number | null {
+  const started = Date.parse(clock.setStartedAt ?? "");
+  if (Number.isNaN(started)) return clock.setOnS ?? null;
+  return (clock.setOnS ?? 0) + Math.max(0, Math.floor((now.getTime() - started) / 1000));
 }
 
 /** The rest taken after a lap, shown beside it. */

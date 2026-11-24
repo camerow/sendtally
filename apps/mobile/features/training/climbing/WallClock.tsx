@@ -1,10 +1,8 @@
 import React from "react";
-import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { elapsedClock } from "@sendtally/features/sessions";
-import { IconButton } from "../components/IconButton";
 import { ClockRow } from "../hold/ClockRow";
-import { useTimerSounds } from "../timer/useTimerSounds";
+import { ClockToggle } from "./ClockToggle";
 
 export type WallClockProps = {
   /** The set's time on the wall. */
@@ -15,8 +13,7 @@ export type WallClockProps = {
 };
 
 /**
- * A timed climbing set's clock, under its climbs: only its own button starts and pauses it, with
- * a tone on start, on stop and on reaching its time.
+ * A timed climbing set's clock, under its climbs: only its own button starts and pauses it.
  */
 export function WallClock({
   targetS,
@@ -24,15 +21,6 @@ export function WallClock({
   running,
   onToggle,
 }: WallClockProps): React.ReactElement {
-  const play = useTimerSounds();
-  const was = React.useRef({ running, left });
-  React.useEffect(() => {
-    const before = was.current;
-    was.current = { running, left };
-    if (running && !before.running) play("work");
-    else if (before.running && before.left > 0 && left === 0) play("finish");
-    else if (before.running && !running && before.left > 0) play("rest");
-  }, [running, left, play]);
   const clock = elapsedClock(targetS - left);
   const of = t("activities.holdOf", { time: elapsedClock(targetS) });
   return (
@@ -43,15 +31,7 @@ export function WallClock({
       clock={clock}
       of={of}
     >
-      <IconButton
-        icon={running ? "pause" : "play"}
-        label={running ? t("hang.pause") : t("hang.start")}
-        onPress={onToggle}
-        color={colors.gunmetal}
-        size={40}
-        iconSize={18}
-        disabled={left === 0}
-      />
+      <ClockToggle left={left} running={running} onToggle={onToggle} />
     </ClockRow>
   );
 }

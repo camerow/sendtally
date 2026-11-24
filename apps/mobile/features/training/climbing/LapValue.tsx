@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { type lapPlanOf } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
@@ -8,6 +8,7 @@ import { elapsedClock } from "@sendtally/features/sessions";
 import { TimeField } from "../../../components/TimeField";
 import { Stepper } from "../components/Stepper";
 import { type } from "../type";
+import { ClockToggle } from "./ClockToggle";
 
 export type LapPlan = ReturnType<typeof lapPlanOf>;
 
@@ -94,15 +95,15 @@ function Time({
 
 /**
  * One lap's value in its row, in the run and the review alike: a moves lap's moves on − and +,
- * a timed lap's time, which `onStart` starts with a press while its clock has not run, or which
- * a logged lap in Log workout and Edit workout types to correct.
+ * a timed lap's time with its clock's start and pause in the run, or which a logged lap in Log
+ * workout and Edit workout types to correct.
  */
 export function LapValue({
   label,
   value,
   plan,
   onChange,
-  onStart,
+  clock,
   timeTyped = false,
 }: {
   label: string;
@@ -110,22 +111,26 @@ export function LapValue({
   plan: LapPlan;
   /** Moves, or seconds for a timed lap. */
   onChange: (value: number) => void;
-  onStart?: () => void;
+  /** A timed lap's clock in the run, started and paused from its row. */
+  clock?: { running: boolean; onToggle: () => void } | undefined;
   timeTyped?: boolean;
 }): React.ReactElement {
   if (plan.unit !== "seconds")
     return <Moves label={label} value={value} plan={plan} onChange={onChange} />;
   if (timeTyped) return <Time label={label} value={value} plan={plan} onChange={onChange} />;
-  return onStart === undefined ? (
-    <LapTime seconds={value} plan={plan} />
-  ) : (
-    <Pressable
-      style={{ flex: 1, minHeight: 44, justifyContent: "center" }}
-      onPress={onStart}
-      accessibilityRole="button"
-      accessibilityLabel={`${label}, ${t("hang.start")}`}
-    >
-      <LapTime seconds={value} plan={plan} />
-    </Pressable>
+  return (
+    <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 4 }}>
+      <View style={{ flex: 1 }}>
+        <LapTime seconds={value} plan={plan} />
+      </View>
+      {clock !== undefined && (
+        <ClockToggle
+          label={label}
+          left={plan.target - value}
+          running={clock.running}
+          onToggle={clock.onToggle}
+        />
+      )}
+    </View>
   );
 }
