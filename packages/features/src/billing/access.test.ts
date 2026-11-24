@@ -1,6 +1,6 @@
 import type { Entitlements } from "@sendtally/api-client";
 import { describe, expect, it } from "vitest";
-import { hasAccess } from "./access";
+import { hasAccess, keepEyebrow } from "./access";
 
 const NOW = new Date("2027-03-10T12:00:00.000Z");
 const MEMBER = { active: true, web: true, store: null };
@@ -39,5 +39,15 @@ describe("hasAccess", () => {
       trial: { endsAt: "2001-01-01T00:00:00Z" },
     };
     expect(hasAccess(lapsed, NOW)).toBe(false);
+  });
+});
+
+describe("keepEyebrow", () => {
+  it("names the trial's end while it runs, and is the panel's eyebrow otherwise", () => {
+    expect(keepEyebrow(free(new Date(2027, 3, 9, 12).toISOString()), NOW)).toBe(
+      "Free trial · ends Apr 9"
+    );
+    expect(keepEyebrow(free("2001-01-01T00:00:00Z"), NOW)).toBe("Membership");
+    expect(keepEyebrow(null, NOW)).toBe("Membership");
   });
 });

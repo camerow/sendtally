@@ -1,5 +1,5 @@
 import React from "react";
-import { membershipPanel } from "@sendtally/features/billing";
+import { keepEyebrow, useMembership } from "@sendtally/features/billing";
 import { exerciseLabel } from "@sendtally/features/exercises";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { sessionsPerWeek, usePlanPath } from "@sendtally/features/settings";
@@ -19,6 +19,7 @@ export const KeepStep: StepComponent = ({ wizard, api }) => {
   const library = useLibrary().state;
   const exercises = useExercises(api).state;
   const member = useMember();
+  const entitlements = useMembership(api).state;
   const { next } = wizard;
   React.useEffect(() => {
     if (member) next();
@@ -80,7 +81,7 @@ export const KeepStep: StepComponent = ({ wizard, api }) => {
       }
     >
       <MembershipPanel
-        eyebrow={membershipPanel().eyebrow}
+        eyebrow={keepEyebrow(entitlements.status === "ready" ? entitlements.data : null)}
         title={t("onboarding.membership.plan.title")}
         body={t("onboarding.membership.plan.body")}
         rows={rows}

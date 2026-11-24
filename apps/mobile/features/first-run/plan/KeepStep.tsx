@@ -1,5 +1,6 @@
 import React from "react";
 import type { SendtallyApi } from "@sendtally/api-client";
+import { keepEyebrow } from "@sendtally/features/billing";
 import { exerciseLabel } from "@sendtally/features/exercises";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { sessionsPerWeek, usePlanPath, type Wizard } from "@sendtally/features/settings";
@@ -25,7 +26,8 @@ export function KeepStep({
   const plan = usePlan(api).state;
   const library = useLibrary().state;
   const exercises = useExercises(api).state;
-  const member = useBilling()?.membership.active === true;
+  const membership = useBilling()?.membership;
+  const member = membership?.active === true;
   const { next } = wizard;
   React.useEffect(() => {
     if (member) next();
@@ -83,6 +85,7 @@ export function KeepStep({
       footer={<Button variant="link" height={44} label={t("hang.notNow")} onPress={() => next()} />}
     >
       <Paywall
+        eyebrow={keepEyebrow(membership?.state.status === "ready" ? membership.state.data : null)}
         title={t("onboarding.membership.plan.title")}
         body={t("onboarding.membership.plan.body")}
         rows={rows}
