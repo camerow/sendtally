@@ -60,6 +60,7 @@ Current scope: sign up, log sessions via the form, session list and detail, tren
   `pnpm lint` is ESLint, run once at the root rather than per package; the flat config is `eslint.config.js`.
   Agents running checks wrap them in RTK (`rtk err pnpm check-types`, `rtk test pnpm test`): its hook does not rewrite pnpm scripts, and the filters keep only errors and failing tests, with the full output recoverable through `rtk recall`.
 - **Toolchain versions:** pinned in `.prototools` (proto manages Node and Go here; this repo does not use asdf).
+- **Checking a mobile change on a device:** agents use an Expo cloud simulator, which runs on Expo's servers and takes nothing from this machine; the local iOS simulator is for the few cases that need the local API, Maestro or a device language. The steps are in `docs/mobile-cloud-simulator.md`.
 - **Local iOS builds** additionally need Xcode, CocoaPods, and Homebrew `gmp`, which the rbenv ruby CocoaPods runs under links against; a missing `libgmp.10.dylib` kills every `pod` call.
 - **Package scope:** every workspace package is `@sendtally/*` (e.g. `@sendtally/core`, `@sendtally/api`). Never introduce another scope.
 - **`@sendtally/api-client` depends on `@sendtally/api`** for `AppType`, so the dependency arrow runs client -> server and nothing in `api` may import `api-client` or `features` (that closes a cycle turbo rejects).
