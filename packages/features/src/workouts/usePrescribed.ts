@@ -49,5 +49,6 @@ export function useLoggedPrescription(
     { membershipId: logged.membershipId, week: logged.week, focus: null },
     0
   );
+  // ponytail: an alternating workout's edit shows no targets because the log keeps no turn; store the variant that ran on the activity to show them.
   return workout?.items.every((i) => i.doses.length <= 1) === true ? (items ?? []) : [];
 }
