@@ -10,6 +10,7 @@ import { t } from "@sendtally/features/i18n";
 import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
 import { logConversion } from "../features/analytics/conversions";
+import { useCapture } from "../features/analytics/useCapture";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
 import { press } from "../lib/press";
 import { Button } from "../features/training/components/Button";
@@ -18,12 +19,14 @@ import { goBack } from "../lib/goBack";
 export default function SignIn(): React.ReactElement | null {
   const params = useLocalSearchParams<{ intent?: string }>();
   const router = useRouter();
+  const capture = useCapture();
   const flow = useSignInFlow({
     intent: params.intent === "sign-up" ? "sign-up" : "sign-in",
     onSignedIn: (outcome) => {
       if (outcome === "signed-up") logConversion("account_created");
       router.replace("/(tabs)/sessions");
     },
+    onFailed: (failure) => capture("sign_in_failed", failure),
   });
   const { phase, busy, error, copy, swap } = flow;
   const inCodePhase = phase.name === "code";

@@ -4,8 +4,8 @@ import * as WebBrowser from "expo-web-browser";
 import React from "react";
 import { t } from "@sendtally/features/i18n";
 import { copyFor, swapFor } from "./copy";
-import { errorCode, errorMessage } from "./errors";
-import { oauthOutcome } from "./outcome";
+import { errorCode, errorMessage, failureCode } from "./errors";
+import { oauthOutcome, ssoFailure } from "./outcome";
 import type { Phase, SignInFlow, SignInFlowOptions } from "./types";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -17,7 +17,7 @@ function needsSecondFactor(status: string | null): boolean {
   return status === "needs_second_factor" || status === "needs_client_trust";
 }
 
-export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignInFlow {
+export function useSignInFlow({ intent, onSignedIn, onFailed }: SignInFlowOptions): SignInFlow {
   const { signIn, isLoaded: signInLoaded, setActive } = useSignIn();
   const { signUp, isLoaded: signUpLoaded } = useSignUp();
   const clerk = useClerk();
@@ -61,10 +61,13 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
       }
       if (await continueSecondFactor(result.signIn)) return;
       if (await adoptExistingSession()) return;
-      setError(t("auth.googleIncomplete"));
+      const { message, ...failure } = ssoFailure(result);
+      onFailed?.({ provider: "google", ...failure });
+      if (failure.reason !== "cancelled") setError(message ?? t("auth.googleIncomplete"));
     } catch (err) {
       if (errorCode(err) === "session_exists" && (await adoptExistingSession())) return;
-      setError(errorMessage(err));
+      onFailed?.({ provider: "google", reason: "error", code: failureCode(err) });
+      setError(errorCode(err) === undefined ? t("auth.googleIncomplete") : errorMessage(err));
     }
     setBusy(false);
   }
@@ -80,8 +83,10 @@ export function useSignInFlow({ intent, onSignedIn }: SignInFlowOptions): SignIn
         return;
       }
       if (await continueSecondFactor(result.signIn)) return;
+      onFailed?.({ provider: "apple", reason: "cancelled" });
     } catch (err) {
-      setError(errorMessage(err));
+      onFailed?.({ provider: "apple", reason: "error", code: failureCode(err) });
+      setError(errorCode(err) === undefined ? t("auth.appleIncomplete") : errorMessage(err));
     }
     setBusy(false);
   }

@@ -61,7 +61,15 @@ export type OnboardingEvent =
       event: "paywall_shown";
       properties: { source: "onboarding"; path: OnboardingPath; step: "H5" | "P6" | "gate" };
     }
-  | { event: "onboarding_resumed"; properties: { path: OnboardingPath; at: StepId } };
+  | { event: "onboarding_resumed"; properties: { path: OnboardingPath; at: StepId } }
+  | {
+      event: "sign_in_failed";
+      properties: {
+        provider: "google" | "apple";
+        reason: "cancelled" | "incomplete" | "error";
+        code?: string;
+      };
+    };
 
 /** Each app hands in its own PostHog capture: posthog-react-native on mobile, the browser snippet on web. */
 export type Capture = <K extends OnboardingEvent["event"]>(
