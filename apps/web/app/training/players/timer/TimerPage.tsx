@@ -9,14 +9,14 @@ import {
   timerLoadStep,
 } from "@sendtally/core/hang";
 import { hangLoadText, useGrips } from "@sendtally/features/hang";
+import { NO_PLAN } from "@sendtally/features/training";
 import { t } from "@sendtally/features/i18n";
 import {
   changeLoad,
   forToday,
   loadNow,
-  partPlaces,
-  partPlanned,
-  partRows,
+  partTimerStart,
+  pausePartTimer,
   readWorkoutRun,
   resumedTimer,
   startLoads,
@@ -25,6 +25,7 @@ import {
   usePlannedRun,
   type DoneParams,
   type FingersPart,
+  type SetAt,
   type ForToday,
   type PlannedRun,
   type ResumedTimer,
@@ -172,46 +173,53 @@ export function TimerPage({
 }
 
 /**
- * A mix's fingerboard part in the hang timer: its grips in order, kept in the workout's live run.
- * Minimise goes back to the workout page; End or the last hang hands the sets it held back there
- * as editable rows, with no review of its own.
+ * A grip of a mix in the hang timer, from row `start` on its sets left, or the paused one when
+ * none is given, kept in the workout's live run, whose rows take every set it holds. Minimise
+ * pauses it and goes back to the workout page; its last hang or End goes back there too.
  */
-export function PartTimerPage({ workoutId }: { workoutId: string }): React.ReactElement | null {
+export function PartTimerPage({
+  workoutId,
+  start,
+}: {
+  workoutId: string;
+  start: SetAt | null;
+}): React.ReactElement | null {
   const { model } = useHangData();
   const { isGrip } = useGrips(useAppApi());
   const store = useLiveRunStore();
   const back = useGoBack("/app/workout/sets");
-  const [live] = React.useState(() => store.resumed("/workout/sets", workoutId));
-  const run = live === null ? null : readWorkoutRun(live.params);
-  const fingers = live?.state.player === "sets" ? live.state.fingers : undefined;
-  const resumed = fingers !== undefined && "run" in fingers ? fingers : null;
-  if (run === null) return null;
-  const planned = partPlanned(run, partPlaces(run.items, isGrip));
-  if (planned === null) return null;
+  const [opened] = React.useState(() => {
+    const live = store.resumed("/workout/sets", workoutId);
+    const run = live === null ? null : readWorkoutRun(live.params);
+    const fingers = live?.state.player === "sets" ? live.state.fingers : undefined;
+    return run === null ? null : partTimerStart(run, isGrip, fingers, start);
+  });
+  React.useEffect(() => () => pausePartTimer(store, workoutId, Date.now()), [store, workoutId]);
+  if (opened === null) return null;
+  const { planned, resumed, at } = opened;
   const forRun = forToday(planned, planned.items[0].workout.grip, model);
-  const keep = (part: FingersPart): void => {
-    const now = store.resumed("/workout/sets", workoutId);
-    if (now?.state.player === "sets")
-      store.writeAsIs({ ...now, state: { ...now.state, fingers: part } });
-  };
   return (
     <Timer
       planned={planned}
       today={forRun}
       setups={resumed?.setups ?? forRun.entries.map((e) => e.planned)}
-      link={run.link}
+      link={NO_PLAN}
       session={0}
       resumed={resumed}
       end={false}
       write={(timerRun, now, loads) => {
-        if (timerRun.finished === null)
-          keep({ run: timerRun, setups: now, ...(loads !== undefined && { loads }), planned });
+        const live = store.resumed("/workout/sets", workoutId);
+        if (live?.state.player !== "sets") return;
+        const part: FingersPart = {
+          run: timerRun,
+          setups: now,
+          ...(loads !== undefined && { loads }),
+          planned,
+          ...(at !== undefined && { at }),
+        };
+        store.writeAsIs({ ...live, state: { ...live.state, fingers: part } });
       }}
-      onFinish={({ run: done }) => {
-        if (done !== null)
-          keep({ done: partRows(planned, done, model), setups: done.setups, planned });
-        back();
-      }}
+      onFinish={() => back()}
     />
   );
 }

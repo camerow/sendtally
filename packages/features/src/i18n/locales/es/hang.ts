@@ -99,6 +99,9 @@ export const hang = {
   "hang.skipInterval": "Saltar al siguiente intervalo",
   "hang.pause": "Pausar",
   "hang.resume": "Reanudar",
+  "hang.startTimer": "Iniciar temporizador",
+  "hang.startTimerAt": "Iniciar temporizador en la serie {n}",
+  "hang.resumeTimer": "Reanudar temporizador",
   "hang.lifted": "Levantado",
   "hang.logLift": "Registrar un tirón",
 

@@ -510,7 +510,7 @@ describe("Sets player", () => {
     await root.unmount();
   });
 
-  it("runs a mix's grips as one fingerboard part: Start opens the timer, its ended rows edit in place, Finish logs the rest", async () => {
+  it("runs a grip as one card: its rows by hand or its timer from the card, both logged as its part", async () => {
     const mix: WorkoutRun = {
       ...run,
       title: "Fingers and pull",
@@ -520,44 +520,28 @@ describe("Sets player", () => {
       ],
     };
     const view = await renderWithHang(<SetsScreen run={mix} />);
-    expect(screen.getByText("Fingerboard")).toBeTruthy();
-    expect(screen.getByText("Exercise 1 of 2")).toBeTruthy();
+    expect(screen.queryByText("Fingerboard")).toBeNull();
     expect(screen.getByText("Half crimp")).toBeTruthy();
-    expect(screen.queryByLabelText("Half crimp, set 1")).toBeNull();
-    await fireEvent.press(screen.getByText("Start"));
+    expect(screen.getByLabelText("Half crimp, set 1 · Hangs")).toBeTruthy();
+    expect(screen.queryByText("Add exercise")).toBeNull();
+    await fireEvent.press(screen.getByText("Start timer"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/timer",
-      params: { workoutId: "w1", gripId: "half", part: "1" },
+      params: { workoutId: "w1", gripId: "half", part: "1", item: "0", set: "0" },
     });
+    await fireEvent.press(screen.getByLabelText("Half crimp, set 1"));
+    expect(screen.getByText("Start timer at set 2")).toBeTruthy();
     await view.unmount();
 
     const live = liveRun.read();
     if (live === null || live.state.player !== "sets") throw new Error("no live run");
-    const planned = {
-      items: [
-        {
-          workout: {
-            name: "Fingers and pull",
-            kind: "hang" as const,
-            hangS: 7,
-            restS: 3,
-            reps: 3,
-            sets: 2,
-            setRestS: 0,
-            id: "w1",
-            source: "mine" as const,
-            grip: "half",
-            timeUnits: { hangS: "s" as const, restS: "s" as const, setRestS: "s" as const },
-          },
-          dose: mix.items[0]?.dose,
-        },
-      ] as const,
-      exerciseRestS: 120,
-    };
+    expect(live.state.ticked).toEqual(["0:0"]);
+    // A run saved before grips had rows: its part's held sets come back ticked.
     liveRun.writeAsIs({
       ...live,
       state: {
         ...live.state,
+        ticked: [],
         fingers: {
           done: [
             {
@@ -565,23 +549,47 @@ describe("Sets player", () => {
               exercise: "half",
               sets: [
                 { reps: 3, onS: 7 },
-                { reps: 0, onS: 7 },
+                { reps: 2, onS: 7 },
               ],
             },
           ],
           setups: [{ edgeMm: 20, loadKg: 0 }],
-          planned: { ...planned, items: [...planned.items] },
+          planned: {
+            items: [
+              {
+                workout: {
+                  name: "Fingers and pull",
+                  kind: "hang",
+                  hangS: 7,
+                  restS: 3,
+                  reps: 3,
+                  sets: 2,
+                  setRestS: 0,
+                  id: "w1",
+                  source: "mine",
+                  grip: "half",
+                  timeUnits: { hangS: "s", restS: "s", setRestS: "s" },
+                },
+                dose: { sets: 2, reps: 3, onS: 7, offS: 3 },
+              },
+            ],
+            exerciseRestS: 120,
+          },
         },
       },
     });
     await renderWithHang(<SetsScreen run={mix} />);
-    expect(screen.getByText("3 of 6 hangs")).toBeTruthy();
-    expect(screen.getByLabelText("Half crimp, set 1 · Hangs")).toBeTruthy();
+    expect(screen.getByLabelText("Open Half crimp, 2 sets × 3 hangs · 7s")).toBeTruthy();
+    expect(screen.queryByText(/Start timer|Resume timer/)).toBeNull();
     await fireEvent.press(screen.getByText("Finish"));
     const [[{ params }]] = (router.replace as jest.Mock).mock.calls.slice(-1) as [
       [{ params: { done: string } }],
     ];
     expect(JSON.parse(params.done).map((d: { exercise: string }) => d.exercise)).toEqual(["Row"]);
+    const saved = liveRun.read()?.state;
+    expect(saved?.player === "sets" && saved.fingers).toMatchObject({
+      done: [{ item: 0, exercise: "half", sets: [{ reps: 3 }, { reps: 2 }] }],
+    });
   });
   it("counts the exercise after a finished fingerboard part while the warm-up checklist is still open", async () => {
     const warm = { exercise: "Checklist", dose: { sets: 1 }, checklist: { lines: ["Jog"] } };
@@ -604,7 +612,7 @@ describe("Sets player", () => {
       state: {
         ...live.state,
         fingers: {
-          done: [{ item: 1, exercise: "half", sets: [{ reps: 1, onS: 7 }] }],
+          done: [{ item: 0, exercise: "half", sets: [{ reps: 1, onS: 7 }] }],
           setups: [{ edgeMm: 20, loadKg: 0 }],
           planned: {
             items: [

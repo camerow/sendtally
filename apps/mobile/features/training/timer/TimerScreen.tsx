@@ -17,9 +17,8 @@ import {
   changeLoad,
   forToday,
   loadNow,
-  partPlaces,
-  partPlanned,
-  partRows,
+  partTimerStart,
+  pausePartTimer,
   readWorkoutRun,
   resumedTimer,
   startLoads,
@@ -29,8 +28,10 @@ import {
   type FingersPart,
   type ForToday,
   type ResumedTimer,
+  type SetAt,
   type SetLoads,
 } from "@sendtally/features/workouts";
+import { NO_PLAN } from "@sendtally/features/training";
 import { leaveLiveScreen } from "../../../components/MinimiseButton";
 import { useApi } from "../../../lib/api";
 import { liveRun } from "../../live-session/liveRun";
@@ -175,45 +176,51 @@ export function TimerScreen({
 }
 
 /**
- * A mix's fingerboard part in the hang timer: its grips in order, kept in the workout's live run.
- * Minimise goes back to the workout view; End or the last hang hands the sets it held back there
- * as editable rows, with no review of its own.
+ * A grip of a mix in the hang timer, from row `start` on its sets left, or the paused one when
+ * none is given, kept in the workout's live run, whose rows take every set it holds. Minimise
+ * pauses it and goes back to the workout view; its last hang or End goes back there too.
  */
-export function PartTimerScreen({ workoutId }: { workoutId: string }): React.ReactElement | null {
+export function PartTimerScreen({
+  workoutId,
+  start,
+}: {
+  workoutId: string;
+  start: SetAt | null;
+}): React.ReactElement | null {
   const { model } = useHangData();
   const { isGrip } = useGrips(useApi());
-  const [live] = React.useState(() => liveRun.resumed("/workout/sets", workoutId));
-  const run = live === null ? null : readWorkoutRun(live.params);
-  const state = live?.state.player === "sets" ? live.state : undefined;
-  const fingers = state?.fingers;
-  const resumed = fingers !== undefined && "run" in fingers ? fingers : null;
-  if (run === null || state === undefined) return null;
-  const planned = partPlanned(run, partPlaces(run.items, isGrip));
-  if (planned === null) return null;
+  const [opened] = React.useState(() => {
+    const live = liveRun.resumed("/workout/sets", workoutId);
+    const run = live === null ? null : readWorkoutRun(live.params);
+    const fingers = live?.state.player === "sets" ? live.state.fingers : undefined;
+    return run === null ? null : partTimerStart(run, isGrip, fingers, start);
+  });
+  React.useEffect(() => () => pausePartTimer(liveRun, workoutId, Date.now()), [workoutId]);
+  if (opened === null) return null;
+  const { planned, resumed, at } = opened;
   const forRun = forToday(planned, planned.items[0].workout.grip, model);
-  const keep = (part: FingersPart): void => {
-    const now = liveRun.resumed("/workout/sets", workoutId);
-    if (now?.state.player === "sets")
-      liveRun.writeAsIs({ ...now, state: { ...now.state, fingers: part } });
-  };
   return (
     <Timer
       planned={planned}
       today={forRun}
       setups={resumed?.setups ?? forRun.entries.map((e) => e.planned)}
-      link={run.link}
+      link={NO_PLAN}
       session={0}
       resumed={resumed}
       end={false}
       write={(timerRun, now, loads) => {
-        if (timerRun.finished === null)
-          keep({ run: timerRun, setups: now, ...(loads !== undefined && { loads }), planned });
+        const live = liveRun.resumed("/workout/sets", workoutId);
+        if (live?.state.player !== "sets") return;
+        const part: FingersPart = {
+          run: timerRun,
+          setups: now,
+          ...(loads !== undefined && { loads }),
+          planned,
+          ...(at !== undefined && { at }),
+        };
+        liveRun.writeAsIs({ ...live, state: { ...live.state, fingers: part } });
       }}
-      onFinish={({ run: done }) => {
-        if (done !== null)
-          keep({ done: partRows(planned, done, model), setups: done.setups, planned });
-        leaveLiveScreen();
-      }}
+      onFinish={() => leaveLiveScreen()}
     />
   );
 }

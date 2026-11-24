@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@sendtally/design/tokens";
 import { climbingDoseLine, foldedLine, useActivities } from "@sendtally/features/activities";
 import { exerciseAbout } from "@sendtally/features/exercises";
-import { useGrips } from "@sendtally/features/hang";
+import { useGrips, useHang } from "@sendtally/features/hang";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { useLiveSession } from "@sendtally/features/log-session";
 import { useExercises } from "@sendtally/features/statistics";
@@ -17,12 +17,12 @@ import {
   climbRows,
   afterKey,
   heldSeconds,
+  gripTimerLabel,
   setKey,
   useSetsPlayer,
   type SetAt,
   type WorkoutRun,
   checklistLine,
-  runItems,
   supersetMembers,
   supersetRoundsTitle,
   type RunGroup,
@@ -45,15 +45,13 @@ import { HoldRow } from "../hold/HoldRow";
 import { RestPreview } from "../rest/RestPreview";
 import { RestRow } from "../rest/RestRow";
 import { type } from "../type";
-import { ExercisePickerSheet } from "../exercise-picker/ExercisePickerSheet";
 import type { DetailMenuRow } from "../components/types";
 import { ChecklistCard } from "./ChecklistCard";
 import { openExerciseHistory } from "../exercises/openExerciseHistory";
 import { SupersetCard } from "./SupersetCard";
 import { FoldedSetsCard } from "./FoldedSetsCard";
 import { SET_COLUMNS } from "./setColumns";
-import { SetsCard } from "./SetsCard";
-import { FingersCard } from "./FingersCard";
+import { SetsCard, type GripCardProps } from "./SetsCard";
 import { SessionTargetContext } from "./sessionTarget";
 import { useRunWorkout } from "../library/useLibrary";
 
@@ -82,8 +80,9 @@ function SetsScreenBody({
   const tally = useLiveSession(exerciseTallyStorage);
   const [keypad, setKeypad] = React.useState(false);
   const grips = useGrips(api);
+  const hang = useHang(api).state;
+  const model = hang.status === "ready" ? hang.data : null;
   const [removed, setRemoved] = React.useState<{ message: string; undo: () => void } | null>(null);
-  const [picking, setPicking] = React.useState(false);
   const runWorkout = useRunWorkout(run.workoutId);
   const player = useSetsPlayer({
     run,
@@ -92,6 +91,9 @@ function SetsScreenBody({
     activities: activities.status === "ready" ? activities.data : null,
     exercises: mine,
     isGrip: grips.isGrip,
+    ...(model !== null && {
+      gripSetup: (g) => model.setup(g.workout, g.workout.grip, g.dose),
+    }),
   });
   const { part } = player;
   const { shown, ticked, rest, hold, nameOf, items, order } = player;
@@ -147,6 +149,35 @@ function SetsScreenBody({
     restAt(afterKey(item)) || (
       <RestPreview seconds={restAfterItem(items, item, run.exerciseRestS)} />
     );
+  const gripOf = (i: number): GripCardProps | undefined => {
+    const k = part?.places.indexOf(i) ?? -1;
+    const planned = part?.planned.items[k];
+    if (part === null || planned === undefined) return undefined;
+    const setup = model?.setup(planned.workout, planned.workout.grip, planned.dose);
+    const timer = part.timer(i);
+    return {
+      name: grips.gripName(planned.workout.grip),
+      edgeMm: setup?.edgeMm ?? 0,
+      loadKg: setup?.loadKg ?? 0,
+      timer:
+        timer === null
+          ? null
+          : {
+              label: gripTimerLabel(timer),
+              onPress: () =>
+                router.push({
+                  pathname: "/workout/timer",
+                  params: {
+                    workoutId: run.workoutId,
+                    gripId: planned.workout.grip,
+                    part: "1",
+                    ...(!timer.resume && { item: String(i), set: String(timer.set) }),
+                  },
+                }),
+            },
+    };
+  };
+  const titleOf = (i: number): string => gripOf(i)?.name ?? nameOf(i);
   const finish = (): void => {
     const { done, off, lastTickAt } = player.finished();
     logRun(run, done, player.startedAt, off, lastTickAt);
@@ -260,30 +291,6 @@ function SetsScreenBody({
                   const item = items[i];
                   const d = shown.find((x) => x.item === i);
                   if (item === undefined || d === undefined) return null;
-                  if (part !== null && part.places.includes(i))
-                    return (
-                      i === part.places[0] && (
-                        <React.Fragment key={i}>
-                          <FingersCard
-                            part={part}
-                            unit={unit}
-                            gripName={grips.gripName}
-                            onStart={() =>
-                              router.push({
-                                pathname: "/workout/timer",
-                                params: {
-                                  workoutId: run.workoutId,
-                                  gripId: item.exercise,
-                                  part: "1",
-                                },
-                              })
-                            }
-                            onRemoved={(message, undo) => setRemoved({ message, undo })}
-                          />
-                          {at < order.length - 1 && restBetween(i)}
-                        </React.Fragment>
-                      )
-                    );
                   const g = player.groups.find((x) => x.members.includes(i));
                   if (g !== undefined) {
                     if (g.members[0] !== i) return null;
@@ -431,8 +438,12 @@ function SetsScreenBody({
                     <React.Fragment key={i}>
                       {player.folded(i) ? (
                         <FoldedSetsCard
-                          name={nameOf(i)}
-                          line={skipped ? t("plan.skipped") : foldedLine(d.sets, unit)}
+                          name={titleOf(i)}
+                          line={
+                            skipped
+                              ? t("plan.skipped")
+                              : foldedLine(d.sets, unit, gripOf(i) ? "hangboard" : "strength")
+                          }
                           done={
                             !skipped &&
                             d.sets.length > 0 &&
@@ -460,21 +471,22 @@ function SetsScreenBody({
                           onAddSet={() => player.addSet(i)}
                           onFold={() => player.fold(i)}
                           menu={menu(i)}
-                          onHistory={openExerciseHistory(mine, item.exercise)}
+                          {...(gripOf(i) === undefined
+                            ? { onHistory: openExerciseHistory(mine, item.exercise) }
+                            : {
+                                grip: gripOf(i),
+                                onHistory: () =>
+                                  router.push({
+                                    pathname: "/grip/[id]",
+                                    params: { id: item.exercise },
+                                  }),
+                              })}
                         />
                       )}
                       {between}
                     </React.Fragment>
                   );
                 })}
-                {run.items.length > 0 && (
-                  <Button
-                    label={t("workouts.addExercise")}
-                    onPress={() => setPicking(true)}
-                    variant="outline"
-                    icon="plus"
-                  />
-                )}
               </Pressable>
             </SessionTargetContext.Provider>
           </KeypadScrollView>
@@ -531,14 +543,6 @@ function SetsScreenBody({
               setPickingGym(false);
             }}
             onClose={() => setPickingGym(false)}
-          />
-        )}
-        {picking && (
-          <ExercisePickerSheet
-            items={runItems(items)}
-            multi
-            onPick={(picked) => picked.forEach(player.addExercise)}
-            onClose={() => setPicking(false)}
           />
         )}
         {!keypad && (

@@ -1,19 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { protocolOf, startWorkoutRun, tick } from "@sendtally/core/hang";
+import {
+  doneAsPrescribed,
+  protocolOf,
+  startWorkoutRun,
+  tick,
+  type ItemDone,
+} from "@sendtally/core/hang";
 import type { HangPart } from "@sendtally/api-client";
 import {
   discardRunBody,
+  gripTimer,
+  gripTimerLabel,
   loggedPartForm,
   livePartForm,
   partBody,
   partEnded,
-  partHangs,
+  partOfRows,
   partPlaces,
   partPlanned,
   partRows,
-  partSetLine,
-  partTotal,
+  partTimerStart,
+  timerWrites,
+  withTimerWrites,
 } from "./fingersPart";
+import { setKey } from "./setsRun";
 import { liveRunSummary, type LiveRun, type RunState } from "./liveRun";
 import type { WorkoutRun } from "./runParams";
 import type { PlannedRun } from "./usePlannedRun";
@@ -49,7 +59,6 @@ describe("a mix's fingerboard part", () => {
       ["half", 3, 2],
       ["open", 2, 1],
     ]);
-    expect(partTotal(planned!)).toBe(8);
     expect(partPlanned(run, partPlaces([pulls], isGrip))).toBeNull();
   });
 
@@ -79,7 +88,6 @@ describe("a mix's fingerboard part", () => {
       ["half", [3, 0]],
       ["open", [0]],
     ]);
-    expect(partHangs({ done: rows, setups, planned })).toBe(3);
   });
 
   it("saves the sets that held, a grip that held none with its dose, and nothing when none held", () => {
@@ -121,8 +129,6 @@ describe("a mix's fingerboard part", () => {
     );
     const ended = partEnded({ run, setups, planned }, (id) => id);
     expect(ended?.done.map((d) => d.exercise)).toEqual(["half", "open"]);
-    expect(partHangs(ended)).toBe(partHangs({ run, setups, planned }));
-    expect(partHangs(ended)).toBeGreaterThan(0);
     expect(partEnded({ run, setups }, (id) => id)).toBeUndefined();
     const [first, second] = planned.items;
     if (second === undefined) throw new Error("no second grip");
@@ -178,13 +184,13 @@ describe("a mix's fingerboard part", () => {
     });
     const rows = [{ item: 0, exercise: "half", sets: [{ reps: 3 }, { reps: 2 }] }];
     const sets = { player: "sets" as const, done: [], ticked: [], grips: [0, 1] };
-    expect(
-      discardRunBody(live({ ...sets, fingers: { done: rows, setups, planned: planned } }))
-    ).toBe("Its fingerboard part (5 hangs held) goes too.");
-    expect(discardRunBody(live(sets))).toBe("Nothing from it is logged.");
-    expect(partSetLine(timerRun, planned, (id) => (id === "half" ? "Half crimp" : id))).toBe(
-      "Half crimp · Set 1 of 2"
+    expect(discardRunBody(live({ ...sets, done: rows, ticked: ["0:0", "0:1"] }))).toBe(
+      "Its fingerboard part (5 hangs held) goes too."
     );
+    expect(discardRunBody(live({ ...sets, done: rows, ticked: ["0:1"] }))).toBe(
+      "Its fingerboard part (2 hangs held) goes too."
+    );
+    expect(discardRunBody(live(sets))).toBe("Nothing from it is logged.");
     expect(liveRunSummary(live({ ...sets, fingers: { run: timerRun, setups } }))).toBe(
       "Fingerboard · Set 1 of 2"
     );
@@ -199,5 +205,96 @@ describe("a mix's fingerboard part", () => {
         })
       )
     ).toBe("Pull-ups · Set 1 of 1");
+  });
+
+  const rowsOf = (done: readonly ItemDone[]) =>
+    doneAsPrescribed(run.items).map((d) => done.find((x) => x.item === d.item) ?? d);
+
+  it("lays a timer's sets into its grip's rows from where it started, ticking each set it ended", () => {
+    const start = partTimerStart(run, isGrip, undefined, { item: 0, set: 1 });
+    if (start === null) throw new Error("no timer");
+    expect(start.planned.items.map((i) => [i.workout.grip, i.workout.sets])).toEqual([["half", 1]]);
+    const protocols = start.planned.items.map((i) => protocolOf(i.workout));
+    const twoHangs = tick(startWorkoutRun(protocols, [], 0), 23_000);
+    const part = { run: twoHangs, setups, planned: start.planned, at: { item: 0, set: 1 } };
+    const writes = timerWrites(part, [0, 1]);
+    expect(writes.map((w) => [w.at, w.value.reps, w.ended])).toEqual([
+      [{ item: 0, set: 1 }, 2, false],
+    ]);
+    const after = withTimerWrites(rowsOf([]), new Set(), writes);
+    expect(after?.done[0]?.sets.map((s) => s.reps)).toEqual([3, 2]);
+    expect([...(after?.ticked ?? [])]).toEqual([]);
+    expect(withTimerWrites(after?.done ?? [], after?.ticked ?? new Set(), writes)).toBeNull();
+    const done = tick(twoHangs, 60_000);
+    const ended = timerWrites({ ...part, run: done }, [0, 1]);
+    expect(ended.map((w) => [w.at.set, w.value.reps, w.ended])).toEqual([[1, 3, true]]);
+  });
+
+  it("opens a run saved before grips had rows on the sets its part held, none of them lost", () => {
+    if (planned === null) throw new Error("no part");
+    const held = [
+      {
+        item: 0,
+        exercise: "half",
+        sets: [
+          { reps: 3, onS: 7 },
+          { reps: 0, onS: 7 },
+        ],
+      },
+      { item: 1, exercise: "open", sets: [{ reps: 2, onS: 10, weightKg: 10 }] },
+    ];
+    const after = withTimerWrites(
+      rowsOf([]),
+      new Set(),
+      timerWrites({ done: held, setups, planned }, [0, 1])
+    );
+    expect(after?.done.slice(0, 2).map((d) => d.sets.map((s) => s.reps))).toEqual([[3, 3], [2]]);
+    expect([...(after?.ticked ?? [])]).toEqual(["0:0", "1:0"]);
+    expect(after?.done[1]?.sets[0]?.weightKg).toBe(10);
+    const protocols = planned.items.map((i) => protocolOf(i.workout));
+    const old = { run: tick(startWorkoutRun(protocols, [], 0), 20_000), setups, planned };
+    expect(timerWrites(old, [0, 1]).every((w) => w.at.item === 0)).toBe(true);
+    expect(partTimerStart(run, isGrip, old, null)?.resumed).toBe(old);
+  });
+
+  it("saves a set ticked by hand as the timer saves one it ran, apart from what was done", () => {
+    if (planned === null) throw new Error("no part");
+    const byHand = partOfRows(rowsOf([]), new Set(["0:0"]), [0, 1], planned, setups);
+    const start = partTimerStart(run, isGrip, undefined, { item: 0, set: 0 });
+    if (start === null) throw new Error("no timer");
+    const protocols = start.planned.items.map((i) => protocolOf(i.workout));
+    const ran = tick(startWorkoutRun(protocols, [], 0), 5_000 + 3 * 10_000);
+    const writes = timerWrites(
+      { run: ran, setups, planned: start.planned, at: { item: 0, set: 0 } },
+      [0, 1]
+    );
+    const timed = withTimerWrites(rowsOf([]), new Set(), writes);
+    expect([...(timed?.ticked ?? [])]).toContain("0:0");
+    const byTimer = partOfRows(timed?.done ?? [], new Set(["0:0"]), [0, 1], planned, setups);
+    expect(partBody(byTimer!)).toEqual(partBody(byHand!));
+    expect(byHand?.done.map((d) => d.sets.map((s) => s.reps))).toEqual([[3, 0], [0]]);
+    expect(
+      partOfRows(rowsOf([]), new Set([setKey({ item: 2, set: 0 })]), [0, 1], planned, setups)
+    ).toBeUndefined();
+  });
+
+  it("names each grip's timer button from where its sets stand", () => {
+    const none = new Set<string>();
+    expect(gripTimerLabel(gripTimer(0, 2, none, undefined, [0, 1])!)).toBe("Start timer");
+    expect(gripTimerLabel(gripTimer(0, 2, new Set(["0:0"]), undefined, [0, 1])!)).toBe(
+      "Start timer at set 2"
+    );
+    expect(gripTimer(0, 2, new Set(["0:0", "0:1"]), undefined, [0, 1])).toBeNull();
+    const start = partTimerStart(run, isGrip, undefined, { item: 1, set: 0 });
+    if (start === null) throw new Error("no timer");
+    const protocols = start.planned.items.map((i) => protocolOf(i.workout));
+    const paused = {
+      run: startWorkoutRun(protocols, [], 0),
+      setups,
+      planned: start.planned,
+      at: { item: 1, set: 0 },
+    };
+    expect(gripTimerLabel(gripTimer(1, 1, none, paused, [0, 1])!)).toBe("Resume timer");
+    expect(gripTimerLabel(gripTimer(0, 2, none, paused, [0, 1])!)).toBe("Start timer");
   });
 });

@@ -99,6 +99,9 @@ export const hang = {
   "hang.skipInterval": "Passer à l'intervalle suivant",
   "hang.pause": "Pause",
   "hang.resume": "Reprendre",
+  "hang.startTimer": "Lancer le minuteur",
+  "hang.startTimerAt": "Lancer le minuteur à la série {n}",
+  "hang.resumeTimer": "Reprendre le minuteur",
   "hang.lifted": "Tiré",
   "hang.logLift": "Enregistrer un tirage",
 

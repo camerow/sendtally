@@ -100,6 +100,9 @@ export const hang = {
   "hang.skipInterval": "Zum nächsten Intervall springen",
   "hang.pause": "Pause",
   "hang.resume": "Fortsetzen",
+  "hang.startTimer": "Timer starten",
+  "hang.startTimerAt": "Timer ab Satz {n} starten",
+  "hang.resumeTimer": "Timer fortsetzen",
   "hang.lifted": "Gezogen",
   "hang.logLift": "Zug eintragen",
 

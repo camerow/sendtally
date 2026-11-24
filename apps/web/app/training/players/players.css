@@ -129,15 +129,6 @@
   color: var(--bs-white);
 }
 
-.player-start {
-  min-height: 48px;
-  margin-top: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
 .player-row {
   position: relative;
   min-height: 48px;
@@ -328,10 +319,6 @@
 
 .player-chevron--down {
   transform: rotate(90deg);
-}
-
-.player-add-exercise {
-  height: 48px;
 }
 
 .player-gym {
@@ -538,48 +525,6 @@
 
 .superset-members + .superset-round {
   padding-top: 0;
-}
-
-.fingers-part {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.fingers-head {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.fingers-title {
-  flex: 1;
-  margin: 0;
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--bs-gunmetal);
-}
-
-.fingers-count {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-on-white-secondary);
-}
-
-.fingers-setup {
-  margin-top: -6px;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  line-height: 20px;
-  color: var(--bs-gunmetal);
-}
-
-.fingers-set-line {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--bs-gunmetal);
 }
 
 .climb-select {

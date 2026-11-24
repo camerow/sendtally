@@ -3,7 +3,11 @@ import {
   doneAsPrescribed,
   isChecklist,
   restAfterItem,
+  currentPhase,
+  isWork,
+  remainingInPhase,
   setOf,
+  type HangSetup,
   type ItemDone,
   type SessionItem,
   type SetDone,
@@ -29,16 +33,23 @@ import { tallyDraft } from "../log-session/tally";
 import type { ClimbDraft, LogSessionDraft } from "../log-session/types";
 import { climbedKeys, type ClimbPlan } from "./climbRows";
 import type { LiveSession } from "../log-session/useLiveSession";
-import { partPlaces, partPlanned, type FingersPart } from "./fingersPart";
+import {
+  gripTimer,
+  partOfRows,
+  partPlaces,
+  partPlanned,
+  timerWrites,
+  withTimerWrites,
+  type FingersPart,
+  type GripTimer,
+} from "./fingersPart";
 import type { Hold } from "./holdClock";
 import { itemTitle } from "./checklist";
 import type { LiveRunStore } from "./liveRun";
-import { newDoseFor } from "./doseFields";
 import { runParams, type RunFinish, type WorkoutRun } from "./runParams";
 import {
   cardsFrom,
   finishedInOrder,
-  withCardAdded,
   withCardEnded,
   withCardFold,
   withUnitMoved,
@@ -48,7 +59,6 @@ import {
   withSetBack,
   type RunCards,
 } from "./runCards";
-import type { Picked } from "./types";
 import { useLatest } from "./useLatest";
 import {
   afterKey,
@@ -90,17 +100,19 @@ export type SetsPlayerInputs = {
   exercises: readonly Pick<Exercise, "name" | "kind" | "measure" | "eachSide">[] | null;
   /** Which items name grips: together they are the run's fingerboard part. */
   isGrip: (exercise: string) => boolean;
+  /** A grip's edge and load as the user last set them, which its save starts from. */
+  gripSetup?: (item: PlannedRun["items"][number]) => HangSetup;
 };
 
-/** A mix's fingerboard part in the player: where it sits, what its timer runs, and where it is. */
+/** A mix's grips in the player: each its own card, and the hang timer that writes their rows. */
 export type PartInPlayer = {
-  /** Its grips' places in the run, the first where its card sits. */
+  /** Its grips' places in the run, in the order its timer plans them. */
   places: number[];
   planned: PlannedRun;
-  /** None until its timer starts. */
+  /** The hang timer's run, none until one starts. */
   state: FingersPart | undefined;
-  /** Where it is now: the timer's run while it has it, or its rows once edited. */
-  change: (next: FingersPart) => void;
+  /** A grip card's timer button, none once its every set is ticked. */
+  timer: (item: number) => GripTimer | null;
 };
 
 export type ClimbingItem = {
@@ -156,8 +168,6 @@ export type SetsPlayer = {
   /** Whether a card, or the superset it is in, has a place to move to that way. */
   canMove: (item: number, by: -1 | 1) => boolean;
   remove: (item: number) => void;
-  /** An exercise added to this run only, at the end, with the dose the editor would give it. */
-  addExercise: (picked: Picked) => void;
   toggle: (at: SetAt) => void;
   change: (item: number, set: number, value: SetDone) => void;
   /** Ends the hold, recording what it counted on its set, which ticks itself. */
@@ -206,6 +216,7 @@ export function useSetsPlayer({
   activities,
   exercises,
   isGrip,
+  gripSetup = () => ({ edgeMm: 0, loadKg: 0 }),
 }: SetsPlayerInputs): SetsPlayer {
   const [resumed] = React.useState(() => {
     const live = store.resumed("/workout/sets", run.workoutId);
@@ -279,9 +290,32 @@ export function useSetsPlayer({
   }, [store, run, startedAt, lastTickAt, done, ticked, cards, places, climbed]);
   const planned = partPlanned(run, places);
   const inPart = (item: number): boolean => places.includes(item);
-  const partOpen =
-    places.length > 0 &&
-    (fingers === undefined || ("run" in fingers && fingers.run.finished === null));
+  // Finish leaves the part's rows in `fingers` for the review, which no merge may take back.
+  const finishing = React.useRef(false);
+  const merge = useLatest((): void => {
+    if (fingers === undefined || finishing.current) return;
+    const writes = timerWrites(fingers, places);
+    const after = withTimerWrites(latest.current.done, latest.current.ticked, writes);
+    if (after !== null) {
+      setDone(after.done);
+      setTicked(after.ticked);
+      const ended = writes.filter((w) => w.ended && !latest.current.ticked.has(setKey(w.at)));
+      const last = ended.at(-1);
+      if (last !== undefined) {
+        setLastTickAt(Date.now());
+        const timer = "run" in fingers ? fingers.run : null;
+        if (timer !== null && timer.finished === null && !isWork(currentPhase(timer).kind))
+          rest.tick(setKey(last.at), Math.round(remainingInPhase(timer, Date.now())));
+      }
+    }
+    // A timer that ended, or rows saved before grips had their own, are in the rows now.
+    if (!("run" in fingers) || fingers.run.finished !== null) {
+      const now = store.resumed("/workout/sets", run.workoutId);
+      if (now?.state.player === "sets")
+        store.writeAsIs({ ...now, state: { ...now.state, fingers: undefined } });
+    }
+  });
+  React.useEffect(() => merge.current(), [fingers, merge]);
   const items = [...run.items.slice(0, cards.base), ...cards.added];
   const tallyMeasure = tallyMeasuresOf(exercises ?? [], run.kind, isGrip);
   const listAt = (item: number): boolean => {
@@ -309,7 +343,7 @@ export function useSetsPlayer({
   const sets = cards.order.flatMap((key) => {
     const g = groupOf(key);
     if (g !== undefined) return g.members[0] === key ? roundOrder(g) : [];
-    return allSets(live).filter((at) => at.item === key && tallyOf(key) === null && !inPart(key));
+    return allSets(live).filter((at) => at.item === key && tallyOf(key) === null);
   });
   const previous = (exercise: string): SetDone[] =>
     activities === null || run.workoutId === null
@@ -318,13 +352,6 @@ export function useSetsPlayer({
   const lifting = (item: number): boolean => isLifting(run.kind, items[item]);
   const shown = withPrevious(done, lifting, previous);
   const next = sets.find((at) => !ticked.has(setKey(at))) ?? null;
-  /** The fingerboard part while it is still to do and comes before the set being worked on. */
-  const partFirst =
-    partOpen &&
-    places[0] !== undefined &&
-    (next === null || cards.order.indexOf(places[0]) < cards.order.indexOf(next.item))
-      ? places[0]
-      : null;
   const nameOf = (item: number): string => {
     const at = items[item];
     return at === undefined ? "" : itemTitle(at);
@@ -371,7 +398,7 @@ export function useSetsPlayer({
 
   const sided = eachSideOf(exercises ?? []);
   const holdTarget = (at: SetAt): number | null => {
-    const targetS = items[at.item]?.dose.onS;
+    const targetS = inPart(at.item) ? undefined : items[at.item]?.dose.onS;
     return !ticked.has(setKey(at)) && targetS !== undefined && targetS > 0 ? targetS : null;
   };
   const setsPlanned = (item: number): number => {
@@ -508,10 +535,9 @@ export function useSetsPlayer({
 
   /** The card the run is on; -1 once nothing is left, where the header names no position. */
   const positionOn =
-    partFirst ??
-    (climbAt !== null && next !== null
+    climbAt !== null && next !== null
       ? (cards.order.find((k) => k === climbAt || k === next.item) ?? -1)
-      : (next?.item ?? climbAt ?? -1));
+      : (next?.item ?? climbAt ?? -1);
   return {
     startedAt,
     shown,
@@ -526,7 +552,7 @@ export function useSetsPlayer({
             cards.order,
             positionOn,
             (k) => (listAt(k) ? null : (groupOf(k)?.id ?? String(k))),
-            (k) => inPart(k) && !partOpen
+            (k) => inPart(k) && doneOf(k)
           ),
     rest,
     hold,
@@ -628,12 +654,6 @@ export function useSetsPlayer({
       setCards((c) => withCardRemoved(c, item));
       if (selected?.item === item) setSelected(null);
     },
-    addExercise: ({ exercise, kind, measure, dose }) => {
-      const key = cards.base + cards.added.length;
-      const item = { exercise, dose: dose ?? newDoseFor(kind, measure) };
-      setCards((c) => withCardAdded(c, item));
-      setDone((all) => [...all, ...doneAsPrescribed([item]).map((d) => ({ ...d, item: key }))]);
-    },
     toggle,
     change,
     endHold,
@@ -683,6 +703,12 @@ export function useSetsPlayer({
           ),
         },
       });
+      finishing.current = true;
+      const now = store.resumed("/workout/sets", run.workoutId);
+      if (planned !== null && now?.state.player === "sets") {
+        const rows = partOfRows(done, ticked, places, planned, planned.items.map(gripSetup));
+        store.writeAsIs({ ...now, state: { ...now.state, fingers: rows } });
+      }
       const each = shown.flatMap((d) => (inPart(d.item) ? [] : [{ d, sets: climbedOf(d) }]));
       const ran = each.map(({ d, sets }) => {
         const lines = items[d.item]?.checklist?.lines;
@@ -704,11 +730,7 @@ export function useSetsPlayer({
             places,
             planned,
             state: fingers,
-            change: (next) => {
-              const now = store.resumed("/workout/sets", run.workoutId);
-              if (now?.state.player === "sets")
-                store.writeAsIs({ ...now, state: { ...now.state, fingers: next } });
-            },
+            timer: (item) => gripTimer(item, live[item]?.dose.sets ?? 0, ticked, fingers, places),
           },
   };
 }

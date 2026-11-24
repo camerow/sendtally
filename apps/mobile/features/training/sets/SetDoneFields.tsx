@@ -3,7 +3,7 @@ import { hangLoadValue } from "@sendtally/features/hang";
 import { Text, View } from "react-native";
 import { fromUnit, toUnit, type SetDone, type WeightUnit, loadStep } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { t } from "@sendtally/features/i18n";
+import { formatNumber, t } from "@sendtally/features/i18n";
 import { KeypadField } from "../../../components/KeypadField";
 import { TimeField } from "../../../components/TimeField";
 import { useFieldOrder, type FieldSlot } from "../../../components/useFieldOrder";
@@ -30,6 +30,10 @@ export type SetDoneFieldsProps = {
   loadSlot?: FieldSlot;
   /** The load a hang set shows while it has none of its own: the session's. */
   defaultLoadKg?: number;
+  /** A hang set not yet done: its values are its target, in placeholder ink. */
+  todo?: boolean;
+  /** The hangs a hang set aims for, read after a count short of it: "3 of 6". */
+  hangsOf?: number;
   onChange: (set: SetDone) => void;
 };
 
@@ -65,6 +69,8 @@ export function SetDoneFields({
   slot: column,
   loadSlot,
   defaultLoadKg = 0,
+  todo = false,
+  hangsOf,
   go,
   onChange,
 }: SetDoneFieldsProps): React.ReactElement {
@@ -103,7 +109,11 @@ export function SetDoneFields({
               <NumberField
                 {...(hangs && column !== undefined ? column : slot("reps"))}
                 {...named(hangs ? t("plan.colHangs") : t("workouts.dose.reps"))}
-                value={hangs && set.reps === 0 ? null : (set.reps ?? null)}
+                value={(hangs && set.reps === 0) || todo ? null : (set.reps ?? null)}
+                {...(todo && set.reps !== undefined && { placeholder: formatNumber(set.reps) })}
+                {...(hangsOf !== undefined && {
+                  unit: t("activities.ofTime", { time: formatNumber(hangsOf) }),
+                })}
                 onChange={(n) => onChange({ ...set, reps: n })}
                 step={1}
                 max={1000}
@@ -143,6 +153,7 @@ export function SetDoneFields({
               <LoadValue
                 slot={loadSlot}
                 kg={set.weightKg ?? defaultLoadKg}
+                dim={todo}
                 unit={unit}
                 {...named(t("hang.load"))}
                 onChange={(weightKg) => onChange({ ...set, weightKg })}
@@ -195,6 +206,7 @@ export function SetDoneFields({
 function LoadValue({
   slot,
   kg,
+  dim,
   unit,
   label,
   accessibilityLabel,
@@ -202,6 +214,7 @@ function LoadValue({
 }: {
   slot: FieldSlot | undefined;
   kg: number;
+  dim: boolean;
   unit: WeightUnit;
   label: string;
   accessibilityLabel: string;
@@ -226,7 +239,7 @@ function LoadValue({
         signed: true,
       }}
       value={value}
-      text={["", text]}
+      text={dim ? [text, ""] : ["", text]}
       {...(value !== 0 && { unit })}
       onChange={(n) => onChange(fromUnit(n, unit))}
     />
