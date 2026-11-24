@@ -42,7 +42,7 @@ describe("exercise shelves", () => {
     expect(router.push).toHaveBeenCalledWith({ pathname: "/exercise/[id]", params: { id: "e2" } });
   });
 
-  it("fills shelves with unclaimed built-ins after the user's own, and ends each long one in a library row", async () => {
+  it("fills shelves with unclaimed built-ins after the user's own, and heads each long one with See all", async () => {
     await renderWithHang(<ExerciseShelves />, hangData(), {
       exercises: [
         anExercise("e1", "Plank", "strength"),
@@ -52,7 +52,7 @@ describe("exercise shelves", () => {
     for (const kind of ["Fingers", "Climbing", "Strength", "Mobility", "Other"])
       expect(screen.getByText(kind)).toBeTruthy();
     expect(screen.queryByText("Pigeon")).toBeNull();
-    expect(screen.queryByLabelText(/^See all/)).toBeNull();
+    expect(screen.queryByLabelText("See all Other")).toBeNull();
     expect(screen.getAllByText("Not in a workout yet").length).toBeGreaterThan(0);
 
     await fireEvent.press(screen.getByText("Back squat"));
@@ -60,11 +60,12 @@ describe("exercise shelves", () => {
       pathname: "/exercise/[id]",
       params: { id: "backSquat" },
     });
-    await fireEvent.press(
+    expect(
       screen.getByText(
-        `All ${TEST_LIBRARY.exercises.filter((b) => b.spec.kind === "strength").length + 1} exercises`
+        `See all ${TEST_LIBRARY.exercises.filter((b) => b.spec.kind === "strength").length + 1}`
       )
-    );
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("See all Strength"));
     expect(router.push).toHaveBeenLastCalledWith({
       pathname: "/exercise/category",
       params: { kind: "strength" },

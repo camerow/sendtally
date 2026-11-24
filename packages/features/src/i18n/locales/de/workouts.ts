@@ -49,7 +49,6 @@ export const workouts = {
   "workouts.moveDown": "{name} nach unten",
   "workouts.seeAll": "Alle anzeigen",
   "workouts.seeAllCount": "Alle {n} anzeigen",
-  "workouts.allExercises": "Alle {n} Übungen",
   "workouts.seeAllOf": "Alle anzeigen: {kind}",
   "workouts.exerciseBest": "Bestwert {value}",
   "workouts.exerciseBestBodyweight": "Bestwert Körpergewicht",
