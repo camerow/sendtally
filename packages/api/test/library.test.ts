@@ -1,6 +1,8 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it, vi } from "vitest";
 import type { BuiltInLibrary, LibraryEntry } from "@sendtally/core/hang";
+import { createdSpec } from "../src/lib/library";
+import * as repo from "../src/lib/repo";
 import { testApp } from "./harness";
 
 const call = async (
@@ -186,6 +188,63 @@ describe("creating a built-in", () => {
       "UPDATE library_items SET status = 'retired' WHERE type = 'exercise' AND id = 'pullUps'"
     ).run();
     expect((await create(mod, "exercise", { ...exercise, name: "Pull-ups" })).status).toBe(409);
+  });
+
+  it("writes nothing, history included, when the id is already in the table", async () => {
+    const changes = async (): Promise<unknown> =>
+      (
+        await env.DB.prepare(
+          "SELECT count(*) AS n FROM library_changes WHERE item_type = 'exercise' AND item_id = 'pullUps'"
+        ).first()
+      )?.["n"];
+    const before = await changes();
+    const made = await repo.createLibraryEntry(env.DB, "mod-create", {
+      ...repo.UNCREATED,
+      name: "Pull-ups",
+      type: "exercise",
+      id: "pullUps",
+      spec: { kind: "strength", measure: "reps" },
+    });
+    expect(made).toBeNull();
+    expect(await changes()).toBe(before);
+  });
+
+  it("refuses a negative or fractional number", async () => {
+    const mod = await moderator("mod-create");
+    const workout = (dose: Record<string, number>, minutes = 30) => ({
+      name: "Bad numbers",
+      description: "",
+      names: {},
+      spec: {
+        kind: "strength",
+        focus: null,
+        minutes,
+        targetRpe: 7,
+        items: [{ exercise: "pullUps", doses: [dose] }],
+      },
+    });
+    expect((await create(mod, "workout", workout({ sets: 3, reps: -5 }))).status).toBe(400);
+    expect((await create(mod, "workout", workout({ sets: 2.5 }))).status).toBe(400);
+    expect((await create(mod, "workout", workout({ sets: 3 }, 30.5))).status).toBe(400);
+    expect(
+      (
+        await create(mod, "exercise", {
+          ...exercise,
+          spec: { ...exercise.spec, dose: { sets: 0 } },
+        })
+      ).status
+    ).toBe(400);
+  });
+
+  it("takes every seeded spec but the empty first run plan, so the bounds fit what ships", async () => {
+    const lib = await library();
+    const ids = new Set(lib.exercises.map((e) => e.id));
+    const workouts = lib.workouts.filter((w) => w.spec.items.length > 0);
+    expect(lib.workouts.length - workouts.length).toBe(1);
+    for (const e of [...lib.exercises, ...workouts])
+      expect(createdSpec(e.type === "exercise" ? "exercise" : "workout", e.spec, ids)).toEqual({
+        spec: e.spec,
+      });
   });
 
   it("refuses a measure its kind does not take", async () => {

@@ -10,7 +10,7 @@ describe("library draft", () => {
     expect(withExerciseKind({ ...draft, measure: "seconds" }, "mobility").measure).toBe("seconds");
   });
 
-  it("empties the items moving into hangboard, and leaves it without minutes or target RPE", () => {
+  it("empties the items moving in or out of hangboard", () => {
     const strength = {
       ...NEW_WORKOUT,
       minutes: 40,
@@ -18,19 +18,17 @@ describe("library draft", () => {
       items: [{ key: "a", ref: { exercise: "pullUps" }, doses: [{ sets: 3 }] }],
     };
     expect(withWorkoutKind(strength, "mobility").items).toHaveLength(1);
-    expect(withWorkoutKind(strength, "hangboard")).toMatchObject({
-      items: [],
-      minutes: null,
-      targetRpe: null,
-    });
+    expect(withWorkoutKind(strength, "hangboard").items).toEqual([]);
   });
 
-  it("trims the text, drops empty names, and strips edge and weight from hangboard doses", () => {
+  it("trims the text, drops empty names, and leaves a hangboard workout no minutes, target RPE, edge or weight", () => {
     const body = createBody(text, {
       type: "workout",
       draft: {
         ...NEW_WORKOUT,
         kind: "hangboard",
+        minutes: 40,
+        targetRpe: 7,
         items: [
           {
             key: "a",

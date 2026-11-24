@@ -61,12 +61,7 @@ export function withExerciseKind(draft: ExerciseSpecDraft, kind: ExerciseKind): 
 /** Grips and exercises do not mix, so moving in or out of hangboard empties the items. */
 export function withWorkoutKind(draft: WorkoutSpecDraft, kind: WorkoutKind): WorkoutSpecDraft {
   const fingers = (k: WorkoutKind): boolean => k === "hangboard";
-  return {
-    ...draft,
-    kind,
-    items: fingers(kind) === fingers(draft.kind) ? draft.items : [],
-    ...(fingers(kind) && { minutes: null, targetRpe: null }),
-  };
+  return { ...draft, kind, items: fingers(kind) === fingers(draft.kind) ? draft.items : [] };
 }
 
 /** Edge depth and added weight are chosen per use, so a hangboard built-in carries neither. */

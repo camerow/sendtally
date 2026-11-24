@@ -14,7 +14,6 @@ import {
   like,
   lt,
   lte,
-  max,
   ne,
   not,
   notInArray,
@@ -4106,8 +4105,15 @@ export async function libraryIdTaken(
   return item !== undefined || change !== undefined;
 }
 
+const uniqueViolation = (e: unknown): boolean =>
+  e instanceof Error &&
+  `${e.message} ${e.cause instanceof Error ? e.cause.message : ""}`.includes(
+    "UNIQUE constraint failed"
+  );
+
 /**
- * Adds a built-in last in its type, logging its creation; null when the id is already taken.
+ * Adds a built-in last in its type and logs its creation in one batch, so it never goes live
+ * without its history; null when the id is already taken.
  */
 export async function createLibraryEntry(
   db: D1Database,
@@ -4116,38 +4122,47 @@ export async function createLibraryEntry(
 ): Promise<LibraryEntry | null> {
   const d = drizzle(db);
   const now = new Date().toISOString();
-  const last = await d
-    .select({ position: max(libraryItems.position) })
+  const last = d
+    .select({ next: sql<number>`coalesce(max(${libraryItems.position}), -1) + 1` })
     .from(libraryItems)
-    .where(eq(libraryItems.type, entry.type))
-    .get();
-  const [row] = await d
-    .insert(libraryItems)
-    .values({
-      type: entry.type,
-      id: entry.id,
-      position: (last?.position ?? -1) + 1,
-      status: entry.status,
-      name: entry.name,
-      description: entry.description || null,
-      translations: JSON.stringify(entry.translations),
-      spec: JSON.stringify(entry.spec),
-      updated_at: now,
-      updated_by: userId,
-    })
-    .onConflictDoNothing()
-    .returning();
-  if (row === undefined) return null;
-  await d.insert(libraryChanges).values({
-    id: crypto.randomUUID(),
-    item_type: entry.type,
-    item_id: entry.id,
-    changed_by: userId,
-    changed_at: now,
-    before_json: JSON.stringify(UNCREATED),
-    after_json: JSON.stringify(stateOf(entryOf(row))),
-  });
-  return entryOf(row);
+    .where(eq(libraryItems.type, entry.type));
+  const row = {
+    type: entry.type,
+    id: entry.id,
+    status: entry.status,
+    name: entry.name,
+    description: entry.description || null,
+    translations: JSON.stringify(entry.translations),
+    spec: JSON.stringify(entry.spec),
+    updated_at: now,
+    updated_by: userId,
+  };
+  try {
+    const [inserted] = await d.batch([
+      d
+        .insert(libraryItems)
+        .values({ ...row, position: sql`(${last})` })
+        .returning(),
+      d.insert(libraryChanges).values({
+        id: crypto.randomUUID(),
+        item_type: entry.type,
+        item_id: entry.id,
+        changed_by: userId,
+        changed_at: now,
+        before_json: JSON.stringify(UNCREATED),
+        after_json: JSON.stringify({
+          name: entry.name,
+          description: entry.description,
+          translations: entry.translations,
+          status: entry.status,
+        }),
+      }),
+    ]);
+    return inserted[0] === undefined ? null : entryOf(inserted[0]);
+  } catch (e) {
+    if (uniqueViolation(e)) return null;
+    throw e;
+  }
 }
 
 export type LibraryChange = {
