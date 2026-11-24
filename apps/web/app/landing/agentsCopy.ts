@@ -109,7 +109,7 @@ export const AGENTS = {
       },
       {
         q: "Is it free?",
-        a: "Connecting is free, and so are reading your log and importing it. Saving exercises, workouts and blocks follows the same 30-day trial and membership as in the app.",
+        a: "Connecting is free, and so are reading your log and importing it. Saving exercises, workouts and blocks follows the same 14-day trial and membership as in the app.",
         link: { label: "See pricing ›", href: "/pricing" },
       },
       {

@@ -22,7 +22,7 @@ export const COPY = {
   meta: {
     title: "sendtally - a climbing log and training app",
     description:
-      "Log every climb, plan your training, run each workout on a timer and see it add up in Stats. Start with 30 days of everything, then keep logging for free.",
+      "Log every climb, plan your training, run each workout on a timer and see it add up in Stats. Start with 14 days of everything, then keep logging for free.",
   },
 
   nav: {
@@ -44,7 +44,7 @@ export const COPY = {
   hero: {
     eyebrow: "Climbing log and training app",
     title: "Log your climbing. Plan your training.",
-    body: "Tally a gym session as you climb, build a training block, run each workout on a timer, and watch it all add up in Stats. Start with 30 days of everything, then keep logging for free.",
+    body: "Tally a gym session as you climb, build a training block, run each workout on a timer, and watch it all add up in Stats. Start with 14 days of everything, then keep logging for free.",
     webAccount: "Or create a free account on the web",
     photoAlt: "A climber high on a streaked red sandstone wall in a narrow canyon",
     phone: {
@@ -203,7 +203,7 @@ export const COPY = {
 
   start: {
     eyebrow: "Free to start",
-    title: "Start with 30 days of everything.",
+    title: "Start with 14 days of everything.",
     body: "Then keep logging, built-in workouts and Strava posting for free.",
     webAccount: "Or create a free account on the web",
     pricing: "See pricing ›",
@@ -213,10 +213,10 @@ export const COPY = {
     meta: {
       title: "Pricing - sendtally",
       description:
-        "Start with 30 days of everything. Then keep logging for free, or stay a member for $23.99 a year or $2.99 a month.",
+        "Start with 14 days of everything. Then keep logging for free, or stay a member for $23.99 a year or $2.99 a month.",
     },
     eyebrow: "Pricing",
-    title: "Start with 30 days of everything.",
+    title: "Start with 14 days of everything.",
     body: "Then keep logging for free, or stay a member for $23.99 a year or $2.99 a month.",
     free: {
       name: "Free",
@@ -240,7 +240,7 @@ export const COPY = {
         "Your own exercises, workouts and blocks",
         "All of your climbing and training Stats",
       ],
-      cta: "Start your 30 days",
+      cta: "Start your 14 days",
       note: "Your trial starts with your account",
     },
     compare: {
@@ -259,14 +259,14 @@ export const COPY = {
         { label: "Blocks and templates", free: false, member: true },
         { label: "Climbing and training Stats", free: "Last 7 days", member: "All time" },
       ] as Array<{ label: string; free: CompareCell; member: CompareCell }>,
-      note: "For your first 30 days you get the Member column.",
+      note: "For your first 14 days you get the Member column.",
     },
     faq: {
       title: "Questions",
       items: [
         {
           q: "Do I need a card for the trial?",
-          a: "No. The 30 days start when you create your account.",
+          a: "No. The 14 days start when you create your account.",
         },
         {
           q: "What happens when the trial ends?",
@@ -283,7 +283,7 @@ export const COPY = {
       ],
     },
     closing: {
-      title: "Start your 30 days.",
+      title: "Start your 14 days.",
       webAccount: "Or create a free account on the web",
     },
   },
