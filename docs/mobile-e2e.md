@@ -2,6 +2,7 @@
 
 Maestro flows under `apps/mobile/maestro/` drive a development build on an iOS simulator through the screens that only misbehave on a device: sign-in, the climb editor sheet with the keyboard up, drag to dismiss, and the draft surviving a trip out of the form.
 They run locally on an iOS simulator against Metro, and in CI on an Android emulator.
+To look at a change on a device without Maestro, use a cloud simulator instead: `docs/mobile-cloud-simulator.md`.
 
 Anything that is not about the device belongs in a component test instead.
 `apps/mobile` runs Jest with `jest-expo` and React Native Testing Library, co-located as `<Component>.test.tsx`, from `pnpm mobile:test` (also part of `pnpm test`).
