@@ -52,8 +52,8 @@ const matches = (entry: LibraryEntry, filter: LibraryFilter): boolean =>
     ? entry.status === "retired"
     : entry.status === "active" && LACKS[filter](entry);
 
-/** The tab's count: offered built-ins missing a description or a picture. */
-export const libraryTabCount = (library: BuiltInLibrary): number =>
+/** The admin count: offered built-ins missing a description or a picture. */
+export const libraryGapCount = (library: BuiltInLibrary): number =>
   [...library.workouts, ...library.grips, ...library.exercises].filter(
     (e) => matches(e, "noDescription") || matches(e, "noPicture")
   ).length;
@@ -102,6 +102,9 @@ export const otherNameCount = (entry: Pick<LibraryEntry, "translations">): numbe
 
 type Change = Pick<LibraryChange, "before" | "after">;
 
+/** Whether a change is a built-in's creation, which starts from no name. */
+const created = (change: Change): boolean => change.before.name === "";
+
 const pictureIds = (s: Change["before"]): string[] => (s.media ?? []).map((m) => m.id);
 
 /** One line for a change to a built-in's pictures, or null when it changed none. */
@@ -127,6 +130,7 @@ function pictureChange({ before, after }: Change): string | null {
  * permanent, and an added one is undone by deleting it.
  */
 export function changeRestore(change: Change): "restore" | "permanent" | null {
+  if (created(change)) return null;
   const summary = pictureChange(change);
   if (summary === "Picture deleted") return "permanent";
   return summary === "Picture added" ? null : "restore";
@@ -134,6 +138,7 @@ export function changeRestore(change: Change): "restore" | "permanent" | null {
 
 /** One line for a logged change: "Description edited", "Retired", "Picture 2 moved up". */
 export function changeSummary(change: Change): string {
+  if (created(change)) return "Created";
   const pictures = pictureChange(change);
   if (pictures !== null) return pictures;
   const { before, after } = change;

@@ -240,10 +240,10 @@ a.mod-title:hover {
   .mod-tab {
     flex: 1 1 auto;
     justify-content: center;
-    gap: 6px;
-    padding: 12px 6px;
+    gap: 4px;
+    padding: 12px 3px;
     font-size: 10px;
-    letter-spacing: 0.02em;
+    letter-spacing: 0;
   }
 
   .mod-card {
@@ -1058,6 +1058,26 @@ button.mod-lib-row:hover {
     display: none;
   }
 
+  .mod-lib-row > :first-child {
+    grid-row: span 2;
+  }
+
+  .mod-lib-desc {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .mod-lib-pic {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+  }
+
+  .mod-lib-when {
+    display: none;
+  }
+
   .mod-lib-edit {
     flex-direction: column;
   }
@@ -1068,5 +1088,67 @@ button.mod-lib-row:hover {
 
   .mod-lib-change {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.admin-head {
+  align-items: center;
+  max-width: 860px;
+}
+.admin-head-actions {
+  margin-left: auto;
+}
+.admin-gate {
+  margin-top: 20px;
+  max-width: 860px;
+  gap: 6px;
+}
+.admin-gate > * {
+  margin: 0;
+}
+.admin-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  text-decoration: none;
+  color: inherit;
+}
+.admin-row:hover {
+  box-shadow: inset 0 0 0 1px var(--line-on-light-strong);
+}
+.admin-row-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.admin-row-chevron {
+  font-size: 22px;
+  color: var(--text-link);
+}
+.admin-create {
+  max-width: 640px;
+  gap: 18px;
+}
+.admin-create-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 767px) {
+  .admin-head {
+    height: auto;
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+
+  .admin-head-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
   }
 }

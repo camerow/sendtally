@@ -14,6 +14,7 @@ import {
   like,
   lt,
   lte,
+  max,
   ne,
   not,
   notInArray,
@@ -101,6 +102,7 @@ import {
   libraryOf,
   libraryState,
   stateOf,
+  type CreatedSpec,
   type LibraryState,
   type MediaRow,
   type MediaState,
@@ -4072,6 +4074,80 @@ export async function saveLibraryEntry(
   ]);
   const { media: _, ...text } = after;
   return { ...before, ...text, updatedAt: now };
+}
+
+/** What a created built-in was before it existed, as its first change records it. */
+export const UNCREATED: LibraryState = {
+  name: "",
+  description: "",
+  translations: {},
+  status: "active",
+};
+
+/** Whether an id was ever a built-in of this type, retired or changed included. */
+export async function libraryIdTaken(
+  db: D1Database,
+  type: LibraryType,
+  id: string
+): Promise<boolean> {
+  const d = drizzle(db);
+  const [item, change] = await Promise.all([
+    d
+      .select({ id: libraryItems.id })
+      .from(libraryItems)
+      .where(and(eq(libraryItems.type, type), eq(libraryItems.id, id)))
+      .get(),
+    d
+      .select({ id: libraryChanges.id })
+      .from(libraryChanges)
+      .where(and(eq(libraryChanges.item_type, type), eq(libraryChanges.item_id, id)))
+      .get(),
+  ]);
+  return item !== undefined || change !== undefined;
+}
+
+/**
+ * Adds a built-in last in its type, logging its creation; null when the id is already taken.
+ */
+export async function createLibraryEntry(
+  db: D1Database,
+  userId: string,
+  entry: { type: "exercise" | "workout"; id: string; spec: CreatedSpec } & LibraryState
+): Promise<LibraryEntry | null> {
+  const d = drizzle(db);
+  const now = new Date().toISOString();
+  const last = await d
+    .select({ position: max(libraryItems.position) })
+    .from(libraryItems)
+    .where(eq(libraryItems.type, entry.type))
+    .get();
+  const [row] = await d
+    .insert(libraryItems)
+    .values({
+      type: entry.type,
+      id: entry.id,
+      position: (last?.position ?? -1) + 1,
+      status: entry.status,
+      name: entry.name,
+      description: entry.description || null,
+      translations: JSON.stringify(entry.translations),
+      spec: JSON.stringify(entry.spec),
+      updated_at: now,
+      updated_by: userId,
+    })
+    .onConflictDoNothing()
+    .returning();
+  if (row === undefined) return null;
+  await d.insert(libraryChanges).values({
+    id: crypto.randomUUID(),
+    item_type: entry.type,
+    item_id: entry.id,
+    changed_by: userId,
+    changed_at: now,
+    before_json: JSON.stringify(UNCREATED),
+    after_json: JSON.stringify(stateOf(entryOf(row))),
+  });
+  return entryOf(row);
 }
 
 export type LibraryChange = {

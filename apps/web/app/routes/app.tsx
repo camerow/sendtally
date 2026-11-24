@@ -58,9 +58,9 @@ const NAV_ITEMS: NavItem[] = [
   { label: () => t("statistics.tab"), to: "/app/stats", icon: "insights" },
 ];
 
-const MODERATION_ITEM: NavItem = {
-  label: () => "Moderation",
-  to: "/app/moderation",
+const ADMIN_ITEM: NavItem = {
+  label: () => "Admin",
+  to: "/app/admin",
   icon: "moderation",
 };
 
@@ -101,7 +101,7 @@ function Shell({ children }: { children: React.ReactNode }): React.ReactElement 
         <a href="/" className="app-logo-link">
           <Logo tone="on-light" size={24} />
         </a>
-        {(moderator ? [...NAV_ITEMS, MODERATION_ITEM] : NAV_ITEMS).map(({ label, to, icon }) => (
+        {(moderator ? [...NAV_ITEMS, ADMIN_ITEM] : NAV_ITEMS).map(({ label, to, icon }) => (
           <NavLink
             key={to}
             to={to}

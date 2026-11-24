@@ -92,3 +92,31 @@ export const entryNames = (entry: LibraryEntry): string[] => [
   entry.name,
   ...TRANSLATED_LOCALES.flatMap((l) => entry.translations[l]?.name || []),
 ];
+
+const ID_PREFIX: Record<WorkoutKind, string> = {
+  climbing: "climb",
+  hangboard: "fingers",
+  strength: "strength",
+  mobility: "mobility",
+  other: "other",
+};
+
+/**
+ * The id a new built-in takes from its English name: camelCase for an exercise ("pullUps"), and
+ * kebab-case under its kind for a workout ("strength-pull-day"). Empty when the name has no
+ * letters or digits.
+ */
+export function libraryIdOf(type: "exercise" | "workout", name: string, kind: WorkoutKind): string {
+  const words =
+    name
+      .normalize("NFKD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .match(/[a-z0-9]+/g) ?? [];
+  if (words.length === 0) return "";
+  const id =
+    type === "exercise"
+      ? words.map((w, i) => (i === 0 ? w : `${w[0]!.toUpperCase()}${w.slice(1)}`)).join("")
+      : [ID_PREFIX[kind], ...words].join("-");
+  return id.slice(0, 64);
+}

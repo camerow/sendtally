@@ -7,7 +7,10 @@ import {
   LIBRARY_TYPES,
   TRANSLATED_LOCALES,
   WORKOUT_KINDS,
+  measuresFor,
+  type BuiltInExerciseSpec,
   type BuiltInLibrary,
+  type BuiltInWorkoutSpec,
   type LibraryEntry,
   type LibraryPicture,
   type LibraryTranslations,
@@ -58,6 +61,50 @@ export const libraryEditBody = z.object({
 });
 
 export type LibraryEdit = z.infer<typeof libraryEditBody>;
+
+/** A new built-in exercise or workout: its English text, other names, and what it holds. */
+export const libraryCreateBody = z.object({
+  name: title,
+  description,
+  names: libraryEditBody.shape.names,
+  spec: z.union([exerciseSpec, workoutSpec]),
+});
+
+export type LibraryCreate = z.infer<typeof libraryCreateBody>;
+
+export type CreatedSpec = BuiltInExerciseSpec | BuiltInWorkoutSpec;
+
+/**
+ * The spec a new built-in of `type` holds, or why it cannot: an exercise's measure fits its kind;
+ * a workout has items, grips when it is hangboard and built-in exercises or steps otherwise.
+ */
+export function createdSpec(
+  type: "exercise" | "workout",
+  spec: unknown,
+  exerciseIds: ReadonlySet<string>
+): { spec: CreatedSpec } | { error: string } {
+  if (type === "exercise") {
+    const parsed = exerciseSpec.safeParse(spec);
+    if (!parsed.success) return { error: "invalid exercise spec" };
+    if (!measuresFor(parsed.data.kind).includes(parsed.data.measure))
+      return { error: `${parsed.data.measure} does not fit ${parsed.data.kind}` };
+    return { spec: parsed.data };
+  }
+  const parsed = workoutSpec.safeParse(spec);
+  if (!parsed.success) return { error: "invalid workout spec" };
+  const { kind, items } = parsed.data;
+  if (items.length === 0) return { error: "a workout needs an item" };
+  for (const item of items) {
+    if ((kind === "hangboard") !== "grip" in item)
+      return {
+        error: kind === "hangboard" ? "hangboard items are grips" : "grips are hangboard only",
+      };
+    if ("exercise" in item && !exerciseIds.has(item.exercise))
+      return { error: `no built-in exercise ${item.exercise}` };
+    if (item.doses.length === 0) return { error: "an item needs a dose" };
+  }
+  return { spec: parsed.data };
+}
 
 /** A picture's text and place, which a change records and Restore writes back. */
 export type MediaState = { id: string; alt: string; credit: string };

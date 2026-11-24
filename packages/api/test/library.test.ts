@@ -135,6 +135,102 @@ describe("built-in library", () => {
   });
 });
 
+describe("creating a built-in", () => {
+  const exercise = {
+    name: "Pull-up negatives",
+    description: "Slow lowers.",
+    names: { de: "Negative Klimmzüge" },
+    spec: { kind: "strength", measure: "reps" },
+  };
+  const create = (user: string, type: string, body: unknown) =>
+    call(user, `/v1/moderation/library/${type}`, { method: "POST", body });
+
+  it("is for moderators only", async () => {
+    expect((await create("climber", "exercise", exercise)).status).toBe(403);
+  });
+
+  it("adds an exercise last, named from its id, logs it, and refuses the id again", async () => {
+    const mod = await moderator("mod-create");
+    const before = await library();
+    const res = await create(mod, "exercise", exercise);
+    expect(res.status).toBe(201);
+    const entry = res.body["entry"] as LibraryEntry;
+    expect(entry).toMatchObject({
+      type: "exercise",
+      id: "pullUpNegatives",
+      status: "active",
+      translations: { de: { name: "Negative Klimmzüge" } },
+      spec: { kind: "strength", measure: "reps" },
+    });
+    const after = await library();
+    expect(after.exercises.at(-1)!.id).toBe("pullUpNegatives");
+    expect(after.exercises).toHaveLength(before.exercises.length + 1);
+    const changes = (await call(mod, "/v1/moderation/library/exercise/pullUpNegatives")).body[
+      "changes"
+    ] as { id: string; before: { name: string } }[];
+    expect(changes).toHaveLength(1);
+    expect(changes[0]!.before.name).toBe("");
+    const restore = await call(mod, `/v1/moderation/library/changes/${changes[0]!.id}/restore`, {
+      method: "POST",
+    });
+    expect(restore.status).toBe(400);
+
+    const again = await create(mod, "exercise", { ...exercise, name: "Pull up, negatives" });
+    expect(again.status).toBe(409);
+    expect(again.body["id"]).toBe("pullUpNegatives");
+  });
+
+  it("refuses a retired built-in's id", async () => {
+    const mod = await moderator("mod-create");
+    await env.DB.prepare(
+      "UPDATE library_items SET status = 'retired' WHERE type = 'exercise' AND id = 'pullUps'"
+    ).run();
+    expect((await create(mod, "exercise", { ...exercise, name: "Pull-ups" })).status).toBe(409);
+  });
+
+  it("refuses a measure its kind does not take", async () => {
+    const mod = await moderator("mod-create");
+    const res = await create(mod, "exercise", {
+      ...exercise,
+      spec: { kind: "climbing", measure: "repsWeight" },
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("adds a workout of built-in exercises, and refuses an unknown exercise or a stray grip", async () => {
+    const mod = await moderator("mod-create");
+    const workout = {
+      name: "Pull day",
+      description: "",
+      names: {},
+      spec: {
+        kind: "strength",
+        focus: "strength",
+        minutes: 45,
+        targetRpe: 8,
+        items: [{ exercise: "pullUps", doses: [{ sets: 3, reps: 5 }] }],
+      },
+    };
+    const res = await create(mod, "workout", workout);
+    expect(res.status).toBe(201);
+    expect((res.body["entry"] as LibraryEntry).id).toBe("strength-pull-day");
+    expect((await library()).workouts.at(-1)!.id).toBe("strength-pull-day");
+
+    const unknown = await create(mod, "workout", {
+      ...workout,
+      name: "Other pull day",
+      spec: { ...workout.spec, items: [{ exercise: "nope", doses: [{ sets: 1 }] }] },
+    });
+    expect(unknown.status).toBe(400);
+    const grip = await create(mod, "workout", {
+      ...workout,
+      name: "Grip day",
+      spec: { ...workout.spec, items: [{ grip: "half", doses: [{ sets: 1 }] }] },
+    });
+    expect(grip.status).toBe(400);
+  });
+});
+
 describe("the Climbing day first run plans", () => {
   it("is served as a built-in climbing workout with nothing to play, in every language", async () => {
     const { status, body } = await call(null, "/v1/library");

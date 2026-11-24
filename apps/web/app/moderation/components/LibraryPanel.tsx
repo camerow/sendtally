@@ -38,16 +38,16 @@ function Row({ entry, onOpen }: { entry: LibraryEntry; onOpen: () => void }): Re
         {categoryLabel(kind)}
       </span>
       {summary === null ? (
-        <span className="mod-lib-missing">No description</span>
+        <span className="mod-lib-missing mod-lib-desc">No description</span>
       ) : (
-        <span className="mod-lib-ok">✓ {summary}</span>
+        <span className="mod-lib-ok mod-lib-desc">✓ {summary}</span>
       )}
       {entry.media.length === 0 ? (
-        <span className="mod-lib-missing">No picture</span>
+        <span className="mod-lib-missing mod-lib-pic">No picture</span>
       ) : (
-        <span className="mod-lib-ok">{pictureSummary(entry)}</span>
+        <span className="mod-lib-ok mod-lib-pic">{pictureSummary(entry)}</span>
       )}
-      <span className="mod-lib-faint">
+      <span className="mod-lib-faint mod-lib-when">
         {entry.updatedAt === null
           ? "Seeded"
           : formatDate(new Date(entry.updatedAt), { month: "short", day: "numeric" })}
