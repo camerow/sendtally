@@ -228,6 +228,39 @@ describe("Climbing inside the workout", () => {
     expect(done[0]?.sets).toEqual([{ onS: 30 }]);
   });
 
+  it("ends a timed lap at its time, logged once, while another card has the grades", async () => {
+    const timed: WorkoutRun = {
+      ...laps,
+      items: [
+        { exercise: "Circuit laps", dose: { sets: 2, onS: 270 } },
+        { exercise: "4x4s", dose: { sets: 1, reps: 2 } },
+      ],
+    };
+    await renderWithHang(<SetsScreen run={timed} />, hangData(), { exercises });
+    await fireEvent.press(screen.getByLabelText("Lap 1, Start"));
+    await fireEvent.press(screen.getByLabelText("Climb in set 1"));
+    await advance(300_000);
+    expect(screen.queryByText("5:00 of 4:30")).toBeNull();
+    expect(screen.getByText("4:30 of 4:30")).toBeTruthy();
+    expect(screen.getByLabelText("Lap 2, Start")).toBeTruthy();
+    const done = (await finished()) as { sets: { onS?: number }[] }[];
+    expect(done[0]?.sets).toEqual([{ onS: 270 }]);
+  });
+
+  it("logs a lap ticked on a card off the tally without moving the grades from the card that has them", async () => {
+    const both: WorkoutRun = {
+      ...laps,
+      items: [...laps.items, { exercise: "4x4s", dose: { sets: 1, reps: 2 } }],
+    };
+    await renderWithHang(<SetsScreen run={both} />, hangData(), { exercises });
+    await fireEvent.press(screen.getByLabelText("Climb in set 1"));
+    await fireEvent.press(screen.getByLabelText("Lap 1"));
+    await add("V5");
+    expect(screen.getByLabelText("Climb 1, V5")).toBeTruthy();
+    const done = (await finished()) as { sets: { reps?: number; climbs?: unknown[] }[] }[];
+    expect(done[0]?.sets).toEqual([{ reps: 40 }]);
+  });
+
   it("runs a time set's clock only from its own button, and ends the set at its time", async () => {
     const arc = runOf("ARC", { sets: 2, onS: 60, setRestS: 30 });
     await renderWithHang(<SetsScreen run={arc} />, hangData(), {

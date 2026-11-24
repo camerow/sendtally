@@ -339,7 +339,7 @@ export function SetsPage({ run, end }: { run: WorkoutRun; end: boolean }): React
                   at={item}
                   planned={player.setsPlanned(i)}
                   draft={draft}
-                  on={() => player.tallyOn(i)}
+                  on={() => player.draftOn(i)}
                   live={tally}
                   rest={rest}
                   now={climbs.now}

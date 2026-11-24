@@ -165,8 +165,8 @@ export type SetsPlayer = {
   climbedSets: (item: number) => SetDone[];
   /** The climbing card the tally is on, whose picked set takes the grades picked. */
   climbAt: number | null;
-  /** The draft with the tally on a climbing card, which the card's next change builds on. */
-  tallyOn: (item: number) => LogSessionDraft;
+  /** The draft with the tally on a climbing card, which a change on it builds on; it moves no focus. */
+  draftOn: (item: number) => LogSessionDraft;
   /** What a climbing item asks of each set, for its rows. */
   climbPlan: (item: number) => ClimbPlan;
   /** The sets or laps a climbing item asks for now, after any Add set, Add lap or −. */
@@ -432,12 +432,17 @@ export function useSetsPlayer({
     const started = startOf(item);
     if (started !== null) tally.replace(started);
   });
+  const draftOn = (item: number): LogSessionDraft =>
+    on?.item === item && draft !== null
+      ? draft
+      : (startOf(item) ?? draft ?? tallyDraft(new Date()));
+  /** A press that moves the grades to a card: the card they leave stays as it was, open. */
   const tallyOn = (item: number): LogSessionDraft => {
     if (on?.item === item && draft !== null) return draft;
     const was = climbAt;
     if (was !== null && was !== item && !cards.shut.includes(was)) withFold(was, false);
     setChosen(item);
-    return startOf(item) ?? draft ?? tallyDraft(new Date());
+    return draftOn(item);
   };
   const onClimbAt =
     on !== undefined &&
@@ -629,7 +634,7 @@ export function useSetsPlayer({
     climbedSets,
     climbAt,
     climbPlan,
-    tallyOn,
+    draftOn,
     setsPlanned,
     climbOn: (item) => {
       if (climbAt !== item || on?.item !== item) tally.replace(tallyOn(item));

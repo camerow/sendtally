@@ -357,7 +357,7 @@ function SetsScreenBody({
                         at={item}
                         planned={player.setsPlanned(i)}
                         draft={draft}
-                        on={() => player.tallyOn(i)}
+                        on={() => player.draftOn(i)}
                         live={tally}
                         rest={rest}
                         now={climbs.now}

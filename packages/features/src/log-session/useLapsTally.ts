@@ -1,9 +1,11 @@
 import React from "react";
 import { MORE_REST_S, type Rest } from "../workouts/restCountdown";
+import { useLatest } from "../workouts/useLatest";
 import type { RestClock } from "../workouts/useLiveRun";
 import {
   lapElapsed,
   lapsClimb,
+  type LapPlan,
   withLapChanged,
   withLapLogged,
   withLapRemoved,
@@ -18,7 +20,7 @@ import type { LiveSession } from "./useLiveSession";
 export type LapsTally = {
   /** How far each lap logged got, in moves or seconds, oldest first. */
   laps: number[];
-  /** Seconds the lap on the wall has run, none before its row is first pressed. */
+  /** Seconds the lap on the wall has run, up to its time, none before its row is first pressed. */
   elapsed: number | null;
   /** The rest after the last lap: running, waiting for play, or none. */
   rest: { running: Rest; left: number } | { seconds: number } | null;
@@ -45,6 +47,8 @@ const restKey = (lap: number): string => `lap-${lap}`;
 export function useLapsTally(
   draft: LogSessionDraft | null,
   item: number,
+  /** What each lap asks for, from the item's dose, so a timed lap ends at its time wherever the tally is. */
+  plan: LapPlan,
   /** The laps it asks for now, after any Add lap or −. */
   planned: number,
   on: () => LogSessionDraft,
@@ -53,19 +57,20 @@ export function useLapsTally(
   now: Date
 ): LapsTally {
   const ex = draft?.exercise?.item === item ? draft.exercise : undefined;
-  const timed = ex?.lap?.unit === "seconds";
+  const timed = plan.unit === "seconds";
   const kept = draft?.lapStartedAt?.[item];
-  const elapsed =
+  const ran =
     ex !== undefined
       ? lapElapsed(ex, now)
       : kept === undefined
         ? null
         : Math.max(0, Math.floor((now.getTime() - Date.parse(kept)) / 1000));
-  const target = ex?.lap?.target ?? 0;
-  const timeUp = timed && elapsed !== null && elapsed >= target;
+  const timeUp = timed && ran !== null && ran >= plan.target;
+  const elapsed = ran === null || !timed ? ran : Math.min(ran, plan.target);
+  const endLap = useLatest((): void => live.replace(withLapLogged(on(), plan.target)));
   React.useEffect(() => {
-    if (timeUp && draft !== null) live.replace(withLapLogged(draft, target));
-  }, [timeUp, draft, live, target]);
+    if (timeUp) endLap.current();
+  }, [timeUp, endLap]);
 
   const laps = (draft === null ? undefined : lapsClimb(draft.climbs, item))?.endurance?.laps ?? [];
   const last = laps.length - 1;

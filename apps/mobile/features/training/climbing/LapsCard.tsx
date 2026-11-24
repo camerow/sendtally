@@ -23,7 +23,7 @@ export type LapsCardProps = {
   /** The laps it asks for now, after any Add lap or −. */
   planned: number;
   draft: LogSessionDraft | null;
-  /** The draft with the tally on this card, for a change made on it. */
+  /** The draft with the tally on this card, for a change made on it; it moves no focus. */
   on: () => LogSessionDraft;
   live: LiveSession;
   rest: RestClock;
@@ -59,7 +59,7 @@ export function LapsCard({
 }: LapsCardProps): React.ReactElement {
   const sessionRpe = useSessionTarget();
   const plan = lapPlanOf(at.dose);
-  const laps = useLapsTally(draft, item, planned, on, live, rest, now);
+  const laps = useLapsTally(draft, item, plan, planned, on, live, rest, now);
   const [moves, setMoves] = React.useState<{ lap: number; n: number } | null>(null);
   const [selected, setSelected] = React.useState<number | null>(null);
   const done = laps.laps.length;
