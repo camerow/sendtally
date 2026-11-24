@@ -59,6 +59,8 @@ export function TodayScreen(): React.ReactElement {
   const scroll = React.useRef<ScrollView>(null);
   const tops = React.useRef(new Map<CalendarDate, number>());
   const [strip, setStrip] = React.useState(0);
+  const [stripTop, setStripTop] = React.useState(0);
+  const [stuck, setStuck] = React.useState(false);
   const [viewport, setViewport] = React.useState(0);
   // The day to hold under the strip as the list lays out, until a drag takes over.
   const target = React.useRef<CalendarDate | null>(today);
@@ -114,11 +116,26 @@ export function TodayScreen(): React.ReactElement {
     setSelected(addDays(addDays(weekStart(today), next * 7), weekday(selected)));
     target.current = null;
   };
+  const weekStrip = (
+    <WeekStrip
+      offset={offset}
+      days={days}
+      selected={selected}
+      onSelect={(date) => {
+        setSelected(date);
+        target.current = date;
+        scrollTo(date, true);
+      }}
+      onOffset={changeWeek}
+    />
+  );
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
         ref={scroll}
         stickyHeaderIndices={[2]}
+        scrollEventThrottle={16}
+        onScroll={(e) => setStuck(e.nativeEvent.contentOffset.y > stripTop)}
         onLayout={(e) => setViewport(e.nativeEvent.layout.height)}
         onContentSizeChange={() => {
           if (target.current !== null) scrollTo(target.current, false);
@@ -138,20 +155,16 @@ export function TodayScreen(): React.ReactElement {
         </View>
         <Label color={colors.gunmetal}>{longDate(today)}</Label>
         <View
-          onLayout={(e) => setStrip(e.nativeEvent.layout.height)}
+          onLayout={(e) => {
+            setStrip(e.nativeEvent.layout.height);
+            setStripTop(e.nativeEvent.layout.y);
+          }}
+          pointerEvents={stuck ? "none" : "auto"}
+          accessibilityElementsHidden={stuck}
+          importantForAccessibility={stuck ? "no-hide-descendants" : "auto"}
           style={{ backgroundColor: colors.white }}
         >
-          <WeekStrip
-            offset={offset}
-            days={days}
-            selected={selected}
-            onSelect={(date) => {
-              setSelected(date);
-              target.current = date;
-              scrollTo(date, true);
-            }}
-            onOffset={changeWeek}
-          />
+          {weekStrip}
         </View>
         {running.length > 0 && (
           <View>
@@ -187,6 +200,22 @@ export function TodayScreen(): React.ReactElement {
           </View>
         ))}
       </ScrollView>
+      {/* A stuck sticky header keeps its unstuck touch area, so a press on it is dropped; this
+          copy sits where the strip sticks and takes the presses. */}
+      {stuck && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            paddingHorizontal: 18,
+            backgroundColor: colors.white,
+          }}
+        >
+          {weekStrip}
+        </View>
+      )}
       {scheduled === null && asked.imported === undefined && (
         <Fab label={t("plan.schedule")} onPress={() => setAdding(true)} />
       )}
