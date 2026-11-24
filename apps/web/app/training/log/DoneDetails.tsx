@@ -220,9 +220,15 @@ export function DoneDetails({
                       label={label}
                       value={plan.unit === "seconds" ? (set.onS ?? 0) : (set.reps ?? 0)}
                       plan={plan}
-                      onChange={(reps) =>
+                      timeTyped
+                      onChange={(n) =>
                         onChange(
-                          changeSet(done, d.item, i, { ...set, reps }),
+                          changeSet(
+                            done,
+                            d.item,
+                            i,
+                            plan.unit === "seconds" ? { ...set, onS: n } : { ...set, reps: n }
+                          ),
                           offWithoutKey(off, d.item, i)
                         )
                       }

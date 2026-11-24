@@ -5,6 +5,7 @@ import { type lapPlanOf } from "@sendtally/features/activities";
 import { t } from "@sendtally/features/i18n";
 import { enduranceAmountLabel } from "@sendtally/features/log-session";
 import { elapsedClock } from "@sendtally/features/sessions";
+import { TimeField } from "../../../components/TimeField";
 import { Stepper } from "../components/Stepper";
 import { type } from "../type";
 
@@ -62,9 +63,39 @@ function LapTime({ seconds, plan }: { seconds: number; plan: LapPlan }): React.R
   );
 }
 
+/** A logged timed lap's time, typed to correct it, out of the lap's. */
+function Time({
+  label,
+  value,
+  plan,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  plan: LapPlan;
+  onChange: (seconds: number) => void;
+}): React.ReactElement {
+  return (
+    <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 6 }}>
+      <TimeField
+        compact
+        label={`${label} · ${t("workouts.dose.time")}`}
+        value={value}
+        min={0}
+        max={plan.target}
+        onChange={onChange}
+      />
+      <Text style={[type.mono, { fontSize: 13, color: colors.textSecondary }]}>
+        {t("activities.holdOf", { time: elapsedClock(plan.target) })}
+      </Text>
+    </View>
+  );
+}
+
 /**
  * One lap's value in its row, in the run and the review alike: a moves lap's moves on − and +,
- * a timed lap's time, which `onStart` starts with a press while its clock has not run.
+ * a timed lap's time, which `onStart` starts with a press while its clock has not run, or which
+ * a logged lap in Log workout and Edit workout types to correct.
  */
 export function LapValue({
   label,
@@ -72,15 +103,19 @@ export function LapValue({
   plan,
   onChange,
   onStart,
+  timeTyped = false,
 }: {
   label: string;
   value: number;
   plan: LapPlan;
-  onChange: (moves: number) => void;
+  /** Moves, or seconds for a timed lap. */
+  onChange: (value: number) => void;
   onStart?: () => void;
+  timeTyped?: boolean;
 }): React.ReactElement {
   if (plan.unit !== "seconds")
     return <Moves label={label} value={value} plan={plan} onChange={onChange} />;
+  if (timeTyped) return <Time label={label} value={value} plan={plan} onChange={onChange} />;
   return onStart === undefined ? (
     <LapTime seconds={value} plan={plan} />
   ) : (

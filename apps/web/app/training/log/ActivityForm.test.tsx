@@ -333,6 +333,30 @@ describe("a logged climbing exercise in review", () => {
     ]);
   });
 
+  it("corrects a timed lap's time in its row", () => {
+    mount(false, null, {
+      ...review,
+      kind: "climbing",
+      done: [{ item: 0, exercise: "Circuit laps", sets: [{ onS: 270 }, { onS: 200 }] }],
+    });
+    const label = [...container.querySelectorAll("label")].find(
+      (l) => l.textContent === "Lap 2 · Time"
+    );
+    const field = label === undefined ? null : (label.control as HTMLInputElement | null);
+    expect(field).not.toBeNull();
+    act(() => {
+      field!.focus();
+      const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+      set?.call(field, "300");
+      field!.dispatchEvent(new Event("input", { bubbles: true }));
+      field!.blur();
+    });
+    save();
+    expect(saved()).toEqual([
+      { item: 0, exercise: "Circuit laps", sets: [{ onS: 270 }, { onS: 180 }] },
+    ]);
+  });
+
   it("reviews a circuit's laps as the run's lap rows: moves on − and +, no headings", () => {
     mount(false, null, {
       ...review,

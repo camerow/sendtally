@@ -395,6 +395,29 @@ describe("Log activity", () => {
     expect(screen.queryByText("Add set")).toBeNull();
   });
 
+  it("corrects a timed lap's time in its row, as Log workout and Edit workout allow", async () => {
+    const done = [{ item: 0, exercise: "Circuit laps", sets: [{ onS: 270 }, { onS: 200 }] }];
+    const initial = newActivityDraft(
+      { kind: "climbing", workoutId: "w4", done: JSON.stringify(done) },
+      "2026-11-17"
+    );
+    await render(
+      <ActivityForm
+        id="a1"
+        initial={initial}
+        logged={null}
+        timed
+        kindSet
+        live
+        planned={[{ exercise: "Circuit laps", dose: { sets: 2, onS: 270 } }]}
+      />
+    );
+    await fireEvent.press(screen.getByLabelText("Lap 2 · Time"));
+    for (const key of ["3", "0", "0", "Done"]) await fireEvent.press(screen.getByLabelText(key));
+    expect(screen.queryByText("3:20")).toBeNull();
+    expect(screen.getAllByText(/3:00/).length).toBeGreaterThan(0);
+  });
+
   it("groups a superset's members under one header, from the log itself", async () => {
     const group = { id: "s1", rounds: 2 };
     const done = [
