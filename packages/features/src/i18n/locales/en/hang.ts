@@ -89,7 +89,6 @@ export const hang = {
   "hang.phaseRest": "Rest",
   "hang.phaseSetRest": "Set rest",
   "hang.phaseLift": "Lift",
-  "hang.phaseClimb": "Climb",
   "hang.paused": "Paused",
   "hang.setsAhead_one": "{count} set ahead",
   "hang.setsAhead_other": "{count} sets ahead",

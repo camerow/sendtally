@@ -11,7 +11,7 @@ import { readWorkoutRun } from "./runParams";
 
 /** Where a player is: the timer's run, or the sets and items ticked so far. */
 export type RunState =
-  | { player: "timer"; run: Run; setups?: HangSetup[]; loads?: SetLoads; laps?: boolean }
+  | { player: "timer"; run: Run; setups?: HangSetup[]; loads?: SetLoads }
   | {
       player: "sets";
       done: ItemDone[];
@@ -151,8 +151,7 @@ export function liveRunWhere({ state, params }: LiveRun): { name: string | null;
   if (state.player === "timer") {
     const { set } = currentPhase(state.run);
     const sets = { set, sets: state.run.sets };
-    const where = state.laps === true ? t("tally.lapOf", sets) : t("hang.setOf", sets);
-    return { name: null, where: `${where} · ${phaseLabel(state.run, state.laps === true)}` };
+    return { name: null, where: `${t("hang.setOf", sets)} · ${phaseLabel(state.run)}` };
   }
   if (state.player === "checklist")
     return {

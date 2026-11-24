@@ -89,7 +89,6 @@ export const hang = {
   "hang.phaseRest": "Repos",
   "hang.phaseSetRest": "Repos série",
   "hang.phaseLift": "Tirage",
-  "hang.phaseClimb": "Grimpe",
   "hang.paused": "En pause",
   "hang.setsAhead_one": "Encore {count} série",
   "hang.setsAhead_other": "Encore {count} séries",

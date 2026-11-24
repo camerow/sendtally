@@ -19,9 +19,8 @@ const label = (run: Run, phase: Phase): MessageKey =>
   phase.kind === "ready" && run.index > 0 ? "hang.phaseRest" : PHASE_LABELS[phase.kind];
 
 /** What the run is doing now, "Hang" or "Rest"; climbing works as "Climb". */
-export function phaseLabel(run: Run, climbing = false): string {
-  const phase = currentPhase(run);
-  return climbing && phase.kind === "hang" ? t("hang.phaseClimb") : t(label(run, phase));
+export function phaseLabel(run: Run): string {
+  return t(label(run, currentPhase(run)));
 }
 
 /**

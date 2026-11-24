@@ -17,14 +17,19 @@ const boulders = { exercise: "Limit boulders", dose: { sets: 4, reps: 4, setRest
 const measure = (name: string): "wallTime" | "climbs" => (name === "ARC" ? "wallTime" : "climbs");
 
 describe("starting a climbing workout", () => {
-  it("runs climbing measured in time on the timer, a lap a set with its rest between", () => {
+  it("runs climbing measured in time in the sets player, each lap a set with its clock", () => {
     const run = { link: PLAN, session: 0, items: [arc] };
     const start = workoutStart(climbing, "2026-10-30", run, () => false, measure);
-    expect(start.open).toBe("intervals");
-    expect(start.open === "intervals" && start.run.body).toEqual({
-      rounds: 3,
-      steps: [{ label: "ARC", measure: "time", seconds: 1200, restAfter: 180 }],
-    });
+    expect(start.open === "sets" && start.run.items).toEqual([arc]);
+    const crawls = { exercise: "Crimp crawls", dose: { sets: 1, onS: 60 } };
+    const timed = { link: PLAN, session: 0, items: [crawls] };
+    expect(workoutStart(climbing, "2026-10-30", timed, () => false).open).toBe("sets");
+  });
+
+  it("runs a climbing exercise timed in any workout in the sets player", () => {
+    const other = { ...climbing, kind: "other" } as LibraryWorkout;
+    const run = { link: PLAN, session: 0, items: [arc] };
+    expect(workoutStart(other, "2026-10-30", run, () => false, measure).open).toBe("sets");
   });
 
   it("keeps climbing measured in climbs on the tally", () => {
@@ -119,13 +124,18 @@ describe("the player a start opens", () => {
     });
   });
 
-  it("opens a timed workout in the intervals player, and climbs on the tally in the sets player", () => {
+  it("opens a timed workout in the intervals player, and a climbing one in the sets player", () => {
+    const strength = { ...climbing, kind: "strength" } as LibraryWorkout;
+    const plank = {
+      link: PLAN,
+      session: 0,
+      items: [{ exercise: "Plank", dose: { sets: 3, onS: 60 } }],
+    };
+    const start = workoutStart(strength, "2026-10-30", plank, () => false);
+    expect(playerRoute(strength, start, plank)?.pathname).toBe("/workout/intervals");
     const timed = { link: PLAN, session: 0, items: [arc] };
-    const start = workoutStart(climbing, "2026-10-30", timed, () => false, measure);
-    expect(playerRoute(climbing, start, timed)?.pathname).toBe("/workout/intervals");
-    const tally = { link: PLAN, session: 0, items: [boulders] };
-    const sets = workoutStart(climbing, "2026-10-30", tally, () => false, measure);
-    expect(playerRoute(climbing, sets, tally)?.pathname).toBe("/workout/sets");
+    const sets = workoutStart(climbing, "2026-10-30", timed, () => false, measure);
+    expect(playerRoute(climbing, sets, timed)?.pathname).toBe("/workout/sets");
   });
 
   it("opens no player for the live session", () => {
