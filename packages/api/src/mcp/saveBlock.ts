@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { requireConnectorAccess } from "../lib/entitlements";
 import { exerciseNameKey } from "../lib/exercises";
 import { blockBody, blockOf, MAX_BLOCK_WEEKS, scheduleBody } from "../lib/plan";
 import * as repo from "../lib/repo";
@@ -43,6 +44,7 @@ export const saveBlock: ConnectorTool<typeof inputSchema> = {
       }
       return { ...w, workoutId: found.id };
     });
+    await requireConnectorAccess(env, userId);
     const blockId = editing ?? key ?? crypto.randomUUID();
     await repo.ensureUser(env.DB, userId);
     const saved = blockOf(await repo.saveBlock(env.DB, userId, { id: blockId, ...block }));

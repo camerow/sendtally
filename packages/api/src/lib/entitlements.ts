@@ -1,6 +1,10 @@
-import type { AuthedUser } from "../auth";
+import { isBuiltInGrip } from "@sendtally/core/hang";
+import type { Context } from "hono";
+import { auth, type AuthedUser } from "../auth";
 import type { Env } from "../bindings";
-import { INSIGHTS_FEATURE, STORE_ENTITLEMENT, TRIAL_DAYS } from "../features";
+import type { AppEnv } from "../context";
+import { INSIGHTS_FEATURE, LOCKS_RELEASED_AT, STORE_ENTITLEMENT, TRIAL_DAYS } from "../features";
+import { workoutOf } from "./plan";
 import { captureUserEvent } from "./posthog";
 import * as repo from "./repo";
 import type { RevenueCatClient, StoreEntitlement } from "./revenuecat";
@@ -25,7 +29,8 @@ export type Entitlements = { membership: Membership; trial: Trial };
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function trialEndsAt(createdAt: string): string {
-  return new Date(Date.parse(createdAt) + TRIAL_DAYS * DAY_MS).toISOString();
+  const from = Math.max(Date.parse(createdAt) || 0, Date.parse(LOCKS_RELEASED_AT));
+  return new Date(from + TRIAL_DAYS * DAY_MS).toISOString();
 }
 
 /**
@@ -90,3 +95,61 @@ export async function resolveEntitlements(
     trial: { endsAt: trialEndsAt(account?.created_at ?? now.toISOString()) },
   };
 }
+
+export const MEMBERS_ONLY = "members_only";
+
+export class MembersOnly extends Error {
+  constructor() {
+    super(
+      "Custom workouts, custom exercises and training blocks need a sendtally membership now that the 14-day free trial is over. Nothing you made is deleted. Logging climbs and workouts, built-in workouts and posting to Strava stay free. You can become a member from Membership in the sendtally app's Settings."
+    );
+  }
+}
+
+async function refuseWithoutAccess(
+  env: Env,
+  userId: string,
+  webMember: () => boolean | Promise<boolean>
+): Promise<void> {
+  const now = new Date();
+  const { membership, trial } = await resolveEntitlements(
+    env,
+    { userId, hasFeature: () => false },
+    now
+  );
+  if (membership.active || Date.parse(trial.endsAt) > now.getTime() || (await webMember())) return;
+  throw new MembersOnly();
+}
+
+export const requireAccess = (c: Context<AppEnv>): Promise<void> =>
+  refuseWithoutAccess(c.env, c.get("userId"), () => c.get("hasFeature")(INSIGHTS_FEATURE));
+
+export const requireConnectorAccess = (env: Env, userId: string): Promise<void> =>
+  refuseWithoutAccess(env, userId, () => auth.webFeature(userId, INSIGHTS_FEATURE, env));
+
+export async function wrapsBuiltIn(
+  db: D1Database,
+  userId: string,
+  items: readonly { exercise: string }[]
+): Promise<boolean> {
+  const [only] = items;
+  if (only === undefined || items.length > 1) return false;
+  if (isBuiltInGrip(only.exercise)) return true;
+  return ((await repo.findExerciseByName(db, userId, only.exercise))?.built_in ?? null) !== null;
+}
+
+export async function plansCustomWork(
+  db: D1Database,
+  userId: string,
+  blockId: string | null,
+  workoutId: string
+): Promise<boolean> {
+  if (blockId !== null) return true;
+  const workout = await repo.getWorkout(db, userId, workoutId);
+  return workout !== undefined && !(await wrapsBuiltIn(db, userId, workoutOf(workout).items));
+}
+
+export const customExercise = (
+  builtIn: string | null | undefined,
+  saved: repo.ExerciseRow | null
+): boolean => (builtIn ?? saved?.built_in ?? null) === null;

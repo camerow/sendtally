@@ -1,4 +1,5 @@
 import { FOCI, WORKOUT_KINDS, isChecklist, type BuiltInLibrary } from "@sendtally/core/hang";
+import { requireConnectorAccess, wrapsBuiltIn } from "../lib/entitlements";
 import { exerciseKindOf } from "../lib/exercises";
 import { withDerivedKind } from "../lib/workoutKind";
 import { workoutBody, workoutFields, workoutItems, workoutOf } from "../lib/plan";
@@ -48,6 +49,8 @@ export const saveWorkout: ConnectorTool<typeof inputSchema> = {
       workoutBody.parse({ ...input, exerciseRestS: old?.exercise_rest_s ?? undefined }),
       old?.kind
     );
+    if (!(await wrapsBuiltIn(env.DB, userId, body.items)))
+      await requireConnectorAccess(env, userId);
     const items = [];
     for (const item of body.items) {
       const exercise =

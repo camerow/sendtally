@@ -1,10 +1,11 @@
 import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import type { PlanChange } from "@sendtally/core/hang";
 import { z } from "zod";
 import { type AppEnv, invalidBody, postAfterResponse } from "./context";
 import { activitiesQuery, activityBody, activityOf } from "./lib/activities";
 import { maybeOlderChecklist, withWorkoutChecklists } from "./lib/checklists";
+import { customExercise, plansCustomWork, requireAccess, wrapsBuiltIn } from "./lib/entitlements";
 import { hangPartOf } from "./lib/hang";
 import {
   exerciseBody,
@@ -34,6 +35,7 @@ import {
 } from "./lib/plan";
 import { syncActivityToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
+import type { MembershipRow } from "./lib/repo";
 import { withDerivedKind } from "./lib/workoutKind";
 import {
   captureBlockCreated,
@@ -116,6 +118,14 @@ const itemIdAt = async (
   return item?.id ?? String(at);
 };
 
+const requireAccessFor = async (c: Context<AppEnv>, row: MembershipRow | null): Promise<void> => {
+  if (
+    row !== null &&
+    (await plansCustomWork(c.env.DB, c.get("userId"), row.block_id, row.workout_id))
+  )
+    await requireAccess(c);
+};
+
 // Blocks, memberships and their week changes, in one read.
 export const plan = new Hono<AppEnv>().get("/", async (c) => {
   const rows = await repo.planRows(c.env.DB, c.get("userId"));
@@ -137,6 +147,7 @@ export const blocks = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
+      await requireAccess(c);
       await repo.ensureUser(c.env.DB, userId);
       const body = c.req.valid("json");
       const created = (await repo.getBlock(c.env.DB, userId, id)) === null;
@@ -166,6 +177,7 @@ export const blocks = new Hono<AppEnv>()
       if (source === null) return c.json({ error: "not found" }, 404);
       const existing = await repo.getBlock(c.env.DB, userId, to);
       if (existing !== null) return c.json({ block: blockOf(existing) });
+      await requireAccess(c);
       const block = { ...blockOf(source), id: to, start };
       await repo.copyBlock(c.env.DB, userId, source, block);
       return c.json({ block });
@@ -184,8 +196,11 @@ export const memberships = new Hono<AppEnv>()
       if (body.blockId !== null && (await repo.getBlock(c.env.DB, userId, body.blockId)) === null) {
         return c.json({ error: "no such block" }, 400);
       }
+      const existing = await repo.getMembership(c.env.DB, userId, id);
+      const blockId = body.blockId ?? existing?.block_id ?? null;
+      if (await plansCustomWork(c.env.DB, userId, blockId, body.workoutId)) await requireAccess(c);
       await repo.ensureUser(c.env.DB, userId);
-      const created = (await repo.getMembership(c.env.DB, userId, id)) === null;
+      const created = existing === null;
       const row = await repo.saveMembership(c.env.DB, userId, { id, ...body });
       if (created && body.blockId !== null) await captureBlockScheduled(c, body);
       return c.json({ membership: membershipOf(row) });
@@ -195,7 +210,10 @@ export const memberships = new Hono<AppEnv>()
   // Its week changes go with it; sessions logged against it keep what was done.
   .delete("/:id", zValidator("param", trainingIdParam, invalidBody), async (c) => {
     const { id } = c.req.valid("param");
-    return c.json({ deleted: await repo.deleteMembership(c.env.DB, c.get("userId"), id) });
+    const userId = c.get("userId");
+    const membership = await repo.getMembership(c.env.DB, userId, id);
+    if (membership?.block_id != null) await requireAccess(c);
+    return c.json({ deleted: await repo.deleteMembership(c.env.DB, userId, id) });
   })
 
   // Sets what one week changes about one item. An empty change is the item as written.
@@ -208,6 +226,7 @@ export const memberships = new Hono<AppEnv>()
       const userId = c.get("userId");
       const membership = await repo.getMembership(c.env.DB, userId, id);
       if (membership === null) return c.json({ error: "not found" }, 404);
+      await requireAccessFor(c, membership);
       const { week, dose, change, ...item } = c.req.valid("json");
       const itemId =
         "itemId" in item
@@ -227,9 +246,9 @@ export const memberships = new Hono<AppEnv>()
     async (c) => {
       const { id, date } = c.req.valid("param");
       const userId = c.get("userId");
-      if ((await repo.getMembership(c.env.DB, userId, id)) === null) {
-        return c.json({ error: "not found" }, 404);
-      }
+      const membership = await repo.getMembership(c.env.DB, userId, id);
+      if (membership === null) return c.json({ error: "not found" }, 404);
+      await requireAccessFor(c, membership);
       const body = c.req.valid("json");
       const planChange: PlanChange =
         body.kind === "skip"
@@ -255,9 +274,9 @@ export const memberships = new Hono<AppEnv>()
     async (c) => {
       const { id: membershipId } = c.req.valid("param");
       const userId = c.get("userId");
-      if ((await repo.getMembership(c.env.DB, userId, membershipId)) === null) {
-        return c.json({ error: "not found" }, 404);
-      }
+      const membership = await repo.getMembership(c.env.DB, userId, membershipId);
+      if (membership === null) return c.json({ error: "not found" }, 404);
+      await requireAccessFor(c, membership);
       const { weekdays, weeks } = c.req.valid("json");
       const days = weeks.map((w) => ({ membershipId, ...w }));
       await repo.saveSchedule(c.env.DB, userId, membershipId, weekdays, days);
@@ -268,7 +287,9 @@ export const memberships = new Hono<AppEnv>()
   // Undoes a skip or move.
   .delete("/:id/days/:date", zValidator("param", planChangeParam, invalidBody), async (c) => {
     const { id, date } = c.req.valid("param");
-    return c.json({ deleted: await repo.deletePlanChange(c.env.DB, c.get("userId"), id, date) });
+    const userId = c.get("userId");
+    await requireAccessFor(c, await repo.getMembership(c.env.DB, userId, id));
+    return c.json({ deleted: await repo.deletePlanChange(c.env.DB, userId, id, date) });
   });
 
 // The user's own library workouts of every kind. Built-in workouts live in the
@@ -286,8 +307,9 @@ export const workouts = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
-      await repo.ensureUser(c.env.DB, userId);
       const body = c.req.valid("json");
+      if (!(await wrapsBuiltIn(c.env.DB, userId, body.items))) await requireAccess(c);
+      await repo.ensureUser(c.env.DB, userId);
       const existing = await repo.getWorkout(c.env.DB, userId, id);
       const saved = body.kind === undefined ? existing?.kind : undefined;
       const { workout, isGrip } = await withDerivedKind(c.env.DB, userId, body, saved);
@@ -356,7 +378,10 @@ export const exercises = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid("param");
       const body = c.req.valid("json");
-      const { exercise, taken, created } = await saveExercise(c.env.DB, c.get("userId"), id, body);
+      const userId = c.get("userId");
+      if (customExercise(body.builtIn, await repo.getExercise(c.env.DB, userId, id)))
+        await requireAccess(c);
+      const { exercise, taken, created } = await saveExercise(c.env.DB, userId, id, body);
       if (taken) return c.json({ error: "name taken", exercise }, 409);
       if (created)
         await captureValueEvent(c, "exercise_created", {
@@ -390,6 +415,7 @@ export const exercises = new Hono<AppEnv>()
         repo.getExercise(c.env.DB, userId, into),
       ]);
       if (from === null || target === null) return c.json({ error: "not found" }, 404);
+      await requireAccess(c);
       await repo.mergeExercise(c.env.DB, userId, from, target);
       return c.json({ exercise: exerciseOf(target) });
     }
