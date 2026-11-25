@@ -287,6 +287,11 @@
   padding: 0;
 }
 
+.plan-row-lock {
+  display: inline-flex;
+  padding: 10px 4px;
+}
+
 .plan-row-undo {
   height: 36px;
   padding: 0 4px;
@@ -330,6 +335,11 @@
 .plan-card-title:hover {
   text-decoration: underline;
   text-underline-offset: 4px;
+}
+
+.plan-card-title--locked,
+.plan-row-text--locked .plan-row-name {
+  color: var(--text-muted);
 }
 
 .plan-card-head .more-button {
@@ -1011,6 +1021,7 @@ button.grid-cell:hover {
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 15px;
+  text-decoration: none;
   cursor: pointer;
 }
 

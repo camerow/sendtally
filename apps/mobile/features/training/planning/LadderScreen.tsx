@@ -30,6 +30,8 @@ import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { useRunWorkout } from "../library/useLibrary";
 import { usePlanActions } from "../plan/usePlanActions";
+import { LockedPage } from "../components/LockedPage";
+import { useLocks } from "../locks";
 import { type } from "../type";
 import { LoadTable } from "./LoadTable";
 import { LoadSection } from "./LoadSection";
@@ -61,7 +63,9 @@ export function LadderScreen({ id, back }: LadderScreenProps): React.ReactElemen
   const { plan } = draft;
   const view = ladderView(plan, log, model, id, turn, today, exercises);
   const library = useRunWorkout(view?.workout.id ?? null);
+  const locked = useLocks().block;
   if (view === null) return null;
+  if (locked) return <LockedPage source="block" />;
   const { membership: m, block, workout: w, turns, items, current, ended, done, lines } = view;
   const loads = items.flatMap((it, i) => (it.checklist === undefined ? [{ it, i }] : []));
   const look = KIND_LOOK[w.kind];

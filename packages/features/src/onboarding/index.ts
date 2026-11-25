@@ -16,7 +16,6 @@ export {
   cardMeta,
   historyCard,
   importedInsights,
-  keepCopy,
   nextUnlock,
   revealLine,
   yearDate,
@@ -25,7 +24,6 @@ export {
   type NextUnlock,
 } from "./historyCard";
 export {
-  firstWeekday,
   nextMonday,
   sessionsPerWeek,
   shortcutChanges,
@@ -35,7 +33,13 @@ export {
   type LoadBar,
   type Shortcuts,
 } from "./planMaths";
-export { resumedPath, setPlanPath, usePlanPath, type PlanPath } from "./planPath";
+export {
+  setPlanPath,
+  useSeededPlanPath,
+  usePlanPath,
+  pickToggled,
+  type PlanPath,
+} from "./planPath";
 export { useHistoryCard } from "./useHistoryCard";
 export {
   ADD_OUTCOMES,
@@ -53,5 +57,6 @@ export {
   type AddedWhen,
   type AddOutcome,
 } from "./addClimb";
-export { useBlockStep, type BlockStepState } from "./useBlockStep";
-export { defaultBlockName, defaultWorkoutName, keptName, nameOr } from "./defaultNames";
+export { shapeable, useBlockStep, type BlockStepState } from "./useBlockStep";
+export { useBuildWeek } from "./useBuildWeek";
+export { defaultBlockName, defaultWorkoutName } from "./defaultNames";

@@ -59,6 +59,11 @@ const library = (): WorkoutLibrary => {
   };
 };
 
+vi.mock("@sendtally/features/billing", () => ({ useMembership: () => ({ access: null }) }));
+vi.mock("@sendtally/features/exercises", async (actual) => ({
+  ...(await actual<object>()),
+  useExerciseList: () => [],
+}));
 vi.mock("@sendtally/features/hang", async (actual) => ({
   ...(await actual<typeof T_hang>()),
   useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),

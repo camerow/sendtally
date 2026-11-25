@@ -52,6 +52,7 @@ const library = (): WorkoutLibrary => {
   return { workouts, usage: new Map(), workout: (id) => workouts.find((w) => w.id === id) };
 };
 
+vi.mock("@sendtally/features/billing", () => ({ useMembership: () => ({ access: null }) }));
 vi.mock("@sendtally/features/hang", async (actual) => ({
   ...(await actual<typeof T_hang>()),
   useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),

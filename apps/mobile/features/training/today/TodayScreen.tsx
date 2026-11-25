@@ -26,6 +26,7 @@ import { useApi } from "../../../lib/api";
 import { openBlock } from "../blocks/openBlock";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
+import { openMembershipPage, useLocks } from "../locks";
 import { AddWorkoutsSheet, type Scheduled } from "../planning/AddWorkoutsSheet";
 import { BlockRow } from "../train/BlockRow";
 import { DaySection } from "./DaySection";
@@ -110,6 +111,7 @@ export function TodayScreen(): React.ReactElement {
   const monday = addDays(weekStart(today), offset * 7);
   const days = trainingWeek(log, monday, today);
   const running = blockGroups(log.plan.blocks, today).current;
+  const blockLocked = useLocks().block;
 
   const changeWeek = (next: number): void => {
     setOffset(next);
@@ -178,6 +180,10 @@ export function TodayScreen(): React.ReactElement {
                 id={b.id}
                 name={b.name}
                 meta={t("plan.workoutCount", { count: blockMembers(log.plan, b).length })}
+                {...(blockLocked && {
+                  locked: true,
+                  onPress: () => openMembershipPage("block"),
+                })}
               />
             ))}
           </View>

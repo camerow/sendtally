@@ -11,14 +11,19 @@ import {
 import { useAppApi } from "../../lib/useAppApi";
 import { DashedPanel } from "../components/DashedPanel";
 import { useHangData } from "../data/HangDataContext";
+import { useLocks } from "../locks";
 import { BlockRow } from "./BlockRow";
 
-export type ScheduleBlocksProps = { onPick: (block: Block) => void };
+export type ScheduleBlocksProps = {
+  /** Called for a locked block too, which the sheet sends to Membership. */
+  onPick: (block: Block) => void;
+};
 
 /** What can be scheduled as a block: templates, and past blocks to run again. Running and upcoming ones already are. */
 export function ScheduleBlocks({ onPick }: ScheduleBlocksProps): React.ReactElement {
   const { today } = useHangData();
   const { log } = useTrainingLog(useAppApi());
+  const locked = useLocks().block;
   const { templates, past } = blockGroups(log.plan.blocks, today);
   const groups = [
     {
@@ -42,6 +47,7 @@ export function ScheduleBlocks({ onPick }: ScheduleBlocksProps): React.ReactElem
               id={block.id}
               name={blockName(block)}
               meta={meta}
+              locked={locked}
               onPress={() => onPick(block)}
             />
           ))}

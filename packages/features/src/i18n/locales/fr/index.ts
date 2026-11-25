@@ -16,7 +16,6 @@ import { journal } from "./journal";
 import { logSession } from "./logSession";
 import { onboarding } from "./onboarding";
 import { onboardingHistory } from "./onboardingHistory";
-import { onboardingMembership } from "./onboardingMembership";
 import { onboardingPlan } from "./onboardingPlan";
 import { onboardingSetup } from "./onboardingSetup";
 import { plan } from "./plan";
@@ -50,7 +49,6 @@ export const fr = {
   ...logSession,
   ...onboarding,
   ...onboardingHistory,
-  ...onboardingMembership,
   ...onboardingPlan,
   ...onboardingSetup,
   ...plan,

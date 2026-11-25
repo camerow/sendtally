@@ -1,27 +1,22 @@
 import React from "react";
-import { weekdayLong } from "@sendtally/features/hang";
+import type { SendtallyApi } from "@sendtally/api-client";
+import { Button } from "@sendtally/design";
+import { useMembership } from "@sendtally/features/billing";
 import { t } from "@sendtally/features/i18n";
-import { queries, useQuery } from "@sendtally/features/query";
-import { firstWeekday, sessionsPerWeek, usePlanPath } from "@sendtally/features/settings";
+import { sessionsPerWeek, usePlanPath } from "@sendtally/features/settings";
 import { usePlan } from "@sendtally/features/training";
-import { MenuRow } from "../../components/MenuRow";
+import { ClosingOffer } from "../../billing/components/ClosingOffer";
 import { useLibrary } from "../../training/library/useLibrary";
 import type { StepComponent } from "../types";
 import { WizardFrame } from "../WizardFrame";
-import { StartRow } from "./components/StartRow";
 import { WeekCard } from "./components/WeekCard";
-import { useMember } from "../useMember";
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 
-/** P7: hands over to the first workout, the Plan tab, or the other path. */
-export const DoneStep: StepComponent = ({ wizard, api }) => {
+function MemberWeek({ api }: { api: SendtallyApi }): React.ReactElement {
   const path = usePlanPath();
   const plan = usePlan(api).state;
   const library = useLibrary().state;
-  const status = useQuery(queries.status(api)).state;
-  const outcome = useMember() ? "member" : "later";
-
   const ready = plan.status === "ready" && library.status === "ready";
   const members = ready
     ? plan.data.memberships
@@ -32,49 +27,42 @@ export const DoneStep: StepComponent = ({ wizard, api }) => {
     const workout = ready ? library.data.workout(m.workoutId) : undefined;
     return workout === undefined ? [] : [{ m, workout }];
   });
-  const days = Object.fromEntries(members.map((m) => [m.id, m.weekdays]));
-  const perWeek = sessionsPerWeek(days);
-  const first = firstWeekday(days);
-  const workout = placed[0]?.workout;
-  const noSessions = status.status === "ready" && !status.data.onboarding.progress.sessions;
-
-  const openPlan = (): void => wizard.complete(outcome, "plan");
   const week = DAYS.map((d) => {
-    const kinds = placed.filter(({ m }) => m.weekdays.includes(d)).map(({ workout: w }) => w.kind);
+    const kinds = placed
+      .filter(({ m }) => m.weekdays.includes(d))
+      .map(({ workout }) => workout.kind);
     return kinds.length > 0 ? kinds : null;
   });
-
   return (
-    <WizardFrame wizard={wizard} bar={false} onClose={openPlan}>
-      <h1 className="wizard-title">{t("onboarding.plan.done.title")}</h1>
-      <WeekCard
-        week={week}
-        meta={t("onboarding.plan.week.perWeek", { count: perWeek })}
-        empty={t("onboarding.plan.week.empty")}
-      />
-      <div className="plan-path-menu">
-        {workout !== undefined && (
-          <StartRow workout={workout} onStart={() => wizard.complete(outcome, "first_workout")} />
-        )}
-        {noSessions && (
-          <MenuRow
-            icon="climbs"
-            title={t("onboarding.chooser.historyTitle")}
-            hint={t("onboarding.plan.done.historyHint")}
-            onPress={() => {
-              wizard.complete(outcome, "other_path");
-              wizard.choose("history", "end_screen");
-            }}
-          />
-        )}
-        <MenuRow
-          icon="today"
-          title={t("onboarding.plan.done.openPlan")}
-          {...(first === null
-            ? {}
-            : { hint: t("onboarding.plan.done.dayFirst", { day: weekdayLong(first) }) })}
-          onPress={openPlan}
-        />
+    <WeekCard
+      week={week}
+      meta={t("onboarding.plan.week.perWeek", {
+        count: sessionsPerWeek(Object.fromEntries(members.map((m) => [m.id, m.weekdays]))),
+      })}
+      empty={t("onboarding.plan.week.empty")}
+    />
+  );
+}
+
+/** P7: the plan is ready; a free account sees the trial and what members get, a member the week. */
+export const DoneStep: StepComponent = ({ wizard, api }) => {
+  const member = useMembership(api).active === true;
+  return (
+    <WizardFrame
+      wizard={wizard}
+      bar={false}
+      footer={
+        <Button
+          variant="azure"
+          onClick={() => wizard.complete(member ? "member" : "later", "plan")}
+        >
+          {t("common.done")}
+        </Button>
+      }
+    >
+      <div className="closing">
+        <h1 className="wizard-title">{t("onboarding.plan.done.title")}</h1>
+        {member ? <MemberWeek api={api} /> : <ClosingOffer api={api} />}
       </div>
     </WizardFrame>
   );

@@ -1,19 +1,30 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { plannedOn, type Occurrence } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
+import { Lock } from "../../../components/Lock";
 import { Button } from "../components/Button";
 import { Label } from "../components/Label";
+import { openMembershipPage } from "../locks";
 import { usePlanActions } from "../plan/usePlanActions";
 import { type } from "../type";
 import { DayMark } from "./DayMark";
 
-export type SkippedRowProps = { occurrence: Occurrence; workout: LibraryWorkout };
+export type SkippedRowProps = {
+  occurrence: Occurrence;
+  workout: LibraryWorkout;
+  /** Members only: the lock in place of Undo skip. */
+  locked?: boolean;
+};
 
 /** A planned run skipped: on its day, dashed and faded, with why and Undo skip. */
-export function SkippedRow({ occurrence: o, workout }: SkippedRowProps): React.ReactElement {
+export function SkippedRow({
+  occurrence: o,
+  workout,
+  locked = false,
+}: SkippedRowProps): React.ReactElement {
   const actions = usePlanActions();
   const reason = o.change?.reason ?? null;
   return (
@@ -47,12 +58,23 @@ export function SkippedRow({ occurrence: o, workout }: SkippedRowProps): React.R
           </Text>
         )}
       </View>
-      <Button
-        label={t("plan.undoSkip")}
-        onPress={() => void actions.undoPlanChange(o.membership.id, plannedOn(o))}
-        variant="link"
-        height={36}
-      />
+      {locked ? (
+        <Pressable
+          onPress={() => openMembershipPage("plan_day")}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.membersOnly", { label: workout.name })}
+          hitSlop={14}
+        >
+          <Lock />
+        </Pressable>
+      ) : (
+        <Button
+          label={t("plan.undoSkip")}
+          onPress={() => void actions.undoPlanChange(o.membership.id, plannedOn(o))}
+          variant="link"
+          height={36}
+        />
+      )}
     </View>
   );
 }

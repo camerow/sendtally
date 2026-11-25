@@ -244,6 +244,11 @@
   background: var(--bs-gunmetal-deep);
 }
 
+.detail-add--locked,
+.detail-add--locked:hover {
+  background: var(--surface-soft);
+}
+
 .detail-tiles {
   display: flex;
   gap: 6px;

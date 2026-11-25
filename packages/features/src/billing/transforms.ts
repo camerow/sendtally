@@ -1,6 +1,6 @@
 import type { Entitlements, StoreMembership } from "@sendtally/api-client";
 import { formatDate, t, type MessageKey } from "../i18n";
-import type { MembershipManagedIn, MembershipPlan, MembershipVM } from "./types";
+import type { MembershipManagedIn, MembershipPlan, MembershipSource, MembershipVM } from "./types";
 
 const STORE_NAMES: Record<MembershipManagedIn, () => string> = {
   web: () => "sendtally.com",
@@ -111,3 +111,15 @@ export function membershipSummary(vm: MembershipVM): string {
   if (vm.managedIn === "web") return t("settings.membershipWeb");
   return t("billing.activeOnAccount");
 }
+
+const SOURCES: readonly MembershipSource[] = [
+  "onboarding",
+  "workout",
+  "exercise",
+  "block",
+  "create",
+  "plan_day",
+];
+
+export const membershipSource = (param: unknown): MembershipSource | null =>
+  SOURCES.find((s) => s === param) ?? null;

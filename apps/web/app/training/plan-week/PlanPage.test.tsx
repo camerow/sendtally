@@ -52,6 +52,7 @@ const state = vi.hoisted(() => ({
   deleteMembership: vi.fn(async () => undefined),
   saveMembership: vi.fn(async () => undefined),
   copyBlock: vi.fn(async () => true),
+  access: null as boolean | null,
 }));
 
 const library = (): WorkoutLibrary => {
@@ -59,6 +60,9 @@ const library = (): WorkoutLibrary => {
   return { workouts, usage: new Map(), workout: (id) => workouts.find((w) => w.id === id) };
 };
 
+vi.mock("@sendtally/features/billing", () => ({
+  useMembership: () => ({ access: state.access }),
+}));
 vi.mock("@sendtally/features/hang", async (actual) => ({
   ...(await actual<typeof T_hang>()),
   useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),
@@ -127,7 +131,19 @@ vi.mock("@sendtally/features/training", async (actual) => {
 let container: HTMLDivElement;
 let root: Root;
 
+const render = (): void =>
+  act(() =>
+    root.render(
+      <MemoryRouter initialEntries={["/app/plan"]}>
+        <ToastProvider>
+          <PlanPage />
+        </ToastProvider>
+      </MemoryRouter>
+    )
+  );
+
 beforeEach(() => {
+  state.access = null;
   state.plan = {
     blocks: [],
     memberships: [
@@ -153,15 +169,7 @@ beforeEach(() => {
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
-  act(() =>
-    root.render(
-      <MemoryRouter initialEntries={["/app/plan"]}>
-        <ToastProvider>
-          <PlanPage />
-        </ToastProvider>
-      </MemoryRouter>
-    )
-  );
+  render();
 });
 
 afterEach(() => {
@@ -184,17 +192,27 @@ describe("PlanPage", () => {
     expect(menuOf(card)).toEqual(["Reschedule", "Skip", "Remove"]);
   });
 
+  it("gives a locked day one Become a member in place of Start, Log it and its ···", () => {
+    state.access = false;
+    render();
+    const card = container.querySelector(".plan-card")!;
+    const title = card.querySelector(".plan-card-title")!;
+    expect(title.getAttribute("aria-label")).toBe("Gym, legs, members only");
+    expect(title.getAttribute("href")).toBe("/app/membership?source=plan_day");
+    const join = [...card.querySelectorAll("a")].filter((a) => a.textContent === "Become a member");
+    expect(join).toHaveLength(1);
+    expect(join[0]?.getAttribute("href")).toBe("/app/membership?source=plan_day");
+    expect(card.textContent).not.toContain("Start");
+    expect(card.textContent).not.toContain("Log it");
+    expect(card.querySelector(".more-button")).toBeNull();
+    const missed = container.querySelector(".plan-row")!;
+    expect(missed.querySelector(".more-button")).toBeNull();
+    expect(missed.querySelector("a")?.getAttribute("href")).toBe("/app/membership?source=plan_day");
+  });
+
   it("shows an empty Today as its title alone, as the phone does", () => {
     state.plan = { ...state.plan, memberships: [] };
-    act(() =>
-      root.render(
-        <MemoryRouter initialEntries={["/app/plan"]}>
-          <ToastProvider>
-            <PlanPage />
-          </ToastProvider>
-        </MemoryRouter>
-      )
-    );
+    render();
     expect(container.querySelector(".plan-day-title")?.textContent).toBe("Today");
     expect(container.querySelector(".dashed-panel")).toBeNull();
   });

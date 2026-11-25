@@ -8,6 +8,7 @@ import {
   type WorkoutLibrary,
 } from "@sendtally/features/workouts";
 import { DashedPanel } from "../components/DashedPanel";
+import type { RowPress } from "../useLockedRows";
 import { LibraryCard } from "./LibraryCard";
 import { LibrarySearch } from "./LibrarySearch";
 
@@ -19,7 +20,8 @@ export type LibraryBrowserProps = {
   focus?: Focus | null;
   /** What the search box says before anything is typed. */
   placeholder?: string;
-  onPick: (workout: LibraryWorkout) => void;
+  /** How each workout found presses: open, or locked. */
+  press: (workout: LibraryWorkout) => RowPress;
   /** Shown in place of the list until a search is typed. */
   children?: React.ReactNode;
 };
@@ -30,7 +32,7 @@ export function LibraryBrowser({
   kinds,
   focus,
   placeholder,
-  onPick,
+  press,
   children,
 }: LibraryBrowserProps): React.ReactElement {
   const [text, setText] = React.useState("");
@@ -51,7 +53,7 @@ export function LibraryBrowser({
           workout={w}
           use={library.usage.get(w.id)}
           showKind={kinds?.length !== 1}
-          onPress={() => onPick(w)}
+          {...press(w)}
         />
       ))}
     </View>

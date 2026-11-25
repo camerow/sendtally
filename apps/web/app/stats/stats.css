@@ -25,10 +25,6 @@
   cursor: pointer;
 }
 
-.range-chip--locked {
-  color: rgba(64, 63, 76, 0.55);
-}
-
 .range-chip[aria-pressed="true"] {
   background: var(--bs-gunmetal);
   color: var(--bs-white);

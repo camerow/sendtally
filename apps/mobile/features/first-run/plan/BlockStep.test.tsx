@@ -6,10 +6,7 @@ import { setPlanPath, type Wizard } from "@sendtally/features/settings";
 import { hangData, renderWithHang } from "../../training/data/renderWithHang";
 import { BlockStep } from "./BlockStep";
 
-const mockPlan = {
-  saveDraft: jest.fn(async () => undefined),
-  saveMembership: jest.fn(async () => undefined),
-};
+const mockPlan = { saveDraft: jest.fn(async () => undefined) };
 
 const mockApi = new Proxy(
   {},
@@ -34,7 +31,16 @@ const legs: WorkoutRecord = {
 };
 
 const plan: Plan = {
-  blocks: [{ id: "b1", name: "", description: "", start: null, weeks: 4, focus: null }],
+  blocks: [
+    {
+      id: "b1",
+      name: "November block",
+      description: "",
+      start: "2026-11-30",
+      weeks: 4,
+      focus: null,
+    },
+  ],
   memberships: [
     { id: "m1", workoutId: "legs", blockId: "b1", weekdays: [1], start: "2026-10-05", position: 0 },
   ],
@@ -47,12 +53,12 @@ const wizard = {
   path: "plan",
   step: "P4",
   canGoBack: true,
-  position: { n: 4, total: 7 },
-  memory: { way: "by_hand", existingLog: "none", days: [], membershipShown: false },
+  position: { n: 0, total: 0 },
+  memory: { way: null, existingLog: null },
   choose: jest.fn(),
   answerLog: jest.fn(),
   setWay: jest.fn(),
-  setDays: jest.fn(),
+  open: jest.fn(),
   next: jest.fn(),
   back: jest.fn(),
   skip: jest.fn(),
@@ -68,22 +74,23 @@ beforeEach(() => {
     days: { legs: [1] },
     members: { legs: "m1" },
     blockId: "b1",
-    building: "legs",
+    seeded: true,
   }));
 });
 
-describe("P4's name", () => {
-  it("starts as the month the block starts in, so Schedule is on without typing", async () => {
+describe("Shape the weeks, opened from the reveal", () => {
+  it("has no name to type and no Skip, and Save keeps the block's name and goes back", async () => {
     await renderWithHang(<BlockStep wizard={wizard} api={mockApi} />, hangData(), {
       workouts: [legs],
       plan,
     });
-    expect(screen.getByDisplayValue("October block")).toBeTruthy();
-    const schedule = screen.getByRole("button", { name: /^Schedule from/ });
-    expect(schedule.props.accessibilityState).toMatchObject({ disabled: false });
-    await fireEvent.press(schedule);
+    expect(screen.queryByText("Block name")).toBeNull();
+    expect(screen.queryByText("Skip")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Save" }));
     expect(mockPlan.saveDraft).toHaveBeenCalledWith(
-      expect.objectContaining({ block: expect.objectContaining({ name: "October block" }) })
+      expect.objectContaining({
+        block: expect.objectContaining({ name: "November block", weeks: 4 }),
+      })
     );
     expect(wizard.next).toHaveBeenCalledTimes(1);
   });

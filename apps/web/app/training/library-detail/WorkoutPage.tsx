@@ -1,6 +1,6 @@
 import React from "react";
 import { libraryPictures } from "@sendtally/features/library";
-import { Link } from "react-router";
+import { Link, Navigate } from "react-router";
 import { eachSideOf, tallyMeasuresOf } from "@sendtally/features/exercises";
 import { hangWorkoutOf, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -32,6 +32,7 @@ import { editWorkoutPath } from "../editor/paths";
 import { exerciseHistoryPath } from "../components/exerciseHistory";
 import { workoutHistoryPath } from "../history/paths";
 import { WORKOUTS_VIEW, useLibrary } from "../library/useLibrary";
+import { joinPath, useLocks } from "../locks";
 import { plannedLogLink } from "../log/logLink";
 import { MoveSheet } from "../plan-week/MoveSheet";
 import { schedulePath } from "../schedule/paths";
@@ -169,13 +170,16 @@ export function WorkoutPage({ id, run = null }: WorkoutPageProps): React.ReactEl
   const { state, reload } = useLibrary();
   const { today } = useHangData();
   const { log } = useTrainingLog(useAppApi());
+  const locks = useLocks();
   const planned =
     run === null
       ? undefined
       : trainingDay(log, run.date, today).plans.find((o) => o.membership.id === run.membershipId);
   if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;
   const workout = state.data.workout(id);
-  return workout === undefined ? null : (
-    <Detail workout={workout} session={state.data.usage.get(id)?.count ?? 0} run={planned} />
-  );
+  if (workout === undefined) return null;
+  if (locks.workout(workout)) return <Navigate to={joinPath("workout")} replace />;
+  if (planned !== undefined && locks.day(planned.membership, workout))
+    return <Navigate to={joinPath("plan_day")} replace />;
+  return <Detail workout={workout} session={state.data.usage.get(id)?.count ?? 0} run={planned} />;
 }

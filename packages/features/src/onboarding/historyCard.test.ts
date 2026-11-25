@@ -5,7 +5,6 @@ import {
   cardMeta,
   historyCard,
   importedInsights,
-  keepCopy,
   nextUnlock,
   revealLine,
   yearDate,
@@ -113,17 +112,5 @@ describe("the card's words", () => {
     expect(cardMeta(card(3))).toBe("3 climbs · since 2022");
     expect(revealLine(card(3), false)).toBe("across 2 years · since 2022");
     expect(revealLine(card(3), true)).toBe("3 sessions · 2 years · since 2022");
-  });
-
-  it("offers to keep the years with the user's own sends", () => {
-    expect(keepCopy(card(3))).toEqual({
-      title: "Keep all 2 years in view.",
-      body: "Join now to start tracking and understanding your climbing history.",
-      rows: [
-        { eyebrow: "Sends by grade", text: "3 sends, V3 to V5" },
-        { eyebrow: "Hardest send by year", text: "V5 in 2022, back to 2022" },
-        { eyebrow: "Every range", text: "A month, a year, all time, on every Stats screen" },
-      ],
-    });
   });
 });

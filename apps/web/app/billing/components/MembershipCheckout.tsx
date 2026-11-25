@@ -1,7 +1,6 @@
 import { CheckoutButton, usePlans } from "@clerk/react/experimental";
 import React from "react";
 import { useRevalidator } from "react-router";
-import { capture } from "../../lib/analytics";
 import { clerkAppearance } from "./clerkAppearance";
 import { formatNumber, t } from "@sendtally/features/i18n";
 import { Segmented } from "../../components/Segmented";
@@ -32,7 +31,7 @@ function Price({ plan, period }: { plan: Plan; period: Period }): React.ReactEle
       ? t("billing.perMonthBilledYearly")
       : t("billing.perPeriod", { period: t("billing.period.month") });
   return (
-    <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+    <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
       <b
         style={{
           fontFamily: "var(--font-display)",
@@ -44,18 +43,15 @@ function Price({ plan, period }: { plan: Plan; period: Period }): React.ReactEle
       >
         {money(monthly)}
       </b>
-      <span style={{ ...panelMono, textTransform: "none" }}>
+      <span style={{ fontSize: 14, color: "var(--bs-gunmetal)" }}>
         {suffix} · {t("billing.cancelAnyTime")}
       </span>
     </span>
   );
 }
 
-/**
- * The not-a-member strip: price, billing period, and Clerk's checkout behind our own button.
- * With `stay`, a new member stays on the page they joined from, as the wizard's offer does.
- */
-export function MembershipCheckout({ stay = false }: { stay?: boolean }): React.ReactElement {
+/** The not-a-member checkout: price, billing period, and Clerk's checkout behind our own button. */
+export function MembershipCheckout(): React.ReactElement {
   const { data, isLoading } = usePlans({ for: "user" });
   const { revalidate } = useRevalidator();
   const [chosen, setPeriod] = React.useState<Period | null>(null);
@@ -87,32 +83,27 @@ export function MembershipCheckout({ stay = false }: { stay?: boolean }): React.
   ];
 
   return (
-    <>
-      <span style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
-        <Price plan={plan} period={period} />
-        {options.length > 1 && (
-          <Segmented
-            label={t("billing.plans")}
-            options={options}
-            value={period}
-            onChange={setPeriod}
-          />
-        )}
-      </span>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
+      <Price plan={plan} period={period} />
+      {options.length > 1 && (
+        <Segmented
+          label={t("billing.plans")}
+          options={options}
+          value={period}
+          onChange={setPeriod}
+        />
+      )}
       <CheckoutButton
         planId={plan.id}
         planPeriod={period}
         checkoutProps={{ appearance: clerkAppearance }}
-        {...(stay ? {} : { newSubscriptionRedirectUrl: `/app/membership?${SUBSCRIBED_PARAM}=1` })}
-        onSubscriptionComplete={() => {
-          if (stay) capture("membership_started", { channel: "web" });
-          void revalidate();
-        }}
+        newSubscriptionRedirectUrl={`/app/membership?${SUBSCRIBED_PARAM}=1`}
+        onSubscriptionComplete={() => void revalidate()}
       >
         <button type="button" style={panelButton}>
           {t("billing.becomeAMember")} →
         </button>
       </CheckoutButton>
-    </>
+    </div>
   );
 }

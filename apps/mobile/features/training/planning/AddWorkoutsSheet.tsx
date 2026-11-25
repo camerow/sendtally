@@ -39,8 +39,15 @@ import { ExerciseCategorySheet } from "../exercises/ExerciseCategorySheet";
 import { useLibrary } from "../library/useLibrary";
 import { usePlanActions } from "../plan/usePlanActions";
 import { useReminderPrompt } from "../reminders/ReminderPromptProvider";
+import { openMembershipPage, useLocks } from "../locks";
 import { AddWorkoutRow, type AddState } from "./AddWorkoutRow";
-import { addFlowParams, addKicker, addTitle, type AddFlow } from "@sendtally/features/training";
+import {
+  addFlowParams,
+  addKicker,
+  addTitle,
+  type AddFlow,
+  type LockSource,
+} from "@sendtally/features/training";
 import { PlanAgainStart } from "./PlanAgainStart";
 import { ScheduleBlocks } from "./ScheduleBlocks";
 import { useAddTo } from "./useAddTo";
@@ -97,6 +104,11 @@ export function AddWorkoutsSheet({
     }
   }
   useFocusEffect(React.useCallback(() => setAway(false), []));
+  const locks = useLocks();
+  const join = (source: LockSource): void => {
+    setAway(true);
+    openMembershipPage(source);
+  };
 
   const make = useMakeExercise();
   const world = usePickerWorld([], "all");
@@ -148,6 +160,7 @@ export function AddWorkoutsSheet({
         ? t("plan.ongoing")
         : t("plan.inBlock");
   const pick = (b: Block): void => {
+    if (locks.block) return join("block");
     setPicked(b);
     const day = flow.date ?? today;
     setStart(day < today ? today : day);
@@ -162,6 +175,7 @@ export function AddWorkoutsSheet({
     close();
     onScheduled?.({ id, name: blockName(b), start });
   };
+  const newLabel = mode === "exercise" ? t("workouts.newExercise") : t("workouts.newWorkout");
   const footer =
     picked !== null ? (
       <Button
@@ -174,7 +188,11 @@ export function AddWorkoutsSheet({
     ) : mode === "block" ? (
       <Button
         label={t("plan.newBlock")}
+        accessibilityLabel={
+          locks.create ? t("common.membersOnly", { label: t("plan.newBlock") }) : undefined
+        }
         onPress={() => {
+          if (locks.create) return join("create");
           close();
           newBlock();
         }}
@@ -184,8 +202,15 @@ export function AddWorkoutsSheet({
       />
     ) : (
       <Button
-        label={mode === "exercise" ? t("workouts.newExercise") : t("workouts.newWorkout")}
-        onPress={() => (mode === "exercise" ? setMaking(true) : leave("/workout/edit", {}))}
+        label={newLabel}
+        accessibilityLabel={locks.create ? t("common.membersOnly", { label: newLabel }) : undefined}
+        onPress={() =>
+          locks.create
+            ? join("create")
+            : mode === "exercise"
+              ? setMaking(true)
+              : leave("/workout/edit", {})
+        }
         variant="primary"
         icon="plus"
         height={50}
@@ -257,6 +282,7 @@ export function AddWorkoutsSheet({
                       mine,
                       using.map((w) => w.id)
                     );
+                    const shut = locks.exercise(e.source);
                     return (
                       <AddWorkoutRow
                         key={e.key}
@@ -266,8 +292,11 @@ export function AddWorkoutsSheet({
                         picture={sourcePictures(e.source)[0]}
                         state={now}
                         thereLabel={thereLabel}
-                        onOpen={() => openEntry(e)}
-                        onToggle={() => (now === "added" ? undo(mine) : void addEntry(e))}
+                        locked={shut}
+                        onOpen={() => (shut ? join("exercise") : openEntry(e))}
+                        onToggle={() =>
+                          shut ? join("exercise") : now === "added" ? undo(mine) : void addEntry(e)
+                        }
                       />
                     );
                   })}
@@ -285,6 +314,7 @@ export function AddWorkoutsSheet({
                   <Label color={colors.textSecondary}>{focusLabel(shelf.focus)}</Label>
                   {shelf.workouts.map((w) => {
                     const now = stateOf(w.id, [w.id]);
+                    const shut = locks.workout(w);
                     return (
                       <AddWorkoutRow
                         key={w.id}
@@ -294,8 +324,17 @@ export function AddWorkoutsSheet({
                         picture={libraryPictures("workout", w.id)[0]}
                         state={now}
                         thereLabel={thereLabel}
-                        onOpen={() => leave("/workout/[id]", { id: w.id })}
-                        onToggle={() => (now === "added" ? undo(w.id) : void addTo.add(w.id))}
+                        locked={shut}
+                        onOpen={() =>
+                          shut ? join("workout") : leave("/workout/[id]", { id: w.id })
+                        }
+                        onToggle={() =>
+                          shut
+                            ? join("workout")
+                            : now === "added"
+                              ? undo(w.id)
+                              : void addTo.add(w.id)
+                        }
                       />
                     );
                   })}

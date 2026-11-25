@@ -53,8 +53,4 @@ export const onboardingHistory = {
   "onboarding.history.reveal.yearsSince_other": "{count} Jahre · seit {year}",
   "onboarding.history.reveal.andCounting": "und es werden mehr",
   "onboarding.history.done.title": "Dein Logbuch ist bereit.",
-  "onboarding.history.done.planHint": "Deine Tage, dein Workout, die Wochen im Überblick",
-  "onboarding.history.done.logToday": "Heutige Session eintragen",
-  "onboarding.history.done.logTodayHint": "Halte Versuche und Begehungen beim Klettern fest",
-  "onboarding.history.done.openLog": "Mein Logbuch öffnen",
 } as const;

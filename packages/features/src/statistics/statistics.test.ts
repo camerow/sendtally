@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import type { Activity as Logged, HangHistoryRow, SessionWithClimbs } from "@sendtally/api-client";
-import { isLockedRange, shownRange } from "../trends/types";
 import { hangSessionSeconds } from "@sendtally/core/hang";
 import { durationLabel } from "../sessions/years";
 import { doneOf, trainingInsightsVM } from "./insights";
@@ -96,21 +95,6 @@ const lift = (date: string, weightKg: number): Logged => ({
 });
 
 const grip = (): string => "Half crimp";
-
-describe("the free range gate", () => {
-  it("locks every range but 7D until membership is known to be on", () => {
-    expect(isLockedRange(false, "7d")).toBe(false);
-    expect(isLockedRange(false, "1m")).toBe(true);
-    expect(isLockedRange(null, "all")).toBe(true);
-    expect(isLockedRange(true, "all")).toBe(false);
-  });
-
-  it("draws 7D for a free picker whatever was picked", () => {
-    expect(shownRange(false, "1y")).toBe("7d");
-    expect(shownRange(null, "3m")).toBe("7d");
-    expect(shownRange(true, "1y")).toBe("1y");
-  });
-});
 
 describe("trainingInsightsVM", () => {
   const log = {

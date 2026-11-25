@@ -1,4 +1,5 @@
 import type { ConnectionStatus, FirstRunStep } from "@sendtally/api-client";
+import type { LockSource } from "../training/locks";
 import type { Shortcut } from "./planMaths";
 
 export type OnboardingStatus = ConnectionStatus["onboarding"];
@@ -25,6 +26,8 @@ export type OnboardingEvent =
         step: StepId;
         count?: Count;
         sends?: Count;
+        sessions?: Count;
+        own?: 0 | 1;
         way?: HistoryWay;
         shortcut?: Shortcut;
       };
@@ -59,7 +62,7 @@ export type OnboardingEvent =
     }
   | {
       event: "paywall_shown";
-      properties: { source: "onboarding"; path: OnboardingPath; step: "H5" | "P6" | "gate" };
+      properties: { source: "onboarding" | LockSource };
     }
   | { event: "onboarding_resumed"; properties: { path: OnboardingPath; at: StepId } }
   | {
@@ -82,8 +85,6 @@ export type WizardMemory = {
   way: HistoryWay | null;
   /** H1's answer, so the import's how-to names that app. */
   existingLog: ExistingLog | null;
-  days: readonly number[];
-  membershipShown: boolean;
 };
 
 export type Wizard = {
@@ -91,14 +92,15 @@ export type Wizard = {
   step: StepId;
   /** Whether back() moves; false on the first step of a walk opened straight onto a path. */
   canGoBack: boolean;
-  /** 1-based place of `step` in its path's remaining order, and that order's length, for the frame's progress. */
+  /** The path's stage `step` is at and how many it has, for the frame's progress; 0 of 0 shows none. */
   position: { n: number; total: number };
   memory: WizardMemory;
   choose: (path: OnboardingPath, from: PathFrom) => void;
   /** H1's answer and which way history goes from it. */
   answerLog: (existingLog: ExistingLog) => void;
   setWay: (way: HistoryWay) => void;
-  setDays: (days: readonly number[]) => void;
+  /** Opens a side step over the current one; its next() comes back to it. */
+  open: (step: StepId) => void;
   /** Leaves the current step forward; `extra` rides on its onboarding_step_completed. */
   next: (
     extra?: Omit<

@@ -43,8 +43,12 @@ const state = vi.hoisted(() => ({
   workouts: [] as WorkoutRecord[],
   merge: vi.fn(async () => true),
   remove: vi.fn(async () => true),
+  access: null as boolean | null,
 }));
 
+vi.mock("@sendtally/features/billing", () => ({
+  useMembership: () => ({ access: state.access }),
+}));
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
 vi.mock("../data/usePlanActions", () => ({ usePlanActions: () => ({}) }));
 vi.mock("@sendtally/features/training", async (actual) => ({
@@ -79,19 +83,21 @@ vi.mock("@sendtally/features/workouts", async (actual) => ({
 }));
 vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<typeof T_exercises>()),
+  useExerciseList: () => state.exercises,
   useExerciseActions: () => ({ merge: state.merge, remove: state.remove }),
   useMakeExercise: () => vi.fn(),
 }));
 
 let container: HTMLDivElement;
 let root: Root;
-const at = { path: "" };
+const at = { path: "", search: "" };
 
 function Spy(): null {
-  const path = useLocation().pathname;
+  const { pathname: path, search } = useLocation();
   React.useEffect(() => {
     at.path = path;
-  }, [path]);
+    at.search = search;
+  }, [path, search]);
   return null;
 }
 
@@ -108,6 +114,7 @@ beforeEach(() => {
   })) as unknown as typeof window.matchMedia;
   state.exercises = [ex("squat", "Zercher squat"), ex("bench", "Floor press"), ex("rdl", "RDL")];
   state.workouts = [];
+  state.access = null;
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -217,6 +224,41 @@ describe("ExercisePage", () => {
       expect.objectContaining({ id: "rdl" })
     );
     expect(at.path).toBe("/app/train/exercise/rdl");
+  });
+});
+
+describe("ExercisePage without access", () => {
+  it("gives a locked exercise's page way to Membership, and locks a built-in's Add to workout", () => {
+    state.access = false;
+    mount("/app/train/exercise/squat");
+    expect(`${at.path}${at.search}`).toBe("/app/membership?source=exercise");
+    expect(container.querySelector("h1")).toBeNull();
+
+    act(() => root.unmount());
+    root = createRoot(container);
+    state.workouts = [
+      {
+        id: "legs",
+        kind: "strength",
+        name: "Gym, legs",
+        description: "",
+        minutes: 50,
+        targetRpe: null,
+        items: [{ exercise: "Zercher squat", doses: [{ sets: 5, reps: 5 }] }],
+        exerciseRestS: 180,
+        focus: null,
+        updatedAt: "t",
+      },
+    ];
+    mount("/app/train/exercise/pullUps");
+    menu();
+    const items = [...document.querySelectorAll(".more-item")];
+    expect(items.map((b) => b.getAttribute("aria-label"))).toEqual([
+      "Add to workout, members only",
+      null,
+    ]);
+    click(items[0]);
+    expect(`${at.path}${at.search}`).toBe("/app/membership?source=exercise");
   });
 });
 

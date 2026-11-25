@@ -161,6 +161,13 @@
   font-size: 15px;
 }
 
+.category-row-head {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .category-row-meta {
   font-family: var(--font-mono);
   font-size: 11.5px;
@@ -169,6 +176,58 @@
 
 .category-row-meta--faded {
   color: rgba(64, 63, 76, 0.55);
+}
+
+.category-row--locked .category-row-name,
+.library-card--locked .library-card-name,
+.entry-row--locked .entry-row-name {
+  color: var(--text-muted);
+}
+
+.locked-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.locked-row > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.locked-row .more-button {
+  border: none;
+  background: none;
+  color: var(--text-on-white-secondary);
+}
+
+.locked-row .more-button:hover,
+.locked-row .more-button[aria-expanded="true"] {
+  background: var(--surface-soft);
+}
+
+.locked-row:has(> .entry-row) {
+  border-bottom: 1px solid var(--line-on-light-soft);
+}
+
+.locked-row > .entry-row {
+  border-bottom: none;
+}
+
+.locked-row--card {
+  position: relative;
+  display: block;
+}
+
+.locked-row--card > .more-wrap {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+.locked-row--card .more-button {
+  width: 32px;
+  height: 32px;
 }
 
 .dashed-panel {
@@ -223,7 +282,15 @@
   gap: 6px;
 }
 
+.library-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .library-card-name {
+  flex: 1;
+  min-width: 0;
   font-size: 22px;
 }
 
@@ -860,6 +927,18 @@
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text-on-white-secondary);
+}
+
+.entry-row--locked {
+  position: relative;
+  padding-right: 28px;
+}
+
+.entry-row--locked > .lock {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
 }
 
 .option-list {

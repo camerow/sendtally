@@ -18,6 +18,7 @@ import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { CategoryMark } from "../library/CategoryMark";
 import { useLibrary } from "../library/useLibrary";
+import { lockedRow, useLocks } from "../locks";
 import { useAddToWorkout } from "./useAddToWorkout";
 import { useExerciseInPlan } from "./useExerciseInPlan";
 import { useMakeExercise } from "./useMakeExercise";
@@ -38,7 +39,13 @@ export function BuiltInExerciseScreen({ builtIn }: BuiltInExerciseScreenProps): 
   });
   const inPlan = useExerciseInPlan({ kind: builtIn.kind, name: builtIn.name, source: { builtIn } });
   const toast = addTo.toast ?? inPlan.block.toast;
-  const menu = [...[addTo.row, inPlan.block.row].filter((r) => r !== null), inPlan.schedule];
+  const locked = useLocks().create;
+  const menu = [
+    ...[addTo.row, inPlan.block.row]
+      .filter((r) => r !== null)
+      .map((r) => (locked ? lockedRow(r, "exercise") : r)),
+    inPlan.schedule,
+  ];
   return (
     <ScreenFrame
       overlay={toast && <Toast {...toast} />}

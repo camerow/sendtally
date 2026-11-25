@@ -10,6 +10,8 @@ export type SheetAction = {
   disabled?: boolean;
   /** The red outline, for a delete. */
   danger?: boolean;
+  /** Members only: read as such; what it presses is the caller's. */
+  locked?: boolean;
 };
 
 export type SheetProps = {
@@ -150,6 +152,9 @@ function OpenSheet({
             type="button"
             className={
               action.danger === true ? "sheet-action sheet-action--danger" : "sheet-action"
+            }
+            aria-label={
+              action.locked === true ? t("common.membersOnly", { label: action.label }) : undefined
             }
             disabled={action.disabled}
             onClick={action.onPress}

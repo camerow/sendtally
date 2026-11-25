@@ -22,7 +22,7 @@ import { AddToSheet } from "../components/AddToSheet";
 import { DashedPanel } from "../components/DashedPanel";
 import { DetailActions } from "../components/DetailActions";
 import { Description } from "../components/Description";
-import { deleteRow } from "../components/deleteRow";
+import { archiveGripRow } from "../components/deleteRow";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import type { DetailMenuRow } from "../components/types";
@@ -32,6 +32,8 @@ import { openGripEditor } from "../exercises/openExerciseEditor";
 import { useAddToWorkout } from "../exercises/useAddToWorkout";
 import { CategoryMark } from "../library/CategoryMark";
 import { useLibrary } from "../library/useLibrary";
+import { LockedPage } from "../components/LockedPage";
+import { lockedRow, useLocks } from "../locks";
 import { SummaryTiles } from "../summary/SummaryTiles";
 import { TrendCard } from "../trends/TrendCard";
 import { insight } from "@sendtally/features/hang";
@@ -73,7 +75,12 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
     fingers: true,
     usedIn,
   });
-  const menu: DetailMenuRow[] = addTo.row === null || grip?.hidden === true ? [] : [addTo.row];
+  const locks = useLocks();
+  const locked = locks.create;
+  const menu: DetailMenuRow[] =
+    addTo.row === null || grip?.hidden === true
+      ? []
+      : [locked ? lockedRow(addTo.row, "exercise") : addTo.row];
   if (canCompareGrips(model.sessions))
     menu.push({
       icon: "insights",
@@ -81,18 +88,9 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
       onPress: () => router.push("/grip/compare"),
     });
   if (grip !== undefined && !grip.hidden)
-    menu.push(
-      deleteRow({
-        title: t("workouts.archiveExercise"),
-        confirm: {
-          title: t("workouts.archiveExerciseTitle", { name }),
-          body: t("workouts.archiveExerciseBody"),
-          action: t("workouts.archiveExercise"),
-        },
-        onDelete: () => void actions.archiveGrip(grip),
-      })
-    );
+    menu.push(archiveGripRow(name, () => void actions.archiveGrip(grip)));
 
+  if (grip !== undefined && locks.exercise({ grip })) return <LockedPage source="exercise" />;
   return (
     <ScreenFrame
       overlay={addTo.toast && <Toast {...addTo.toast} />}

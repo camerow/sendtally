@@ -103,7 +103,7 @@ export function useSetupPaths(
     const to = {
       step: "skipped",
       path,
-      at: resumeStep(path, null, onboarding.progress, { membershipShown: false }, false),
+      at: resumeStep(path, null, onboarding.progress),
     } as const;
     client.setQueryData(queries.status(api).queryKey, (s) => s && patchStatus(s, to));
     void api.firstRunStep(to).catch(() => undefined);

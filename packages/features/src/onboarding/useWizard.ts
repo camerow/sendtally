@@ -8,19 +8,18 @@ import {
   NO_PROGRESS,
   openWizard,
   patchStatus,
-  paywallOnEnter,
   wizardOf,
   type WizardOptions,
 } from "./wizardState";
 
 /** The onboarding wizard, the same on both apps: each app draws `step` and routes after `complete`, `skip` and `leave`. */
-export function useWizard(api: SendtallyApi, { capture, member, start }: WizardOptions): Wizard {
+export function useWizard(api: SendtallyApi, { capture, start }: WizardOptions): Wizard {
   const client = useQueryClient();
   const { data } = useQuery(queries.status(api));
   const onboarding = data?.onboarding;
   // ponytail: opens on NO_PROGRESS when the status is not cached yet; the gate only opens the wizard once it is.
   const progress = onboarding?.progress ?? NO_PROGRESS;
-  const [state, update] = React.useState(() => openWizard(onboarding, { progress, member }, start));
+  const [state, update] = React.useState(() => openWizard(onboarding, { progress }, start));
 
   const send = React.useCallback(
     (to: FirstRunStep): void => {
@@ -40,8 +39,5 @@ export function useWizard(api: SendtallyApi, { capture, member, start }: WizardO
     announceOpen(state, onboarding, start, { send, capture });
   });
 
-  const { path, step } = state;
-  React.useEffect(() => paywallOnEnter(path, step, capture), [path, step, capture]);
-
-  return wizardOf(state, { member, progress, capture, send, update });
+  return wizardOf(state, { progress, capture, send, update });
 }

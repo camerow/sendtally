@@ -3,14 +3,13 @@ import { Pressable, Text, View } from "react-native";
 import type { SendtallyApi } from "@sendtally/api-client";
 import { letterOf } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
-import { shortDate, weightText } from "@sendtally/features/hang";
+import { weightText } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { useBlockStep, weeklyStepKg, type Wizard } from "@sendtally/features/settings";
 import { loadColumns } from "@sendtally/features/training";
 import { press } from "../../../lib/press";
 import { Button } from "../../training/components/Button";
 import { Label } from "../../training/components/Label";
-import { NameField } from "../../training/components/NameField";
 import { Segmented } from "../../training/components/Segmented";
 import { Stepper } from "../../training/components/Stepper";
 import { Title } from "../../training/components/Title";
@@ -23,7 +22,7 @@ import { DarkCard } from "../components/DarkCard";
 import { WizardFrame } from "../WizardFrame";
 import { LoadBars } from "./components/LoadBars";
 
-/** P4: the week becomes a block, with its name, its length and how the load changes. */
+/** P4, a side step from the reveal: the block's length and how the load changes week by week. */
 export function BlockStep({
   wizard,
   api,
@@ -31,27 +30,26 @@ export function BlockStep({
   wizard: Wizard;
   api: SendtallyApi;
 }): React.ReactElement {
-  const { model, today } = useHangData();
+  const { model } = useHangData();
   const unit = model.settings.units;
   const step = useBlockStep({
     wizard,
     api,
     model,
-    today,
     library: useLibrary().state,
     actions: usePlanActions(),
   });
-  const { start } = step;
 
   if (step.status === "loading")
     return (
       <WizardFrame
         wizard={wizard}
+        skip={false}
         footer={
           <Button
             variant="primary"
             height={54}
-            label={t("plan.scheduleFrom", { day: shortDate(start) })}
+            label={t("common.save")}
             onPress={() => undefined}
             disabled
           />
@@ -64,9 +62,6 @@ export function BlockStep({
   const {
     workout,
     exercise,
-    name,
-    setName,
-    keepName,
     weeks,
     resize,
     alt,
@@ -80,7 +75,7 @@ export function BlockStep({
     shownChanges,
     setCell,
     bars,
-    schedule,
+    save,
   } = step;
 
   const chip = (label: string, on: boolean, onPress: () => void): React.ReactElement => (
@@ -105,22 +100,11 @@ export function BlockStep({
   return (
     <WizardFrame
       wizard={wizard}
+      skip={false}
       sticky={[1]}
-      footer={
-        <Button
-          variant="primary"
-          height={54}
-          label={t("plan.scheduleFrom", { day: shortDate(start) })}
-          onPress={schedule}
-        />
-      }
+      footer={<Button variant="primary" height={54} label={t("common.save")} onPress={save} />}
     >
-      <View style={{ gap: 8 }}>
-        <Title size={34}>{t("onboarding.plan.block.title")}</Title>
-        <Text style={[type.body, { fontSize: 15, lineHeight: 22, color: colors.textSecondary }]}>
-          {t("onboarding.plan.block.body")}
-        </Text>
-      </View>
+      <Title size={34}>{t("onboarding.plan.block.title")}</Title>
       <DarkCard
         raised
         reserveNote
@@ -134,17 +118,6 @@ export function BlockStep({
       >
         <LoadBars bars={bars} />
       </DarkCard>
-      <View style={{ gap: 4 }}>
-        <Label color={colors.textSecondary}>{t("onboarding.plan.block.nameLabel")}</Label>
-        <NameField
-          value={name}
-          onChange={setName}
-          onBlur={keepName}
-          selectTextOnFocus
-          placeholder=""
-          maxLength={80}
-        />
-      </View>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Text style={[type.bodyBold, { fontSize: 15, color: colors.gunmetal }]}>
           {t("plan.weeks")}

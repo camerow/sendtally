@@ -397,6 +397,24 @@ export const TEST_LIBRARY: BuiltInLibrary = {
       }
     ),
     workout(
+      "strength-antagonist",
+      "Antagonist push",
+      ["Antagonisten: Drücken", "Antagonistes : poussée", "Antagonistas: empuje"],
+      "The pushing muscles climbing leaves behind, to keep shoulders balanced and healthy.",
+      {
+        kind: "strength",
+        focus: null,
+        minutes: 30,
+        targetRpe: 6,
+        items: [
+          { exercise: "pushUps", doses: [{ sets: 3, reps: 15 }] },
+          { exercise: "overheadPress", doses: [{ sets: 3, reps: 8 }] },
+          { exercise: "dips", doses: [{ sets: 3, reps: 10 }] },
+          { exercise: "externalRotation", doses: [{ sets: 4, reps: 15 }] },
+        ],
+      }
+    ),
+    workout(
       "mobility-hips",
       "Hip mobility flow",
       ["Hüftmobilität", "Mobilité des hanches", "Movilidad de cadera"],

@@ -6,6 +6,15 @@ import { TrainPage } from "./TrainPage";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
+const access = vi.hoisted(() => ({ value: null as boolean | null }));
+vi.mock("@sendtally/features/billing", () => ({
+  useMembership: () => ({ access: access.value }),
+}));
+vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
+vi.mock("@sendtally/features/exercises", async (actual) => ({
+  ...(await actual<object>()),
+  useExerciseList: () => [],
+}));
 vi.mock("../../components/AccountButton", () => ({ AccountButton: () => null }));
 vi.mock("../data/HangDataProvider", () => ({
   HangDataProvider: ({ children }: { children: React.ReactNode }) => children,
@@ -18,17 +27,20 @@ vi.mock("../exercises/ExerciseShelves", () => ({ ExerciseShelves: () => <p>exerc
 
 let container: HTMLDivElement;
 let root: Root;
-const at = { search: "" };
+const at = { pathname: "", search: "" };
 
 function Spy(): null {
-  const { search } = useLocation();
+  const { pathname, search } = useLocation();
   React.useEffect(() => {
+    at.pathname = pathname;
     at.search = search;
-  }, [search]);
+  }, [pathname, search]);
   return null;
 }
 
 beforeEach(() => {
+  access.value = null;
+  newBlock.mockClear();
   window.matchMedia = vi.fn(() => ({
     matches: false,
     addEventListener: () => undefined,
@@ -78,6 +90,22 @@ describe("TrainPage", () => {
     );
     act(() => row?.click());
     expect(newBlock).toHaveBeenCalled();
+  });
+
+  it("locks Create's three items without access, each opening Membership", () => {
+    access.value = false;
+    mount("/app/train");
+    act(() => container.querySelector<HTMLElement>(".page-action")?.click());
+    const items = [...document.querySelectorAll<HTMLElement>(".more-item")];
+    expect(items.map((b) => b.getAttribute("aria-label"))).toEqual([
+      "Create block, members only",
+      "Create workout, members only",
+      "Create exercise, members only",
+    ]);
+    expect(items.every((b) => b.querySelector(".lock") !== null)).toBe(true);
+    act(() => items[0]?.click());
+    expect(newBlock).not.toHaveBeenCalled();
+    expect(`${at.pathname}${at.search}`).toBe("/app/membership?source=create");
   });
 
   it("lands on the segment a link names", () => {

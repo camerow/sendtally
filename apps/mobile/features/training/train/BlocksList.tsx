@@ -18,12 +18,16 @@ import {
 } from "@sendtally/features/training";
 import { useApi } from "../../../lib/api";
 import { BlockCard } from "../blocks/BlockCard";
+import { openBlock } from "../blocks/openBlock";
 import { PlanCard } from "../blocks/PlanCard";
 import { DashedPanel } from "../components/DashedPanel";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
+import { useLibrary } from "../library/useLibrary";
+import { openMembershipPage, useLocks } from "../locks";
 import { PlanGrid } from "../plan/PlanGrid";
 import { openMembership } from "../plan/openMembership";
+import { useLockedBlocks } from "../useLockedRows";
 import { BlockRow } from "./BlockRow";
 
 function Section({
@@ -55,11 +59,20 @@ export function BlocksList(): React.ReactElement {
   const { log } = useTrainingLog(useApi());
   const { plan, workout } = log;
   const { current, upcoming, templates, past } = blockGroups(plan.blocks, today);
+  const locks = useLocks();
+  const library = useLibrary().state;
   const ongoing = planGridRows(ongoingMembers(plan, today), workout, model, {
     exercises,
-    open: (m) => openMembership(m),
+    open: (m) => {
+      const w = library.status === "ready" ? library.data.workout(m.workoutId) : undefined;
+      if (w !== undefined && locks.day(m, w)) openMembershipPage("plan_day");
+      else openMembership(m);
+    },
   });
   const weeks = (n: number): string => t("calendar.weeks", { count: n });
+  const locked = useLockedBlocks();
+  const back = t("training.train");
+  const press = (b: { id: string; name: string }) => locked.row(b, () => openBlock(b.id, back));
   const nothing = plan.blocks.length === 0 && ongoing.length === 0;
 
   return (
@@ -76,6 +89,7 @@ export function BlocksList(): React.ReactElement {
                 weekdays: daysThisWeek(plan, m, block, today),
               }))}
               workout={workout}
+              press={press({ id: block.id, name: blockName(block) })}
             />
           ))}
           {ongoing.length > 0 && (
@@ -84,8 +98,7 @@ export function BlocksList(): React.ReactElement {
               subtitle={t("plan.ongoingRepeats")}
               open={{
                 label: t("plan.openBlock", { name: t("plan.ongoing") }),
-                onPress: () =>
-                  router.push({ pathname: "/plan/ongoing", params: { back: t("training.train") } }),
+                onPress: () => router.push({ pathname: "/plan/ongoing", params: { back } }),
               }}
             >
               <PlanGrid rows={ongoing} framed={false} />
@@ -97,11 +110,12 @@ export function BlocksList(): React.ReactElement {
         <Section title={t("plan.upcoming")}>
           {upcoming.map((b) => (
             <BlockRow
-              back={t("training.train")}
+              back={back}
               key={b.id}
               id={b.id}
               name={b.name}
               meta={`${t("plan.startsOn", { date: shortDate(b.start) })} · ${weeks(b.weeks)}`}
+              {...press(b)}
             />
           ))}
         </Section>
@@ -110,11 +124,12 @@ export function BlocksList(): React.ReactElement {
         <Section title={t("plan.templates")}>
           {templates.map((b) => (
             <BlockRow
-              back={t("training.train")}
+              back={back}
               key={b.id}
               id={b.id}
               name={blockName(b)}
               meta={templateMeta(log, b)}
+              {...press({ id: b.id, name: blockName(b) })}
             />
           ))}
         </Section>
@@ -123,15 +138,17 @@ export function BlocksList(): React.ReactElement {
         <Section title={t("plan.completed")}>
           {past.map((b) => (
             <BlockRow
-              back={t("training.train")}
+              back={back}
               key={b.id}
               id={b.id}
               name={b.name}
               meta={pastMeta(log, b, today)}
+              {...press(b)}
             />
           ))}
         </Section>
       )}
+      {locked.sheet}
     </View>
   );
 }

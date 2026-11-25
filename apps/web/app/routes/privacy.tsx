@@ -77,12 +77,13 @@ export default function Privacy(): React.ReactElement {
         edit suggested, or a report resolved, carrying only the kind of action and a few labels,
         such as whether it was an area or a climb, never what you wrote. When you first sign in, we
         record which path you chose or that you skipped, which app you kept a log in, if any, which
-        steps you completed, how many climbs, sessions or weeks each step added, whether you dated a
-        climb by year or by day, and the platform you used. The path you chose and the app you kept
-        a log in stay on your PostHog profile, so we can compare people by where they came from.
-        Importing a log is recorded as which app the file came from and how many sessions it held.
-        Creating an exercise, a workout or a training block, and scheduling a block, are recorded as
-        the kind of thing and a few counts, never names or contents. Seeing the membership offer,
+        steps you completed, how many climbs, workouts, sessions or weeks each step added, whether
+        one of those workouts was your own, whether you dated a climb by year or by day, and the
+        platform you used. The path you chose and the app you kept a log in stay on your PostHog
+        profile, so we can compare people by where they came from. Importing a log is recorded as
+        which app the file came from and how many sessions it held. Creating an exercise, a workout
+        or a training block, and scheduling a block, are recorded as the kind of thing and a few
+        counts, never names or contents. Seeing the membership offer, with which screen opened it,
         and whether you joined, are recorded too. When signing in with Google or Apple in the app
         does not finish, we record which one it was, whether you closed it or it failed, and the
         error code, never your account. Logging a workout is recorded as whether it was on your plan

@@ -20,7 +20,7 @@ import { confirmDiscard, useDiscardGuard } from "../../../lib/useDiscardGuard";
 import { Button } from "../components/Button";
 import { DetailActions } from "../components/DetailActions";
 import { EditorHeader } from "../components/EditorHeader";
-import { deleteRow } from "../components/deleteRow";
+import { deleteBlockRow } from "../components/deleteRow";
 import { Label } from "../components/Label";
 import { NameSheet } from "../components/NameSheet";
 import { Title } from "../components/Title";
@@ -35,6 +35,8 @@ import { BlockWeek } from "./BlockWeek";
 import { PlanAgainSheet } from "./PlanAgainSheet";
 import { BlockHeader } from "./BlockHeader";
 import { Description } from "../components/Description";
+import { LockedPage } from "../components/LockedPage";
+import { useLocks } from "../locks";
 import { MoveStartSheet } from "./MoveStartSheet";
 
 export type BlockScreenProps = {
@@ -79,7 +81,9 @@ export function BlockScreen({
     newId: randomUUID,
   });
   useDiscardGuard(draft.dirty);
+  const locked = useLocks().block;
 
+  if (locked) return <LockedPage source="block" />;
   if (plan.state.status !== "ready")
     return <LoadState state={plan.state} onRetry={() => void plan.reload()} framed />;
   // Gone, deleted elsewhere: Back still leaves.
@@ -116,14 +120,7 @@ export function BlockScreen({
                     onPress: () => setNaming(true),
                   },
                 ]),
-            deleteRow({
-              title: t("plan.deleteBlock"),
-              confirm: {
-                title: t("plan.deleteBlockTitle", { name: blockName(block) }),
-                body: t("plan.deleteBlockBody"),
-              },
-              onDelete: () => void actions.deleteBlock(id),
-            }),
+            deleteBlockRow(blockName(block), () => void actions.deleteBlock(id)),
           ]}
         />
       }

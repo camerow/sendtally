@@ -1,30 +1,23 @@
 import React from "react";
-import type { Weekday, WorkoutKind } from "@sendtally/core/hang";
+import type { WorkoutKind } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { DarkWeek } from "../../../../components/DarkWeek";
 import { DarkCard } from "../../components/DarkCard";
 
 export type WeekCardProps = {
-  /** The days on, with the kinds of what lands on each; an empty list is a day on with no workout yet. */
+  /** The days on, with the kinds of what lands on each. */
   week: readonly (readonly WorkoutKind[] | null)[];
-  /** The line beside the label once a day is on, and the prompt while none is. */
+  /** The line beside the label once a day is on. */
   meta: string;
+  /** The line beside the label while no day is on. */
   empty: string;
-  /** Makes the seven days the control, as P1 uses them. */
-  onToggle?: (day: Weekday) => void;
 };
 
-/** "Your week": seven days, lit where the user can train, with each workout's mark on its days. */
-export function WeekCard({ week, meta, empty, onToggle }: WeekCardProps): React.ReactElement {
-  const any = week.some((d) => d !== null);
-  const control = onToggle !== undefined;
+/** "Your week": seven days, lit where training lands, with each workout's mark on its days. */
+export function WeekCard({ week, meta, empty }: WeekCardProps): React.ReactElement {
   return (
-    <DarkCard
-      label={t("plan.week")}
-      reserveNote={control}
-      {...(any ? { meta } : control ? { note: empty } : {})}
-    >
-      <DarkWeek week={week} {...(onToggle === undefined ? {} : { onToggle })} />
+    <DarkCard label={t("plan.week")} meta={week.some((d) => d !== null) ? meta : empty}>
+      <DarkWeek week={week} />
     </DarkCard>
   );
 }

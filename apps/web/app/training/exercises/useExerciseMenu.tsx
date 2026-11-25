@@ -8,6 +8,8 @@ import { Sheet } from "../../components/Sheet";
 import { useToast } from "../../components/Toast";
 import { useAppApi } from "../../lib/useAppApi";
 import { useGoBack } from "../../lib/useGoBack";
+import { DeleteSheet } from "../components/DeleteSheet";
+import { removeExerciseFlow } from "../components/deleteFlows";
 import { EXERCISES_VIEW, exercisePath } from "./paths";
 
 export type ExerciseMenu = { items: MoreMenuItem[]; sheets: React.ReactNode };
@@ -38,13 +40,10 @@ export function useExerciseMenu(
     (a, b) => Number(b.kind === exercise.kind) - Number(a.kind === exercise.kind)
   );
   const merge = { label: t("workouts.mergeExercise"), onSelect: () => setOpen({ kind: "merge" }) };
-  const removeLabel = inUse ? t("workouts.archiveExercise") : t("common.delete");
+  const flow = removeExerciseFlow(name, inUse);
   const items: MoreMenuItem[] = exercise.archived
     ? [merge]
-    : [
-        merge,
-        { label: removeLabel, onSelect: () => setOpen({ kind: "remove" }), destructive: true },
-      ];
+    : [merge, { label: flow.item, onSelect: () => setOpen({ kind: "remove" }), destructive: true }];
 
   return {
     items,
@@ -86,28 +85,16 @@ export function useExerciseMenu(
             </p>
           </Sheet>
         )}
-        <Sheet
-          open={open?.kind === "remove"}
-          title={
-            inUse
-              ? t("workouts.archiveExerciseTitle", { name })
-              : t("workouts.deleteExerciseTitle", { name })
-          }
-          onClose={close}
-          action={{
-            label: removeLabel,
-            danger: true,
-            onPress: () => {
-              close();
+        {open?.kind === "remove" && (
+          <DeleteSheet
+            flow={flow}
+            onClose={close}
+            onDelete={() => {
               back();
               void actions.remove(exercise.id);
-            },
-          }}
-        >
-          <p className="sheet-body">
-            {inUse ? t("workouts.archiveExerciseBody") : t("workouts.deleteExerciseBody")}
-          </p>
-        </Sheet>
+            }}
+          />
+        )}
       </>
     ),
   };

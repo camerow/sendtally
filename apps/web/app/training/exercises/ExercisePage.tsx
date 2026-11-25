@@ -1,7 +1,7 @@
 import React from "react";
 import { useHangData } from "../data/HangDataContext";
 import { libraryPictures } from "@sendtally/features/library";
-import { Link } from "react-router";
+import { Link, Navigate } from "react-router";
 import type { Exercise } from "@sendtally/api-client";
 import { exerciseItems, kindLabel, useActivities } from "@sendtally/features/activities";
 import {
@@ -29,6 +29,7 @@ import { LoadState } from "../data/LoadState";
 import { editExercisePath } from "../editor/paths";
 import { useAddToWorkout } from "../editor/useAddToWorkout";
 import { useLibrary } from "../library/useLibrary";
+import { joinPath, useCreateGate, useLocks } from "../locks";
 import { activityPath } from "../log/paths";
 import { Description } from "../components/Description";
 import { BuiltInExercisePage } from "./BuiltInExercisePage";
@@ -65,6 +66,7 @@ function Detail({
     name: exerciseLabel(exercise),
     source: { exercise },
   });
+  const gate = useCreateGate("exercise");
   const menu = useExerciseMenu(
     exercise,
     all.filter((e) => e.id !== exercise.id),
@@ -89,7 +91,10 @@ function Detail({
             items={[
               ...(exercise.archived
                 ? []
-                : [...[addTo.item, inPlan.block.item].filter((i) => i !== null), inPlan.schedule]),
+                : [
+                    ...[addTo.item, inPlan.block.item].filter((i) => i !== null).map(gate),
+                    inPlan.schedule,
+                  ]),
               ...menu.items,
             ]}
           />
@@ -126,11 +131,17 @@ function Detail({
  */
 export function ExercisePage({ id }: { id: string }): React.ReactElement | null {
   const exercises = useExercises(useAppApi());
+  const locks = useLocks();
   if (exercises.state.status !== "ready")
     return <LoadState state={exercises.state} onRetry={() => void exercises.reload()} />;
   const all = exercises.state.data;
   const exercise = all.find((e) => e.id === id || (e.builtIn === id && !e.archived));
-  if (exercise !== undefined) return <Detail exercise={exercise} all={all} />;
+  if (exercise !== undefined)
+    return locks.exercise({ exercise }) ? (
+      <Navigate to={joinPath("exercise")} replace />
+    ) : (
+      <Detail exercise={exercise} all={all} />
+    );
   const builtIn = builtInExercise(id);
   return builtIn === undefined ? null : <BuiltInExercisePage builtIn={builtIn} />;
 }

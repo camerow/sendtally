@@ -12,7 +12,11 @@ import {
   type LibraryWorkout,
   type WorkoutUse,
 } from "@sendtally/features/workouts";
+import { t } from "@sendtally/features/i18n";
+import { Lock } from "../../../components/Lock";
 import { pressRow } from "../../../lib/press";
+import { holdProps } from "../components/holdProps";
+import type { LongPress } from "../components/types";
 import { IntervalsBar } from "../components/IntervalsBar";
 import { Label } from "../components/Label";
 import { PhaseBar } from "../components/PhaseBar";
@@ -29,6 +33,9 @@ export type LibraryCardProps = {
   showKind?: boolean;
   /** Set on a shelf, where cards sit side by side; otherwise it fills the column. */
   width?: number;
+  /** Members only: the name muted, with the lock. */
+  locked?: boolean;
+  hold?: LongPress;
 };
 
 /** A workout in the library: its kind, name, length, and what it holds. */
@@ -38,6 +45,8 @@ export function LibraryCard({
   onPress,
   showKind = true,
   width,
+  locked = false,
+  hold,
 }: LibraryCardProps): React.ReactElement {
   const exercises = useExerciseList(useApi());
   const minutes = workoutMinutes(workout, use?.count ?? 0);
@@ -49,6 +58,8 @@ export function LibraryCard({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
+      accessibilityLabel={locked ? t("common.membersOnly", { label: workout.name }) : undefined}
+      {...holdProps(hold)}
       style={pressRow({
         borderRadius: 16,
         padding: 16,
@@ -60,7 +71,12 @@ export function LibraryCard({
     >
       {showKind && <Label color={KIND_LOOK[workout.kind].ink}>{kindLabel(workout.kind)}</Label>}
       <View style={{ gap: 6 }}>
-        <Title size={22}>{workout.name}</Title>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Title size={22} color={locked ? colors.textMuted : colors.gunmetal} style={{ flex: 1 }}>
+            {workout.name}
+          </Title>
+          {locked && <Lock />}
+        </View>
         {(workout.source === "mine" || minutes !== null) && (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             {workout.source === "mine" && <MineBadge />}

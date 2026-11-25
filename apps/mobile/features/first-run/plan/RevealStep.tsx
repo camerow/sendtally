@@ -7,7 +7,8 @@ import { shortDate, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   sessionsPerWeek,
-  usePlanPath,
+  shapeable,
+  useSeededPlanPath,
   useTrainingReminders,
   weekBars,
   type Wizard,
@@ -27,7 +28,7 @@ import { WizardFrame } from "../WizardFrame";
 import { LoadBars } from "./components/LoadBars";
 import { PlanCalendar } from "./components/PlanCalendar";
 
-/** P5: the whole block on a calendar, its session count running up, and reminders one switch away. */
+/** P5: the whole block on a calendar, its session count running up, Shape the weeks, and reminders one switch away. */
 export function RevealStep({
   wizard,
   api,
@@ -35,7 +36,7 @@ export function RevealStep({
   wizard: Wizard;
   api: SendtallyApi;
 }): React.ReactElement {
-  const path = usePlanPath();
+  const path = useSeededPlanPath(api);
   const plan = usePlan(api).state;
   const library = useLibrary().state;
   const unit = useHangData().model.settings.units;
@@ -80,9 +81,11 @@ export function RevealStep({
 
   const changed =
     ready && plan.data.weekChanges.some((c) => members.some((m) => m.id === c.membershipId));
+  const shaped = shapeable(placed.map(({ workout }) => workout));
+  const shapedIn = placed.find(({ workout }) => workout === shaped);
   const main =
-    changed && placed[0] !== undefined
-      ? weekBars(placed[0].workout, placed[0].m.id, weeks, plan.data.weekChanges, unit, gripName)
+    changed && shapedIn !== undefined
+      ? weekBars(shapedIn.workout, shapedIn.m.id, weeks, plan.data.weekChanges, unit, gripName)
       : null;
 
   const toggle = async (value: boolean): Promise<void> => {
@@ -161,6 +164,16 @@ export function RevealStep({
                 {t("onboarding.plan.block.weekByWeek", { name: main.name })}
               </Label>
               <LoadBars bars={main.bars} height={26} />
+            </View>
+          )}
+          {shaped !== undefined && (
+            <View style={{ flexDirection: "row" }}>
+              <Button
+                variant="outlineDark"
+                height={48}
+                label={t("onboarding.plan.reveal.shapeWeeks")}
+                onPress={() => wizard.open("P4")}
+              />
             </View>
           )}
           <View

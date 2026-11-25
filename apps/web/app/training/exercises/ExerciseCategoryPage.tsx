@@ -11,23 +11,19 @@ import {
 import { gripMeta } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
+import { Lock } from "../../components/Lock";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { newExercisePath } from "../editor/paths";
 import { useAppApi } from "../../lib/useAppApi";
 import { CategoryMark } from "../components/CategoryMark";
 import { DashedPanel } from "../components/DashedPanel";
 import { useHangData, type HangData } from "../data/HangDataContext";
-import { EXERCISES_VIEW, exercisePath, gripPath } from "./paths";
+import { joinPath, useLocks } from "../locks";
+import { useLockedExercises, type RowLink } from "../useLockedRows";
+import { EXERCISES_VIEW, sourcePath } from "./paths";
 
 const mine = ({ source }: PickerEntry): boolean =>
   "exercise" in source || ("grip" in source && source.grip.custom);
-
-const pathOf = ({ source }: PickerEntry): string =>
-  "exercise" in source
-    ? exercisePath(source.exercise.id)
-    : "grip" in source
-      ? gripPath(source.grip.id)
-      : exercisePath(source.builtIn.id);
 
 function metaOf(entry: PickerEntry, { model, today }: HangData): string {
   if ("grip" in entry.source)
@@ -38,7 +34,12 @@ function metaOf(entry: PickerEntry, { model, today }: HangData): string {
   return measureLabel(measure, kind);
 }
 
-function EntryRow({ entry }: { entry: PickerEntry }): React.ReactElement {
+function EntryRow({
+  entry,
+  to,
+  locked = false,
+  menu,
+}: { entry: PickerEntry } & RowLink): React.ReactElement {
   const meta = metaOf(entry, useHangData());
   const body = (
     <>
@@ -47,12 +48,27 @@ function EntryRow({ entry }: { entry: PickerEntry }): React.ReactElement {
         {mine(entry) && <span className="mine-badge">{t("workouts.mine")}</span>}
       </span>
       {meta !== "" && <span className="entry-row-meta">{meta}</span>}
+      {locked && <Lock />}
     </>
   );
-  return (
-    <Link to={pathOf(entry)} className="entry-row entry-row--link">
+  const row = (
+    <Link
+      to={to}
+      className={
+        locked ? "entry-row entry-row--link entry-row--locked" : "entry-row entry-row--link"
+      }
+      aria-label={locked ? t("common.membersOnly", { label: entry.name }) : undefined}
+    >
       {body}
     </Link>
+  );
+  return menu === undefined ? (
+    row
+  ) : (
+    <div className="locked-row">
+      {row}
+      {menu}
+    </div>
   );
 }
 
@@ -69,16 +85,19 @@ export function ExerciseCategoryPage({ kind }: { kind: WorkoutKind }): React.Rea
   const label = kindLabel(kind);
   const placeholder = t("focus.search", { focus: label });
   const entries = pickerEntries(world, { category: kind, text });
+  const locked = useLockedExercises();
+  const create = useLocks().create;
+  const newLabel = t("workouts.newExerciseIn", { category: label });
   return (
     <DetailFrame
       backTo={EXERCISES_VIEW}
       action={
         <Link
-          to={newExercisePath(kind)}
-          className="detail-add"
-          aria-label={t("workouts.newExerciseIn", { category: label })}
+          to={create ? joinPath("create") : newExercisePath(kind)}
+          className={create ? "detail-add detail-add--locked" : "detail-add"}
+          aria-label={create ? t("common.membersOnly", { label: newLabel }) : newLabel}
         >
-          <Icon name="plus" size={18} strokeWidth={2.5} />
+          {create ? <Lock /> : <Icon name="plus" size={18} strokeWidth={2.5} />}
         </Link>
       }
     >
@@ -108,11 +127,16 @@ export function ExerciseCategoryPage({ kind }: { kind: WorkoutKind }): React.Rea
         ) : (
           <div>
             {entries.map((entry) => (
-              <EntryRow key={entry.key} entry={entry} />
+              <EntryRow
+                key={entry.key}
+                entry={entry}
+                {...locked.row(entry, sourcePath(entry.source))}
+              />
             ))}
           </div>
         )}
       </div>
+      {locked.sheet}
     </DetailFrame>
   );
 }

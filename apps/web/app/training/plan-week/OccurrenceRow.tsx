@@ -8,7 +8,9 @@ import {
   type Occurrence,
 } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
+import { Lock } from "../../components/Lock";
 import { MoreMenu } from "../../components/MoreMenu";
+import { joinPath } from "../locks";
 import { DayMark } from "./DayMark";
 import { KindCircle } from "./KindCircle";
 import { occurrenceLogLink, occurrencePath } from "./planLinks";
@@ -16,14 +18,16 @@ import { useDayChanges } from "./useDayChanges";
 
 /**
  * A planned workout on a day that is not today's to start: still to come, or missed, crossed on
- * its kind's mark, with ··· to log it, reschedule or skip.
+ * its kind's mark, with ··· to log it, reschedule or skip. Locked, the lock takes the ···'s place.
  */
 export function OccurrenceRow({
   occurrence: o,
   workout,
+  locked = false,
 }: {
   occurrence: Occurrence;
   workout: LibraryWorkout;
+  locked?: boolean;
 }): React.ReactElement {
   const changes = useDayChanges();
   const missed = o.status === "missed";
@@ -36,9 +40,19 @@ export function OccurrenceRow({
         <DayMark kind={workout.kind} filled={false} />
       )}
       <Link
-        to={occurrencePath(o)}
-        className="plan-row-text plan-row-text--link"
-        aria-label={missed ? `${t("hang.missed")}: ${workout.name}` : undefined}
+        to={locked ? joinPath("plan_day") : occurrencePath(o)}
+        className={
+          locked
+            ? "plan-row-text plan-row-text--link plan-row-text--locked"
+            : "plan-row-text plan-row-text--link"
+        }
+        aria-label={
+          locked
+            ? t("common.membersOnly", { label: workout.name })
+            : missed
+              ? `${t("hang.missed")}: ${workout.name}`
+              : undefined
+        }
       >
         {!missed && (
           <span className="plan-label-small" style={{ color: KIND_LOOK[workout.kind].ink }}>
@@ -48,7 +62,8 @@ export function OccurrenceRow({
         <span className="plan-row-name">{workout.name}</span>
         {meta !== "" && <span className="plan-row-meta">{meta}</span>}
       </Link>
-      {(o.status === "planned" || missed) && (
+      {locked && <Lock />}
+      {!locked && (o.status === "planned" || missed) && (
         <MoreMenu
           label={t("summary.more")}
           items={changes.items(o, workout.name, missed ? occurrenceLogLink(workout, o) : null)}

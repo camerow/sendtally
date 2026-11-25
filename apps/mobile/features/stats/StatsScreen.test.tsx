@@ -23,7 +23,6 @@ const mockClimb = (vGrade: number, kind: "send" | "attempt"): object => ({
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 jest.mock("../../lib/api", () => ({ useApi: () => undefined }));
-let mockMember: boolean | null = true;
 const mockDefaultClimbs = [
   mockClimb(4, "send"),
   mockClimb(6, "send"),
@@ -31,7 +30,6 @@ const mockDefaultClimbs = [
   mockClimb(8, "attempt"),
 ];
 let mockClimbs = mockDefaultClimbs;
-jest.mock("../billing/useBilling", () => ({ useCanSeeInsights: () => mockMember }));
 jest.mock("@sendtally/features/query", () => ({
   ...jest.requireActual<object>("@sendtally/features/query"),
   useQuery: () => ({
@@ -98,7 +96,6 @@ jest.mock("../training/insights/TrainingInsights", () => ({
 describe("Stats", () => {
   beforeEach(() => {
     statsSegmentStorage.remove();
-    mockMember = true;
     mockClimbs = mockDefaultClimbs;
   });
 
@@ -155,11 +152,12 @@ describe("Stats", () => {
     expect(screen.getByText("Training over y2025")).toBeTruthy();
   });
 
-  it("opens a non-member on the free 7D, every other range locked", async () => {
-    mockMember = false;
+  it("opens on All with every range open, and no lock on any", async () => {
     statsSegmentStorage.write("training");
     await render(<StatsScreen />);
-    expect(screen.getByText("Training over 7d")).toBeTruthy();
-    expect(screen.getByLabelText("2026, members only")).toBeTruthy();
+    expect(screen.getByText("Training over all")).toBeTruthy();
+    expect(screen.queryByLabelText(/members only/)).toBeNull();
+    await fireEvent.press(screen.getByLabelText("1Y"));
+    expect(screen.getByText("Training over 1y")).toBeTruthy();
   });
 });

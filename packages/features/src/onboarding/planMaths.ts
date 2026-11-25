@@ -67,14 +67,6 @@ export const nextMonday = (today: CalendarDate): CalendarDate =>
 export const sessionsPerWeek = (days: Readonly<Record<string, readonly Weekday[]>>): number =>
   Object.values(days).reduce((n, d) => n + d.length, 0);
 
-/** The first weekday anything is planned on, or null when nothing is. */
-export const firstWeekday = (
-  days: Readonly<Record<string, readonly Weekday[]>>
-): Weekday | null => {
-  const all = Object.values(days).flat();
-  return all.length === 0 ? null : (Math.min(...all) as Weekday);
-};
-
 /** One week of a block's main exercise, as P4 and P5 draw it. */
 export type LoadBar = { label: string; value: number; deload: boolean };
 

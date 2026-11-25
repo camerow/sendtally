@@ -15,7 +15,9 @@ import {
   useTrainingLog,
   blockName,
 } from "@sendtally/features/training";
-import { workoutPath } from "../library/useLibrary";
+import { useLibrary, workoutIn, workoutPath } from "../library/useLibrary";
+import { joinPath, useLocks } from "../locks";
+import { useLockedBlocks } from "../useLockedRows";
 import { ONGOING_PATH } from "../plan-calendar/paths";
 import { useAppApi } from "../../lib/useAppApi";
 import { DashedPanel } from "../components/DashedPanel";
@@ -25,6 +27,7 @@ import { LoadState } from "../data/LoadState";
 import { BlockCard } from "./BlockCard";
 import { BlockRow } from "./BlockRow";
 import { PlanCard } from "./PlanCard";
+import { blockPath } from "./paths";
 
 function Section({
   title,
@@ -49,11 +52,20 @@ export function BlocksList(): React.ReactElement {
   const loaded = usePlan(api);
   const { log } = useTrainingLog(api);
   const navigate = useNavigate();
+  const locks = useLocks();
+  const workoutOf = workoutIn(useLibrary());
+  const locked = useLockedBlocks();
+  const link = (b: { id: string; name: string }) => locked.row(b, blockPath(b.id));
   const { plan, workout } = log;
   const { current, upcoming, templates, past } = blockGroups(plan.blocks, today);
   const ongoing = planGridRows(ongoingMembers(plan, today), workout, model, {
     exercises,
-    open: (m) => void navigate(workoutPath(m.workoutId)),
+    open: (m) => {
+      const w = workoutOf(m.workoutId);
+      void navigate(
+        w !== undefined && locks.day(m, w) ? joinPath("plan_day") : workoutPath(m.workoutId)
+      );
+    },
   });
   const weeks = (n: number): string => t("calendar.weeks", { count: n });
 
@@ -74,6 +86,7 @@ export function BlocksList(): React.ReactElement {
                 weekdays: daysThisWeek(plan, m, block, today),
               }))}
               workout={workout}
+              link={link({ id: block.id, name: blockName(block) })}
             />
           ))}
           {ongoing.length > 0 && (
@@ -95,6 +108,7 @@ export function BlocksList(): React.ReactElement {
               id={b.id}
               name={b.name}
               meta={`${t("plan.startsOn", { date: shortDate(b.start) })} · ${weeks(b.weeks)}`}
+              {...link(b)}
             />
           ))}
         </Section>
@@ -102,17 +116,30 @@ export function BlocksList(): React.ReactElement {
       {templates.length > 0 && (
         <Section title={t("plan.templates")}>
           {templates.map((b) => (
-            <BlockRow key={b.id} id={b.id} name={blockName(b)} meta={templateMeta(log, b)} />
+            <BlockRow
+              key={b.id}
+              id={b.id}
+              name={blockName(b)}
+              meta={templateMeta(log, b)}
+              {...link({ id: b.id, name: blockName(b) })}
+            />
           ))}
         </Section>
       )}
       {past.length > 0 && (
         <Section title={t("plan.completed")}>
           {past.map((b) => (
-            <BlockRow key={b.id} id={b.id} name={b.name} meta={pastMeta(log, b, today)} />
+            <BlockRow
+              key={b.id}
+              id={b.id}
+              name={b.name}
+              meta={pastMeta(log, b, today)}
+              {...link(b)}
+            />
           ))}
         </Section>
       )}
+      {locked.sheet}
     </div>
   );
 }

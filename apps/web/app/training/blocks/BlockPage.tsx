@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router";
+import { Navigate, useNavigate } from "react-router";
 
 import { t } from "@sendtally/features/i18n";
 import {
@@ -11,16 +11,18 @@ import {
   useBlockPage,
 } from "@sendtally/features/training";
 import { MoreMenu } from "../../components/MoreMenu";
-import { Sheet } from "../../components/Sheet";
 import { useToast } from "../../components/Toast";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { useAppApi } from "../../lib/useAppApi";
 import { useDiscardGuard } from "../../lib/useDiscardGuard";
 import { useGoBack } from "../../lib/useGoBack";
+import { DeleteSheet } from "../components/DeleteSheet";
+import { deleteBlockFlow } from "../components/deleteFlows";
 import { NameSheet } from "../components/NameSheet";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { usePlanActions } from "../data/usePlanActions";
+import { joinPath, useLocks } from "../locks";
 import { BlockHead } from "./BlockHead";
 import { BlockHeader } from "./BlockHeader";
 import { BlockOverview } from "./BlockOverview";
@@ -65,7 +67,9 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
     newId: () => crypto.randomUUID(),
   });
   const guard = useDiscardGuard(draft.dirty);
+  const locked = useLocks().block;
 
+  if (locked) return <Navigate to={joinPath("block")} replace />;
   if (plan.state.status !== "ready")
     return (
       <DetailFrame backTo={BACK_TO}>
@@ -85,8 +89,8 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
     });
   };
   const cancel = (): void => guard.ask(draft.cancel);
+  const flow = deleteBlockFlow(name);
   const remove = (): void => {
-    setDeleting(false);
     leave();
     void actions.deleteBlock(id);
   };
@@ -126,11 +130,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
                 ...(dated === null
                   ? []
                   : [{ label: t("plan.saveAsTemplate"), onSelect: () => setNaming(true) }]),
-                {
-                  label: t("plan.deleteBlock"),
-                  destructive: true,
-                  onSelect: () => setDeleting(true),
-                },
+                { label: flow.item, destructive: true, onSelect: () => setDeleting(true) },
               ]}
             />
           </span>
@@ -200,14 +200,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
       )}
       {again && <PlanAgainSheet block={block} onClose={() => setAgain(false)} />}
       {guard.sheet}
-      <Sheet
-        open={deleting}
-        title={t("plan.deleteBlockTitle", { name })}
-        onClose={() => setDeleting(false)}
-        action={{ label: t("common.delete"), danger: true, onPress: remove }}
-      >
-        <p className="sheet-body">{t("plan.deleteBlockBody")}</p>
-      </Sheet>
+      {deleting && <DeleteSheet flow={flow} onClose={() => setDeleting(false)} onDelete={remove} />}
     </DetailFrame>
   );
 }

@@ -30,8 +30,22 @@
   gap: 12px;
 }
 
-.blocks-section-body > .block-row + .block-row {
+.blocks-section-body > .block-row + .block-row,
+.blocks-section-body > .locked-row + .locked-row {
   margin-top: -12px;
+}
+
+.locked-row:has(> .block-row) {
+  border-bottom: 1px solid var(--line-on-light-soft);
+}
+
+.locked-row > .block-row {
+  border-bottom: none;
+}
+
+.block-row--locked .block-row-name,
+.group-card-head--locked .group-card-title {
+  color: var(--text-muted);
 }
 
 .block-row {

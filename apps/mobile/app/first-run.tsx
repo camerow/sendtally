@@ -9,7 +9,6 @@ import {
   type Wizard,
 } from "@sendtally/features/settings";
 import { useCapture } from "../features/analytics/useCapture";
-import { useBilling } from "../features/billing/useBilling";
 import { ChooserStep } from "../features/first-run/ChooserStep";
 import { historyStepMap } from "../features/first-run/history/steps";
 import { planStepMap } from "../features/first-run/plan/steps";
@@ -36,11 +35,7 @@ function Walk(): React.ReactElement {
     params.path === "history" || params.path === "plan" ? params.path : null;
   const from: PathFrom = params.from === "setup_card" ? "setup_card" : "account";
   const start = React.useMemo(() => (path === null ? undefined : { path, from }), [path, from]);
-  const wizard = useWizard(api, {
-    capture,
-    member: useBilling()?.membership.active === true,
-    start,
-  });
+  const wizard = useWizard(api, { capture, start });
   const routed: Wizard = {
     ...wizard,
     skip: () => {

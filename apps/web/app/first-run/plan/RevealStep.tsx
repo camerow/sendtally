@@ -2,7 +2,12 @@ import React from "react";
 import { Button } from "@sendtally/design";
 import { shortDate, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
-import { sessionsPerWeek, usePlanPath, weekBars } from "@sendtally/features/settings";
+import {
+  sessionsPerWeek,
+  shapeable,
+  useSeededPlanPath,
+  weekBars,
+} from "@sendtally/features/settings";
 import { KIND_LOOK, usePlan } from "@sendtally/features/training";
 import { useTween } from "@sendtally/features/trends";
 import { useHangData } from "../../training/data/HangDataContext";
@@ -12,9 +17,9 @@ import { WizardFrame } from "../WizardFrame";
 import { LoadBars } from "./components/LoadBars";
 import { PlanCalendar } from "./components/PlanCalendar";
 
-/** P5: the whole block on a calendar, with its session count running up. */
+/** P5: the whole block on a calendar, its session count running up, and Shape the weeks. */
 export const RevealStep: StepComponent = ({ wizard, api }) => {
-  const path = usePlanPath();
+  const path = useSeededPlanPath(api);
   const plan = usePlan(api).state;
   const library = useLibrary().state;
   const unit = useHangData().model.settings.units;
@@ -50,9 +55,11 @@ export const RevealStep: StepComponent = ({ wizard, api }) => {
 
   const changed =
     ready && plan.data.weekChanges.some((c) => members.some((m) => m.id === c.membershipId));
+  const shaped = shapeable(placed.map(({ workout }) => workout));
+  const shapedIn = placed.find(({ workout }) => workout === shaped);
   const main =
-    changed && placed[0] !== undefined
-      ? weekBars(placed[0].workout, placed[0].m.id, weeks, plan.data.weekChanges, unit, gripName)
+    changed && shapedIn !== undefined
+      ? weekBars(shapedIn.workout, shapedIn.m.id, weeks, plan.data.weekChanges, unit, gripName)
       : null;
 
   return (
@@ -103,6 +110,13 @@ export const RevealStep: StepComponent = ({ wizard, api }) => {
                 {t("onboarding.plan.block.weekByWeek", { name: main.name })}
               </span>
               <LoadBars bars={main.bars} height={26} />
+            </div>
+          )}
+          {shaped !== undefined && (
+            <div>
+              <Button variant="ghostOnDark" onClick={() => wizard.open("P4")}>
+                {t("onboarding.plan.reveal.shapeWeeks")}
+              </Button>
             </div>
           )}
         </>

@@ -41,6 +41,8 @@ import { LogItButton } from "./LogItButton";
 import { StartButton } from "./StartButton";
 import { usePlannedItems } from "./usePlannedItems";
 import { useWorkoutDetailActions } from "./useWorkoutDetailActions";
+import { LockedPage } from "../components/LockedPage";
+import { useLocks } from "../locks";
 import { SessionTargetContext } from "../sets/sessionTarget";
 
 /** A planned run a workout opens as: the day it lands on and the plan it is in. */
@@ -204,6 +206,7 @@ export function WorkoutScreen({
   const { state, reload } = useLibrary();
   const { today } = useHangData();
   const { log } = useTrainingLog(useApi());
+  const locks = useLocks();
   const planned =
     run === null
       ? undefined
@@ -211,7 +214,9 @@ export function WorkoutScreen({
   if (state.status !== "ready")
     return <LoadState state={state} onRetry={() => void reload()} framed />;
   const workout = state.data.workout(id);
-  return workout === undefined ? null : (
-    <Detail workout={workout} grip={grip} adding={adding} run={planned} />
-  );
+  if (workout === undefined) return null;
+  if (locks.workout(workout)) return <LockedPage source="workout" />;
+  if (planned !== undefined && locks.day(planned.membership, workout))
+    return <LockedPage source="plan_day" />;
+  return <Detail workout={workout} grip={grip} adding={adding} run={planned} />;
 }

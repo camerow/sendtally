@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ConnectionStatus, FirstRunStep } from "@sendtally/api-client";
 import { DEFAULT_GRADE_SCALES } from "../settings/transforms";
 import type { Capture, OnboardingProgress, OnboardingStatus, PathFrom } from "./types";
-import { announceOpen, openWizard, patchStatus, paywallOnEnter, wizardOf } from "./wizardState";
+import { announceOpen, openWizard, patchStatus, wizardOf } from "./wizardState";
 
 const NONE: OnboardingProgress = {
   sessions: false,
@@ -14,11 +14,10 @@ const NONE: OnboardingProgress = {
 
 type Setup = {
   onboarding?: Partial<OnboardingStatus>;
-  member?: boolean;
   start?: { path: "history" | "plan"; from: PathFrom };
 };
 
-function setup({ onboarding: given = {}, member = false, start }: Setup = {}): {
+function setup({ onboarding: given = {}, start }: Setup = {}): {
   wizard: () => ReturnType<typeof wizardOf>;
   announce: () => void;
   capture: ReturnType<typeof vi.fn<Capture>>;
@@ -27,16 +26,13 @@ function setup({ onboarding: given = {}, member = false, start }: Setup = {}): {
   const onboarding: OnboardingStatus = { path: null, left: false, progress: NONE, ...given };
   const capture = vi.fn<Capture>();
   const send = vi.fn<(to: FirstRunStep) => void>();
-  let state = openWizard(onboarding, { progress: onboarding.progress, member }, start);
+  let state = openWizard(onboarding, { progress: onboarding.progress }, start);
   const deps = {
-    member,
     progress: onboarding.progress,
     capture,
     send,
     update: (change: (s: typeof state) => typeof state): void => {
-      const before = state.step;
       state = change(state);
-      if (state.step !== before) paywallOnEnter(state.path, state.step, capture);
     },
   };
   return {
@@ -60,7 +56,7 @@ describe("opening the wizard", () => {
     const { wizard, announce, send } = setup({
       onboarding: { path: "plan", progress: { ...NONE, workouts: true } },
     });
-    expect(wizard().step).toBe("P1");
+    expect(wizard().step).toBe("P1w");
     announce();
     expect(send).not.toHaveBeenCalled();
     wizard().back();
@@ -69,20 +65,20 @@ describe("opening the wizard", () => {
 
   it("opens the asked path from the setup card and counts a resume of a path left", () => {
     const start = { path: "plan", from: "setup_card" } as const;
-    const progress = { ...NONE, workouts: true, blockMemberships: true };
+    const progress = { ...NONE, workouts: true, blockMemberships: true, scheduledBlocks: true };
     const { wizard, announce, send, capture } = setup({
       onboarding: { path: "plan", left: true, progress },
       start,
     });
-    expect(wizard().step).toBe("P4");
+    expect(wizard().step).toBe("P5");
     announce();
     expect(send).toHaveBeenCalledExactlyOnceWith({ step: "path", ...start });
     expect(capture).toHaveBeenCalledExactlyOnceWith("onboarding_resumed", {
       path: "plan",
-      at: "P4",
+      at: "P5",
     });
     wizard().back();
-    expect(wizard().step).toBe("P4");
+    expect(wizard().step).toBe("P5");
   });
 
   it("does not count a path opened from Account as a resume", () => {
@@ -93,7 +89,7 @@ describe("opening the wizard", () => {
 });
 
 describe("the history path", () => {
-  it("goes from the chooser through the import to the end, offering membership once", () => {
+  it("goes from the chooser through the import to the end, with no membership step", () => {
     const { wizard, send, capture } = setup();
     wizard().choose("history", "chooser");
     expect(send).toHaveBeenLastCalledWith({ step: "path", path: "history", from: "chooser" });
@@ -102,23 +98,20 @@ describe("the history path", () => {
     wizard().answerLog("kaya");
     expect(send).toHaveBeenLastCalledWith({ step: "log_answered", existingLog: "kaya" });
     expect(wizard().memory).toMatchObject({ way: "import", existingLog: "kaya" });
-    expect(wizard().position).toEqual({ n: 1, total: 4 });
+    expect(wizard().position).toEqual({ n: 1, total: 3 });
 
     const visited = [wizard().step];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       wizard().next();
       visited.push(wizard().step);
     }
-    expect(visited).toEqual(["H1", "H2i", "H3i", "H4", "H5", "H6"]);
-    expect(wizard().position).toEqual({ n: 4, total: 4 });
-    expect(wizard().memory.membershipShown).toBe(true);
+    expect(visited).toEqual(["H1", "H2i", "H3i", "H4", "H6"]);
+    expect(wizard().position).toEqual({ n: 3, total: 3 });
     expect(capture).toHaveBeenCalledWith("onboarding_step_completed", {
       path: "history",
       step: "H1",
     });
-    expect(capture.mock.calls.filter(([event]) => event === "paywall_shown")).toEqual([
-      ["paywall_shown", { source: "onboarding", path: "history", step: "H5" }],
-    ]);
+    expect(capture.mock.calls.some(([event]) => event === "paywall_shown")).toBe(false);
   });
 
   it("goes by hand for a first log, and carries a step's extra on its event", () => {
@@ -138,15 +131,15 @@ describe("the history path", () => {
     });
   });
 
-  it("shows history as four fixed stages whichever way it goes", () => {
+  it("shows history as three fixed stages whichever way it goes", () => {
     const { wizard } = setup();
     wizard().choose("history", "chooser");
-    expect(wizard().position).toEqual({ n: 1, total: 4 });
+    expect(wizard().position).toEqual({ n: 1, total: 3 });
     wizard().answerLog("none");
     wizard().next();
-    expect(wizard()).toMatchObject({ step: "H2h", position: { n: 2, total: 4 } });
+    expect(wizard()).toMatchObject({ step: "H2h", position: { n: 2, total: 3 } });
     wizard().next();
-    expect(wizard()).toMatchObject({ step: "H4", position: { n: 3, total: 4 } });
+    expect(wizard()).toMatchObject({ step: "H4", position: { n: 3, total: 3 } });
   });
 
   it("turns from the import's how-to to adding climbs by hand", () => {
@@ -165,17 +158,6 @@ describe("the history path", () => {
     });
   });
 
-  it("skips the membership offer for a member", () => {
-    const { wizard, capture } = setup({ member: true });
-    wizard().choose("history", "chooser");
-    wizard().answerLog("none");
-    wizard().next();
-    wizard().next();
-    wizard().next();
-    expect(wizard().step).toBe("H6");
-    expect(capture.mock.calls.some(([event]) => event === "paywall_shown")).toBe(false);
-  });
-
   it("goes back the way it came, to the chooser", () => {
     const { wizard } = setup();
     wizard().choose("history", "chooser");
@@ -185,6 +167,44 @@ describe("the history path", () => {
     expect(wizard().step).toBe("H1");
     wizard().back();
     expect(wizard().step).toBe("choose");
+  });
+});
+
+describe("the plan path", () => {
+  it("builds the week, then shows the plan, the builder and Shape the weeks only as side steps", () => {
+    const { wizard, capture } = setup();
+    wizard().choose("plan", "chooser");
+    expect(wizard()).toMatchObject({ step: "P1w", position: { n: 1, total: 2 } });
+
+    wizard().open("P2");
+    expect(wizard()).toMatchObject({ step: "P2", canGoBack: true, position: { n: 0, total: 0 } });
+    wizard().next();
+    expect(wizard().step).toBe("P1w");
+    expect(capture).toHaveBeenLastCalledWith("onboarding_step_completed", {
+      path: "plan",
+      step: "P2",
+    });
+
+    wizard().next({ count: 2, sessions: 3, own: 1 });
+    expect(wizard().step).toBe("P5");
+    wizard().open("P4");
+    wizard().back();
+    expect(wizard().step).toBe("P5");
+    wizard().open("P4");
+    wizard().next({ count: 2, shortcut: "both" });
+    expect(wizard().step).toBe("P5");
+    wizard().next();
+    expect(wizard().step).toBe("P7");
+    wizard().back();
+    expect(wizard().step).toBe("P5");
+    wizard().back();
+    expect(wizard().step).toBe("P1w");
+    expect(capture.mock.calls.map(([, p]) => "step" in p && p.step)).toEqual([
+      "P2",
+      "P1w",
+      "P4",
+      "P5",
+    ]);
   });
 });
 
@@ -198,10 +218,9 @@ describe("closing the wizard", () => {
   it("skips mid-path at the step it is on", () => {
     const { wizard, send } = setup();
     wizard().choose("plan", "chooser");
-    wizard().next({ count: 3 });
-    wizard().next();
+    wizard().open("P2");
     wizard().skip();
-    expect(send).toHaveBeenLastCalledWith({ step: "skipped", path: "plan", at: "P3" });
+    expect(send).toHaveBeenLastCalledWith({ step: "skipped", path: "plan", at: "P2" });
   });
 
   it("leaves mid-path keeping the path", () => {
@@ -211,11 +230,11 @@ describe("closing the wizard", () => {
     expect(send).toHaveBeenLastCalledWith({ step: "left", path: "plan" });
   });
 
-  it("completes into the other path, which shows no second membership offer", () => {
-    const { wizard, send, capture } = setup();
+  it("completes into the other path", () => {
+    const { wizard, send } = setup();
     wizard().choose("history", "chooser");
     wizard().answerLog("none");
-    for (let i = 0; i < 4; i++) wizard().next();
+    for (let i = 0; i < 3; i++) wizard().next();
     expect(wizard().step).toBe("H6");
 
     wizard().complete("later", "other_path");
@@ -227,13 +246,11 @@ describe("closing the wizard", () => {
     });
     wizard().choose("plan", "end_screen");
     expect(send).toHaveBeenLastCalledWith({ step: "path", path: "plan", from: "end_screen" });
-    expect(wizard()).toMatchObject({ path: "plan", step: "P1", position: { n: 1, total: 6 } });
+    expect(wizard()).toMatchObject({ path: "plan", step: "P1w", position: { n: 1, total: 2 } });
     wizard().next();
-    expect(wizard().position).toEqual({ n: 2, total: 6 });
-
-    for (let i = 0; i < 5; i++) wizard().next();
+    expect(wizard()).toMatchObject({ step: "P5", position: { n: 2, total: 2 } });
+    wizard().next();
     expect(wizard().step).toBe("P7");
-    expect(capture.mock.calls.filter(([event]) => event === "paywall_shown")).toHaveLength(1);
   });
 });
 

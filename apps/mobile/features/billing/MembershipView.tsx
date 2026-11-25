@@ -2,8 +2,8 @@ import React from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  membershipPanel,
   storeChipName,
+  type MembersGet as MembersGetView,
   type MembershipFeature,
   type MembershipVM,
 } from "@sendtally/features/billing";
@@ -17,6 +17,7 @@ import {
   underlineLabel,
   underlinePress,
 } from "../../lib/styles";
+import { MembersGet } from "./MembersGet";
 import { MembershipPanel, panelMono, panelNote } from "./MembershipPanel";
 import { PurchaseControls } from "./PurchaseControls";
 import { storeBillingAvailable, storeLabel, subscriptionManagementUrl } from "./store";
@@ -26,6 +27,7 @@ import { BackButton } from "../../components/BackButton";
 
 export type MembershipViewProps = {
   membership: MembershipFeature;
+  members: MembersGetView | null;
   purchase: PurchaseFeature;
   onBack: () => void;
 };
@@ -47,23 +49,25 @@ function RestoreLink({ purchase }: { purchase: PurchaseFeature }): React.ReactEl
 
 function Panel({
   vm,
+  members,
   purchase,
 }: {
   vm: MembershipVM;
+  members: MembersGetView | null;
   purchase: PurchaseFeature;
 }): React.ReactElement {
-  const panel = membershipPanel();
   if (!vm.active) {
     return (
-      <MembershipPanel eyebrow={panel.eyebrow} title={panel.pageTitle}>
+      <>
+        {members !== null && <MembersGet view={members} />}
         <PurchaseControls purchase={purchase} />
-      </MembershipPanel>
+      </>
     );
   }
   const eyebrow = t("billing.memberVia", { store: storeChipName(vm.managedIn ?? "other") });
   if (vm.managedIn === "web") {
     return (
-      <MembershipPanel eyebrow={eyebrow} title={t("billing.trendsOpen")}>
+      <MembershipPanel eyebrow={eyebrow} title={t("billing.trainingOpen")}>
         <Text style={panelMono}>{t("billing.renewsOnWeb")}</Text>
         <Text style={panelNote}>{t("billing.webBody")}</Text>
       </MembershipPanel>
@@ -71,7 +75,7 @@ function Panel({
   }
   const inStore = vm.managedIn === "play_store" || vm.managedIn === "app_store";
   return (
-    <MembershipPanel eyebrow={eyebrow} title={t("billing.trendsOpen")}>
+    <MembershipPanel eyebrow={eyebrow} title={t("billing.trainingOpen")}>
       {vm.renewalLine !== null && <Text style={panelMono}>{vm.renewalLine}</Text>}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
         {inStore && (
@@ -130,6 +134,7 @@ function MemberBadge(): React.ReactElement {
 
 export function MembershipView({
   membership,
+  members,
   purchase,
   onBack,
 }: MembershipViewProps): React.ReactElement {
@@ -167,7 +172,7 @@ export function MembershipView({
               color: colors.textSecondary,
             }}
           >
-            {t("billing.introMobile")}
+            {t("billing.intro")}
           </Text>
         </View>
 
@@ -186,7 +191,7 @@ export function MembershipView({
         )}
         {state.status === "ready" && (
           <>
-            <Panel vm={vm} purchase={purchase} />
+            <Panel vm={vm} members={members} purchase={purchase} />
             {vm.active && vm.managedIn === "web" && <SwitchToStore purchase={purchase} />}
           </>
         )}

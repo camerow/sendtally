@@ -50,9 +50,10 @@ export default function Support(): React.ReactElement {
 
       <h2>Membership</h2>
       <p>
-        Logging sessions, effort scores and Strava posting are free. Membership adds the trends
-        screens: volume, grade pyramid, hardest send, flash rate and average grade. Subscriptions
-        are managed on sendtally.com, where you can also change or cancel one.
+        Logging sessions, effort scores, your climbing history, built-in workouts and Strava posting
+        are free. Membership adds custom training: your own workouts, your own exercises and
+        training blocks. Subscriptions are managed on sendtally.com, where you can also change or
+        cancel one.
       </p>
 
       <h2>Deleting your account</h2>

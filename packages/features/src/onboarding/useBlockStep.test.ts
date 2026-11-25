@@ -12,6 +12,7 @@ import {
   loadBars,
   loadText,
   resized,
+  shapeable,
   sized,
   weekChangesOf,
   withCell,
@@ -119,5 +120,17 @@ describe("changedWeeks and weekChangesOf", () => {
         { membershipId, week: 3, dose: 1, itemId: "i0", change: { sets: 2 } },
       ])
     );
+  });
+});
+
+describe("shapeable", () => {
+  const workout = (id: string, items: object[]): LibraryWorkout =>
+    ({ id, items }) as unknown as LibraryWorkout;
+
+  it("is the first workout with an exercise to load, none when only Climbing is placed", () => {
+    const climbing = workout("climb", []);
+    const hangs = workout("hangs", [{ exercise: "half", doses: [REPS] }]);
+    expect(shapeable([climbing, undefined, hangs])).toBe(hangs);
+    expect(shapeable([climbing])).toBeUndefined();
   });
 });

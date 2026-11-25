@@ -1,8 +1,15 @@
+import { useLocalSearchParams } from "expo-router";
 import React from "react";
-import type { MembershipFeature } from "@sendtally/features/billing";
+import {
+  membershipSource,
+  useMembersGet,
+  type MembershipFeature,
+} from "@sendtally/features/billing";
+import { useCapture } from "../features/analytics/useCapture";
 import { MembershipView } from "../features/billing/MembershipView";
 import { useBilling } from "../features/billing/useBilling";
 import { usePurchase } from "../features/billing/usePurchase";
+import { useApi } from "../lib/api";
 import { goBack } from "../lib/goBack";
 
 function MembershipWithBilling({
@@ -11,7 +18,24 @@ function MembershipWithBilling({
   membership: MembershipFeature;
 }): React.ReactElement {
   const purchase = usePurchase(membership.refresh);
-  return <MembershipView membership={membership} purchase={purchase} onBack={() => goBack()} />;
+  const members = useMembersGet(useApi());
+  const source = membershipSource(useLocalSearchParams<{ source?: string }>().source);
+  const capture = useCapture();
+  const free = membership.active === false;
+  const sent = React.useRef(false);
+  React.useEffect(() => {
+    if (source === null || !free || sent.current) return;
+    sent.current = true;
+    capture("paywall_shown", { source });
+  }, [source, free, capture]);
+  return (
+    <MembershipView
+      membership={membership}
+      members={members}
+      purchase={purchase}
+      onBack={() => goBack()}
+    />
+  );
 }
 
 export default function MembershipScreen(): React.ReactElement | null {

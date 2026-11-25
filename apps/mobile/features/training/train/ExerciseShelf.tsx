@@ -15,6 +15,7 @@ export type ExerciseShelfProps = {
   kind: WorkoutKind;
   cards: readonly ShelfCard[];
   onAdd: () => void;
+  addLocked: boolean;
   onSeeAll: () => void;
 };
 
@@ -23,6 +24,7 @@ export function ExerciseShelf({
   kind,
   cards,
   onAdd,
+  addLocked,
   onSeeAll,
 }: ExerciseShelfProps): React.ReactElement {
   const label = kindLabel(kind);
@@ -35,6 +37,7 @@ export function ExerciseShelf({
         count={cards.length}
         addLabel={t("workouts.newExerciseIn", { category: label })}
         onAdd={onAdd}
+        addLocked={addLocked}
       />
       {cards.length === 0 ? (
         <View
@@ -63,7 +66,7 @@ export function ExerciseShelf({
             faded={c.meta === null}
             showKind={false}
             picture={c.picture}
-            onPress={c.open}
+            {...c.press}
           />
         ))
       )}

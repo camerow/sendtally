@@ -3,7 +3,7 @@ import { Button } from "@sendtally/design";
 import { useExerciseList } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { libraryPictures } from "@sendtally/features/library";
-import { setPlanPath, usePlanPath, type PlanPath } from "@sendtally/features/settings";
+import { pickToggled, setPlanPath, usePlanPath } from "@sendtally/features/settings";
 import { libraryLine } from "@sendtally/features/workouts";
 import { Sheet } from "../../../components/Sheet";
 import { useAppApi } from "../../../lib/useAppApi";
@@ -17,16 +17,7 @@ export type AddWorkoutSheetProps = {
   onBuildAnother: () => void;
 };
 
-const toggled = (p: PlanPath, id: string): PlanPath => {
-  if (!p.workouts.includes(id)) return { ...p, workouts: [...p.workouts, id] };
-  return {
-    ...p,
-    workouts: p.workouts.filter((w) => w !== id),
-    days: Object.fromEntries(Object.entries(p.days).filter(([w]) => w !== id)),
-  };
-};
-
-/** P3's dialog: the built-in workouts, each added to the week or taken back, or another of their own. */
+/** All workouts, from Build your week: the built-in workouts, each picked or taken back, or one of their own. */
 export function AddWorkoutSheet({
   open,
   onClose,
@@ -38,7 +29,7 @@ export function AddWorkoutSheet({
   const path = usePlanPath();
   const builtIns =
     state.status === "ready" ? state.data.workouts.filter((w) => w.source === "library") : [];
-  const toggle = (id: string): void => setPlanPath((p) => toggled(p, id));
+  const toggle = (id: string): void => setPlanPath((p) => pickToggled(p, id));
   return (
     <Sheet
       open={open}

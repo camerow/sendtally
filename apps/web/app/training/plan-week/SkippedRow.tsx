@@ -1,17 +1,22 @@
 import React from "react";
+import { Link } from "react-router";
 import { t } from "@sendtally/features/i18n";
 import { plannedOn, type Occurrence } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
+import { Lock } from "../../components/Lock";
 import { usePlanActions } from "../data/usePlanActions";
+import { joinPath } from "../locks";
 import { DayMark } from "./DayMark";
 
-/** A planned run skipped: on its day, dashed and faded, with why and Undo skip. */
+/** A planned run skipped: on its day, dashed and faded, with why and Undo skip, or locked, the lock. */
 export function SkippedRow({
   occurrence: o,
   workout,
+  locked = false,
 }: {
   occurrence: Occurrence;
   workout: LibraryWorkout;
+  locked?: boolean;
 }): React.ReactElement {
   const actions = usePlanActions();
   const reason = o.change?.reason ?? null;
@@ -28,13 +33,23 @@ export function SkippedRow({
         <span className="plan-row-name">{workout.name}</span>
         {note !== null && <span className="plan-row-note">{note}</span>}
       </span>
-      <button
-        type="button"
-        className="plan-row-undo"
-        onClick={() => void actions.undoPlanChange(o.membership.id, plannedOn(o))}
-      >
-        {t("plan.undoSkip")}
-      </button>
+      {locked ? (
+        <Link
+          to={joinPath("plan_day")}
+          className="plan-row-lock"
+          aria-label={t("common.membersOnly", { label: workout.name })}
+        >
+          <Lock />
+        </Link>
+      ) : (
+        <button
+          type="button"
+          className="plan-row-undo"
+          onClick={() => void actions.undoPlanChange(o.membership.id, plannedOn(o))}
+        >
+          {t("plan.undoSkip")}
+        </button>
+      )}
     </div>
   );
 }

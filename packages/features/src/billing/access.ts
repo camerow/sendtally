@@ -2,10 +2,10 @@ import type { Entitlements } from "@sendtally/api-client";
 import { formatDate, t } from "../i18n";
 import { lapsed } from "./transforms";
 
-const isMember = (entitlements: Entitlements, now: Date): boolean =>
+export const isMember = (entitlements: Entitlements, now: Date): boolean =>
   entitlements.membership.active && !lapsed(entitlements.membership, now);
 
-const trialRunning = (entitlements: Entitlements, now: Date): boolean =>
+export const trialRunning = (entitlements: Entitlements, now: Date): boolean =>
   Date.parse(entitlements.trial.endsAt) > now.getTime();
 
 /** What every member gate asks: a live membership, or a trial still running. */
