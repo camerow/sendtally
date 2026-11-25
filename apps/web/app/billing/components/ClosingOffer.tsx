@@ -6,7 +6,13 @@ import { Icon } from "../../components/Icon";
 import { MembersGet } from "./MembersGet";
 
 /** The closing screen's offer to a free account: the trial, what stays free, and what members get. */
-export function ClosingOffer({ api }: { api: SendtallyApi }): React.ReactElement | null {
+export function ClosingOffer({
+  api,
+  onJoin,
+}: {
+  api: SendtallyApi;
+  onJoin: () => void;
+}): React.ReactElement | null {
   const view = useMembersGet(api);
   const { state } = useMembership(api);
   if (view === null || state.status !== "ready") return null;
@@ -31,7 +37,7 @@ export function ClosingOffer({ api }: { api: SendtallyApi }): React.ReactElement
           ))}
         </ul>
       </section>
-      <MembersGet view={view} closing />
+      <MembersGet view={view} onJoin={onJoin} />
     </>
   );
 }

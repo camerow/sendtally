@@ -1,6 +1,8 @@
 import React from "react";
 import { weekdayLetters, weekdayLong } from "@sendtally/features/hang";
+import { t } from "@sendtally/features/i18n";
 import { KIND_LOOK, type GridPart, type PlanGridRow } from "@sendtally/features/training";
+import { Lock } from "../../components/Lock";
 import { GridCell } from "./GridCell";
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6];
@@ -93,8 +95,22 @@ export function PlanGrid({
             key={row.key}
             className={lit.includes(row.key) ? "plan-grid-row plan-grid-row--lit" : "plan-grid-row"}
           >
-            <button type="button" className="plan-grid-name plan-grid-open" onClick={row.open}>
-              <span className="plan-grid-workout">{row.name}</span>
+            <button
+              type="button"
+              className="plan-grid-name plan-grid-open"
+              aria-label={
+                row.locked === true ? t("common.membersOnly", { label: row.name }) : undefined
+              }
+              onClick={row.open}
+            >
+              {row.locked === true ? (
+                <span className="plan-grid-locked">
+                  <span className="plan-grid-workout">{row.name}</span>
+                  <Lock />
+                </span>
+              ) : (
+                <span className="plan-grid-workout">{row.name}</span>
+              )}
               {row.lines.map((parts, i) => (
                 <Line key={i} parts={parts} ink={KIND_LOOK[row.kind].ink} />
               ))}

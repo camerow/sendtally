@@ -11,12 +11,13 @@ import {
   placedWorkouts,
   setPlanPath,
   STARTERS,
-  useSeededPlanPath,
   withDay,
   pickToggled,
   type PlanPath,
 } from "./planPath";
 import type { Wizard } from "./types";
+import { useSeededPlanPath } from "./useSeededPlanPath";
+import { useOnePress } from "./useOnePress";
 
 const WEEKDAYS: readonly Weekday[] = [0, 1, 2, 3, 4, 5, 6];
 
@@ -92,6 +93,7 @@ export function useBuildWeek({
 }): BuildWeekState {
   const path = useSeededPlanPath(api);
   const plan = usePlan(api).state;
+  const once = useOnePress();
   const start = nextMonday(today);
   if (!path.seeded || plan.status !== "ready" || library.status !== "ready")
     return { status: "loading", start };
@@ -136,6 +138,6 @@ export function useBuildWeek({
     sessions: sessionsPerWeek(path.days),
     toggle: (id) => setPlanPath((p) => pickToggled(p, id)),
     toggleDay: (id, day) => setPlanPath((p) => withDay(p, id, day)),
-    schedule,
+    schedule: once(schedule),
   };
 }

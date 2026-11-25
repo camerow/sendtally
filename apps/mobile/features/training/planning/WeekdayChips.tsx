@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import type { Weekday } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { weekdayLetters, weekdayLong } from "@sendtally/features/hang";
+import { t } from "@sendtally/features/i18n";
 import { type } from "../type";
 
 export type WeekdayChipsProps = {
@@ -10,10 +11,17 @@ export type WeekdayChipsProps = {
   onToggle: (day: Weekday) => void;
   /** Days drawn faint, still pressable. */
   dim?: readonly Weekday[];
+  /** What the days are for, when chips for several things share a screen. */
+  label?: string;
 };
 
 /** A chip per weekday, Monday first, each on or off. */
-export function WeekdayChips({ days, onToggle, dim = [] }: WeekdayChipsProps): React.ReactElement {
+export function WeekdayChips({
+  days,
+  onToggle,
+  dim = [],
+  label,
+}: WeekdayChipsProps): React.ReactElement {
   return (
     <View style={{ flexDirection: "row", gap: 5 }}>
       {weekdayLetters().map((letter, i) => {
@@ -24,7 +32,11 @@ export function WeekdayChips({ days, onToggle, dim = [] }: WeekdayChipsProps): R
             key={i}
             onPress={() => onToggle(day)}
             accessibilityRole="checkbox"
-            accessibilityLabel={weekdayLong(i)}
+            accessibilityLabel={
+              label === undefined
+                ? weekdayLong(i)
+                : t("plan.dayOf", { name: label, day: weekdayLong(i) })
+            }
             accessibilityState={{ checked: on }}
             style={{
               flex: 1,

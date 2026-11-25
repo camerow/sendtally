@@ -101,13 +101,17 @@ const setup: Step[] = [
   ["PUT", "/v1/memberships/m_block", membership("w_own", "b1")],
   ["PUT", "/v1/exercises/e_own", { name: "Hip openers", kind: "mobility" }],
   ["PUT", "/v1/exercises/e_other", { name: "Wall slides", kind: "mobility" }],
+  ["PUT", "/v1/exercises/e_linked", { name: "Back squat", kind: "strength", builtIn: "squat" }],
 ];
 
 const gated: Step[] = [
   ["PUT", "/v1/workouts/w_new", workout("Push day", ["Dips", "Push-up"])],
   ["PUT", "/v1/workouts/w_own", workout("Pull day", ["Pull-up"])],
+  ["PUT", "/v1/workouts/w_own", workout("Pull day", ["Back squat"])],
   ["PUT", "/v1/exercises/e_new", { name: "Hip circles", kind: "mobility" }],
   ["PUT", "/v1/exercises/e_own", { name: "Hip openers", kind: "mobility", eachSide: true }],
+  ["PUT", "/v1/exercises/e_own", { name: "Hip openers", kind: "mobility", builtIn: "squat" }],
+  ["PUT", "/v1/exercises/e_linked", { name: "Back squat", kind: "strength", builtIn: null }],
   ["PUT", "/v1/hang/grips/g_new", { name: "Pinch block" }],
   ["PUT", "/v1/blocks/b_new", block],
   ["PUT", "/v1/blocks/b1", { ...block, weeks: 6 }],
@@ -229,6 +233,17 @@ const saves: [string, Record<string, unknown>][] = [
         { exercise: "Dips", doses: [{ sets: 3, reps: 8 }] },
         { exercise: "Push-up", doses: [{ sets: 3, reps: 12 }] },
       ],
+    },
+  ],
+  [
+    "save_workout",
+    {
+      id: "w_own",
+      name: "Pull day",
+      description: "",
+      minutes: null,
+      targetRpe: null,
+      items: [{ exercise: "half", doses: [{ sets: 3, reps: 6, onS: 7, offS: 3 }] }],
     },
   ],
   ["save_exercise", { name: "Hip circles", kind: "mobility" }],

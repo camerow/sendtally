@@ -73,7 +73,7 @@ export const billing = {
   "billing.freeHistory": "Ton historique d’escalade",
   "billing.freeBuiltIns": "Séances intégrées",
   "billing.freeStrava": "Publication sur Strava",
-  "billing.membersGet": "Les abonnés ont…",
+  "billing.membersGet": "Avec l'abonnement…",
   "billing.needsMembershipAfter": "Après le {date}, ces fonctions demandent un abonnement.",
   "billing.needsMembership": "Ces fonctions demandent un abonnement.",
   "billing.lockedNotDeleted_one": "Ce que tu as créé est verrouillé, pas supprimé : {things}.",

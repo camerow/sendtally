@@ -25,7 +25,7 @@ import { useAppApi } from "../../lib/useAppApi";
 import { BlockRow } from "../blocks/BlockRow";
 import { useScheduledToast } from "../blocks/useScheduledToast";
 import { useHangData } from "../data/HangDataContext";
-import { joinPath, useLocks } from "../locks";
+import { membershipPagePath, useLocks } from "../locks";
 import { Icon } from "../../components/Icon";
 import { CalendarMonth } from "../plan-calendar/CalendarMonth";
 import { CALENDAR_PATH } from "../plan-calendar/paths";
@@ -169,7 +169,7 @@ export function PlanPage(): React.ReactElement {
                 id={b.id}
                 name={b.name}
                 meta={t("plan.workoutCount", { count: blockMembers(log.plan, b).length })}
-                {...(blockLocked && { locked: true, to: joinPath("block") })}
+                {...(blockLocked && { locked: true, to: membershipPagePath("block") })}
               />
             ))}
           </div>

@@ -1,7 +1,9 @@
 import React from "react";
 import { Link } from "react-router";
 import type { EntryKind } from "@sendtally/features/journal";
+import { t } from "@sendtally/features/i18n";
 import { Icon, type IconName } from "./Icon";
+import { Lock } from "./Lock";
 import { EntryKindIcon } from "../journal/components/EntryKindIcon";
 
 export type MenuRowProps = {
@@ -13,6 +15,8 @@ export type MenuRowProps = {
   onPress?: () => void;
   /** Leaves the app: an arrow out in place of the chevron. */
   external?: boolean;
+  /** Members only: muted, with the lock in place of the chevron. */
+  locked?: boolean;
 };
 
 /** A way in: a round icon, its title and a hint, and a chevron. */
@@ -23,6 +27,7 @@ export function MenuRow({
   to,
   onPress,
   external = false,
+  locked = false,
 }: MenuRowProps): React.ReactElement {
   const body = (
     <>
@@ -37,17 +42,30 @@ export function MenuRow({
         <span className="menu-row-title">{title}</span>
         {hint !== undefined && <span className="menu-row-hint">{hint}</span>}
       </span>
-      <span className="menu-row-chevron">
-        <Icon name={external ? "external" : "chevron"} size={external ? 14 : 12} strokeWidth={2} />
-      </span>
+      {locked ? (
+        <Lock />
+      ) : (
+        <span className="menu-row-chevron">
+          <Icon
+            name={external ? "external" : "chevron"}
+            size={external ? 14 : 12}
+            strokeWidth={2}
+          />
+        </span>
+      )}
     </>
   );
+  const props = {
+    className: locked ? "menu-row menu-row--locked" : "menu-row",
+    "aria-label": locked ? t("common.membersOnly", { label: title }) : undefined,
+    onClick: onPress,
+  };
   return to === undefined ? (
-    <button type="button" className="menu-row" onClick={onPress}>
+    <button type="button" {...props}>
       {body}
     </button>
   ) : (
-    <Link to={to} className="menu-row" onClick={onPress}>
+    <Link to={to} {...props}>
       {body}
     </Link>
   );

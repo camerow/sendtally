@@ -71,7 +71,7 @@ describe("Build your week", () => {
       "Hip mobility flow",
     ])
       expect(screen.getByLabelText(`Add ${name}`)).toBeTruthy();
-    const monday = screen.getAllByRole("checkbox", { name: "Monday" });
+    const monday = screen.getAllByRole("checkbox", { name: "Climbing on Monday" });
     expect(monday).toHaveLength(1);
     expect(monday[0]?.props.accessibilityState).toMatchObject({ checked: false });
     expect(screen.getByRole("button", { name: "Build my own" })).toBeTruthy();
@@ -81,10 +81,10 @@ describe("Build your week", () => {
 
   it("puts each pressed day on the week and schedules what has a day, leaving a pick with none out", async () => {
     await renderWithHang(<BuildWeekStep wizard={wizard} api={mockApi} />, hangData(), { plan });
-    await fireEvent.press(screen.getByRole("checkbox", { name: "Monday" }));
-    await fireEvent.press(screen.getByRole("checkbox", { name: "Friday" }));
+    await fireEvent.press(screen.getByRole("checkbox", { name: "Climbing on Monday" }));
+    await fireEvent.press(screen.getByRole("checkbox", { name: "Climbing on Friday" }));
     await fireEvent.press(screen.getByLabelText("Add Max hangs"));
-    await fireEvent.press(screen.getAllByRole("checkbox", { name: "Wednesday" })[1]!);
+    await fireEvent.press(screen.getByRole("checkbox", { name: "Max hangs on Wednesday" }));
     await fireEvent.press(screen.getByLabelText("Add Core circuit"));
     expect(screen.getByText("3 sessions a week")).toBeTruthy();
     expect(screen.getByLabelText("Take Max hangs back out")).toBeTruthy();

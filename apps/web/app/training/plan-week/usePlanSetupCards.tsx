@@ -17,6 +17,7 @@ import { PyramidGhost } from "../../components/PyramidGhost";
 import { SamplePyramid } from "../../components/SamplePyramid";
 import type { SetupCard } from "../../components/SetupStack";
 import { useDismissed } from "../../lib/useDismissed";
+import { useLocks } from "../locks";
 
 const STRAVA = "#fc4c02";
 
@@ -27,7 +28,11 @@ const SAMPLE_DAYS = SAMPLE_WEEK.map((kind) => (kind === null ? null : [kind]));
 /** Plan's setup cards in order: the two onboarding paths, then a gym, then Strava. */
 export function usePlanSetupCards(api: SendtallyApi): SetupCard[] {
   const prompt = { history: useDismissed("history"), plan: useDismissed("plan") };
-  const { paths, skip } = useSetupPaths(api, (p) => prompt[p].dismissed !== false);
+  const { paths, skip } = useSetupPaths(
+    api,
+    (p) => prompt[p].dismissed !== false,
+    useLocks().create
+  );
   const { vm } = useClimbingInsights(api, "all");
   const gyms = useGyms(api);
   const gymPrompt = useDismissed("gym");

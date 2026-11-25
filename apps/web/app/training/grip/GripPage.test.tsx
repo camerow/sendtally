@@ -22,6 +22,10 @@ vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<object>()),
   useExerciseList: () => [],
 }));
+vi.mock("@sendtally/features/statistics", async (actual) => ({
+  ...(await actual<object>()),
+  useExercises: () => ({ state: { status: "ready", data: [] } }),
+}));
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
 vi.mock("@sendtally/features/workouts", async (actual) => ({
   ...(await actual<typeof T_workouts>()),

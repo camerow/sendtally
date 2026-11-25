@@ -15,6 +15,10 @@
   cursor: pointer;
 }
 
+.menu-row--locked {
+  color: var(--text-muted);
+}
+
 .menu-row:hover {
   background: #fbfaf8;
 }

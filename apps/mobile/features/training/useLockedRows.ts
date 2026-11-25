@@ -1,8 +1,12 @@
 import type React from "react";
 import { Alert } from "react-native";
-import { useExerciseActions, type PickerSource } from "@sendtally/features/exercises";
+import {
+  exerciseRemoval,
+  useExerciseActions,
+  type PickerSource,
+} from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
-import { exerciseKey, useExerciseSeries, workoutsUsing } from "@sendtally/features/statistics";
+import { useExerciseSeries } from "@sendtally/features/statistics";
 import type { LockSource } from "@sendtally/features/training";
 import { useWorkoutActions, type LibraryWorkout } from "@sendtally/features/workouts";
 import { useApi } from "../../lib/api";
@@ -67,23 +71,17 @@ export function useLockedExercises(): LockedRows<LockedExercise> {
   const exercises = useExerciseActions(api, failed);
   const series = useExerciseSeries(api);
   const library = useLibrary().state;
-  const inUse = (name: string): boolean =>
-    (library.status === "ready" && workoutsUsing(library.data.workouts, name).length > 0) ||
-    (series.status === "ready" && series.data.some((s) => s.key === exerciseKey(name)));
   return useLockedRows(
     "exercise",
     (e) => locks.exercise(e.source),
-    ({ source, name }) =>
-      "grip" in source
-        ? archiveGripRow(name, () => void actions.archiveGrip(source.grip), true)
-        : "exercise" in source
-          ? removeExerciseRow(
-              name,
-              inUse(source.exercise.name),
-              () => void exercises.remove(source.exercise.id),
-              true
-            )
-          : undefined
+    ({ source, name }) => {
+      const r = exerciseRemoval(source, library, series);
+      return r === undefined
+        ? undefined
+        : "grip" in r
+          ? archiveGripRow(name, () => void actions.archiveGrip(r.grip), true)
+          : removeExerciseRow(name, r.inUse, () => void exercises.remove(r.exercise.id), true);
+    }
   );
 }
 

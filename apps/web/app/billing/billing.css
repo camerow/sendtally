@@ -122,6 +122,12 @@
   scrollbar-width: none;
 }
 
+.members-get--closing .members-get-cards:focus-visible {
+  outline: 2px solid var(--bs-azure);
+  outline-offset: -2px;
+  border-radius: var(--radius-card);
+}
+
 .members-get--closing .members-get-cards::-webkit-scrollbar {
   display: none;
 }

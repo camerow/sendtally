@@ -36,6 +36,7 @@ const state = vi.hoisted(() => ({
 
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({ saveExercise: state.saveExercise }) }));
 vi.mock("./useMake", () => ({ useMake: () => state.make }));
+vi.mock("@sendtally/features/billing", () => ({ useMembership: () => ({ access: null }) }));
 vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<typeof Exercises>()),
   useExerciseActions: () => ({ merge: vi.fn(), remove: vi.fn(), refresh: vi.fn() }),

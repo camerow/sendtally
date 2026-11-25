@@ -22,7 +22,7 @@ import { NameSheet } from "../components/NameSheet";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { usePlanActions } from "../data/usePlanActions";
-import { joinPath, useLocks } from "../locks";
+import { membershipPagePath, useLocks } from "../locks";
 import { BlockHead } from "./BlockHead";
 import { BlockHeader } from "./BlockHeader";
 import { BlockOverview } from "./BlockOverview";
@@ -69,7 +69,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
   const guard = useDiscardGuard(draft.dirty);
   const locked = useLocks().block;
 
-  if (locked) return <Navigate to={joinPath("block")} replace />;
+  if (locked) return <Navigate to={membershipPagePath("block")} replace />;
   if (plan.state.status !== "ready")
     return (
       <DetailFrame backTo={BACK_TO}>

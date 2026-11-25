@@ -29,7 +29,7 @@ import { LoadState } from "../data/LoadState";
 import { editExercisePath } from "../editor/paths";
 import { useAddToWorkout } from "../editor/useAddToWorkout";
 import { useLibrary } from "../library/useLibrary";
-import { joinPath, useCreateGate, useLocks } from "../locks";
+import { membershipPagePath, useCreateGate, useLocks } from "../locks";
 import { activityPath } from "../log/paths";
 import { Description } from "../components/Description";
 import { BuiltInExercisePage } from "./BuiltInExercisePage";
@@ -138,7 +138,7 @@ export function ExercisePage({ id }: { id: string }): React.ReactElement | null 
   const exercise = all.find((e) => e.id === id || (e.builtIn === id && !e.archived));
   if (exercise !== undefined)
     return locks.exercise({ exercise }) ? (
-      <Navigate to={joinPath("exercise")} replace />
+      <Navigate to={membershipPagePath("exercise")} replace />
     ) : (
       <Detail exercise={exercise} all={all} />
     );

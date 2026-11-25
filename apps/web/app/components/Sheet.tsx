@@ -10,7 +10,7 @@ export type SheetAction = {
   disabled?: boolean;
   /** The red outline, for a delete. */
   danger?: boolean;
-  /** Members only: read as such; what it presses is the caller's. */
+  /** Members only: wears the lock and reads as such; what it presses is the caller's. */
   locked?: boolean;
 };
 
@@ -151,7 +151,11 @@ function OpenSheet({
           <button
             type="button"
             className={
-              action.danger === true ? "sheet-action sheet-action--danger" : "sheet-action"
+              action.danger === true
+                ? "sheet-action sheet-action--danger"
+                : action.locked === true
+                  ? "sheet-action sheet-action--locked"
+                  : "sheet-action"
             }
             aria-label={
               action.locked === true ? t("common.membersOnly", { label: action.label }) : undefined
@@ -159,6 +163,7 @@ function OpenSheet({
             disabled={action.disabled}
             onClick={action.onPress}
           >
+            {action.locked === true && <Icon name="lock" size={16} strokeWidth={2.4} />}
             {action.label}
           </button>
         </div>

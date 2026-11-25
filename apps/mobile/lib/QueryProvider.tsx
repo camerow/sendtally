@@ -5,6 +5,7 @@ import * as Network from "expo-network";
 import * as Updates from "expo-updates";
 import React from "react";
 import { AppState } from "react-native";
+import { resetPlanPath } from "@sendtally/features/settings";
 import {
   ScreenFocusContext,
   createQueryClient,
@@ -75,7 +76,10 @@ function OwnCache(): null {
     if (!isLoaded) return;
     const next = userId ?? null;
     if (draftOwner() === next) return;
-    if (draftOwner() !== null) queryClient.clear();
+    if (draftOwner() !== null) {
+      queryClient.clear();
+      resetPlanPath();
+    }
     setDraftOwner(next);
   }, [isLoaded, userId]);
   return null;

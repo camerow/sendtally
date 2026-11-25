@@ -45,5 +45,5 @@ export function OnboardingWizard({ api, start }: OnboardingWizardProps): React.R
     },
   };
   const Step = STEPS[wizard.step];
-  return Step === undefined ? null : <Step wizard={routed} api={api} />;
+  return Step === undefined ? null : <Step wizard={routed} api={api} finish={wizard.complete} />;
 }

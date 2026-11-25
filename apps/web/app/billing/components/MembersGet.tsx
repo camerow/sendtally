@@ -26,14 +26,15 @@ function SampleWorkout({ view }: { view: MembersGetView }): React.ReactElement {
   );
 }
 
-/** What membership opens, as two cards; on the closing screen a scroll-snap row with the support row under it. */
+/** What membership opens, as two cards; on the closing screen, given `onJoin`, a scroll-snap row with the support row under it. */
 export function MembersGet({
   view,
-  closing = false,
+  onJoin,
 }: {
   view: MembersGetView;
-  closing?: boolean;
+  onJoin?: () => void;
 }): React.ReactElement {
+  const closing = onJoin !== undefined;
   const art = {
     blocks: <LoadBars bars={view.bars} height={44} />,
     workouts: <SampleWorkout view={view} />,
@@ -68,6 +69,7 @@ export function MembersGet({
           </span>
           <Link
             to="/app/membership?source=onboarding"
+            onClick={onJoin}
             style={{ ...panelButton, height: 44, padding: "0 16px", boxSizing: "border-box" }}
           >
             {t("billing.becomeAMember")}

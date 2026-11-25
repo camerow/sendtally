@@ -1,10 +1,13 @@
 import React from "react";
+import { useNavigate } from "react-router";
 import { t } from "@sendtally/features/i18n";
 import { queries, useQuery } from "@sendtally/features/query";
 import { pathDone, SAMPLE_WEEK, type OnboardingPath } from "@sendtally/features/settings";
 import { DarkWeek } from "../components/DarkWeek";
 import { Icon } from "../components/Icon";
+import { Lock } from "../components/Lock";
 import { SamplePyramid } from "../components/SamplePyramid";
+import { membershipPagePath, useLocks } from "../training/locks";
 import type { StepComponent } from "./types";
 import { WizardFrame } from "./WizardFrame";
 
@@ -14,6 +17,8 @@ const WEEK = SAMPLE_WEEK.map((kind) => (kind === null ? null : [kind]));
 export const ChooserStep: StepComponent = ({ wizard, api }) => {
   const { state } = useQuery(queries.status(api));
   const progress = state.status === "ready" ? state.data.onboarding.progress : undefined;
+  const planLocked = useLocks().create;
+  const navigate = useNavigate();
   const doors: { path: OnboardingPath; title: string; body: string; art: React.ReactNode }[] = [
     {
       path: "history",
@@ -32,28 +37,36 @@ export const ChooserStep: StepComponent = ({ wizard, api }) => {
     <WizardFrame wizard={wizard} wide>
       <h1 className="wizard-title">{t("onboarding.chooser.title")}</h1>
       <div className="chooser-doors">
-        {doors.map((d) => (
-          <button
-            key={d.path}
-            type="button"
-            className="chooser-door"
-            onClick={() => wizard.choose(d.path, "chooser")}
-          >
-            <span className="chooser-art" aria-hidden="true">
-              {d.art}
-            </span>
-            <span className="chooser-text">
-              <span className="chooser-title">
-                {d.title}
-                <Icon name="chevron" size={18} strokeWidth={2.2} />
+        {doors.map((d) => {
+          const locked = d.path === "plan" && planLocked;
+          return (
+            <button
+              key={d.path}
+              type="button"
+              className="chooser-door"
+              aria-label={locked ? t("common.membersOnly", { label: d.title }) : undefined}
+              onClick={() =>
+                locked
+                  ? void navigate(membershipPagePath("create"))
+                  : wizard.choose(d.path, "chooser")
+              }
+            >
+              <span className="chooser-art" aria-hidden="true">
+                {d.art}
               </span>
-              <span className="chooser-body">{d.body}</span>
-              {progress !== undefined && pathDone(progress, d.path) && (
-                <span className="chooser-done">{t("common.done")}</span>
-              )}
-            </span>
-          </button>
-        ))}
+              <span className="chooser-text">
+                <span className="chooser-title">
+                  {d.title}
+                  {locked ? <Lock /> : <Icon name="chevron" size={18} strokeWidth={2.2} />}
+                </span>
+                <span className="chooser-body">{d.body}</span>
+                {progress !== undefined && pathDone(progress, d.path) && (
+                  <span className="chooser-done">{t("common.done")}</span>
+                )}
+              </span>
+            </button>
+          );
+        })}
       </div>
       <p className="chooser-after">{t("onboarding.chooser.otherAfter")}</p>
     </WizardFrame>

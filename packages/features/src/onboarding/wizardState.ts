@@ -3,6 +3,7 @@ import { isSideStep, remainingSteps, stepPosition } from "./steps";
 import type {
   Capture,
   HistoryWay,
+  OnboardingEvent,
   OnboardingPath,
   OnboardingProgress,
   OnboardingStatus,
@@ -22,7 +23,14 @@ export type WizardState = {
   order: readonly StepId[];
   trail: readonly StepId[];
   memory: WizardMemory;
+  /** Whether this walk has counted its reveal, so the reveal coming back from a side step is not counted again. */
+  revealed: boolean;
 };
+
+type AnyEvent = (
+  event: OnboardingEvent["event"],
+  properties: OnboardingEvent["properties"]
+) => void;
 
 type WizardDeps = {
   progress: OnboardingProgress;
@@ -45,6 +53,7 @@ const CHOOSER: WizardState = {
   order: [],
   trail: [],
   memory: { way: null, existingLog: null },
+  revealed: false,
 };
 
 function choosePath(
@@ -115,13 +124,21 @@ export function wizardOf(state: WizardState, deps: WizardDeps): Wizard {
     order: s.path === null ? s.order : remainingSteps(s.path, way, deps.progress),
   });
   const setWay = (way: HistoryWay): void => update((s) => reorder(s, way));
+  const forward: AnyEvent = capture;
+  const captureOnce: AnyEvent = (event, properties) => {
+    if (event === "onboarding_reveal_viewed") {
+      if (state.revealed) return;
+      update((s) => ({ ...s, revealed: true }));
+    }
+    forward(event, properties);
+  };
   return {
     path,
     step,
     canGoBack: trail.length > 0,
     position: stepPosition(path, step),
     memory,
-    capture,
+    capture: captureOnce,
     choose: (to, from) => {
       send({ step: "path", path: to, from });
       update((s) => choosePath(s, to, deps));

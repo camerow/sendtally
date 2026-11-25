@@ -9,7 +9,7 @@ import { WizardFrame } from "../WizardFrame";
 import { HistoryCard } from "./components/HistoryCard";
 
 /** H6: the log is ready; a free account sees the trial and what members get, a member the card. */
-export const DoneStep: StepComponent = ({ wizard, api }) => {
+export const DoneStep: StepComponent = ({ wizard, api, finish }) => {
   const vm = useHistoryCard(api);
   const member = useMembership(api).active === true;
   return (
@@ -29,7 +29,7 @@ export const DoneStep: StepComponent = ({ wizard, api }) => {
             <HistoryCard vm={vm} label={t("onboarding.history.card.soFar")} slim max={4} />
           )
         ) : (
-          <ClosingOffer api={api} />
+          <ClosingOffer api={api} onJoin={() => finish?.("later", "log")} />
         )}
       </div>
     </WizardFrame>

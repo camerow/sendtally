@@ -1,7 +1,11 @@
 import React from "react";
-import { useExerciseActions, type PickerSource } from "@sendtally/features/exercises";
+import {
+  exerciseRemoval,
+  useExerciseActions,
+  type PickerSource,
+} from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
-import { exerciseKey, useExerciseSeries, workoutsUsing } from "@sendtally/features/statistics";
+import { useExerciseSeries } from "@sendtally/features/statistics";
 import type { LockSource } from "@sendtally/features/training";
 import { useWorkoutActions, type LibraryWorkout } from "@sendtally/features/workouts";
 import { MoreMenu } from "../components/MoreMenu";
@@ -18,7 +22,7 @@ import {
 import { useHangData } from "./data/HangDataContext";
 import { usePlanActions } from "./data/usePlanActions";
 import { useLibrary } from "./library/useLibrary";
-import { joinPath, useLocks } from "./locks";
+import { membershipPagePath, useLocks } from "./locks";
 
 /** Where a row goes: its own page, or locked, the Membership page with a ··· holding only Delete. */
 export type RowLink = { to: string; locked?: boolean; menu?: React.ReactNode };
@@ -42,7 +46,7 @@ function useLockedRows<T>(
       if (!locked(thing)) return { to };
       const removal = remove(thing);
       return {
-        to: joinPath(source),
+        to: membershipPagePath(source),
         locked: true,
         menu: removal && (
           <MoreMenu
@@ -87,21 +91,21 @@ export function useLockedExercises(): LockedRows<LockedExercise> {
   const exercises = useExerciseActions(api, useFailed());
   const series = useExerciseSeries(api);
   const library = useLibrary().state;
-  const inUse = (name: string): boolean =>
-    (library.status === "ready" && workoutsUsing(library.data.workouts, name).length > 0) ||
-    (series.status === "ready" && series.data.some((s) => s.key === exerciseKey(name)));
   return useLockedRows<LockedExercise>(
     "exercise",
     (e) => locks.exercise(e.source),
-    ({ source, name }) =>
-      "grip" in source
-        ? { flow: archiveGripFlow(name), onDelete: () => void actions.archiveGrip(source.grip) }
-        : "exercise" in source
-          ? {
-              flow: removeExerciseFlow(name, inUse(source.exercise.name)),
-              onDelete: () => void exercises.remove(source.exercise.id),
-            }
-          : undefined
+    ({ source, name }) => {
+      const r = exerciseRemoval(source, library, series);
+      return (
+        r &&
+        ("grip" in r
+          ? { flow: archiveGripFlow(name), onDelete: () => void actions.archiveGrip(r.grip) }
+          : {
+              flow: removeExerciseFlow(name, r.inUse),
+              onDelete: () => void exercises.remove(r.exercise.id),
+            })
+      );
+    }
   );
 }
 

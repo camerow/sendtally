@@ -130,6 +130,7 @@ export const plan = {
   "plan.planAgainStart": "¿Cuándo empieza?",
   "plan.startsRange": "Del {start} al {end}. Cada semana del bloque va del {from} al {to}.",
   "plan.scheduleFrom": "Programar desde el {day}",
+  "plan.dayOf": "{name} el {day}",
   "plan.workout": "Entreno",
   "plan.scheduledName": "{name} programado",
   "plan.noBlocksToSchedule": "Aún no hay plantillas ni bloques pasados. Nuevo bloque crea uno.",

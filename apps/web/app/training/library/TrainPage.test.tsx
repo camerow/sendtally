@@ -15,6 +15,10 @@ vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<object>()),
   useExerciseList: () => [],
 }));
+vi.mock("@sendtally/features/statistics", async (actual) => ({
+  ...(await actual<object>()),
+  useExercises: () => ({ state: { status: "ready", data: [] } }),
+}));
 vi.mock("../../components/AccountButton", () => ({ AccountButton: () => null }));
 vi.mock("../data/HangDataProvider", () => ({
   HangDataProvider: ({ children }: { children: React.ReactNode }) => children,

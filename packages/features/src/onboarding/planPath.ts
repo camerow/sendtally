@@ -1,7 +1,6 @@
 import React from "react";
-import type { Plan, SendtallyApi } from "@sendtally/api-client";
+import type { Plan } from "@sendtally/api-client";
 import type { Weekday } from "@sendtally/core/hang";
-import { usePlan } from "../training/usePlan";
 
 /** What the plan path has made so far, by id: its workouts picked in order, each one's days and membership, and the block. */
 export type PlanPath = {
@@ -48,22 +47,26 @@ export function setPlanPath(change: (p: PlanPath) => PlanPath): void {
   listeners.forEach((l) => l());
 }
 
+/** A new account starts its own walk. */
+export const resetPlanPath = (): void => setPlanPath(() => EMPTY_PATH);
+
 export function usePlanPath(): PlanPath {
   return React.useSyncExternalStore(subscribe, () => path);
 }
 
 /**
- * The walk as the saved data has it when memory holds none, after a kill: the newest
- * unscheduled block with workouts in it, else the newest scheduled one, else a new walk
- * with Climbing picked.
+ * The walk as the saved data has it when memory holds none, after a kill: the newest dated
+ * block with workouts in it, which is what Build your week saves, else a new walk with
+ * Climbing picked. A template has no date and is never the walk.
  */
 export function seededPath(p: PlanPath, plan: Pick<Plan, "blocks" | "memberships">): PlanPath {
   if (p.seeded) return p;
   if (p.workouts.length > 0 || p.blockId !== null) return { ...p, seeded: true };
-  const filled = plan.blocks
+  const block = plan.blocks
+    .filter((b) => b.start !== null)
     .map((b) => ({ b, members: plan.memberships.filter((m) => m.blockId === b.id) }))
-    .filter(({ members }) => members.length > 0);
-  const block = filled.filter(({ b }) => b.start === null).at(-1) ?? filled.at(-1);
+    .filter(({ members }) => members.length > 0)
+    .at(-1);
   if (block === undefined) return { ...p, workouts: [CLIMBING], seeded: true };
   const members = [...block.members].sort((a, b) => a.position - b.position);
   return {
@@ -73,16 +76,6 @@ export function seededPath(p: PlanPath, plan: Pick<Plan, "blocks" | "memberships
     blockId: block.b.id,
     seeded: true,
   };
-}
-
-/** The walk, seeded once from the saved plan as it loads; not ready until then. */
-export function useSeededPlanPath(api: SendtallyApi): PlanPath {
-  const current = usePlanPath();
-  const plan = usePlan(api).state;
-  React.useEffect(() => {
-    if (plan.status === "ready") setPlanPath((p) => seededPath(p, plan.data));
-  }, [plan]);
-  return current;
 }
 
 /** Picks a workout, last, or takes it back with its days. */

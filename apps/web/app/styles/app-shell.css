@@ -449,6 +449,13 @@
   color: var(--bs-white);
 }
 
+.sheet-action--locked {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 .sheet-action--danger {
   background: var(--bs-white);
   border-color: var(--bs-watermelon-ink);

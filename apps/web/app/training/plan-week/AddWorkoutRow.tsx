@@ -14,7 +14,7 @@ export type AddWorkoutRowProps = {
   meta: string | null;
   /** The built-in's first picture, as its tile. */
   picture?: LibraryPicture;
-  /** Where the row opens; `onOpen` instead runs an action here. */
+  /** Where the row opens; `onOpen` instead toggles the add here, pressed while added. */
   to?: string;
   onOpen?: () => void;
   state: AddState;
@@ -46,7 +46,12 @@ export function AddWorkoutRow({
   return (
     <div className="add-row">
       {to === undefined && onOpen !== undefined ? (
-        <button type="button" className="add-row-main add-row-open" onClick={onOpen}>
+        <button
+          type="button"
+          className="add-row-main add-row-open"
+          aria-pressed={state === "added"}
+          onClick={onOpen}
+        >
           <CategoryRow kind={kind} name={name} meta={meta} picture={picture} tag={tag} />
         </button>
       ) : (

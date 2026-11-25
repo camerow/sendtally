@@ -29,7 +29,7 @@ import { LoadState } from "../data/LoadState";
 import { usePlanActions } from "../data/usePlanActions";
 import { copyWorkoutPath, editWorkoutPath } from "../editor/paths";
 import { useLibrary, workoutIn } from "../library/useLibrary";
-import { joinPath, useLocks } from "../locks";
+import { membershipPagePath, useLocks } from "../locks";
 import { LoadSection } from "./LoadSection";
 import { LoadTable } from "./LoadTable";
 import { WeekDaysGrid } from "./WeekDaysGrid";
@@ -69,7 +69,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
     );
   // Gone, removed elsewhere: Back still leaves.
   if (view === null) return <DetailFrame backTo={BACK_TO} />;
-  if (locked) return <Navigate to={joinPath("block")} replace />;
+  if (locked) return <Navigate to={membershipPagePath("block")} replace />;
 
   const { membership: m, block, workout: w, turns, items, current, ended, done, lines } = view;
   const loads = items.flatMap((it, i) => (it.checklist === undefined ? [{ it, i }] : []));

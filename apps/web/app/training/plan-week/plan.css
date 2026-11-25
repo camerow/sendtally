@@ -864,6 +864,17 @@
   color: var(--bs-gunmetal);
 }
 
+.plan-grid-locked {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.plan-grid-locked .plan-grid-workout {
+  color: var(--text-muted);
+}
+
 .plan-grid-line {
   overflow: hidden;
   white-space: nowrap;

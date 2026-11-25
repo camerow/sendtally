@@ -9,6 +9,7 @@ import type {
 import type { MembershipVM } from "@sendtally/features/billing";
 import type { Gym } from "@sendtally/features/gyms";
 import { MenuRow } from "../../components/MenuRow";
+import { membershipPagePath } from "../../training/locks";
 import { GymsSection } from "../../gyms/components/GymsSection";
 import { bodyText, monoMuted, pageTitle, secondaryButton } from "./styles";
 import { t } from "@sendtally/features/i18n";
@@ -40,6 +41,8 @@ export type SettingsViewProps = {
   onboarding: OnboardingProgress | null;
   /** At 375 the tab bar has no room for Admin, so it is a row here. */
   moderator?: boolean;
+  /** The plan path makes things: while making is locked its row opens the Membership page. */
+  planLocked: boolean;
 };
 
 export function SettingsView({
@@ -52,6 +55,7 @@ export function SettingsView({
   gymsReady,
   onboarding,
   moderator = false,
+  planLocked,
 }: SettingsViewProps): React.ReactElement {
   return (
     <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -133,7 +137,8 @@ export function SettingsView({
                 ? t("common.done")
                 : t("onboarding.setup.notStarted")
           }
-          to="/app/start?path=plan&from=account"
+          to={planLocked ? membershipPagePath("create") : "/app/start?path=plan&from=account"}
+          locked={planLocked}
         />
       </Section>
 

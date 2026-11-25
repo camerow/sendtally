@@ -131,17 +131,7 @@ export {
 export { occurrenceMeta, occurrenceTag } from "./occurrenceText";
 export { loggedRowText, type LoggedRowText } from "./loggedRowText";
 export { KIND_LOOK, type KindLook, type MarkShape } from "./kindLook";
-export {
-  locks,
-  madeCounts,
-  ownExercise,
-  ownWorkout,
-  type LockExercises,
-  type LockSource,
-  type LockWorkout,
-  type Locks,
-  type MadeCounts,
-} from "./locks";
+export { dayLocked, locks, type LockSource, type Locks } from "./locks";
 export { bandOn, bandText, blockOn, calendarDay, monthWeeks, type Band } from "./calendarGrid";
 export { isOneOff } from "./plan";
 export { membershipTag, oneOffDate, plannedIn, removeText } from "./planText";

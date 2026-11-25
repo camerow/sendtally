@@ -13,6 +13,10 @@ jest.mock("../../../components/Sheet", () => ({
 }));
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "new-grip" }));
+let mockAccess: boolean | null = null;
+jest.mock("../../billing/useBilling", () => ({
+  useBilling: () => (mockAccess === null ? null : { membership: { access: mockAccess } }),
+}));
 
 const repeaters = {
   ...NEW_WORKOUT,
@@ -73,5 +77,30 @@ describe("Grip picker", () => {
     await fireEvent.press(screen.getByText("Add"));
     expect(actions.saveGrip).toHaveBeenCalledWith({ ...gone, hidden: false });
     expect(onPick).toHaveBeenCalledWith("g2");
+  });
+
+  it("locks the pencil on a grip of the user's own and adding one, opening the Membership page", async () => {
+    mockAccess = false;
+    const { actions } = await renderPicker();
+    await fireEvent.press(screen.getByLabelText("Edit Pocket, members only"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/membership",
+      params: { source: "exercise" },
+    });
+    expect(screen.getByLabelText("Edit Half crimp")).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText("New exercise name"), "Sloper ledge");
+    await fireEvent.press(screen.getByLabelText("Add, members only"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/membership",
+      params: { source: "create" },
+    });
+    await fireEvent.changeText(screen.getByLabelText("New exercise name"), "narrow pinch");
+    await fireEvent.press(screen.getByLabelText("Add, members only"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/membership",
+      params: { source: "exercise" },
+    });
+    expect(actions.saveGrip).not.toHaveBeenCalled();
+    mockAccess = null;
   });
 });

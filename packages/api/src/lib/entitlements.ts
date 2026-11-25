@@ -1,4 +1,4 @@
-import { isBuiltInGrip } from "@sendtally/core/hang";
+import { wrapsBuiltIn } from "@sendtally/core/hang";
 import type { Context } from "hono";
 import { auth, type AuthedUser } from "../auth";
 import type { Env } from "../bindings";
@@ -96,9 +96,9 @@ export async function resolveEntitlements(
   };
 }
 
-export const MEMBERS_ONLY = "members_only";
-
 export class MembersOnly extends Error {
+  readonly code = "members_only";
+
   constructor() {
     super(
       "Custom workouts, custom exercises and training blocks need a sendtally membership now that the 14-day free trial is over. Nothing you made is deleted. Logging climbs and workouts, built-in workouts and posting to Strava stay free. You can become a member from Membership in the sendtally app's Settings."
@@ -127,15 +127,30 @@ export const requireAccess = (c: Context<AppEnv>): Promise<void> =>
 export const requireConnectorAccess = (env: Env, userId: string): Promise<void> =>
   refuseWithoutAccess(env, userId, () => auth.webFeature(userId, INSIGHTS_FEATURE, env));
 
-export async function wrapsBuiltIn(
+async function customItems(
   db: D1Database,
   userId: string,
   items: readonly { exercise: string }[]
 ): Promise<boolean> {
   const [only] = items;
-  if (only === undefined || items.length > 1) return false;
-  if (isBuiltInGrip(only.exercise)) return true;
-  return ((await repo.findExerciseByName(db, userId, only.exercise))?.built_in ?? null) !== null;
+  const linked =
+    only === undefined || items.length > 1
+      ? null
+      : await repo.findExerciseByName(db, userId, only.exercise);
+  return !wrapsBuiltIn(items, () => (linked?.built_in ?? null) !== null);
+}
+
+/** A workout the user made, as sent or as saved: an edit cannot turn one into a built-in's wrapper. */
+export async function customWorkout(
+  db: D1Database,
+  userId: string,
+  items: readonly { exercise: string }[],
+  saved: repo.WorkoutRow | undefined
+): Promise<boolean> {
+  return (
+    (await customItems(db, userId, items)) ||
+    (saved !== undefined && (await customItems(db, userId, workoutOf(saved).items)))
+  );
 }
 
 export async function plansCustomWork(
@@ -146,10 +161,14 @@ export async function plansCustomWork(
 ): Promise<boolean> {
   if (blockId !== null) return true;
   const workout = await repo.getWorkout(db, userId, workoutId);
-  return workout !== undefined && !(await wrapsBuiltIn(db, userId, workoutOf(workout).items));
+  return workout !== undefined && (await customItems(db, userId, workoutOf(workout).items));
 }
 
+/** An exercise the user made, as saved or as it would be after this save: an edit cannot move one across the line. */
 export const customExercise = (
   builtIn: string | null | undefined,
   saved: repo.ExerciseRow | null
-): boolean => (builtIn ?? saved?.built_in ?? null) === null;
+): boolean => {
+  const after = builtIn === undefined ? (saved?.built_in ?? null) : builtIn;
+  return after === null || (saved !== null && saved.built_in === null);
+};

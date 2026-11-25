@@ -5,7 +5,7 @@ import { plannedOn, type Occurrence } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { Lock } from "../../components/Lock";
 import { usePlanActions } from "../data/usePlanActions";
-import { joinPath } from "../locks";
+import { membershipPagePath } from "../locks";
 import { DayMark } from "./DayMark";
 
 /** A planned run skipped: on its day, dashed and faded, with why and Undo skip, or locked, the lock. */
@@ -35,7 +35,7 @@ export function SkippedRow({
       </span>
       {locked ? (
         <Link
-          to={joinPath("plan_day")}
+          to={membershipPagePath("plan_day")}
           className="plan-row-lock"
           aria-label={t("common.membersOnly", { label: workout.name })}
         >

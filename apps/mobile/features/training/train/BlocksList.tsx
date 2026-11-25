@@ -8,6 +8,7 @@ import { t } from "@sendtally/features/i18n";
 import {
   blockGroups,
   blockMembers,
+  dayLocked,
   daysThisWeek,
   useTrainingLog,
   ongoingMembers,
@@ -63,10 +64,12 @@ export function BlocksList(): React.ReactElement {
   const library = useLibrary().state;
   const ongoing = planGridRows(ongoingMembers(plan, today), workout, model, {
     exercises,
-    open: (m) => {
-      const w = library.status === "ready" ? library.data.workout(m.workoutId) : undefined;
-      if (w !== undefined && locks.day(m, w)) openMembershipPage("plan_day");
-      else openMembership(m);
+    open: (m) => openMembership(m),
+    locked: {
+      row: dayLocked(locks, (id) =>
+        library.status === "ready" ? library.data.workout(id) : undefined
+      ),
+      join: () => openMembershipPage("plan_day"),
     },
   });
   const weeks = (n: number): string => t("calendar.weeks", { count: n });

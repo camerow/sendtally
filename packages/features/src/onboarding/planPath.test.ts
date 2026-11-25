@@ -25,15 +25,31 @@ const member = (id: string, blockId: string, workoutId: string): Blocks["members
   }) as unknown as Blocks["memberships"][number];
 
 describe("seededPath", () => {
-  it("rebuilds a walk from the newest draft block", () => {
+  it("rebuilds a walk from the newest dated block, never from a template", () => {
     const plan: Blocks = {
-      blocks: [block("old", "2026-11-02"), block("draft", null)],
-      memberships: [member("m1", "old", "w-old"), member("m2", "draft", "w1")],
+      blocks: [block("old", "2026-11-02"), block("new", "2026-11-23"), block("template", null)],
+      memberships: [
+        member("m1", "old", "w-old"),
+        member("m2", "new", "w1"),
+        member("m3", "template", "w-template"),
+      ],
     };
     expect(seededPath(EMPTY_PATH, plan)).toMatchObject({
-      blockId: "draft",
+      blockId: "new",
       workouts: ["w1"],
       members: { w1: "m2" },
+    });
+  });
+
+  it("starts a new walk when the only block with workouts is a template", () => {
+    const plan: Blocks = {
+      blocks: [block("template", null)],
+      memberships: [member("m1", "template", "w1")],
+    };
+    expect(seededPath(EMPTY_PATH, plan)).toEqual({
+      ...EMPTY_PATH,
+      workouts: [CLIMBING],
+      seeded: true,
     });
   });
 

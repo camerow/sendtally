@@ -1,6 +1,7 @@
 import type { Exercise } from "@sendtally/api-client";
-import { exerciseNameKey, isBuiltInGrip, type Grip, type Membership } from "@sendtally/core/hang";
+import { exerciseNameKey, wrapsBuiltIn, type Grip, type Membership } from "@sendtally/core/hang";
 import type { PickerSource } from "../exercises/types";
+import type { QueryState } from "../query";
 import type { LibrarySource } from "../workouts/types";
 
 /** Where a locked press was, as the Membership page reads it. */
@@ -12,21 +13,16 @@ export type LockWorkout = { source: LibrarySource; items: readonly { exercise: s
 /** The user's exercises, by which a one-item workout's exercise is told built-in or their own. */
 export type LockExercises = readonly Pick<Exercise, "name" | "builtIn">[];
 
-/** One item of a built-in grip, or of an exercise picked from the built-ins: how Schedule on a built-in plans it. */
-const wrapsBuiltIn = (items: LockWorkout["items"], exercises: LockExercises): boolean => {
-  const [only] = items;
-  if (only === undefined || items.length > 1) return false;
-  if (isBuiltInGrip(only.exercise)) return true;
-  const key = exerciseNameKey(only.exercise);
-  return (exercises.find((e) => exerciseNameKey(e.name) === key)?.builtIn ?? null) !== null;
-};
-
 /** A workout the user made: theirs, and not the one-item workout a scheduled built-in becomes. */
-export const ownWorkout = (w: LockWorkout, exercises: LockExercises): boolean =>
-  w.source === "mine" && !wrapsBuiltIn(w.items, exercises);
+const ownWorkout = (w: LockWorkout, exercises: LockExercises): boolean =>
+  w.source === "mine" &&
+  !wrapsBuiltIn(w.items, (name) => {
+    const key = exerciseNameKey(name);
+    return (exercises.find((e) => exerciseNameKey(e.name) === key)?.builtIn ?? null) !== null;
+  });
 
 /** An exercise or grip the user made: not picked from the built-ins, not a built-in grip. */
-export const ownExercise = (source: PickerSource): boolean =>
+const ownExercise = (source: PickerSource): boolean =>
   "exercise" in source ? source.exercise.builtIn === null : "grip" in source && source.grip.custom;
 
 export type MadeCounts = { workouts: number; blocks: number; exercises: number };
@@ -57,10 +53,24 @@ export type Locks = {
   create: boolean;
 };
 
-export const locks = (access: boolean, exercises: LockExercises): Locks => ({
-  workout: (w) => !access && ownWorkout(w, exercises),
-  exercise: (source) => !access && ownExercise(source),
-  day: (m, w) => !access && (m.blockId !== null || ownWorkout(w, exercises)),
-  block: !access,
-  create: !access,
-});
+/** Nothing is locked while access is unknown, and no workout reads as the user's own until their exercises load. */
+export const locks = (access: boolean | null, exercises: QueryState<LockExercises>): Locks => {
+  const shut = access === false;
+  const own = (w: LockWorkout): boolean =>
+    exercises.status === "ready" && ownWorkout(w, exercises.data);
+  return {
+    workout: (w) => shut && own(w),
+    exercise: (source) => shut && ownExercise(source),
+    day: (m, w) => shut && (m.blockId !== null || own(w)),
+    block: shut,
+    create: shut,
+  };
+};
+
+/** Whether the lock covers a planned day, its workout looked up in the library; open until the library has it. */
+export const dayLocked =
+  (locks: Locks, workout: (id: string) => LockWorkout | undefined) =>
+  (m: Pick<Membership, "blockId" | "workoutId">): boolean => {
+    const w = workout(m.workoutId);
+    return w !== undefined && locks.day(m, w);
+  };

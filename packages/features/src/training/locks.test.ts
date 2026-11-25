@@ -20,6 +20,7 @@ const exercises = [
   exercise("Back squat", { builtIn: "backSquat" }),
   exercise("Bench press"),
 ];
+const loaded = { status: "ready", data: exercises } as const;
 const of = (...names: string[]) => names.map((name) => ({ exercise: name }));
 const mine = { source: "mine" as const, items: of("Zercher carry", "Back squat") };
 const builtIn = { source: "library" as const, items: of("Bench press", "Zercher carry") };
@@ -28,7 +29,7 @@ const builtInGrip = { grip: { id: "half", name: "Half crimp", custom: false, hid
 
 describe("locks", () => {
   it("locks nothing with access", () => {
-    const open = locks(true, exercises);
+    const open = locks(true, loaded);
     expect(open.workout(mine)).toBe(false);
     expect(open.exercise({ exercise: exercise("e1") })).toBe(false);
     expect(open.exercise(ownGrip)).toBe(false);
@@ -38,7 +39,7 @@ describe("locks", () => {
   });
 
   it("locks what the user made, every block and every way to make one, and leaves built-ins open", () => {
-    const shut = locks(false, exercises);
+    const shut = locks(false, loaded);
     expect(shut.workout(mine)).toBe(true);
     expect(shut.workout(builtIn)).toBe(false);
     expect(shut.exercise({ exercise: exercise("e1") })).toBe(true);
@@ -50,14 +51,14 @@ describe("locks", () => {
   });
 
   it("leaves a built-in on its own day open, and locks one inside a block or a day of the user's own", () => {
-    const shut = locks(false, exercises);
+    const shut = locks(false, loaded);
     expect(shut.day({ blockId: null }, builtIn)).toBe(false);
     expect(shut.day({ blockId: "b1" }, builtIn)).toBe(true);
     expect(shut.day({ blockId: null }, mine)).toBe(true);
   });
 
   it("matches the Worker: a scheduled built-in exercise or grip stays open, a scheduled custom one locks", () => {
-    const shut = locks(false, exercises);
+    const shut = locks(false, loaded);
     const wrapper = (name: string) => ({ source: "mine" as const, items: of(name) });
     expect(shut.workout(wrapper("back squat"))).toBe(false);
     expect(shut.day({ blockId: null }, wrapper("Back squat"))).toBe(false);
@@ -65,6 +66,20 @@ describe("locks", () => {
     expect(shut.day({ blockId: "b1" }, wrapper("half"))).toBe(true);
     expect(shut.day({ blockId: null }, wrapper("Zercher carry"))).toBe(true);
     expect(shut.day({ blockId: null }, wrapper("g1"))).toBe(true);
+  });
+
+  it("locks nothing while access is unknown", () => {
+    const unknown = locks(null, loaded);
+    expect(unknown.workout(mine)).toBe(false);
+    expect(unknown.day({ blockId: "b1" }, mine)).toBe(false);
+    expect(unknown.create).toBe(false);
+  });
+
+  it("reads no workout as the user's own until their exercises load", () => {
+    const loading = locks(false, { status: "loading" });
+    expect(loading.workout(mine)).toBe(false);
+    expect(loading.day({ blockId: null }, mine)).toBe(false);
+    expect(loading.day({ blockId: "b1" }, mine)).toBe(true);
   });
 });
 

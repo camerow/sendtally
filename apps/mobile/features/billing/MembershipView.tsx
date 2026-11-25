@@ -29,6 +29,7 @@ export type MembershipViewProps = {
   membership: MembershipFeature;
   members: MembersGetView | null;
   purchase: PurchaseFeature;
+  fromSettings: boolean;
   onBack: () => void;
 };
 
@@ -136,6 +137,7 @@ export function MembershipView({
   membership,
   members,
   purchase,
+  fromSettings,
   onBack,
 }: MembershipViewProps): React.ReactElement {
   const { state, vm } = membership;
@@ -149,7 +151,7 @@ export function MembershipView({
           gap: 16,
         }}
       >
-        <BackButton label={t("common.settings")} onPress={onBack} />
+        <BackButton label={fromSettings ? t("common.settings") : undefined} onPress={onBack} />
         <View style={{ gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <Text

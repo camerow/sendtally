@@ -48,12 +48,14 @@ afterEach(() => {
   host.remove();
 });
 
+const finish = vi.fn();
+
 const show = (entitlements: Entitlements): void =>
   act(() =>
     root.render(
       <QueryClientProvider client={seededClient(entitlements)}>
         <MemoryRouter>
-          <DoneStep wizard={wizard} api={hangingApi} />
+          <DoneStep wizard={wizard} api={hangingApi} finish={finish} />
         </MemoryRouter>
       </QueryClientProvider>
     )
@@ -77,6 +79,14 @@ describe("P7", () => {
     expect(join?.getAttribute("href")).toBe("/app/membership?source=onboarding");
     done();
     expect(wizard.complete).toHaveBeenCalledWith("later", "plan");
+  });
+
+  it("finishes the walk where Become a member goes, without the wizard's own routing", () => {
+    show(ENTITLEMENTS.trial);
+    const join = [...host.querySelectorAll("a")].find((a) => a.textContent === "Become a member");
+    act(() => join?.click());
+    expect(finish).toHaveBeenCalledExactlyOnceWith("later", "plan");
+    expect(wizard.complete).not.toHaveBeenCalled();
   });
 
   it("drops the trial panel once the trial is over", () => {

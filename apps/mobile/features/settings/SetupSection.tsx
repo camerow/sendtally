@@ -8,6 +8,7 @@ import { queries, useQuery } from "@sendtally/features/query";
 import { useApi } from "../../lib/api";
 import { sectionCard, sectionLabel } from "../../lib/styles";
 import { MenuRow } from "../live-session/MenuRow";
+import { openMembershipPage, useLocks } from "../training/locks";
 
 const row: ViewStyle = { backgroundColor: colors.white, borderRadius: radius.card };
 
@@ -17,6 +18,7 @@ const open = (path: OnboardingPath): void => router.push(`/first-run?path=${path
 export function SetupSection(): React.ReactElement {
   const { state } = useQuery(queries.status(useApi()));
   const progress = state.status === "ready" ? state.data.onboarding.progress : null;
+  const planLocked = useLocks().create;
   return (
     <View style={sectionCard}>
       <Text style={sectionLabel}>{t("onboarding.setup.section")}</Text>
@@ -46,7 +48,8 @@ export function SetupSection(): React.ReactElement {
                   ? t("common.done")
                   : t("onboarding.setup.notStarted")
             }
-            onPress={() => open("plan")}
+            onPress={() => (planLocked ? openMembershipPage("create") : open("plan"))}
+            locked={planLocked}
           />
         </View>
       </View>

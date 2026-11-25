@@ -18,6 +18,7 @@ import { bodyHeading, workoutMinutes, type LibraryWorkout } from "@sendtally/fea
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
+import { useLiveRun } from "../../live-session/liveRun";
 import { AddToSheet } from "../components/AddToSheet";
 import { Button } from "../components/Button";
 import { DetailActions } from "../components/DetailActions";
@@ -207,6 +208,7 @@ export function WorkoutScreen({
   const { today } = useHangData();
   const { log } = useTrainingLog(useApi());
   const locks = useLocks();
+  const running = useLiveRun()?.workoutId === id;
   const planned =
     run === null
       ? undefined
@@ -215,8 +217,8 @@ export function WorkoutScreen({
     return <LoadState state={state} onRetry={() => void reload()} framed />;
   const workout = state.data.workout(id);
   if (workout === undefined) return null;
-  if (locks.workout(workout)) return <LockedPage source="workout" />;
-  if (planned !== undefined && locks.day(planned.membership, workout))
+  if (!running && locks.workout(workout)) return <LockedPage source="workout" />;
+  if (!running && planned !== undefined && locks.day(planned.membership, workout))
     return <LockedPage source="plan_day" />;
   return <Detail workout={workout} grip={grip} adding={adding} run={planned} />;
 }

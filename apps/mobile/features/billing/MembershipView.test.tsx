@@ -22,12 +22,13 @@ const purchase: PurchaseFeature = {
   restore: jest.fn(),
 };
 
-const show = (entitlements: Entitlements): Promise<unknown> =>
+const show = (entitlements: Entitlements, fromSettings = true): Promise<unknown> =>
   render(
     <MembershipView
       membership={billingFeature(entitlements)}
       members={membersGet(entitlements, { workouts: 5, blocks: 2, exercises: 0 }, "kg")}
       purchase={purchase}
+      fromSettings={fromSettings}
       onBack={jest.fn()}
     />
   );
@@ -51,5 +52,13 @@ describe("MembershipView", () => {
     await show(ENTITLEMENTS.member);
     expect(screen.getByText("Your training is open.")).toBeTruthy();
     expect(screen.queryByText("Members get…")).toBeNull();
+  });
+
+  it("goes back to Settings from Settings, and plainly Back from a lock", async () => {
+    await show(ENTITLEMENTS.pastTrial);
+    expect(screen.getByText("Settings")).toBeTruthy();
+    await show(ENTITLEMENTS.pastTrial, false);
+    expect(screen.getByText("Back")).toBeTruthy();
+    expect(screen.queryByText("Settings")).toBeNull();
   });
 });

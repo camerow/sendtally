@@ -77,7 +77,9 @@ export const BuildWeekStep: StepComponent = ({ wizard, api }) => {
               onAdd={() => step.toggle(w.id)}
               onUndo={() => step.toggle(w.id)}
             />
-            {picked && <WeekdayChips days={days} onToggle={(d) => step.toggleDay(w.id, d)} />}
+            {picked && (
+              <WeekdayChips days={days} label={w.name} onToggle={(d) => step.toggleDay(w.id, d)} />
+            )}
           </div>
         ))}
       </div>

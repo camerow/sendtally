@@ -77,12 +77,17 @@ const PATHS: readonly OnboardingPath[] = ["history", "plan"];
 export const pathDone = (progress: OnboardingProgress, path: OnboardingPath): boolean =>
   path === "history" ? progress.sessions : progress.scheduledBlocks;
 
-/** The path cards in order: Finish setting up while a path is left mid-way, otherwise Start until the path is done or Not now on this device. */
+/**
+ * The path cards in order: Finish setting up while a path is left mid-way, otherwise Start until
+ * the path is done or Not now on this device. The plan path makes things, so it is not offered while making is locked.
+ */
 export function setupPaths(
   onboarding: OnboardingStatus,
-  dismissed: (path: OnboardingPath) => boolean
+  dismissed: (path: OnboardingPath) => boolean,
+  createLocked: boolean
 ): SetupPath[] {
   return PATHS.flatMap((path): SetupPath[] => {
+    if (path === "plan" && createLocked) return [];
     if (onboarding.left && onboarding.path === path) return [{ path, resume: true }];
     return pathDone(onboarding.progress, path) || dismissed(path) ? [] : [{ path, resume: false }];
   });
@@ -94,7 +99,8 @@ export const setupCardQuery = (path: OnboardingPath): string => `?path=${path}&f
 /** The path cards from the cached status, and Not now on a path left mid-way, which ends it on the server. */
 export function useSetupPaths(
   api: SendtallyApi,
-  dismissed: (path: OnboardingPath) => boolean
+  dismissed: (path: OnboardingPath) => boolean,
+  createLocked: boolean
 ): { paths: SetupPath[]; skip: (path: OnboardingPath) => void } {
   const client = useQueryClient();
   const onboarding = useQuery(queries.status(api)).data?.onboarding ?? null;
@@ -109,7 +115,7 @@ export function useSetupPaths(
     void api.firstRunStep(to).catch(() => undefined);
   };
   return {
-    paths: onboarding === null ? [] : setupPaths(onboarding, dismissed),
+    paths: onboarding === null ? [] : setupPaths(onboarding, dismissed, createLocked),
     skip,
   };
 }

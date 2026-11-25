@@ -4,7 +4,7 @@ import { newWorkoutPath } from "../editor/paths";
 import { focusParam } from "@sendtally/features/training";
 import { libraryShelves, type LibraryWorkout } from "@sendtally/features/workouts";
 import { LoadState } from "../data/LoadState";
-import { joinPath, useLocks } from "../locks";
+import { membershipPagePath, useLocks } from "../locks";
 import { useLockedWorkouts } from "../useLockedRows";
 import { LibraryBrowser } from "./LibraryBrowser";
 import { LibraryShelf } from "./LibraryShelf";
@@ -26,7 +26,9 @@ export function WorkoutLibrary(): React.ReactElement {
             key={focusParam(shelf.focus)}
             shelf={shelf}
             link={link}
-            onAdd={() => void navigate(create ? joinPath("create") : newWorkoutPath(shelf.focus))}
+            onAdd={() =>
+              void navigate(create ? membershipPagePath("create") : newWorkoutPath(shelf.focus))
+            }
             addLocked={create}
           />
         ))}

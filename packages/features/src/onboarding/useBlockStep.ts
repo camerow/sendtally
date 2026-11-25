@@ -18,8 +18,10 @@ import type { LibraryWorkout } from "../workouts/types";
 import type { WorkoutLibraryQuery } from "../workouts/useWorkoutLibrary";
 import { usePlan } from "../training/usePlan";
 import { shortcutChanges, shortcutOf, type LoadBar, type Shortcuts } from "./planMaths";
-import { placedWorkouts, useSeededPlanPath } from "./planPath";
+import { placedWorkouts } from "./planPath";
 import type { Wizard } from "./types";
+import { useSeededPlanPath } from "./useSeededPlanPath";
+import { useOnePress } from "./useOnePress";
 
 export const MIN_WEEKS = 2;
 
@@ -157,6 +159,7 @@ export function useBlockStep({
   const [shortcuts, setShortcuts] = React.useState<Shortcuts>({ stepUp: false, deload: false });
   const [shown, setShown] = React.useState(0);
   const [changes, setChanges] = React.useState<Changes>({});
+  const once = useOnePress();
 
   const block =
     plan.status === "ready" ? plan.data.blocks.find((b) => b.id === path.blockId) : undefined;
@@ -233,6 +236,6 @@ export function useBlockStep({
     shownChanges,
     setCell,
     bars: loadBars(written, shownChanges, shortcuts.deload, workout.kind, unit),
-    save,
+    save: once(save),
   };
 }

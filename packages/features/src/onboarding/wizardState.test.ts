@@ -170,6 +170,20 @@ describe("the history path", () => {
   });
 });
 
+describe("the reveal", () => {
+  it("is counted once a walk, not again when it comes back from a side step", () => {
+    const { wizard, capture } = setup({ start: { path: "plan", from: "chooser" } });
+    const viewed = { path: "plan", weeks: 4, sessions_planned: 8, reminders: "off" } as const;
+    wizard().capture("onboarding_reveal_viewed", viewed);
+    wizard().open("P4");
+    wizard().next();
+    wizard().capture("onboarding_reveal_viewed", viewed);
+    expect(capture.mock.calls.filter(([event]) => event === "onboarding_reveal_viewed")).toEqual([
+      ["onboarding_reveal_viewed", viewed],
+    ]);
+  });
+});
+
 describe("the plan path", () => {
   it("builds the week, then shows the plan, the builder and Shape the weeks only as side steps", () => {
     const { wizard, capture } = setup();

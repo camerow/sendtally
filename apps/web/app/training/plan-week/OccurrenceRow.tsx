@@ -10,7 +10,7 @@ import {
 import type { LibraryWorkout } from "@sendtally/features/workouts";
 import { Lock } from "../../components/Lock";
 import { MoreMenu } from "../../components/MoreMenu";
-import { joinPath } from "../locks";
+import { membershipPagePath } from "../locks";
 import { DayMark } from "./DayMark";
 import { KindCircle } from "./KindCircle";
 import { occurrenceLogLink, occurrencePath } from "./planLinks";
@@ -40,7 +40,7 @@ export function OccurrenceRow({
         <DayMark kind={workout.kind} filled={false} />
       )}
       <Link
-        to={locked ? joinPath("plan_day") : occurrencePath(o)}
+        to={locked ? membershipPagePath("plan_day") : occurrencePath(o)}
         className={
           locked
             ? "plan-row-text plan-row-text--link plan-row-text--locked"

@@ -40,7 +40,7 @@ import { ScheduleBlocks } from "../blocks/ScheduleBlocks";
 import { useNewBlock } from "../blocks/useNewBlock";
 import { AddWorkoutRow, type AddState } from "./AddWorkoutRow";
 import { useMake } from "../editor/useMake";
-import { joinPath, useLocks } from "../locks";
+import { membershipPagePath, useLocks } from "../locks";
 import { sourcePath } from "../exercises/paths";
 import { useToast } from "../../components/Toast";
 
@@ -73,7 +73,7 @@ export function AddWorkoutsSheet({
   const newBlock = useNewBlock();
   const navigate = useNavigate();
   const locks = useLocks();
-  const join = (source: LockSource): void => void navigate(joinPath(source));
+  const join = (source: LockSource): void => void navigate(membershipPagePath(source));
   const addTo = useAddTo(api, flow, today, { newId: () => crypto.randomUUID(), actions });
   const [mode, setMode] = React.useState<"workout" | "exercise" | "block">("workout");
   const [picked, setPicked] = React.useState<Block | null>(null);
@@ -219,7 +219,7 @@ export function AddWorkoutsSheet({
                         name={e.name}
                         meta={usedInText(using.length)}
                         picture={sourcePictures(e.source)[0]}
-                        to={shut ? joinPath("exercise") : sourcePath(e.source)}
+                        to={shut ? membershipPagePath("exercise") : sourcePath(e.source)}
                         state={stateOf(
                           mine,
                           using.map((w) => w.id)
@@ -253,7 +253,7 @@ export function AddWorkoutsSheet({
                           name={w.name}
                           meta={libraryLine(w, model.settings.units, exercises)}
                           picture={libraryPictures("workout", w.id)[0]}
-                          to={shut ? joinPath("workout") : workoutPath(w.id)}
+                          to={shut ? membershipPagePath("workout") : workoutPath(w.id)}
                           state={stateOf(w.id, [w.id])}
                           thereLabel={thereLabel}
                           locked={shut}

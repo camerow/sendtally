@@ -21,7 +21,7 @@ function MembershipWithBilling({
   const members = useMembersGet(useApi());
   const source = membershipSource(useLocalSearchParams<{ source?: string }>().source);
   const capture = useCapture();
-  const free = membership.active === false;
+  const free = membership.state.status === "ready" && membership.active === false;
   const sent = React.useRef(false);
   React.useEffect(() => {
     if (source === null || !free || sent.current) return;
@@ -33,6 +33,7 @@ function MembershipWithBilling({
       membership={membership}
       members={members}
       purchase={purchase}
+      fromSettings={source === null}
       onBack={() => goBack()}
     />
   );

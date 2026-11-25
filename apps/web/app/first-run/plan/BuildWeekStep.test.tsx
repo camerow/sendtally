@@ -107,14 +107,22 @@ describe("Build your week", () => {
     expect(schedule()?.disabled).toBe(true);
   });
 
-  it("puts a pressed day on the week card and schedules what has a day", () => {
+  it("puts a pressed day on the week card and schedules what has a day, once on a double tap", () => {
     show();
     act(() => button("Monday")?.click());
     expect(host.querySelectorAll(".dark-week-cell.is-on")).toHaveLength(1);
     expect(host.textContent).toContain("1 session a week");
     act(() => button("Add Max hangs")?.click());
     expect(button("Take Max hangs back out")).toBeDefined();
-    act(() => schedule()?.click());
+    expect(
+      host.querySelector('[role="group"][aria-label="Climbing"] [aria-label="Monday"]')
+    ).not.toBeNull();
+    expect(host.querySelectorAll('button[aria-pressed="true"]')).toHaveLength(2);
+    act(() => {
+      schedule()?.click();
+      schedule()?.click();
+    });
+    expect(actions.saveBlock).toHaveBeenCalledTimes(1);
     expect(actions.saveBlock).toHaveBeenCalledWith(
       expect.objectContaining({ name: "October block", start: "2026-10-05" })
     );

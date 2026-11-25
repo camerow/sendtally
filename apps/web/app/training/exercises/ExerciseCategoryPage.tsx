@@ -18,7 +18,7 @@ import { useAppApi } from "../../lib/useAppApi";
 import { CategoryMark } from "../components/CategoryMark";
 import { DashedPanel } from "../components/DashedPanel";
 import { useHangData, type HangData } from "../data/HangDataContext";
-import { joinPath, useLocks } from "../locks";
+import { membershipPagePath, useLocks } from "../locks";
 import { useLockedExercises, type RowLink } from "../useLockedRows";
 import { EXERCISES_VIEW, sourcePath } from "./paths";
 
@@ -93,7 +93,7 @@ export function ExerciseCategoryPage({ kind }: { kind: WorkoutKind }): React.Rea
       backTo={EXERCISES_VIEW}
       action={
         <Link
-          to={create ? joinPath("create") : newExercisePath(kind)}
+          to={create ? membershipPagePath("create") : newExercisePath(kind)}
           className={create ? "detail-add detail-add--locked" : "detail-add"}
           aria-label={create ? t("common.membersOnly", { label: newLabel }) : newLabel}
         >

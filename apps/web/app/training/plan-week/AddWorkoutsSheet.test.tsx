@@ -91,6 +91,10 @@ vi.mock("@sendtally/features/exercises", async (actual) => ({
     offer: "exercises",
   }),
 }));
+vi.mock("@sendtally/features/statistics", async (actual) => ({
+  ...(await actual<object>()),
+  useExercises: () => ({ state: { status: "ready", data: [] } }),
+}));
 vi.mock("@sendtally/features/training", async (actual) => ({
   ...(await actual<typeof T_training>()),
   useTrainingLog: () => ({ log: { plan } }),

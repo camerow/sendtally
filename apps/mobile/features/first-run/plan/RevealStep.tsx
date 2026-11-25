@@ -7,7 +7,9 @@ import { shortDate, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   sessionsPerWeek,
+  SETTLE_MS,
   shapeable,
+  useOnePress,
   useSeededPlanPath,
   useTrainingReminders,
   weekBars,
@@ -67,10 +69,9 @@ export function RevealStep({
   const shown = reduceMotion ? total : counted;
   const on = reminders.settings?.enabled === true;
 
-  const viewed = React.useRef(false);
+  const once = useOnePress(SETTLE_MS);
   React.useEffect(() => {
-    if (viewed.current || block === undefined || reminders.settings === null) return;
-    viewed.current = true;
+    if (block === undefined || reminders.settings === null) return;
     wizard.capture("onboarding_reveal_viewed", {
       path: "plan",
       weeks,
@@ -105,7 +106,7 @@ export function RevealStep({
           variant="plain"
           height={54}
           label={t("onboarding.firstRun.continue")}
-          onPress={() => wizard.next()}
+          onPress={once(() => wizard.next())}
           style={{ backgroundColor: colors.gold }}
         />
       }

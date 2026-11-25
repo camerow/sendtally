@@ -4,22 +4,7 @@ import { TEST_LIBRARY } from "@sendtally/features/library/testing";
 import { queries } from "@sendtally/features/query";
 import { hangData } from "../training/data/testHang";
 
-const DAY = 24 * 60 * 60 * 1000;
-
-export const ENTITLEMENTS = {
-  trial: {
-    membership: { active: false, web: false, store: null },
-    trial: { endsAt: new Date(Date.now() + 10 * DAY).toISOString() },
-  },
-  pastTrial: {
-    membership: { active: false, web: false, store: null },
-    trial: { endsAt: new Date(Date.now() - DAY).toISOString() },
-  },
-  member: {
-    membership: { active: true, web: true, store: null },
-    trial: { endsAt: new Date(Date.now() - DAY).toISOString() },
-  },
-} satisfies Record<string, Entitlements>;
+export { ENTITLEMENTS } from "@sendtally/features/billing/testing";
 
 const EMPTY_PLAN: Plan = {
   blocks: [],

@@ -31,6 +31,8 @@ import {
 import { useApi } from "../../../lib/api";
 import { Button } from "../components/Button";
 import { EditorHeader } from "../components/EditorHeader";
+import { LockedPage } from "../components/LockedPage";
+import { useLocks } from "../locks";
 import { FocusField } from "../components/FocusField";
 import { NameField } from "../components/NameField";
 import { useHangData } from "../data/HangDataContext";
@@ -355,7 +357,11 @@ function Editor({
 /** Make, edit or customise a workout of any kind: what it holds, and how each exercise rests and alternates. */
 export function WorkoutEditorScreen(props: WorkoutEditorScreenProps): React.ReactElement | null {
   const { state, reload } = useLibrary();
+  const locks = useLocks();
   if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;
+  const editing = props.id === undefined ? undefined : state.data.workout(props.id);
+  if (editing === undefined ? props.id === undefined && locks.create : locks.workout(editing))
+    return <LockedPage source={editing === undefined ? "create" : "workout"} />;
   const initial = initialDraft(state.data, props);
   return initial === null ? null : <Editor id={props.id} initial={initial} adding={props.adding} />;
 }

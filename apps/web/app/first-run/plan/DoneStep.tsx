@@ -45,7 +45,7 @@ function MemberWeek({ api }: { api: SendtallyApi }): React.ReactElement {
 }
 
 /** P7: the plan is ready; a free account sees the trial and what members get, a member the week. */
-export const DoneStep: StepComponent = ({ wizard, api }) => {
+export const DoneStep: StepComponent = ({ wizard, api, finish }) => {
   const member = useMembership(api).active === true;
   return (
     <WizardFrame
@@ -62,7 +62,11 @@ export const DoneStep: StepComponent = ({ wizard, api }) => {
     >
       <div className="closing">
         <h1 className="wizard-title">{t("onboarding.plan.done.title")}</h1>
-        {member ? <MemberWeek api={api} /> : <ClosingOffer api={api} />}
+        {member ? (
+          <MemberWeek api={api} />
+        ) : (
+          <ClosingOffer api={api} onJoin={() => finish?.("later", "plan")} />
+        )}
       </div>
     </WizardFrame>
   );

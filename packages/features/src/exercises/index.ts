@@ -38,6 +38,7 @@ export { exerciseAbout, hasAbout, sourceAbout, workoutAbout, type About } from "
 export * from "./exerciseText";
 export { usePickerWorld } from "./usePickerWorld";
 export { useExerciseActions, type ExerciseActions } from "./useExerciseActions";
+export { exerciseRemoval } from "./exerciseRemoval";
 export { exerciseShelves, shelfRows, type ShelfCard, type ShelfWorld } from "./shelfCards";
 export { pickedOf, pickWith, takenBy } from "./makeExercise";
 export { useMakeExercise, type MakeExercise } from "./useMakeExercise";

@@ -188,9 +188,7 @@ export function AddWorkoutsSheet({
     ) : mode === "block" ? (
       <Button
         label={t("plan.newBlock")}
-        accessibilityLabel={
-          locks.create ? t("common.membersOnly", { label: t("plan.newBlock") }) : undefined
-        }
+        locked={locks.create}
         onPress={() => {
           if (locks.create) return join("create");
           close();
@@ -203,7 +201,7 @@ export function AddWorkoutsSheet({
     ) : (
       <Button
         label={newLabel}
-        accessibilityLabel={locks.create ? t("common.membersOnly", { label: newLabel }) : undefined}
+        locked={locks.create}
         onPress={() =>
           locks.create
             ? join("create")

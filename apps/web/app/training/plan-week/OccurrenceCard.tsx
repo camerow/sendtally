@@ -7,7 +7,7 @@ import { Lock } from "../../components/Lock";
 import { MoreMenu } from "../../components/MoreMenu";
 import { StartButton } from "../components/StartButton";
 import { useWorkoutStart } from "../library-detail/useWorkoutStart";
-import { joinPath } from "../locks";
+import { membershipPagePath } from "../locks";
 import { DayMark } from "./DayMark";
 import { occurrenceLogLink, occurrencePath } from "./planLinks";
 import { useDayChanges } from "./useDayChanges";
@@ -34,7 +34,7 @@ export function OccurrenceCard({
     <div className="plan-card">
       <div className="plan-card-head">
         <Link
-          to={locked ? joinPath("plan_day") : occurrencePath(o)}
+          to={locked ? membershipPagePath("plan_day") : occurrencePath(o)}
           className={locked ? "plan-card-title plan-card-title--locked" : "plan-card-title"}
           aria-label={locked ? t("common.membersOnly", { label: workout.name }) : undefined}
         >
@@ -53,7 +53,7 @@ export function OccurrenceCard({
         <span>{occurrenceMeta(o)}</span>
       </div>
       {locked ? (
-        <Link to={joinPath("plan_day")} className="plan-card-start">
+        <Link to={membershipPagePath("plan_day")} className="plan-card-start">
           {t("billing.becomeAMember")}
         </Link>
       ) : (

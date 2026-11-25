@@ -52,17 +52,19 @@ const show = (entitlements: Entitlements, url: string): void => {
   loaded.membership = entitlements.membership;
   act(() =>
     root.render(
-      <QueryClientProvider client={seededClient(entitlements)}>
-        <MemoryRouter initialEntries={[url]}>
-          <MembershipRoute />
-        </MemoryRouter>
-      </QueryClientProvider>
+      <React.StrictMode>
+        <QueryClientProvider client={seededClient(entitlements)}>
+          <MemoryRouter initialEntries={[url]}>
+            <MembershipRoute />
+          </MemoryRouter>
+        </QueryClientProvider>
+      </React.StrictMode>
     )
   );
 };
 
 describe("/app/membership", () => {
-  it("shows a trial account what members get over the checkout, and counts the paywall once", () => {
+  it("shows a trial account what members get over the checkout, and counts the paywall once through the app's double-run effects", () => {
     show(ENTITLEMENTS.trial, "/app/membership?source=workout");
     expect(host.textContent).toContain("and posting to Strava are free, and always will be.");
     expect(host.textContent).toContain("Members get…");

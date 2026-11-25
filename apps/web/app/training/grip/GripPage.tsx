@@ -29,7 +29,7 @@ import { COMPARE_GRIPS_PATH, EXERCISES_VIEW } from "../exercises/paths";
 import { editGripPath } from "../editor/paths";
 import { useAddToWorkout } from "../editor/useAddToWorkout";
 import { useLibrary } from "../library/useLibrary";
-import { joinPath, useCreateGate, useLocks } from "../locks";
+import { membershipPagePath, useCreateGate, useLocks } from "../locks";
 import { GripSessions } from "./GripSessions";
 import { LoadTrendCard } from "./LoadTrendCard";
 import { Milestones } from "./Milestones";
@@ -86,7 +86,7 @@ export function GripPage({ id }: { id: string }): React.ReactElement {
   ];
 
   if (grip !== undefined && locks.exercise({ grip }))
-    return <Navigate to={joinPath("exercise")} replace />;
+    return <Navigate to={membershipPagePath("exercise")} replace />;
   return (
     <DetailFrame
       backTo={EXERCISES_VIEW}

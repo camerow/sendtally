@@ -1041,6 +1041,9 @@
 
 .form-link {
   align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .effort-bars {

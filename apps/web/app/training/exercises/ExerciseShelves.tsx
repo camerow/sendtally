@@ -13,7 +13,7 @@ import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { SHELF_ROWS } from "../library/LibraryShelf";
 import { useLibrary } from "../library/useLibrary";
-import { joinPath, useLocks } from "../locks";
+import { membershipPagePath, useLocks } from "../locks";
 import { useLockedExercises } from "../useLockedRows";
 import { exerciseCategoryPath, sourcePath } from "./paths";
 
@@ -50,7 +50,8 @@ export function ExerciseShelves(): React.ReactElement {
             }
             add={{
               label: t("workouts.newExerciseIn", { category: kindLabel(kind) }),
-              onPress: () => void navigate(create ? joinPath("create") : newExercisePath(kind)),
+              onPress: () =>
+                void navigate(create ? membershipPagePath("create") : newExercisePath(kind)),
               locked: create,
             }}
           />

@@ -36,6 +36,15 @@ vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<object>()),
   useExerciseList: () => [],
 }));
+vi.mock("@sendtally/features/statistics", async (actual) => ({
+  ...(await actual<object>()),
+  useExercises: () => ({ state: { status: "ready", data: [] } }),
+}));
+vi.mock("@sendtally/features/billing", () => ({ useMembership: () => ({ access: null }) }));
+vi.mock("../library/useLibrary", async (actual) => ({
+  ...(await actual<object>()),
+  useLibrary: () => ({ state: { status: "loading" }, reload: vi.fn() }),
+}));
 vi.mock("../data/HangDataContext", () => ({
   useHangData: () => ({ model: hangModel(hangData(), libraryOf([])), today: "2026-11-12" }),
 }));

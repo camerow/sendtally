@@ -1,6 +1,8 @@
 import React from "react";
 import { Pressable, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { colors, disabledOpacity, radius } from "@sendtally/design/tokens";
+import { t } from "@sendtally/features/i18n";
+import { Icon } from "../../../components/Icon";
 import { press } from "../../../lib/press";
 import { type } from "../type";
 import { HangIcon, type HangIconName } from "./HangIcon";
@@ -16,6 +18,8 @@ export type ButtonProps = {
   height?: number;
   icon?: HangIconName;
   disabled?: boolean;
+  /** Members only: the lock in place of the icon, read as such; what it presses is the caller's. */
+  locked?: boolean;
   accessibilityLabel?: string;
   style?: StyleProp<ViewStyle>;
 };
@@ -38,6 +42,7 @@ export function Button({
   height = 48,
   icon,
   disabled,
+  locked = false,
   accessibilityLabel,
   style,
 }: ButtonProps): React.ReactElement {
@@ -47,7 +52,7 @@ export function Button({
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={locked ? t("common.membersOnly", { label }) : accessibilityLabel}
       accessibilityState={{ disabled: !!disabled }}
       style={press([
         {
@@ -63,7 +68,11 @@ export function Button({
       ])}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        {icon !== undefined && <HangIcon name={icon} color={ink} size={18} strokeWidth={2.4} />}
+        {locked ? (
+          <Icon name="lock" color={ink} size={18} strokeWidth={2.4} />
+        ) : (
+          icon !== undefined && <HangIcon name={icon} color={ink} size={18} strokeWidth={2.4} />
+        )}
         <Text
           style={[
             type.bodyBold,

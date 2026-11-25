@@ -5,7 +5,7 @@ import { z } from "zod";
 import { type AppEnv, invalidBody, postAfterResponse } from "./context";
 import { activitiesQuery, activityBody, activityOf } from "./lib/activities";
 import { maybeOlderChecklist, withWorkoutChecklists } from "./lib/checklists";
-import { customExercise, plansCustomWork, requireAccess, wrapsBuiltIn } from "./lib/entitlements";
+import { customExercise, customWorkout, plansCustomWork, requireAccess } from "./lib/entitlements";
 import { hangPartOf } from "./lib/hang";
 import {
   exerciseBody,
@@ -308,9 +308,9 @@ export const workouts = new Hono<AppEnv>()
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
       const body = c.req.valid("json");
-      if (!(await wrapsBuiltIn(c.env.DB, userId, body.items))) await requireAccess(c);
-      await repo.ensureUser(c.env.DB, userId);
       const existing = await repo.getWorkout(c.env.DB, userId, id);
+      if (await customWorkout(c.env.DB, userId, body.items, existing)) await requireAccess(c);
+      await repo.ensureUser(c.env.DB, userId);
       const saved = body.kind === undefined ? existing?.kind : undefined;
       const { workout, isGrip } = await withDerivedKind(c.env.DB, userId, body, saved);
       const row = await repo.saveWorkout(c.env.DB, userId, { id, ...workout }, isGrip);
