@@ -5,7 +5,6 @@ import { colors } from "@sendtally/design/tokens";
 import { kindLabel } from "@sendtally/features/activities";
 import { shelfRows } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
-import { LinkRow } from "../../../components/LinkRow";
 import { CategoryRow } from "../components/CategoryRow";
 import { ShelfHeader } from "../components/ShelfHeader";
 import { SHELF_ROWS } from "../library/LibraryShelf";
@@ -32,6 +31,8 @@ export function ExerciseShelf({
       <ShelfHeader
         title={label}
         kind={kind}
+        onSeeAll={cards.length > SHELF_ROWS ? onSeeAll : undefined}
+        count={cards.length}
         addLabel={t("workouts.newExerciseIn", { category: label })}
         onAdd={onAdd}
       />
@@ -65,9 +66,6 @@ export function ExerciseShelf({
             onPress={c.open}
           />
         ))
-      )}
-      {cards.length > SHELF_ROWS && (
-        <LinkRow label={t("workouts.allExercises", { n: cards.length })} onPress={onSeeAll} />
       )}
     </View>
   );

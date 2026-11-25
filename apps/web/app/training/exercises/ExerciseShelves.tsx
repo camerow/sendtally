@@ -1,6 +1,5 @@
 import React from "react";
-import { Link, useNavigate } from "react-router";
-import { Icon } from "../../components/Icon";
+import { useNavigate } from "react-router";
 import { newExercisePath } from "../editor/paths";
 import { kindLabel } from "@sendtally/features/activities";
 import { exerciseShelves, shelfRows, type ShelfCard } from "@sendtally/features/exercises";
@@ -45,6 +44,11 @@ export function ExerciseShelves(): React.ReactElement {
           <ShelfHeader
             title={kindLabel(kind)}
             kind={kind}
+            seeAll={
+              entries.length > SHELF_ROWS
+                ? { to: exerciseCategoryPath(kind), count: entries.length }
+                : undefined
+            }
             add={{
               label: t("workouts.newExerciseIn", { category: kindLabel(kind) }),
               onPress: () => void navigate(newExercisePath(kind)),
@@ -65,12 +69,6 @@ export function ExerciseShelves(): React.ReactElement {
                 to={pathOf(c)}
               />
             ))
-          )}
-          {entries.length > SHELF_ROWS && (
-            <Link to={exerciseCategoryPath(kind)} className="link-row">
-              {t("workouts.allExercises", { n: entries.length })}
-              <Icon name="chevron" size={18} />
-            </Link>
           )}
         </section>
       ))}
