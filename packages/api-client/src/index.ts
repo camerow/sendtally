@@ -49,6 +49,7 @@ import type {
   CreationResult,
   BuiltInLibrary,
   LibraryChange,
+  LibraryCreate,
   LibraryEdit,
   LibraryEntry,
   LibraryMediaRow,
@@ -474,6 +475,15 @@ export class SendtallyApi {
 
   library(): Promise<{ library: BuiltInLibrary }> {
     return body(this.client.v1.library.$get());
+  }
+
+  createLibraryEntry(
+    type: "exercise" | "workout",
+    create: LibraryCreate
+  ): Promise<{ entry: LibraryEntry }> {
+    return body(
+      this.client.v1.moderation.library[":type"].$post({ param: { type }, json: create })
+    );
   }
 
   saveLibraryEntry(

@@ -83,14 +83,16 @@ export default function Privacy(): React.ReactElement {
         Importing a log is recorded as which app the file came from and how many sessions it held.
         Creating an exercise, a workout or a training block, and scheduling a block, are recorded as
         the kind of thing and a few counts, never names or contents. Seeing the membership offer,
-        and whether you joined, are recorded too. Logging a workout is recorded as whether it was on
-        your plan and whether it is one of sendtally&rsquo;s built-in workouts, never what you
-        logged. When an AI assistant you connect to your account uses it, its connection and each
-        action it takes are recorded as events too, carrying only which action it was, which
-        assistant and model took it, how long it took, whether it failed, the names of the options
-        it set, and a random identifier we give the assistant so the actions of one conversation can
-        be grouped, never what it read or wrote. When the assistant cannot do something you asked,
-        it may send us a short description of what was missing.
+        and whether you joined, are recorded too. When signing in with Google or Apple in the app
+        does not finish, we record which one it was, whether you closed it or it failed, and the
+        error code, never your account. Logging a workout is recorded as whether it was on your plan
+        and whether it is one of sendtally&rsquo;s built-in workouts, never what you logged. When an
+        AI assistant you connect to your account uses it, its connection and each action it takes
+        are recorded as events too, carrying only which action it was, which assistant and model
+        took it, how long it took, whether it failed, the names of the options it set, and a random
+        identifier we give the assistant so the actions of one conversation can be grouped, never
+        what it read or wrote. When the assistant cannot do something you asked, it may send us a
+        short description of what was missing.
       </p>
       <p>
         <strong>App installs.</strong> The mobile apps also run Google Analytics for Firebase, which

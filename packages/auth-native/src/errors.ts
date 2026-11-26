@@ -14,3 +14,9 @@ export function errorMessage(err: unknown): string {
 export function errorCode(err: unknown): string | undefined {
   return firstError(err)?.code;
 }
+
+export function failureCode(err: unknown): string | undefined {
+  const native =
+    typeof err === "object" && err !== null ? (err as { code?: unknown }).code : undefined;
+  return errorCode(err) ?? (typeof native === "string" ? native : undefined);
+}

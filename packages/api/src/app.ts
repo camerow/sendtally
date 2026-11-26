@@ -16,7 +16,12 @@ import {
   saveManualSession,
   sessionResponse,
 } from "./sessions";
-import { MAX_PICTURE_BYTES, pictureProblem, type PictureType } from "@sendtally/core/hang";
+import {
+  libraryIdOf,
+  MAX_PICTURE_BYTES,
+  pictureProblem,
+  type PictureType,
+} from "@sendtally/core/hang";
 import { z } from "zod";
 import { auth } from "./auth";
 import type { Env } from "./bindings";
@@ -109,8 +114,10 @@ import { syncSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 import { RevenueCatClient, webhookBody, webhookUserIds } from "./lib/revenuecat";
 import {
+  createdSpec,
   editedMedia,
   editedState,
+  libraryCreateBody,
   libraryEditBody,
   libraryParam,
   mediaEditBody,
@@ -1573,6 +1580,36 @@ const app = new Hono<AppEnv>()
     return c.json({ creations, revisions, duplicates, reports });
   })
 
+  // A new built-in is live for every user at once. Its id comes from its name and is never
+  // reused, so one a built-in ever had is refused.
+  .post(
+    "/v1/moderation/library/:type",
+    zValidator("param", z.object({ type: z.enum(["exercise", "workout"]) }), invalidBody),
+    zValidator("json", libraryCreateBody, invalidBody),
+    async (c) => {
+      const { type } = c.req.valid("param");
+      const body = c.req.valid("json");
+      const library = await repo.library(c.env.DB, c.env.MEDIA_URL);
+      const exerciseIds = new Set(
+        library.exercises.filter((e) => e.status === "active").map((e) => e.id)
+      );
+      const made = createdSpec(type, body.spec, exerciseIds);
+      if ("error" in made) return c.json({ error: made.error }, 400);
+      const id = libraryIdOf(type, body.name, made.spec.kind);
+      if (id === "") return c.json({ error: "the name needs a letter or digit" }, 400);
+      const taken = { error: `The id ${id} is already used by a built-in ${type}.`, id };
+      if (await repo.libraryIdTaken(c.env.DB, type, id)) return c.json(taken, 409);
+      const state = editedState(repo.UNCREATED, { ...body, status: "active" });
+      const entry = await repo.createLibraryEntry(c.env.DB, c.get("userId"), {
+        ...state,
+        type,
+        id,
+        spec: made.spec,
+      });
+      return entry === null ? c.json(taken, 409) : c.json({ entry }, 201);
+    }
+  )
+
   .put(
     "/v1/moderation/library/:type/:id",
     zValidator("param", libraryParam, invalidBody),
@@ -1722,6 +1759,8 @@ const app = new Hono<AppEnv>()
     async (c) => {
       const change = await repo.libraryChange(c.env.DB, c.req.valid("param").id);
       if (change === null) return c.json({ error: "not found" }, 404);
+      if (change.before.name === "")
+        return c.json({ error: "a creation has nothing to restore" }, 400);
       const before = await repo.libraryEntry(c.env.DB, change.type, change.itemId);
       if (before === null) return c.json({ error: "not found" }, 404);
       const { media: restored, ...text } = change.before;

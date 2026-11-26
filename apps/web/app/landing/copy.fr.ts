@@ -4,7 +4,7 @@ export const COPY_FR: LandingCopy = {
   meta: {
     title: "sendtally - a climbing log and training app", // follows en
     description:
-      "Log every climb, plan your training, run each workout on a timer and see it add up in Stats. Start with 30 days of everything, then keep logging for free.", // follows en
+      "Log every climb, plan your training, run each workout on a timer and see it add up in Stats. Start with 14 days of everything, then keep logging for free.", // follows en
   },
   nav: {
     home: "sendtally home", // follows en
@@ -36,7 +36,7 @@ export const COPY_FR: LandingCopy = {
   hero: {
     eyebrow: "Climbing log and training app", // follows en
     title: "Log your climbing. Plan your training.", // follows en
-    body: "Tally a gym session as you climb, build a training block, run each workout on a timer, and watch it all add up in Stats. Start with 30 days of everything, then keep logging for free.", // follows en
+    body: "Tally a gym session as you climb, build a training block, run each workout on a timer, and watch it all add up in Stats. Start with 14 days of everything, then keep logging for free.", // follows en
     webAccount: "Or create a free account on the web", // follows en
     photoAlt: "A climber high on a streaked red sandstone wall in a narrow canyon", // follows en
     phone: {
@@ -229,7 +229,7 @@ export const COPY_FR: LandingCopy = {
   },
   start: {
     eyebrow: "Free to start", // follows en
-    title: "Start with 30 days of everything.", // follows en
+    title: "Start with 14 days of everything.", // follows en
     body: "Then keep logging, built-in workouts and Strava posting for free.", // follows en
     webAccount: "Or create a free account on the web", // follows en
     pricing: "See pricing ›", // follows en
@@ -238,10 +238,10 @@ export const COPY_FR: LandingCopy = {
     meta: {
       title: "Pricing - sendtally", // follows en
       description:
-        "Start with 30 days of everything. Then keep logging for free, or stay a member for $23.99 a year or $2.99 a month.", // follows en
+        "Start with 14 days of everything. Then keep logging for free, or stay a member for $23.99 a year or $2.99 a month.", // follows en
     },
     eyebrow: "Pricing", // follows en
-    title: "Start with 30 days of everything.", // follows en
+    title: "Start with 14 days of everything.", // follows en
     body: "Then keep logging for free, or stay a member for $23.99 a year or $2.99 a month.", // follows en
     free: {
       name: "Gratuit",
@@ -265,7 +265,7 @@ export const COPY_FR: LandingCopy = {
         "Your own exercises, workouts and blocks", // follows en
         "All of your climbing and training Stats", // follows en
       ],
-      cta: "Start your 30 days", // follows en
+      cta: "Start your 14 days", // follows en
       note: "Your trial starts with your account", // follows en
     },
     compare: {
@@ -320,14 +320,14 @@ export const COPY_FR: LandingCopy = {
           member: "All time", // follows en
         },
       ],
-      note: "For your first 30 days you get the Member column.", // follows en
+      note: "For your first 14 days you get the Member column.", // follows en
     },
     faq: {
       title: "Questions", // follows en
       items: [
         {
           q: "Do I need a card for the trial?", // follows en
-          a: "No. The 30 days start when you create your account.", // follows en
+          a: "No. The 14 days start when you create your account.", // follows en
         },
         {
           q: "What happens when the trial ends?", // follows en
@@ -344,7 +344,7 @@ export const COPY_FR: LandingCopy = {
       ],
     },
     closing: {
-      title: "Start your 30 days.", // follows en
+      title: "Start your 14 days.", // follows en
       webAccount: "Or create a free account on the web", // follows en
     },
   },

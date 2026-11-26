@@ -195,17 +195,14 @@ describe("intervalsView", () => {
   const start = startIntervalsRun(flow, at0);
   const holding = tick(start, at0 + 5_000);
 
-  it("counts rounds, or laps on a climb", () => {
-    expect(intervalsView(holding, flow, 40, "kg", false).round).toBe(
+  it("counts rounds", () => {
+    expect(intervalsView(holding, flow, 40, "kg").round).toBe(
       t("activities.roundOf", { round: 1, rounds: 2 })
-    );
-    expect(intervalsView(holding, flow, 40, "kg", true).round).toBe(
-      t("tally.lapOf", { set: 1, sets: 2 })
     );
   });
 
   it("asks Done on a counted step", () => {
     const counted = skip(skip(holding, at0 + 6_000), at0 + 7_000);
-    expect(intervalsView(counted, flow, 0, "kg", false).primary).toBe(t("common.done"));
+    expect(intervalsView(counted, flow, 0, "kg").primary).toBe(t("common.done"));
   });
 });

@@ -1,14 +1,8 @@
 import { useBottomSheetInternal } from "@gorhom/bottom-sheet";
 import React from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { KeyboardAvoider } from "../../components/KeyboardAvoider";
+import { useKeepFocusedAboveKeys } from "../../components/useKeepFocusedAboveKeys";
 import { TextInput } from "../../components/TextInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -76,6 +70,7 @@ export function GymEditor({
   const [wall, setWall] = React.useState("");
   const [problem, setProblem] = React.useState<string | null>(null);
   const inSheet = useBottomSheetInternal(true) !== null;
+  const { scrollProps } = useKeepFocusedAboveKeys();
 
   const setCircuits = (circuits: Circuit[]): void => setDraft((d) => ({ ...d, circuits }));
   const changeMode = (next: CircuitMode): void => {
@@ -289,17 +284,15 @@ export function GymEditor({
   if (inSheet) return <View style={{ padding: 18, gap: 18 }}>{content}</View>;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={["top"]}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoider>
         <ScrollView
+          {...scrollProps}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 18, paddingBottom: 48, gap: 18 }}
         >
           {content}
         </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
     </SafeAreaView>
   );
 }

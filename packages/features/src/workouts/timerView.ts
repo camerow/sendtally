@@ -25,6 +25,8 @@ export type TimerItems = {
   planned: PlannedRun;
   grips: readonly string[];
   setups: readonly HangSetup[];
+  /** Sets of its grip done before the timer opened on it, which its set numbers count on from. */
+  setsBefore?: number;
 };
 
 export type TimerView = TimerText & {
@@ -45,7 +47,7 @@ export type TimerView = TimerText & {
 export function timerView(
   run: Run<HangPhase>,
   secondsLeft: number,
-  { planned, grips, setups }: TimerItems
+  { planned, grips, setups, setsBefore = 0 }: TimerItems
 ): TimerView {
   const phase = currentPhase(run);
   const { items } = planned;
@@ -54,7 +56,7 @@ export function timerView(
   const pull = phase.taps > 0;
   const working = isWork(phase.kind);
   const paused = run.pausedAt !== null;
-  const text = timerText(run, secondsLeft, current.sets);
+  const text = timerText(run, secondsLeft, current.sets, setsBefore);
   const pause = paused ? t("hang.resume") : t("hang.pause");
   return {
     ...text,

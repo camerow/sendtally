@@ -60,6 +60,7 @@ Current scope: sign up, log sessions via the form, session list and detail, tren
   `pnpm lint` is ESLint, run once at the root rather than per package; the flat config is `eslint.config.js`.
   Agents running checks wrap them in RTK (`rtk err pnpm check-types`, `rtk test pnpm test`): its hook does not rewrite pnpm scripts, and the filters keep only errors and failing tests, with the full output recoverable through `rtk recall`.
 - **Toolchain versions:** pinned in `.prototools` (proto manages Node and Go here; this repo does not use asdf).
+- **Checking a mobile change on a device:** agents use an Expo cloud simulator, which runs on Expo's servers and takes nothing from this machine; the local iOS simulator is for the few cases that need the local API, Maestro or a device language. The steps are in `docs/mobile-cloud-simulator.md`.
 - **Local iOS builds** additionally need Xcode, CocoaPods, and Homebrew `gmp`, which the rbenv ruby CocoaPods runs under links against; a missing `libgmp.10.dylib` kills every `pod` call.
 - **Package scope:** every workspace package is `@sendtally/*` (e.g. `@sendtally/core`, `@sendtally/api`). Never introduce another scope.
 - **`@sendtally/api-client` depends on `@sendtally/api`** for `AppType`, so the dependency arrow runs client -> server and nothing in `api` may import `api-client` or `features` (that closes a cycle turbo rejects).
@@ -141,7 +142,9 @@ Red (watermelon) is only for destructive actions, and those use the `danger` red
 A call to action that is not destructive (Become a member, Create account, Save) uses the blue `azure` Button, never a red fill.
 
 Mobile form standard: a focused input always stays visible when the keyboard comes up.
-Wrap the screen's scroll view in `KeyboardAvoidingView` (`behavior="padding"` on iOS) and give the scroll view `keyboardShouldPersistTaps="handled"`; `GymEditor` and `EntryComposer` are the reference.
+Wrap the screen's scroll view in `KeyboardAvoider` (`apps/mobile/components/KeyboardAvoider.tsx`) and give the scroll view `keyboardShouldPersistTaps="handled"`; `ScreenFrame` already does both, and `GymEditor` and `EntryComposer` are the reference for a screen without it.
+`KeyboardAvoider` pads on Android as well as iOS: Android draws edge to edge, so the window no longer resizes for the keyboard and a screen that avoids it only on iOS leaves the field under the keys.
+ESLint bans importing `KeyboardAvoidingView` anywhere else.
 Design work (Claude-generated or otherwise) targets the token vocabulary; each platform implements idiomatically.
 
 ### Screen design rules
@@ -235,7 +238,7 @@ Store listing copy lives in `apps/mobile/store/listing.md` and should match what
 - Never call `t()` at module scope: the locale is set after modules load on mobile and per request on the web Worker (`AsyncLocalStorage` in `entry.server.tsx`), so a module-level constant freezes to English. Keep module-level data as plain values or keys and resolve the text in a function (`trendRangeLabel(range)`, `memberBenefits()`).
 - Locale is the device language on mobile (`expo-localization`) and `Accept-Language` on the web; the marketing landing is additionally served per locale at `/de`, `/fr`, `/es` from `apps/web/app/landing/copy.<locale>.ts` with hreflang alternates.
   Terms, privacy, support, API error bodies, and the Strava activity description stay English.
-- Moderation tooling (`/app/moderation`, `apps/web/app/moderation/`, `packages/features/src/areas/moderation.ts`) is internal and English only: plain string literals, no `t()`, no catalog keys.
+- Moderation tooling (`/app/admin` and its Library and Areas pages, `apps/web/app/moderation/`, `packages/features/src/areas/moderation.ts`) is internal and English only: plain string literals, no `t()`, no catalog keys.
   It is also never indexed or crawled - the route sets `noindex` and `robots.txt` disallows `/app/`.
 - Grades follow the user's grade scales everywhere; the rule and its functions are under Session flow, Invariants.
 - Weights follow the user's weight unit everywhere.

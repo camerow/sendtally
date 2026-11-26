@@ -90,7 +90,6 @@ describe("a live run", () => {
 
   it("says where each player is", () => {
     expect(liveRunSummary(live({ player: "timer", run }))).toBe("Set 1 of 5 · Hang");
-    expect(liveRunSummary(live({ player: "timer", run, laps: true }))).toBe("Lap 1 of 5 · Climb");
     expect(
       liveRunSummary(
         live({

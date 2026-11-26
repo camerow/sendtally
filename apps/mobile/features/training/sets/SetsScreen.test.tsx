@@ -4,7 +4,8 @@ import { router } from "expo-router";
 import React from "react";
 import { liveRunStorage } from "../../../lib/liveRunStorage";
 import { anExercise, hangData, readingOrder, renderWithHang } from "../data/renderWithHang";
-import type { WorkoutRun } from "@sendtally/features/workouts";
+import { partTimerStart, type WorkoutRun } from "@sendtally/features/workouts";
+import { protocolOf, startWorkoutRun, tick, togglePause } from "@sendtally/core/hang";
 import { liveRun } from "../../live-session/liveRun";
 import { useLiveHold } from "../hold/useLiveHold";
 import { SetsScreen } from "./SetsScreen";
@@ -510,7 +511,7 @@ describe("Sets player", () => {
     await root.unmount();
   });
 
-  it("runs a mix's grips as one fingerboard part: Start opens the timer, its ended rows edit in place, Finish logs the rest", async () => {
+  it("runs a grip as one card: its rows by hand or its timer from the card, both logged as its part", async () => {
     const mix: WorkoutRun = {
       ...run,
       title: "Fingers and pull",
@@ -520,44 +521,28 @@ describe("Sets player", () => {
       ],
     };
     const view = await renderWithHang(<SetsScreen run={mix} />);
-    expect(screen.getByText("Fingerboard")).toBeTruthy();
-    expect(screen.getByText("Exercise 1 of 2")).toBeTruthy();
+    expect(screen.queryByText("Fingerboard")).toBeNull();
     expect(screen.getByText("Half crimp")).toBeTruthy();
-    expect(screen.queryByLabelText("Half crimp, set 1")).toBeNull();
-    await fireEvent.press(screen.getByText("Start"));
+    expect(screen.getByLabelText("Half crimp, set 1 · Hangs")).toBeTruthy();
+    expect(screen.queryByText("Add exercise")).toBeNull();
+    await fireEvent.press(screen.getByText("Start timer"));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/workout/timer",
-      params: { workoutId: "w1", gripId: "half", part: "1" },
+      params: { workoutId: "w1", gripId: "half", part: "1", item: "0", set: "0" },
     });
+    await fireEvent.press(screen.getByLabelText("Half crimp, set 1"));
+    expect(screen.getByText("Start timer at set 2")).toBeTruthy();
     await view.unmount();
 
     const live = liveRun.read();
     if (live === null || live.state.player !== "sets") throw new Error("no live run");
-    const planned = {
-      items: [
-        {
-          workout: {
-            name: "Fingers and pull",
-            kind: "hang" as const,
-            hangS: 7,
-            restS: 3,
-            reps: 3,
-            sets: 2,
-            setRestS: 0,
-            id: "w1",
-            source: "mine" as const,
-            grip: "half",
-            timeUnits: { hangS: "s" as const, restS: "s" as const, setRestS: "s" as const },
-          },
-          dose: mix.items[0]?.dose,
-        },
-      ] as const,
-      exerciseRestS: 120,
-    };
+    expect(live.state.ticked).toEqual(["0:0"]);
+    // A run saved before grips had rows: its part's held sets come back ticked.
     liveRun.writeAsIs({
       ...live,
       state: {
         ...live.state,
+        ticked: [],
         fingers: {
           done: [
             {
@@ -565,23 +550,133 @@ describe("Sets player", () => {
               exercise: "half",
               sets: [
                 { reps: 3, onS: 7 },
-                { reps: 0, onS: 7 },
+                { reps: 2, onS: 7 },
               ],
             },
           ],
-          setups: [{ edgeMm: 20, loadKg: 0 }],
-          planned: { ...planned, items: [...planned.items] },
+          setups: [{ edgeMm: 25, loadKg: 5 }],
+          planned: {
+            items: [
+              {
+                workout: {
+                  name: "Fingers and pull",
+                  kind: "hang",
+                  hangS: 7,
+                  restS: 3,
+                  reps: 3,
+                  sets: 2,
+                  setRestS: 0,
+                  id: "w1",
+                  source: "mine",
+                  grip: "half",
+                  timeUnits: { hangS: "s", restS: "s", setRestS: "s" },
+                },
+                dose: { sets: 2, reps: 3, onS: 7, offS: 3 },
+              },
+            ],
+            exerciseRestS: 120,
+          },
         },
       },
     });
     await renderWithHang(<SetsScreen run={mix} />);
-    expect(screen.getByText("3 of 6 hangs")).toBeTruthy();
-    expect(screen.getByLabelText("Half crimp, set 1 · Hangs")).toBeTruthy();
+    expect(screen.queryByText(/Start timer|Resume timer/)).toBeNull();
+    const merged = liveRun.read()?.state;
+    expect(merged?.player === "sets" && merged).toMatchObject({
+      ticked: expect.arrayContaining(["0:0", "0:1"]),
+      gripSetups: { "0": { edgeMm: 25, loadKg: 5 } },
+    });
+    expect(merged?.player === "sets" && merged.fingers).toBeUndefined();
+    await fireEvent.press(screen.getByLabelText("Open Half crimp, 2 sets × 3 hangs · 7s"));
+    expect(screen.getByText(/25 mm edge/)).toBeTruthy();
     await fireEvent.press(screen.getByText("Finish"));
     const [[{ params }]] = (router.replace as jest.Mock).mock.calls.slice(-1) as [
       [{ params: { done: string } }],
     ];
     expect(JSON.parse(params.done).map((d: { exercise: string }) => d.exercise)).toEqual(["Row"]);
+    const saved = liveRun.read()?.state;
+    expect(saved?.player === "sets" && saved.fingers).toMatchObject({
+      done: [{ item: 0, exercise: "half", sets: [{ reps: 3 }, { reps: 2 }] }],
+      setups: [{ edgeMm: 25, loadKg: 5 }],
+    });
+  });
+
+  it("resumes a grip's timer in its rest from the run's rest row, which Resume leaves running", async () => {
+    const mix: WorkoutRun = {
+      ...run,
+      title: "Fingers and pull",
+      items: [
+        { exercise: "half", dose: { sets: 2, reps: 3, onS: 7, offS: 3, setRestS: 120 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    };
+    const view = await renderWithHang(<SetsScreen run={mix} />);
+    await view.unmount();
+    const live = liveRun.read();
+    if (live === null || live.state.player !== "sets") throw new Error("no live run");
+    const start = partTimerStart(mix, () => true, undefined, { item: 0, set: 0 });
+    if (start === null) throw new Error("no timer");
+    const protocols = start.planned.items.map((i) => protocolOf(i.workout));
+    const t0 = Date.now() - 40_000;
+    const resting = togglePause(tick(startWorkoutRun(protocols, [], t0), t0 + 36_000), t0 + 36_000);
+    liveRun.writeAsIs({
+      ...live,
+      state: {
+        ...live.state,
+        fingers: {
+          run: resting,
+          setups: [{ edgeMm: 20, loadKg: 0 }],
+          planned: start.planned,
+          at: { item: 0, set: 0 },
+        },
+      },
+    });
+    await renderWithHang(<SetsScreen run={mix} />);
+    await act(async () => {
+      liveRun.writeRest({ at: "0:0", next: null, seconds: 120, endsAt: Date.now() + 90_000 });
+    });
+    await fireEvent.press(screen.getByText("Resume timer"));
+    expect(liveRun.read()?.rest).toMatchObject({ at: "0:0" });
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/workout/timer",
+      params: { workoutId: "w1", gripId: "half", part: "1" },
+    });
+  });
+
+  it("never counts a rest under a grip while its timer is on a set", async () => {
+    const mix: WorkoutRun = {
+      ...run,
+      title: "Fingers and pull",
+      items: [
+        { exercise: "half", dose: { sets: 2, reps: 3, onS: 7, offS: 3, setRestS: 120 } },
+        { exercise: "Row", dose: { sets: 1, reps: 8 } },
+      ],
+    };
+    const view = await renderWithHang(<SetsScreen run={mix} />);
+    await fireEvent.press(screen.getByLabelText("Half crimp, set 1"));
+    expect(screen.getByLabelText(/^Rest, /)).toBeTruthy();
+    await view.unmount();
+    const live = liveRun.read();
+    if (live === null || live.state.player !== "sets") throw new Error("no live run");
+    const start = partTimerStart(mix, () => true, undefined, { item: 0, set: 1 });
+    if (start === null) throw new Error("no timer");
+    const protocols = start.planned.items.map((i) => protocolOf(i.workout));
+    const onSet = tick(startWorkoutRun(protocols, [], Date.now() - 6_000), Date.now());
+    liveRun.writeAsIs({
+      ...live,
+      state: {
+        ...live.state,
+        fingers: {
+          run: onSet,
+          setups: [{ edgeMm: 20, loadKg: 0 }],
+          planned: start.planned,
+          at: { item: 0, set: 1 },
+        },
+      },
+    });
+    await renderWithHang(<SetsScreen run={mix} />);
+    expect(screen.queryByLabelText(/^Rest, /)).toBeNull();
+    expect(liveRun.read()?.rest).toBeUndefined();
   });
   it("counts the exercise after a finished fingerboard part while the warm-up checklist is still open", async () => {
     const warm = { exercise: "Checklist", dose: { sets: 1 }, checklist: { lines: ["Jog"] } };
@@ -604,7 +699,7 @@ describe("Sets player", () => {
       state: {
         ...live.state,
         fingers: {
-          done: [{ item: 1, exercise: "half", sets: [{ reps: 1, onS: 7 }] }],
+          done: [{ item: 0, exercise: "half", sets: [{ reps: 1, onS: 7 }] }],
           setups: [{ edgeMm: 20, loadKg: 0 }],
           planned: {
             items: [

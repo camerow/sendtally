@@ -12,7 +12,17 @@ export type IntentSwap = { to: Intent; prompt: string; label: string };
 
 export type SignInOutcome = "signed-in" | "signed-up";
 
-export type SignInFlowOptions = { intent: Intent; onSignedIn: (outcome: SignInOutcome) => void };
+export type SignInFailure = {
+  provider: "google" | "apple";
+  reason: "cancelled" | "incomplete" | "error";
+  code?: string;
+};
+
+export type SignInFlowOptions = {
+  intent: Intent;
+  onSignedIn: (outcome: SignInOutcome) => void;
+  onFailed?: (failure: SignInFailure) => void;
+};
 
 export type SignInFlow = {
   phase: Phase;

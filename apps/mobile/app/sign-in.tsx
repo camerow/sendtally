@@ -1,7 +1,8 @@
 import * as AppleAuthentication from "expo-apple-authentication";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
+import { KeyboardAvoider } from "../components/KeyboardAvoider";
 import { TextInput } from "../components/TextInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GoogleMark, useSignInFlow } from "@sendtally/auth-native";
@@ -9,6 +10,7 @@ import { t } from "@sendtally/features/i18n";
 import { colors, disabledOpacity, fonts, radius } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
 import { logConversion } from "../features/analytics/conversions";
+import { useCapture } from "../features/analytics/useCapture";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
 import { press } from "../lib/press";
 import { Button } from "../features/training/components/Button";
@@ -17,12 +19,14 @@ import { goBack } from "../lib/goBack";
 export default function SignIn(): React.ReactElement | null {
   const params = useLocalSearchParams<{ intent?: string }>();
   const router = useRouter();
+  const capture = useCapture();
   const flow = useSignInFlow({
     intent: params.intent === "sign-up" ? "sign-up" : "sign-in",
     onSignedIn: (outcome) => {
       if (outcome === "signed-up") logConversion("account_created");
       router.replace("/(tabs)/sessions");
     },
+    onFailed: (failure) => capture("sign_in_failed", failure),
   });
   const { phase, busy, error, copy, swap } = flow;
   const inCodePhase = phase.name === "code";
@@ -49,10 +53,7 @@ export default function SignIn(): React.ReactElement | null {
   return (
     <SignedOutOnly>
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={{ flex: 1 }}
-        >
+        <KeyboardAvoider>
           <View style={{ flex: 1, paddingHorizontal: 22, paddingTop: 32, gap: 16 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
               {router.canGoBack() && (
@@ -265,7 +266,7 @@ export default function SignIn(): React.ReactElement | null {
               {t("auth.stravaNote")}
             </Text>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </SafeAreaView>
     </SignedOutOnly>
   );

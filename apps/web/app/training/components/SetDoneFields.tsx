@@ -1,7 +1,7 @@
 import React from "react";
 import { hangLoadValue } from "@sendtally/features/hang";
 import { fromUnit, toUnit, type SetDone, type WeightUnit, loadStep } from "@sendtally/core/hang";
-import { t } from "@sendtally/features/i18n";
+import { formatNumber, t } from "@sendtally/features/i18n";
 import { NumberField } from "../../components/NumberField";
 import { SET_COLUMNS } from "./setColumns";
 
@@ -20,6 +20,10 @@ export type SetDoneFieldsProps = {
   go?: React.ReactNode;
   /** The load a hang set shows while it has none of its own: the session's. */
   defaultLoadKg?: number;
+  /** A hang set not yet done: its values are its target, in placeholder ink. */
+  todo?: boolean;
+  /** The hangs a hang set aims for, read after a count short of it: "3 of 6". */
+  hangsOf?: number;
   onChange: (set: SetDone) => void;
 };
 
@@ -47,6 +51,8 @@ export function SetDoneFields({
   hangs = false,
   oneHang = false,
   defaultLoadKg = 0,
+  todo = false,
+  hangsOf,
   go,
   onChange,
 }: SetDoneFieldsProps): React.ReactElement {
@@ -73,7 +79,11 @@ export function SetDoneFields({
               <NumberField
                 compact
                 label={named(hangs ? t("plan.colHangs") : t("workouts.dose.reps"))}
-                value={hangs && set.reps === 0 ? null : (set.reps ?? null)}
+                value={(hangs && set.reps === 0) || todo ? null : (set.reps ?? null)}
+                {...(todo && set.reps !== undefined && { placeholder: formatNumber(set.reps) })}
+                {...(hangsOf !== undefined && {
+                  unit: t("activities.ofTime", { time: formatNumber(hangsOf) }),
+                })}
                 onChange={(n) => onChange({ ...set, reps: n })}
                 mode={{ kind: "number", step: 1, max: 1000 }}
               />
@@ -90,7 +100,8 @@ export function SetDoneFields({
               <NumberField
                 compact
                 label={named(hangs ? t("hang.load") : t("hang.weight"))}
-                value={kg === undefined ? null : toUnit(kg, unit)}
+                value={kg === undefined || todo ? null : toUnit(kg, unit)}
+                {...(todo && kg !== undefined && { placeholder: hangLoadValue(kg, unit) })}
                 onChange={(n) => onChange({ ...set, weightKg: fromUnit(n, unit) })}
                 mode={{
                   kind: "number",

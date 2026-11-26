@@ -1,21 +1,20 @@
 import { describe, expect, it } from "vitest";
 import {
   allLapsDone,
-  lapClockLabel,
   lapElapsed,
   lapSets,
   lapsDone,
   lapsPlanned,
-  lapsPlannedFor,
   withLapBack,
   lapRemovable,
-  withLapAdded,
+  withLapChanged,
+  withLapUnlogged,
   withLapLogged,
   withLapRemoved,
-  withLapStarted,
+  withLapToggled,
 } from "./exerciseLaps";
 import { parseStoredDraft } from "./draftStore";
-import { withExerciseDone } from "./exerciseTally";
+import { setsPlannedFor, startExercise, withExerciseDone, withSetAdded } from "./exerciseTally";
 import { tallyDraft } from "./tally";
 import type { LogSessionDraft } from "./types";
 
@@ -43,26 +42,25 @@ describe("circuit laps", () => {
   it("is done at the laps asked for, until + Add lap asks for one more", () => {
     const two = withLapLogged(withLapLogged(circuit("moves", 40), 40), 40);
     expect(allLapsDone(two)).toBe(true);
-    expect(lapClockLabel(two)).toBe("All laps done");
-    const more = withLapAdded(two);
+    const more = withSetAdded(two);
     expect(allLapsDone(more)).toBe(false);
-    expect(lapClockLabel(more)).toBe("Lap 3 of 3");
+    expect(lapsPlanned(more)).toBe(3);
   });
 
   it("takes back any lap that holds nothing yet, down to one", () => {
     const one = withLapLogged(circuit("moves", 40), 40);
     expect(lapRemovable(one)).toBe(true);
-    const three = withLapAdded(withLapAdded(one));
-    expect(lapClockLabel(three)).toBe("Lap 2 of 4");
+    const three = withSetAdded(withSetAdded(one));
+    expect(lapsPlanned(three)).toBe(4);
     const back = withLapRemoved(withLapRemoved(withLapRemoved(three)));
-    expect(lapClockLabel(back)).toBe("All laps done");
+    expect(allLapsDone(back)).toBe(true);
     expect(lapRemovable(back)).toBe(false);
     expect(withLapRemoved(back)).toBe(back);
     const empty = circuit("moves", 40);
     expect(lapRemovable(withLapRemoved(empty))).toBe(false);
 
     const full = withLapLogged(
-      withLapLogged(withLapAdded(withLapLogged(circuit("moves", 40), 40)), 40),
+      withLapLogged(withSetAdded(withLapLogged(circuit("moves", 40), 40)), 40),
       40
     );
     expect(allLapsDone(full)).toBe(true);
@@ -70,7 +68,7 @@ describe("circuit laps", () => {
   });
 
   it("times a lap from its start and keeps no more than its target", () => {
-    const started = withLapStarted(circuit("seconds", 240), at);
+    const started = withLapToggled(circuit("seconds", 240), at);
     const ex = started.exercise;
     if (ex === undefined) throw new Error("no exercise");
     expect(lapElapsed(ex, new Date(at.getTime() + 95_000))).toBe(95);
@@ -79,8 +77,20 @@ describe("circuit laps", () => {
     expect(lapSets(logged.climbs, 1)).toEqual([{ onS: 240 }]);
   });
 
+  it("pauses a lap's clock with its time kept, and runs on from it when started again", () => {
+    const paused = withLapToggled(
+      withLapToggled(circuit("seconds", 240), at),
+      new Date(at.getTime() + 30_000)
+    );
+    expect(paused.exercise?.setStartedAt).toBeUndefined();
+    expect(lapElapsed(paused.exercise!, new Date(at.getTime() + 90_000))).toBe(30);
+    const again = withLapToggled(paused, new Date(at.getTime() + 90_000));
+    expect(lapElapsed(again.exercise!, new Date(at.getTime() + 100_000))).toBe(40);
+    expect(withLapLogged(again, 40).exercise?.setOnS).toBeUndefined();
+  });
+
   it("reads a draft from the build before inline climbing that still carries plannedSets", () => {
-    const added = withLapAdded(withLapLogged(circuit("moves", 40), 40));
+    const added = withSetAdded(withLapLogged(circuit("moves", 40), 40));
     const old = { ...added, exercise: { ...added.exercise!, plannedSets: 2 } };
     const read = parseStoredDraft(JSON.stringify({ draft: old, savedAt: at.toISOString() }), at);
     expect(read?.draft.exercise).toMatchObject({ sets: 3, plannedSets: 2 });
@@ -92,9 +102,43 @@ describe("circuit laps", () => {
   it("remembers a circuit's laps after the tally leaves it, and an Undo puts a removed one back", () => {
     const removed = withLapRemoved(withLapLogged(circuit("moves", 40), 40));
     const left = withExerciseDone(removed, at);
-    expect(lapsPlannedFor(left, 1, 2)).toBe(1);
-    expect(lapsPlannedFor(left, 5, 2)).toBe(2);
-    expect(lapsPlannedFor(withLapBack(left, 1), 1, 2)).toBe(2);
+    expect(setsPlannedFor(left, 1, 2)).toBe(1);
+    expect(setsPlannedFor(left, 5, 2)).toBe(2);
+    expect(setsPlannedFor(withLapBack(left, 1), 1, 2)).toBe(2);
     expect(withLapBack(removed, 1).exercise?.sets).toBe(2);
+  });
+
+  it("changes a logged lap's moves, and takes its tick off with the laps after it moving up", () => {
+    const two = withLapLogged(withLapLogged(circuit("moves", 40), 40), 28);
+    expect(lapsDone(withLapChanged(two, 1, 0, 33))).toEqual([33, 28]);
+    expect(lapsDone(withLapChanged(two, 1, 1, 99))).toEqual([40, 40]);
+    expect(lapsDone(withLapUnlogged(two, 1, 0))).toEqual([28]);
+  });
+
+  it("keeps a timed lap's clock running while the tally is on another card", () => {
+    const lap = {
+      item: 1,
+      name: "Circuit laps",
+      sets: 2,
+      restS: 0,
+      lap: { unit: "seconds" as const, target: 240 },
+    };
+    const started = withLapToggled(startExercise(null, lap, at), at);
+    const away = startExercise(
+      started,
+      { item: 0, name: "4x4s", sets: 1, climbs: 4, restS: 0 },
+      at
+    );
+    expect(away.lapClocks).toEqual({ 1: { setStartedAt: at.toISOString() } });
+    const back = startExercise(away, lap, new Date(at.getTime() + 60_000));
+    expect(lapElapsed(back.exercise!, new Date(at.getTime() + 95_000))).toBe(95);
+    expect(back.lapClocks).toEqual({});
+
+    const paused = withLapToggled(back, new Date(at.getTime() + 100_000));
+    const left = withExerciseDone(paused, at);
+    expect(lapElapsed(left.lapClocks![1]!, new Date(at.getTime() + 999_000))).toBe(100);
+    const resumed = startExercise(left, lap, at);
+    expect(resumed.exercise).toMatchObject({ setOnS: 100 });
+    expect(resumed.exercise?.setStartedAt).toBeUndefined();
   });
 });

@@ -43,7 +43,7 @@ export * from "./runParams";
 export * from "./climbRows";
 export * from "./runCards";
 export * from "./setsRun";
-export { usePrescribed } from "./usePrescribed";
+export { useLoggedPrescription, usePrescribed } from "./usePrescribed";
 export * from "./workoutStart";
 export type { Picked } from "./types";
 export { usePlannedRun, type PlannedItem, type PlannedRun } from "./usePlannedRun";
@@ -62,7 +62,7 @@ export * from "./holdRow";
 export * from "./startLive";
 export * from "./useTimerPlayers";
 export * from "./hangReview";
-export { bodyHeading, checklistLine, checklistTitle, itemTitle, runItems } from "./checklist";
+export { bodyHeading, checklistLine, checklistTitle, itemTitle } from "./checklist";
 export { useLineKeys } from "./useLineKeys";
 export {
   memberSetLabel,
@@ -75,3 +75,4 @@ export {
   supersetRoundsTitle,
   type RunGroup,
 } from "./groups";
+export { useGradePicker, type GradePickerModel } from "./useGradePicker";

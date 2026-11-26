@@ -1,12 +1,14 @@
 import type { Exercise } from "@sendtally/api-client";
 import {
   EXERCISE_KINDS,
+  entryNames,
   type ExerciseKind,
   type ExerciseMeasure,
   type GripMeasure,
   type WorkoutKind,
 } from "@sendtally/core/hang";
 import { t } from "../i18n";
+import { currentLibrary } from "../library/current";
 import { exerciseKey } from "../statistics/exercises";
 import type { TallyMeasure } from "./types";
 
@@ -21,8 +23,9 @@ export function tallyMeasureOf(
 }
 
 /**
- * How the exercise a workout item names logs on the tally, by name in any case. In a climbing
- * workout, one the library does not know logs climbs, unless it is a grip, which never does.
+ * How the exercise a workout item names logs on the tally, by name in any case: the user's own,
+ * else a built-in by any of its names. In a climbing workout, one neither knows logs climbs,
+ * unless it is a grip, which never does.
  */
 export function tallyMeasuresOf(
   exercises: readonly Pick<Exercise, "name" | "kind" | "measure">[],
@@ -31,7 +34,12 @@ export function tallyMeasuresOf(
 ): (name: string) => TallyMeasure | null {
   return (name) => {
     if (isGrip(name)) return null;
-    const e = exercises.find((x) => exerciseKey(x.name) === exerciseKey(name));
+    const key = exerciseKey(name);
+    const e =
+      exercises.find((x) => exerciseKey(x.name) === key) ??
+      currentLibrary().exercises.find(
+        (b) => b.id === name || entryNames(b).some((n) => exerciseKey(n) === key)
+      )?.spec;
     return e === undefined && workoutKind === "climbing" ? "climbs" : tallyMeasureOf(e);
   };
 }

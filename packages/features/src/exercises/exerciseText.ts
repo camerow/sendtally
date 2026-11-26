@@ -17,7 +17,7 @@ export function metricText(
   if (metric === "volume") return formatNumber(value);
   if (metric === "seconds") return `${formatNumber(value)}s`;
   if (metric === "sends") return t("tally.sentCount", { count: value });
-  if (metric === "laps") return t("tally.lapCount", { count: value });
+  if (metric === "climbs") return t("common.climbCount", { count: value });
   return t("statistics.repsValue", { count: value });
 }
 
@@ -46,6 +46,6 @@ export function headlineLabel(metric: ExerciseMetric): string {
   if (metric === "volume") return t("trends.volumeScore");
   if (metric === "load") return t("statistics.heaviestDone");
   if (metric === "sends") return t("common.sent");
-  if (metric === "laps") return t("summary.laps");
+  if (metric === "climbs") return t("common.climbs");
   return metric === "seconds" ? t("statistics.longestDone") : t("statistics.mostRepsDone");
 }

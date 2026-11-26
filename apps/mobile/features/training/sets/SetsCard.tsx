@@ -42,6 +42,17 @@ export type SetsCardProps = {
   onFold: () => void;
   /** Its ··· menu: skip, move, remove. */
   menu: readonly DetailMenuRow[];
+  /** A grip: hangs × load rows, its edge under its target, and its timer button. */
+  grip?: GripCardProps;
+};
+
+export type GripCardProps = {
+  name: string;
+  edgeMm: number;
+  /** The load a set shows until it has its own. */
+  loadKg: number;
+  /** Start timer or Resume timer; none once every set is ticked. */
+  timer: { label: string; onPress: () => void } | null;
 };
 
 /** One exercise of the run: its target once in the head, then a row per set on the set grid. */
@@ -65,11 +76,17 @@ export function SetsCard({
   onAddSet,
   onFold,
   menu,
+  grip,
 }: SetsCardProps): React.ReactElement {
   const sessionRpe = useSessionTarget();
-  const name = exerciseName(item.exercise);
+  const name = grip?.name ?? exerciseName(item.exercise);
   const { setRestS, targetRpe } = item.dose;
-  const rated = targetRpe !== undefined;
+  const rated = targetRpe !== undefined || grip !== undefined;
+  const target = targetText(item.dose, grip === undefined ? "strength" : "hangboard", unit, {
+    eachSide,
+    sessionRpe,
+  });
+  const edge = grip === undefined ? undefined : t("hang.edgeLine", { n: grip.edgeMm });
   const tickedSets = done.sets.flatMap((_, i) =>
     ticked.has(setKey({ item: done.item, set: i })) ? [String(i)] : []
   );
@@ -79,7 +96,11 @@ export function SetsCard({
       head={
         <ExerciseHead
           name={name}
-          target={targetText(item.dose, "strength", unit, { eachSide, sessionRpe })}
+          target={
+            edge === undefined
+              ? target
+              : { ...target, rpe: [edge, target.rpe].filter((l) => l).join(" · ") }
+          }
           about={about}
           {...(onHistory !== undefined && { onHistory })}
           onFold={onFold}
@@ -91,10 +112,18 @@ export function SetsCard({
         accessibilityLabel: t("activities.addSetTo", { exercise: name }),
         onPress: onAddSet,
       }}
+      {...(grip !== undefined && grip.timer !== null && { action: grip.timer })}
     >
       <SetHeadings
         position={t("activities.colSet")}
-        fields={holdsOnly(done.sets) ? t("workouts.dose.hold") : t("activities.colDone")}
+        fields={
+          grip !== undefined
+            ? t("plan.colHangs")
+            : holdsOnly(done.sets)
+              ? t("workouts.dose.hold")
+              : t("activities.colDone")
+        }
+        {...(grip !== undefined && { measure: t("hang.load") })}
         rpe={rated}
       />
       {done.sets.map((set, i) => {
@@ -130,6 +159,14 @@ export function SetsCard({
                   lifting={lifting}
                   unit={unit}
                   label={label}
+                  {...(grip !== undefined && {
+                    hangs: true,
+                    defaultLoadKg: grip.loadKg,
+                    todo: !on && set.reps === item.dose.reps,
+                    ...(!on &&
+                      set.reps !== undefined &&
+                      set.reps < (item.dose.reps ?? 1) && { hangsOf: item.dose.reps ?? 1 }),
+                  })}
                   {...(!on && go(i) ? { go: go(i) } : {})}
                   onChange={(value) => onChange(i, value)}
                 />

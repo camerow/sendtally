@@ -59,7 +59,7 @@ const FINGERS_FIELDS: Record<GripMeasure, readonly DoseField[]> = {
 /** The dose numbers each kind asks for, in the order they show. */
 export const DOSE_FIELDS_OF: Record<WorkoutKind, readonly DoseField[]> = {
   hangboard: FINGERS_FIELDS.hang,
-  climbing: [count("sets", "workouts.dose.sets"), count("reps", "workouts.dose.reps"), rpe],
+  climbing: [sets, reps, rpe],
   strength: [sets, reps, weight, rpe],
   mobility: [sets, reps, time("onS", "workouts.dose.hold"), rpe],
   other: [
@@ -72,12 +72,20 @@ export const DOSE_FIELDS_OF: Record<WorkoutKind, readonly DoseField[]> = {
 /** The dose numbers each measure asks for, in the order they show. Climbing asks no grade. */
 export const DOSE_FIELDS_BY_MEASURE: Record<Exclude<DoseMeasure, "hang">, readonly DoseField[]> = {
   climbs: [
-    count("sets", "workouts.dose.sets"),
-    { ...count("reps", "workouts.dose.climbs"), placeholder: "workouts.dose.anyClimbs" },
+    sets,
+    {
+      ...count("reps", "workouts.dose.climbs"),
+      placeholder: "workouts.dose.anyClimbs",
+      range: true,
+    },
     rpe,
   ],
-  wallTime: [count("sets", "workouts.dose.sets"), time("onS", "workouts.dose.time"), rpe],
-  laps: [count("sets", "workouts.dose.laps"), count("reps", "workouts.dose.moves"), rpe],
+  wallTime: [sets, time("onS", "workouts.dose.time"), rpe],
+  laps: [
+    { ...count("sets", "workouts.dose.laps"), range: true },
+    count("reps", "workouts.dose.moves"),
+    rpe,
+  ],
   reps: [sets, reps, rpe],
   repsWeight: [sets, reps, weight, rpe],
   seconds: [count("sets", "workouts.dose.sets"), time("onS", "workouts.dose.hold"), rpe],

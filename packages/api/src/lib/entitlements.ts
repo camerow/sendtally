@@ -1,6 +1,6 @@
 import type { AuthedUser } from "../auth";
 import type { Env } from "../bindings";
-import { INSIGHTS_FEATURE, STORE_ENTITLEMENT, TRIAL_DAYS, TRIAL_FLOOR } from "../features";
+import { INSIGHTS_FEATURE, STORE_ENTITLEMENT, TRIAL_DAYS } from "../features";
 import { captureUserEvent } from "./posthog";
 import * as repo from "./repo";
 import type { RevenueCatClient, StoreEntitlement } from "./revenuecat";
@@ -25,8 +25,7 @@ export type Entitlements = { membership: Membership; trial: Trial };
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function trialEndsAt(createdAt: string): string {
-  const start = Math.max(Date.parse(createdAt), Date.parse(TRIAL_FLOOR));
-  return new Date(start + TRIAL_DAYS * DAY_MS).toISOString();
+  return new Date(Date.parse(createdAt) + TRIAL_DAYS * DAY_MS).toISOString();
 }
 
 /**

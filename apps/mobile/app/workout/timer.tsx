@@ -11,12 +11,21 @@ export default function TimerRoute(): React.ReactElement {
     gripId: string;
     end?: string;
     part?: string;
+    item?: string;
+    set?: string;
   }>();
   return (
     <OwnerKnown>
       <HangDataProvider>
         {params.part === "1" ? (
-          <PartTimerScreen workoutId={params.workoutId} />
+          <PartTimerScreen
+            workoutId={params.workoutId}
+            start={
+              params.item === undefined
+                ? null
+                : { item: Number(params.item), set: Number(params.set ?? 0) }
+            }
+          />
         ) : (
           <TimerScreen
             workoutId={params.workoutId}

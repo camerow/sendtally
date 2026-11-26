@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   cardsOf,
   finishedInOrder,
-  withCardAdded,
   withCardEnded,
   withCardFold,
   withCardMoved,
@@ -41,14 +40,6 @@ describe("a run's cards", () => {
 
   it("removes a card from the run", () => {
     expect(withCardRemoved(cardsOf(3), 1).order).toEqual([0, 2]);
-  });
-
-  it("adds an exercise as the last card, keyed past the workout's own as it started", () => {
-    const added = { exercise: "Dips", dose: { sets: 3, reps: 10 } };
-    const once = withCardAdded(cardsOf(3), added);
-    expect(once.order).toEqual([0, 1, 2, 3]);
-    expect(once.added).toEqual([added]);
-    expect(withCardAdded(withCardRemoved(once, 1), added).order).toEqual([0, 2, 3, 4]);
   });
 
   it("keeps a card folded or opened by hand, and lets it go back to its own state", () => {

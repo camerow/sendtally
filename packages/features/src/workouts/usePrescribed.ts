@@ -29,3 +29,26 @@ export function usePrescribed(
     week: link.week,
   });
 }
+
+/**
+ * What a logged workout asked for, for its targets when it is edited: its workout's doses when
+ * every item has one, since the log does not keep which turn of an alternating workout it ran.
+ */
+export function useLoggedPrescription(
+  api: SendtallyApi,
+  logged: { workoutId: string | null; membershipId: string | null; week: number | null }
+): SessionItem[] {
+  const library = useWorkoutLibrary(api).state;
+  const workout =
+    logged.workoutId === null || library.status !== "ready"
+      ? undefined
+      : library.data.workout(logged.workoutId);
+  const items = usePrescribed(
+    api,
+    logged.workoutId,
+    { membershipId: logged.membershipId, week: logged.week, focus: null },
+    0
+  );
+  // ponytail: an alternating workout's edit shows no targets because the log keeps no turn; store the variant that ran on the activity to show them.
+  return workout?.items.every((i) => i.doses.length <= 1) === true ? (items ?? []) : [];
+}

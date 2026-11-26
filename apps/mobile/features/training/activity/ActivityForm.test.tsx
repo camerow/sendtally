@@ -1,5 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { act, fireEvent, render, screen, within } from "@testing-library/react-native";
+import { act, fireEvent, render as rtlRender, screen, within } from "@testing-library/react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 import React from "react";
@@ -8,6 +9,9 @@ import type * as Activities from "@sendtally/features/activities";
 import { activityFromDraft, justLogged, newActivityDraft } from "@sendtally/features/activities";
 import { readingOrder } from "../data/renderWithHang";
 import { ActivityForm } from "./ActivityForm";
+
+const render = (ui: React.ReactElement): ReturnType<typeof rtlRender> =>
+  rtlRender(<QueryClientProvider client={new QueryClient()}>{ui}</QueryClientProvider>);
 
 const mockActions = {
   saveActivity: jest.fn(async (): Promise<boolean> => true),
@@ -35,7 +39,8 @@ jest.mock("@sendtally/features/workouts", () => ({
   ...jest.requireActual<object>("@sendtally/features/workouts"),
   useWorkoutActions: () => mockWorkouts,
 }));
-jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
+const mockApi = { climbs: () => Promise.resolve({ climbs: [] }) };
+jest.mock("../../../lib/api", () => ({ useApi: () => mockApi }));
 jest.mock("@sendtally/features/hang", () => ({
   ...jest.requireActual<object>("@sendtally/features/hang"),
   useGrips: () => ({ isGrip: () => false, gripName: (id: string) => id }),
@@ -363,7 +368,7 @@ describe("Log activity", () => {
     ).toBeNull();
   });
 
-  it("states a circuit's target as laps of moves, its sets as laps", async () => {
+  it("states a circuit's target as laps of moves, its laps as the run's lap rows", async () => {
     const done = [{ item: 0, exercise: "Circuit laps", sets: [{ reps: 40 }, { reps: 8 }] }];
     const initial = newActivityDraft(
       { kind: "climbing", workoutId: "w4", done: JSON.stringify(done) },
@@ -382,10 +387,35 @@ describe("Log activity", () => {
     );
     expect(screen.getByText("3 laps × 40 moves")).toBeTruthy();
     expect(screen.queryByText("8 of 40 moves")).toBeNull();
-    expect(screen.getByText("Lap")).toBeTruthy();
+    expect(screen.queryByText("Lap")).toBeNull();
+    expect(screen.getAllByText("of 40 moves")).toHaveLength(2);
+    expect(screen.getByLabelText("Lap 2 · Fewer moves")).toBeTruthy();
     expect(screen.getByText("Add lap")).toBeTruthy();
     expect(screen.queryByText("Remove lap")).toBeNull();
     expect(screen.queryByText("Add set")).toBeNull();
+  });
+
+  it("corrects a timed lap's time in its row, as Log workout and Edit workout allow", async () => {
+    const done = [{ item: 0, exercise: "Circuit laps", sets: [{ onS: 270 }, { onS: 200 }] }];
+    const initial = newActivityDraft(
+      { kind: "climbing", workoutId: "w4", done: JSON.stringify(done) },
+      "2026-11-17"
+    );
+    await render(
+      <ActivityForm
+        id="a1"
+        initial={initial}
+        logged={null}
+        timed
+        kindSet
+        live
+        planned={[{ exercise: "Circuit laps", dose: { sets: 2, onS: 270 } }]}
+      />
+    );
+    await fireEvent.press(screen.getByLabelText("Lap 2 · Time"));
+    for (const key of ["3", "0", "0", "Done"]) await fireEvent.press(screen.getByLabelText(key));
+    expect(screen.queryByText("3:20")).toBeNull();
+    expect(screen.getAllByText(/3:00/).length).toBeGreaterThan(0);
   });
 
   it("groups a superset's members under one header, from the log itself", async () => {
@@ -442,7 +472,7 @@ describe("Log activity", () => {
     expect(screen.queryByText("Add set")).toBeNull();
   });
 
-  it("keeps an exercise with nothing ticked, its planned sets there to tick", async () => {
+  it("keeps a climbing exercise with nothing logged, its planned sets there to climb in", async () => {
     const done = [{ item: 0, exercise: "Volume climbing", sets: [{ onS: 600 }, { onS: 600 }] }];
     const initial = newActivityDraft(
       { kind: "climbing", workoutId: "w6", done: JSON.stringify(done), off: '["0:0","0:1"]' },
@@ -461,7 +491,43 @@ describe("Log activity", () => {
     );
     expect(screen.queryByText("Not started")).toBeNull();
     expect(screen.getByText("2 sets")).toBeTruthy();
-    expect(screen.getAllByRole("checkbox", { checked: false })).toHaveLength(2);
+    expect(screen.getByLabelText("Climb in set 2")).toBeTruthy();
+    expect(screen.getAllByLabelText("V3")).toHaveLength(1);
+  });
+
+  it("edits a logged climbing exercise as the run drew it: attempts, Sent, a grade picked, Add set", async () => {
+    const climb = { grade: "V3", scale: "v", tries: 1, sent: true, style: "flash" };
+    const done = [{ item: 0, exercise: "Crimp crawls", sets: [{ climbs: [climb] }] }];
+    const initial = newActivityDraft(
+      { kind: "climbing", workoutId: "w6", done: JSON.stringify(done), off: "[]" },
+      "2026-11-22"
+    );
+    await render(<ActivityForm id="a1" initial={initial} logged={null} />);
+    await fireEvent.press(screen.getByLabelText("Increase Climb 1, V3 · Attempts"));
+    await fireEvent.press(screen.getByLabelText("V5"));
+    await fireEvent.press(screen.getByLabelText("Climb 2, V5, Sent"));
+    await fireEvent.press(screen.getByText("Add set"));
+    await fireEvent.press(screen.getByLabelText("V4"));
+    await fireEvent.press(screen.getByText("Save"));
+    expect(mockActions.saveActivity).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        done: [
+          {
+            item: 0,
+            exercise: "Crimp crawls",
+            sets: [
+              {
+                climbs: [
+                  { grade: "V3", scale: "v", tries: 2, sent: true, style: "redpoint" },
+                  { grade: "V5", scale: "v", tries: 1, sent: true, style: "flash" },
+                ],
+              },
+              { climbs: [{ grade: "V4", scale: "v", tries: 1, sent: false }] },
+            ],
+          },
+        ],
+      })
+    );
   });
 
   it("reviews a run: its target once in the head, no short line, and Discard ends the run once confirmed", async () => {

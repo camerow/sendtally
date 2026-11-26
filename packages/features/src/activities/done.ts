@@ -5,6 +5,7 @@ import {
   type Item,
   type ItemDone,
   type SessionItem,
+  type SetClimb,
   type SetDone,
   type WeightUnit,
 } from "@sendtally/core/hang";
@@ -61,14 +62,23 @@ export function setReadText(set: SetDone, unit: WeightUnit): string {
 }
 
 /** A finished exercise on one line in the target's words, its top set's reps or time and load: "5 sets × 5 reps · 60 kg". */
-export function foldedLine(sets: readonly SetDone[], unit: WeightUnit): string {
+export function foldedLine(
+  sets: readonly SetDone[],
+  unit: WeightUnit,
+  kind: "strength" | "hangboard" = "strength"
+): string {
   const top = sets.reduce<SetDone | undefined>(
     (best, s) => (best === undefined || (s.weightKg ?? 0) > (best.weightKg ?? 0) ? s : best),
     undefined
   );
   return targetText(
-    { sets: sets.length, reps: top?.reps, onS: top?.onS, weightKg: top?.weightKg },
-    "strength",
+    {
+      sets: sets.length,
+      reps: top?.reps,
+      onS: top?.onS,
+      ...(kind === "hangboard" ? { offS: top?.offS } : { weightKg: top?.weightKg }),
+    },
+    kind,
     unit
   ).work;
 }
@@ -123,12 +133,23 @@ export function withRpe(set: SetDone, rpe: number): SetDone {
   return rpe < 1 ? rest : { ...rest, rpe: Math.min(10, Math.round(rpe)) };
 }
 
-/** Another set like the last one, not yet rated. */
+/** Another set like the last one, not yet rated; a climbing set starts with no climbs. */
 export const addSet = (done: readonly ItemDone[], item: number): ItemDone[] =>
   withSets(done, item, (sets) => {
     const { rpe: _, ...last } = sets[sets.length - 1] ?? {};
-    return [...sets, last];
+    return [...sets, last.climbs === undefined ? last : { ...last, climbs: [] }];
   });
+
+/** One set's climbs changed, the set made a climbing set if it held none. */
+export const withSetClimbs = (
+  done: readonly ItemDone[],
+  item: number,
+  set: number,
+  edit: (climbs: SetClimb[]) => SetClimb[]
+): ItemDone[] =>
+  withSets(done, item, (sets) =>
+    sets.map((s, i) => (i === set ? { ...s, climbs: edit(s.climbs ?? []) } : s))
+  );
 
 /** Removing an item's last set removes the item. */
 export function removeSet(done: readonly ItemDone[], item: number, set: number): ItemDone[] {

@@ -7,7 +7,17 @@ import { PartTimerPage, TimerPage } from "../training/players/timer/TimerPage";
 export default function Route(): React.ReactElement {
   const [search] = useSearchParams();
   const params = Object.fromEntries(search);
-  if (params.part === "1") return <PartTimerPage workoutId={params.workoutId ?? ""} />;
+  if (params.part === "1")
+    return (
+      <PartTimerPage
+        workoutId={params.workoutId ?? ""}
+        start={
+          params.item === undefined
+            ? null
+            : { item: Number(params.item), set: Number(params.set ?? 0) }
+        }
+      />
+    );
   return (
     <OwnerKnown>
       <TimerPage

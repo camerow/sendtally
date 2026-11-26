@@ -150,7 +150,6 @@ export function useIntervalsPlayer({
     playSound
   );
   const { run } = timer;
-  const climbing = workout.kind === "climbing";
 
   const finish = useLatest(onFinish);
   const sent = React.useRef(false);
@@ -161,13 +160,13 @@ export function useIntervalsPlayer({
       pathname: "/workout/intervals",
       params: intervalsParams(workout),
       startedAt: run.startedAt,
-      state: { player: "timer", run, ...(climbing ? { laps: true } : {}) },
+      state: { player: "timer", run },
     });
     if (run.finished === null || sent.current) return;
     sent.current = true;
     const { done, off } = doneOfRun(workout.body, stepsDone(run));
     finish.current(done, off, run.startedAt);
-  }, [store, run, workout, climbing, finish]);
+  }, [store, run, workout, finish]);
 
   useEndOnOpen(end, timer);
 

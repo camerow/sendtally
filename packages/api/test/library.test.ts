@@ -1,6 +1,8 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it, vi } from "vitest";
 import type { BuiltInLibrary, LibraryEntry } from "@sendtally/core/hang";
+import { createdSpec } from "../src/lib/library";
+import * as repo from "../src/lib/repo";
 import { testApp } from "./harness";
 
 const call = async (
@@ -132,6 +134,159 @@ describe("built-in library", () => {
       body: { name: "Nope", description: "", names: {}, status: "active" },
     });
     expect(res.status).toBe(404);
+  });
+});
+
+describe("creating a built-in", () => {
+  const exercise = {
+    name: "Pull-up negatives",
+    description: "Slow lowers.",
+    names: { de: "Negative Klimmzüge" },
+    spec: { kind: "strength", measure: "reps" },
+  };
+  const create = (user: string, type: string, body: unknown) =>
+    call(user, `/v1/moderation/library/${type}`, { method: "POST", body });
+
+  it("is for moderators only", async () => {
+    expect((await create("climber", "exercise", exercise)).status).toBe(403);
+  });
+
+  it("adds an exercise last, named from its id, logs it, and refuses the id again", async () => {
+    const mod = await moderator("mod-create");
+    const before = await library();
+    const res = await create(mod, "exercise", exercise);
+    expect(res.status).toBe(201);
+    const entry = res.body["entry"] as LibraryEntry;
+    expect(entry).toMatchObject({
+      type: "exercise",
+      id: "pullUpNegatives",
+      status: "active",
+      translations: { de: { name: "Negative Klimmzüge" } },
+      spec: { kind: "strength", measure: "reps" },
+    });
+    const after = await library();
+    expect(after.exercises.at(-1)!.id).toBe("pullUpNegatives");
+    expect(after.exercises).toHaveLength(before.exercises.length + 1);
+    const changes = (await call(mod, "/v1/moderation/library/exercise/pullUpNegatives")).body[
+      "changes"
+    ] as { id: string; before: { name: string } }[];
+    expect(changes).toHaveLength(1);
+    expect(changes[0]!.before.name).toBe("");
+    const restore = await call(mod, `/v1/moderation/library/changes/${changes[0]!.id}/restore`, {
+      method: "POST",
+    });
+    expect(restore.status).toBe(400);
+
+    const again = await create(mod, "exercise", { ...exercise, name: "Pull up, negatives" });
+    expect(again.status).toBe(409);
+    expect(again.body["id"]).toBe("pullUpNegatives");
+  });
+
+  it("refuses a retired built-in's id", async () => {
+    const mod = await moderator("mod-create");
+    await env.DB.prepare(
+      "UPDATE library_items SET status = 'retired' WHERE type = 'exercise' AND id = 'pullUps'"
+    ).run();
+    expect((await create(mod, "exercise", { ...exercise, name: "Pull-ups" })).status).toBe(409);
+  });
+
+  it("writes nothing, history included, when the id is already in the table", async () => {
+    const changes = async (): Promise<unknown> =>
+      (
+        await env.DB.prepare(
+          "SELECT count(*) AS n FROM library_changes WHERE item_type = 'exercise' AND item_id = 'pullUps'"
+        ).first()
+      )?.["n"];
+    const before = await changes();
+    const made = await repo.createLibraryEntry(env.DB, "mod-create", {
+      ...repo.UNCREATED,
+      name: "Pull-ups",
+      type: "exercise",
+      id: "pullUps",
+      spec: { kind: "strength", measure: "reps" },
+    });
+    expect(made).toBeNull();
+    expect(await changes()).toBe(before);
+  });
+
+  it("refuses a negative or fractional number", async () => {
+    const mod = await moderator("mod-create");
+    const workout = (dose: Record<string, number>, minutes = 30) => ({
+      name: "Bad numbers",
+      description: "",
+      names: {},
+      spec: {
+        kind: "strength",
+        focus: null,
+        minutes,
+        targetRpe: 7,
+        items: [{ exercise: "pullUps", doses: [dose] }],
+      },
+    });
+    expect((await create(mod, "workout", workout({ sets: 3, reps: -5 }))).status).toBe(400);
+    expect((await create(mod, "workout", workout({ sets: 2.5 }))).status).toBe(400);
+    expect((await create(mod, "workout", workout({ sets: 3 }, 30.5))).status).toBe(400);
+    expect(
+      (
+        await create(mod, "exercise", {
+          ...exercise,
+          spec: { ...exercise.spec, dose: { sets: 0 } },
+        })
+      ).status
+    ).toBe(400);
+  });
+
+  it("takes every seeded spec but the empty first run plan, so the bounds fit what ships", async () => {
+    const lib = await library();
+    const ids = new Set(lib.exercises.map((e) => e.id));
+    const workouts = lib.workouts.filter((w) => w.spec.items.length > 0);
+    expect(lib.workouts.length - workouts.length).toBe(1);
+    for (const e of [...lib.exercises, ...workouts])
+      expect(createdSpec(e.type === "exercise" ? "exercise" : "workout", e.spec, ids)).toEqual({
+        spec: e.spec,
+      });
+  });
+
+  it("refuses a measure its kind does not take", async () => {
+    const mod = await moderator("mod-create");
+    const res = await create(mod, "exercise", {
+      ...exercise,
+      spec: { kind: "climbing", measure: "repsWeight" },
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("adds a workout of built-in exercises, and refuses an unknown exercise or a stray grip", async () => {
+    const mod = await moderator("mod-create");
+    const workout = {
+      name: "Pull day",
+      description: "",
+      names: {},
+      spec: {
+        kind: "strength",
+        focus: "strength",
+        minutes: 45,
+        targetRpe: 8,
+        items: [{ exercise: "pullUps", doses: [{ sets: 3, reps: 5 }] }],
+      },
+    };
+    const res = await create(mod, "workout", workout);
+    expect(res.status).toBe(201);
+    expect((res.body["entry"] as LibraryEntry).id).toBe("strength-pull-day");
+    expect((await library()).workouts.at(-1)!.id).toBe("strength-pull-day");
+
+    const unknown = await create(mod, "workout", {
+      ...workout,
+      name: "Other pull day",
+      spec: { ...workout.spec, items: [{ exercise: "nope", doses: [{ sets: 1 }] }] },
+    });
+    expect(unknown.status).toBe(400);
+    const grip = await create(mod, "workout", {
+      ...workout,
+      name: "Grip day",
+      spec: { ...workout.spec, items: [{ grip: "half", doses: [{ sets: 1 }] }] },
+    });
+    expect(grip.status).toBe(400);
   });
 });
 

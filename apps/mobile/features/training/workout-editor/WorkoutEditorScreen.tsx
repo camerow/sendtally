@@ -1,6 +1,7 @@
 import { randomUUID } from "expo-crypto";
 import React from "react";
-import { Alert, KeyboardAvoidingView, Platform, View } from "react-native";
+import { Alert, View } from "react-native";
+import { KeyboardAvoider } from "../../../components/KeyboardAvoider";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   gripMeasureOf,
@@ -198,10 +199,7 @@ function Editor({
         onCancel={() => goBack()}
         onSave={save}
       />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
+      <KeyboardAvoider>
         <KeypadScrollView
           contentContainerStyle={{
             gap: 18,
@@ -325,7 +323,7 @@ function Editor({
             onChange={(targetRpe) => setState((s) => ({ ...s, targetRpe }))}
           />
         </KeypadScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
       {picking !== null && (
         <ExercisePickerSheet
           items={state.items}

@@ -37,6 +37,7 @@ export const gyms = {
   "gyms.setupProgress": "Configuración {done}/{total}",
   "gyms.gym": "Rocódromo",
   "gyms.noGym": "Sin rocódromo",
+  "gyms.selectGym": "Elige un rocódromo",
   "gyms.circuit": "Circuito",
   "gyms.wall": "Pared - añade paredes en ajustes",
   "gyms.noWall": "Cualquiera",

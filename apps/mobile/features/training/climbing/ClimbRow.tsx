@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import type { ClimbDraft } from "@sendtally/features/log-session";
+import type { SetClimb } from "@sendtally/core/hang";
 import { useDisplayScales } from "@sendtally/features/settings";
 import { Stepper } from "../components/Stepper";
 import { SetRow } from "../sets/SetRow";
@@ -9,18 +9,18 @@ import { ClimbGrade, climbGradeText } from "./ClimbGrade";
 
 export type ClimbRowProps = {
   position: number;
-  climb: ClimbDraft;
+  climb: SetClimb;
   selected: boolean;
   onSelect: () => void;
   onRemove: () => void;
   onTries: (tries: number) => void;
   /** The Sent tick. */
   onFlip: () => void;
-  /** A hold opens the climb's editor, to name it. */
-  onEdit: () => void;
+  /** A hold opens the climb's editor, to name it; none where it has no editor. */
+  onEdit?: (() => void) | undefined;
 };
 
-/** One climb of the set being climbed: its grade, its attempts on − and +, and a Sent tick. */
+/** One climb of a set: its grade, its attempts on − and +, and a Sent tick. */
 export function ClimbRow({
   position,
   climb,
@@ -33,7 +33,7 @@ export function ClimbRow({
 }: ClimbRowProps): React.ReactElement {
   const scales = useDisplayScales();
   const grade = climbGradeText(climb, scales);
-  const name = climb.name.trim();
+  const name = climb.name ?? "";
   const label = t("tally.climbOfSet", { n: position, grade });
   const attempts = t("climbs.attempts");
   return (
@@ -41,7 +41,7 @@ export function ClimbRow({
       position={String(position)}
       {...(name === "" ? {} : { name })}
       label={`${label}, ${t("common.sent")}`}
-      ticked={climb.kind === "send"}
+      ticked={climb.sent}
       onToggle={onFlip}
       selected={selected}
       onSelect={onSelect}
@@ -50,15 +50,17 @@ export function ClimbRow({
     >
       <Pressable
         onPress={onSelect}
-        onLongPress={onEdit}
         accessibilityRole="button"
         accessibilityLabel={label}
         accessibilityState={{ selected }}
-        accessibilityHint={t("tally.editClimb")}
-        accessibilityActions={[{ name: "longpress", label: t("tally.editClimb") }]}
-        onAccessibilityAction={(e) => {
-          if (e.nativeEvent.actionName === "longpress") onEdit();
-        }}
+        {...(onEdit !== undefined && {
+          onLongPress: onEdit,
+          accessibilityHint: t("tally.editClimb"),
+          accessibilityActions: [{ name: "longpress", label: t("tally.editClimb") }],
+          onAccessibilityAction: (e: { nativeEvent: { actionName: string } }) => {
+            if (e.nativeEvent.actionName === "longpress") onEdit();
+          },
+        })}
         hitSlop={{ top: 12, bottom: 12 }}
       >
         <ClimbGrade climb={climb} scales={scales} />

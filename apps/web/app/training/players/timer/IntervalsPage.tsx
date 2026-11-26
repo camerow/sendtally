@@ -34,8 +34,7 @@ export function IntervalsPage({
         replace: true,
       }),
   });
-  const climbing = workout.kind === "climbing";
-  const view = intervalsView(timer.run, workout.body, timer.secondsLeft, unit, climbing);
+  const view = intervalsView(timer.run, workout.body, timer.secondsLeft, unit);
 
   return (
     <TimerFrame timer={timer} controls={{ color: view.look.fill, primary: view.primary }}>

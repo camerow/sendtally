@@ -1,6 +1,6 @@
 import React from "react";
-import { membershipPanel, useMembership } from "@sendtally/features/billing";
-import { formatDate, t } from "@sendtally/features/i18n";
+import { keepEyebrow, useMembership } from "@sendtally/features/billing";
+import { t } from "@sendtally/features/i18n";
 import { keepCopy, useHistoryCard } from "@sendtally/features/settings";
 import { MembershipCheckout } from "../../billing/components/MembershipCheckout";
 import { MembershipPanel } from "../../billing/components/MembershipPanel";
@@ -12,8 +12,7 @@ import { WizardFrame } from "../WizardFrame";
 export const KeepStep: StepComponent = ({ wizard, api }) => {
   const vm = useHistoryCard(api);
   const membership = useMembership(api);
-  const endsAt =
-    membership.state.status === "ready" ? membership.state.data.trial.endsAt : undefined;
+  const eyebrow = keepEyebrow(membership.state.status === "ready" ? membership.state.data : null);
   const joined = useMember();
   const moved = React.useRef(false);
 
@@ -36,16 +35,7 @@ export const KeepStep: StepComponent = ({ wizard, api }) => {
       {vm === null ? (
         <span className="load-state-loading">{t("common.loading")}</span>
       ) : (
-        <MembershipPanel
-          {...keepCopy(vm)}
-          eyebrow={
-            endsAt === undefined
-              ? membershipPanel().eyebrow
-              : t("billing.freeTrialEnds", {
-                  date: formatDate(new Date(endsAt), { month: "short", day: "numeric" }),
-                })
-          }
-        >
+        <MembershipPanel {...keepCopy(vm)} eyebrow={eyebrow}>
           <MembershipCheckout stay />
         </MembershipPanel>
       )}

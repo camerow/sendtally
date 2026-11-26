@@ -36,6 +36,7 @@ export const gyms = {
   "gyms.setupProgress": "Set up {done}/{total}",
   "gyms.gym": "Gym",
   "gyms.noGym": "No gym",
+  "gyms.selectGym": "Select a gym",
   "gyms.circuit": "Circuit",
   "gyms.wall": "Wall - add walls in settings",
   "gyms.noWall": "Anywhere",

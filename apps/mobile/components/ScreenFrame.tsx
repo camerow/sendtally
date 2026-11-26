@@ -1,7 +1,8 @@
 import { useIsFocused } from "expo-router/react-navigation";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { Animated, KeyboardAvoidingView, Platform, useWindowDimensions, View } from "react-native";
+import { Animated, useWindowDimensions, View } from "react-native";
+import { KeyboardAvoider } from "./KeyboardAvoider";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import type { LibraryPicture } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
@@ -152,10 +153,7 @@ export function ScreenFrame({
           </View>
         </FloatingBar.Provider>
       )}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
+      <KeyboardAvoider>
         {pictured ? (
           <HeroScroll pictures={hero} covered={covered} onCovered={setCovered}>
             {children}
@@ -190,7 +188,7 @@ export function ScreenFrame({
             {footer}
           </View>
         )}
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
       <ToastFooter.Provider value={shown ? footerHeight : 0}>{overlay}</ToastFooter.Provider>
     </SafeAreaView>
   );

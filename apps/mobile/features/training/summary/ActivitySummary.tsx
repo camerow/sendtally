@@ -108,7 +108,7 @@ export function ActivitySummary({
                 />
               }
             >
-              {isClimbingSets(d.sets) && d.sets.every((set) => set.onS === undefined) ? (
+              {isClimbingSets(d.sets) ? (
                 <ClimbSetsRead sets={d.sets} />
               ) : (
                 d.sets.map((set, n) => (

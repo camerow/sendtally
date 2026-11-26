@@ -9,7 +9,9 @@ export const auth = {
   "auth.secondFactorOnWeb":
     "Dieses Konto braucht einen weiteren Anmeldeschritt, den die App noch nicht kann. Melde dich auf sendtally.com an, um ihn abzuschließen.",
   "auth.googleIncomplete":
-    "Die Google-Anmeldung wurde nicht abgeschlossen. Versuch es noch einmal.",
+    "Die Google-Anmeldung wurde nicht abgeschlossen. Versuch es noch einmal oder nutze unten deine E-Mail.",
+  "auth.appleIncomplete":
+    "Die Apple-Anmeldung wurde nicht abgeschlossen. Versuch es noch einmal oder nutze unten deine E-Mail.",
   "auth.invalidEmail": "Gib eine gültige E-Mail-Adresse ein.",
   "auth.emailCodeDisabled": "Die Anmeldung per E-Mail-Code ist für dieses Konto nicht aktiviert.",
   "auth.noAccount":

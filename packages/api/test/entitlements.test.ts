@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { newlyGranted, trialEndsAt } from "../src/lib/entitlements";
-import { INSIGHTS_FEATURE, STORE_ENTITLEMENT, TRIAL_FLOOR } from "../src/features";
+import { INSIGHTS_FEATURE, STORE_ENTITLEMENT } from "../src/features";
 import { storeEntitlementsOf, webhookUserIds } from "../src/lib/revenuecat";
 import { jsonResponse, makeFakeFetch, type RecordedCall } from "./fakes";
 import { testApp } from "./harness";
@@ -350,13 +350,12 @@ describe("newlyGranted", () => {
 describe("trial", () => {
   const LATER = "2027-03-10T12:00:00.000Z";
 
-  it("runs 30 days from sign-up", () => {
-    expect(trialEndsAt(LATER)).toBe("2027-04-09T12:00:00.000Z");
+  it("runs 14 days from sign-up", () => {
+    expect(trialEndsAt(LATER)).toBe("2027-03-24T12:00:00.000Z");
   });
 
-  it("gives an account older than the trial 30 days from the floor", () => {
-    expect(trialEndsAt("2026-01-01T00:00:00.000Z")).toBe(trialEndsAt(TRIAL_FLOOR));
-    expect(trialEndsAt(TRIAL_FLOOR)).toBe("2026-12-31T00:00:00.000Z");
+  it("has ended for an account older than 14 days", () => {
+    expect(trialEndsAt("2026-01-01T00:00:00.000Z")).toBe("2026-01-15T00:00:00.000Z");
   });
 
   it("answers the trial end from the account's sign-up", async () => {
@@ -365,7 +364,7 @@ describe("trial", () => {
       .bind(LATER)
       .run();
     const body = await entitlements(testApp(fetchImpl), "user_trial_1");
-    expect(body.trial).toEqual({ endsAt: "2027-04-09T12:00:00.000Z" });
+    expect(body.trial).toEqual({ endsAt: "2027-03-24T12:00:00.000Z" });
     expect(body.membership.active).toBe(false);
   });
 

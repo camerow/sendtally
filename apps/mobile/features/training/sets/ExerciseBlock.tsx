@@ -1,5 +1,5 @@
 import React from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { Button } from "../components/Button";
 
@@ -9,12 +9,25 @@ export type ExerciseBlockProps = {
   children?: React.ReactNode;
   /** Add set or Add round, under its rows. */
   add?: { label: string; accessibilityLabel?: string; onPress: () => void };
+  /** The card's timer, beside Add set and filling the rest of its line. */
+  action?: { label: string; onPress: () => void };
+  /** A press on the block outside its controls, such as a climbing card taking the grade picker. */
+  onPress?: () => void;
 };
 
 /** One exercise, or one superset, on every screen and for every kind: a frame, a head, its rows. */
-export function ExerciseBlock({ head, children, add }: ExerciseBlockProps): React.ReactElement {
+export function ExerciseBlock({
+  head,
+  children,
+  add,
+  action,
+  onPress,
+}: ExerciseBlockProps): React.ReactElement {
   return (
-    <View
+    <Pressable
+      accessible={false}
+      disabled={onPress === undefined}
+      onPress={onPress}
       style={{
         gap: 4,
         padding: 14,
@@ -27,7 +40,7 @@ export function ExerciseBlock({ head, children, add }: ExerciseBlockProps): Reac
       {head}
       {children}
       {add !== undefined && (
-        <View style={{ flexDirection: "row", paddingTop: 6 }}>
+        <View style={{ flexDirection: "row", gap: 8, paddingTop: action === undefined ? 6 : 8 }}>
           <Button
             label={add.label}
             {...(add.accessibilityLabel !== undefined && {
@@ -36,10 +49,20 @@ export function ExerciseBlock({ head, children, add }: ExerciseBlockProps): Reac
             onPress={add.onPress}
             variant="outline"
             icon="plus"
-            height={40}
+            height={action === undefined ? 40 : 48}
           />
+          {action !== undefined && (
+            <Button
+              label={action.label}
+              onPress={action.onPress}
+              variant="primary"
+              icon="play"
+              height={48}
+              style={{ flex: 1 }}
+            />
+          )}
         </View>
       )}
-    </View>
+    </Pressable>
   );
 }

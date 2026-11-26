@@ -1,6 +1,6 @@
 import type { ActivityRecord, HangSessionRecord } from "@sendtally/api-client";
 import type { CalendarDate, WeightUnit } from "@sendtally/core/hang";
-import { climbsLine, isClimbingSets, wallLine } from "./climbing";
+import { climbsLine, climbsTotal, isClimbingSets, wallTimeText } from "./climbing";
 import { checklistsLine, setText } from "./done";
 import { bestSet, hangGrids, hangTotals } from "./summary";
 import { dayMonth, shortDate } from "../hang/format";
@@ -74,7 +74,13 @@ function exerciseMeta(
     .filter((d) => exerciseKey(d.exercise) === series.key)
     .flatMap((d) => d.sets);
   if (!isClimbingSets(sets)) return setText(best, unit);
-  return sets.some((s) => s.onS !== undefined) ? wallLine(sets) : climbsLine(sets);
+  if (!sets.some((s) => s.onS !== undefined)) return climbsLine(sets);
+  const { climbs, top } = climbsTotal(sets);
+  return [
+    wallTimeText(sets.reduce((n, s) => n + (s.onS ?? 0), 0)),
+    t("common.climbCount", { count: climbs }),
+    ...(top === null ? [] : [t("sessions.topSend", { grade: top })]),
+  ].join(" · ");
 }
 
 /** An exercise's sessions, newest first: the workout it was in and what it did there. */
@@ -95,9 +101,16 @@ export function exerciseItems(
   });
 }
 
+/** "6 climbs · 5 sent · top V6 · 52 min" for a workout that climbed, else how long it took. */
+function workoutMeta(a: ActivityRecord): string {
+  const climbed = a.done.flatMap((d) => d.sets).filter((s) => s.climbs !== undefined);
+  const minutes = t("hang.minutes", { n: a.minutes });
+  return climbed.length === 0 ? minutes : `${climbsLine(climbed)} · ${minutes}`;
+}
+
 /**
- * Every session of one workout, newest first, each titled by its day: a logged workout with how
- * long it took, a hangboard one with its load and hangs held.
+ * Every session of one workout, newest first, each titled by its day: a logged workout with what it
+ * climbed and how long it took, a hangboard one with its load and hangs held.
  */
 export function workoutHistory(
   activities: readonly ActivityRecord[],
@@ -109,7 +122,7 @@ export function workoutHistory(
   const dated = [
     ...ofWorkout(activities, workoutId).map((a) => ({
       date: a.date,
-      item: { ...activityItem(a, unit, currentId), meta: t("hang.minutes", { n: a.minutes }) },
+      item: { ...activityItem(a, unit, currentId), meta: workoutMeta(a) },
     })),
     ...ofWorkout(model.data.sessions, workoutId).map((s) => ({
       date: s.date,

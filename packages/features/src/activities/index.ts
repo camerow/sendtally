@@ -34,6 +34,7 @@ export {
   setText,
   setReadText,
   withRpe,
+  withSetClimbs,
 } from "./done";
 export { doneOfRun, intervalsSummary, stepDose } from "./intervals";
 export {
@@ -43,11 +44,15 @@ export {
   climbsLine,
   climbsTotal,
   isClimbingSets,
+  lapPlanFor,
   lapPlanOf,
   lapsLine,
   wallChip,
   wallLine,
   type ClimbsTotal,
+  wallTimeText,
+  withClimbSent,
+  withClimbTries,
 } from "./climbing";
 export { useExerciseNames } from "./useExerciseNames";
 export { useWeightUnit } from "./useWeightUnit";

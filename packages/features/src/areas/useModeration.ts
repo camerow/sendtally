@@ -10,8 +10,9 @@ import {
 } from "@sendtally/api-client";
 import { queries, useQuery, type Query } from "../query";
 
-export function useModerationQueue(api: SendtallyApi): Query<ModerationQueue> {
-  return useQuery(queries.moderation(api));
+/** The queue, fetched only when `enabled`, so a non-moderator never asks for it. */
+export function useModerationQueue(api: SendtallyApi, enabled = true): Query<ModerationQueue> {
+  return useQuery({ ...queries.moderation(api), enabled });
 }
 
 export function useModerationCreations(api: SendtallyApi): Query<ModerationCreations> {

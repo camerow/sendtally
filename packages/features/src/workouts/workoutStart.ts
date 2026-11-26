@@ -41,8 +41,8 @@ export type WorkoutStart =
 
 /**
  * The player a workout's items call for: hangboard in the timer, all timed in the
- * intervals player (climbing measured in time too, as laps), anything else in the sets player.
- * A mix of grips and other exercises always opens the sets player,
+ * intervals player, anything else in the sets player. Climbing, timed or not, always runs in
+ * the sets player, as does a mix of grips and other exercises,
  * where its grips are one fingerboard part. A climbing workout with no items opens the live
  * session, and any other workout with none the sets player with no cards, its description the
  * body. An exercise done on each side plays twice in the intervals player.
@@ -63,10 +63,9 @@ export function workoutStart(
   const run = { kind, title: w.name, date, workoutId: w.id, link, session, minutes: w.minutes };
   if (first === undefined)
     return { open: "sets", run: { ...run, exerciseRestS: w.exerciseRestS, items: [] } };
-  if (items.some((i) => isGrip(i.exercise)))
-    return { open: "sets", run: { ...run, exerciseRestS: w.exerciseRestS, items: [...items] } };
-  const climbs = items.some((i) => ["climbs", "laps"].includes(tally(i.exercise) ?? ""));
-  if (!climbs && items.every((i) => i.dose.onS !== undefined))
+  const sets =
+    kind === "climbing" || items.some((i) => isGrip(i.exercise) || tally(i.exercise) !== null);
+  if (!sets && items.every((i) => i.dose.onS !== undefined))
     return { open: "intervals", run: { ...run, body: intervalsOf(items, eachSide) } };
   return { open: "sets", run: { ...run, exerciseRestS: w.exerciseRestS, items: [...items] } };
 }

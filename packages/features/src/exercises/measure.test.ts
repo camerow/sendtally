@@ -19,6 +19,12 @@ describe("tallyMeasuresOf", () => {
     expect(tallyMeasuresOf(library, "strength", noGrip)("Hard Boulders")).toBeNull();
   });
 
+  it("reads a built-in the user never saved by its own measure, so ARC keeps its clock", () => {
+    expect(tallyMeasuresOf([], "climbing", noGrip)("ARC")).toBe("wallTime");
+    expect(tallyMeasuresOf([], "climbing", noGrip)("arc")).toBe("wallTime");
+    expect(tallyMeasuresOf([], "climbing", noGrip)("Circuit laps")).toBe("laps");
+  });
+
   it("never logs a grip on the tally, though the library does not know it", () => {
     const isGrip = (name: string): boolean => name === "half";
     expect(tallyMeasuresOf(library, "climbing", isGrip)("half")).toBeNull();

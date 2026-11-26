@@ -49,6 +49,8 @@ export type ItemEditorProps = {
   member?: number;
   /** The wizard's card: one row of numbers per dose, no target RPE or dose name, and Remove in the menu. */
   compact?: boolean;
+  /** Takes one dose only, so it offers no alternate sessions. */
+  single?: boolean;
 };
 
 function IconButton({
@@ -84,6 +86,7 @@ export function ItemEditor({
   onMoveUp,
   onMoveDown,
   preview = false,
+  single = false,
   member,
   tag,
   compact = false,
@@ -211,13 +214,15 @@ export function ItemEditor({
       {member === undefined && (
         <>
           {compact && <div className="item-editor-rest--compact">{rest}</div>}
-          <div className="item-editor-foot">
-            <SwitchField
-              label={t("workouts.alternates")}
-              checked={alternating}
-              onChange={(on) => onChange(withAlternates(item, on))}
-            />
-          </div>
+          {!single && (
+            <div className="item-editor-foot">
+              <SwitchField
+                label={t("workouts.alternates")}
+                checked={alternating}
+                onChange={(on) => onChange(withAlternates(item, on))}
+              />
+            </div>
+          )}
           {!compact && rest}
         </>
       )}

@@ -11,7 +11,7 @@ const AIR = {
   seconds: 5,
   reps: 1,
   sends: 1,
-  laps: 1,
+  climbs: 1,
   averageGrade: 1,
   topGrade: 1,
   volume: 2,

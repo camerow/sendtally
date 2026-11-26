@@ -3,37 +3,54 @@ import {
   doneAsPrescribed,
   isChecklist,
   restAfterItem,
+  currentPhase,
+  isWork,
+  remainingInPhase,
   setOf,
+  type HangSetup,
   type ItemDone,
   type SessionItem,
   type SetDone,
 } from "@sendtally/core/hang";
 import type { Activity, Exercise } from "@sendtally/api-client";
-import {
-  climbingLastTime,
-  climbsLine,
-  lapPlanOf,
-  lapsLine,
-  wallLine,
-} from "../activities/climbing";
+import { climbingLastTime, climbsLine, lapPlanOf, lapsLine } from "../activities/climbing";
 import { addSet, changeSet, previousSets } from "../activities/done";
 import { tallyMeasuresOf } from "../exercises/measure";
 import type { TallyMeasure } from "../exercises/types";
 import { eachSideOf } from "../exercises/sides";
-import { allLapsDone, lapSets, lapsPlannedFor } from "../log-session/exerciseLaps";
-import { allSetsDone, exerciseSets, nextSet, startExercise } from "../log-session/exerciseTally";
+import { allLapsDone, lapSets, withLapBack } from "../log-session/exerciseLaps";
+import {
+  allSetsDone,
+  exerciseSets,
+  nextSet,
+  setsPlannedFor,
+  startExercise,
+  withClimbBack,
+  withSetAdded,
+  withSetPressed,
+} from "../log-session/exerciseTally";
+import { tallyDraft } from "../log-session/tally";
+import type { ClimbDraft, LogSessionDraft } from "../log-session/types";
 import { climbedKeys, type ClimbPlan } from "./climbRows";
 import type { LiveSession } from "../log-session/useLiveSession";
-import { partPlaces, partPlanned, type FingersPart } from "./fingersPart";
+import {
+  gripTimer,
+  partOfRows,
+  partPlaces,
+  partPlanned,
+  partSetups,
+  timerWrites,
+  withTimerWrites,
+  type FingersPart,
+  type GripTimer,
+} from "./fingersPart";
 import type { Hold } from "./holdClock";
 import { itemTitle } from "./checklist";
 import type { LiveRunStore } from "./liveRun";
-import { newDoseFor } from "./doseFields";
 import { runParams, type RunFinish, type WorkoutRun } from "./runParams";
 import {
   cardsFrom,
   finishedInOrder,
-  withCardAdded,
   withCardEnded,
   withCardFold,
   withUnitMoved,
@@ -43,7 +60,6 @@ import {
   withSetBack,
   type RunCards,
 } from "./runCards";
-import type { Picked } from "./types";
 import { useLatest } from "./useLatest";
 import {
   afterKey,
@@ -85,17 +101,21 @@ export type SetsPlayerInputs = {
   exercises: readonly Pick<Exercise, "name" | "kind" | "measure" | "eachSide">[] | null;
   /** Which items name grips: together they are the run's fingerboard part. */
   isGrip: (exercise: string) => boolean;
+  /** A grip's edge and load as the user last set them, which its save starts from. */
+  gripSetup: (item: PlannedRun["items"][number]) => HangSetup;
 };
 
-/** A mix's fingerboard part in the player: where it sits, what its timer runs, and where it is. */
+/** A mix's grips in the player: each its own card, and the hang timer that writes their rows. */
 export type PartInPlayer = {
-  /** Its grips' places in the run, the first where its card sits. */
+  /** Its grips' places in the run, in the order its timer plans them. */
   places: number[];
   planned: PlannedRun;
-  /** None until its timer starts. */
+  /** The hang timer's run, none until one starts. */
   state: FingersPart | undefined;
-  /** Where it is now: the timer's run while it has it, or its rows once edited. */
-  change: (next: FingersPart) => void;
+  /** A grip's edge and load as its timer last set them; null for one it never ran. */
+  setup: (item: number) => HangSetup | null;
+  /** A grip card's timer button, none once its every set is ticked. */
+  timer: (item: number) => GripTimer | null;
 };
 
 export type ClimbingItem = {
@@ -151,24 +171,28 @@ export type SetsPlayer = {
   /** Whether a card, or the superset it is in, has a place to move to that way. */
   canMove: (item: number, by: -1 | 1) => boolean;
   remove: (item: number) => void;
-  /** An exercise added to this run only, at the end, with the dose the editor would give it. */
-  addExercise: (picked: Picked) => void;
   toggle: (at: SetAt) => void;
   change: (item: number, set: number, value: SetDone) => void;
   /** Ends the hold, recording what it counted on its set, which ticks itself. */
   endHold: (h: Hold, seconds: number | null) => void;
   /** The sets a climbing item logged on the tally. */
   climbedSets: (item: number) => SetDone[];
-  /** The climbing card the tally is on, whose current set takes the grades picked. */
+  /** The climbing card the tally is on, whose picked set takes the grades picked. */
   climbAt: number | null;
+  /** The draft with the tally on a climbing card, which a change on it builds on; it moves no focus. */
+  draftOn: (item: number) => LogSessionDraft;
+  /** The Undo of a climb removed from the tally, which puts it back where it was. */
+  climbRemoved: (climb: ClimbDraft) => () => void;
+  /** The Undo of a lap's −, wherever the tally is by then. */
+  lapBack: (item: number) => void;
   /** What a climbing item asks of each set, for its rows. */
   climbPlan: (item: number) => ClimbPlan;
-  /** The laps a circuit item asks for now, after any + Add lap or −. */
-  lapsPlanned: (item: number) => number;
-  /** Moves the tally onto a climbing card, from its menu. */
+  /** The sets or laps a climbing item asks for now, after any Add set, Add lap or −. */
+  setsPlanned: (item: number) => number;
+  /** Moves the tally onto a climbing card, from a press on it. */
   climbOn: (item: number) => void;
-  /** Whether a climbing card can take the tally: not on it already, and climbing still to do. */
-  canClimbOn: (item: number) => boolean;
+  /** A climbing set's line pressed: the grades picked go to that set, a set to come ending those before it. */
+  pressSet: (item: number, set: number) => void;
   /** A checklist's typed lines, one set each; null for an exercise. */
   checklist: (item: number) => string[] | null;
   /** The supersets as the cards stand now: neighbours sharing a group. */
@@ -195,6 +219,7 @@ export function useSetsPlayer({
   activities,
   exercises,
   isGrip,
+  gripSetup,
 }: SetsPlayerInputs): SetsPlayer {
   const [resumed] = React.useState(() => {
     const live = store.resumed("/workout/sets", run.workoutId);
@@ -217,6 +242,7 @@ export function useSetsPlayer({
     () => resumed?.done ?? doneAsPrescribed(run.items)
   );
   const [ticked, setTicked] = React.useState<ReadonlySet<string>>(() => new Set(resumed?.ticked));
+  const [gripSetups, setGripSetups] = React.useState(() => resumed?.gripSetups ?? {});
   const [tickedAt, setLastTickAt] = React.useState(resumed?.lastTickAt);
   const [cards, setCards] = React.useState<RunCards>(() =>
     cardsFrom(resumed?.cards, run.items.length)
@@ -228,7 +254,7 @@ export function useSetsPlayer({
   const logged = climbs.length + climbs.reduce((n, c) => n + (c.endurance?.laps.length ?? 0), 0);
   const lastTickAt = ticked.size === 0 && logged === 0 ? undefined : tickedAt;
   const lastRemoved = useLatest(removed);
-  const latest = useLatest({ done, ticked });
+  const latest = useLatest({ done, ticked, gripSetups });
   const rest = useRest(store);
   // Kept by value: grips load after the run opens, and a new list each render would write each render.
   const placesKey = partPlaces(run.items, isGrip).join(",");
@@ -262,15 +288,52 @@ export function useSetsPlayer({
         cards,
         ...(part && { fingers: part }),
         ...(places.length > 0 && { grips: places }),
+        ...(Object.keys(gripSetups).length > 0 && { gripSetups }),
         ...(climbed.length > 0 && { climbed }),
       },
     });
-  }, [store, run, startedAt, lastTickAt, done, ticked, cards, places, climbed]);
+  }, [store, run, startedAt, lastTickAt, done, ticked, cards, places, gripSetups, climbed]);
   const planned = partPlanned(run, places);
   const inPart = (item: number): boolean => places.includes(item);
-  const partOpen =
-    places.length > 0 &&
-    (fingers === undefined || ("run" in fingers && fingers.run.finished === null));
+  // Finish leaves the part's rows in `fingers` for the review, which no merge may take back.
+  const finishing = React.useRef(false);
+  // The timer's sets, ticks and setups land in the rows and the store in one write, so a run
+  // killed between the two never loses them.
+  const merge = useLatest((): void => {
+    if (fingers === undefined || finishing.current) return;
+    const was = latest.current;
+    const writes = timerWrites(fingers, places);
+    const after = withTimerWrites(was.done, was.ticked, writes);
+    const setups = { ...was.gripSetups, ...partSetups(fingers, places) };
+    const newSetups = JSON.stringify(setups) !== JSON.stringify(was.gripSetups);
+    const consumed = !("run" in fingers) || fingers.run.finished !== null;
+    const timer = "run" in fingers && fingers.run.finished === null ? fingers.run : null;
+    if (timer !== null && isWork(currentPhase(timer).kind) && rest.rest !== null) rest.skip();
+    if (after === null && !newSetups && !consumed) return;
+    const done = after?.done ?? was.done;
+    const ticked = after?.ticked ?? was.ticked;
+    const now = store.resumed("/workout/sets", run.workoutId);
+    if (now?.state.player === "sets")
+      store.writeAsIs({
+        ...now,
+        state: {
+          ...now.state,
+          done,
+          ticked: [...ticked],
+          gripSetups: setups,
+          fingers: consumed ? undefined : now.state.fingers,
+        },
+      });
+    setDone(done);
+    setTicked(ticked);
+    setGripSetups(setups);
+    const last = writes.filter((w) => w.ended && !was.ticked.has(setKey(w.at))).at(-1);
+    if (last === undefined) return;
+    setLastTickAt(Date.now());
+    if (timer !== null && !isWork(currentPhase(timer).kind))
+      rest.tick(setKey(last.at), Math.round(remainingInPhase(timer, Date.now())));
+  });
+  React.useEffect(() => merge.current(), [fingers, merge]);
   const items = [...run.items.slice(0, cards.base), ...cards.added];
   const tallyMeasure = tallyMeasuresOf(exercises ?? [], run.kind, isGrip);
   const listAt = (item: number): boolean => {
@@ -298,7 +361,7 @@ export function useSetsPlayer({
   const sets = cards.order.flatMap((key) => {
     const g = groupOf(key);
     if (g !== undefined) return g.members[0] === key ? roundOrder(g) : [];
-    return allSets(live).filter((at) => at.item === key && tallyOf(key) === null && !inPart(key));
+    return allSets(live).filter((at) => at.item === key && tallyOf(key) === null);
   });
   const previous = (exercise: string): SetDone[] =>
     activities === null || run.workoutId === null
@@ -307,13 +370,6 @@ export function useSetsPlayer({
   const lifting = (item: number): boolean => isLifting(run.kind, items[item]);
   const shown = withPrevious(done, lifting, previous);
   const next = sets.find((at) => !ticked.has(setKey(at))) ?? null;
-  /** The fingerboard part while it is still to do and comes before the set being worked on. */
-  const partFirst =
-    partOpen &&
-    places[0] !== undefined &&
-    (next === null || cards.order.indexOf(places[0]) < cards.order.indexOf(next.item))
-      ? places[0]
-      : null;
   const nameOf = (item: number): string => {
     const at = items[item];
     return at === undefined ? "" : itemTitle(at);
@@ -360,25 +416,30 @@ export function useSetsPlayer({
 
   const sided = eachSideOf(exercises ?? []);
   const holdTarget = (at: SetAt): number | null => {
-    const targetS = items[at.item]?.dose.onS;
+    const targetS = inPart(at.item) ? undefined : items[at.item]?.dose.onS;
     return !ticked.has(setKey(at)) && targetS !== undefined && targetS > 0 ? targetS : null;
+  };
+  const setsPlanned = (item: number): number => {
+    const asked = items[item]?.dose.sets ?? 0;
+    return draft === null ? asked : setsPlannedFor(draft, item, asked);
   };
   const climbPlan = (item: number): ClimbPlan => {
     const dose = items[item]?.dose ?? { sets: 0 };
     const measure = tallyOf(item);
+    const perSet = dose.repsMax ?? dose.reps;
     return {
-      sets: dose.sets,
-      ...(measure === "climbs" && dose.reps !== undefined ? { climbs: dose.reps } : {}),
+      sets: setsPlanned(item),
+      ...(measure === "climbs" && perSet !== undefined ? { climbs: perSet } : {}),
       ...(measure === "wallTime" ? { onS: dose.onS ?? 0 } : {}),
     };
   };
   const climbDone = (item: number): boolean => {
-    const sets = items[item]?.dose.sets ?? 0;
+    const sets = setsPlanned(item);
     const ex = draft?.exercise?.item === item ? draft.exercise : undefined;
     if (tallyOf(item) === "laps")
       return ex !== undefined && draft !== null
         ? allLapsDone(draft)
-        : draft !== null && lapSets(climbs, item).length >= lapsPlannedFor(draft, item, sets);
+        : draft !== null && lapSets(climbs, item).length >= sets;
     return ex !== undefined ? allSetsDone(ex) : nextSet(climbs, item) > sets;
   };
   const doneOf = (item: number): boolean =>
@@ -392,32 +453,48 @@ export function useSetsPlayer({
     tallyOf(k) !== null &&
     !cards.shut.includes(k) &&
     !cards.skipped.includes(k);
+  const on = draft?.exercise;
   const climbAt =
     (climbable(chosen) && (cards.open.includes(chosen) || !climbDone(chosen))
       ? chosen
-      : cards.order.find((k) => climbable(k) && !climbDone(k))) ?? null;
-  const begin = useLatest((item: number): void => {
+      : (cards.order.find((k) => climbable(k) && !climbDone(k)) ??
+        (on !== undefined && climbable(on.item) ? on.item : undefined))) ?? null;
+  const startOf = (item: number): LogSessionDraft | null => {
     const at = items[item];
     const measure = tallyOf(item);
-    if (at === undefined || measure === null) return;
-    const { climbs: perSet, onS } = climbPlan(item);
-    tally.replace(
-      startExercise(
-        draft,
-        {
-          item,
-          name: nameOf(item),
-          sets: draft === null ? at.dose.sets : lapsPlannedFor(draft, item, at.dose.sets),
-          ...(perSet === undefined ? {} : { climbs: perSet }),
-          ...(onS === undefined ? {} : { onS }),
-          ...(measure === "laps" ? { lap: lapPlanOf(at.dose) } : {}),
-          restS: at.dose.setRestS ?? 0,
-        },
-        new Date()
-      )
+    if (at === undefined || measure === null) return null;
+    const { climbs: perSet, onS, sets } = climbPlan(item);
+    return startExercise(
+      draft,
+      {
+        item,
+        name: nameOf(item),
+        sets,
+        ...(perSet === undefined ? {} : { climbs: perSet }),
+        ...(onS === undefined ? {} : { onS }),
+        ...(measure === "laps" ? { lap: lapPlanOf(at.dose) } : {}),
+        restS: at.dose.setRestS ?? 0,
+      },
+      new Date()
     );
+  };
+  const begin = useLatest((item: number): void => {
+    const started = startOf(item);
+    if (started !== null) tally.replace(started);
   });
-  const on = draft?.exercise;
+  const draftOn = (item: number): LogSessionDraft =>
+    on?.item === item && draft !== null
+      ? draft
+      : (startOf(item) ?? draft ?? tallyDraft(new Date()));
+  /** A press that moves the grades to a card: the card they leave stays as it was, open. */
+  const tallyOn = (item: number): LogSessionDraft => {
+    if (on?.item === item && draft !== null) return draft;
+    const was = climbAt;
+    if (was !== null && was !== item && !cards.shut.includes(was)) withFold(was, false);
+    setChosen(item);
+    return draftOn(item);
+  };
+  const draftNow = useLatest(draft);
   const onClimbAt =
     on !== undefined &&
     on.item === climbAt &&
@@ -470,18 +547,15 @@ export function useSetsPlayer({
           ? null
           : measure === "laps"
             ? lapsLine(logged, at.dose)
-            : measure === "wallTime"
-              ? wallLine(logged)
-              : climbsLine(logged),
+            : climbsLine(logged),
     };
   };
 
   /** The card the run is on; -1 once nothing is left, where the header names no position. */
   const positionOn =
-    partFirst ??
-    (climbAt !== null && next !== null
+    climbAt !== null && next !== null
       ? (cards.order.find((k) => k === climbAt || k === next.item) ?? -1)
-      : (next?.item ?? climbAt ?? -1));
+      : (next?.item ?? climbAt ?? -1);
   return {
     startedAt,
     shown,
@@ -496,7 +570,7 @@ export function useSetsPlayer({
             cards.order,
             positionOn,
             (k) => (listAt(k) ? null : (groupOf(k)?.id ?? String(k))),
-            (k) => inPart(k) && !partOpen
+            (k) => inPart(k) && doneOf(k)
           ),
     rest,
     hold,
@@ -517,6 +591,11 @@ export function useSetsPlayer({
     skipped: (item) => cards.skipped.includes(item),
     // In a superset a set is a round: it is added to every member, and goes from every member.
     addSet: (item) => {
+      if (tallyOf(item) !== null) {
+        tally.replace(withSetAdded(tallyOn(item)));
+        withFold(item, false);
+        return;
+      }
       const members = groupOf(item)?.members ?? [item];
       setDone((all) =>
         members.reduce(
@@ -593,24 +672,33 @@ export function useSetsPlayer({
       setCards((c) => withCardRemoved(c, item));
       if (selected?.item === item) setSelected(null);
     },
-    addExercise: ({ exercise, kind, measure, dose }) => {
-      const key = cards.base + cards.added.length;
-      const item = { exercise, dose: dose ?? newDoseFor(kind, measure) };
-      setCards((c) => withCardAdded(c, item));
-      setDone((all) => [...all, ...doneAsPrescribed([item]).map((d) => ({ ...d, item: key }))]);
-    },
     toggle,
     change,
     endHold,
     climbedSets,
     climbAt,
     climbPlan,
-    lapsPlanned: (item) => {
-      const asked = items[item]?.dose.sets ?? 0;
-      return draft === null ? asked : lapsPlannedFor(draft, item, asked);
+    draftOn,
+    climbRemoved: (climb) => {
+      const at = draft?.climbs.indexOf(climb) ?? 0;
+      return () => {
+        const now = draftNow.current;
+        if (now !== null) tally.replace(withClimbBack(now, climb, at));
+      };
     },
-    climbOn: setChosen,
-    canClimbOn: (item) => tallyOf(item) !== null && climbAt !== item && !climbDone(item),
+    lapBack: (item) => {
+      const now = draftNow.current;
+      if (now !== null) tally.replace(withLapBack(now, item));
+    },
+    setsPlanned,
+    climbOn: (item) => {
+      if (climbAt !== item || on?.item !== item) tally.replace(tallyOn(item));
+    },
+    pressSet: (item, set) => {
+      const out = withSetPressed(tallyOn(item), set, new Date());
+      tally.replace(out.draft);
+      if (out.rest !== null) rest.tick(setKey({ item, set: out.rest.set - 1 }), out.rest.seconds);
+    },
     checklist: (item) => items[item]?.checklist?.lines ?? null,
     groups,
     live,
@@ -633,6 +721,13 @@ export function useSetsPlayer({
           ),
         },
       });
+      finishing.current = true;
+      const now = store.resumed("/workout/sets", run.workoutId);
+      if (planned !== null && now?.state.player === "sets") {
+        const setups = planned.items.map((it, k) => gripSetups[String(places[k])] ?? gripSetup(it));
+        const rows = partOfRows(done, ticked, places, planned, setups);
+        store.writeAsIs({ ...now, state: { ...now.state, fingers: rows } });
+      }
       const each = shown.flatMap((d) => (inPart(d.item) ? [] : [{ d, sets: climbedOf(d) }]));
       const ran = each.map(({ d, sets }) => {
         const lines = items[d.item]?.checklist?.lines;
@@ -654,11 +749,8 @@ export function useSetsPlayer({
             places,
             planned,
             state: fingers,
-            change: (next) => {
-              const now = store.resumed("/workout/sets", run.workoutId);
-              if (now?.state.player === "sets")
-                store.writeAsIs({ ...now, state: { ...now.state, fingers: next } });
-            },
+            setup: (item) => gripSetups[String(item)] ?? null,
+            timer: (item) => gripTimer(item, live[item]?.dose.sets ?? 0, ticked, fingers, places),
           },
   };
 }

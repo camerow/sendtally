@@ -70,17 +70,18 @@ jest.mock("@clerk/clerk-expo", () => ({
   useUser: () => ({ isLoaded: true, user: null }),
   useClerk: () => ({ signOut: () => Promise.resolve() }),
 }));
-// A query unmounted waits out its gcTime, five minutes for a climb search, before it goes; a
-// timer that long kept a lone test file's run open. Unreferenced, it still fires but holds nothing.
+// A query unmounted waits out its gcTime, five minutes for a climb search, before it goes, and
+// a pending Strava post polls on an interval; either kept a test worker open. Unreferenced, a
+// timer still fires but holds nothing.
 type Unreferenced = { unref?: () => void };
+function unreferenced<T>(id: T): T {
+  (id as Unreferenced).unref?.();
+  return id;
+}
 timeoutManager.setTimeoutProvider({
-  setTimeout: (callback, delay) => {
-    const id = setTimeout(callback, delay);
-    (id as Unreferenced).unref?.();
-    return id;
-  },
+  setTimeout: (callback, delay) => unreferenced(setTimeout(callback, delay)),
   clearTimeout: (id) => clearTimeout(id),
-  setInterval: (callback, delay) => setInterval(callback, delay),
+  setInterval: (callback, delay) => unreferenced(setInterval(callback, delay)),
   clearInterval: (id) => clearInterval(id),
 });
 

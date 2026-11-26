@@ -1,6 +1,6 @@
 ---
 name: library-add
-description: Add built-in exercises and workouts to the standard training library every user gets, as a D1 data migration. Use when Will says "add an exercise", "add a workout", "/library-add", or describes exercises or workouts every user should get out of the box. Editing an existing built-in's text happens in the moderation Library tab, not here.
+description: Add built-in exercises and workouts to the standard training library every user gets, as a D1 data migration. Use when Will says "add an exercise", "add a workout", "/library-add", or describes exercises or workouts every user should get out of the box. Moderators can also create one built-in at a time, and edit existing ones, on the web admin Library page (/app/admin/library).
 argument-hint: "<what to add, e.g. pull-ups and a pyramid workout>"
 ---
 
@@ -8,7 +8,9 @@ argument-hint: "<what to add, e.g. pull-ups and a pyramid workout>"
 
 The library lives in D1, in `library_items` (`packages/api/src/db/schema.ts`), served to the apps by `GET /v1/library`.
 A user's own exercise links to a built-in by id, and sessions and plans reference a built-in workout by id, so an id is frozen once it ships and never reused, retired ones included.
-Will edits names, descriptions and other-language names, and retires built-ins, in the moderation Library tab on the web; this skill only adds new ones, until moderation can create them.
+Moderators create single built-ins, and edit names, descriptions and other-language names, add pictures and retire built-ins, on the web admin Library page (`/app/admin/library`, New exercise and New workout).
+That form derives the id from the name the same way (`libraryIdOf` in `packages/core/src/hang/builtIns.ts`) and the Worker refuses an id any built-in ever had.
+Use this skill when Will asks you to add built-ins, several at once, or with translated descriptions, which the form does not take.
 Do not ask Will for anything you can default; make the call, then list what you chose at the end.
 
 ## Where things are
@@ -31,14 +33,14 @@ Read the seed and any later library migrations before writing, so a new id is un
 
 ## Exercise
 
-- `id`: camelCase from the English name, unique among exercises.
+- `id`: `libraryIdOf("exercise", name, kind)`, camelCase from the English name, never one any exercise ever had.
 - `spec`: `{"kind", "measure"[, "dose"]}`.
   `kind` is one of `EXERCISE_KINDS` (`climbing`, `strength`, `mobility`, `other`); `measure` one of `EXERCISE_MEASURES` (`reps`, `repsWeight`, `seconds`, `secondsWeight`, `rounds`, `laps`; climbing only takes `reps`, `seconds` or `laps`).
   `dose` only when the measure's default start is wrong for it, e.g. `{"sets": 1}`.
 
 ## Workout
 
-- `id`: kebab-case, prefixed by kind like the others (`strength-…`, `mobility-…`, `climb-…`).
+- `id`: `libraryIdOf("workout", name, kind)`, kebab-case prefixed by kind (`climb-…`, `fingers-…`, `strength-…`, `mobility-…`, `other-…`), never one any workout ever had.
 - `spec`: `{"kind", "focus", "minutes", "targetRpe", "items"}`.
   `kind` is one of `WORKOUT_KINDS`; `focus` one of `FOCI` or `null`; `minutes` and `targetRpe` (1-10) set, except hangboard workouts, which leave both `null` like their siblings.
 - `items`: hangboard uses `{"grip", "doses"}` with a grip from `BUILT_IN_GRIPS`; every other kind uses `{"exercise": "<built-in exercise id>", "doses"}`, adding the exercise first when it is new.
