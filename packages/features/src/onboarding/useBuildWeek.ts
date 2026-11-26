@@ -13,6 +13,7 @@ import {
   STARTERS,
   usePlanPath,
   withDay,
+  withKnown,
   pickToggled,
   type PlanPath,
 } from "./planPath";
@@ -117,13 +118,14 @@ export function useBuildWeek({
   actions: PlanActions;
   newId: () => string;
 }): BuildWeekState {
-  const path = useSeededPlanPath(api);
+  const walk = useSeededPlanPath(api);
   const plan = usePlan(api).state;
   const once = useOnePress();
   const start = nextMonday(today);
-  if (!path.seeded || plan.status !== "ready" || library.status !== "ready")
+  if (!walk.seeded || plan.status !== "ready" || library.status !== "ready")
     return { status: "loading", start };
   const workout = library.data.workout;
+  const path = withKnown(walk, (id) => workout(id) !== undefined);
 
   const schedule = (): void => {
     const placed = placedWorkouts(path);

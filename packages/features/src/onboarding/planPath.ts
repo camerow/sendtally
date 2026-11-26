@@ -96,5 +96,15 @@ export const withDay = (p: PlanPath, id: string, day: Weekday): PlanPath => {
 };
 
 /** The picked workouts with a day: the block holds these, and a pick with no day is left out. */
+/** The walk less any workout the library no longer has, so a deleted one is neither drawn nor scheduled. */
+export const withKnown = (p: PlanPath, known: (id: string) => boolean): PlanPath =>
+  p.workouts.every(known)
+    ? p
+    : {
+        ...p,
+        workouts: p.workouts.filter(known),
+        days: Object.fromEntries(Object.entries(p.days).filter(([id]) => known(id))),
+      };
+
 export const placedWorkouts = (p: PlanPath): string[] =>
   p.workouts.filter((id) => (p.days[id]?.length ?? 0) > 0);

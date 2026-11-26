@@ -6,6 +6,7 @@ import {
   placedWorkouts,
   seededPath,
   withDay,
+  withKnown,
   pickToggled,
   type PlanPath,
 } from "./planPath";
@@ -85,6 +86,14 @@ describe("picking and placing", () => {
     expect(placed.days).toEqual({ b: [0, 2, 4] });
     expect(withDay(placed, "b", 2).days).toEqual({ b: [0, 4] });
     expect(pickToggled(placed, "b")).toEqual({ ...EMPTY_PATH, workouts: ["a"], days: {} });
+  });
+
+  it("drops a workout the library no longer has, with its days", () => {
+    const walk = withDay(withDay(pickToggled(EMPTY_PATH, "gone"), "gone", 1), CLIMBING, 0);
+    const known = withKnown({ ...walk, workouts: [CLIMBING, "gone"] }, (id) => id !== "gone");
+    expect(known.workouts).toEqual([CLIMBING]);
+    expect(Object.keys(known.days)).toEqual([CLIMBING]);
+    expect(withKnown(known, () => true)).toBe(known);
   });
 
   it("leaves a picked workout with no day out of the block", () => {

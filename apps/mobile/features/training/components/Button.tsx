@@ -56,9 +56,10 @@ export function Button({
       accessibilityState={{ disabled: !!disabled }}
       style={press([
         {
-          height,
+          minHeight: height,
           borderRadius: height >= 52 ? 14 : radius.control,
           paddingHorizontal: height > 40 ? 16 : 13,
+          paddingVertical: 6,
           alignItems: "center",
           justifyContent: "center",
           opacity: disabled ? disabledOpacity : 1,
