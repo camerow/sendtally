@@ -95,3 +95,37 @@ describe("Shape the weeks, opened from the reveal", () => {
     expect(wizard.next).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("Shape the weeks, opened a second time", () => {
+  const shaped: Plan = {
+    ...plan,
+    weekChanges: [{ membershipId: "m1", week: 2, dose: 0, itemId: "0", change: { reps: 6 } }],
+  };
+  const show = (): Promise<unknown> =>
+    renderWithHang(<BlockStep wizard={wizard} api={mockApi} />, hangData(), {
+      workouts: [legs],
+      plan: shaped,
+    });
+  const saved = (): unknown => mockPlan.saveDraft.mock.calls.at(-1)?.at(0);
+
+  it("shows the first visit's changes and saves them again when left untouched", async () => {
+    await show();
+    expect(screen.getAllByText("6 reps").length).toBeGreaterThan(0);
+    await fireEvent.press(screen.getByRole("button", { name: "Save" }));
+    expect(saved()).toEqual(expect.objectContaining({ weekChanges: shaped.weekChanges }));
+  });
+
+  it("sends an empty change for a shaped week that is cleared", async () => {
+    await show();
+    const addRep = screen.getByRole("checkbox", { name: "Add a rep each week" });
+    await fireEvent.press(addRep);
+    await fireEvent.press(addRep);
+    expect(screen.queryAllByText("6 reps")).toHaveLength(0);
+    await fireEvent.press(screen.getByRole("button", { name: "Save" }));
+    expect(saved()).toEqual(
+      expect.objectContaining({
+        weekChanges: [{ membershipId: "m1", week: 2, dose: 0, itemId: "0", change: {} }],
+      })
+    );
+  });
+});

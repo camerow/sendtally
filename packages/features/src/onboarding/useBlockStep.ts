@@ -116,6 +116,75 @@ export const weekChangesOf = (
     )
   );
 
+/** The cells this item of this workout was shaped to, as saved. */
+export const savedChanges = (
+  saved: readonly WeekChange[],
+  membershipId: string | undefined,
+  itemId: string,
+  doses: number,
+  weeks: number
+): Changes =>
+  Object.fromEntries(
+    Array.from({ length: doses }, (_, dose) => [
+      dose,
+      Array.from(
+        { length: weeks },
+        (_, w) =>
+          saved.find(
+            (c) =>
+              c.membershipId === membershipId &&
+              c.itemId === itemId &&
+              c.dose === dose &&
+              c.week === w + 1
+          )?.change ?? {}
+      ),
+    ])
+  );
+
+const sameChange = (a: Partial<Dose> | undefined, b: Partial<Dose>): boolean =>
+  Object.keys(a ?? {}).length === Object.keys(b).length &&
+  Object.entries(b).every(([k, v]) => a?.[k as keyof Dose] === v);
+
+const OFF: Shortcuts = { stepUp: false, deload: false };
+
+const SHORTCUTS: readonly Shortcuts[] = [
+  { stepUp: true, deload: true },
+  { stepUp: true, deload: false },
+  { stepUp: false, deload: true },
+];
+
+/** The shortcuts whose fill the saved cells are, so a step opened again shows them on. */
+export const savedShortcuts = (
+  changes: Changes,
+  doses: readonly Dose[],
+  weeks: number,
+  unit: WeightUnit
+): Shortcuts =>
+  changedWeeks(Object.values(changes), weeks) === 0
+    ? OFF
+    : (SHORTCUTS.find((s) =>
+        Object.entries(filled(doses, s, weeks, unit)).every(([d, list]) =>
+          list.every((c, w) => sameChange(changes[Number(d)]?.[w], c))
+        )
+      ) ?? OFF);
+
+/** What Save sends: each changed cell, and an empty change for each saved one now as written. */
+export const weekChangesToSave = (
+  saved: readonly WeekChange[],
+  members: readonly string[],
+  doses: readonly (readonly Partial<Dose>[])[],
+  itemId: string
+): WeekChange[] => {
+  const next = weekChangesOf(members, doses, itemId);
+  const cleared = saved.filter(
+    (s) =>
+      s.itemId === itemId &&
+      members.includes(s.membershipId) &&
+      !next.some((n) => n.membershipId === s.membershipId && n.week === s.week && n.dose === s.dose)
+  );
+  return [...next, ...cleared.map((s) => ({ ...s, change: {} }))];
+};
+
 export type BlockStepState =
   | { status: "loading" }
   | {
@@ -156,9 +225,9 @@ export function useBlockStep({
   const path = useSeededPlanPath(api);
   const plan = usePlan(api).state;
   const [stepped, setStepped] = React.useState<number | null>(null);
-  const [shortcuts, setShortcuts] = React.useState<Shortcuts>({ stepUp: false, deload: false });
+  const [toggled, setShortcuts] = React.useState<Shortcuts | null>(null);
   const [shown, setShown] = React.useState(0);
-  const [changes, setChanges] = React.useState<Changes>({});
+  const [edited, setChanges] = React.useState<Changes | null>(null);
   const once = useOnePress();
 
   const block =
@@ -179,6 +248,15 @@ export function useBlockStep({
   const written = item.doses[dose] ?? item.doses[0] ?? { sets: 1 };
   const weighted = (item.doses[0]?.weightKg ?? 0) > 0;
   const itemId = itemIdOf(item, workout.items.indexOf(item));
+  const saved = savedChanges(
+    plan.data.weekChanges,
+    path.members[workout.id],
+    itemId,
+    item.doses.length,
+    weeks
+  );
+  const changes = edited ?? saved;
+  const shortcuts = toggled ?? savedShortcuts(saved, item.doses, weeks, unit);
   const shownChanges = sized(changes[dose], weeks);
   const anyShortcut = shortcuts.stepUp || shortcuts.deload;
 
@@ -191,11 +269,11 @@ export function useBlockStep({
   const resize = (by: 1 | -1): void => {
     const next = clampWeeks(weeks + by, MIN_WEEKS);
     setStepped(next);
-    setChanges((c) => resized(c, item.doses, shortcuts, next, unit));
+    setChanges((c) => resized(c ?? saved, item.doses, shortcuts, next, unit));
   };
 
   const setCell = (week: number, change: Partial<Dose>): void =>
-    setChanges((c) => withCell(c, dose, weeks, week, change));
+    setChanges((c) => withCell(c ?? saved, dose, weeks, week, change));
 
   const ready = library.status === "ready" ? library.data : null;
   const doses = item.doses.map((_, d) => sized(changes[d], weeks));
@@ -214,7 +292,7 @@ export function useBlockStep({
     void actions.saveDraft({
       ...emptyPlanDraft,
       block: { ...block, weeks },
-      weekChanges: weekChangesOf(members, doses, itemId),
+      weekChanges: weekChangesToSave(plan.data.weekChanges, members, doses, itemId),
     });
     wizard.next({ count: changedWeeks(doses, weeks), shortcut: shortcutOf(shortcuts) });
   };
