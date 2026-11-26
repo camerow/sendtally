@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClientProvider } from "@tanstack/react-query";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, useLocation } from "react-router";
 import type { Entitlements } from "@sendtally/api-client";
 import type { Wizard } from "@sendtally/features/settings";
 import { ENTITLEMENTS, hangingApi, seededClient } from "../../billing/testBilling";
@@ -38,6 +38,7 @@ let root: Root;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.useFakeTimers({ toFake: ["Date"] });
   host = document.createElement("div");
   document.body.appendChild(host);
   root = createRoot(host);
@@ -46,9 +47,18 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  vi.useRealTimers();
 });
 
+const settled = (): void => void vi.advanceTimersByTime(600);
+
 const finish = vi.fn();
+
+function Path(): React.ReactElement {
+  return <output>{useLocation().pathname}</output>;
+}
+
+const path = (): string | null | undefined => host.querySelector("output")?.textContent;
 
 const show = (entitlements: Entitlements): void =>
   act(() =>
@@ -56,6 +66,7 @@ const show = (entitlements: Entitlements): void =>
       <QueryClientProvider client={seededClient(entitlements)}>
         <MemoryRouter>
           <DoneStep wizard={wizard} api={hangingApi} finish={finish} />
+          <Path />
         </MemoryRouter>
       </QueryClientProvider>
     )
@@ -77,6 +88,7 @@ describe("P7", () => {
     expect(cards?.querySelector("a, button")).toBeNull();
     const join = [...host.querySelectorAll("a")].find((a) => a.textContent === "Become a member");
     expect(join?.getAttribute("href")).toBe("/app/membership?source=onboarding");
+    settled();
     done();
     expect(wizard.complete).toHaveBeenCalledWith("later", "plan");
   });
@@ -84,9 +96,22 @@ describe("P7", () => {
   it("finishes the walk where Become a member goes, without the wizard's own routing", () => {
     show(ENTITLEMENTS.trial);
     const join = [...host.querySelectorAll("a")].find((a) => a.textContent === "Become a member");
+    settled();
     act(() => join?.click());
     expect(finish).toHaveBeenCalledExactlyOnceWith("later", "plan");
     expect(wizard.complete).not.toHaveBeenCalled();
+  });
+
+  it("does not follow Become a member on a tap as it opens, where the step before had its Continue", () => {
+    show(ENTITLEMENTS.trial);
+    const join = [...host.querySelectorAll("a")].find((a) => a.textContent === "Become a member");
+    act(() => join?.click());
+    expect(path()).toBe("/");
+    expect(finish).not.toHaveBeenCalled();
+    settled();
+    act(() => join?.click());
+    expect(path()).toBe("/app/membership");
+    expect(finish).toHaveBeenCalledExactlyOnceWith("later", "plan");
   });
 
   it("drops the trial panel once the trial is over", () => {
@@ -99,7 +124,18 @@ describe("P7", () => {
     show(ENTITLEMENTS.member);
     expect(host.textContent).toContain("Your week");
     expect(host.textContent).not.toContain("Members get…");
+    settled();
     done();
     expect(wizard.complete).toHaveBeenCalledWith("member", "plan");
+  });
+
+  it("ignores a tap as it opens, the second of a double tap on the step before, then takes one", () => {
+    show(ENTITLEMENTS.member);
+    done();
+    expect(wizard.complete).not.toHaveBeenCalled();
+    settled();
+    done();
+    done();
+    expect(wizard.complete).toHaveBeenCalledExactlyOnceWith("member", "plan");
   });
 });

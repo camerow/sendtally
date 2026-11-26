@@ -59,6 +59,7 @@ let root: Root;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.useFakeTimers({ toFake: ["Date"] });
   setPlanPath(() => ({ workouts: [], days: {}, members: {}, blockId: null, seeded: false }));
   host = document.createElement("div");
   document.body.appendChild(host);
@@ -81,7 +82,10 @@ const show = (workouts: WorkoutRecord[] = []): void =>
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  vi.useRealTimers();
 });
+
+const settled = (): void => void vi.advanceTimersByTime(600);
 
 const button = (label: string): HTMLButtonElement | undefined =>
   [...host.querySelectorAll<HTMLButtonElement>("button")].find(
@@ -118,6 +122,7 @@ describe("Build your week", () => {
       host.querySelector('[role="group"][aria-label="Climbing"] [aria-label="Monday"]')
     ).not.toBeNull();
     expect(host.querySelectorAll('button[aria-pressed="true"]')).toHaveLength(2);
+    settled();
     act(() => {
       schedule()?.click();
       schedule()?.click();
@@ -131,6 +136,18 @@ describe("Build your week", () => {
       expect.objectContaining({ workoutId: "climb-session", weekdays: [0] })
     );
     expect(wizard.next).toHaveBeenCalledWith({ count: 1, sessions: 1, own: 0 });
+  });
+
+  it("ignores Schedule as it opens, the second of a double tap on the step before, then takes one press", () => {
+    show();
+    act(() => button("Monday")?.click());
+    act(() => schedule()?.click());
+    expect(actions.saveBlock).not.toHaveBeenCalled();
+    settled();
+    act(() => schedule()?.click());
+    act(() => schedule()?.click());
+    expect(actions.saveBlock).toHaveBeenCalledTimes(1);
+    expect(wizard.next).toHaveBeenCalledTimes(1);
   });
 
   it("opens the builder as a side step", () => {

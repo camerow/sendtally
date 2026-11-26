@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { t } from "@sendtally/features/i18n";
-import { useHistoryCard } from "@sendtally/features/settings";
+import { useHistoryCard, useOnePress } from "@sendtally/features/settings";
 import { ClosingOffer } from "../../billing/ClosingOffer";
 import { useBilling } from "../../billing/useBilling";
 import { Button } from "../../training/components/Button";
@@ -13,6 +13,7 @@ import { HistoryCard } from "./components/HistoryCard";
 export function DoneStep({ wizard, api }: Parameters<StepComponent>[0]): React.ReactElement {
   const vm = useHistoryCard(api);
   const member = useBilling()?.membership.active === true;
+  const once = useOnePress(true);
   return (
     <WizardFrame
       wizard={wizard}
@@ -22,7 +23,7 @@ export function DoneStep({ wizard, api }: Parameters<StepComponent>[0]): React.R
           variant="primary"
           height={54}
           label={t("common.done")}
-          onPress={() => wizard.complete(member ? "member" : "later", "log")}
+          onPress={once(() => wizard.complete(member ? "member" : "later", "log"))}
         />
       }
     >

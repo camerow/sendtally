@@ -11,7 +11,7 @@ export function ClosingOffer({
   onJoin,
 }: {
   api: SendtallyApi;
-  onJoin: () => void;
+  onJoin: React.MouseEventHandler;
 }): React.ReactElement | null {
   const view = useMembersGet(api);
   const { state } = useMembership(api);

@@ -38,6 +38,7 @@ let root: Root;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.useFakeTimers({ toFake: ["Date"] });
   host = document.createElement("div");
   document.body.appendChild(host);
   root = createRoot(host);
@@ -46,7 +47,10 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  vi.useRealTimers();
 });
+
+const settled = (): void => void vi.advanceTimersByTime(600);
 
 const show = (entitlements: Entitlements): void =>
   act(() =>
@@ -75,6 +79,7 @@ describe("H6", () => {
     expect(cards?.querySelector("a, button")).toBeNull();
     const join = [...host.querySelectorAll("a")].find((a) => a.textContent === "Become a member");
     expect(join?.getAttribute("href")).toBe("/app/membership?source=onboarding");
+    settled();
     done();
     expect(wizard.complete).toHaveBeenCalledWith("later", "log");
   });
@@ -88,7 +93,18 @@ describe("H6", () => {
   it("shows a member no offer, only Done", () => {
     show(ENTITLEMENTS.member);
     expect(host.textContent).not.toContain("Members get…");
+    settled();
     done();
     expect(wizard.complete).toHaveBeenCalledWith("member", "log");
+  });
+
+  it("ignores a tap as it opens, the second of a double tap on the step before, then takes one", () => {
+    show(ENTITLEMENTS.member);
+    done();
+    expect(wizard.complete).not.toHaveBeenCalled();
+    settled();
+    done();
+    done();
+    expect(wizard.complete).toHaveBeenCalledExactlyOnceWith("member", "log");
   });
 });

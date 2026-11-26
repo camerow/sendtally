@@ -120,7 +120,7 @@ export function useBuildWeek({
 }): BuildWeekState {
   const walk = useSeededPlanPath(api);
   const plan = usePlan(api).state;
-  const once = useOnePress();
+  const once = useOnePress(true);
   const start = nextMonday(today);
   if (!walk.seeded || plan.status !== "ready" || library.status !== "ready")
     return { status: "loading", start };

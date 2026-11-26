@@ -1,5 +1,5 @@
-import { describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import type { Entitlements } from "@sendtally/api-client";
 import type { Wizard } from "@sendtally/features/settings";
@@ -35,6 +35,12 @@ const wizard = {
   capture: jest.fn(),
 } satisfies Wizard;
 
+afterEach(() => {
+  jest.useRealTimers();
+});
+
+const settled = (): Promise<unknown> => act(() => jest.advanceTimersByTime(600));
+
 const show = (entitlements: Entitlements): Promise<unknown> =>
   renderWithHang(
     withBilling(<DoneStep wizard={wizard} api={apiWith(entitlements)} />, entitlements)
@@ -59,11 +65,28 @@ describe("P7", () => {
   });
 
   it("shows a member the week and Done, which lands on the plan", async () => {
+    jest.useFakeTimers();
     wizard.complete.mockClear();
     await show(ENTITLEMENTS.member);
+    await settled();
     expect(screen.getByText("Your week")).toBeTruthy();
     expect(screen.queryByText("Members get…")).toBeNull();
     await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    expect(wizard.complete).toHaveBeenCalledWith("member", "plan");
+  });
+
+  it("ignores a tap as it opens, the second of a double tap on the step before, then takes one", async () => {
+    jest.useFakeTimers();
+    wizard.complete.mockClear();
+    await show(ENTITLEMENTS.member);
+    const done = (): Promise<unknown> =>
+      fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    await done();
+    expect(wizard.complete).not.toHaveBeenCalled();
+    await settled();
+    await done();
+    await done();
+    expect(wizard.complete).toHaveBeenCalledTimes(1);
     expect(wizard.complete).toHaveBeenCalledWith("member", "plan");
   });
 });

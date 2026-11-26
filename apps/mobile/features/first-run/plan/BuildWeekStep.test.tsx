@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import type { Plan, SendtallyApi } from "@sendtally/api-client";
 import type { Membership } from "@sendtally/core/hang";
@@ -58,6 +58,12 @@ beforeEach(() => {
   setPlanPath(() => ({ workouts: [], days: {}, members: {}, blockId: null, seeded: false }));
 });
 
+afterEach(() => {
+  jest.useRealTimers();
+});
+
+const settled = (): Promise<unknown> => act(() => jest.advanceTimersByTime(600));
+
 describe("Build your week", () => {
   it("arrives with Climbing picked and its days open, none set, and Schedule off", async () => {
     await renderWithHang(<BuildWeekStep wizard={wizard} api={mockApi} />, hangData(), { plan });
@@ -80,6 +86,7 @@ describe("Build your week", () => {
   });
 
   it("puts each pressed day on the week and schedules what has a day, leaving a pick with none out", async () => {
+    jest.useFakeTimers();
     await renderWithHang(<BuildWeekStep wizard={wizard} api={mockApi} />, hangData(), { plan });
     await fireEvent.press(screen.getByRole("checkbox", { name: "Climbing on Monday" }));
     await fireEvent.press(screen.getByRole("checkbox", { name: "Climbing on Friday" }));
@@ -89,6 +96,7 @@ describe("Build your week", () => {
     expect(screen.getByText("3 sessions a week")).toBeTruthy();
     expect(screen.getByLabelText("Take Max hangs back out")).toBeTruthy();
 
+    await settled();
     await fireEvent.press(schedule());
     expect(mockPlan.saveBlock).toHaveBeenCalledWith(
       expect.objectContaining({ name: "October block", weeks: 4, start: "2026-10-05" })
@@ -98,6 +106,19 @@ describe("Build your week", () => {
       expect.objectContaining({ workoutId: "max10", weekdays: [2], position: 1 }),
     ]);
     expect(wizard.next).toHaveBeenCalledWith({ count: 2, sessions: 3, own: 0 });
+  });
+
+  it("ignores Schedule as it opens, the second of a double tap on the step before, then takes one press", async () => {
+    jest.useFakeTimers();
+    await renderWithHang(<BuildWeekStep wizard={wizard} api={mockApi} />, hangData(), { plan });
+    await fireEvent.press(screen.getByRole("checkbox", { name: "Climbing on Monday" }));
+    await fireEvent.press(schedule());
+    expect(mockPlan.saveBlock).not.toHaveBeenCalled();
+    await settled();
+    await fireEvent.press(schedule());
+    await fireEvent.press(schedule());
+    expect(mockPlan.saveBlock).toHaveBeenCalledTimes(1);
+    expect(wizard.next).toHaveBeenCalledTimes(1);
   });
 
   it("opens the builder as a side step", async () => {
