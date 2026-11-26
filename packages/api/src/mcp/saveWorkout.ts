@@ -1,4 +1,5 @@
 import { FOCI, WORKOUT_KINDS, isChecklist, type BuiltInLibrary } from "@sendtally/core/hang";
+import type { Env } from "../bindings";
 import { customWorkout, requireConnectorAccess } from "../lib/entitlements";
 import { exerciseKindOf } from "../lib/exercises";
 import { withDerivedKind } from "../lib/workoutKind";
@@ -14,16 +15,18 @@ const inputSchema = { key: retryKey, id: editId("workout"), ...fields, items: wo
 
 // The user's exercise of that name, else the built-in, else a new one saveWorkout adds.
 async function exerciseName(
-  db: D1Database,
+  env: Env,
   userId: string,
   library: BuiltInLibrary,
   name: string
 ): Promise<string> {
-  const mine = await repo.findExerciseByName(db, userId, name);
+  const mine = await repo.findExerciseByName(env.DB, userId, name);
   if (mine !== null) return mine.name;
   const builtIn = builtInExercise(library, name);
   if (builtIn === undefined) return name;
-  return (await saveExercise(db, userId, crypto.randomUUID(), builtIn)).exercise.name;
+  const access = (): Promise<void> => requireConnectorAccess(env, userId);
+  return (await saveExercise(env.DB, userId, crypto.randomUUID(), builtIn, library, access))
+    .exercise.name;
 }
 
 export const saveWorkout: ConnectorTool<typeof inputSchema> = {
@@ -49,14 +52,14 @@ export const saveWorkout: ConnectorTool<typeof inputSchema> = {
       workoutBody.parse({ ...input, exerciseRestS: old?.exercise_rest_s ?? undefined }),
       old?.kind
     );
-    if (await customWorkout(env.DB, userId, body.items, old))
+    if (await customWorkout(env.DB, userId, body.items, old, library))
       await requireConnectorAccess(env, userId);
     const items = [];
     for (const item of body.items) {
       const exercise =
         exerciseKindOf(body.kind) === null || isGrip(item.exercise) || isChecklist(item)
           ? item.exercise
-          : await exerciseName(env.DB, userId, library, item.exercise);
+          : await exerciseName(env, userId, library, item.exercise);
       items.push({ ...item, exercise });
     }
     await repo.ensureUser(env.DB, userId);

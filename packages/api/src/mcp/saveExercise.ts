@@ -1,5 +1,5 @@
 import type { BuiltInLibrary } from "@sendtally/core/hang";
-import { customExercise, requireConnectorAccess } from "../lib/entitlements";
+import { requireConnectorAccess } from "../lib/entitlements";
 import { exerciseBody, exerciseNameKey, type ExerciseInput } from "../lib/exercises";
 import { id } from "../lib/plan";
 import * as repo from "../lib/repo";
@@ -61,22 +61,21 @@ export const saveExercise: ConnectorTool<typeof inputSchema> = {
   annotations: { readOnlyHint: false, destructiveHint: false },
   run: async ({ key, id: editing, ...body }, { env, userId }) => {
     const library = await repo.library(env.DB, env.MEDIA_URL);
-    const saved =
-      editing === undefined
-        ? null
-        : owned(
-            await repo.getExercise(env.DB, userId, editing),
-            "exercise",
-            editing,
-            library.exercises
-          );
+    if (editing !== undefined)
+      owned(
+        await repo.getExercise(env.DB, userId, editing),
+        "exercise",
+        editing,
+        library.exercises
+      );
     const builtIn = editing === undefined ? builtInExercise(library, body.name) : undefined;
-    if (customExercise(builtIn?.builtIn, saved)) await requireConnectorAccess(env, userId);
     const { exercise, taken } = await save(
       env.DB,
       userId,
       editing ?? key ?? crypto.randomUUID(),
-      builtIn ?? body
+      builtIn ?? body,
+      library,
+      () => requireConnectorAccess(env, userId)
     );
     const { name, kind, measure, eachSide, description } = exercise;
     return {

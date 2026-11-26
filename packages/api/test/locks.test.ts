@@ -101,7 +101,7 @@ const setup: Step[] = [
   ["PUT", "/v1/memberships/m_block", membership("w_own", "b1")],
   ["PUT", "/v1/exercises/e_own", { name: "Hip openers", kind: "mobility" }],
   ["PUT", "/v1/exercises/e_other", { name: "Wall slides", kind: "mobility" }],
-  ["PUT", "/v1/exercises/e_linked", { name: "Back squat", kind: "strength", builtIn: "squat" }],
+  ["PUT", "/v1/exercises/e_linked", { name: "Back squat", kind: "strength", builtIn: "backSquat" }],
 ];
 
 const gated: Step[] = [
@@ -110,7 +110,7 @@ const gated: Step[] = [
   ["PUT", "/v1/workouts/w_own", workout("Pull day", ["Back squat"])],
   ["PUT", "/v1/exercises/e_new", { name: "Hip circles", kind: "mobility" }],
   ["PUT", "/v1/exercises/e_own", { name: "Hip openers", kind: "mobility", eachSide: true }],
-  ["PUT", "/v1/exercises/e_own", { name: "Hip openers", kind: "mobility", builtIn: "squat" }],
+  ["PUT", "/v1/exercises/e_own", { name: "Hip openers", kind: "mobility", builtIn: "backSquat" }],
   ["PUT", "/v1/exercises/e_linked", { name: "Back squat", kind: "strength", builtIn: null }],
   ["PUT", "/v1/hang/grips/g_new", { name: "Pinch block" }],
   ["PUT", "/v1/blocks/b_new", block],
@@ -133,7 +133,7 @@ const open: Step[] = [
   ["PUT", "/v1/activities/a1", activity],
   ["POST", "/v1/sessions", session],
   ["PUT", "/v1/memberships/m_builtin", membership("max10", null)],
-  ["PUT", "/v1/exercises/e_linked", { name: "Back squat", kind: "strength", builtIn: "squat" }],
+  ["PUT", "/v1/exercises/e_linked", { name: "Back squat", kind: "strength", builtIn: "backSquat" }],
   ["PUT", "/v1/workouts/w_wrap", workout("Back squat", ["Back squat"])],
   ["PUT", "/v1/memberships/m_wrap", membership("w_wrap", null)],
   ["PUT", "/v1/hang/grips/half", { name: "Half crimp", measure: "hang" }],
@@ -141,6 +141,11 @@ const open: Step[] = [
   ["DELETE", "/v1/blocks/b1"],
   ["DELETE", "/v1/exercises/e_own"],
 ];
+
+const exerciseRow = (userId: string, id: string): Promise<Record<string, unknown> | null> =>
+  env.DB.prepare("SELECT name, built_in, archived FROM exercises WHERE user_id = ? AND id = ?")
+    .bind(userId, id)
+    .first();
 
 async function madeInTrial(account: Account): Promise<void> {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -245,6 +250,74 @@ describe("membership locks", () => {
     });
   });
 
+  it("frees an exercise save past the trial only when it leaves a genuine built-in of that name", async () => {
+    const account = lapsed("user_locks_genuine");
+    await madeInTrial(account);
+    const refused: [string, unknown][] = [
+      ["e_fake", { name: "Hip circles", kind: "mobility", builtIn: "x" }],
+      ["e_misnamed", { name: "Hip swings", kind: "mobility", builtIn: "plank" }],
+      ["e_linked", { name: "My squat", kind: "strength" }],
+      ["e_linked", { name: "My squat", kind: "strength", builtIn: "backSquat" }],
+    ];
+    const codes = [];
+    for (const [id, body] of refused) {
+      const res = await call(account, "PUT", `/v1/exercises/${id}`, body);
+      codes.push([id, res.status, ((await res.json()) as { code?: string }).code]);
+    }
+    expect(codes).toEqual(refused.map(([id]) => [id, 403, "members_only"]));
+    expect(await exerciseRow(account.userId, "e_fake")).toBeNull();
+    expect(await exerciseRow(account.userId, "e_misnamed")).toBeNull();
+    expect(await exerciseRow(account.userId, "e_linked")).toMatchObject({ name: "Back squat" });
+    const picked = { name: "Plank", kind: "other", builtIn: "plank" };
+    expect((await call(account, "PUT", "/v1/exercises/e_plank", picked)).status).toBe(200);
+  });
+
+  it("keeps an archived custom exercise archived past the trial when a made-up link would bring it back", async () => {
+    const account = lapsed("user_locks_restore_fake");
+    await madeInTrial(account);
+    vi.setSystemTime(IN_TRIAL);
+    await call(account, "PUT", "/v1/exercises/e_wall", { name: "Wall sit", kind: "other" });
+    await call(account, "PUT", "/v1/workouts/w_wall", workout("Legs", ["Wall sit", "Dips"]));
+    await call(account, "DELETE", "/v1/exercises/e_wall");
+    vi.setSystemTime(AFTER_TRIAL);
+    const res = await call(account, "PUT", "/v1/exercises/e_back", {
+      name: "Wall sit",
+      kind: "other",
+      builtIn: "x",
+    });
+    expect(res.status).toBe(403);
+    expect(await exerciseRow(account.userId, "e_wall")).toMatchObject({
+      archived: 1,
+      built_in: null,
+    });
+  });
+
+  it("lets a free account past its trial save a one-exercise workout of a built-in it never picked", async () => {
+    const account = lapsed("user_locks_wrap_new");
+    await madeInTrial(account);
+    expect(
+      (await call(account, "PUT", "/v1/workouts/w_plank", workout("Plank", ["Plank"]))).status
+    ).toBe(200);
+    const row = await env.DB.prepare(
+      "SELECT built_in FROM exercises WHERE user_id = ? AND name = ?"
+    )
+      .bind(account.userId, "Plank")
+      .first();
+    expect(row).toMatchObject({ built_in: "plank" });
+  });
+
+  it("refuses a one-exercise workout past the trial when the user's own exercise holds a built-in's name", async () => {
+    const account = lapsed("user_locks_wrap_own");
+    await madeInTrial(account);
+    vi.setSystemTime(IN_TRIAL);
+    await call(account, "PUT", "/v1/exercises/e_my_plank", { name: "Plank", kind: "other" });
+    vi.setSystemTime(AFTER_TRIAL);
+    for (const name of ["Plank", "Hip openers"]) {
+      const res = await call(account, "PUT", "/v1/workouts/w_wrap", workout(name, [name]));
+      expect(res.status, name).toBe(403);
+    }
+  });
+
   it("gives every account at least 14 days from the locks' release", async () => {
     const account = { ...lapsed("user_locks_floor"), signedUp: "2026-01-01T00:00:00Z" };
     await madeInTrial(account);
@@ -321,6 +394,37 @@ describe("membership locks through the connector", () => {
       expect(result.isError, name).toBe(true);
       expect(result.content[0]?.text).toMatch(/need a sendtally membership/);
     }
+  });
+
+  it("refuses renaming a built-in's exercise past the trial", async () => {
+    const account = lapsed("user_locks_connector_rename");
+    await madeInTrial(account);
+    const result = await tool(account, "save_exercise", {
+      id: "e_linked",
+      name: "My squat",
+      kind: "strength",
+    });
+    expect(result.isError).toBe(true);
+    expect(await exerciseRow(account.userId, "e_linked")).toMatchObject({ name: "Back squat" });
+  });
+
+  it("saves a one-exercise workout of a built-in never picked past the trial, linking the exercise", async () => {
+    const account = lapsed("user_locks_connector_wrap");
+    await madeInTrial(account);
+    const result = await tool(account, "save_workout", {
+      name: "Hollow",
+      description: "",
+      minutes: null,
+      targetRpe: null,
+      items: [{ exercise: "Hollow hold", doses: [{ sets: 3, reps: 1, onS: 30 }] }],
+    });
+    expect(result.isError).toBeUndefined();
+    const row = await env.DB.prepare(
+      "SELECT built_in FROM exercises WHERE user_id = ? AND name = ?"
+    )
+      .bind(account.userId, "Hollow hold")
+      .first();
+    expect(row).toMatchObject({ built_in: "hollowHold" });
   });
 
   it.each([

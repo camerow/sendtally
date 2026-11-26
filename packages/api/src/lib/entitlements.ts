@@ -1,9 +1,10 @@
-import { wrapsBuiltIn } from "@sendtally/core/hang";
+import { wrapsBuiltIn, type BuiltInLibrary } from "@sendtally/core/hang";
 import type { Context } from "hono";
 import { auth, type AuthedUser } from "../auth";
 import type { Env } from "../bindings";
 import type { AppEnv } from "../context";
 import { INSIGHTS_FEATURE, LOCKS_RELEASED_AT, STORE_ENTITLEMENT, TRIAL_DAYS } from "../features";
+import { builtInNamed, type ExerciseInput } from "./exercises";
 import { workoutOf } from "./plan";
 import { captureUserEvent } from "./posthog";
 import * as repo from "./repo";
@@ -127,17 +128,23 @@ export const requireAccess = (c: Context<AppEnv>): Promise<void> =>
 export const requireConnectorAccess = (env: Env, userId: string): Promise<void> =>
   refuseWithoutAccess(env, userId, () => auth.webFeature(userId, INSIGHTS_FEATURE, env));
 
+type Exercises = Pick<BuiltInLibrary, "exercises">;
+
+/** The user's exercise of the name decides; with none, the name is a built-in's when the library has it. */
 async function customItems(
   db: D1Database,
   userId: string,
-  items: readonly { exercise: string }[]
+  items: readonly { exercise: string }[],
+  library?: Exercises
 ): Promise<boolean> {
   const [only] = items;
-  const linked =
-    only === undefined || items.length > 1
-      ? null
-      : await repo.findExerciseByName(db, userId, only.exercise);
-  return !wrapsBuiltIn(items, () => (linked?.built_in ?? null) !== null);
+  if (only === undefined || items.length > 1) return true;
+  const mine = await repo.findExerciseByName(db, userId, only.exercise);
+  const builtIn =
+    mine === null
+      ? builtInNamed(library ?? (await repo.library(db, "")), only.exercise) !== undefined
+      : mine.built_in !== null;
+  return !wrapsBuiltIn(items, () => builtIn);
 }
 
 /** A workout the user made, as sent or as saved: an edit cannot turn one into a built-in's wrapper. */
@@ -145,11 +152,12 @@ export async function customWorkout(
   db: D1Database,
   userId: string,
   items: readonly { exercise: string }[],
-  saved: repo.WorkoutRow | undefined
+  saved: repo.WorkoutRow | undefined,
+  library: Exercises
 ): Promise<boolean> {
   return (
-    (await customItems(db, userId, items)) ||
-    (saved !== undefined && (await customItems(db, userId, workoutOf(saved).items)))
+    (await customItems(db, userId, items, library)) ||
+    (saved !== undefined && (await customItems(db, userId, workoutOf(saved).items, library)))
   );
 }
 
@@ -164,11 +172,18 @@ export async function plansCustomWork(
   return workout !== undefined && (await customItems(db, userId, workoutOf(workout).items));
 }
 
-/** An exercise the user made, as saved or as it would be after this save: an edit cannot move one across the line. */
-export const customExercise = (
-  builtIn: string | null | undefined,
-  saved: repo.ExerciseRow | null
-): boolean => {
-  const after = builtIn === undefined ? (saved?.built_in ?? null) : builtIn;
-  return after === null || (saved !== null && saved.built_in === null);
-};
+/**
+ * An exercise the user made, as saved or as it will be after this save, `restored` being the
+ * archived one the save brings back: only a genuine built-in of its name, linked to it, is free.
+ */
+export function customExercise(
+  library: Exercises,
+  body: Pick<ExerciseInput, "name" | "builtIn">,
+  saved: repo.ExerciseRow | null,
+  restored: repo.ExerciseRow | null
+): boolean {
+  const link =
+    restored?.built_in ?? (body.builtIn === undefined ? (saved?.built_in ?? null) : body.builtIn);
+  const own = restored === null && saved?.built_in === null;
+  return own || link === null || link !== builtInNamed(library, body.name)?.id;
+}

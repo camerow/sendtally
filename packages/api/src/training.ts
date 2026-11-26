@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono, type Context } from "hono";
-import type { PlanChange } from "@sendtally/core/hang";
+import type { BuiltInLibrary, PlanChange } from "@sendtally/core/hang";
 import { z } from "zod";
 import { type AppEnv, invalidBody, postAfterResponse } from "./context";
 import { activitiesQuery, activityBody, activityOf } from "./lib/activities";
@@ -312,10 +312,11 @@ export const workouts = new Hono<AppEnv>()
       const userId = c.get("userId");
       const body = c.req.valid("json");
       const existing = await repo.getWorkout(c.env.DB, userId, id);
-      if (await customWorkout(c.env.DB, userId, body.items, existing)) await requireAccess(c);
-      await repo.ensureUser(c.env.DB, userId);
       const saved = body.kind === undefined ? existing?.kind : undefined;
       const { workout, isGrip, library } = await withDerivedKind(c.env.DB, userId, body, saved);
+      if (await customWorkout(c.env.DB, userId, body.items, existing, library))
+        await requireAccess(c);
+      await repo.ensureUser(c.env.DB, userId);
       const row = await repo.saveWorkout(c.env.DB, userId, { id, ...workout }, isGrip, library);
       if (existing === undefined) await captureWorkoutCreated(c, workout);
       return c.json({ workout: workoutOf(row) });
@@ -328,20 +329,26 @@ export const workouts = new Hono<AppEnv>()
     return c.json({ deleted: await repo.deleteWorkout(c.env.DB, c.get("userId"), id) });
   });
 
-/** Creates, or saves and renames everywhere; `taken` is the other exercise already holding the name. */
+/**
+ * Creates, or saves and renames everywhere; `taken` is the other exercise already holding the
+ * name. `access` refuses an account without a membership when the save leaves a custom exercise.
+ */
 export async function saveExercise(
   db: D1Database,
   userId: string,
   id: string,
-  body: ExerciseInput
+  body: ExerciseInput,
+  library: Pick<BuiltInLibrary, "exercises">,
+  access: () => Promise<void>
 ): Promise<{ exercise: Exercise; taken: boolean; created: boolean }> {
   const [taken, row] = await Promise.all([
     repo.findExerciseByName(db, userId, body.name),
     repo.getExercise(db, userId, id),
   ]);
+  const restoring = taken !== null && taken.id !== id && row === null && taken.archived;
+  if (customExercise(library, body, row, restoring ? taken : null)) await access();
   if (taken !== null && taken.id !== id) {
-    if (row !== null || !taken.archived)
-      return { exercise: exerciseOf(taken), taken: true, created: false };
+    if (!restoring) return { exercise: exerciseOf(taken), taken: true, created: false };
     const restored = await repo.restoreExercise(db, userId, taken, body.builtIn);
     return { exercise: exerciseOf(restored), taken: false, created: false };
   }
@@ -382,9 +389,14 @@ export const exercises = new Hono<AppEnv>()
       const { id } = c.req.valid("param");
       const body = c.req.valid("json");
       const userId = c.get("userId");
-      if (customExercise(body.builtIn, await repo.getExercise(c.env.DB, userId, id)))
-        await requireAccess(c);
-      const { exercise, taken, created } = await saveExercise(c.env.DB, userId, id, body);
+      const { exercise, taken, created } = await saveExercise(
+        c.env.DB,
+        userId,
+        id,
+        body,
+        await repo.library(c.env.DB, ""),
+        () => requireAccess(c)
+      );
       if (taken) return c.json({ error: "name taken", exercise }, 409);
       if (created)
         await captureValueEvent(c, "exercise_created", {
