@@ -82,7 +82,7 @@ export function AddWorkoutRow({
       ) : (
         <button
           type="button"
-          className="add-row-add"
+          className={locked ? "add-row-add add-row-add--locked" : "add-row-add"}
           aria-label={locked ? t("common.membersOnly", { label: add }) : add}
           onClick={onAdd}
         >

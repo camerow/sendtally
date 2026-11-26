@@ -304,6 +304,7 @@
   padding: 3px 7px;
   border-radius: 5px;
   background: var(--bs-gold);
+  color: var(--bs-gunmetal);
   font-family: var(--font-mono);
   font-weight: 500;
   font-size: 10px;
@@ -1671,6 +1672,7 @@
   flex: 1;
   min-width: 0;
   padding: 0;
+  margin: 0;
 }
 
 .category-row--plain:hover {

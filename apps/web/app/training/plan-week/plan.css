@@ -554,12 +554,17 @@
 
 .add-row-add {
   width: 36px;
-  background: var(--surface-soft);
-  color: var(--bs-gunmetal);
+  background: var(--bs-gunmetal);
+  color: var(--bs-white);
 }
 
 .add-row-add:hover {
-  background: rgba(64, 63, 76, 0.12);
+  background: var(--bs-gunmetal-deep);
+}
+
+.add-row-add--locked,
+.add-row-add--locked:hover {
+  background: var(--surface-soft);
 }
 
 .add-row-added {

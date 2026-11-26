@@ -2,6 +2,7 @@
 
 .blocks-list {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px 48px;
   align-items: start;
 }

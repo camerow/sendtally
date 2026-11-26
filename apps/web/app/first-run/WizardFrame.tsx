@@ -49,6 +49,7 @@ export function WizardFrame({
           )}
           {bar && inPath && (
             <div
+              aria-hidden={total === 0 || undefined}
               role="progressbar"
               aria-label={t("onboarding.firstRun.step", { n, total })}
               aria-valuemin={0}
