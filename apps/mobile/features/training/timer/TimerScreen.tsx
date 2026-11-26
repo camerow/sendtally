@@ -1,6 +1,5 @@
 import { router } from "expo-router";
 import React from "react";
-import { Text, View } from "react-native";
 import {
   bumpLoad,
   type HangPhase,
@@ -12,8 +11,6 @@ import {
 import { t } from "@sendtally/features/i18n";
 import { hangLoadText, useGrips } from "@sendtally/features/hang";
 import {
-  ON_DARK,
-  ON_DARK_SOFT,
   changeLoad,
   forToday,
   loadNow,
@@ -39,8 +36,8 @@ import { Stepper } from "../components/Stepper";
 import { WorkoutNotes } from "../components/WorkoutNotes";
 import { useHangData } from "../data/HangDataContext";
 import { donePath } from "../done/doneParams";
-import { type } from "../type";
 import { RepDots } from "./RepDots";
+import { TimerColumn } from "./TimerColumn";
 import { TimerFrame } from "./TimerFrame";
 import { TimerRing } from "./TimerRing";
 import { usePlannedRun, type PlannedRun } from "./usePlannedRun";
@@ -100,44 +97,38 @@ function Timer({
 
   return (
     <TimerFrame timer={timer} controls={{ color: view.look.fill, primary: view.primary }}>
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 24 }}>
-        <View style={{ alignItems: "center", gap: 8 }}>
-          <Text style={[type.mono, { fontSize: 13, color: ON_DARK_SOFT }]}>
-            {[model.gripName(view.gripId), view.edge].filter((x) => x !== null).join(" · ")}
-          </Text>
-          <Stepper
-            surface="dark"
-            text={hangLoadText(kg, unit)}
-            label={t("hang.load")}
-            onStep={(d) =>
-              setLoads(
-                changeLoad(
-                  loads,
-                  run,
-                  bumpLoad(view.current.kind, kg, unit, d, timerLoadStep(unit))
-                )
-              )
-            }
-            decreaseLabel={t("hang.decrease", { field: t("hang.load") })}
-            increaseLabel={t("hang.increase", { field: t("hang.load") })}
+      <TimerColumn
+        style={{ flex: 1 }}
+        grip={[model.gripName(view.gripId), view.edge].filter((x) => x !== null).join(" · ")}
+        ring={
+          <TimerRing
+            progress={progress}
+            color={view.look.mark}
+            labelColor={view.look.fill}
+            phaseKey={run.index}
+            label={view.label}
+            big={view.big}
+            accessibilityLabel={view.ring}
+            onPress={timer.primary}
           />
-          <WorkoutNotes workoutId={workout.id} dark />
-        </View>
-        <TimerRing
-          progress={progress}
-          color={view.look.mark}
-          labelColor={view.look.fill}
-          phaseKey={run.index}
-          label={view.label}
-          big={view.big}
-          accessibilityLabel={view.ring}
-          onPress={timer.primary}
+        }
+        setLine={view.setLine}
+        dots={<RepDots reps={view.current.reps} marks={run.marks} working={view.working} />}
+      >
+        <Stepper
+          surface="dark"
+          text={hangLoadText(kg, unit)}
+          label={t("hang.load")}
+          onStep={(d) =>
+            setLoads(
+              changeLoad(loads, run, bumpLoad(view.current.kind, kg, unit, d, timerLoadStep(unit)))
+            )
+          }
+          decreaseLabel={t("hang.decrease", { field: t("hang.load") })}
+          increaseLabel={t("hang.increase", { field: t("hang.load") })}
         />
-        <View style={{ alignItems: "center", gap: 10 }}>
-          <Text style={[type.monoBold, { fontSize: 15, color: ON_DARK }]}>{view.setLine}</Text>
-          <RepDots reps={view.current.reps} marks={run.marks} working={view.working} />
-        </View>
-      </View>
+        <WorkoutNotes workoutId={workout.id} dark />
+      </TimerColumn>
     </TimerFrame>
   );
 }

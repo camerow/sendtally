@@ -1,9 +1,32 @@
 export const onboarding = {
   "onboarding.intro.title": "Was ist sendtally?",
-  "onboarding.intro.body":
-    "Sendtally ist Trainingsplaner und Klettertagebuch in einem. Du kannst eigene Trainingsblöcke erstellen, wiederkehrende Workouts einplanen, ein Hangboard-Workout mit eigenem Timer bauen und mehr. Außerdem kannst du dein Klettern über die Zeit verfolgen und deine Pyramiden und deine Klettertrends pro Jahr und insgesamt sehen.",
-  "onboarding.intro.why":
-    "Mit Sendtally gestaltest du deinen Plan aktiv mit, und einen Trainingsplan, in den du selbst Zeit und Sorgfalt gesteckt hast, ziehst du eher durch.",
+  "onboarding.intro.blocksBody":
+    "Plane wiederkehrende Workouts und gestalte jede Woche des Blocks.",
+  "onboarding.intro.workoutsBody":
+    "Bring Übungen in eine Reihenfolge, jede mit Wiederholungen, Gewicht und Pause.",
+  "onboarding.intro.hangTitle": "Hangboard-Workouts",
+  "onboarding.intro.hangBody": "Leg Hänge, Pausen und Sätze fest. Der Timer führt dich hindurch.",
+  "onboarding.intro.metricsTitle": "Übungswerte",
+  "onboarding.intro.metricsBody":
+    "Jede Übung im Verlauf, mit geschätztem Ein-Wiederholungs-Maximum.",
+  "onboarding.intro.loadTitle": "Belastung im Blick",
+  "onboarding.intro.loadBody": "Anstrengung und Minuten jeder Woche, neben der Durchschnittswoche.",
+  "onboarding.intro.logTitle": "Ein Klettertagebuch",
+  "onboarding.intro.logBody": "Sieh Gradpyramiden und Klettertrends, pro Jahr oder insgesamt.",
+  "onboarding.intro.line": "Einen Plan, den du selbst baust, ziehst du auch durch.",
+  "onboarding.intro.cardLabel": "{title}. {body} {n} von {total}",
+  "onboarding.intro.cards": "Was sendtally kann",
+  "onboarding.intro.sampleDeadlift": "Kreuzheben",
+  "onboarding.intro.samplePushUp": "Liegestütz",
+  "onboarding.intro.sampleSidePlank": "Seitstütz",
+  "onboarding.intro.sampleDip": "Dips",
+  "onboarding.intro.sampleGrip": "Halbaufgestellt",
+  "onboarding.intro.sampleHangboard": "Hangboard",
+  "onboarding.intro.sampleHomeGym": "Stammhalle",
+  "onboarding.intro.sampleLeftArete": "Linke Kante",
+  "onboarding.intro.sampleOrangeSlab": "Orange Platte",
+  "onboarding.intro.sampleRoofCrack": "Dachriss",
+  "onboarding.intro.sampleWarmUp": "Aufwärmrunde",
   "onboarding.firstRun.step": "{n} von {total}",
   "onboarding.firstRun.skip": "Überspringen",
   "onboarding.firstRun.logQuestion": "Führst du schon ein Logbuch?",

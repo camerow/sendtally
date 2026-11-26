@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import type { Wizard } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
+import { ProgressSegments } from "../../components/ProgressSegments";
 import { ScreenFrame } from "../../components/ScreenFrame";
 import { Button } from "../training/components/Button";
 import { IconButton } from "../training/components/IconButton";
@@ -65,30 +66,13 @@ export function WizardFrame({
                   color={ink}
                 />
               )}
-              <View
-                accessible={total > 0}
-                accessibilityRole="progressbar"
-                accessibilityLabel={t("onboarding.firstRun.step", { n, total })}
-                style={{ flex: 1, flexDirection: "row", gap: 4 }}
-              >
-                {Array.from({ length: total }, (_, i) => (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: 4,
-                      borderRadius: 2,
-                      backgroundColor:
-                        i < n
-                          ? dark
-                            ? colors.gold
-                            : colors.gunmetal
-                          : dark
-                            ? "rgba(255,255,255,0.18)"
-                            : colors.dataBarEmpty,
-                    }}
-                  />
-                ))}
+              <View style={{ flex: 1 }}>
+                <ProgressSegments
+                  total={total}
+                  n={n}
+                  dark={dark}
+                  label={t("onboarding.firstRun.step", { n, total })}
+                />
               </View>
             </>
           )}

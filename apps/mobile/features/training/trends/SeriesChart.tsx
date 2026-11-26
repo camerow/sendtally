@@ -22,6 +22,7 @@ export type SeriesChartProps = {
   seriesKey: string;
   /** The point drawn in gold; the latest unless given. */
   marked?: number;
+  height?: number;
 };
 
 /** Values over time: filled dots, hollow ones for partials, the latest or the marked one in gold. */
@@ -33,29 +34,27 @@ export function SeriesChart({
   label,
   seriesKey,
   marked = values.length - 1,
+  height = HEIGHT,
 }: SeriesChartProps): React.ReactElement {
   const [width, setWidth] = React.useState(0);
   const [lo, hi] = paddedRange(values, air);
-  const points = plot(values, lo, hi, width, HEIGHT, PAD);
+  const points = plot(values, lo, hi, width, height, PAD);
   const complete = points.filter((_, i) => hollow[i] !== true);
   const partial = points.filter((_, i) => hollow[i] === true);
   const latest = points.slice(marked, marked + 1);
-  const rules = `M0 ${PAD}H${width}M0 ${HEIGHT - PAD}H${width}`;
+  const rules = `M0 ${PAD}H${width}M0 ${height - PAD}H${width}`;
   const axisText = [type.mono, { fontSize: 10, color: colors.textSecondary }];
 
   return (
     <View style={{ flexDirection: "row", gap: 6 }}>
-      <View style={{ width: AXIS, height: HEIGHT, justifyContent: "space-between" }}>
+      <View style={{ width: AXIS, height, justifyContent: "space-between" }}>
         <Text style={axisText}>{edge(hi)}</Text>
         <Text style={axisText}>{edge(lo)}</Text>
       </View>
-      <View
-        onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
-        style={{ flex: 1, height: HEIGHT }}
-      >
+      <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)} style={{ flex: 1, height }}>
         {width > 0 && (
           <Animated.View entering={FadeIn.duration(260)} key={seriesKey}>
-            <Svg width={width} height={HEIGHT} accessibilityLabel={label} accessible>
+            <Svg width={width} height={height} accessibilityLabel={label} accessible>
               <Path d={rules} stroke={colors.lineOnLight} strokeWidth={1} fill="none" />
               <Polyline
                 points={polyline(points)}

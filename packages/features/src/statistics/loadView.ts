@@ -246,11 +246,18 @@ export type LoadPlot = {
   right: number;
   bars: LoadPlotBar[];
   averageY: number | null;
+  /** Where the under-counted dots sit, under the bars. */
+  dotY: number;
 };
 
-/** Each bar's box and rounded-top path in a `width` wide plot; an empty bucket is a 3px stub with no path. */
-export function loadPlot(vm: Pick<LoadVM, "bars" | "average">, width: number): LoadPlot {
-  const { base, top, gutter, gap } = LOAD_PLOT;
+/** Each bar's box and rounded-top path in a `width` by `height` plot; an empty bucket is a 3px stub with no path. */
+export function loadPlot(
+  vm: Pick<LoadVM, "bars" | "average">,
+  width: number,
+  height: number = LOAD_PLOT.height
+): LoadPlot {
+  const { top, gutter, gap } = LOAD_PLOT;
+  const base = height - (LOAD_PLOT.height - LOAD_PLOT.base);
   const right = Math.max(0, width - gutter);
   const pitch = right / Math.max(1, vm.bars.length);
   const max = Math.max(vm.average, ...vm.bars.map((b) => b.value));
@@ -272,5 +279,6 @@ export function loadPlot(vm: Pick<LoadVM, "bars" | "average">, width: number): L
       };
     }),
     averageY: vm.average > 0 ? y(vm.average) : null,
+    dotY: height - (LOAD_PLOT.height - LOAD_PLOT.dotY),
   };
 }

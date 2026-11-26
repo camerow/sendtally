@@ -19,7 +19,6 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const SIZE = 280;
 const STROKE = 14;
 const RADIUS = 126;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 /** Sized by length to fit inside the ring: "6" at full size, "10:00" smaller. */
 const bigSize = (big: string): number => (big.length <= 2 ? 92 : big.length <= 4 ? 72 : 58);
@@ -33,6 +32,8 @@ export type TimerRingProps = {
   big: string;
   accessibilityLabel: string;
   onPress: () => void;
+  /** Width and height; the stroke and type scale with it. */
+  size?: number;
 };
 
 /**
@@ -48,13 +49,17 @@ export function TimerRing({
   big,
   accessibilityLabel,
   onPress,
+  size = SIZE,
 }: TimerRingProps): React.ReactElement {
+  const k = size / SIZE;
+  const radius = RADIUS * k;
+  const circumference = 2 * Math.PI * radius;
   const stroke = useAnimatedColor(color);
   const ink = useAnimatedColor(labelColor);
   const pressed = useSharedValue(1);
 
   const arc = useAnimatedProps(() => ({
-    strokeDashoffset: CIRCUMFERENCE * (1 - progress.value),
+    strokeDashoffset: circumference * (1 - progress.value),
     stroke: stroke.value,
   }));
   const labelStyle = useAnimatedStyle(() => ({ color: ink.value }));
@@ -68,30 +73,36 @@ export function TimerRing({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
     >
-      <Animated.View style={[{ width: SIZE, height: SIZE }, scale]}>
-        <Svg width={SIZE} height={SIZE} style={{ position: "absolute" }}>
+      <Animated.View style={[{ width: size, height: size }, scale]}>
+        <Svg width={size} height={size} style={{ position: "absolute" }}>
           <Circle
-            cx={SIZE / 2}
-            cy={SIZE / 2}
-            r={RADIUS}
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
             fill="none"
             stroke={ON_DARK_TRACK}
-            strokeWidth={STROKE}
+            strokeWidth={STROKE * k}
           />
           <AnimatedCircle
-            cx={SIZE / 2}
-            cy={SIZE / 2}
-            r={RADIUS}
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
             fill="none"
-            strokeWidth={STROKE}
+            strokeWidth={STROKE * k}
             strokeLinecap="round"
-            strokeDasharray={CIRCUMFERENCE}
+            strokeDasharray={circumference}
             animatedProps={arc}
-            transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
           />
         </Svg>
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 4 }}>
-          <Animated.Text style={[type.label, { fontSize: 14, letterSpacing: 2.24 }, labelStyle]}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 4 * k }}>
+          <Animated.Text
+            style={[
+              type.label,
+              { fontSize: Math.max(9, 14 * k), letterSpacing: 2.24 * k },
+              labelStyle,
+            ]}
+          >
             {label}
           </Animated.Text>
           <Animated.Text
@@ -99,7 +110,12 @@ export function TimerRing({
             entering={FadeIn.duration(220)}
             style={[
               type.monoBold,
-              { fontSize: bigSize(big), lineHeight: 100, letterSpacing: -4, color: ON_DARK },
+              {
+                fontSize: bigSize(big) * k,
+                lineHeight: 100 * k,
+                letterSpacing: -4 * k,
+                color: ON_DARK,
+              },
             ]}
             numberOfLines={1}
           >

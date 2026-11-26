@@ -56,3 +56,11 @@ export { shapeable, useBlockStep, type BlockStepState } from "./useBlockStep";
 export { useBuildWeek, useMemberWeek } from "./useBuildWeek";
 export { useOnePress } from "./useOnePress";
 export { defaultBlockName, defaultWorkoutName } from "./defaultNames";
+export {
+  welcomeCards,
+  type WelcomeCard,
+  type WelcomeCardKey,
+  type WelcomeClimb,
+  type WelcomeExercise,
+  type WelcomeView,
+} from "./welcomeCards";

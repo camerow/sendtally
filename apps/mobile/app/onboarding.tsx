@@ -6,12 +6,15 @@ import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
-import { WelcomeCard } from "../features/onboarding/WelcomeCard";
+import { WelcomeCarousel } from "../features/onboarding/WelcomeCarousel";
 import { Button } from "../features/training/components/Button";
 import { Title } from "../features/training/components/Title";
 import { type } from "../features/training/type";
 
-const body = [type.body, { fontSize: 15, lineHeight: 22, color: colors.gunmetal }];
+const line = [
+  type.bodyBold,
+  { paddingHorizontal: 22, fontSize: 15, lineHeight: 20, color: colors.gunmetal },
+];
 
 export default function Onboarding(): React.ReactElement | null {
   return (
@@ -24,19 +27,14 @@ export default function Onboarding(): React.ReactElement | null {
 
           <ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={{
-              flexGrow: 1,
-              justifyContent: "center",
-              gap: 22,
-              paddingHorizontal: 22,
-            }}
+            alwaysBounceVertical={false}
+            contentContainerStyle={{ flexGrow: 1, gap: 14 }}
           >
-            <WelcomeCard />
-            <View style={{ gap: 10 }}>
+            <View style={{ paddingHorizontal: 22 }}>
               <Title size={27}>{t("onboarding.intro.title")}</Title>
-              <Text style={body}>{t("onboarding.intro.body")}</Text>
-              <Text style={body}>{t("onboarding.intro.why")}</Text>
             </View>
+            <WelcomeCarousel />
+            <Text style={line}>{t("onboarding.intro.line")}</Text>
           </ScrollView>
 
           <View style={{ paddingHorizontal: 22, gap: 10 }}>

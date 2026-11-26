@@ -1,9 +1,35 @@
 export const onboarding = {
   "onboarding.intro.title": "¿Qué es sendtally?",
-  "onboarding.intro.body":
-    "Sendtally es a la vez un creador de planes de entrenamiento y un registro de escalada. Puedes crear bloques de entrenamiento propios, programar entrenos recurrentes, montar un entreno de hangboard con un temporizador a tu medida y más. También puedes seguir tu escalada a lo largo del tiempo para ver tus pirámides y tus tendencias por año y de todo el historial.",
-  "onboarding.intro.why":
-    "Sendtally te ayuda a tener un papel activo en la creación de tu plan, y es más probable que completes los planes de entrenamiento que has dedicado tiempo a crear y pulir.",
+  "onboarding.intro.blocksBody":
+    "Programa entrenos recurrentes y da forma a cada semana del bloque.",
+  "onboarding.intro.workoutsBody":
+    "Ordena los ejercicios con las repeticiones, el peso y el descanso de cada uno.",
+  "onboarding.intro.hangTitle": "Entrenos de hangboard",
+  "onboarding.intro.hangBody":
+    "Define suspensiones, descansos y series. El temporizador los marca por ti.",
+  "onboarding.intro.metricsTitle": "Métricas de ejercicios",
+  "onboarding.intro.metricsBody":
+    "Cada levantamiento en una gráfica, con un máximo estimado a una repetición.",
+  "onboarding.intro.loadTitle": "Seguimiento de la carga",
+  "onboarding.intro.loadBody":
+    "El esfuerzo y los minutos de cada semana, frente a la semana media.",
+  "onboarding.intro.logTitle": "Un registro de escalada",
+  "onboarding.intro.logBody":
+    "Pirámides de grados y tendencias de escalada, por año o de todo el historial.",
+  "onboarding.intro.line": "Un plan que construyes es un plan que terminas.",
+  "onboarding.intro.cardLabel": "{title}. {body} {n} de {total}",
+  "onboarding.intro.cards": "Lo que hace sendtally",
+  "onboarding.intro.sampleDeadlift": "Peso muerto",
+  "onboarding.intro.samplePushUp": "Flexiones",
+  "onboarding.intro.sampleSidePlank": "Plancha lateral",
+  "onboarding.intro.sampleDip": "Fondos",
+  "onboarding.intro.sampleGrip": "Semiarqueo",
+  "onboarding.intro.sampleHangboard": "Hangboard",
+  "onboarding.intro.sampleHomeGym": "Rocódromo habitual",
+  "onboarding.intro.sampleLeftArete": "Arista izquierda",
+  "onboarding.intro.sampleOrangeSlab": "Placa naranja",
+  "onboarding.intro.sampleRoofCrack": "Fisura del techo",
+  "onboarding.intro.sampleWarmUp": "Circuito de calentamiento",
   "onboarding.firstRun.step": "{n} de {total}",
   "onboarding.firstRun.skip": "Omitir",
   "onboarding.firstRun.logQuestion": "¿Ya llevas un registro?",

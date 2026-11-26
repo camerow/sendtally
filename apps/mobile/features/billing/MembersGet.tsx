@@ -1,9 +1,11 @@
 import React from "react";
-import { ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import type { MembersGet as MembersGetView } from "@sendtally/features/billing";
 import { t } from "@sendtally/features/i18n";
+import { FeatureCard } from "../../components/FeatureCard";
 import { ART_HEIGHT } from "../../components/SetupStack";
+import { SnapCarousel } from "../../components/SnapCarousel";
 import { LoadBars } from "../first-run/plan/components/LoadBars";
 import { Button } from "../training/components/Button";
 import { Title } from "../training/components/Title";
@@ -46,58 +48,22 @@ export function MembersGet({
           {view.line}
         </Text>
       </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={cardWidth + 8}
-        decelerationRate="fast"
+      <SnapCarousel
+        cardWidth={cardWidth}
         style={{ marginRight: -18 }}
-        contentContainerStyle={{ gap: 8, paddingRight: 18 }}
+        contentContainerStyle={{ paddingRight: 18 }}
       >
         {view.cards.map((card) => (
-          <View
+          <FeatureCard
             key={card.key}
-            style={{
-              width: cardWidth,
-              backgroundColor: colors.white,
-              borderWidth: 1,
-              borderColor: colors.lineOnLight,
-              borderRadius: radius.card,
-              overflow: "hidden",
-            }}
-          >
-            <View
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-              style={{
-                minHeight: ART_HEIGHT,
-                justifyContent: "center",
-                paddingHorizontal: 16,
-                backgroundColor: art[card.key].background,
-              }}
-            >
-              {art[card.key].content}
-            </View>
-            <View style={{ gap: 4, paddingTop: 14, paddingHorizontal: 16, paddingBottom: 16 }}>
-              <Text
-                style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.gunmetal }}
-              >
-                {card.title}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: fonts.sans,
-                  fontSize: 13,
-                  lineHeight: 19,
-                  color: colors.textSecondary,
-                }}
-              >
-                {card.body}
-              </Text>
-            </View>
-          </View>
+            width={cardWidth}
+            title={card.title}
+            body={card.body}
+            art={art[card.key].content}
+            artStyle={{ minHeight: ART_HEIGHT, backgroundColor: art[card.key].background }}
+          />
         ))}
-      </ScrollView>
+      </SnapCarousel>
       {onBecomeMember !== undefined && (
         <View
           style={{

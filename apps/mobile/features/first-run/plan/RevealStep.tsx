@@ -14,8 +14,9 @@ import {
   weekBars,
   type Wizard,
 } from "@sendtally/features/settings";
-import { KIND_LOOK, usePlan } from "@sendtally/features/training";
+import { usePlan } from "@sendtally/features/training";
 import { useTween } from "@sendtally/features/trends";
+import { KindLegend } from "../../../components/KindLegend";
 import { Switch } from "../../../components/Switch";
 import { Button } from "../../training/components/Button";
 import { Label } from "../../training/components/Label";
@@ -139,25 +140,11 @@ export function RevealStep({
             weeks={weeks}
             days={placed.map(({ m, workout }) => ({ kind: workout.kind, weekdays: m.weekdays }))}
           />
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-            {placed
+          <KindLegend
+            items={placed
               .filter(({ m }) => m.weekdays.length > 0)
-              .map(({ m, workout }) => (
-                <View key={m.id} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <View
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: KIND_LOOK[workout.kind].onDark,
-                    }}
-                  />
-                  <Text style={[type.mono, { fontSize: 12, color: colors.white }]}>
-                    {workout.name}
-                  </Text>
-                </View>
-              ))}
-          </View>
+              .map(({ m, workout }) => ({ key: m.id, kind: workout.kind, name: workout.name }))}
+          />
           {main !== null && (
             <View style={{ gap: 8 }}>
               <Label small color={darkMeta.color}>

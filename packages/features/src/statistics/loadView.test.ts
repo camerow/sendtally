@@ -207,5 +207,13 @@ describe("loadPlot", () => {
     expect(p.bars[12]).toMatchObject({ y: 12, h: 100 });
     expect(p.bars[12]!.x + p.bars[12]!.w).toBeCloseTo(276);
     expect(p.averageY).toBeCloseTo(112 - 75);
+    expect(p.dotY).toBe(120);
+  });
+
+  it("keeps the axis band and the dots' row under the bars at another height", () => {
+    const p = loadPlot(loadVM([rec(0), rec(2), rec(9)], "3m", now), 330, 66);
+    expect(p.bars[0]).toMatchObject({ y: 49, h: 3, path: null });
+    expect(p.bars[12]).toMatchObject({ y: 12, h: 40 });
+    expect(p.dotY).toBe(60);
   });
 });

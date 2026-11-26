@@ -1,9 +1,35 @@
 export const onboarding = {
   "onboarding.intro.title": "C'est quoi sendtally ?",
-  "onboarding.intro.body":
-    "Sendtally est à la fois un outil pour bâtir ton plan d’entraînement et un carnet de grimpe. Tu peux créer des blocs d’entraînement personnalisés, programmer des séances récurrentes, construire une séance de poutre avec un minuteur sur mesure, et plus encore. Tu peux aussi suivre ta grimpe dans le temps pour voir tes pyramides et tes tendances par année ou depuis le début.",
-  "onboarding.intro.why":
-    "Sendtally t’aide à garder un rôle actif dans la construction de ton plan, et tu as plus de chances de terminer un plan d’entraînement que tu as pris le temps de construire et de peaufiner.",
+  "onboarding.intro.blocksBody":
+    "Programme des séances récurrentes et façonne chaque semaine du bloc.",
+  "onboarding.intro.workoutsBody":
+    "Mets les exercices dans l’ordre, avec répétitions, charge et repos pour chacun.",
+  "onboarding.intro.hangTitle": "Séances de poutre",
+  "onboarding.intro.hangBody":
+    "Règle suspensions, repos et séries. Le minuteur les enchaîne pour toi.",
+  "onboarding.intro.metricsTitle": "Suivi des exercices",
+  "onboarding.intro.metricsBody":
+    "Chaque exercice suivi dans le temps, avec un maximum estimé sur une répétition.",
+  "onboarding.intro.loadTitle": "Suivi de la charge",
+  "onboarding.intro.loadBody":
+    "L’effort et les minutes de chaque semaine, face à la semaine moyenne.",
+  "onboarding.intro.logTitle": "Un carnet de grimpe",
+  "onboarding.intro.logBody":
+    "Pyramides des cotations et tendances de grimpe, par année ou depuis le début.",
+  "onboarding.intro.line": "Un plan qu’on construit, c’est un plan qu’on termine.",
+  "onboarding.intro.cardLabel": "{title}. {body} {n} sur {total}",
+  "onboarding.intro.cards": "Ce que fait sendtally",
+  "onboarding.intro.sampleDeadlift": "Soulevé de terre",
+  "onboarding.intro.samplePushUp": "Pompes",
+  "onboarding.intro.sampleSidePlank": "Gainage latéral",
+  "onboarding.intro.sampleDip": "Dips",
+  "onboarding.intro.sampleGrip": "Semi-arqué",
+  "onboarding.intro.sampleHangboard": "Poutre",
+  "onboarding.intro.sampleHomeGym": "Salle habituelle",
+  "onboarding.intro.sampleLeftArete": "Arête gauche",
+  "onboarding.intro.sampleOrangeSlab": "Dalle orange",
+  "onboarding.intro.sampleRoofCrack": "Fissure du toit",
+  "onboarding.intro.sampleWarmUp": "Circuit d’échauffement",
   "onboarding.firstRun.step": "{n} sur {total}",
   "onboarding.firstRun.skip": "Passer",
   "onboarding.firstRun.logQuestion": "Tiens-tu déjà un carnet ?",

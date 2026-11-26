@@ -11,26 +11,25 @@ export function LoadChart({
   load,
   hit,
   onHit,
+  height = LOAD_PLOT.height,
 }: {
   load: LoadVM;
   hit: number | null;
   onHit: (i: number | null) => void;
+  height?: number;
 }): React.ReactElement {
   const [width, setWidth] = React.useState(0);
-  const plot = loadPlot(load, width);
+  const plot = loadPlot(load, width, height);
   const last = load.bars.length - 1;
   const dim = (i: number): number => (hit === null || hit === i ? 1 : 0.3);
 
   return (
     <View style={{ gap: 6, paddingTop: 4 }}>
-      <View
-        onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
-        style={{ height: LOAD_PLOT.height }}
-      >
+      <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)} style={{ height }}>
         {width > 0 && (
           <Svg
             width={width}
-            height={LOAD_PLOT.height}
+            height={height}
             accessible
             accessibilityLabel={t("statistics.loadChartLabel", { count: load.bars.length })}
           >
@@ -68,7 +67,7 @@ export function LoadChart({
                 <Circle
                   key={`u${i}`}
                   cx={b.x + b.w / 2}
-                  cy={LOAD_PLOT.dotY}
+                  cy={plot.dotY}
                   r={2}
                   fill={colors.gunmetal}
                   opacity={dim(i)}
