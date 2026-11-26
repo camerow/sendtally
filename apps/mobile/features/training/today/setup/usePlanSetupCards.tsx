@@ -20,6 +20,7 @@ import type { SetupCard } from "../../../../components/SetupStack";
 import { useApi } from "../../../../lib/api";
 import { useSetupDismissed } from "../../../../lib/setupPrompt";
 import { useStravaConnect } from "../../../settings/useStravaConnect";
+import { useLocks } from "../../locks";
 import { CircuitsArt } from "./CircuitsArt";
 import { STRAVA_ORANGE, StravaArt } from "./StravaArt";
 
@@ -34,7 +35,11 @@ export function usePlanSetupCards(): SetupCard[] {
     history: useSetupDismissed("history"),
     plan: useSetupDismissed("plan"),
   };
-  const { paths, skip } = useSetupPaths(api, (p) => prompts[p].dismissed !== false);
+  const { paths, skip } = useSetupPaths(
+    api,
+    (p) => prompts[p].dismissed !== false,
+    useLocks().create
+  );
   const own = useClimbingInsights(api, "all").vm?.pyramid ?? [];
   const climbs = own.reduce((n, r) => n + r.inner + r.outer, 0);
   const settings = useSettings(api);

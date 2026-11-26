@@ -37,6 +37,8 @@ export type PlanGridRow = {
   press?: (day: number) => (() => void) | undefined;
   /** Sets or clears a weekday; a day it gives nothing for reads its mark instead. */
   toggle?: (day: number) => (() => void) | undefined;
+  /** Members only: wears the lock, and every press opens the Membership page. */
+  locked?: boolean;
 };
 
 /** What a grid shows of its rows beyond the workouts: a week's numbers, a dated week, days to tap. */
@@ -50,6 +52,8 @@ export type GridOptions = {
   toggle?: (m: Membership, day: number) => (() => void) | undefined;
   /** The exercises a climbing row reads its measure from, such as laps of a circuit. */
   exercises: MeasuredExercises;
+  /** Which rows are locked, and what each of their presses opens instead. */
+  locked?: { row: (m: Membership) => boolean; join: () => void };
 };
 
 /** How grips read: their names, and the grip a one-grip workout was set to. */
@@ -122,7 +126,7 @@ export function planGridRows(
   grips: GripNames,
   options: GridOptions
 ): PlanGridRow[] {
-  const { open, week, marks, toggle, press, exercises } = options;
+  const { open, week, marks, toggle, press, exercises, locked } = options;
   return members.flatMap((m): PlanGridRow[] => {
     const w = workout(m.workoutId);
     if (w === undefined) return [];
@@ -151,6 +155,12 @@ export function planGridRows(
         open: () => open(m),
         ...(toggle !== undefined && { toggle: (day: number) => toggle(m, day) }),
         ...(press !== undefined && { press: (day: number) => press(m, day) }),
+        ...(locked?.row(m) === true && {
+          locked: true,
+          open: locked.join,
+          ...(toggle !== undefined && { toggle: () => locked.join }),
+          ...(press !== undefined && { press: () => locked.join }),
+        }),
       },
     ];
   });

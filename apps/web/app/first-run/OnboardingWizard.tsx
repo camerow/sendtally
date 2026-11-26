@@ -20,18 +20,13 @@ const onboardingCapture: Capture = (event, properties) => capture(event, propert
 
 export type OnboardingWizardProps = {
   api: SendtallyApi;
-  member: boolean;
   start: { path: OnboardingPath; from: PathFrom } | undefined;
 };
 
 /** The chooser, then path history or path plan, one step at a time; Skip and leaving land on Plan. */
-export function OnboardingWizard({
-  api,
-  member,
-  start,
-}: OnboardingWizardProps): React.ReactElement | null {
+export function OnboardingWizard({ api, start }: OnboardingWizardProps): React.ReactElement | null {
   const navigate = useNavigate();
-  const wizard = useWizard(api, { capture: onboardingCapture, member, start });
+  const wizard = useWizard(api, { capture: onboardingCapture, start });
   const toPlan = (): void => void navigate("/app/plan", { replace: true });
   const routed: Wizard = {
     ...wizard,
@@ -50,5 +45,5 @@ export function OnboardingWizard({
     },
   };
   const Step = STEPS[wizard.step];
-  return Step === undefined ? null : <Step wizard={routed} api={api} />;
+  return Step === undefined ? null : <Step wizard={routed} api={api} finish={wizard.complete} />;
 }

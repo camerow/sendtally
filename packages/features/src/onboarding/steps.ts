@@ -1,21 +1,18 @@
-import type { HistoryWay, OnboardingPath, OnboardingProgress, StepId, WizardMemory } from "./types";
+import type { HistoryWay, OnboardingPath, OnboardingProgress, StepId } from "./types";
 
 const HISTORY: Record<HistoryWay, readonly StepId[]> = {
-  import: ["H1", "H2i", "H3i", "H4", "H5", "H6"],
-  by_hand: ["H1", "H2h", "H4", "H5", "H6"],
+  import: ["H1", "H2i", "H3i", "H4", "H6"],
+  by_hand: ["H1", "H2h", "H4", "H6"],
 };
 
-const PLAN: readonly StepId[] = ["P1", "P2", "P3", "P4", "P5", "P6", "P7"];
+const PLAN: readonly StepId[] = ["P1w", "P5", "P7"];
 
-const PLAN_DONE_BY: readonly (readonly [keyof OnboardingProgress, readonly StepId[]])[] = [
-  ["workouts", ["P2"]],
-  ["blockMemberships", ["P1", "P3"]],
-  ["scheduledBlocks", ["P4"]],
-];
+/** The builder and Shape the weeks: opened from a step, they return to it and count no progress. */
+const SIDE_STEPS: readonly StepId[] = ["P2", "P4"];
 
-const MEMBERSHIP: Record<OnboardingPath, StepId> = { history: "H5", plan: "P6" };
+export const isSideStep = (step: StepId): boolean => SIDE_STEPS.includes(step);
 
-/** The history path's four stages: the question, bringing climbs in (any way), the reveal, the offer. */
+/** The history path's three stages: the question, bringing climbs in (any way), the reveal; H6 closes it. */
 const HISTORY_STAGE: Partial<Record<StepId, number>> = {
   H1: 1,
   H2i: 2,
@@ -23,37 +20,26 @@ const HISTORY_STAGE: Partial<Record<StepId, number>> = {
   H3i: 2,
   H2h: 2,
   H4: 3,
-  H5: 4,
-  H6: 4,
+  H6: 3,
 };
 
-/** Where the frame's progress stands: history's fixed four stages, else the place in the path's order. */
-/** The plan path's six stages; P7 closes it with no bar, and a member who skips P6 still counts six. */
-const PLAN_STAGE: Partial<Record<StepId, number>> = {
-  P1: 1,
-  P2: 2,
-  P3: 3,
-  P4: 4,
-  P5: 5,
-  P6: 6,
-  P7: 6,
-};
+/** The plan path's two stages: Build your week and the reveal; P7 closes it. */
+const PLAN_STAGE: Partial<Record<StepId, number>> = { P1w: 1, P5: 2, P7: 2 };
 
 const STAGES: Record<OnboardingPath, { table: Partial<Record<StepId, number>>; total: number }> = {
-  history: { table: HISTORY_STAGE, total: 4 },
-  plan: { table: PLAN_STAGE, total: 6 },
+  history: { table: HISTORY_STAGE, total: 3 },
+  plan: { table: PLAN_STAGE, total: 2 },
 };
 
+/** Where the frame's progress stands; none on the chooser or a side step. */
 export function stepPosition(
   path: OnboardingPath | null,
-  step: StepId,
-  order: readonly StepId[]
+  step: StepId
 ): { n: number; total: number } {
-  if (step === "choose") return { n: 0, total: 0 };
   const stages = path === null ? undefined : STAGES[path];
   const stage = stages?.table[step];
   return stages === undefined || stage === undefined
-    ? { n: order.indexOf(step) + 1, total: order.length }
+    ? { n: 0, total: 0 }
     : { n: stage, total: stages.total };
 }
 
@@ -63,40 +49,22 @@ export function historySteps(way: HistoryWay | null): StepId[] {
   return way === null ? ["H1"] : [...HISTORY[way]];
 }
 
-function pathSteps(
+/** The steps of a path still to do: its order, less what the data already holds. */
+export function remainingSteps(
   path: OnboardingPath,
   way: HistoryWay | null,
   progress: OnboardingProgress
 ): StepId[] {
-  if (path === "plan") {
-    const done = PLAN_DONE_BY.flatMap(([fact, steps]) => (progress[fact] ? steps : []));
-    return PLAN.filter((step) => !done.includes(step));
-  }
+  if (path === "plan") return PLAN.filter((step) => step !== "P1w" || !progress.scheduledBlocks);
   if (!progress.sessions) return historySteps(way);
   const byHand = historySteps("by_hand");
   return byHand.slice(byHand.indexOf("H2h"));
 }
 
-/** The steps of a path still to do: its order, less what the data already holds and a membership offer already made or not needed. */
-export function remainingSteps(
-  path: OnboardingPath,
-  way: HistoryWay | null,
-  progress: OnboardingProgress,
-  memory: Pick<WizardMemory, "membershipShown">,
-  member: boolean
-): StepId[] {
-  const steps = pathSteps(path, way, progress);
-  return memory.membershipShown || member
-    ? steps.filter((step) => step !== MEMBERSHIP[path])
-    : steps;
-}
-
 export function resumeStep(
   path: OnboardingPath,
   way: HistoryWay | null,
-  progress: OnboardingProgress,
-  memory: Pick<WizardMemory, "membershipShown">,
-  member: boolean
+  progress: OnboardingProgress
 ): StepId {
-  return remainingSteps(path, way, progress, memory, member)[0] ?? END[path];
+  return remainingSteps(path, way, progress)[0] ?? END[path];
 }

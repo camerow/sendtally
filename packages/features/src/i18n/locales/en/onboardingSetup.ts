@@ -8,6 +8,5 @@ export const onboardingSetup = {
   "onboarding.setup.soFarCount_one": "Your climbing so far · {count} climb",
   "onboarding.setup.soFarCount_other": "Your climbing so far · {count} climbs",
   "onboarding.setup.stravaArtName": "Evening session",
-  "onboarding.setup.welcomeTitle": "Log your climbing. Plan your training.",
   "onboarding.setup.historyMore": "Add more climbs, or see it all.",
 } as const;

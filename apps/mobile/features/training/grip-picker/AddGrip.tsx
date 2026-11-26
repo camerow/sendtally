@@ -7,6 +7,7 @@ import { findGrip } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { Button } from "../components/Button";
 import { useHangData } from "../data/HangDataContext";
+import { openMembershipPage, useLocks } from "../locks";
 import { type } from "../type";
 
 /**
@@ -16,11 +17,15 @@ import { type } from "../type";
 export function AddGrip({ onAdded }: { onAdded: (gripId: string) => void }): React.ReactElement {
   const { model, actions } = useHangData();
   const [name, setName] = React.useState("");
+  const locks = useLocks();
 
   const add = (): void => {
     const trimmed = name.trim();
     if (trimmed === "") return;
     const existing = findGrip(model.grips, trimmed);
+    if (existing === undefined && locks.create) return openMembershipPage("create");
+    if (existing?.hidden === true && locks.exercise({ grip: existing }))
+      return openMembershipPage("exercise");
     const id = existing?.id ?? randomUUID();
     if (existing === undefined)
       void actions.saveGrip({ id, name: trimmed, custom: true, hidden: false });
@@ -64,7 +69,13 @@ export function AddGrip({ onAdded }: { onAdded: (gripId: string) => void }): Rea
           },
         ]}
       />
-      <Button label={t("hang.add")} onPress={add} variant="primary" height={48} />
+      <Button
+        label={t("hang.add")}
+        onPress={add}
+        variant="primary"
+        height={48}
+        locked={locks.create}
+      />
     </View>
   );
 }

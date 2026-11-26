@@ -15,6 +15,7 @@ import {
 import { kindLabel } from "@sendtally/features/activities";
 import { workoutsWithGrip } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
+import { deleteCopy } from "@sendtally/features/training";
 import { LinkRow } from "../../../components/LinkRow";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
@@ -32,6 +33,8 @@ import { openGripEditor } from "../exercises/openExerciseEditor";
 import { useAddToWorkout } from "../exercises/useAddToWorkout";
 import { CategoryMark } from "../library/CategoryMark";
 import { useLibrary } from "../library/useLibrary";
+import { LockedPage } from "../components/LockedPage";
+import { useCreateGate, useLocks } from "../locks";
 import { SummaryTiles } from "../summary/SummaryTiles";
 import { TrendCard } from "../trends/TrendCard";
 import { insight } from "@sendtally/features/hang";
@@ -73,7 +76,10 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
     fingers: true,
     usedIn,
   });
-  const menu: DetailMenuRow[] = addTo.row === null || grip?.hidden === true ? [] : [addTo.row];
+  const locks = useLocks();
+  const gate = useCreateGate("exercise");
+  const menu: DetailMenuRow[] =
+    addTo.row === null || grip?.hidden === true ? [] : [gate(addTo.row)];
   if (canCompareGrips(model.sessions))
     menu.push({
       icon: "insights",
@@ -81,18 +87,9 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
       onPress: () => router.push("/grip/compare"),
     });
   if (grip !== undefined && !grip.hidden)
-    menu.push(
-      deleteRow({
-        title: t("workouts.archiveExercise"),
-        confirm: {
-          title: t("workouts.archiveExerciseTitle", { name }),
-          body: t("workouts.archiveExerciseBody"),
-          action: t("workouts.archiveExercise"),
-        },
-        onDelete: () => void actions.archiveGrip(grip),
-      })
-    );
+    menu.push(deleteRow(deleteCopy("grip", name), () => void actions.archiveGrip(grip)));
 
+  if (grip !== undefined && locks.exercise({ grip })) return <LockedPage source="exercise" />;
   return (
     <ScreenFrame
       overlay={addTo.toast && <Toast {...addTo.toast} />}
@@ -144,6 +141,7 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
             <LinkRow
               key={w.id}
               label={w.name}
+              locked={locks.workout(w)}
               onPress={() => router.push({ pathname: "/workout/[id]", params: { id: w.id } })}
             />
           ))}

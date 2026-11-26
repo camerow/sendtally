@@ -25,6 +25,7 @@ import { useAppApi } from "../../lib/useAppApi";
 import { BlockRow } from "../blocks/BlockRow";
 import { useScheduledToast } from "../blocks/useScheduledToast";
 import { useHangData } from "../data/HangDataContext";
+import { membershipPagePath, useLocks } from "../locks";
 import { Icon } from "../../components/Icon";
 import { CalendarMonth } from "../plan-calendar/CalendarMonth";
 import { CALENDAR_PATH } from "../plan-calendar/paths";
@@ -72,6 +73,7 @@ export function PlanPage(): React.ReactElement {
   const monday = addDays(weekStart(today), offset * 7);
   const week = trainingWeek(log, monday, today);
   const running = blockGroups(log.plan.blocks, today).current;
+  const blockLocked = useLocks().block;
 
   // The day to hold under the strip while the list fills in, until the user scrolls.
   const page = React.useRef<HTMLDivElement>(null);
@@ -167,6 +169,7 @@ export function PlanPage(): React.ReactElement {
                 id={b.id}
                 name={b.name}
                 meta={t("plan.workoutCount", { count: blockMembers(log.plan, b).length })}
+                {...(blockLocked && { locked: true, to: membershipPagePath("block") })}
               />
             ))}
           </div>

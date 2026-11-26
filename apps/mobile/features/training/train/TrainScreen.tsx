@@ -13,6 +13,7 @@ import { HangDataProvider } from "../data/HangDataProvider";
 import { openExerciseEditor } from "../exercises/openExerciseEditor";
 import { ExerciseCategorySheet } from "../exercises/ExerciseCategorySheet";
 import { WorkoutLibrary } from "../library/WorkoutLibrary";
+import { openMembershipPage, useLocks } from "../locks";
 import { useNewBlock } from "../planning/useNewBlock";
 import { BlocksList } from "./BlocksList";
 import { ExerciseShelves } from "./ExerciseShelves";
@@ -54,8 +55,10 @@ export function TrainScreen({
   const [menuOpen, setMenuOpen] = React.useState(false);
   const picked = React.useRef<TrainView | null>(null);
   const newBlock = useNewBlock(t("training.train"));
+  const locked = useLocks().create;
   const create = (v: TrainView): void => {
-    if (v === "blocks") newBlock();
+    if (locked) openMembershipPage("create");
+    else if (v === "blocks") newBlock();
     else if (v === "workouts") router.push("/workout/edit");
     else setAdding(true);
   };
@@ -103,6 +106,7 @@ export function TrainScreen({
               key={v}
               icon={icon[v]}
               title={label(v)}
+              locked={locked}
               onPress={() => {
                 picked.current = v;
                 setMenuOpen(false);

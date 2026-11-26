@@ -1,18 +1,20 @@
-import { describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
-import type { SendtallyApi } from "@sendtally/api-client";
+import type { Entitlements } from "@sendtally/api-client";
 import type { Wizard } from "@sendtally/features/settings";
+import { apiWith, ENTITLEMENTS, withBilling } from "../../billing/testBilling";
 import { renderWithHang } from "../../training/data/renderWithHang";
 import { DoneStep } from "./DoneStep";
 
-jest.mock("expo-router", () => ({ router: { push: jest.fn(), replace: jest.fn() } }));
-
+const mockPush = jest.fn();
+jest.mock("expo-router", () => ({
+  router: { push: (href: string) => mockPush(href), replace: jest.fn() },
+}));
 const mockApi = new Proxy(
   {},
   { get: (_, key) => (key === "then" ? undefined : () => new Promise(() => {})) }
-) as SendtallyApi;
-
+);
 jest.mock("../../../lib/api", () => ({ useApi: () => mockApi }));
 
 const wizard = {
@@ -20,11 +22,11 @@ const wizard = {
   step: "H6",
   canGoBack: false,
   position: { n: 5, total: 5 },
-  memory: { way: "by_hand", existingLog: "none", days: [], membershipShown: false },
+  memory: { way: "by_hand", existingLog: "none" },
   choose: jest.fn(),
   answerLog: jest.fn(),
   setWay: jest.fn(),
-  setDays: jest.fn(),
+  open: jest.fn(),
   next: jest.fn(),
   back: jest.fn(),
   skip: jest.fn(),
@@ -33,11 +35,58 @@ const wizard = {
   capture: jest.fn(),
 } satisfies Wizard;
 
+afterEach(() => {
+  jest.useRealTimers();
+});
+
+const settled = (): Promise<unknown> => act(() => jest.advanceTimersByTime(600));
+
+const show = (entitlements: Entitlements): Promise<unknown> =>
+  renderWithHang(
+    withBilling(<DoneStep wizard={wizard} api={apiWith(entitlements)} />, entitlements)
+  );
+
 describe("H6", () => {
-  it("closes to the log, as Open my log does", async () => {
-    await renderWithHang(<DoneStep wizard={wizard} api={mockApi} />);
-    await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+  it("explains the trial and what members get, with no price and no x", async () => {
+    await show(ENTITLEMENTS.trial);
+    expect(await screen.findByText("14 days free.")).toBeTruthy();
+    expect(screen.getByText("Always free")).toBeTruthy();
+    expect(screen.getByText(/these need a membership\.$/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Close" })).toBeNull();
+    expect(screen.queryByText(/\$|per year|per month/)).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Become a member" }));
+    expect(mockPush).toHaveBeenCalledWith("/membership?source=onboarding");
+  });
+
+  it("drops the trial panel once the trial is over", async () => {
+    await show(ENTITLEMENTS.pastTrial);
+    expect(await screen.findByText("These need a membership.")).toBeTruthy();
+    expect(screen.queryByText("14 days free.")).toBeNull();
+  });
+
+  it("shows a member the history card and Done, which lands on the log", async () => {
+    jest.useFakeTimers();
+    wizard.complete.mockClear();
+    await show(ENTITLEMENTS.member);
+    await settled();
+    expect(screen.queryByText("Members get…")).toBeNull();
+    expect(screen.queryByText("Become a member")).toBeNull();
+    await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    expect(wizard.complete).toHaveBeenCalledWith("member", "log");
+  });
+
+  it("ignores a tap as it opens, the second of a double tap on the step before, then takes one", async () => {
+    jest.useFakeTimers();
+    wizard.complete.mockClear();
+    await show(ENTITLEMENTS.member);
+    const done = (): Promise<unknown> =>
+      fireEvent.press(screen.getByRole("button", { name: "Done" }));
+    await done();
+    expect(wizard.complete).not.toHaveBeenCalled();
+    await settled();
+    await done();
+    await done();
     expect(wizard.complete).toHaveBeenCalledTimes(1);
-    expect(wizard.complete).toHaveBeenCalledWith("later", "log");
+    expect(wizard.complete).toHaveBeenCalledWith("member", "log");
   });
 });

@@ -41,7 +41,11 @@ jest.mock("../../../components/Sheet", () => {
   };
 });
 jest.mock("expo-router", () => ({
-  router: { canGoBack: () => true, back: jest.fn(), push: jest.fn() },
+  router: { canGoBack: () => true, back: jest.fn(), push: jest.fn(), replace: jest.fn() },
+}));
+let mockAccess: boolean | null = null;
+jest.mock("../../billing/useBilling", () => ({
+  useBilling: () => (mockAccess === null ? null : { membership: { access: mockAccess } }),
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: jest.fn() }));
 jest.mock("@sendtally/features/workouts", () => ({
@@ -528,5 +532,17 @@ describe("Workout editor", () => {
     });
     expect(screen.queryByText("What kind of exercise?")).toBeNull();
     expect(screen.queryByLabelText("Search exercises")).toBeNull();
+  });
+
+  it("sends a new workout or exercise to the Membership page while making is locked", async () => {
+    mockAccess = false;
+    await renderWithHang(<WorkoutEditorScreen kind="strength" />, hangData(), world);
+    expect(router.replace).toHaveBeenLastCalledWith({
+      pathname: "/membership",
+      params: { source: "create" },
+    });
+    await renderWithHang(<ExerciseEditorScreen kind="strength" />, hangData(), world);
+    expect(router.replace).toHaveBeenCalledTimes(2);
+    mockAccess = null;
   });
 });

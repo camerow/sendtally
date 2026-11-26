@@ -1,13 +1,12 @@
 import React from "react";
 import { letterOf } from "@sendtally/core/hang";
 import { Button } from "@sendtally/design";
-import { shortDate, weightText } from "@sendtally/features/hang";
+import { weightText } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import { useBlockStep, weeklyStepKg } from "@sendtally/features/settings";
 import { loadColumns } from "@sendtally/features/training";
 import { Segmented } from "../../components/Segmented";
 import { LoadTable } from "../../training/blocks/LoadTable";
-import { NameField } from "../../training/components/NameField";
 import { Stepper } from "../../training/components/Stepper";
 import { useHangData } from "../../training/data/HangDataContext";
 import { usePlanActions } from "../../training/data/usePlanActions";
@@ -17,27 +16,26 @@ import type { StepComponent } from "../types";
 import { WizardFrame } from "../WizardFrame";
 import { LoadBars } from "./components/LoadBars";
 
-/** P4: the week becomes a block, with its name, its length and how the load changes. */
+/** P4, a side step from the reveal: the block's length and how the load changes week by week. */
 export const BlockStep: StepComponent = ({ wizard, api }) => {
-  const { model, today } = useHangData();
+  const { model } = useHangData();
   const unit = model.settings.units;
   const step = useBlockStep({
     wizard,
     api,
     model,
-    today,
     library: useLibrary().state,
     actions: usePlanActions(),
   });
-  const scheduleLabel = t("plan.scheduleFrom", { day: shortDate(step.start) });
 
   if (step.status === "loading")
     return (
       <WizardFrame
         wizard={wizard}
+        skip={false}
         footer={
           <Button variant="azure" disabled>
-            {scheduleLabel}
+            {t("common.save")}
           </Button>
         }
       >
@@ -48,9 +46,6 @@ export const BlockStep: StepComponent = ({ wizard, api }) => {
   const {
     workout,
     exercise,
-    name,
-    setName,
-    keepName,
     weeks,
     resize,
     alt,
@@ -64,7 +59,7 @@ export const BlockStep: StepComponent = ({ wizard, api }) => {
     shownChanges,
     setCell,
     bars,
-    schedule,
+    save,
   } = step;
 
   const chip = (label: string, on: boolean, onClick: () => void): React.ReactElement => (
@@ -82,16 +77,14 @@ export const BlockStep: StepComponent = ({ wizard, api }) => {
   return (
     <WizardFrame
       wizard={wizard}
+      skip={false}
       footer={
-        <Button variant="azure" onClick={schedule}>
-          {scheduleLabel}
+        <Button variant="azure" onClick={save}>
+          {t("common.save")}
         </Button>
       }
     >
-      <div className="plan-path-head">
-        <h1 className="wizard-title">{t("onboarding.plan.block.title")}</h1>
-        <p className="plan-path-body">{t("onboarding.plan.block.body")}</p>
-      </div>
+      <h1 className="wizard-title">{t("onboarding.plan.block.title")}</h1>
       <div className="plan-path-sticky">
         <DarkCard
           raised
@@ -102,20 +95,6 @@ export const BlockStep: StepComponent = ({ wizard, api }) => {
         >
           <LoadBars bars={bars} />
         </DarkCard>
-      </div>
-      <div
-        className="field"
-        onFocus={(e) => e.target instanceof HTMLTextAreaElement && e.target.select()}
-        onBlur={keepName}
-      >
-        <span className="train-label">{t("onboarding.plan.block.nameLabel")}</span>
-        <NameField
-          label={t("onboarding.plan.block.nameLabel")}
-          value={name}
-          maxLength={80}
-          placeholder=""
-          onChange={setName}
-        />
       </div>
       <div className="plan-path-between">
         <span className="plan-path-strong">{t("plan.weeks")}</span>

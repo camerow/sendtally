@@ -354,8 +354,8 @@ describe("trial", () => {
     expect(trialEndsAt(LATER)).toBe("2027-03-24T12:00:00.000Z");
   });
 
-  it("has ended for an account older than 14 days", () => {
-    expect(trialEndsAt("2026-01-01T00:00:00.000Z")).toBe("2026-01-15T00:00:00.000Z");
+  it("runs 14 days from the locks' release for an account older than that", () => {
+    expect(trialEndsAt("2026-01-01T00:00:00.000Z")).toBe("2026-12-10T00:00:00.000Z");
   });
 
   it("answers the trial end from the account's sign-up", async () => {

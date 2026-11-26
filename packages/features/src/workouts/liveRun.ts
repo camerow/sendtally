@@ -3,7 +3,7 @@ import { builtInGripName } from "../hang/names";
 import { phaseLabel } from "../hang/timerText";
 import { t } from "../i18n";
 import { exerciseName } from "./library";
-import type { FingersPart } from "./fingersPart";
+import type { FingersPart, TimerRows } from "./fingersPart";
 import type { SetLoads } from "./timerView";
 import { COUNT_IN_S, SWITCH_S, type Hold } from "./holdClock";
 import type { Rest } from "./restCountdown";
@@ -20,6 +20,7 @@ export type RunState =
       cards?: RunCards;
       /** The hang timer on a grip, and the grips' places in `done`. */
       fingers?: FingersPart;
+      timerRows?: TimerRows;
       grips?: number[];
       /** Each grip's edge and load as its timer last set them, by its place in `done`. */
       gripSetups?: Record<string, HangSetup>;

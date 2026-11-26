@@ -14,25 +14,16 @@ import {
   type PickerEntry,
 } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
-import {
-  defaultWorkoutName,
-  keptName,
-  nameOr,
-  setPlanPath,
-  usePlanPath,
-  type Wizard,
-} from "@sendtally/features/settings";
+import { defaultWorkoutName, setPlanPath, type Wizard } from "@sendtally/features/settings";
 import { exerciseKey, useExercises } from "@sendtally/features/statistics";
 import {
   doseMeasureOf,
-  draftOf,
   draftOfEditor,
   editorBlockAt,
   estimatedMinutes,
   newWorkoutDraft,
   useDerivedKindDraft,
   useWorkoutActions,
-  withEditorIds,
   withGroupSet,
   withItem,
   withItemsAdded,
@@ -42,20 +33,17 @@ import {
   withUngrouped,
   withoutItem,
   type Picked,
-  type WorkoutDraft,
 } from "@sendtally/features/workouts";
 import { Icon } from "../../../components/Icon";
 import { TextInput } from "../../../components/TextInput";
 import { press } from "../../../lib/press";
 import { Button } from "../../training/components/Button";
 import { Label } from "../../training/components/Label";
-import { NameField } from "../../training/components/NameField";
 import { Title } from "../../training/components/Title";
 import { useHangData } from "../../training/data/HangDataContext";
 import { usePickerWorld } from "../../training/exercise-picker/usePickerWorld";
 import { usePick } from "../../training/exercise-picker/usePick";
 import { useMakeExercise } from "../../training/exercises/useMakeExercise";
-import { useLibrary } from "../../training/library/useLibrary";
 import { type } from "../../training/type";
 import { ItemEditor } from "../../training/workout-editor/ItemEditor";
 import { SupersetEditor } from "../../training/workout-editor/SupersetEditor";
@@ -68,7 +56,7 @@ const NEW_REST_S = 120;
 
 const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
 
-/** P2: a workout the user already does, from library exercises and ones they name, saved on Continue. */
+/** P2, a side step from Build your week: a workout the user already does, named by its kind, saved on Continue. */
 export function WorkoutStep({
   wizard,
   api,
@@ -76,27 +64,7 @@ export function WorkoutStep({
   wizard: Wizard;
   api: SendtallyApi;
 }): React.ReactElement {
-  const { building } = usePlanPath();
-  const { state } = useLibrary();
-  const [id] = React.useState(() => building ?? randomUUID());
-  if (state.status !== "ready") return <WizardFrame wizard={wizard}>{null}</WizardFrame>;
-  const saved = state.data.workout(id);
-  const initial =
-    saved === undefined ? newWorkoutDraft("other") : withEditorIds(draftOf(saved), randomUUID);
-  return <Builder wizard={wizard} api={api} id={id} initial={initial} />;
-}
-
-function Builder({
-  wizard,
-  api,
-  id,
-  initial,
-}: {
-  wizard: Wizard;
-  api: SendtallyApi;
-  id: string;
-  initial: WorkoutDraft;
-}): React.ReactElement {
+  const [id] = React.useState(randomUUID);
   const actions = useWorkoutActions(api, reportFailure);
   const exercises = useExercises(api).state;
   const mine = exercises.status === "ready" ? exercises.data : [];
@@ -104,13 +72,10 @@ function Builder({
   const pick = usePick();
   const make = useMakeExercise();
   const [text, setText] = React.useState("");
-  const [typedName, setTypedName] = React.useState<string | null>(() =>
-    initial.name.trim() === "" ? null : initial.name
-  );
   const world = usePickerWorld([], "all");
   const isGrip = isGripOf(world);
   const kindIn = exerciseKindIn(world);
-  const { state, setState, remember } = useDerivedKindDraft(initial, kindIn);
+  const { state, setState, remember } = useDerivedKindDraft(newWorkoutDraft("other"), kindIn);
   const inWorkout = state.items.map((i) => exerciseKey(i.exercise));
   const typed = text.trim();
   const matches = pickerEntries(
@@ -185,23 +150,17 @@ function Builder({
   const count = state.items.length;
   const ready = count > 0;
   const first = state.items[0];
-  const name = nameOr(
-    typedName,
-    defaultWorkoutName(first === undefined ? undefined : kindIn(first.exercise))
-  );
   const save = (): void => {
+    const name = defaultWorkoutName(first === undefined ? undefined : kindIn(first.exercise));
     void actions.saveWorkout(id, draftOfEditor({ ...state, name }));
-    setPlanPath((p) => ({
-      ...p,
-      building: id,
-      workouts: p.workouts.includes(id) ? p.workouts : [id, ...p.workouts],
-    }));
+    setPlanPath((p) => ({ ...p, workouts: [id, ...p.workouts] }));
     wizard.next();
   };
 
   return (
     <WizardFrame
       wizard={wizard}
+      skip={false}
       footer={
         <Button
           variant="primary"
@@ -216,23 +175,7 @@ function Builder({
         />
       }
     >
-      <View style={{ gap: 8 }}>
-        <Title size={34}>{t("onboarding.plan.workout.title")}</Title>
-        <Text style={[type.body, { fontSize: 15, lineHeight: 22, color: colors.textSecondary }]}>
-          {t("onboarding.plan.workout.body")}
-        </Text>
-      </View>
-      <View style={{ gap: 4 }}>
-        <Label color={colors.textSecondary}>{t("onboarding.plan.workout.nameLabel")}</Label>
-        <NameField
-          value={typedName ?? name}
-          onChange={setTypedName}
-          onBlur={() => setTypedName(keptName)}
-          selectTextOnFocus
-          placeholder=""
-          maxLength={80}
-        />
-      </View>
+      <Title size={34}>{t("onboarding.plan.workout.title")}</Title>
       <View style={{ gap: 10 }}>
         <Label color={colors.gunmetal}>{t("onboarding.plan.workout.exercises")}</Label>
         {state.items.map((item, i) => {

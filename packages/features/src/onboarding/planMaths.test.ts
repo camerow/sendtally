@@ -1,13 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { LibraryWorkout } from "../workouts/types";
-import {
-  firstWeekday,
-  nextMonday,
-  sessionsPerWeek,
-  shortcutChanges,
-  shortcutOf,
-  weekBars,
-} from "./planMaths";
+import { nextMonday, sessionsPerWeek, shortcutChanges, shortcutOf, weekBars } from "./planMaths";
 
 describe("shortcutChanges", () => {
   const written = { sets: 3, reps: 5, weightKg: 50 };
@@ -36,11 +29,9 @@ describe("plan maths", () => {
     expect(nextMonday("2026-11-20")).toBe("2026-11-23");
     expect(nextMonday("2026-11-23")).toBe("2026-11-23");
   });
-  it("counts sessions and finds the first day", () => {
+  it("counts sessions", () => {
     const days = { a: [1, 3] as const, b: [5] as const };
     expect(sessionsPerWeek(days)).toBe(3);
-    expect(firstWeekday(days)).toBe(1);
-    expect(firstWeekday({})).toBeNull();
     expect(shortcutOf({ stepUp: true, deload: false })).toBe("step_up");
   });
 });

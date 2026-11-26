@@ -8,3 +8,6 @@ export type DetailMenuRow = MenuRowProps & { keepOpen?: boolean };
 
 /** Somewhere a thing can be added, checked when it is already there. */
 export type AddToOption = { id: string; label: string; detail?: string; there: boolean };
+
+/** What holding a row offers, named for a screen reader as the row's long-press action. */
+export type LongPress = { label: string; onPress: () => void };

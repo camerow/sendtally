@@ -18,6 +18,7 @@ import { bodyHeading, workoutMinutes, type LibraryWorkout } from "@sendtally/fea
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
 import { useApi } from "../../../lib/api";
+import { useLiveRun } from "../../live-session/liveRun";
 import { AddToSheet } from "../components/AddToSheet";
 import { Button } from "../components/Button";
 import { DetailActions } from "../components/DetailActions";
@@ -41,6 +42,8 @@ import { LogItButton } from "./LogItButton";
 import { StartButton } from "./StartButton";
 import { usePlannedItems } from "./usePlannedItems";
 import { useWorkoutDetailActions } from "./useWorkoutDetailActions";
+import { LockedPage } from "../components/LockedPage";
+import { useLocks } from "../locks";
 import { SessionTargetContext } from "../sets/sessionTarget";
 
 /** A planned run a workout opens as: the day it lands on and the plan it is in. */
@@ -204,6 +207,8 @@ export function WorkoutScreen({
   const { state, reload } = useLibrary();
   const { today } = useHangData();
   const { log } = useTrainingLog(useApi());
+  const locks = useLocks();
+  const running = useLiveRun()?.workoutId === id;
   const planned =
     run === null
       ? undefined
@@ -211,7 +216,9 @@ export function WorkoutScreen({
   if (state.status !== "ready")
     return <LoadState state={state} onRetry={() => void reload()} framed />;
   const workout = state.data.workout(id);
-  return workout === undefined ? null : (
-    <Detail workout={workout} grip={grip} adding={adding} run={planned} />
-  );
+  if (workout === undefined) return null;
+  if (!running && locks.workout(workout)) return <LockedPage source="workout" />;
+  if (!running && planned !== undefined && locks.day(planned.membership, workout))
+    return <LockedPage source="plan_day" />;
+  return <Detail workout={workout} grip={grip} adding={adding} run={planned} />;
 }

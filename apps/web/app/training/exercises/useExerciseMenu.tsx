@@ -3,11 +3,13 @@ import { useNavigate } from "react-router";
 import type { Exercise } from "@sendtally/api-client";
 import { exerciseLabel, useExerciseActions } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
+import { deleteCopy } from "@sendtally/features/training";
 import type { MoreMenuItem } from "../../components/MoreMenu";
 import { Sheet } from "../../components/Sheet";
 import { useToast } from "../../components/Toast";
 import { useAppApi } from "../../lib/useAppApi";
 import { useGoBack } from "../../lib/useGoBack";
+import { DeleteSheet } from "../components/DeleteSheet";
 import { EXERCISES_VIEW, exercisePath } from "./paths";
 
 export type ExerciseMenu = { items: MoreMenuItem[]; sheets: React.ReactNode };
@@ -38,13 +40,10 @@ export function useExerciseMenu(
     (a, b) => Number(b.kind === exercise.kind) - Number(a.kind === exercise.kind)
   );
   const merge = { label: t("workouts.mergeExercise"), onSelect: () => setOpen({ kind: "merge" }) };
-  const removeLabel = inUse ? t("workouts.archiveExercise") : t("common.delete");
+  const flow = deleteCopy("exercise", name, inUse);
   const items: MoreMenuItem[] = exercise.archived
     ? [merge]
-    : [
-        merge,
-        { label: removeLabel, onSelect: () => setOpen({ kind: "remove" }), destructive: true },
-      ];
+    : [merge, { label: flow.item, onSelect: () => setOpen({ kind: "remove" }), destructive: true }];
 
   return {
     items,
@@ -86,28 +85,16 @@ export function useExerciseMenu(
             </p>
           </Sheet>
         )}
-        <Sheet
-          open={open?.kind === "remove"}
-          title={
-            inUse
-              ? t("workouts.archiveExerciseTitle", { name })
-              : t("workouts.deleteExerciseTitle", { name })
-          }
-          onClose={close}
-          action={{
-            label: removeLabel,
-            danger: true,
-            onPress: () => {
-              close();
+        {open?.kind === "remove" && (
+          <DeleteSheet
+            flow={flow}
+            onClose={close}
+            onDelete={() => {
               back();
               void actions.remove(exercise.id);
-            },
-          }}
-        >
-          <p className="sheet-body">
-            {inUse ? t("workouts.archiveExerciseBody") : t("workouts.deleteExerciseBody")}
-          </p>
-        </Sheet>
+            }}
+          />
+        )}
       </>
     ),
   };

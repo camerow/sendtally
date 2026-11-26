@@ -1,6 +1,6 @@
 import React from "react";
 import { libraryPictures } from "@sendtally/features/library";
-import { Link } from "react-router";
+import { Link, Navigate } from "react-router";
 import { eachSideOf, tallyMeasuresOf } from "@sendtally/features/exercises";
 import { hangWorkoutOf, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
@@ -16,6 +16,7 @@ import { useExercises } from "@sendtally/features/statistics";
 import {
   bodyHeading,
   unplannedItems,
+  useLiveRun,
   workoutMinutes,
   type LibraryWorkout,
 } from "@sendtally/features/workouts";
@@ -24,6 +25,7 @@ import { DetailFrame } from "../../components/detail/DetailFrame";
 import { SectionHeading } from "../../components/detail/SectionHeading";
 import { SummaryTiles } from "../../components/detail/SummaryTiles";
 import { useAppApi } from "../../lib/useAppApi";
+import { useLiveRunStore } from "../../lib/useLiveRun";
 import { SessionTargetContext } from "../components/sessionTarget";
 import { StartButton } from "../components/StartButton";
 import { useHangData } from "../data/HangDataContext";
@@ -32,6 +34,7 @@ import { editWorkoutPath } from "../editor/paths";
 import { exerciseHistoryPath } from "../components/exerciseHistory";
 import { workoutHistoryPath } from "../history/paths";
 import { WORKOUTS_VIEW, useLibrary } from "../library/useLibrary";
+import { membershipPagePath, useLocks } from "../locks";
 import { plannedLogLink } from "../log/logLink";
 import { MoveSheet } from "../plan-week/MoveSheet";
 import { schedulePath } from "../schedule/paths";
@@ -169,13 +172,18 @@ export function WorkoutPage({ id, run = null }: WorkoutPageProps): React.ReactEl
   const { state, reload } = useLibrary();
   const { today } = useHangData();
   const { log } = useTrainingLog(useAppApi());
+  const locks = useLocks();
+  const running = useLiveRun(useLiveRunStore())?.workoutId === id;
   const planned =
     run === null
       ? undefined
       : trainingDay(log, run.date, today).plans.find((o) => o.membership.id === run.membershipId);
   if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;
   const workout = state.data.workout(id);
-  return workout === undefined ? null : (
-    <Detail workout={workout} session={state.data.usage.get(id)?.count ?? 0} run={planned} />
-  );
+  if (workout === undefined) return null;
+  if (!running && locks.workout(workout))
+    return <Navigate to={membershipPagePath("workout")} replace />;
+  if (!running && planned !== undefined && locks.day(planned.membership, workout))
+    return <Navigate to={membershipPagePath("plan_day")} replace />;
+  return <Detail workout={workout} session={state.data.usage.get(id)?.count ?? 0} run={planned} />;
 }

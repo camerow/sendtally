@@ -287,6 +287,11 @@
   padding: 0;
 }
 
+.plan-row-lock {
+  display: inline-flex;
+  padding: 10px 4px;
+}
+
 .plan-row-undo {
   height: 36px;
   padding: 0 4px;
@@ -330,6 +335,11 @@
 .plan-card-title:hover {
   text-decoration: underline;
   text-underline-offset: 4px;
+}
+
+.plan-card-title--locked,
+.plan-row-text--locked .plan-row-name {
+  color: var(--text-muted);
 }
 
 .plan-card-head .more-button {
@@ -544,12 +554,17 @@
 
 .add-row-add {
   width: 36px;
-  background: var(--surface-soft);
-  color: var(--bs-gunmetal);
+  background: var(--bs-gunmetal);
+  color: var(--bs-white);
 }
 
 .add-row-add:hover {
-  background: rgba(64, 63, 76, 0.12);
+  background: var(--bs-gunmetal-deep);
+}
+
+.add-row-add--locked,
+.add-row-add--locked:hover {
+  background: var(--surface-soft);
 }
 
 .add-row-added {
@@ -854,6 +869,17 @@
   color: var(--bs-gunmetal);
 }
 
+.plan-grid-locked {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.plan-grid-locked .plan-grid-workout {
+  color: var(--text-muted);
+}
+
 .plan-grid-line {
   overflow: hidden;
   white-space: nowrap;
@@ -1011,6 +1037,7 @@ button.grid-cell:hover {
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 15px;
+  text-decoration: none;
   cursor: pointer;
 }
 

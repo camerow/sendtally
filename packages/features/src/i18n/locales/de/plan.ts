@@ -131,6 +131,7 @@ export const plan = {
   "plan.planAgainStart": "Wann beginnt er?",
   "plan.startsRange": "{start} bis {end}. Jede Blockwoche läuft von {from} bis {to}.",
   "plan.scheduleFrom": "Ab {day} einplanen",
+  "plan.dayOf": "{name} am {day}",
   "plan.workout": "Workout",
   "plan.scheduledName": "{name} eingeplant",
   "plan.noBlocksToSchedule":

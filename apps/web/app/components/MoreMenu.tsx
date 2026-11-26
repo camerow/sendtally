@@ -1,6 +1,8 @@
 import React from "react";
 import { createPortal } from "react-dom";
+import { t } from "@sendtally/features/i18n";
 import { Icon } from "./Icon";
+import { Lock } from "./Lock";
 import { useIsNarrow } from "../lib/useIsNarrow";
 
 export type MoreMenuItem = {
@@ -9,6 +11,8 @@ export type MoreMenuItem = {
   /** Red text, for a delete; the confirm it opens is the caller's. */
   destructive?: boolean;
   disabled?: boolean;
+  /** Members only: muted, with the lock; what it selects is the caller's. */
+  locked?: boolean;
 };
 
 function Items({
@@ -25,7 +29,16 @@ function Items({
           key={item.label}
           type="button"
           role="menuitem"
-          className={item.destructive === true ? "more-item more-item--danger" : "more-item"}
+          className={
+            item.destructive === true
+              ? "more-item more-item--danger"
+              : item.locked === true
+                ? "more-item more-item--locked"
+                : "more-item"
+          }
+          aria-label={
+            item.locked === true ? t("common.membersOnly", { label: item.label }) : undefined
+          }
           disabled={item.disabled}
           onClick={() => {
             onPick();
@@ -33,6 +46,7 @@ function Items({
           }}
         >
           {item.label}
+          {item.locked === true && <Lock size={14} />}
         </button>
       ))}
     </>

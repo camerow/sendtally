@@ -1,8 +1,13 @@
 import React from "react";
 import type { Focus } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
-import { browseLibrary, type WorkoutLibrary } from "@sendtally/features/workouts";
+import {
+  browseLibrary,
+  type LibraryWorkout,
+  type WorkoutLibrary,
+} from "@sendtally/features/workouts";
 import { DashedPanel } from "../components/DashedPanel";
+import type { RowLink } from "../useLockedRows";
 import { LibraryCard } from "./LibraryCard";
 
 export type LibraryBrowserProps = {
@@ -11,6 +16,8 @@ export type LibraryBrowserProps = {
   focus?: Focus | null;
   /** What the search box says before anything is typed. */
   placeholder?: string;
+  /** Where each workout found goes: its page, or locked, the Membership page. */
+  link: (workout: LibraryWorkout) => RowLink;
   /** Shown in place of the list until a search is typed. */
   children?: React.ReactNode;
 };
@@ -20,6 +27,7 @@ export function LibraryBrowser({
   library,
   focus,
   placeholder = t("workouts.search"),
+  link,
   children,
 }: LibraryBrowserProps): React.ReactElement {
   const [text, setText] = React.useState("");
@@ -44,7 +52,7 @@ export function LibraryBrowser({
       {found.length > 0 && (
         <div className="library-cards">
           {found.map((w) => (
-            <LibraryCard key={w.id} workout={w} use={library.usage.get(w.id)} />
+            <LibraryCard key={w.id} workout={w} use={library.usage.get(w.id)} {...link(w)} />
           ))}
         </div>
       )}

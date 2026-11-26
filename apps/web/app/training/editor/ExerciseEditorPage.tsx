@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router";
+import { Navigate, useNavigate } from "react-router";
 import type { Exercise } from "@sendtally/api-client";
 import { GRIP_MEASURES, type WorkoutKind } from "@sendtally/core/hang";
 import {
@@ -21,6 +21,7 @@ import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { EXERCISES_VIEW, exercisePath } from "../exercises/paths";
+import { membershipPagePath, useLocks } from "../locks";
 import { ExerciseFields } from "./ExerciseFields";
 import { newExerciseForm } from "./NewExerciseSheet";
 import { useMake } from "./useMake";
@@ -105,6 +106,7 @@ function NewExercise({ kind, name }: { kind: WorkoutKind; name: string }): React
   const make = useMake();
   const navigate = useNavigate();
   const back = useGoBack(EXERCISES_VIEW);
+  const locked = useLocks().create;
   const save = (form: ExerciseForm, release: () => void): void => {
     void make(form).then((made) => {
       if (made === null) return;
@@ -113,6 +115,7 @@ function NewExercise({ kind, name }: { kind: WorkoutKind; name: string }): React
       else back();
     });
   };
+  if (locked) return <Navigate to={membershipPagePath("create")} replace />;
   return (
     <Form initial={newExerciseForm(kind, name)} editing={false} logged={false} onSave={save} />
   );
@@ -211,8 +214,10 @@ function EditExercise({
 function EditGrip({ id }: { id: string }): React.ReactElement | null {
   const { model, actions } = useHangData();
   const back = useGoBack(EXERCISES_VIEW);
+  const locks = useLocks();
   const grip = model.grips.find((g) => g.id === id);
   if (grip === undefined) return null;
+  if (locks.exercise({ grip })) return <Navigate to={membershipPagePath("exercise")} replace />;
   const measure = grip.measure ?? "hang";
   const save = (form: ExerciseForm, release: () => void): void => {
     release();
@@ -241,10 +246,12 @@ function EditOwn({ id }: { id: string }): React.ReactElement | null {
   const api = useAppApi();
   const exercises = useExercises(api);
   const series = useExerciseSeries(api);
+  const locks = useLocks();
   if (exercises.state.status !== "ready")
     return <LoadState state={exercises.state} onRetry={() => void exercises.reload()} />;
   const exercise = exercises.state.data.find((e) => e.id === id);
   if (exercise === undefined) return null;
+  if (locks.exercise({ exercise })) return <Navigate to={membershipPagePath("exercise")} replace />;
   const logged =
     series.status === "ready" && series.data.some((s) => s.key === exerciseKey(exercise.name));
   return <EditExercise exercise={exercise} logged={logged} />;

@@ -11,6 +11,7 @@ import { CategorySheet } from "../editor/CategorySheet";
 import { newExercisePath, newWorkoutPath } from "../editor/paths";
 import { HangDataProvider } from "../data/HangDataProvider";
 import { ExerciseShelves } from "../exercises/ExerciseShelves";
+import { useCreateGate } from "../locks";
 import { WorkoutLibrary } from "./WorkoutLibrary";
 
 type TrainView = "blocks" | "workouts" | "exercises";
@@ -28,6 +29,7 @@ export function TrainPage(): React.ReactElement {
   const navigate = useNavigate();
   const [making, setMaking] = React.useState(false);
   const newBlock = useNewBlock();
+  const gate = useCreateGate("create");
   return (
     <div className="train">
       <div className="train-head">
@@ -41,7 +43,7 @@ export function TrainPage(): React.ReactElement {
             { label: t("plan.createBlock"), onSelect: newBlock },
             { label: t("workouts.createWorkout"), onSelect: () => void navigate(newWorkoutPath()) },
             { label: t("workouts.createExercise"), onSelect: () => setMaking(true) },
-          ]}
+          ].map(gate)}
         />
         <AccountButton />
       </div>

@@ -1,16 +1,3 @@
-.plan-path-head {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.plan-path-body {
-  margin: 0;
-  font-size: 15px;
-  line-height: 22px;
-  color: var(--text-on-white-secondary);
-}
-
 .plan-path-section {
   display: flex;
   flex-direction: column;
@@ -62,28 +49,6 @@
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.plan-path-workout {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.plan-path-workout-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.plan-path-workout-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 700;
-  font-size: 15px;
 }
 
 .plan-path-rows {
@@ -267,28 +232,24 @@
   border-radius: 4px;
 }
 
-.plan-path-link {
-  align-self: center;
-  height: 44px;
-  padding: 0 8px;
-  border: none;
-  background: none;
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--bs-azure-ink);
-  cursor: pointer;
-}
-
-.plan-path-menu {
+.build-week-rows {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 20px;
-  background: var(--surface-soft);
+  gap: 2px;
 }
 
-.plan-path-menu .menu-row {
-  border-radius: 16px;
+.build-week-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.build-week-row.is-picked {
+  padding-bottom: 8px;
+}
+
+.build-week-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
 }

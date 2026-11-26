@@ -15,9 +15,6 @@ export const yearRange = (year: number): YearRange => `y${year}`;
 
 export const yearOf = (range: YearRange): number => Number(range.slice(1));
 
-/** The one range a non-member can see; every longer range is the membership. */
-export const PREVIEW_TREND_RANGE: TrendRange = "7d";
-
 export const TREND_RANGES: readonly TrendRange[] = ["all", "1y", "6m", "3m", "1m", "7d"];
 
 /** Longest first: All, each calendar year with sessions in it newest first, then the trailing ranges. */
@@ -44,18 +41,6 @@ export const statsYears = (logged: {
     ...logged.hangSessions.map((h) => h.date),
     ...logged.activities.map((a) => a.date),
   ]);
-
-/** Everything for a member; the one unlocked range for anyone else. */
-export const defaultRange = (member: boolean | null): TrendRange =>
-  member === true ? "all" : PREVIEW_TREND_RANGE;
-
-/** Every range but the preview is the membership; unknown membership counts as free. */
-export const isLockedRange = (member: boolean | null, range: TrendRange): boolean =>
-  member !== true && range !== PREVIEW_TREND_RANGE;
-
-/** The range drawn: the one picked, unless it is locked. */
-export const shownRange = (member: boolean | null, picked: TrendRange): TrendRange =>
-  isLockedRange(member, picked) ? PREVIEW_TREND_RANGE : picked;
 
 export function trendRangeLabel(range: TrendRange): string {
   if (isYearRange(range)) return String(yearOf(range));

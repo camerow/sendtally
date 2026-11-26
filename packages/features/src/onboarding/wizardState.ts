@@ -1,8 +1,9 @@
 import type { ConnectionStatus, FirstRunStep } from "@sendtally/api-client";
-import { remainingSteps, stepPosition } from "./steps";
+import { isSideStep, remainingSteps, stepPosition } from "./steps";
 import type {
   Capture,
   HistoryWay,
+  OnboardingEvent,
   OnboardingPath,
   OnboardingProgress,
   OnboardingStatus,
@@ -14,7 +15,7 @@ import type {
 
 export type WizardStart = { path: OnboardingPath; from: PathFrom };
 
-export type WizardOptions = { capture: Capture; member: boolean; start?: WizardStart };
+export type WizardOptions = { capture: Capture; start?: WizardStart };
 
 export type WizardState = {
   path: OnboardingPath | null;
@@ -22,10 +23,16 @@ export type WizardState = {
   order: readonly StepId[];
   trail: readonly StepId[];
   memory: WizardMemory;
+  /** Whether this walk has counted its reveal, so the reveal coming back from a side step is not counted again. */
+  revealed: boolean;
 };
 
+type AnyEvent = (
+  event: OnboardingEvent["event"],
+  properties: OnboardingEvent["properties"]
+) => void;
+
 type WizardDeps = {
-  member: boolean;
   progress: OnboardingProgress;
   capture: Capture;
   send: (to: FirstRunStep) => void;
@@ -45,35 +52,30 @@ const CHOOSER: WizardState = {
   step: "choose",
   order: [],
   trail: [],
-  memory: { way: null, existingLog: null, days: [], membershipShown: false },
+  memory: { way: null, existingLog: null },
+  revealed: false,
 };
 
 function choosePath(
   state: WizardState,
   path: OnboardingPath,
-  { progress, member }: Pick<WizardDeps, "progress" | "member">
+  { progress }: Pick<WizardDeps, "progress">
 ): WizardState {
-  const order = remainingSteps(path, state.memory.way, progress, state.memory, member);
+  const order = remainingSteps(path, state.memory.way, progress);
   const [first] = order;
   if (first === undefined) return state;
   return { ...state, path, order, step: first, trail: [...state.trail, state.step] };
 }
 
-function enter(state: WizardState, step: StepId): WizardState {
-  if (step !== "H5" && step !== "P6") return { ...state, step };
-  return { ...state, step, memory: { ...state.memory, membershipShown: true } };
-}
-
-/** The membership offer just came on screen: the app sends this once, as the step lands on H5 or P6. */
-export function paywallOnEnter(path: OnboardingPath | null, step: StepId, capture: Capture): void {
-  if (path !== null && (step === "H5" || step === "P6"))
-    capture("paywall_shown", { source: "onboarding", path, step });
-}
+const back = (s: WizardState): WizardState => {
+  const to = s.trail.at(-1);
+  return to === undefined ? s : { ...s, step: to, trail: s.trail.slice(0, -1) };
+};
 
 /** Where the wizard opens: the path asked for, the path the status says is under way, or the chooser. */
 export function openWizard(
   onboarding: OnboardingStatus | undefined,
-  deps: Pick<WizardDeps, "progress" | "member">,
+  deps: Pick<WizardDeps, "progress">,
   start?: WizardStart
 ): WizardState {
   const path = start?.path ?? onboarding?.path ?? null;
@@ -115,21 +117,28 @@ export function patchStatus(status: ConnectionStatus, to: FirstRunStep): Connect
 /** Each action is a pure change of the state as it is when React applies it, so two in one handler both land. */
 export function wizardOf(state: WizardState, deps: WizardDeps): Wizard {
   const { send, capture, update } = deps;
-  const { path, step, order, trail, memory } = state;
+  const { path, step, trail, memory } = state;
   const reorder = (s: WizardState, way: HistoryWay): WizardState => ({
     ...s,
     memory: { ...s.memory, way },
-    order:
-      s.path === null ? s.order : remainingSteps(s.path, way, deps.progress, s.memory, deps.member),
+    order: s.path === null ? s.order : remainingSteps(s.path, way, deps.progress),
   });
   const setWay = (way: HistoryWay): void => update((s) => reorder(s, way));
+  const forward: AnyEvent = capture;
+  const captureOnce: AnyEvent = (event, properties) => {
+    if (event === "onboarding_reveal_viewed") {
+      if (state.revealed) return;
+      update((s) => ({ ...s, revealed: true }));
+    }
+    forward(event, properties);
+  };
   return {
     path,
     step,
     canGoBack: trail.length > 0,
-    position: stepPosition(path, step, order),
+    position: stepPosition(path, step),
     memory,
-    capture,
+    capture: captureOnce,
     choose: (to, from) => {
       send({ step: "path", path: to, from });
       update((s) => choosePath(s, to, deps));
@@ -143,22 +152,19 @@ export function wizardOf(state: WizardState, deps: WizardDeps): Wizard {
       });
     },
     setWay,
-    setDays: (days) => update((s) => ({ ...s, memory: { ...s.memory, days } })),
+    open: (to) => update((s) => ({ ...s, step: to, trail: [...s.trail, s.step] })),
     next: (extra) => {
       if (path === null) return;
       capture("onboarding_step_completed", { ...extra, path, step });
       update((s) => {
+        if (isSideStep(s.step)) return back(s);
         const at = s.order.indexOf(s.step);
         const from = at >= 0 ? at : Math.max(-1, ...s.trail.map((x) => s.order.indexOf(x)));
         const to = s.order[from + 1];
-        return to === undefined ? s : { ...enter(s, to), trail: [...s.trail, s.step] };
+        return to === undefined ? s : { ...s, step: to, trail: [...s.trail, s.step] };
       });
     },
-    back: () =>
-      update((s) => {
-        const to = s.trail.at(-1);
-        return to === undefined ? s : { ...s, step: to, trail: s.trail.slice(0, -1) };
-      }),
+    back: () => update(back),
     skip: () => send({ step: "skipped", path, at: step }),
     leave: () =>
       send(path === null ? { step: "skipped", path: null, at: step } : { step: "left", path }),

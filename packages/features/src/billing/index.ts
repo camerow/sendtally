@@ -1,15 +1,18 @@
 export { hasAccess, keepEyebrow } from "./access";
-export { membershipPanel } from "./benefits";
-export type { MembershipPanel, MembershipPanelRow } from "./benefits";
+export { alwaysFree, membersGet, trialPanel } from "./benefits";
+export type { MembersGet } from "./benefits";
 export {
   formatRenewalDate,
   managedInOf,
   membershipSummary,
+  membershipSource,
   membershipVM,
   planLabel,
   planOf,
   storeChipName,
   storeName,
 } from "./transforms";
+export { useMembersGet } from "./useMembersGet";
+export { usePaywallShown } from "./usePaywallShown";
 export { useMembership, type MembershipFeature } from "./useMembership";
-export type { MembershipManagedIn, MembershipPlan, MembershipVM } from "./types";
+export type { MembershipManagedIn, MembershipPlan, MembershipSource, MembershipVM } from "./types";

@@ -13,6 +13,7 @@ import { getMembership } from "../lib/billing.server";
 import { useClientApi } from "../lib/useClientApi";
 import { useIsModerator } from "../lib/useIsModerator";
 import { SettingsView } from "../settings/components/SettingsView";
+import { useLocks } from "../training/locks";
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: menuRowStyles }];
 
@@ -35,6 +36,7 @@ export default function SettingsRoute(): React.ReactElement {
   const gyms = useGyms(api);
   const moderator = useIsModerator();
   const { state: status } = useQuery(queries.status(api));
+  const planLocked = useLocks().create;
 
   return (
     <SettingsView
@@ -47,6 +49,7 @@ export default function SettingsRoute(): React.ReactElement {
       gymsReady={gyms.ready}
       onboarding={status.status === "ready" ? status.data.onboarding.progress : null}
       moderator={moderator}
+      planLocked={planLocked}
     />
   );
 }

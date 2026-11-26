@@ -7,13 +7,16 @@ import { shortDate, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   sessionsPerWeek,
-  usePlanPath,
+  shapeable,
+  useOnePress,
+  useSeededPlanPath,
   useTrainingReminders,
   weekBars,
   type Wizard,
 } from "@sendtally/features/settings";
-import { KIND_LOOK, usePlan } from "@sendtally/features/training";
+import { usePlan } from "@sendtally/features/training";
 import { useTween } from "@sendtally/features/trends";
+import { KindLegend } from "../../../components/KindLegend";
 import { Switch } from "../../../components/Switch";
 import { Button } from "../../training/components/Button";
 import { Label } from "../../training/components/Label";
@@ -27,7 +30,7 @@ import { WizardFrame } from "../WizardFrame";
 import { LoadBars } from "./components/LoadBars";
 import { PlanCalendar } from "./components/PlanCalendar";
 
-/** P5: the whole block on a calendar, its session count running up, and reminders one switch away. */
+/** P5: the whole block on a calendar, its session count running up, Shape the weeks, and reminders one switch away. */
 export function RevealStep({
   wizard,
   api,
@@ -35,7 +38,7 @@ export function RevealStep({
   wizard: Wizard;
   api: SendtallyApi;
 }): React.ReactElement {
-  const path = usePlanPath();
+  const path = useSeededPlanPath(api);
   const plan = usePlan(api).state;
   const library = useLibrary().state;
   const unit = useHangData().model.settings.units;
@@ -66,10 +69,9 @@ export function RevealStep({
   const shown = reduceMotion ? total : counted;
   const on = reminders.settings?.enabled === true;
 
-  const viewed = React.useRef(false);
+  const once = useOnePress(true);
   React.useEffect(() => {
-    if (viewed.current || block === undefined || reminders.settings === null) return;
-    viewed.current = true;
+    if (block === undefined || reminders.settings === null) return;
     wizard.capture("onboarding_reveal_viewed", {
       path: "plan",
       weeks,
@@ -80,9 +82,11 @@ export function RevealStep({
 
   const changed =
     ready && plan.data.weekChanges.some((c) => members.some((m) => m.id === c.membershipId));
+  const shaped = shapeable(placed.map(({ workout }) => workout));
+  const shapedIn = placed.find(({ workout }) => workout === shaped);
   const main =
-    changed && placed[0] !== undefined
-      ? weekBars(placed[0].workout, placed[0].m.id, weeks, plan.data.weekChanges, unit, gripName)
+    changed && shapedIn !== undefined
+      ? weekBars(shapedIn.workout, shapedIn.m.id, weeks, plan.data.weekChanges, unit, gripName)
       : null;
 
   const toggle = async (value: boolean): Promise<void> => {
@@ -102,7 +106,7 @@ export function RevealStep({
           variant="plain"
           height={54}
           label={t("onboarding.firstRun.continue")}
-          onPress={() => wizard.next()}
+          onPress={once(() => wizard.next())}
           style={{ backgroundColor: colors.gold }}
         />
       }
@@ -136,31 +140,27 @@ export function RevealStep({
             weeks={weeks}
             days={placed.map(({ m, workout }) => ({ kind: workout.kind, weekdays: m.weekdays }))}
           />
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-            {placed
+          <KindLegend
+            items={placed
               .filter(({ m }) => m.weekdays.length > 0)
-              .map(({ m, workout }) => (
-                <View key={m.id} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <View
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: KIND_LOOK[workout.kind].onDark,
-                    }}
-                  />
-                  <Text style={[type.mono, { fontSize: 12, color: colors.white }]}>
-                    {workout.name}
-                  </Text>
-                </View>
-              ))}
-          </View>
+              .map(({ m, workout }) => ({ key: m.id, kind: workout.kind, name: workout.name }))}
+          />
           {main !== null && (
             <View style={{ gap: 8 }}>
               <Label small color={darkMeta.color}>
                 {t("onboarding.plan.block.weekByWeek", { name: main.name })}
               </Label>
               <LoadBars bars={main.bars} height={26} />
+            </View>
+          )}
+          {shaped !== undefined && (
+            <View style={{ flexDirection: "row" }}>
+              <Button
+                variant="outlineDark"
+                height={48}
+                label={t("onboarding.plan.reveal.shapeWeeks")}
+                onPress={() => wizard.open("P4")}
+              />
             </View>
           )}
           <View

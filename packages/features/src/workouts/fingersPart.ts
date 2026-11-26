@@ -269,32 +269,93 @@ export function timerWrites(part: FingersPart, places: readonly number[]): Timer
   );
 }
 
-/** The rows with what the timer wrote laid in, each set it ended ticked; the same rows when it wrote nothing new. */
+/**
+ * What one timer run has written into the rows: each set by the row it first landed on, with
+ * what it laid there and whether it left it ticked, and the rows taken out or put back since it
+ * started, which move its later sets with them.
+ */
+export type TimerRows = {
+  run: number | null;
+  moved: { at: SetAt; by: -1 | 1 }[];
+  written: Record<string, { value: SetDone; ticked: boolean }>;
+};
+
+/** The part's record of its timer run, fresh for a run it has not written yet. */
+export const timerRowsOf = (part: FingersPart, rows: TimerRows | undefined): TimerRows => {
+  const run = "run" in part ? part.run.startedAt : null;
+  return run !== null && rows?.run === run ? rows : { run, moved: [], written: {} };
+};
+
+/** Rows taken out (-1) or put back (1) under a running timer; putting back a row it took out undoes that. */
+export function withRowsMoved(
+  rows: TimerRows | undefined,
+  part: FingersPart | undefined,
+  ats: readonly SetAt[],
+  by: -1 | 1
+): TimerRows | undefined {
+  if (part === undefined || !("run" in part)) return rows;
+  const now = timerRowsOf(part, rows);
+  const moved = ats.reduce((all, at) => {
+    const out =
+      by === 1
+        ? all.findLastIndex((m) => m.by === -1 && m.at.item === at.item && m.at.set === at.set)
+        : -1;
+    return out === -1 ? [...all, { at, by }] : all.filter((_, k) => k !== out);
+  }, now.moved);
+  return { ...now, moved };
+}
+
+const movedRow = (moved: TimerRows["moved"], at: SetAt): SetAt | null =>
+  moved.reduce<SetAt | null>((row, m) => {
+    if (row === null || row.item !== m.at.item || row.set < m.at.set) return row;
+    return m.by === -1 && row.set === m.at.set ? null : { ...row, set: row.set + m.by };
+  }, at);
+
+const sameSet = (a: SetDone | undefined, b: SetDone): boolean => {
+  const { rpe: _a, ...x } = a ?? {};
+  const { rpe: _b, ...y } = b;
+  return a !== undefined && JSON.stringify(x) === JSON.stringify(y);
+};
+
+/**
+ * The rows with what the timer has new laid in, each set it ended ticked, on the row its set
+ * sits on now. A set it wrote that was since edited, ticked or unticked by hand is left as the
+ * user has it. Null when nothing is new.
+ */
 export function withTimerWrites(
   done: readonly ItemDone[],
   ticked: ReadonlySet<string>,
-  writes: readonly TimerWrite[]
-): { done: ItemDone[]; ticked: ReadonlySet<string> } | null {
+  writes: readonly TimerWrite[],
+  rows: TimerRows = { run: null, moved: [], written: {} }
+): { done: ItemDone[]; ticked: ReadonlySet<string>; rows: TimerRows } | null {
   let changed = false;
   const after = new Set(ticked);
-  const rows = done.map((d) => {
-    const mine = writes.filter((w) => w.at.item === d.item);
-    if (mine.length === 0) return d;
-    const sets = [...d.sets];
-    for (const { at, value, ended } of mine) {
-      const was = sets[at.set];
-      if (was === undefined || JSON.stringify(was) !== JSON.stringify(value)) {
-        sets[at.set] = was?.rpe === undefined ? value : { ...value, rpe: was.rpe };
-        changed = true;
-      }
-      if (ended && !after.has(setKey(at))) {
-        after.add(setKey(at));
-        changed = true;
-      }
+  const written = { ...rows.written };
+  const sets = new Map(done.map((d) => [d.item, [...d.sets]]));
+  for (const { at, value, ended } of writes) {
+    const row = movedRow(rows.moved, at);
+    const onRow = row === null ? undefined : sets.get(row.item);
+    if (row === null || onRow === undefined) continue;
+    const key = setKey(row);
+    const was = written[setKey(at)];
+    const now = onRow[row.set];
+    if (was !== undefined) {
+      const byHand = !sameSet(now, was.value) || after.has(key) !== was.ticked;
+      const nothingNew = sameSet(value, was.value) && (was.ticked || !ended);
+      if (byHand || nothingNew) continue;
     }
-    return { ...d, sets };
-  });
-  return changed ? { done: rows, ticked: after } : null;
+    if (!sameSet(now, value))
+      onRow[row.set] = now?.rpe === undefined ? value : { ...value, rpe: now.rpe };
+    if (ended) after.add(key);
+    written[setKey(at)] = { value, ticked: after.has(key) };
+    changed = true;
+  }
+  if (!changed) return null;
+  return {
+    done: done.map((d) => ({ ...d, sets: sets.get(d.item) ?? d.sets })),
+    ticked: after,
+    rows: { ...rows, written },
+  };
 }
 
 /**

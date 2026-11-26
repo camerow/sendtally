@@ -14,7 +14,7 @@ export const offlineFetch = makeFakeFetch([
 ]).fetchImpl;
 
 export type AuthOverrides = Partial<
-  Pick<typeof auth, "deleteUser" | "verifyWebhook" | "userNames">
+  Pick<typeof auth, "deleteUser" | "verifyWebhook" | "userNames" | "webFeature">
 >;
 
 // A test picks its case by naming the signed-in user in a header and swapping
@@ -34,6 +34,7 @@ export function testApp(
     const userId = req.headers.get("x-test-user");
     return userId === null ? null : { userId };
   };
+  auth.webFeature = overrides.webFeature ?? (async () => false);
   auth.deleteUser = overrides.deleteUser ?? (async () => undefined);
   auth.userNames = overrides.userNames ?? (async () => new Map());
   auth.verifyWebhook =

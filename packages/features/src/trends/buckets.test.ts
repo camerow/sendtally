@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { bucketsFor, priorWindow, windowOf } from "./buckets";
-import { defaultRange, shownRange, trendRanges, yearsOf } from "./types";
+import { trendRanges, yearsOf } from "./types";
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -82,12 +82,5 @@ describe("range chips", () => {
       "1m",
       "7d",
     ]);
-  });
-
-  it("opens on All for a member and the free 7D for anyone else", () => {
-    expect(defaultRange(true)).toBe("all");
-    expect(defaultRange(false)).toBe("7d");
-    expect(defaultRange(null)).toBe("7d");
-    expect(shownRange(false, "y2025")).toBe("7d");
   });
 });

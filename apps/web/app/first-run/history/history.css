@@ -349,46 +349,6 @@
   }
 }
 
-.done-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 4px;
-  border-radius: var(--radius-panel);
-  background: var(--surface-soft);
-}
-
-.done-trial {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: var(--radius-card);
-  background: var(--bs-gold);
-  color: var(--bs-gunmetal);
-}
-
-.done-trial-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.done-trial-ends {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.done-trial-keep {
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 14px;
-}
-
 @media (max-width: 767px) {
   .add-climbs {
     grid-template-columns: minmax(0, 1fr);

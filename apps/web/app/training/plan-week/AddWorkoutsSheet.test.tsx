@@ -65,6 +65,7 @@ const library = (): WorkoutLibrary => {
   return { workouts, usage: new Map(), workout: (id) => workouts.find((w) => w.id === id) };
 };
 
+vi.mock("@sendtally/features/billing", () => ({ useMembership: () => ({ access: null }) }));
 vi.mock("../library/useLibrary", async (actual) => ({
   ...(await actual<typeof T_useLibrary>()),
   useLibrary: () => ({ state: { status: "ready", data: library() }, reload: vi.fn() }),
@@ -89,6 +90,10 @@ vi.mock("@sendtally/features/exercises", async (actual) => ({
     inWorkout: [],
     offer: "exercises",
   }),
+}));
+vi.mock("@sendtally/features/statistics", async (actual) => ({
+  ...(await actual<object>()),
+  useExercises: () => ({ state: { status: "ready", data: [] } }),
 }));
 vi.mock("@sendtally/features/training", async (actual) => ({
   ...(await actual<typeof T_training>()),

@@ -35,8 +35,8 @@ export function PlanPicker({
             style={press({
               flex: 1,
               borderWidth: 1.5,
-              borderColor: active ? colors.gunmetal : "transparent",
-              backgroundColor: active ? colors.white : "rgba(255,255,255,0.55)",
+              borderColor: active ? colors.gunmetal : colors.lineOnLightStrong,
+              backgroundColor: colors.white,
               borderRadius: radius.card,
               padding: 14,
               gap: 4,

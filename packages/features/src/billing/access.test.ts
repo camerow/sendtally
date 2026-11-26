@@ -11,8 +11,8 @@ const free = (endsAt: string): Entitlements => ({
 });
 
 describe("hasAccess", () => {
-  it("is closed while nothing has loaded", () => {
-    expect(hasAccess(null, NOW)).toBe(false);
+  it("is unknown while nothing has loaded or the request failed", () => {
+    expect(hasAccess(null, NOW)).toBeNull();
   });
 
   it("is open while the trial runs and closed from the moment it ends", () => {

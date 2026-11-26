@@ -9,13 +9,11 @@ const NONE: OnboardingProgress = {
   blockMemberships: false,
   scheduledBlocks: false,
 };
-const FRESH = { membershipShown: false };
-const SHOWN = { membershipShown: true };
 
 describe("historySteps", () => {
   it("goes through the import or by hand, and is only H1 before the answer", () => {
-    expect(historySteps("import")).toEqual(["H1", "H2i", "H3i", "H4", "H5", "H6"]);
-    expect(historySteps("by_hand")).toEqual(["H1", "H2h", "H4", "H5", "H6"]);
+    expect(historySteps("import")).toEqual(["H1", "H2i", "H3i", "H4", "H6"]);
+    expect(historySteps("by_hand")).toEqual(["H1", "H2h", "H4", "H6"]);
     expect(historySteps(null)).toEqual(["H1"]);
   });
 
@@ -26,93 +24,46 @@ describe("historySteps", () => {
 
 describe("remainingSteps", () => {
   it("is the whole path for a new user", () => {
-    expect(remainingSteps("plan", null, NONE, FRESH, false)).toEqual([
-      "P1",
-      "P2",
-      "P3",
-      "P4",
-      "P5",
-      "P6",
-      "P7",
-    ]);
-    expect(remainingSteps("history", "import", NONE, FRESH, false)).toEqual(historySteps("import"));
+    expect(remainingSteps("plan", null, NONE)).toEqual(["P1w", "P5", "P7"]);
+    expect(remainingSteps("history", "import", NONE)).toEqual(historySteps("import"));
   });
 
   it.each([
-    [{ workouts: true }, ["P1", "P3", "P4", "P5", "P6", "P7"]],
-    [{ blockMemberships: true }, ["P2", "P4", "P5", "P6", "P7"]],
-    [{ scheduledBlocks: true }, ["P1", "P2", "P3", "P5", "P6", "P7"]],
-    [{ workouts: true, blockMemberships: true, scheduledBlocks: true }, ["P5", "P6", "P7"]],
-    [{ exercises: true, sessions: true }, ["P1", "P2", "P3", "P4", "P5", "P6", "P7"]],
-  ])("drops the plan steps the data already holds: %o", (done, steps) => {
-    expect(remainingSteps("plan", null, { ...NONE, ...done }, FRESH, false)).toEqual(steps);
+    [{ workouts: true }, ["P1w", "P5", "P7"]],
+    [{ blockMemberships: true }, ["P1w", "P5", "P7"]],
+    [{ scheduledBlocks: true }, ["P5", "P7"]],
+    [{ exercises: true, sessions: true }, ["P1w", "P5", "P7"]],
+  ])("drops Build your week once a block is scheduled: %o", (done, steps) => {
+    expect(remainingSteps("plan", null, { ...NONE, ...done })).toEqual(steps);
   });
 
   it("reopens a finished history path on adding climbs, whatever the way", () => {
     const progress = { ...NONE, sessions: true };
     for (const way of ["import", "by_hand", null] as const)
-      expect(remainingSteps("history", way, progress, FRESH, false)).toEqual([
-        "H2h",
-        "H4",
-        "H5",
-        "H6",
-      ]);
-  });
-
-  it("drops the membership offer for a member", () => {
-    expect(remainingSteps("history", "by_hand", NONE, FRESH, true)).toEqual([
-      "H1",
-      "H2h",
-      "H4",
-      "H6",
-    ]);
-    expect(remainingSteps("plan", null, NONE, FRESH, true)).not.toContain("P6");
-  });
-
-  it("shows no membership panel at the second path's end once the first showed it", () => {
-    expect(remainingSteps("plan", null, NONE, SHOWN, false)).toEqual([
-      "P1",
-      "P2",
-      "P3",
-      "P4",
-      "P5",
-      "P7",
-    ]);
-    expect(remainingSteps("history", "import", NONE, SHOWN, false)).toEqual([
-      "H1",
-      "H2i",
-      "H3i",
-      "H4",
-      "H6",
-    ]);
+      expect(remainingSteps("history", way, progress)).toEqual(["H2h", "H4", "H6"]);
   });
 });
 
 describe("resumeStep", () => {
   it("is the first step not done", () => {
-    expect(resumeStep("history", null, NONE, FRESH, false)).toBe("H1");
-    expect(resumeStep("history", null, { ...NONE, sessions: true }, FRESH, false)).toBe("H2h");
-    expect(resumeStep("plan", null, { ...NONE, blockMemberships: true }, FRESH, false)).toBe("P2");
-    expect(
-      resumeStep(
-        "plan",
-        null,
-        { ...NONE, workouts: true, blockMemberships: true, scheduledBlocks: true },
-        SHOWN,
-        true
-      )
-    ).toBe("P5");
+    expect(resumeStep("history", null, NONE)).toBe("H1");
+    expect(resumeStep("history", null, { ...NONE, sessions: true })).toBe("H2h");
+    expect(resumeStep("plan", null, { ...NONE, blockMemberships: true })).toBe("P1w");
+    expect(resumeStep("plan", null, { ...NONE, scheduledBlocks: true })).toBe("P5");
   });
 });
 
-describe("stepPosition on the plan path", () => {
-  const all = ["P1", "P2", "P3", "P4", "P5", "P6", "P7"] as const;
-  const member = ["P1", "P2", "P3", "P4", "P5", "P7"] as const;
-  it("counts six fixed stages, the membership offer the sixth", () => {
-    expect(stepPosition("plan", "P5", all)).toEqual({ n: 5, total: 6 });
-    expect(stepPosition("plan", "P6", all)).toEqual({ n: 6, total: 6 });
+describe("stepPosition", () => {
+  it("counts two plan stages and three history ones", () => {
+    expect(stepPosition("plan", "P1w")).toEqual({ n: 1, total: 2 });
+    expect(stepPosition("plan", "P5")).toEqual({ n: 2, total: 2 });
+    expect(stepPosition("history", "H2h")).toEqual({ n: 2, total: 3 });
+    expect(stepPosition("history", "H4")).toEqual({ n: 3, total: 3 });
   });
-  it("keeps six for a member who never sees the offer", () => {
-    expect(stepPosition("plan", "P5", member)).toEqual({ n: 5, total: 6 });
+
+  it("shows no progress on the chooser or a side step", () => {
+    expect(stepPosition(null, "choose")).toEqual({ n: 0, total: 0 });
+    expect(stepPosition("plan", "P2")).toEqual({ n: 0, total: 0 });
+    expect(stepPosition("plan", "P4")).toEqual({ n: 0, total: 0 });
   });
 });

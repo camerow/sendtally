@@ -19,14 +19,20 @@ import {
   type LibraryWorkout,
   type WorkoutUse,
 } from "@sendtally/features/workouts";
+import { Lock } from "../../components/Lock";
 import { PhaseBar } from "../components/PhaseBar";
-import { workoutPath } from "./useLibrary";
+import { LockedRow } from "../components/LockedRow";
 
 export type LibraryCardProps = {
   workout: LibraryWorkout;
   use: WorkoutUse | undefined;
   /** Its category's name; off where the page already names it. */
   showKind?: boolean;
+  to: string;
+  /** Members only: the name muted, with the lock. */
+  locked?: boolean;
+  /** A ··· on the card, such as a locked card's Delete. */
+  menu?: React.ReactNode;
 };
 
 /** A workout in the library: its kind, name, length, and what it holds. */
@@ -34,6 +40,9 @@ export function LibraryCard({
   workout,
   use,
   showKind = true,
+  to,
+  locked = false,
+  menu,
 }: LibraryCardProps): React.ReactElement {
   const exercises = useExerciseList(useAppApi());
   const count = use?.count ?? 0;
@@ -50,15 +59,22 @@ export function LibraryCard({
       : timed
         ? intervalPhases(intervalsOf(items)).slice(1)
         : null;
-  return (
-    <Link to={workoutPath(workout.id)} className="library-card">
+  const card = (
+    <Link
+      to={to}
+      className={locked ? "library-card library-card--locked" : "library-card"}
+      aria-label={locked ? t("common.membersOnly", { label: workout.name }) : undefined}
+    >
       {showKind && (
         <span className="train-label" style={{ color: KIND_LOOK[workout.kind].ink }}>
           {kindLabel(workout.kind)}
         </span>
       )}
       <span className="library-card-head">
-        <span className="train-title library-card-name">{workout.name}</span>
+        <span className="library-card-title">
+          <span className="train-title library-card-name">{workout.name}</span>
+          {locked && <Lock />}
+        </span>
         {(workout.source === "mine" || minutes !== null) && (
           <span className="library-card-tags">
             {workout.source === "mine" && <span className="mine-badge">{t("workouts.mine")}</span>}
@@ -69,5 +85,10 @@ export function LibraryCard({
       {summary !== null && <span className="library-card-summary">{summary}</span>}
       {phases !== null && <PhaseBar phases={phases} height={12} />}
     </Link>
+  );
+  return (
+    <LockedRow menu={menu} card>
+      {card}
+    </LockedRow>
   );
 }

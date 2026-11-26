@@ -29,7 +29,7 @@ export function useMembership(api: SendtallyApi): MembershipFeature {
   const vm = React.useMemo(() => membershipVM(entitlements), [entitlements]);
   const loading = state.status === "loading";
   const active = loading ? null : vm.active;
-  const access = loading ? null : hasAccess(entitlements);
+  const access = hasAccess(entitlements);
 
   return { state, vm, active, access, reload, refresh };
 }

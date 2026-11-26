@@ -1,6 +1,6 @@
 import React from "react";
 import { libraryPictures } from "@sendtally/features/library";
-import { Link, useNavigate } from "react-router";
+import { Link, Navigate, useNavigate } from "react-router";
 import { gripSeries, setupsOf, summarise, type GripSetup } from "@sendtally/core/hang";
 import { kindLabel } from "@sendtally/features/activities";
 import { pickedOf, workoutsWithGrip } from "@sendtally/features/exercises";
@@ -14,11 +14,12 @@ import {
   milestoneRows,
 } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import { deleteCopy } from "@sendtally/features/training";
 import { MoreMenu, type MoreMenuItem } from "../../components/MoreMenu";
-import { Sheet } from "../../components/Sheet";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { SummaryTiles } from "../../components/detail/SummaryTiles";
 import { CategoryMark } from "../components/CategoryMark";
+import { DeleteSheet } from "../components/DeleteSheet";
 import { DashedPanel } from "../components/DashedPanel";
 import { Description } from "../components/Description";
 import { UsedIn } from "../components/UsedIn";
@@ -28,6 +29,7 @@ import { COMPARE_GRIPS_PATH, EXERCISES_VIEW } from "../exercises/paths";
 import { editGripPath } from "../editor/paths";
 import { useAddToWorkout } from "../editor/useAddToWorkout";
 import { useLibrary } from "../library/useLibrary";
+import { membershipPagePath, useCreateGate, useLocks } from "../locks";
 import { GripSessions } from "./GripSessions";
 import { LoadTrendCard } from "./LoadTrendCard";
 import { Milestones } from "./Milestones";
@@ -65,15 +67,17 @@ export function GripPage({ id }: { id: string }): React.ReactElement {
     fingers: true,
     usedIn,
   });
+  const gate = useCreateGate("exercise");
+  const locks = useLocks();
   const menu: MoreMenuItem[] = [
-    ...(addTo.item === null || grip?.hidden === true ? [] : [addTo.item]),
+    ...(addTo.item === null || grip?.hidden === true ? [] : [gate(addTo.item)]),
     ...(canCompareGrips(model.sessions)
       ? [{ label: t("hang.compareGrips"), onSelect: () => void navigate(COMPARE_GRIPS_PATH) }]
       : []),
     ...(grip !== undefined && !grip.hidden
       ? [
           {
-            label: t("workouts.archiveExercise"),
+            label: deleteCopy("grip", name).item,
             onSelect: () => setArchiving(true),
             destructive: true,
           },
@@ -81,6 +85,8 @@ export function GripPage({ id }: { id: string }): React.ReactElement {
       : []),
   ];
 
+  if (grip !== undefined && locks.exercise({ grip }))
+    return <Navigate to={membershipPagePath("exercise")} replace />;
   return (
     <DetailFrame
       backTo={EXERCISES_VIEW}
@@ -127,23 +133,15 @@ export function GripPage({ id }: { id: string }): React.ReactElement {
       )}
       <UsedIn workouts={usedIn} />
       {addTo.sheet}
-      {grip !== undefined && (
-        <Sheet
-          open={archiving}
-          title={t("workouts.archiveExerciseTitle", { name })}
+      {grip !== undefined && archiving && (
+        <DeleteSheet
+          flow={deleteCopy("grip", name)}
           onClose={() => setArchiving(false)}
-          action={{
-            label: t("workouts.archiveExercise"),
-            danger: true,
-            onPress: () => {
-              setArchiving(false);
-              back();
-              void actions.archiveGrip(grip);
-            },
+          onDelete={() => {
+            back();
+            void actions.archiveGrip(grip);
           }}
-        >
-          <p className="sheet-body">{t("workouts.archiveExerciseBody")}</p>
-        </Sheet>
+        />
       )}
     </DetailFrame>
   );

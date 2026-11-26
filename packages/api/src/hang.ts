@@ -21,6 +21,7 @@ import {
   settingsOf,
   type HangData,
 } from "./lib/hang";
+import { requireAccess } from "./lib/entitlements";
 import { syncHangSessionToStrava } from "./lib/posting";
 import * as repo from "./lib/repo";
 import { captureWorkoutLogged } from "./workoutLogged";
@@ -79,6 +80,7 @@ export const hang = new Hono<AppEnv>()
           },
         });
       }
+      await requireAccess(c);
       const nameKey = gripKey(name);
       const [existing, taken] = await Promise.all([
         repo.getHangGrip(c.env.DB, userId, id),

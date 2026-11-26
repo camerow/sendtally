@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
@@ -24,6 +24,10 @@ jest.mock("../../../components/Sheet", () => ({
     ) : null,
 }));
 jest.mock("./setup/usePlanSetupCards", () => ({ usePlanSetupCards: () => [] }));
+let mockAccess: boolean | null = null;
+jest.mock("../../billing/useBilling", () => ({
+  useBilling: () => (mockAccess === null ? null : { membership: { access: mockAccess } }),
+}));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "b-new" }));
 let mockParams: Record<string, string> = {};
 
@@ -72,6 +76,10 @@ const plan = (workoutId: string, weekdays: (0 | 1)[] = [0, 1]): Plan => ({
 });
 
 describe("Today", () => {
+  beforeEach(() => {
+    mockAccess = null;
+  });
+
   it("starts today's planned hangboard workout on its grip, against its plan", async () => {
     await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10") });
     await fireEvent.press(screen.getByText("Start"));
@@ -398,5 +406,96 @@ describe("Today", () => {
     expect(mockPlanActions.savePlanChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ kind: "move", plannedOn: "2026-09-29", movedTo: "2026-10-07" })
     );
+  });
+
+  it("locks a day in a block and the block past the trial, and leaves a built-in on its own day open", async () => {
+    mockAccess = false;
+    const locked: Plan = {
+      ...plan("rep73", [1]),
+      blocks: [
+        {
+          id: "b1",
+          name: "Winter base",
+          description: "",
+          start: "2026-09-21",
+          weeks: 4,
+          focus: null,
+        },
+      ],
+      memberships: [
+        {
+          id: "m1",
+          workoutId: "rep73",
+          blockId: null,
+          weekdays: [1],
+          start: "2026-09-28",
+          position: 0,
+        },
+        {
+          id: "m2",
+          workoutId: "max10",
+          blockId: "b1",
+          weekdays: [1],
+          start: "2026-09-21",
+          position: 1,
+        },
+      ],
+    };
+    await renderWithHang(<TodayScreen />, hangData(), { plan: locked });
+    expect(screen.getAllByText("Become a member")).toHaveLength(1);
+    expect(screen.getAllByText("Start")).toHaveLength(1);
+    expect(screen.getAllByText("Log it")).toHaveLength(1);
+    expect(screen.getAllByLabelText("More")).toHaveLength(1);
+    await fireEvent.press(screen.getByText("Become a member"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/membership",
+      params: { source: "plan_day" },
+    });
+    await fireEvent.press(screen.getByLabelText("Max hangs, members only"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/membership",
+      params: { source: "plan_day" },
+    });
+    await fireEvent.press(screen.getByLabelText("Winter base, members only"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/membership",
+      params: { source: "block" },
+    });
+  });
+
+  it("leaves a skipped day of the user's own workout only its lock past the trial", async () => {
+    mockAccess = false;
+    const skipped: Plan = {
+      ...plan("legs", [1]),
+      planChanges: [
+        {
+          membershipId: "m1",
+          plannedOn: "2026-09-29",
+          kind: "skip",
+          movedTo: null,
+          reason: "sick",
+          note: null,
+        },
+      ],
+    };
+    await renderWithHang(<TodayScreen />, hangData(), { plan: skipped, workouts: [legs] });
+    expect(screen.queryByText("Undo skip")).toBeNull();
+    await fireEvent.press(screen.getByLabelText("Gym, legs, members only"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/membership",
+      params: { source: "plan_day" },
+    });
+  });
+
+  it("locks the user's own workout in the Schedule sheet past the trial, and leaves a built-in to add", async () => {
+    mockAccess = false;
+    await renderWithHang(<TodayScreen />, hangData(), { plan: plan("max10"), workouts: [legs] });
+    await fireEvent.press(screen.getByText("Schedule"));
+    expect(screen.getByLabelText("Add Repeaters 7:3")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText("Add Gym, legs, members only"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/membership",
+      params: { source: "workout" },
+    });
   });
 });

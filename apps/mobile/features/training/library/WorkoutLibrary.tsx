@@ -5,6 +5,8 @@ import { focusParam } from "@sendtally/features/training";
 import { libraryShelves, type LibraryWorkout } from "@sendtally/features/workouts";
 import { HangDataProvider } from "../data/HangDataProvider";
 import { LoadState } from "../data/LoadState";
+import { openMembershipPage, useLocks } from "../locks";
+import { useLockedWorkouts } from "../useLockedRows";
 import { LibraryBrowser } from "./LibraryBrowser";
 import { LibraryShelf } from "./LibraryShelf";
 import { useLibrary } from "./useLibrary";
@@ -14,15 +16,18 @@ const open = (w: LibraryWorkout): void =>
 
 function Library(): React.ReactElement {
   const { state, reload } = useLibrary();
+  const locked = useLockedWorkouts();
+  const create = useLocks().create;
+  const press = (w: LibraryWorkout) => locked.row(w, () => open(w));
   return (
     <View style={{ gap: 14 }}>
       {state.status === "ready" ? (
-        <LibraryBrowser library={state.data} onPick={open}>
+        <LibraryBrowser library={state.data} press={press}>
           {libraryShelves(state.data.workouts, state.data.usage, { empty: true }).map((shelf) => (
             <LibraryShelf
               key={focusParam(shelf.focus)}
               shelf={shelf}
-              onPick={open}
+              press={press}
               onSeeAll={() =>
                 router.push({
                   pathname: "/workout/category",
@@ -30,17 +35,21 @@ function Library(): React.ReactElement {
                 })
               }
               onAdd={() =>
-                router.push({
-                  pathname: "/workout/edit",
-                  params: { focus: focusParam(shelf.focus) },
-                })
+                create
+                  ? openMembershipPage("create")
+                  : router.push({
+                      pathname: "/workout/edit",
+                      params: { focus: focusParam(shelf.focus) },
+                    })
               }
+              addLocked={create}
             />
           ))}
         </LibraryBrowser>
       ) : (
         <LoadState state={state} onRetry={() => void reload()} />
       )}
+      {locked.sheet}
     </View>
   );
 }

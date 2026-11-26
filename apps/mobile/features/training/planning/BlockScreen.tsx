@@ -12,6 +12,7 @@ import {
   blockDateRange,
   blockName,
   useBlockPage,
+  deleteCopy,
 } from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
@@ -35,6 +36,8 @@ import { BlockWeek } from "./BlockWeek";
 import { PlanAgainSheet } from "./PlanAgainSheet";
 import { BlockHeader } from "./BlockHeader";
 import { Description } from "../components/Description";
+import { LockedPage } from "../components/LockedPage";
+import { useLocks } from "../locks";
 import { MoveStartSheet } from "./MoveStartSheet";
 
 export type BlockScreenProps = {
@@ -79,7 +82,9 @@ export function BlockScreen({
     newId: randomUUID,
   });
   useDiscardGuard(draft.dirty);
+  const locked = useLocks().block;
 
+  if (locked) return <LockedPage source="block" />;
   if (plan.state.status !== "ready")
     return <LoadState state={plan.state} onRetry={() => void plan.reload()} framed />;
   // Gone, deleted elsewhere: Back still leaves.
@@ -116,14 +121,7 @@ export function BlockScreen({
                     onPress: () => setNaming(true),
                   },
                 ]),
-            deleteRow({
-              title: t("plan.deleteBlock"),
-              confirm: {
-                title: t("plan.deleteBlockTitle", { name: blockName(block) }),
-                body: t("plan.deleteBlockBody"),
-              },
-              onDelete: () => void actions.deleteBlock(id),
-            }),
+            deleteRow(deleteCopy("block", blockName(block)), () => void actions.deleteBlock(id)),
           ]}
         />
       }

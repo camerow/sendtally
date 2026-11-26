@@ -171,9 +171,9 @@ describe("membershipSummary", () => {
     ...vm,
   });
 
-  it("pitches the trends to someone who is not a member", () => {
+  it("pitches custom training to someone who is not a member", () => {
     expect(membershipSummary(member({ active: false }))).toBe(
-      "Logging is free. Membership adds the trends."
+      "Logging is free. Membership adds custom training."
     );
   });
 
@@ -188,7 +188,7 @@ describe("membershipSummary", () => {
 
   it("says a web membership was bought on sendtally.com", () => {
     expect(membershipSummary(member({ managedIn: "web" }))).toBe(
-      "Bought on sendtally.com. It unlocks the trends here too."
+      "Bought on sendtally.com. It opens your training here too."
     );
   });
 

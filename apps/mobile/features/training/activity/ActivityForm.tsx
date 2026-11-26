@@ -52,6 +52,7 @@ import { liveRun } from "../../live-session/liveRun";
 import { DoneDetails } from "./DoneDetails";
 import { PartSets } from "./PartSets";
 import { AMBER } from "../components/tints";
+import { openMembershipPage, useLocks } from "../locks";
 import { type } from "../type";
 import { ReadRow } from "./ReadRow";
 import { KindChips } from "./KindChips";
@@ -131,6 +132,7 @@ function ActivityFormBody({
   const workouts = useWorkoutActions(api, reportFailure);
   const items = workoutItemsOfDone(draft.done);
   const note = idleNote(idleEnd, draft.minutes);
+  const createLocked = useLocks().create;
 
   const saveAsWorkout = (): void => {
     if (items.length === 0) return;
@@ -383,7 +385,12 @@ function ActivityFormBody({
         )}
 
         {logged !== null && items.length > 0 && (
-          <Button label={t("workouts.saveAsWorkout")} onPress={saveAsWorkout} variant="link" />
+          <Button
+            label={t("workouts.saveAsWorkout")}
+            onPress={createLocked ? () => openMembershipPage("create") : saveAsWorkout}
+            locked={createLocked}
+            variant="link"
+          />
         )}
       </KeypadScrollView>
       {removed !== null && (

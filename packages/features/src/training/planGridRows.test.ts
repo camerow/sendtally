@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import type { Workout } from "@sendtally/core/hang";
-import { weekLines, workoutLines, type GripNames } from "./planGridRows";
+import { describe, expect, it, vi } from "vitest";
+import type { Membership, Workout } from "@sendtally/core/hang";
+import { planGridRows, weekLines, workoutLines, type GripNames } from "./planGridRows";
 
 const named = (name: (id: string) => string, chosen?: string): GripNames => ({
   gripName: name,
@@ -141,5 +141,35 @@ describe("weekLines", () => {
         []
       )
     ).toEqual([[{ text: "2 grips" }], [{ text: "1 changed", changed: true }]]);
+  });
+});
+
+describe("planGridRows", () => {
+  it("wears the lock on a locked row and sends every press of it to the join", () => {
+    const member = (id: string): Membership =>
+      ({ id, workoutId: "f", blockId: null, weekdays: [1] }) as unknown as Membership;
+    const open = vi.fn();
+    const join = vi.fn();
+    const toggled = vi.fn();
+    const [shut, free] = planGridRows(
+      [member("m1"), member("m2")],
+      () => fingers(["half"]),
+      named((id) => id),
+      {
+        exercises: [],
+        open,
+        toggle: () => toggled,
+        locked: { row: (m) => m.id === "m1", join },
+      }
+    );
+    expect(shut?.locked).toBe(true);
+    expect(free?.locked).toBeUndefined();
+    shut?.open();
+    shut?.toggle?.(2)?.();
+    expect(join).toHaveBeenCalledTimes(2);
+    free?.open();
+    free?.toggle?.(2)?.();
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(toggled).toHaveBeenCalledTimes(1);
   });
 });

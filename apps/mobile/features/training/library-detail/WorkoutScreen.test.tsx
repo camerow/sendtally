@@ -14,6 +14,15 @@ jest.mock("expo-router", () => ({
 jest.mock("../../../lib/api", () => ({ useApi: () => undefined }));
 jest.mock("../../../components/Sheet", () => ({ Sheet: () => null }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "copy" }));
+let mockAccess: boolean | null = null;
+let mockRunning: string | null = null;
+jest.mock("../../billing/useBilling", () => ({
+  useBilling: () => (mockAccess === null ? null : { membership: { access: mockAccess } }),
+}));
+jest.mock("../../live-session/liveRun", () => ({
+  ...jest.requireActual<object>("../../live-session/liveRun"),
+  useLiveRun: () => (mockRunning === null ? null : { workoutId: mockRunning }),
+}));
 
 const logged = aHang({ id: "h1", workoutId: "fingers-ab", rpe: 7 });
 
@@ -67,6 +76,25 @@ const labels = (): string[] =>
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockAccess = null;
+  mockRunning = null;
+});
+
+describe("A locked workout", () => {
+  it("opens the Membership page in its place, except while it is the run going", async () => {
+    mockAccess = false;
+    const page = <WorkoutScreen id="legs" run={{ date: "2026-09-28", membershipId: "m1" }} />;
+    await renderWithHang(page, hangData(), { workouts: [legs], plan: planned });
+    expect(router.replace).toHaveBeenCalledWith({
+      pathname: "/membership",
+      params: { source: "workout" },
+    });
+    jest.clearAllMocks();
+    mockRunning = "legs";
+    await renderWithHang(page, hangData(), { workouts: [legs], plan: planned });
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(screen.getByText("Missed Mon, Sep 28")).toBeTruthy();
+  });
 });
 
 describe("Hangboard workout", () => {

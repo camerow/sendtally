@@ -15,9 +15,10 @@ export const settings = {
   "settings.postSince": "Publier les séances enregistrées à partir du",
   "settings.postSinceBody": "Tout ce qui précède reste uniquement dans sendtally.",
   "settings.postSinceAny": "Toute date",
-  "settings.membershipFree": "Enregistrer est gratuit. L'abonnement ajoute les tendances.",
+  "settings.membershipFree":
+    "Enregistrer est gratuit. L'abonnement ajoute l'entraînement sur mesure.",
   "settings.membershipStore": "{plan}, facturé via {store}.",
-  "settings.membershipWeb": "Acheté sur sendtally.com. Il débloque aussi les tendances ici.",
+  "settings.membershipWeb": "Acheté sur sendtally.com. Il débloque aussi ton entraînement ici.",
   "settings.manageMembership": "Gérer l'abonnement",
   "settings.seePlans": "Voir les formules",
   "settings.stravaNotConnected": "Non connecté",

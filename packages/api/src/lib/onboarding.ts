@@ -13,6 +13,7 @@ export const ONBOARDING_STEPS = [
   "H5",
   "H6",
   "P1",
+  "P1w",
   "P2",
   "P3",
   "P4",

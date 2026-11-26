@@ -1,6 +1,6 @@
 import React from "react";
 import { NameField } from "../components/NameField";
-import { useNavigate } from "react-router";
+import { Navigate, useNavigate } from "react-router";
 import {
   gripMeasureOf,
   restAfterItem,
@@ -59,6 +59,7 @@ import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { WORKOUTS_VIEW, useLibrary, workoutPath } from "../library/useLibrary";
 import { FocusField } from "../log/FocusField";
+import { membershipPagePath, useLocks } from "../locks";
 import { ExercisePicker } from "./ExercisePicker";
 import { ChecklistEditor } from "./ChecklistEditor";
 import { ItemEditor } from "./ItemEditor";
@@ -345,7 +346,13 @@ function Editor({
 /** Make or edit a workout of any kind: what it holds, and how each exercise rests and alternates. */
 export function WorkoutEditorPage(props: WorkoutEditorProps): React.ReactElement | null {
   const { state, reload } = useLibrary();
+  const locks = useLocks();
   if (state.status !== "ready") return <LoadState state={state} onRetry={() => void reload()} />;
+  const editing = props.id === undefined ? undefined : state.data.workout(props.id);
+  if (editing === undefined ? props.id === undefined && locks.create : locks.workout(editing))
+    return (
+      <Navigate to={membershipPagePath(editing === undefined ? "create" : "workout")} replace />
+    );
   const initial = initialDraft(state.data, props);
   return initial === null ? null : <Editor id={props.id} initial={initial} />;
 }
