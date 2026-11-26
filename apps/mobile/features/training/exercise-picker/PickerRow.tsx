@@ -9,11 +9,14 @@ import {
 } from "@sendtally/features/exercises";
 import { gripMeta } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import { Lock } from "../../../components/Lock";
 import { pressRow } from "../../../lib/press";
 import { AboutButton } from "../components/AboutButton";
 import { CheckBox } from "../components/CheckBox";
+import { holdProps } from "../components/holdProps";
 import { IconButton } from "../components/IconButton";
 import { KindTile } from "../components/KindTile";
+import type { LongPress } from "../components/types";
 import { Label } from "../components/Label";
 import { useHangData, type HangData } from "../data/HangDataContext";
 import { MineBadge } from "../library/MineBadge";
@@ -30,6 +33,9 @@ export type PickerRowProps = {
   onPress?: () => void;
   /** A pencil beside the row, where it can be edited from the list. */
   onEdit?: () => void;
+  /** Members only: the name muted, with the lock. */
+  locked?: boolean;
+  hold?: LongPress;
 };
 
 function metaOf(entry: PickerEntry, { model, today }: HangData): string {
@@ -49,6 +55,8 @@ export function PickerRow({
   mine = false,
   onPress,
   onEdit,
+  locked = false,
+  hold,
 }: PickerRowProps): React.ReactElement {
   const meta = metaOf(entry, useHangData());
   return (
@@ -65,7 +73,8 @@ export function PickerRow({
         disabled={onPress === undefined}
         accessibilityRole={multi ? "checkbox" : "button"}
         accessibilityState={multi ? { checked: ticked } : undefined}
-        accessibilityLabel={entry.name}
+        accessibilityLabel={locked ? t("common.membersOnly", { label: entry.name }) : entry.name}
+        {...holdProps(hold)}
         style={pressRow({
           flex: 1,
           minHeight: 56,
@@ -78,7 +87,12 @@ export function PickerRow({
         <KindTile kind={entry.kind} picture={sourcePictures(entry.source)[0]} />
         <View style={{ flex: 1, gap: 2, paddingVertical: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Text style={[type.bodyBold, { flexShrink: 1, fontSize: 15, color: colors.gunmetal }]}>
+            <Text
+              style={[
+                type.bodyBold,
+                { flexShrink: 1, fontSize: 15, color: locked ? colors.textMuted : colors.gunmetal },
+              ]}
+            >
               {entry.name}
             </Text>
             {mine && <MineBadge />}
@@ -88,6 +102,7 @@ export function PickerRow({
           )}
         </View>
         {entry.inWorkout && <Label color={colors.textSecondary}>{t("workouts.inWorkout")}</Label>}
+        {locked && <Lock />}
       </Pressable>
       <AboutButton
         about={sourceAbout(entry)}

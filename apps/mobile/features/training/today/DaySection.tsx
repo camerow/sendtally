@@ -16,6 +16,7 @@ import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { useLibrary } from "../library/useLibrary";
+import { useLocks } from "../locks";
 import { LoggedRow } from "./LoggedRow";
 import { OccurrenceCard } from "./OccurrenceCard";
 import { OccurrenceRow } from "./OccurrenceRow";
@@ -41,6 +42,7 @@ export function DaySection({
   const { model } = useHangData();
   const scales = useDisplayScales();
   const library = useLibrary().state;
+  const locks = useLocks();
   const workout = (id: string) =>
     library.status === "ready" ? library.data.workout(id) : undefined;
   const empty = day.logged.length === 0 && day.plans.length === 0;
@@ -79,12 +81,13 @@ export function DaySection({
         const o = e.occurrence;
         const w = workout(o.membership.workoutId);
         if (w === undefined) return null;
+        const locked = locks.day(o.membership, w);
         if (o.status === "skipped")
-          return <SkippedRow key={o.membership.id} occurrence={o} workout={w} />;
+          return <SkippedRow key={o.membership.id} occurrence={o} workout={w} locked={locked} />;
         return day.isToday && o.status === "planned" ? (
-          <OccurrenceCard key={o.membership.id} occurrence={o} workout={w} />
+          <OccurrenceCard key={o.membership.id} occurrence={o} workout={w} locked={locked} />
         ) : (
-          <OccurrenceRow key={o.membership.id} occurrence={o} workout={w} />
+          <OccurrenceRow key={o.membership.id} occurrence={o} workout={w} locked={locked} />
         );
       })}
       {empty && (

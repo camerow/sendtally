@@ -6,8 +6,11 @@ import { useExercises } from "@sendtally/features/statistics";
 import { useApi } from "../../../lib/api";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
+import { openExercise } from "../exercises/openExercise";
 import { openExerciseEditor } from "../exercises/openExerciseEditor";
 import { useLibrary } from "../library/useLibrary";
+import { openMembershipPage, useLocks } from "../locks";
+import { useLockedExercises } from "../useLockedRows";
 import { ExerciseShelf } from "./ExerciseShelf";
 
 /**
@@ -20,6 +23,8 @@ export function ExerciseShelves(): React.ReactElement {
   const { model } = useHangData();
   const exercises = useExercises(api);
   const library = useLibrary().state;
+  const locked = useLockedExercises();
+  const create = useLocks().create;
   if (exercises.state.status !== "ready")
     return <LoadState state={exercises.state} onRetry={() => void exercises.reload()} />;
 
@@ -36,18 +41,14 @@ export function ExerciseShelves(): React.ReactElement {
           kind={s.kind}
           cards={s.entries.map((c) => ({
             ...c,
-            open: () =>
-              "grip" in c.opens
-                ? router.push({ pathname: "/grip/[id]", params: { id: c.opens.grip } })
-                : router.push({
-                    pathname: "/exercise/[id]",
-                    params: { id: "exercise" in c.opens ? c.opens.exercise : c.opens.builtIn },
-                  }),
+            press: locked.row(c, () => openExercise(c.source)),
           }))}
-          onAdd={() => openExerciseEditor(s.kind)}
+          onAdd={() => (create ? openMembershipPage("create") : openExerciseEditor(s.kind))}
+          addLocked={create}
           onSeeAll={() => router.push({ pathname: "/exercise/category", params: { kind: s.kind } })}
         />
       ))}
+      {locked.sheet}
     </View>
   );
 }

@@ -14,24 +14,28 @@ import { CategoryRow } from "../components/CategoryRow";
 import { DashedPanel } from "../components/DashedPanel";
 import { ShelfHeader } from "../components/ShelfHeader";
 import { useHangData } from "../data/HangDataContext";
+import type { RowPress } from "../useLockedRows";
 
 /** How many workouts a focus shows before See all. */
 export const SHELF_ROWS = 3;
 
 export type LibraryShelfProps = {
   shelf: Shelf;
-  onPick: (workout: LibraryWorkout) => void;
+  /** How each workout's row presses: open, or locked. */
+  press: (workout: LibraryWorkout) => RowPress;
   onSeeAll: () => void;
   /** Makes a new workout in the shelf's focus. */
   onAdd: () => void;
+  addLocked: boolean;
 };
 
 /** One focus: its name, See all when it holds more than it shows, a plus, and its first workouts or what it trains. */
 export function LibraryShelf({
   shelf,
-  onPick,
+  press,
   onSeeAll,
   onAdd,
+  addLocked,
 }: LibraryShelfProps): React.ReactElement {
   const { model } = useHangData();
   const exercises = useExerciseList(useApi());
@@ -45,6 +49,7 @@ export function LibraryShelf({
         count={shelf.workouts.length}
         addLabel={t("workouts.newWorkoutIn", { focus: label })}
         onAdd={onAdd}
+        addLocked={addLocked}
       />
       {shelf.workouts.length === 0 && (
         <View style={{ marginTop: 8 }}>
@@ -58,7 +63,7 @@ export function LibraryShelf({
           name={w.name}
           meta={libraryLine(w, model.settings.units, exercises)}
           picture={libraryPictures("workout", w.id)[0]}
-          onPress={() => onPick(w)}
+          {...press(w)}
         />
       ))}
     </View>

@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import type { WorkoutKind } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
+import { Lock } from "../../components/Lock";
 import { CategoryMark } from "./CategoryMark";
 
 export type ShelfHeaderProps = {
@@ -11,8 +12,8 @@ export type ShelfHeaderProps = {
   kind?: WorkoutKind;
   /** Opens the whole shelf; left out when the shelf already shows all of it. */
   seeAll?: { to: string; count: number };
-  /** A round plus making a new one in the shelf. */
-  add?: { label: string; onPress: () => void };
+  /** A round plus making a new one in the shelf; locked, the lock in its place. */
+  add?: { label: string; onPress: () => void; locked?: boolean };
 };
 
 /** A shelf's heading: its mark, name and See all as one link. */
@@ -47,8 +48,15 @@ export function ShelfHeader({ title, kind, seeAll, add }: ShelfHeaderProps): Rea
     <div className="shelf-head-row">
       {head}
       {add !== undefined && (
-        <button type="button" className="detail-add" aria-label={add.label} onClick={add.onPress}>
-          <Icon name="plus" size={18} strokeWidth={2.5} />
+        <button
+          type="button"
+          className={add.locked === true ? "detail-add detail-add--locked" : "detail-add"}
+          aria-label={
+            add.locked === true ? t("common.membersOnly", { label: add.label }) : add.label
+          }
+          onClick={add.onPress}
+        >
+          {add.locked === true ? <Lock /> : <Icon name="plus" size={18} strokeWidth={2.5} />}
         </button>
       )}
     </div>

@@ -3,10 +3,9 @@ import { ScrollView, View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import { t } from "@sendtally/features/i18n";
 import { queries, useQuery } from "@sendtally/features/query";
-import { defaultRange, shownRange, statsYears, type TrendRange } from "@sendtally/features/trends";
+import { statsYears, type TrendRange } from "@sendtally/features/trends";
 import { useApi } from "../../lib/api";
 import { RangeChips } from "../../components/RangeChips";
-import { useCanSeeInsights } from "../billing/useBilling";
 import { ClimbingInsights } from "../climbs/ClimbingInsights";
 import { Segmented } from "../training/components/Segmented";
 import { SegmentPager } from "../../components/SegmentPager";
@@ -16,10 +15,8 @@ import { useStatsSegment } from "./statsSegment";
 
 /** Climbing and Training over one range: the segment stays on the device, the range on the tab. */
 export function StatsScreen(): React.ReactElement {
-  const member = useCanSeeInsights();
   const [segment, setSegment] = useStatsSegment();
-  const [picked, setPicked] = React.useState<TrendRange | null>(null);
-  const range = shownRange(member, picked ?? defaultRange(member));
+  const [range, setRange] = React.useState<TrendRange>("all");
   const { state } = useQuery(queries.sessionsWithClimbs(useApi()));
   const years = React.useMemo(
     () => (state.status === "ready" ? statsYears(state.data) : []),
@@ -34,7 +31,7 @@ export function StatsScreen(): React.ReactElement {
     <View style={{ flex: 1 }}>
       <View style={{ gap: 14, paddingHorizontal: 18, paddingTop: 4, paddingBottom: 14 }}>
         <Segmented value={segment} onChange={setSegment} options={segments} progress={progress} />
-        <RangeChips member={member} shown={range} onPick={setPicked} years={years} />
+        <RangeChips shown={range} onPick={setRange} years={years} />
       </View>
       <SegmentPager
         options={segments}

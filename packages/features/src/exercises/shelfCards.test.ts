@@ -45,7 +45,9 @@ describe("exerciseShelves", () => {
         .map((e) => e.name) ?? [];
     expect(of("strength")).toEqual(["Back squat", "Bench press"]);
     expect(of("hangboard")).toEqual(["Half crimp"]);
-    expect(shelves.find((s) => s.kind === "hangboard")?.entries[0]?.opens).toEqual({ grip: "g1" });
+    expect(shelves.find((s) => s.kind === "hangboard")?.entries[0]?.source).toMatchObject({
+      grip: { id: "g1" },
+    });
   });
 
   it("adds the built-ins the user has not made their own, by link or by name", () => {
@@ -56,7 +58,9 @@ describe("exerciseShelves", () => {
     ).find((s) => s.kind === "strength")!.entries;
     const library = strength.filter((e) => e.library);
     expect(library.some((e) => e.name === "Pull-ups")).toBe(true);
-    expect(library.find((e) => e.name === "Pull-ups")?.opens).toEqual({ builtIn: "pullUps" });
+    expect(library.find((e) => e.name === "Pull-ups")?.source).toMatchObject({
+      builtIn: { id: "pullUps" },
+    });
     expect(library.some((e) => e.name === "Back squat" || e.name === "Dips")).toBe(false);
   });
 

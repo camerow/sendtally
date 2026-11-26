@@ -26,7 +26,16 @@ const legs: WorkoutRecord = {
 };
 
 const plan: Plan = {
-  blocks: [{ id: "b1", name: "", description: "", start: null, weeks: 4, focus: null }],
+  blocks: [
+    {
+      id: "b1",
+      name: "November block",
+      description: "",
+      start: "2026-11-30",
+      weeks: 4,
+      focus: null,
+    },
+  ],
   memberships: [
     { id: "m1", workoutId: "legs", blockId: "b1", weekdays: [1], start: "2026-10-05", position: 0 },
   ],
@@ -58,12 +67,12 @@ const wizard = {
   path: "plan",
   step: "P4",
   canGoBack: true,
-  position: { n: 4, total: 7 },
-  memory: { way: "by_hand", existingLog: "none", days: [], membershipShown: false },
+  position: { n: 0, total: 0 },
+  memory: { way: null, existingLog: null },
   choose: vi.fn(),
   answerLog: vi.fn(),
   setWay: vi.fn(),
-  setDays: vi.fn(),
+  open: vi.fn(),
   next: vi.fn(),
   back: vi.fn(),
   skip: vi.fn(),
@@ -85,7 +94,7 @@ beforeEach(() => {
     days: { legs: [1] },
     members: { legs: "m1" },
     blockId: "b1",
-    building: "legs",
+    seeded: true,
   }));
 });
 
@@ -94,8 +103,8 @@ afterEach(() => {
   host.remove();
 });
 
-describe("P4's name", () => {
-  it("starts as the month the block starts in, so Schedule is on without typing", () => {
+describe("Shape the weeks, opened from the reveal", () => {
+  it("has no name to type and no Skip, and Save keeps the block's name and goes back", () => {
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false, gcTime: Infinity, staleTime: Infinity } },
     });
@@ -112,15 +121,14 @@ describe("P4's name", () => {
         </QueryClientProvider>
       )
     );
-    const field = host.querySelector<HTMLTextAreaElement>('textarea[aria-label="Block name"]');
-    expect(field?.value).toBe("October block");
-    const schedule = [...host.querySelectorAll("button")].find((b) =>
-      b.textContent?.startsWith("Schedule from")
-    );
-    expect(schedule?.disabled).toBe(false);
-    act(() => schedule?.click());
+    expect(host.querySelector('textarea[aria-label="Block name"]')).toBeNull();
+    expect(host.textContent).not.toContain("Skip");
+    const save = [...host.querySelectorAll("button")].find((b) => b.textContent === "Save");
+    act(() => save?.click());
     expect(actions.saveDraft).toHaveBeenCalledWith(
-      expect.objectContaining({ block: expect.objectContaining({ name: "October block" }) })
+      expect.objectContaining({
+        block: expect.objectContaining({ name: "November block", weeks: 4 }),
+      })
     );
     expect(wizard.next).toHaveBeenCalledTimes(1);
   });

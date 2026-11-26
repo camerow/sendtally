@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { router } from "expo-router";
 import React from "react";
@@ -8,6 +8,10 @@ import { anExercise, renderWithHang, hangData } from "../data/renderWithHang";
 import { ExerciseShelves } from "./ExerciseShelves";
 
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
+let mockAccess: boolean | null = null;
+jest.mock("../../billing/useBilling", () => ({
+  useBilling: () => (mockAccess === null ? null : { membership: { access: mockAccess } }),
+}));
 jest.mock("@sendtally/features/activities", () => ({
   ...jest.requireActual<object>("@sendtally/features/activities"),
   useWeightUnit: () => "kg",
@@ -27,6 +31,10 @@ const workout = (id: string, kind: WorkoutRecord["kind"], exercise: string): Wor
 });
 
 describe("exercise shelves", () => {
+  beforeEach(() => {
+    mockAccess = null;
+  });
+
   it("shelves exercises by kind with how many workouts use each, and opens one", async () => {
     await renderWithHang(<ExerciseShelves />, hangData(), {
       exercises: [
@@ -75,5 +83,26 @@ describe("exercise shelves", () => {
       pathname: "/exercise/edit",
       params: { kind: "climbing" },
     });
+  });
+
+  it("locks an exercise the user made past the trial, and leaves one picked from the built-ins open", async () => {
+    mockAccess = false;
+    await renderWithHang(<ExerciseShelves />, hangData(), {
+      exercises: [
+        anExercise("e1", "Zercher carry", "strength"),
+        anExercise("e2", "Back squat", "strength", { builtIn: "backSquat" }),
+      ],
+    });
+    await fireEvent.press(screen.getByLabelText("Zercher carry, members only"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/membership",
+      params: { source: "exercise" },
+    });
+    await fireEvent.press(screen.getByLabelText("Back squat"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/exercise/[id]",
+      params: { id: "e2" },
+    });
+    expect(screen.getByLabelText("New exercise in Strength, members only")).toBeTruthy();
   });
 });

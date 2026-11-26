@@ -21,6 +21,10 @@ export type ExerciseTrendCardProps = {
   series: ExerciseSeries;
   chart: ExerciseChartMetric;
   unit: WeightUnit;
+  /** The chart's height, SeriesChart's own unless given. */
+  chartHeight?: number;
+  /** The content alone, with no frame and no legend, for a picture set inside another card. */
+  bare?: boolean;
 };
 
 type Point = { session: ExerciseSession; value: number };
@@ -41,6 +45,8 @@ export function ExerciseTrendCard({
   series,
   chart,
   unit,
+  chartHeight,
+  bare = false,
 }: ExerciseTrendCardProps): React.ReactElement {
   const points: Point[] =
     chart === "e1rm"
@@ -56,13 +62,15 @@ export function ExerciseTrendCard({
   const made = latest === undefined ? null : volumeLine(latest.session, series.grades);
   return (
     <View
-      style={{
-        gap: 12,
-        padding: 16,
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: colors.lineOnLight,
-      }}
+      style={[
+        { gap: 12 },
+        !bare && {
+          padding: 16,
+          borderRadius: 18,
+          borderWidth: 1,
+          borderColor: colors.lineOnLight,
+        },
+      ]}
     >
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <Label color={colors.gunmetal}>
@@ -88,6 +96,7 @@ export function ExerciseTrendCard({
             to: text(latest.value),
           })}
           seriesKey={`${series.key}:${chart}`}
+          {...(chartHeight !== undefined && { height: chartHeight })}
         />
       )}
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
@@ -98,9 +107,11 @@ export function ExerciseTrendCard({
           {t("statistics.exerciseSessions", { count: points.length })}
         </Label>
       </View>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 14 }}>
-        <Legend ring={false} label={t("statistics.legendDone")} />
-      </View>
+      {!bare && (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 14 }}>
+          <Legend ring={false} label={t("statistics.legendDone")} />
+        </View>
+      )}
     </View>
   );
 }

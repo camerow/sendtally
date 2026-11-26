@@ -2,6 +2,8 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
+import { Lock } from "../../../components/Lock";
+import { press } from "../../../lib/press";
 import { HangIcon } from "../components/HangIcon";
 import { IconButton } from "../components/IconButton";
 import { Label } from "../components/Label";
@@ -15,6 +17,8 @@ export type GripRowProps = {
   multi: boolean;
   onPress: () => void;
   onEdit: () => void;
+  /** Members only: the lock in place of the pencil. */
+  editLocked?: boolean;
 };
 
 /**
@@ -30,7 +34,9 @@ export function GripRow({
   multi,
   onPress,
   onEdit,
+  editLocked = false,
 }: GripRowProps): React.ReactElement {
+  const editLabel = t("hang.editGripAria", { grip: name });
   return (
     <View
       style={{
@@ -89,13 +95,24 @@ export function GripRow({
           <Text style={[type.monoBold, { fontSize: 14, color: colors.gunmetal }]}>{load}</Text>
         )}
       </Pressable>
-      <IconButton
-        icon="edit"
-        label={t("hang.editGripAria", { grip: name })}
-        onPress={onEdit}
-        color={colors.textSecondary}
-        iconSize={18}
-      />
+      {editLocked ? (
+        <Pressable
+          onPress={onEdit}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.membersOnly", { label: editLabel })}
+          style={press({ width: 44, height: 44, alignItems: "center", justifyContent: "center" })}
+        >
+          <Lock />
+        </Pressable>
+      ) : (
+        <IconButton
+          icon="edit"
+          label={editLabel}
+          onPress={onEdit}
+          color={colors.textSecondary}
+          iconSize={18}
+        />
+      )}
     </View>
   );
 }

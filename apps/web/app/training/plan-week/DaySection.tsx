@@ -12,6 +12,7 @@ import { useDisplayScales } from "@sendtally/features/settings";
 import { DashedPanel } from "../components/DashedPanel";
 import { useHangData } from "../data/HangDataContext";
 import { useLibrary, workoutIn } from "../library/useLibrary";
+import { useLocks } from "../locks";
 import { LoggedRow } from "./LoggedRow";
 import { OccurrenceCard } from "./OccurrenceCard";
 import { OccurrenceRow } from "./OccurrenceRow";
@@ -34,6 +35,7 @@ export function DaySection({
   const { model } = useHangData();
   const scales = useDisplayScales();
   const workoutOf = workoutIn(useLibrary());
+  const locks = useLocks();
   const empty = day.logged.length === 0 && day.plans.length === 0;
   const head = day.isToday ? (
     <h2 className="plan-day-title">{t("training.today")}</h2>
@@ -63,12 +65,13 @@ export function DaySection({
         const o = e.occurrence;
         const w = workoutOf(o.membership.workoutId);
         if (w === undefined) return null;
+        const locked = locks.day(o.membership, w);
         if (o.status === "skipped")
-          return <SkippedRow key={o.membership.id} occurrence={o} workout={w} />;
+          return <SkippedRow key={o.membership.id} occurrence={o} workout={w} locked={locked} />;
         return day.isToday && o.status === "planned" ? (
-          <OccurrenceCard key={o.membership.id} occurrence={o} workout={w} />
+          <OccurrenceCard key={o.membership.id} occurrence={o} workout={w} locked={locked} />
         ) : (
-          <OccurrenceRow key={o.membership.id} occurrence={o} workout={w} />
+          <OccurrenceRow key={o.membership.id} occurrence={o} workout={w} locked={locked} />
         );
       })}
       {empty && (

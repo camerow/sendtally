@@ -25,6 +25,10 @@ export type AddWorkoutRowProps = {
   onOpen: () => void;
   /** Adds it, or takes back what was just added. */
   onToggle: () => void;
+  /** Beside the name, such as the Yours tag. */
+  tag?: React.ReactNode;
+  /** Members only: muted with the lock, its + the lock too. */
+  locked?: boolean;
 };
 
 /** A workout or exercise to add: its kind's tile, name and meta, opening it, with + to add it. */
@@ -37,11 +41,21 @@ export function AddWorkoutRow({
   thereLabel,
   onOpen,
   onToggle,
+  tag,
+  locked = false,
 }: AddWorkoutRowProps): React.ReactElement {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <CategoryRow kind={kind} name={name} meta={meta} picture={picture} onPress={onOpen} />
+        <CategoryRow
+          kind={kind}
+          name={name}
+          meta={meta}
+          picture={picture}
+          onPress={onOpen}
+          tag={tag}
+          locked={locked}
+        />
       </View>
       {state === "there" ? (
         <Text style={[type.mono, { fontSize: 12, color: colors.textMuted }]}>{thereLabel}</Text>
@@ -67,7 +81,7 @@ export function AddWorkoutRow({
           </Text>
         </Pressable>
       ) : (
-        <AddButton label={t("plan.addNamed", { name })} onPress={onToggle} />
+        <AddButton label={t("plan.addNamed", { name })} onPress={onToggle} locked={locked} />
       )}
     </View>
   );

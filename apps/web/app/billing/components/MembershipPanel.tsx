@@ -1,11 +1,6 @@
 import React from "react";
-import { Link } from "react-router";
-import { membershipPanel, type MembershipPanelRow } from "@sendtally/features/billing";
-import { t } from "@sendtally/features/i18n";
 
-export const MEMBERSHIP_PANEL_ID = "membership-panel";
-
-export const panelEyebrow: React.CSSProperties = {
+const panelEyebrow: React.CSSProperties = {
   fontFamily: "var(--font-mono)",
   fontWeight: 500,
   fontSize: 11,
@@ -46,93 +41,21 @@ export const panelGhostButton: React.CSSProperties = {
   borderColor: "rgba(64,63,76,0.3)",
 };
 
-/** A line of what membership keeps: its own words beside a small chart. */
-export type LedgerRowVM = { eyebrow: string; text: string };
-
-type DrawnRow = LedgerRowVM & Pick<MembershipPanelRow, "bars" | "peak">;
-
-function LedgerRow({ row, link }: { row: DrawnRow; link: boolean }): React.ReactElement {
-  const bars = (
-    <span style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 24 }}>
-      {row.bars.map((value, i) => (
-        <i
-          key={i}
-          style={{
-            flex: 1,
-            display: "block",
-            height: `${value}%`,
-            borderRadius: "2px 2px 0 0",
-            background: i === row.peak ? "var(--data-bar-peak)" : "var(--bs-gunmetal)",
-            opacity: i === row.peak ? 1 : 0.85,
-          }}
-        />
-      ))}
-    </span>
-  );
-  const text = (
-    <span style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      <span style={{ ...panelEyebrow, fontSize: 9 }}>{row.eyebrow}</span>
-      <span style={{ fontSize: 13, lineHeight: 1.45 }}>{row.text}</span>
-    </span>
-  );
-  const style: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: link ? "44px 1fr auto" : "44px 1fr",
-    gap: 12,
-    alignItems: "center",
-    padding: "9px 0",
-    borderTop: "1px solid rgba(64,63,76,0.14)",
-    color: "inherit",
-    textDecoration: "none",
-  };
-  if (!link) {
-    return (
-      <div style={style}>
-        {bars}
-        {text}
-      </div>
-    );
-  }
-  return (
-    <Link to="/app/stats" style={style}>
-      {bars}
-      {text}
-      <span style={{ ...panelEyebrow, fontSize: 11 }}>{t("billing.openTrend")} →</span>
-    </Link>
-  );
-}
-
 export type MembershipPanelProps = {
   eyebrow: string;
   title: string;
-  body?: string;
-  /** In place of the stats rows; each borrows the chart of the default row in its place. */
-  rows?: readonly LedgerRowVM[];
-  /** Members get the ledger rows as links into the stats they unlock. */
-  linkRows?: boolean;
-  /** The action strip at the bottom: price and checkout, or status and manage. */
+  /** The strip at the bottom: status and manage. */
   children: React.ReactNode;
 };
 
-/** The one gold surface every membership state shares; only the strip changes. */
+/** A member's gold panel: how they are a member, and the strip that manages it. */
 export function MembershipPanel({
   eyebrow,
   title,
-  body,
-  rows,
-  linkRows = false,
   children,
 }: MembershipPanelProps): React.ReactElement {
-  const charts = membershipPanel().rows;
-  const drawn: DrawnRow[] = (rows ?? charts.map((r) => ({ eyebrow: r.eyebrow, text: r.line }))).map(
-    (row, i) => {
-      const chart = charts[i % charts.length]!;
-      return { ...row, bars: chart.bars, peak: chart.peak };
-    }
-  );
   return (
     <div
-      id={MEMBERSHIP_PANEL_ID}
       style={{
         background: "var(--surface-accent-gold)",
         borderRadius: "var(--radius-panel)",
@@ -141,7 +64,6 @@ export function MembershipPanel({
         flexDirection: "column",
         gap: 16,
         color: "var(--text-on-light)",
-        scrollMarginTop: 24,
       }}
     >
       <span style={panelEyebrow}>{eyebrow}</span>
@@ -158,25 +80,6 @@ export function MembershipPanel({
       >
         {title}
       </h2>
-      {body !== undefined && (
-        <p
-          style={{
-            margin: 0,
-            fontSize: 14,
-            lineHeight: 1.55,
-            color: "var(--text-on-light-secondary)",
-            maxWidth: "52ch",
-            textWrap: "pretty",
-          }}
-        >
-          {body}
-        </p>
-      )}
-      <div className="upgrade-ledger">
-        {drawn.map((row) => (
-          <LedgerRow key={row.eyebrow} row={row} link={linkRows} />
-        ))}
-      </div>
       <div
         style={{
           display: "flex",

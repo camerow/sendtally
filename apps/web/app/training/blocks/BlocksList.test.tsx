@@ -42,10 +42,20 @@ const state = vi.hoisted(() => ({
   deleteMembership: vi.fn(async () => undefined),
 }));
 
+vi.mock("@sendtally/features/billing", () => ({ useMembership: () => ({ access: null }) }));
+vi.mock("../library/useLibrary", async (actual) => ({
+  ...(await actual<object>()),
+  useLibrary: () => ({ state: { status: "loading" }, reload: vi.fn() }),
+}));
+vi.mock("../data/usePlanActions", () => ({ usePlanActions: () => ({}) }));
 vi.mock("../../lib/useAppApi", () => ({ useAppApi: () => ({}) }));
 vi.mock("@sendtally/features/exercises", async (actual) => ({
   ...(await actual<object>()),
   useExerciseList: () => [],
+}));
+vi.mock("@sendtally/features/statistics", async (actual) => ({
+  ...(await actual<object>()),
+  useExercises: () => ({ state: { status: "ready", data: [] } }),
 }));
 vi.mock("../data/HangDataContext", () => ({
   useHangData: () => ({ model: hangModel(hangData(), libraryOf([])), today: TODAY }),

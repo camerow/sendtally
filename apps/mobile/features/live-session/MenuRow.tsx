@@ -2,7 +2,9 @@ import React from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import type { EntryKind } from "@sendtally/features/journal";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
+import { t } from "@sendtally/features/i18n";
 import { Icon, type IconName } from "../../components/Icon";
+import { Lock } from "../../components/Lock";
 import { StravaMark } from "../../components/StravaMark";
 import { pressRow } from "../../lib/press";
 import { EntryKindIcon } from "../journal/EntryKindIcon";
@@ -19,6 +21,8 @@ export type MenuRowProps = {
   busy?: boolean;
   /** Leaves the app: an arrow out in place of the chevron. */
   external?: boolean;
+  /** Members only: muted, with the lock in place of the chevron. */
+  locked?: boolean;
 };
 
 const iconOf = (icon: MenuRowProps["icon"], ink: string): React.ReactElement => {
@@ -37,13 +41,15 @@ export function MenuRow({
   danger = false,
   busy = false,
   external = false,
+  locked = false,
 }: MenuRowProps): React.ReactElement {
-  const ink = danger ? colors.watermelonInk : colors.gunmetal;
+  const ink = danger ? colors.watermelonInk : locked ? colors.textMuted : colors.gunmetal;
   return (
     <Pressable
       onPress={onPress}
       disabled={busy}
       accessibilityRole="button"
+      accessibilityLabel={locked ? t("common.membersOnly", { label: title }) : undefined}
       accessibilityState={{ disabled: busy, busy }}
       style={pressRow({
         flexDirection: "row",
@@ -92,6 +98,8 @@ export function MenuRow({
       </View>
       {busy ? (
         <ActivityIndicator color={colors.gunmetal} />
+      ) : locked ? (
+        <Lock />
       ) : (
         <Icon
           name={external ? "external" : "chevron"}

@@ -42,29 +42,4 @@ describe("Segmented", () => {
     act(() => radios()[1]?.click());
     expect(onChange).toHaveBeenCalledWith("workouts");
   });
-
-  it("sends a locked option to onLocked instead of choosing it", () => {
-    const onChange = vi.fn();
-    const onLocked = vi.fn();
-    act(() =>
-      root.render(
-        <Segmented
-          label="Range"
-          options={[
-            { value: "month", label: "Month" },
-            { value: "year", label: "Year", locked: true },
-          ]}
-          value="month"
-          onChange={onChange}
-          onLocked={onLocked}
-        />
-      )
-    );
-    const locked = radios()[1]!;
-    expect(locked.getAttribute("aria-label")).toBe("Year, members only");
-    expect(locked.querySelector("svg")).not.toBeNull();
-    act(() => locked.click());
-    expect(onLocked).toHaveBeenCalledWith("year");
-    expect(onChange).not.toHaveBeenCalled();
-  });
 });

@@ -5,6 +5,7 @@ import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import { type Occurrence, occurrenceMeta, plannedItems } from "@sendtally/features/training";
 import type { LibraryWorkout } from "@sendtally/features/workouts";
+import { Lock } from "../../../components/Lock";
 import { liveRunHref, useLiveRun } from "../../live-session/liveRun";
 import { Button } from "../components/Button";
 import { DetailMenu } from "../components/DetailMenu";
@@ -13,19 +14,31 @@ import { useDayChanges } from "../plan-days/useDayChanges";
 import { Title } from "../components/Title";
 import { LogItButton } from "../library-detail/LogItButton";
 import { StartButton } from "../library-detail/StartButton";
+import { openMembershipPage } from "../locks";
 import { type } from "../type";
 import { openOccurrence } from "./openOccurrence";
 import { DayMark } from "./DayMark";
 
-export type OccurrenceCardProps = { occurrence: Occurrence; workout: LibraryWorkout };
+export type OccurrenceCardProps = {
+  occurrence: Occurrence;
+  workout: LibraryWorkout;
+  /** Members only: its name muted with the lock, and Become a member in place of Start, Log it and ···. */
+  locked?: boolean;
+};
 
 /** A workout due today, its kind marked by its name: the card opens the workout, Start runs what it prescribes, Resume goes back to it running. */
-export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): React.ReactElement {
+export function OccurrenceCard({
+  occurrence,
+  workout,
+  locked: lockedDay = false,
+}: OccurrenceCardProps): React.ReactElement {
   const o = occurrence;
   const planned = plannedItems(o);
   const run = useLiveRun();
   const running = run?.workoutId === workout.id ? run : null;
+  const locked = lockedDay && running === null;
   const changes = useDayChanges();
+  const join = (): void => openMembershipPage("plan_day");
   return (
     <View
       style={{
@@ -38,16 +51,22 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
       }}
     >
       <Pressable
-        onPress={() => openOccurrence(o)}
+        onPress={() => (locked ? join() : openOccurrence(o))}
         accessibilityRole="button"
+        accessibilityLabel={locked ? t("common.membersOnly", { label: workout.name }) : undefined}
         style={({ pressed }) => ({ gap: 12, opacity: pressed ? 0.7 : 1 })}
       >
         <View style={{ gap: 4 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Title size={28} style={{ flex: 1 }}>
+            <Title
+              size={28}
+              color={locked ? colors.textMuted : colors.gunmetal}
+              style={{ flex: 1 }}
+            >
               {workout.name}
             </Title>
-            {running === null && (
+            {locked && <Lock />}
+            {!locked && running === null && (
               <View style={{ marginVertical: -8 }}>
                 <DetailMenu
                   rows={dayRows(
@@ -72,7 +91,9 @@ export function OccurrenceCard({ occurrence, workout }: OccurrenceCardProps): Re
           </View>
         </View>
       </Pressable>
-      {running === null ? (
+      {locked ? (
+        <Button label={t("billing.becomeAMember")} onPress={join} variant="primary" height={50} />
+      ) : running === null ? (
         <View style={{ flexDirection: "row", gap: 10 }}>
           <StartButton
             workout={workout}

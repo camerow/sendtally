@@ -9,6 +9,7 @@ import { useHangData } from "../data/HangDataContext";
 import { HangSheet } from "../data/HangSheet";
 import { type } from "../type";
 import { openGripEditor } from "../exercises/openExerciseEditor";
+import { openMembershipPage, useLocks } from "../locks";
 import { AddGrip } from "./AddGrip";
 import { GripRow } from "./GripRow";
 
@@ -36,6 +37,7 @@ export function GripPickerSheet({
   const { model, today } = useHangData();
   const unit = model.settings.units;
   const shown = model.grips.filter((g) => !g.hidden || selected.includes(g.id));
+  const locks = useLocks();
 
   const pick = (id: string): void => {
     onPick(id);
@@ -44,9 +46,10 @@ export function GripPickerSheet({
   const choose = (id: string): void => {
     if (!multi || !selected.includes(id)) pick(id);
   };
-  const edit = (id: string): void => {
+  const edit = (id: string, locked: boolean): void => {
     onClose();
-    openGripEditor(id);
+    if (locked) openMembershipPage("exercise");
+    else openGripEditor(id);
   };
 
   return (
@@ -70,6 +73,7 @@ export function GripPickerSheet({
       <View style={{ gap: 8, paddingTop: 14 }}>
         {shown.map((g) => {
           const used = model.lastUsed(workout, g.id);
+          const locked = locks.exercise({ grip: g });
           return (
             <GripRow
               key={g.id}
@@ -79,7 +83,8 @@ export function GripPickerSheet({
               on={selected.includes(g.id)}
               multi={multi}
               onPress={() => pick(g.id)}
-              onEdit={() => edit(g.id)}
+              onEdit={() => edit(g.id, locked)}
+              editLocked={locked}
             />
           );
         })}

@@ -20,6 +20,8 @@ export type ShelfHeaderProps = {
   count?: number;
   addLabel: string;
   onAdd: () => void;
+  /** Members only: the plus becomes the lock. */
+  addLocked?: boolean;
 };
 
 /** A shelf's heading: its mark, name and See all as one button, and a plus to make one in it. */
@@ -30,6 +32,7 @@ export function ShelfHeader({
   count,
   addLabel,
   onAdd,
+  addLocked = false,
 }: ShelfHeaderProps): React.ReactElement {
   const heading = (
     <>
@@ -71,7 +74,7 @@ export function ShelfHeader({
         </Pressable>
       )}
       <View style={{ flex: 1 }} />
-      <AddButton label={addLabel} onPress={onAdd} />
+      <AddButton label={addLabel} onPress={onAdd} locked={addLocked} />
     </View>
   );
 }

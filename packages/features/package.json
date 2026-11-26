@@ -23,6 +23,7 @@
     "./hang": "./src/hang/index.ts",
     "./library": "./src/library/index.ts",
     "./library/testing": "./src/library/testing.ts",
+    "./billing/testing": "./src/billing/testing.ts",
     "./training": "./src/training/index.ts",
     "./activities": "./src/activities/index.ts",
     "./workouts": "./src/workouts/index.ts",

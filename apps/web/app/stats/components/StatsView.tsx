@@ -1,9 +1,9 @@
 import React from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { Logo } from "@sendtally/design";
 import { t } from "@sendtally/features/i18n";
 import { queries, useQuery } from "@sendtally/features/query";
-import { defaultRange, shownRange, statsYears, type TrendRange } from "@sendtally/features/trends";
+import { statsYears, type TrendRange } from "@sendtally/features/trends";
 import { AccountButton } from "../../components/AccountButton";
 import { Segmented } from "../../components/Segmented";
 import { useAppApi } from "../../lib/useAppApi";
@@ -15,12 +15,10 @@ import { TrainingInsights } from "./training/TrainingInsights";
 type StatsSegment = "climbing" | "training";
 
 /** Climbing and Training over one range; the segment is in the address so Back and a reload keep it. */
-export function StatsView({ member }: { member: boolean }): React.ReactElement {
-  const navigate = useNavigate();
+export function StatsView(): React.ReactElement {
   const [params, setParams] = useSearchParams();
   const segment: StatsSegment = params.get("segment") === "training" ? "training" : "climbing";
-  const [picked, setPicked] = React.useState<TrendRange | null>(null);
-  const range = shownRange(member, picked ?? defaultRange(member));
+  const [range, setRange] = React.useState<TrendRange>("all");
   const { state } = useQuery(queries.sessionsWithClimbs(useAppApi()));
   const years = React.useMemo(
     () => (state.status === "ready" ? statsYears(state.data) : []),
@@ -47,13 +45,7 @@ export function StatsView({ member }: { member: boolean }): React.ReactElement {
           { value: "training", label: t("statistics.training") },
         ]}
       />
-      <RangeChips
-        member={member}
-        shown={range}
-        onPick={setPicked}
-        years={years}
-        onLocked={() => void navigate("/app/membership")}
-      />
+      <RangeChips shown={range} onPick={setRange} years={years} />
       {segment === "climbing" ? (
         <ClimbingInsights range={range} />
       ) : (

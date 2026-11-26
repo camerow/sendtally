@@ -97,7 +97,7 @@ import { hangHistory } from "./lib/hang";
 import { dedupedWalls, gymBody, gymOf, newGymBody } from "./lib/gyms";
 import { importBody } from "./lib/import";
 import { onboardingSteps } from "./lib/onboarding";
-import { mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
+import { MembersOnly, mirrorStoreEntitlements, resolveEntitlements } from "./lib/entitlements";
 import {
   climbNoteBody,
   userClimbNoteBody,
@@ -2370,6 +2370,7 @@ const app = new Hono<AppEnv>()
   .route("/", mcp);
 
 app.onError(async (error, c) => {
+  if (error instanceof MembersOnly) return c.json({ error: error.message, code: error.code }, 403);
   // zValidator throws this for a body it cannot parse at all. Without this the
   // catch-all below would answer 500 and log a false exception for what is a
   // malformed request, and RevenueCat would retry a payload that can never work.

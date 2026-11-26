@@ -1,0 +1,235 @@
+.closing {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.closing-trial {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px 18px;
+  border-radius: var(--radius-card);
+  background: var(--bs-gold);
+  color: var(--bs-gunmetal);
+}
+
+.closing-trial-eyebrow {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.closing-trial-headline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 38px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.closing-trial-note {
+  margin: 0;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.closing-free {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.closing-free-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.closing-free-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--bs-gunmetal);
+}
+
+.closing-free-list li:first-child {
+  grid-column: 1 / -1;
+}
+
+.closing-free-list svg {
+  flex: none;
+  color: var(--bs-fern);
+}
+
+.members-get {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 18px;
+  overflow: hidden;
+  border-radius: var(--radius-panel);
+  background: var(--surface-soft);
+  color: var(--bs-gunmetal);
+}
+
+.members-get-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.members-get-heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: var(--bs-gunmetal);
+}
+
+.members-get-line {
+  margin: 0;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--text-on-white-secondary);
+}
+
+.members-get-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+.members-get--closing .members-get-cards {
+  display: flex;
+  gap: 8px;
+  margin-right: -18px;
+  padding-right: 18px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.members-get--closing .members-get-cards:focus-visible {
+  outline: 2px solid var(--bs-azure);
+  outline-offset: -2px;
+  border-radius: var(--radius-card);
+}
+
+.members-get--closing .members-get-cards::-webkit-scrollbar {
+  display: none;
+}
+
+.members-get-card {
+  overflow: hidden;
+  box-sizing: border-box;
+  border: 1px solid var(--line-on-light);
+  border-radius: var(--radius-card);
+  background: var(--bs-white);
+}
+
+.members-get--closing .members-get-card {
+  flex: none;
+  width: min(340px, calc(100% - 40px));
+  scroll-snap-align: start;
+}
+
+.members-get-art {
+  height: 124px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 16px;
+}
+
+.members-get--closing .members-get-art {
+  height: 104px;
+}
+
+.members-get-art--blocks {
+  background: var(--bs-gunmetal);
+}
+
+.members-get-art--workouts {
+  background: var(--surface-soft);
+}
+
+.members-get-exercise {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.members-get-exercise-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.members-get-exercise-work {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.members-get-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px 16px;
+}
+
+.members-get-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.members-get-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--text-on-white-secondary);
+}
+
+.members-get-support {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--data-bar-empty);
+}
+
+.members-get-support-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text-on-white-secondary);
+}
+
+.members-get-support-text b {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 21px;
+  color: var(--bs-gunmetal);
+}

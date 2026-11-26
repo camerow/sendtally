@@ -90,7 +90,13 @@ import {
   withItemIds,
 } from "@sendtally/core/hang";
 import type { ActivityInput } from "./activities";
-import { exerciseKindOf, exerciseNameKey, workoutExercises, type ExerciseInput } from "./exercises";
+import {
+  builtInNamed,
+  exerciseKindOf,
+  exerciseNameKey,
+  workoutExercises,
+  type ExerciseInput,
+} from "./exercises";
 import type { ContentEntity, Viewer } from "./areas";
 import type { RegradedSession } from "./climbs";
 import type { ClimbLink } from "./manual";
@@ -3083,7 +3089,8 @@ export async function saveActivity(
   db: D1Database,
   userId: string,
   id: string,
-  a: ActivityInput
+  a: ActivityInput,
+  library: Pick<BuiltInLibrary, "exercises">
 ): Promise<{ activity: ActivityRow; part: HangSessionRow | null }> {
   const now = new Date().toISOString();
   const fields = {
@@ -3155,7 +3162,8 @@ export async function saveActivity(
       userId,
       a.done
         .filter((e) => !isChecklist(e))
-        .map((e) => ({ name: e.exercise, kind: a.kind, measure: measureOf(a.kind, e.sets) }))
+        .map((e) => ({ name: e.exercise, kind: a.kind, measure: measureOf(a.kind, e.sets) })),
+      library
     ),
   ]);
   return { activity: only(rows), part: parts[0] ?? null };
@@ -3601,7 +3609,8 @@ export async function saveWorkout(
   db: D1Database,
   userId: string,
   w: FocusOptional<Workout>,
-  isGrip: (exercise: string) => boolean
+  isGrip: (exercise: string) => boolean,
+  library: Pick<BuiltInLibrary, "exercises">
 ): Promise<WorkoutRow> {
   const now = new Date().toISOString();
   const fields = {
@@ -3622,7 +3631,7 @@ export async function saveWorkout(
       .values({ user_id: userId, id: w.id, ...fields, created_at: now })
       .onConflictDoUpdate({ target: [workouts.user_id, workouts.id], set: fields })
       .returning(),
-    ...addExercises(d, userId, workoutExercises(w, isGrip)),
+    ...addExercises(d, userId, workoutExercises(w, isGrip), library),
   ]);
   return only(rows);
 }
@@ -3786,14 +3795,31 @@ const exerciseValues = (userId: string, id: string, e: ExerciseInput, now: strin
   updated_at: now,
 });
 
-/** Adds the names not yet listed; a name already there, in any case, keeps its row. */
-function addExercises(d: DrizzleD1Database, userId: string, list: readonly ExerciseInput[]) {
+/**
+ * Adds the names not yet listed; a name already there, in any case, keeps its row. A name a
+ * built-in goes by is that built-in's copy, with its kind and measure.
+ */
+function addExercises(
+  d: DrizzleD1Database,
+  userId: string,
+  list: readonly ExerciseInput[],
+  library: Pick<BuiltInLibrary, "exercises">
+) {
   const now = new Date().toISOString();
+  const linked = (e: ExerciseInput): ExerciseInput => {
+    const b = builtInNamed(library, e.name);
+    return b === undefined
+      ? e
+      : { ...e, kind: b.spec.kind, measure: b.spec.measure, builtIn: b.id };
+  };
   const rows = [
     ...new Map(
       list
         .filter((e) => e.name.trim() !== "")
-        .map((e) => [exerciseNameKey(e.name), exerciseValues(userId, crypto.randomUUID(), e, now)])
+        .map((e) => [
+          exerciseNameKey(e.name),
+          exerciseValues(userId, crypto.randomUUID(), linked(e), now),
+        ])
     ).values(),
   ];
   return Array.from({ length: Math.ceil(rows.length / EXERCISES_PER_INSERT) }, (_, i) =>
@@ -3817,17 +3843,19 @@ export async function createExercise(
     .get();
 }
 
-/** Brings an archived exercise back into the lists. */
+/** Brings an archived exercise back into the lists, linked to `builtIn` when it had no link. */
 export async function restoreExercise(
   db: D1Database,
   userId: string,
-  row: ExerciseRow
+  row: ExerciseRow,
+  builtIn: string | null = null
 ): Promise<ExerciseRow> {
+  const fields = { archived: false, built_in: row.built_in ?? builtIn };
   await drizzle(db)
     .update(exercises)
-    .set({ archived: false, updated_at: new Date().toISOString() })
+    .set({ ...fields, updated_at: new Date().toISOString() })
     .where(and(eq(exercises.user_id, userId), eq(exercises.id, row.id)));
-  return { ...row, archived: false };
+  return { ...row, ...fields };
 }
 
 /** Whether any workout item or logged exercise names it, in any case. */

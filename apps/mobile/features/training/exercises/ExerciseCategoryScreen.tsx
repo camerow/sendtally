@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 import type { WorkoutKind } from "@sendtally/core/hang";
@@ -14,7 +13,10 @@ import { usePickerWorld } from "../exercise-picker/usePickerWorld";
 import { CategoryMark } from "../library/CategoryMark";
 import { LibrarySearch } from "../library/LibrarySearch";
 import { ScreenFrame } from "../../../components/ScreenFrame";
+import { openMembershipPage, useLocks } from "../locks";
+import { useLockedExercises } from "../useLockedRows";
 import { type } from "../type";
+import { openExercise } from "./openExercise";
 import { openExerciseEditor } from "./openExerciseEditor";
 
 export type ExerciseCategoryScreenProps = { kind: WorkoutKind };
@@ -31,19 +33,16 @@ export function ExerciseCategoryScreen({ kind }: ExerciseCategoryScreenProps): R
   const [text, setText] = React.useState("");
   const label = kindLabel(kind);
   const entries = pickerEntries(world, { category: kind, text });
-  const open = ({ source }: PickerEntry): (() => void) =>
-    "exercise" in source
-      ? () => router.push({ pathname: "/exercise/[id]", params: { id: source.exercise.id } })
-      : "grip" in source
-        ? () => router.push({ pathname: "/grip/[id]", params: { id: source.grip.id } })
-        : () => router.push({ pathname: "/exercise/[id]", params: { id: source.builtIn.id } });
+  const locked = useLockedExercises();
+  const create = useLocks().create;
 
   return (
     <ScreenFrame
       action={
         <AddButton
           label={t("workouts.newExerciseIn", { category: label })}
-          onPress={() => openExerciseEditor(kind)}
+          onPress={() => (create ? openMembershipPage("create") : openExerciseEditor(kind))}
+          locked={create}
         />
       }
     >
@@ -77,11 +76,12 @@ export function ExerciseCategoryScreen({ kind }: ExerciseCategoryScreenProps): R
               multi={false}
               ticked={false}
               mine={mine(entry)}
-              onPress={open(entry)}
+              {...locked.row(entry, () => openExercise(entry.source))}
             />
           ))
         )}
       </View>
+      {locked.sheet}
     </ScreenFrame>
   );
 }

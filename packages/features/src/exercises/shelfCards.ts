@@ -15,7 +15,8 @@ export type ShelfCard = {
   library: boolean;
   /** The first picture of the built-in it stands for, as its row's tile. */
   picture?: LibraryPicture;
-  opens: { grip: string } | { exercise: string } | { builtIn: string };
+  /** What it is, which says whether the user made it. */
+  source: PickerSource;
 };
 
 export type ShelfWorld = {
@@ -30,13 +31,7 @@ export type ShelfWorld = {
  * the built-in ones; every other category also holds the built-ins the user has not made their own.
  */
 export function exerciseShelves(w: ShelfWorld): CategoryShelf<ShelfCard>[] {
-  const card = (
-    key: string,
-    kind: WorkoutKind,
-    name: string,
-    source: PickerSource,
-    opens: ShelfCard["opens"]
-  ): ShelfCard => {
+  const card = (key: string, kind: WorkoutKind, name: string, source: PickerSource): ShelfCard => {
     const uses = workoutsWith(w.workouts, { kind, name, source }).length;
     return {
       key,
@@ -45,18 +40,16 @@ export function exerciseShelves(w: ShelfWorld): CategoryShelf<ShelfCard>[] {
       meta: uses === 0 ? null : usedInText(uses),
       library: "builtIn" in source,
       picture: sourcePictures(source)[0],
-      opens,
+      source,
     };
   };
   return categoryShelves([
-    ...w.grips
-      .filter((g) => !g.hidden)
-      .map((g) => card(g.id, "hangboard", g.name, { grip: g }, { grip: g.id })),
+    ...w.grips.filter((g) => !g.hidden).map((g) => card(g.id, "hangboard", g.name, { grip: g })),
     ...w.exercises
       .filter((e) => !e.archived)
-      .map((e) => card(e.id, e.kind, exerciseLabel(e), { exercise: e }, { exercise: e.id })),
+      .map((e) => card(e.id, e.kind, exerciseLabel(e), { exercise: e })),
     ...unclaimedBuiltIns(w.exercises).map((b) =>
-      card(`builtIn:${b.id}`, b.kind, b.name, { builtIn: b }, { builtIn: b.id })
+      card(`builtIn:${b.id}`, b.kind, b.name, { builtIn: b })
     ),
   ]);
 }

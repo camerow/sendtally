@@ -51,14 +51,14 @@ export function SummaryFrame({
     else if (state?.kind === "connect") strava.connect();
     else post.run();
   };
-  const remove = deleteRow({
-    title: t("summary.deleteWorkout"),
-    confirm: {
+  const remove = deleteRow(
+    {
+      item: t("summary.deleteWorkout"),
       title: t("workouts.deleteTitle", { name: title }),
       ...(post.state?.kind === "posted" && { body: t("summary.deleteHintStrava") }),
     },
-    onDelete,
-  });
+    onDelete
+  );
 
   return (
     <ScreenFrame

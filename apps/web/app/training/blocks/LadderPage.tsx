@@ -23,12 +23,13 @@ import { DetailFrame } from "../../components/detail/DetailFrame";
 import { useAppApi } from "../../lib/useAppApi";
 import { useDiscardGuard } from "../../lib/useDiscardGuard";
 import { useGoBack } from "../../lib/useGoBack";
-import { useNavigate } from "react-router";
+import { Navigate, useNavigate } from "react-router";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { usePlanActions } from "../data/usePlanActions";
 import { copyWorkoutPath, editWorkoutPath } from "../editor/paths";
 import { useLibrary, workoutIn } from "../library/useLibrary";
+import { membershipPagePath, useLocks } from "../locks";
 import { LoadSection } from "./LoadSection";
 import { LoadTable } from "./LoadTable";
 import { WeekDaysGrid } from "./WeekDaysGrid";
@@ -56,6 +57,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
   const [turn, setTurn] = React.useState(0);
   const [open, setOpen] = React.useState<readonly number[]>([0]);
   const [removing, setRemoving] = React.useState(false);
+  const locked = useLocks().block;
   const { plan } = draft;
   const view = ladderView(plan, log, model, id, turn, today, exercises);
 
@@ -67,6 +69,7 @@ export function LadderPage({ id }: { id: string }): React.ReactElement {
     );
   // Gone, removed elsewhere: Back still leaves.
   if (view === null) return <DetailFrame backTo={BACK_TO} />;
+  if (locked) return <Navigate to={membershipPagePath("block")} replace />;
 
   const { membership: m, block, workout: w, turns, items, current, ended, done, lines } = view;
   const loads = items.flatMap((it, i) => (it.checklist === undefined ? [{ it, i }] : []));

@@ -1,15 +1,20 @@
 import { router } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
 import { Logo } from "../components/Logo";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
-import { WelcomeCard } from "../features/onboarding/WelcomeCard";
+import { WelcomeCarousel } from "../features/onboarding/WelcomeCarousel";
 import { Button } from "../features/training/components/Button";
-import { Label } from "../features/training/components/Label";
 import { Title } from "../features/training/components/Title";
+import { type } from "../features/training/type";
+
+const line = [
+  type.bodyBold,
+  { paddingHorizontal: 22, fontSize: 15, lineHeight: 20, color: colors.gunmetal },
+];
 
 export default function Onboarding(): React.ReactElement | null {
   return (
@@ -20,13 +25,17 @@ export default function Onboarding(): React.ReactElement | null {
             <Logo size={24} />
           </View>
 
-          <View style={{ flex: 1, justifyContent: "center", gap: 22, paddingHorizontal: 22 }}>
-            <WelcomeCard />
-            <View style={{ gap: 10 }}>
-              <Label color={colors.gunmetal}>{t("onboarding.intro.eyebrow")}</Label>
-              <Title size={27}>{t("onboarding.setup.welcomeTitle")}</Title>
+          <ScrollView
+            style={{ flex: 1 }}
+            alwaysBounceVertical={false}
+            contentContainerStyle={{ flexGrow: 1, gap: 14 }}
+          >
+            <View style={{ paddingHorizontal: 22 }}>
+              <Title size={27}>{t("onboarding.intro.title")}</Title>
             </View>
-          </View>
+            <WelcomeCarousel />
+            <Text style={line}>{t("onboarding.intro.line")}</Text>
+          </ScrollView>
 
           <View style={{ paddingHorizontal: 22, gap: 10 }}>
             <Button

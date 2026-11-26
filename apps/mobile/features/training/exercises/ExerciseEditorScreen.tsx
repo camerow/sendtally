@@ -20,6 +20,7 @@ import { confirmDestructive } from "../../../lib/confirmDestructive";
 import { useDiscardGuard } from "../../../lib/useDiscardGuard";
 import { pressRow } from "../../../lib/press";
 import { ChipRow } from "../components/ChipRow";
+import { LockedPage } from "../components/LockedPage";
 import { EditorTextField } from "../components/EditorTextField";
 import { EditorHeader } from "../components/EditorHeader";
 import { NameField } from "../components/NameField";
@@ -27,6 +28,7 @@ import { SheetSection } from "../components/SheetSection";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { ScreenFrame } from "../../../components/ScreenFrame";
+import { useLocks } from "../locks";
 import { type } from "../type";
 import { ItemEditor } from "../workout-editor/ItemEditor";
 import { newDoseFor } from "@sendtally/features/workouts";
@@ -226,6 +228,7 @@ function Form({
 
 function NewExercise({ kind, name = "", ret }: ExerciseEditorScreenProps): React.ReactElement {
   const make = useMakeExercise();
+  const locked = useLocks().create;
   React.useEffect(() => () => forgetOpener(ret), [ret]);
   const initial: ExerciseForm = {
     kind,
@@ -249,6 +252,7 @@ function NewExercise({ kind, name = "", ret }: ExerciseEditorScreenProps): React
       else goBack();
     });
   };
+  if (locked) return <LockedPage source="create" />;
   return <Form initial={initial} editing={false} logged={false} onSave={save} />;
 }
 
@@ -257,10 +261,12 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
   const exercises = useExercises(api);
   const series = useExerciseSeries(api);
   const merge = useMergeExercise();
+  const locks = useLocks();
   if (exercises.state.status !== "ready")
     return <LoadState state={exercises.state} onRetry={() => void exercises.reload()} />;
   const exercise = exercises.state.data.find((e) => e.id === id);
   if (exercise === undefined) return null;
+  if (locks.exercise({ exercise })) return <LockedPage source="exercise" />;
   const logged =
     series.status === "ready" && series.data.some((s) => s.key === exerciseKey(exercise.name));
 
@@ -305,8 +311,10 @@ function EditExercise({ id }: { id: string }): React.ReactElement | null {
 
 function EditGrip({ id }: { id: string }): React.ReactElement | null {
   const { model, actions } = useHangData();
+  const locks = useLocks();
   const grip = model.grips.find((g) => g.id === id);
   if (grip === undefined) return null;
+  if (locks.exercise({ grip })) return <LockedPage source="exercise" />;
   const measure = grip.measure ?? "hang";
 
   const save = (form: ExerciseForm, release: () => void): void => {

@@ -47,6 +47,23 @@ export async function verifyConnectorUser(
   }
 }
 
+export async function clerkWebFeature(userId: string, feature: string, env: Env): Promise<boolean> {
+  try {
+    const subscription = await createClerkClient({
+      secretKey: env.CLERK_SECRET_KEY,
+    }).billing.getUserBillingSubscription(userId);
+    return subscription.subscriptionItems.some(
+      (item) => item.status === "active" && item.plan?.features.some((f) => f.slug === feature)
+    );
+  } catch (err) {
+    if (err instanceof Error && "status" in err && err.status === 404) return false;
+    console.error(
+      `clerk billing lookup failed: ${err instanceof Error ? err.message : String(err)}`
+    );
+    return true;
+  }
+}
+
 export async function deleteClerkUser(userId: string, env: Env): Promise<void> {
   await createClerkClient({ secretKey: env.CLERK_SECRET_KEY }).users.deleteUser(userId);
 }
@@ -106,6 +123,7 @@ export async function verifyClerkWebhook(req: Request, env: Env): Promise<AuthWe
 export const auth = {
   verifyUser: verifyClerkUser,
   verifyConnector: verifyConnectorUser,
+  webFeature: clerkWebFeature,
   deleteUser: deleteClerkUser,
   verifyWebhook: verifyClerkWebhook,
   userNames: clerkUserNames,

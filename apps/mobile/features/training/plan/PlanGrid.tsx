@@ -2,6 +2,8 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import { weekdayLetters, weekdayLong } from "@sendtally/features/hang";
+import { t } from "@sendtally/features/i18n";
+import { Lock } from "../../../components/Lock";
 import { pressRow } from "../../../lib/press";
 import { Label } from "../components/Label";
 import { GOLD_TINT } from "../components/tints";
@@ -95,12 +97,22 @@ export function PlanGrid({
       {rows.map((row) => {
         const name = (
           <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
-            <Text
-              numberOfLines={1}
-              style={[type.bodyBold, { fontSize: 14, color: colors.gunmetal }]}
-            >
-              {row.name}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Text
+                numberOfLines={1}
+                style={[
+                  type.bodyBold,
+                  {
+                    flexShrink: 1,
+                    fontSize: 14,
+                    color: row.locked === true ? colors.textMuted : colors.gunmetal,
+                  },
+                ]}
+              >
+                {row.name}
+              </Text>
+              {row.locked === true && <Lock />}
+            </View>
             {row.lines.map((parts, i) => (
               <Line key={i} parts={parts} ink={KIND_LOOK[row.kind].ink} />
             ))}
@@ -126,6 +138,7 @@ export function PlanGrid({
             />
           );
         });
+        const label = row.locked === true ? t("common.membersOnly", { label: row.name }) : row.name;
         const line = {
           flexDirection: "row",
           alignItems: "center",
@@ -140,7 +153,7 @@ export function PlanGrid({
             key={row.key}
             onPress={row.open}
             accessibilityRole="button"
-            accessibilityLabel={row.name}
+            accessibilityLabel={label}
             style={pressRow(line)}
           >
             {name}
@@ -151,7 +164,7 @@ export function PlanGrid({
             <Pressable
               onPress={row.open}
               accessibilityRole="button"
-              accessibilityLabel={row.name}
+              accessibilityLabel={label}
               style={pressRow({ flex: 1, minWidth: 0 })}
             >
               {name}

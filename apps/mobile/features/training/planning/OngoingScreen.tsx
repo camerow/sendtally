@@ -23,6 +23,7 @@ import { EditorHeader } from "../components/EditorHeader";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
+import { useDayLock } from "../locks";
 import { PlanGrid } from "../plan/PlanGrid";
 import { openMembership } from "../plan/openMembership";
 import { type } from "../type";
@@ -47,6 +48,7 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
   const release = useDiscardGuard(draft.dirty);
   const [adding, setAdding] = React.useState(false);
   const [added, setAdded] = useLit();
+  const locked = useDayLock();
 
   if (plan.state.status !== "ready")
     return <LoadState state={plan.state} onRetry={() => void plan.reload()} framed />;
@@ -61,10 +63,11 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
       ? {
           exercises,
           open: (m) => openMembership(m, name),
+          locked,
           toggle: (m, day) => () =>
             draft.toggle(m.id, { week: 1, day: day as Weekday, following: true, last: 1 }),
         }
-      : { exercises, open: (m) => openMembership(m, name) }
+      : { exercises, open: (m) => openMembership(m, name), locked }
   );
   const dayless = members.filter((m) => !hasDays(scheduleOf(draft.plan, m)));
   const save = (): void => {

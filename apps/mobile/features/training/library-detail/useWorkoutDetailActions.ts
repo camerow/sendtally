@@ -2,6 +2,7 @@ import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 import { t } from "@sendtally/features/i18n";
+import { deleteCopy } from "@sendtally/features/training";
 import {
   copyName,
   draftOf,
@@ -13,6 +14,7 @@ import type { DetailActionsProps } from "../components/DetailActions";
 import { deleteRow } from "../components/deleteRow";
 import type { DetailMenuRow } from "../components/types";
 import type { AddToMenu } from "../components/useAddToMenu";
+import { useCreateGate } from "../locks";
 import { useAddToBlock } from "./useAddToBlock";
 
 const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
@@ -25,7 +27,8 @@ export type WorkoutDetailActions = {
 
 /**
  * A workout's bar: Edit, then Add to block, Duplicate and Delete for the user's own; Add to
- * block and Duplicate for a built-in. Opened from a planned run it cannot be edited there.
+ * block and Duplicate for a built-in, both locked without access. Opened from a planned run it
+ * cannot be edited there.
  */
 export function useWorkoutDetailActions(
   workout: LibraryWorkout,
@@ -34,6 +37,7 @@ export function useWorkoutDetailActions(
   const actions = useWorkoutActions(useApi(), reportFailure);
   const addToBlock = useAddToBlock(workout.name, workout.id);
   const mine = workout.source === "mine";
+  const gate = useCreateGate("workout");
   const duplicate: DetailMenuRow = {
     icon: "copy",
     title: t("workouts.duplicate"),
@@ -43,17 +47,13 @@ export function useWorkoutDetailActions(
       router.replace({ pathname: "/workout/[id]", params: { id } });
     },
   };
-  const remove = deleteRow({
-    title: t("workouts.delete"),
-    confirm: {
-      title: t("workouts.deleteTitle", { name: workout.name }),
-      body: t("workouts.deleteBody"),
-    },
-    onDelete: () => void actions.deleteWorkout(workout.id),
-  });
+  const remove = deleteRow(
+    deleteCopy("workout", workout.name),
+    () => void actions.deleteWorkout(workout.id)
+  );
   const menu = [
-    ...(addToBlock.row === null ? [] : [addToBlock.row]),
-    duplicate,
+    ...(addToBlock.row === null ? [] : [gate(addToBlock.row)]),
+    gate(duplicate),
     ...(mine ? [remove] : []),
   ];
   const edit = () => router.push({ pathname: "/workout/edit", params: { id: workout.id } });

@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { colors } from "@sendtally/design/tokens";
 import type { Wizard } from "@sendtally/features/settings";
 import { t } from "@sendtally/features/i18n";
+import { ProgressSegments } from "../../components/ProgressSegments";
 import { ScreenFrame } from "../../components/ScreenFrame";
 import { Button } from "../training/components/Button";
 import { IconButton } from "../training/components/IconButton";
@@ -18,8 +19,6 @@ export type WizardFrameProps = {
   skip?: boolean;
   /** Off for a closing screen with no back, progress or Skip. */
   bar?: boolean;
-  /** With the bar off, an X at the trailing edge of the bar's row that leaves the wizard. */
-  onClose?: () => void;
   /** Children of the body that stay pinned to the top once scrolled to. */
   sticky?: number[];
   /** Short content sits midway between the bar and the footer, as the reveals want. */
@@ -36,7 +35,6 @@ export function WizardFrame({
   bar = true,
   sticky,
   center = false,
-  onClose,
 }: WizardFrameProps): React.ReactElement {
   const inPath = wizard.step !== "choose";
   const { n, total } = wizard.position;
@@ -50,7 +48,7 @@ export function WizardFrame({
       header={
         <View
           style={{
-            height: bar || onClose !== undefined ? 48 : 20,
+            height: bar ? 48 : 20,
             flexDirection: "row",
             alignItems: "center",
             gap: 10,
@@ -68,30 +66,13 @@ export function WizardFrame({
                   color={ink}
                 />
               )}
-              <View
-                accessible
-                accessibilityRole="progressbar"
-                accessibilityLabel={t("onboarding.firstRun.step", { n, total })}
-                style={{ flex: 1, flexDirection: "row", gap: 4 }}
-              >
-                {Array.from({ length: total }, (_, i) => (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: 4,
-                      borderRadius: 2,
-                      backgroundColor:
-                        i < n
-                          ? dark
-                            ? colors.gold
-                            : colors.gunmetal
-                          : dark
-                            ? "rgba(255,255,255,0.18)"
-                            : colors.dataBarEmpty,
-                    }}
-                  />
-                ))}
+              <View style={{ flex: 1 }}>
+                <ProgressSegments
+                  total={total}
+                  n={n}
+                  dark={dark}
+                  label={t("onboarding.firstRun.step", { n, total })}
+                />
               </View>
             </>
           )}
@@ -105,17 +86,6 @@ export function WizardFrame({
             />
           ) : (
             bar && <View style={{ width: 8 }} />
-          )}
-          {!bar && onClose !== undefined && (
-            <View style={{ marginLeft: "auto" }}>
-              <IconButton
-                icon="x"
-                label={t("common.close")}
-                onPress={onClose}
-                color={colors.gunmetal}
-                iconSize={22}
-              />
-            </View>
           )}
         </View>
       }

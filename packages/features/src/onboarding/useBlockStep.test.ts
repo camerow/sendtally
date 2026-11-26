@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Dose } from "@sendtally/core/hang";
+import type { Dose, WeekChange } from "@sendtally/core/hang";
 import { hangLoadText, weightText } from "../hang/weights";
 import { t } from "../i18n";
 import type { LibraryWorkout } from "../workouts/types";
@@ -12,8 +12,12 @@ import {
   loadBars,
   loadText,
   resized,
+  savedChanges,
+  savedShortcuts,
+  shapeable,
   sized,
   weekChangesOf,
+  weekChangesToSave,
   withCell,
 } from "./useBlockStep";
 
@@ -119,5 +123,59 @@ describe("changedWeeks and weekChangesOf", () => {
         { membershipId, week: 3, dose: 1, itemId: "i0", change: { sets: 2 } },
       ])
     );
+  });
+});
+
+describe("shapeable", () => {
+  const workout = (id: string, items: object[]): LibraryWorkout =>
+    ({ id, items }) as unknown as LibraryWorkout;
+
+  it("is the first workout with an exercise to load, none when only Climbing is placed", () => {
+    const climbing = workout("climb", []);
+    const hangs = workout("hangs", [{ exercise: "half", doses: [REPS] }]);
+    expect(shapeable([climbing, undefined, hangs])).toBe(hangs);
+    expect(shapeable([climbing])).toBeUndefined();
+  });
+});
+
+describe("Shape the weeks, opened again", () => {
+  const first: WeekChange[] = [
+    { membershipId: "m1", week: 2, dose: 0, itemId: "i0", change: { reps: 6 } },
+    { membershipId: "m1", week: 3, dose: 1, itemId: "i0", change: { sets: 2 } },
+  ];
+  const saved: WeekChange[] = [
+    ...first,
+    { membershipId: "m2", week: 2, dose: 0, itemId: "i0", change: { reps: 9 } },
+    { membershipId: "m1", week: 2, dose: 0, itemId: "i1", change: { reps: 9 } },
+  ];
+
+  it("shows the first visit's changes to this item of this workout", () => {
+    expect(savedChanges(saved, "m1", "i0", 2, 3)).toEqual({
+      0: [{}, { reps: 6 }, {}],
+      1: [{}, {}, { sets: 2 }],
+    });
+  });
+
+  it("sends an empty change for a week shaped before and cleared now", () => {
+    const doses = [
+      [{}, { reps: 6 }, {}],
+      [{}, {}, {}],
+    ];
+    expect(weekChangesToSave(saved, ["m1"], doses, "i0")).toEqual([
+      first[0],
+      { ...first[1], change: {} },
+    ]);
+  });
+
+  it("saves what it loaded when left untouched", () => {
+    const doses = Object.values(savedChanges(saved, "m1", "i0", 2, 3));
+    expect(weekChangesToSave(saved, ["m1"], doses, "i0")).toEqual(first);
+  });
+
+  it("turns on the shortcuts that filled the saved cells, and none for typed ones", () => {
+    const both = { stepUp: true, deload: true };
+    expect(savedShortcuts(filled([WEIGHTED], both, 4, "kg"), [WEIGHTED], 4, "kg")).toEqual(both);
+    expect(savedShortcuts({ 0: [{}, { reps: 6 }] }, [WEIGHTED], 2, "kg")).toEqual(OFF);
+    expect(savedShortcuts({}, [{ sets: 1 }], 3, "kg")).toEqual(OFF);
   });
 });

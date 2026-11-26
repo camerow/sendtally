@@ -4,12 +4,10 @@ import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router";
 import type { Exercise, SendtallyApi } from "@sendtally/api-client";
-import type { LibraryWorkout } from "@sendtally/features/workouts";
 import type * as T_exercises from "@sendtally/features/exercises";
-import type { Wizard } from "@sendtally/features/settings";
+import { setPlanPath, type PlanPath, type Wizard } from "@sendtally/features/settings";
 import type * as T_statistics from "@sendtally/features/statistics";
 import type * as T_workouts from "@sendtally/features/workouts";
-import { draftOf, withEditorIds } from "@sendtally/features/workouts";
 import { ToastProvider } from "../../../components/Toast";
 import { WithHang } from "../../../training/data/testHang";
 import { WorkoutBuilder } from "./WorkoutBuilder";
@@ -26,19 +24,6 @@ const zercher: Exercise = {
   builtIn: null,
   description: "",
   archived: false,
-};
-
-const unnamed: LibraryWorkout = {
-  id: "w1",
-  kind: "strength",
-  name: "",
-  description: "",
-  minutes: 30,
-  targetRpe: null,
-  items: [{ exercise: "Zercher squat", doses: [{ sets: 3, reps: 5 }] }],
-  exerciseRestS: 180,
-  focus: null,
-  source: "mine",
 };
 
 const writes = vi.hoisted(() => ({ saveWorkout: vi.fn(async () => undefined) }));
@@ -67,12 +52,12 @@ const wizard = {
   path: "plan",
   step: "P2",
   canGoBack: true,
-  position: { n: 2, total: 7 },
-  memory: { way: "by_hand", existingLog: "none", days: [], membershipShown: false },
+  position: { n: 0, total: 0 },
+  memory: { way: null, existingLog: null },
   choose: vi.fn(),
   answerLog: vi.fn(),
   setWay: vi.fn(),
-  setDays: vi.fn(),
+  open: vi.fn(),
   next: vi.fn(),
   back: vi.fn(),
   skip: vi.fn(),
@@ -101,37 +86,62 @@ afterEach(() => {
   host.remove();
 });
 
-describe("P2's name", () => {
-  it("starts as the first exercise's kind, so Continue is on with an exercise and no typed name", () => {
+const pickedNow = (): readonly string[] => {
+  const seen: PlanPath[] = [];
+  setPlanPath((p) => {
+    seen.push(p);
+    return p;
+  });
+  return seen[0]?.workouts ?? [];
+};
+
+describe("Build my own, opened from Build your week", () => {
+  it("has no name to type and no Skip, names the workout by its kind and puts it first", async () => {
+    setPlanPath(() => ({
+      workouts: ["climb-session"],
+      days: {},
+      members: {},
+      blockId: null,
+      seeded: true,
+    }));
     act(() =>
       root.render(
         <QueryClientProvider client={new QueryClient()}>
           <ToastProvider>
             <MemoryRouter>
               <WithHang>
-                <WorkoutBuilder
-                  wizard={wizard}
-                  api={{} as SendtallyApi}
-                  id="w1"
-                  initial={withEditorIds(draftOf(unnamed), () => "i1")}
-                />
+                <WorkoutBuilder wizard={wizard} api={{} as SendtallyApi} />
               </WithHang>
             </MemoryRouter>
           </ToastProvider>
         </QueryClientProvider>
       )
     );
-    const field = host.querySelector<HTMLTextAreaElement>('textarea[aria-label="Workout name"]');
-    expect(field?.value).toBe("Strength workout");
-    const next = [...host.querySelectorAll("button")].find((b) =>
-      b.textContent?.startsWith("Continue")
+    expect(host.querySelector('textarea[aria-label="Workout name"]')).toBeNull();
+    expect(host.textContent).not.toContain("Skip");
+    const search = host.querySelector<HTMLInputElement>('input[role="combobox"]')!;
+    act(() => {
+      search.focus();
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(
+        search,
+        "Zercher"
+      );
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const option = [...host.querySelectorAll<HTMLElement>('[role="option"]')].find(
+      (o) => o.textContent === "Zercher squat"
     );
-    expect(next?.disabled).toBe(false);
+    await act(async () => option?.click());
+    const next = [...host.querySelectorAll("button")].find((b) =>
+      b.textContent?.startsWith("Continue · 1 exercise")
+    );
     act(() => next?.click());
+    const [id] = pickedNow();
     expect(writes.saveWorkout).toHaveBeenCalledWith(
-      "w1",
+      id,
       expect.objectContaining({ name: "Strength workout" })
     );
+    expect(pickedNow()).toEqual([id, "climb-session"]);
     expect(wizard.next).toHaveBeenCalledTimes(1);
   });
 });

@@ -12,7 +12,7 @@ export function RestPreview({ seconds }: { seconds: number }): React.ReactElemen
   return (
     <View
       style={{
-        height: 24,
+        minHeight: 24,
         flexDirection: "row",
         alignItems: "center",
         gap: 8,

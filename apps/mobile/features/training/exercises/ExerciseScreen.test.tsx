@@ -28,6 +28,10 @@ jest.mock("../../../components/Sheet", () => ({
     visible ? children : null,
 }));
 jest.mock("expo-crypto", () => ({ randomUUID: () => "new" }));
+let mockAccess: boolean | null = null;
+jest.mock("../../billing/useBilling", () => ({
+  useBilling: () => (mockAccess === null ? null : { membership: { access: mockAccess } }),
+}));
 jest.mock("expo-router", () => ({
   router: { canGoBack: () => true, push: jest.fn(), replace: jest.fn(), back: jest.fn() },
 }));
@@ -98,6 +102,7 @@ const edit = async (): Promise<void> => {
 };
 
 beforeEach(() => {
+  mockAccess = null;
   jest.clearAllMocks();
   jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
 });
@@ -294,5 +299,27 @@ describe("exercise screen", () => {
       expect.objectContaining({ workoutId: "new", blockId: "b1" })
     );
     expect(screen.getByText("Added to Winter base")).toBeTruthy();
+  });
+
+  it("gives a locked exercise's page way to Membership, and keeps a built-in's open with its add rows locked", async () => {
+    mockAccess = false;
+    await renderWithHang(<ExerciseScreen id="e1" />, hangData(), { exercises });
+    expect(router.replace).toHaveBeenLastCalledWith({
+      pathname: "/membership",
+      params: { source: "exercise" },
+    });
+    expect(screen.queryByText("Back squat")).toBeNull();
+
+    await renderWithHang(<ExerciseScreen id="pullUps" />, hangData(), { ...world, plan });
+    await fireEvent.press(screen.getByLabelText("More"));
+    await fireEvent.press(screen.getByLabelText("Add to workout, members only"));
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: "/membership",
+      params: { source: "exercise" },
+    });
+    await fireEvent.press(screen.getByLabelText("More"));
+    expect(screen.getByLabelText("Add to block, members only")).toBeTruthy();
+    expect(screen.getByText("Schedule")).toBeTruthy();
+    expect(screen.queryByLabelText("Schedule, members only")).toBeNull();
   });
 });

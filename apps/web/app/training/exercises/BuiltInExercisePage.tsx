@@ -11,6 +11,7 @@ import { DashedPanel } from "../components/DashedPanel";
 import { Description } from "../components/Description";
 import { UsedIn } from "../components/UsedIn";
 import { useLibrary } from "../library/useLibrary";
+import { useCreateGate } from "../locks";
 import { usePick } from "../editor/useMake";
 import { useAddToWorkout } from "../editor/useAddToWorkout";
 import { EXERCISES_VIEW } from "./paths";
@@ -29,7 +30,11 @@ export function BuiltInExercisePage({ builtIn }: { builtIn: BuiltInExercise }): 
     usedIn,
   });
   const inPlan = useExerciseInPlan({ kind: builtIn.kind, name: builtIn.name, source: { builtIn } });
-  const items = [...[addTo.item, inPlan.block.item].filter((i) => i !== null), inPlan.schedule];
+  const gate = useCreateGate("exercise");
+  const items = [
+    ...[addTo.item, inPlan.block.item].filter((i) => i !== null).map(gate),
+    inPlan.schedule,
+  ];
   return (
     <DetailFrame
       backTo={EXERCISES_VIEW}

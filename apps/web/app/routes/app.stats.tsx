@@ -1,8 +1,6 @@
 import React from "react";
-import type { LinksFunction, LoaderFunctionArgs } from "react-router";
-import { useLoaderData } from "react-router";
+import type { LinksFunction } from "react-router";
 import climbsStyles from "../climbs/climbs.css?url";
-import { canAccess } from "../lib/billing.server";
 import sessionsStyles from "../sessions/sessions.css?url";
 import { StatsView } from "../stats/components/StatsView";
 import statsStyles from "../stats/stats.css?url";
@@ -15,11 +13,6 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: trainingStyles },
 ];
 
-export async function loader(args: LoaderFunctionArgs): Promise<{ member: boolean }> {
-  return { member: await canAccess(args) };
-}
-
 export default function StatsRoute(): React.ReactElement {
-  const { member } = useLoaderData<typeof loader>();
-  return <StatsView member={member} />;
+  return <StatsView />;
 }

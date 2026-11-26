@@ -24,9 +24,15 @@ import {
   partSetups,
   partRows,
   partTimerStart,
+  timerRowsOf,
   timerWrites,
+  withRowsMoved,
   withTimerWrites,
+  type PartTimer,
+  type TimerRows,
 } from "./fingersPart";
+import { addSet, changeSet } from "../activities/done";
+import { withoutSet, withSetBack } from "./runCards";
 import { setKey } from "./setsRun";
 import { timerText } from "../hang/timerText";
 import { liveRunSummary, type LiveRun, type RunState } from "./liveRun";
@@ -229,7 +235,9 @@ describe("a mix's fingerboard part", () => {
     const after = withTimerWrites(rowsOf([]), new Set(), writes);
     expect(after?.done[0]?.sets.map((s) => s.reps)).toEqual([3, 2]);
     expect([...(after?.ticked ?? [])]).toEqual([]);
-    expect(withTimerWrites(after?.done ?? [], after?.ticked ?? new Set(), writes)).toBeNull();
+    expect(
+      withTimerWrites(after?.done ?? [], after?.ticked ?? new Set(), writes, after?.rows)
+    ).toBeNull();
     const done = tick(twoHangs, 60_000);
     const ended = timerWrites({ ...part, run: done }, [0, 1]);
     expect(ended.map((w) => [w.at.set, w.value.reps, w.ended])).toEqual([[1, 3, true]]);
@@ -401,5 +409,100 @@ describe("a mix's fingerboard part", () => {
       },
     };
     expect(liveRunSummary(live)).toBe("Half crimp · Set 2 of 2");
+  });
+
+  type Rows = { done: ItemDone[]; ticked: ReadonlySet<string>; rows?: TimerRows };
+  const fresh: Rows = { done: rowsOf([]), ticked: new Set() };
+  const merged = (was: Rows, part: PartTimer): Rows => {
+    const after = withTimerWrites(
+      was.done,
+      was.ticked,
+      timerWrites(part, [0, 1]),
+      timerRowsOf(part, was.rows)
+    );
+    return after === null ? was : { ...after, rows: after.rows };
+  };
+  const halfAt = (ms: number, startedAt = 0): PartTimer => {
+    const a = timerOn(0, 0);
+    return { ...a, setups, run: tick(startWorkoutRun(protocolsOf(a.planned), [], startedAt), ms) };
+  };
+  const protocolsOf = (p: PlannedRun) => p.items.map((i) => protocolOf(i.workout));
+  const reps = (r: Rows): (number | undefined)[] => r.done[0]?.sets.map((s) => s.reps) ?? [];
+  const SET_ONE_ENDED = 35_000;
+  const SET_TWO_ONE_HANG = 100_000;
+
+  it("keeps a set corrected by hand when the timer moves on to its next phase", () => {
+    const ended = merged(fresh, halfAt(SET_ONE_ENDED));
+    expect([reps(ended), ended.ticked.has("0:0")]).toEqual([[3, 3], true]);
+    const corrected = { ...ended, done: changeSet(ended.done, 0, 0, { reps: 2, onS: 7 }) };
+    const later = merged(corrected, halfAt(SET_TWO_ONE_HANG));
+    expect(reps(later)).toEqual([2, 1]);
+  });
+
+  it("leaves a set unticked by hand unticked when the timer moves on", () => {
+    const ended = merged(fresh, halfAt(SET_ONE_ENDED));
+    const unticked = { ...ended, ticked: new Set<string>() };
+    expect(merged(unticked, halfAt(SET_TWO_ONE_HANG)).ticked.has("0:0")).toBe(false);
+  });
+
+  it("ticks a set it reached once it ends, and leaves one edited by hand in between", () => {
+    const reached = merged(fresh, halfAt(23_000));
+    expect([reps(reached), reached.ticked.has("0:0")]).toEqual([[2, 3], false]);
+    const ended = merged(reached, halfAt(SET_ONE_ENDED));
+    expect([reps(ended), [...ended.ticked]]).toEqual([[3, 3], ["0:0"]]);
+    const again = ended.rows;
+    expect(
+      withTimerWrites(ended.done, ended.ticked, timerWrites(halfAt(SET_ONE_ENDED), [0, 1]), again)
+    ).toBeNull();
+    const edited = { ...reached, done: changeSet(reached.done, 0, 0, { reps: 1, onS: 7 }) };
+    const kept = merged(edited, halfAt(SET_ONE_ENDED));
+    expect([reps(kept), kept.ticked.has("0:0")]).toEqual([[1, 3], false]);
+  });
+
+  it("writes a set's later hangs on its own row after a row before it is removed", () => {
+    const ended = merged(fresh, halfAt(SET_ONE_ENDED));
+    const gone = withoutSet(ended.done, ended.ticked, { item: 0, set: 0 });
+    const removed = {
+      ...gone,
+      rows: withRowsMoved(ended.rows, halfAt(SET_ONE_ENDED), [{ item: 0, set: 0 }], -1),
+    };
+    const later = merged(removed, halfAt(SET_TWO_ONE_HANG));
+    expect([reps(later), [...later.ticked]]).toEqual([[1], []]);
+    const value = ended.done[0]?.sets[0];
+    if (value === undefined) throw new Error("no set");
+    const back = withSetBack(later.done, later.ticked, { item: 0, set: 0 }, value, true);
+    const undone = {
+      ...back,
+      rows: withRowsMoved(later.rows, halfAt(SET_TWO_ONE_HANG), [{ item: 0, set: 0 }], 1),
+    };
+    const after = merged(undone, halfAt(110_000));
+    expect([reps(after), [...after.ticked]]).toEqual([[3, 2], ["0:0"]]);
+  });
+
+  it("writes no set the timer runs onto a row added after one was removed", () => {
+    const idle = halfAt(0);
+    const gone = withoutSet(fresh.done, fresh.ticked, { item: 0, set: 0 });
+    const rows = withRowsMoved(fresh.rows, idle, [{ item: 0, set: 0 }], -1);
+    const added = { ...gone, done: addSet(gone.done, 0), rows };
+    const later = merged(added, halfAt(SET_TWO_ONE_HANG));
+    expect([reps(later), [...later.ticked]]).toEqual([[1, 3], []]);
+  });
+
+  it("resumes a run killed mid-part without laying old sets over hand edits or losing new ones", () => {
+    const ended = merged(fresh, halfAt(SET_ONE_ENDED));
+    const corrected = { ...ended, done: changeSet(ended.done, 0, 0, { reps: 2, onS: 7 }) };
+    const stored = JSON.parse(
+      JSON.stringify({ ...corrected, ticked: [...corrected.ticked] })
+    ) as Omit<Rows, "ticked"> & { ticked: string[] };
+    const resumed = { ...stored, ticked: new Set(stored.ticked) };
+    const later = merged(resumed, halfAt(SET_TWO_ONE_HANG));
+    expect([reps(later), [...later.ticked]]).toEqual([[2, 1], ["0:0"]]);
+  });
+
+  it("writes a new timer run's sets afresh, over what an earlier run on the grip wrote", () => {
+    const ended = merged(fresh, halfAt(SET_ONE_ENDED));
+    const unticked = { ...ended, ticked: new Set<string>() };
+    const again = merged(unticked, halfAt(1_000 + SET_ONE_ENDED, 1_000));
+    expect(again.ticked.has("0:0")).toBe(true);
   });
 });

@@ -2,8 +2,12 @@ import {
   EXERCISE_KINDS,
   EXERCISE_MEASURES,
   EXERCISE_PROGRESS,
+  entryNames,
+  exerciseNameKey,
   isChecklist,
   measureOf,
+  type BuiltInExerciseEntry,
+  type BuiltInLibrary,
   type ExerciseKind,
   type ExerciseMeasure,
   type ExerciseProgress,
@@ -45,7 +49,18 @@ export type Exercise = {
   archived: boolean;
 };
 
-export { exerciseNameKey } from "@sendtally/core/hang";
+export { exerciseNameKey };
+
+/** The active built-in exercise going by this name in any of its languages, in any case. */
+export function builtInNamed(
+  library: Pick<BuiltInLibrary, "exercises">,
+  name: string
+): BuiltInExerciseEntry | undefined {
+  const key = exerciseNameKey(name);
+  return library.exercises.find(
+    (e) => e.status === "active" && entryNames(e).some((n) => exerciseNameKey(n) === key)
+  );
+}
 
 /** The kind an exercise of this workout kind is, or null where items name grips. */
 export const exerciseKindOf = (kind: WorkoutKind): ExerciseKind | null =>

@@ -4,6 +4,7 @@ import {
   gripsTogether,
   isBuiltInGrip,
   withGroupsSettled,
+  type BuiltInLibrary,
   workoutKindOfItems,
   type Workout,
   type WorkoutKind,
@@ -14,22 +15,26 @@ import * as repo from "./repo";
 /**
  * The workout as saved: its grips together as its fingerboard part, and its kind read off its
  * exercises, the kind sent standing in for an exercise not saved yet; with none, the one sent,
- * else the one saved, else Other. `isGrip` says which items are grips.
+ * else the one saved, else Other. `isGrip` says which items are grips; `library` is the one read.
  */
 export async function withDerivedKind(
   db: D1Database,
   userId: string,
   body: WorkoutBody,
   saved?: WorkoutKind
-): Promise<{ workout: Omit<FocusOptional<Workout>, "id">; isGrip: (exercise: string) => boolean }> {
+): Promise<{
+  workout: Omit<FocusOptional<Workout>, "id">;
+  isGrip: (exercise: string) => boolean;
+  library: BuiltInLibrary;
+}> {
   const fallback = body.kind ?? saved ?? "other";
-  const { isGrip, kindIn } = await kindLookup(db, userId);
+  const { isGrip, kindIn, library } = await kindLookup(db, userId);
   const items = withGroupsSettled(gripsTogether(body.items, isGrip), (e) =>
     isGrip(e) ? "hangboard" : kindIn(e)
   );
   const kind = workoutKindOfItems(items, kindIn, fallback);
   const exerciseRestS = body.exerciseRestS ?? defaultExerciseRestS(kind);
-  return { workout: { ...body, items, kind, exerciseRestS }, isGrip };
+  return { workout: { ...body, items, kind, exerciseRestS }, isGrip, library };
 }
 
 export async function kindLookup(
@@ -38,6 +43,7 @@ export async function kindLookup(
 ): Promise<{
   isGrip: (exercise: string) => boolean;
   kindIn: (exercise: string) => WorkoutKind | undefined;
+  library: BuiltInLibrary;
 }> {
   const [mine, grips, library] = await Promise.all([
     repo.listExercises(db, userId),
@@ -47,5 +53,5 @@ export async function kindLookup(
   const gripIds = new Set([...grips.map((g) => g.id), ...library.grips.map((g) => g.id)]);
   const isGrip = (exercise: string): boolean => isBuiltInGrip(exercise) || gripIds.has(exercise);
   const builtIns = library.exercises.map((e) => ({ name: e.name, kind: e.spec.kind }));
-  return { isGrip, kindIn: exerciseKinds([...builtIns, ...mine], isGrip) };
+  return { isGrip, kindIn: exerciseKinds([...builtIns, ...mine], isGrip), library };
 }

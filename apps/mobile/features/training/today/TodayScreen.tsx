@@ -26,6 +26,7 @@ import { useApi } from "../../../lib/api";
 import { openBlock } from "../blocks/openBlock";
 import { Label } from "../components/Label";
 import { useHangData } from "../data/HangDataContext";
+import { openMembershipPage, useLocks } from "../locks";
 import { AddWorkoutsSheet, type Scheduled } from "../planning/AddWorkoutsSheet";
 import { BlockRow } from "../train/BlockRow";
 import { DaySection } from "./DaySection";
@@ -110,6 +111,7 @@ export function TodayScreen(): React.ReactElement {
   const monday = addDays(weekStart(today), offset * 7);
   const days = trainingWeek(log, monday, today);
   const running = blockGroups(log.plan.blocks, today).current;
+  const blockLocked = useLocks().block;
 
   const changeWeek = (next: number): void => {
     setOffset(next);
@@ -128,6 +130,20 @@ export function TodayScreen(): React.ReactElement {
       }}
       onOffset={changeWeek}
     />
+  );
+  const pressableCopyOverStuckStrip = stuck && (
+    <View
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        paddingHorizontal: 18,
+        backgroundColor: colors.white,
+      }}
+    >
+      {weekStrip}
+    </View>
   );
   return (
     <View style={{ flex: 1 }}>
@@ -178,6 +194,10 @@ export function TodayScreen(): React.ReactElement {
                 id={b.id}
                 name={b.name}
                 meta={t("plan.workoutCount", { count: blockMembers(log.plan, b).length })}
+                {...(blockLocked && {
+                  locked: true,
+                  onPress: () => openMembershipPage("block"),
+                })}
               />
             ))}
           </View>
@@ -200,22 +220,7 @@ export function TodayScreen(): React.ReactElement {
           </View>
         ))}
       </ScrollView>
-      {/* A stuck sticky header keeps its unstuck touch area, so a press on it is dropped; this
-          copy sits where the strip sticks and takes the presses. */}
-      {stuck && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            paddingHorizontal: 18,
-            backgroundColor: colors.white,
-          }}
-        >
-          {weekStrip}
-        </View>
-      )}
+      {pressableCopyOverStuckStrip}
       {scheduled === null && asked.imported === undefined && (
         <Fab label={t("plan.schedule")} onPress={() => setAdding(true)} />
       )}

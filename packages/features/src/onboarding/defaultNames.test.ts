@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultBlockName, defaultWorkoutName, keptName, nameOr } from "./defaultNames";
+import { defaultBlockName, defaultWorkoutName, nameOr } from "./defaultNames";
 
 describe("names that never block", () => {
   it("names a workout for its first exercise's kind, strength before it has one", () => {
@@ -15,9 +15,6 @@ describe("names that never block", () => {
     expect(nameOr("Pull day", defaultWorkoutName("hangboard"))).toBe("Pull day");
     expect(nameOr("  Pull day ", defaultWorkoutName("climbing"))).toBe("Pull day");
     expect(nameOr("   ", defaultWorkoutName("climbing"))).toBe("Climbing workout");
-    expect(keptName("Pull day")).toBe("Pull day");
-    expect(keptName(" ")).toBeNull();
-    expect(keptName(null)).toBeNull();
   });
 
   it("names a block for the month it starts in", () => {

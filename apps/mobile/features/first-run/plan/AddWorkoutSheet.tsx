@@ -13,7 +13,7 @@ import { HangSheet } from "../../training/data/HangSheet";
 import { useHangData } from "../../training/data/HangDataContext";
 import { useLibrary } from "../../training/library/useLibrary";
 import { AddWorkoutRow } from "../../training/planning/AddWorkoutRow";
-import { setPlanPath, usePlanPath, type PlanPath } from "@sendtally/features/settings";
+import { setPlanPath, usePlanPath, pickToggled } from "@sendtally/features/settings";
 
 export type AddWorkoutSheetProps = {
   visible: boolean;
@@ -21,16 +21,7 @@ export type AddWorkoutSheetProps = {
   onBuildAnother: () => void;
 };
 
-const toggled = (p: PlanPath, id: string): PlanPath => {
-  if (!p.workouts.includes(id)) return { ...p, workouts: [...p.workouts, id] };
-  return {
-    ...p,
-    workouts: p.workouts.filter((w) => w !== id),
-    days: Object.fromEntries(Object.entries(p.days).filter(([w]) => w !== id)),
-  };
-};
-
-/** P3's sheet: the built-in workouts, each added to the week or taken back, or another of their own. */
+/** All workouts, from Build your week: the built-in workouts, each picked or taken back, or one of their own. */
 export function AddWorkoutSheet({
   visible,
   onClose,
@@ -42,7 +33,7 @@ export function AddWorkoutSheet({
   const path = usePlanPath();
   const builtIns =
     state.status === "ready" ? state.data.workouts.filter((w) => w.source === "library") : [];
-  const toggle = (id: string): void => setPlanPath((p) => toggled(p, id));
+  const toggle = (id: string): void => setPlanPath((p) => pickToggled(p, id));
   return (
     <HangSheet visible={visible} onClose={onClose} closeLabel={t("common.done")}>
       <View style={{ gap: 12, paddingBottom: 12 }}>

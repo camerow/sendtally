@@ -10,7 +10,17 @@ import { LoadChart } from "./LoadChart";
 import { NotCountedSheet } from "./NotCountedSheet";
 
 /** Load over the range: an average week a bar, the average over the range, and what was left out. */
-export function LoadCard({ load }: { load: LoadVM }): React.ReactElement {
+export function LoadCard({
+  load,
+  plotHeight,
+  bare = false,
+}: {
+  load: LoadVM;
+  /** The bar plot's height, LoadChart's own unless given. */
+  plotHeight?: number;
+  /** The content alone, with no frame, for a picture set inside another card. */
+  bare?: boolean;
+}): React.ReactElement {
   const [hit, setHit] = React.useState<number | null>(null);
   const [open, setOpen] = React.useState(false);
   const bar = hit === null ? null : (load.bars[hit] ?? null);
@@ -18,13 +28,15 @@ export function LoadCard({ load }: { load: LoadVM }): React.ReactElement {
   return (
     <>
       <View
-        style={{
-          gap: 10,
-          padding: 14,
-          borderRadius: 16,
-          borderWidth: 1,
-          borderColor: colors.lineOnLight,
-        }}
+        style={[
+          { gap: 10 },
+          !bare && {
+            padding: 14,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: colors.lineOnLight,
+          },
+        ]}
       >
         <View
           style={{
@@ -75,7 +87,12 @@ export function LoadCard({ load }: { load: LoadVM }): React.ReactElement {
             {load.sentence}
           </Text>
         ) : null}
-        <LoadChart load={load} hit={hit} onHit={setHit} />
+        <LoadChart
+          load={load}
+          hit={hit}
+          onHit={setHit}
+          {...(plotHeight !== undefined && { height: plotHeight })}
+        />
         {load.note !== null && (
           <Text
             style={[type.mono, { fontSize: 11.5, lineHeight: 16, color: colors.textSecondary }]}

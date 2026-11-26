@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router";
 import { useExerciseList } from "@sendtally/features/exercises";
 import type { Block, CalendarDate } from "@sendtally/core/hang";
 import { shortDate } from "@sendtally/features/hang";
@@ -10,6 +11,7 @@ import {
   useAddTo,
   useTrainingLog,
   type AddFlow,
+  type LockSource,
   blockName,
 } from "@sendtally/features/training";
 import { kindLabel } from "@sendtally/features/activities";
@@ -23,7 +25,6 @@ import {
   workoutsWith,
   wrapperOf,
   type ExerciseEntry,
-  type PickerEntry,
 } from "@sendtally/features/exercises";
 import { libraryPictures } from "@sendtally/features/library";
 import { libraryLine, libraryShelves, useWorkoutActions } from "@sendtally/features/workouts";
@@ -39,7 +40,8 @@ import { ScheduleBlocks } from "../blocks/ScheduleBlocks";
 import { useNewBlock } from "../blocks/useNewBlock";
 import { AddWorkoutRow, type AddState } from "./AddWorkoutRow";
 import { useMake } from "../editor/useMake";
-import { exercisePath, gripPath } from "../exercises/paths";
+import { membershipPagePath, useLocks } from "../locks";
+import { sourcePath } from "../exercises/paths";
 import { useToast } from "../../components/Toast";
 
 export type Scheduled = { id: string; name: string; start: CalendarDate };
@@ -69,6 +71,9 @@ export function AddWorkoutsSheet({
   const actions = usePlanActions();
   const { plan } = useTrainingLog(api).log;
   const newBlock = useNewBlock();
+  const navigate = useNavigate();
+  const locks = useLocks();
+  const join = (source: LockSource): void => void navigate(membershipPagePath(source));
   const addTo = useAddTo(api, flow, today, { newId: () => crypto.randomUUID(), actions });
   const [mode, setMode] = React.useState<"workout" | "exercise" | "block">("workout");
   const [picked, setPicked] = React.useState<Block | null>(null);
@@ -104,12 +109,9 @@ export function AddWorkoutsSheet({
     if (id !== null) addTo.add(id);
   };
   const search = mode === "exercise" ? t("workouts.searchExercises") : t("workouts.search");
-  const entryPath = ({ source }: PickerEntry): string =>
-    "grip" in source
-      ? gripPath(source.grip.id)
-      : exercisePath("exercise" in source ? source.exercise.id : source.builtIn.id);
   const close = (): void => onClose(added.map((m) => m.id));
   const pickBlock = (b: Block): void => {
+    if (locks.block) return join("block");
     setPicked(b);
     const day = flow.date ?? today;
     setStart(day < today ? today : day);
@@ -133,7 +135,9 @@ export function AddWorkoutsSheet({
       : mode === "block"
         ? {
             label: t("plan.newBlock"),
+            locked: locks.create,
             onPress: () => {
+              if (locks.create) return join("create");
               close();
               newBlock();
             },
@@ -207,6 +211,7 @@ export function AddWorkoutsSheet({
                   {shelf.entries.map((e) => {
                     const mine = wrapperOf(workouts, e)?.id;
                     const using = workoutsWith(workouts, e);
+                    const shut = locks.exercise(e.source);
                     return (
                       <AddWorkoutRow
                         key={e.key}
@@ -214,13 +219,14 @@ export function AddWorkoutsSheet({
                         name={e.name}
                         meta={usedInText(using.length)}
                         picture={sourcePictures(e.source)[0]}
-                        to={entryPath(e)}
+                        to={shut ? membershipPagePath("exercise") : sourcePath(e.source)}
                         state={stateOf(
                           mine,
                           using.map((w) => w.id)
                         )}
                         thereLabel={thereLabel}
-                        onAdd={() => void addEntry(e)}
+                        locked={shut}
+                        onAdd={() => (shut ? join("exercise") : void addEntry(e))}
                         onUndo={() => undo(mine)}
                       />
                     );
@@ -238,20 +244,24 @@ export function AddWorkoutsSheet({
                 {shelves.map((shelf) => (
                   <section key={shelf.focus ?? "general"} className="add-shelf">
                     <h3 className="plan-label plan-label--muted">{focusLabel(shelf.focus)}</h3>
-                    {shelf.workouts.map((w) => (
-                      <AddWorkoutRow
-                        key={w.id}
-                        kind={w.kind}
-                        name={w.name}
-                        meta={libraryLine(w, model.settings.units, exercises)}
-                        picture={libraryPictures("workout", w.id)[0]}
-                        to={workoutPath(w.id)}
-                        state={stateOf(w.id, [w.id])}
-                        thereLabel={thereLabel}
-                        onAdd={() => void addTo.add(w.id)}
-                        onUndo={() => undo(w.id)}
-                      />
-                    ))}
+                    {shelf.workouts.map((w) => {
+                      const shut = locks.workout(w);
+                      return (
+                        <AddWorkoutRow
+                          key={w.id}
+                          kind={w.kind}
+                          name={w.name}
+                          meta={libraryLine(w, model.settings.units, exercises)}
+                          picture={libraryPictures("workout", w.id)[0]}
+                          to={shut ? membershipPagePath("workout") : workoutPath(w.id)}
+                          state={stateOf(w.id, [w.id])}
+                          thereLabel={thereLabel}
+                          locked={shut}
+                          onAdd={() => (shut ? join("workout") : void addTo.add(w.id))}
+                          onUndo={() => undo(w.id)}
+                        />
+                      );
+                    })}
                   </section>
                 ))}
               </>

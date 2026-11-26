@@ -34,6 +34,8 @@ import { askingStore } from "@sendtally/features/workouts";
 import { useGoBack } from "../../lib/useGoBack";
 import { useHangData } from "../data/HangDataContext";
 import { workoutPath } from "../library/useLibrary";
+import { membershipPagePath, useLocks } from "../locks";
+import { Lock } from "../../components/Lock";
 import { SessionTargetContext } from "../components/sessionTarget";
 import { DoneDetails } from "./DoneDetails";
 import { activityPath } from "./paths";
@@ -148,7 +150,9 @@ export function ActivityForm({
       });
     leave();
   };
+  const createLocked = useLocks().create;
   const saveAsWorkout = (): void => {
+    if (createLocked) return void navigate(membershipPagePath("create"));
     if (items.length === 0) return;
     const workoutId = crypto.randomUUID();
     void workouts.saveWorkout(workoutId, {
@@ -313,7 +317,17 @@ export function ActivityForm({
         </div>
       )}
       {logged !== null && items.length > 0 && (
-        <button type="button" className="text-button form-link" onClick={saveAsWorkout}>
+        <button
+          type="button"
+          className="text-button form-link"
+          aria-label={
+            createLocked
+              ? t("common.membersOnly", { label: t("workouts.saveAsWorkout") })
+              : undefined
+          }
+          onClick={saveAsWorkout}
+        >
+          {createLocked && <Lock />}
           {t("workouts.saveAsWorkout")}
         </button>
       )}

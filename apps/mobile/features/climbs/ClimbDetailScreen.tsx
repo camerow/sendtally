@@ -40,14 +40,14 @@ export function ClimbDetailScreen({ id }: { id: string }): React.ReactElement {
               onPress: () =>
                 router.push({ pathname: "/climb/log", params: { climbId: climb.id, edit: "1" } }),
             },
-            deleteRow({
-              title: t("climbs.deleteClimb"),
-              confirm: {
+            deleteRow(
+              {
+                item: t("climbs.deleteClimb"),
                 title: t("climbs.deleteClimb"),
                 body: t("climbs.deleteConfirm", { name: vm.name }),
               },
-              onDelete: remove,
-            }),
+              remove
+            ),
           ]}
         />
       }

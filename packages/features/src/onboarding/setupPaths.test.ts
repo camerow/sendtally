@@ -20,7 +20,7 @@ const kept = (): boolean => false;
 
 describe("setupPaths", () => {
   it("offers both paths to a new account, climbing first", () => {
-    expect(setupPaths(status(), kept)).toEqual([
+    expect(setupPaths(status(), kept, false)).toEqual([
       { path: "history", resume: false },
       { path: "plan", resume: false },
     ]);
@@ -28,29 +28,38 @@ describe("setupPaths", () => {
 
   it("drops a path once its data exists", () => {
     const done = status({ progress: { ...NONE, sessions: true, scheduledBlocks: true } });
-    expect(setupPaths(done, kept)).toEqual([]);
+    expect(setupPaths(done, kept, false)).toEqual([]);
   });
 
   it("drops a path dismissed on this device", () => {
-    expect(setupPaths(status(), (p) => p === "plan")).toEqual([{ path: "history", resume: false }]);
+    expect(setupPaths(status(), (p) => p === "plan", false)).toEqual([
+      { path: "history", resume: false },
+    ]);
   });
 
   it("turns a path left mid-way into Finish setting up, even after an earlier Not now", () => {
-    expect(setupPaths(status({ path: "plan", left: true }), () => true)).toEqual([
+    expect(setupPaths(status({ path: "plan", left: true }), () => true, false)).toEqual([
       { path: "plan", resume: true },
     ]);
   });
 
   it("resumes a path left after its first save, so climbs already added are counted", () => {
     const left = status({ path: "history", left: true, progress: { ...NONE, sessions: true } });
-    expect(setupPaths(left, kept)).toEqual([
+    expect(setupPaths(left, kept, false)).toEqual([
       { path: "history", resume: true },
       { path: "plan", resume: false },
     ]);
   });
 
+  it("offers no plan path, new or left mid-way, while making is locked", () => {
+    expect(setupPaths(status(), kept, true)).toEqual([{ path: "history", resume: false }]);
+    expect(setupPaths(status({ path: "plan", left: true }), kept, true)).toEqual([
+      { path: "history", resume: false },
+    ]);
+  });
+
   it("does not resume a path the wizard is still open on", () => {
-    expect(setupPaths(status({ path: "history" }), kept)[0]).toEqual({
+    expect(setupPaths(status({ path: "history" }), kept, false)[0]).toEqual({
       path: "history",
       resume: false,
     });

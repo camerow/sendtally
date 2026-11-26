@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router";
 import { newExercisePath } from "../editor/paths";
 import { kindLabel } from "@sendtally/features/activities";
-import { exerciseShelves, shelfRows, type ShelfCard } from "@sendtally/features/exercises";
+import { exerciseShelves, shelfRows } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { useExercises } from "@sendtally/features/statistics";
 import { useAppApi } from "../../lib/useAppApi";
@@ -13,12 +13,9 @@ import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { SHELF_ROWS } from "../library/LibraryShelf";
 import { useLibrary } from "../library/useLibrary";
-import { exerciseCategoryPath, exercisePath, gripPath } from "./paths";
-
-const pathOf = ({ opens }: ShelfCard): string =>
-  "grip" in opens
-    ? gripPath(opens.grip)
-    : exercisePath("exercise" in opens ? opens.exercise : opens.builtIn);
+import { membershipPagePath, useLocks } from "../locks";
+import { useLockedExercises } from "../useLockedRows";
+import { exerciseCategoryPath, sourcePath } from "./paths";
 
 /**
  * Train > Exercises: every category, each exercise with how many workouts use it.
@@ -30,6 +27,8 @@ export function ExerciseShelves(): React.ReactElement {
   const { model } = useHangData();
   const exercises = useExercises(api);
   const library = useLibrary().state;
+  const locked = useLockedExercises();
+  const create = useLocks().create;
   if (exercises.state.status !== "ready")
     return <LoadState state={exercises.state} onRetry={() => void exercises.reload()} />;
   const shelves = exerciseShelves({
@@ -51,7 +50,9 @@ export function ExerciseShelves(): React.ReactElement {
             }
             add={{
               label: t("workouts.newExerciseIn", { category: kindLabel(kind) }),
-              onPress: () => void navigate(newExercisePath(kind)),
+              onPress: () =>
+                void navigate(create ? membershipPagePath("create") : newExercisePath(kind)),
+              locked: create,
             }}
           />
           {entries.length === 0 ? (
@@ -66,12 +67,13 @@ export function ExerciseShelves(): React.ReactElement {
                 faded={c.meta === null}
                 showKind={false}
                 picture={c.picture}
-                to={pathOf(c)}
+                {...locked.row(c, sourcePath(c.source))}
               />
             ))
           )}
         </section>
       ))}
+      {locked.sheet}
     </div>
   );
 }
