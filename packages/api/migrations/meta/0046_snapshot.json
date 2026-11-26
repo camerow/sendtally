@@ -152,10 +152,7 @@
       "indexes": {
         "idx_activities_user_date": {
           "name": "idx_activities_user_date",
-          "columns": [
-            "user_id",
-            "date"
-          ],
+          "columns": ["user_id", "date"],
           "isUnique": false
         }
       },
@@ -163,23 +160,16 @@
         "activities_user_id_users_id_fk": {
           "name": "activities_user_id_users_id_fk",
           "tableFrom": "activities",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "activities_user_id_id_pk": {
-          "columns": [
-            "user_id",
-            "id"
-          ],
+          "columns": ["user_id", "id"],
           "name": "activities_user_id_id_pk"
         }
       },
@@ -215,10 +205,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "ai_usage_user_id_day_pk": {
-          "columns": [
-            "user_id",
-            "day"
-          ],
+          "columns": ["user_id", "day"],
           "name": "ai_usage_user_id_day_pk"
         }
       },
@@ -366,37 +353,27 @@
       "indexes": {
         "area_climbs_slug_unique": {
           "name": "area_climbs_slug_unique",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "isUnique": true
         },
         "idx_area_climbs_area": {
           "name": "idx_area_climbs_area",
-          "columns": [
-            "area_id"
-          ],
+          "columns": ["area_id"],
           "isUnique": false
         },
         "idx_area_climbs_name_key": {
           "name": "idx_area_climbs_name_key",
-          "columns": [
-            "name_key"
-          ],
+          "columns": ["name_key"],
           "isUnique": false
         },
         "idx_area_climbs_status": {
           "name": "idx_area_climbs_status",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "idx_area_climbs_merged_into": {
           "name": "idx_area_climbs_merged_into",
-          "columns": [
-            "merged_into_id"
-          ],
+          "columns": ["merged_into_id"],
           "isUnique": false
         }
       },
@@ -539,51 +516,37 @@
       "indexes": {
         "areas_slug_unique": {
           "name": "areas_slug_unique",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "isUnique": true
         },
         "areas_region_code_unique": {
           "name": "areas_region_code_unique",
-          "columns": [
-            "region_code"
-          ],
+          "columns": ["region_code"],
           "isUnique": true
         },
         "idx_areas_parent": {
           "name": "idx_areas_parent",
-          "columns": [
-            "parent_id"
-          ],
+          "columns": ["parent_id"],
           "isUnique": false
         },
         "idx_areas_path": {
           "name": "idx_areas_path",
-          "columns": [
-            "path"
-          ],
+          "columns": ["path"],
           "isUnique": false
         },
         "idx_areas_name_key": {
           "name": "idx_areas_name_key",
-          "columns": [
-            "name_key"
-          ],
+          "columns": ["name_key"],
           "isUnique": false
         },
         "idx_areas_status": {
           "name": "idx_areas_status",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "idx_areas_lat": {
           "name": "idx_areas_lat",
-          "columns": [
-            "lat"
-          ],
+          "columns": ["lat"],
           "isUnique": false
         }
       },
@@ -621,10 +584,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "board_climb_names_board_climb_uuid_pk": {
-          "columns": [
-            "board",
-            "climb_uuid"
-          ],
+          "columns": ["board", "climb_uuid"],
           "name": "board_climb_names_board_climb_uuid_pk"
         }
       },
@@ -667,11 +627,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "board_climb_stats_board_climb_uuid_angle_pk": {
-          "columns": [
-            "board",
-            "climb_uuid",
-            "angle"
-          ],
+          "columns": ["board", "climb_uuid", "angle"],
           "name": "board_climb_stats_board_climb_uuid_angle_pk"
         }
       },
@@ -752,23 +708,16 @@
         "board_connections_user_id_users_id_fk": {
           "name": "board_connections_user_id_users_id_fk",
           "tableFrom": "board_connections",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "board_connections_user_id_board_pk": {
-          "columns": [
-            "user_id",
-            "board"
-          ],
+          "columns": ["user_id", "board"],
           "name": "board_connections_user_id_board_pk"
         }
       },
@@ -804,10 +753,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "board_cursors_board_table_name_pk": {
-          "columns": [
-            "board",
-            "table_name"
-          ],
+          "columns": ["board", "table_name"],
           "name": "board_cursors_board_table_name_pk"
         }
       },
@@ -856,10 +802,7 @@
       "indexes": {
         "idx_climb_notes_user_climb": {
           "name": "idx_climb_notes_user_climb",
-          "columns": [
-            "user_id",
-            "climb_slug"
-          ],
+          "columns": ["user_id", "climb_slug"],
           "isUnique": false
         }
       },
@@ -867,24 +810,16 @@
         "climb_notes_user_id_users_id_fk": {
           "name": "climb_notes_user_id_users_id_fk",
           "tableFrom": "climb_notes",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "climb_notes_user_id_fingerprint_climb_slug_pk": {
-          "columns": [
-            "user_id",
-            "fingerprint",
-            "climb_slug"
-          ],
+          "columns": ["user_id", "fingerprint", "climb_slug"],
           "name": "climb_notes_user_id_fingerprint_climb_slug_pk"
         }
       },
@@ -961,9 +896,7 @@
       "indexes": {
         "idx_content_reports_status": {
           "name": "idx_content_reports_status",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         }
       },
@@ -1070,26 +1003,17 @@
       "indexes": {
         "idx_content_revisions_entity": {
           "name": "idx_content_revisions_entity",
-          "columns": [
-            "entity_type",
-            "entity_id"
-          ],
+          "columns": ["entity_type", "entity_id"],
           "isUnique": false
         },
         "idx_content_revisions_status": {
           "name": "idx_content_revisions_status",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "idx_content_revisions_one_draft": {
           "name": "idx_content_revisions_one_draft",
-          "columns": [
-            "submitted_by",
-            "entity_type",
-            "entity_id"
-          ],
+          "columns": ["submitted_by", "entity_type", "entity_id"],
           "where": "\"content_revisions\".\"status\" = 'pending'",
           "isUnique": true
         }
@@ -1176,17 +1100,12 @@
       "indexes": {
         "idx_duplicate_reports_status": {
           "name": "idx_duplicate_reports_status",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "idx_duplicate_reports_open": {
           "name": "idx_duplicate_reports_open",
-          "columns": [
-            "duplicate_climb_id",
-            "reporter_id"
-          ],
+          "columns": ["duplicate_climb_id", "reporter_id"],
           "where": "\"duplicate_reports\".\"status\" = 'open'",
           "isUnique": true
         }
@@ -1224,10 +1143,7 @@
       "indexes": {
         "idx_entry_sessions_user_fingerprint": {
           "name": "idx_entry_sessions_user_fingerprint",
-          "columns": [
-            "user_id",
-            "fingerprint"
-          ],
+          "columns": ["user_id", "fingerprint"],
           "isUnique": false
         }
       },
@@ -1235,24 +1151,16 @@
         "entry_sessions_user_id_users_id_fk": {
           "name": "entry_sessions_user_id_users_id_fk",
           "tableFrom": "entry_sessions",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "entry_sessions_user_id_entry_id_fingerprint_pk": {
-          "columns": [
-            "user_id",
-            "entry_id",
-            "fingerprint"
-          ],
+          "columns": ["user_id", "entry_id", "fingerprint"],
           "name": "entry_sessions_user_id_entry_id_fingerprint_pk"
         }
       },
@@ -1287,10 +1195,7 @@
       "indexes": {
         "idx_entry_tags_user_tag": {
           "name": "idx_entry_tags_user_tag",
-          "columns": [
-            "user_id",
-            "tag_id"
-          ],
+          "columns": ["user_id", "tag_id"],
           "isUnique": false
         }
       },
@@ -1298,24 +1203,16 @@
         "entry_tags_user_id_users_id_fk": {
           "name": "entry_tags_user_id_users_id_fk",
           "tableFrom": "entry_tags",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "entry_tags_user_id_entry_id_tag_id_pk": {
-          "columns": [
-            "user_id",
-            "entry_id",
-            "tag_id"
-          ],
+          "columns": ["user_id", "entry_id", "tag_id"],
           "name": "entry_tags_user_id_entry_id_tag_id_pk"
         }
       },
@@ -1423,10 +1320,7 @@
       "indexes": {
         "idx_exercises_user_name": {
           "name": "idx_exercises_user_name",
-          "columns": [
-            "user_id",
-            "name_key"
-          ],
+          "columns": ["user_id", "name_key"],
           "isUnique": true
         }
       },
@@ -1434,23 +1328,16 @@
         "exercises_user_id_users_id_fk": {
           "name": "exercises_user_id_users_id_fk",
           "tableFrom": "exercises",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "exercises_user_id_id_pk": {
-          "columns": [
-            "user_id",
-            "id"
-          ],
+          "columns": ["user_id", "id"],
           "name": "exercises_user_id_id_pk"
         }
       },
@@ -1521,9 +1408,7 @@
       "indexes": {
         "idx_gyms_user": {
           "name": "idx_gyms_user",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -1531,13 +1416,9 @@
         "gyms_user_id_users_id_fk": {
           "name": "gyms_user_id_users_id_fk",
           "tableFrom": "gyms",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1576,23 +1457,16 @@
         "hang_default_grips_user_id_users_id_fk": {
           "name": "hang_default_grips_user_id_users_id_fk",
           "tableFrom": "hang_default_grips",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "hang_default_grips_user_id_workout_id_pk": {
-          "columns": [
-            "user_id",
-            "workout_id"
-          ],
+          "columns": ["user_id", "workout_id"],
           "name": "hang_default_grips_user_id_workout_id_pk"
         }
       },
@@ -1657,10 +1531,7 @@
       "indexes": {
         "idx_hang_grips_user_name": {
           "name": "idx_hang_grips_user_name",
-          "columns": [
-            "user_id",
-            "name_key"
-          ],
+          "columns": ["user_id", "name_key"],
           "isUnique": true
         }
       },
@@ -1668,23 +1539,16 @@
         "hang_grips_user_id_users_id_fk": {
           "name": "hang_grips_user_id_users_id_fk",
           "tableFrom": "hang_grips",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "hang_grips_user_id_id_pk": {
-          "columns": [
-            "user_id",
-            "id"
-          ],
+          "columns": ["user_id", "id"],
           "name": "hang_grips_user_id_id_pk"
         }
       },
@@ -1728,24 +1592,16 @@
         "hang_loads_user_id_users_id_fk": {
           "name": "hang_loads_user_id_users_id_fk",
           "tableFrom": "hang_loads",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "hang_loads_user_id_workout_id_grip_id_pk": {
-          "columns": [
-            "user_id",
-            "workout_id",
-            "grip_id"
-          ],
+          "columns": ["user_id", "workout_id", "grip_id"],
           "name": "hang_loads_user_id_workout_id_grip_id_pk"
         }
       },
@@ -1915,18 +1771,12 @@
       "indexes": {
         "idx_hang_sessions_user_date": {
           "name": "idx_hang_sessions_user_date",
-          "columns": [
-            "user_id",
-            "date"
-          ],
+          "columns": ["user_id", "date"],
           "isUnique": false
         },
         "idx_hang_sessions_user_activity": {
           "name": "idx_hang_sessions_user_activity",
-          "columns": [
-            "user_id",
-            "activity_id"
-          ],
+          "columns": ["user_id", "activity_id"],
           "isUnique": true
         }
       },
@@ -1934,23 +1784,16 @@
         "hang_sessions_user_id_users_id_fk": {
           "name": "hang_sessions_user_id_users_id_fk",
           "tableFrom": "hang_sessions",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "hang_sessions_user_id_id_pk": {
-          "columns": [
-            "user_id",
-            "id"
-          ],
+          "columns": ["user_id", "id"],
           "name": "hang_sessions_user_id_id_pk"
         }
       },
@@ -2022,13 +1865,9 @@
         "hang_settings_user_id_users_id_fk": {
           "name": "hang_settings_user_id_users_id_fk",
           "tableFrom": "hang_settings",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2088,26 +1927,16 @@
         "item_week_changes_user_id_users_id_fk": {
           "name": "item_week_changes_user_id_users_id_fk",
           "tableFrom": "item_week_changes",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "item_week_changes_user_id_membership_id_week_dose_item_id_pk": {
-          "columns": [
-            "user_id",
-            "membership_id",
-            "week",
-            "dose",
-            "item_id"
-          ],
+          "columns": ["user_id", "membership_id", "week", "dose", "item_id"],
           "name": "item_week_changes_user_id_membership_id_week_dose_item_id_pk"
         }
       },
@@ -2205,18 +2034,12 @@
       "indexes": {
         "idx_entries_user_occurred": {
           "name": "idx_entries_user_occurred",
-          "columns": [
-            "user_id",
-            "occurred_at"
-          ],
+          "columns": ["user_id", "occurred_at"],
           "isUnique": false
         },
         "idx_entries_user_parent": {
           "name": "idx_entries_user_parent",
-          "columns": [
-            "user_id",
-            "parent_id"
-          ],
+          "columns": ["user_id", "parent_id"],
           "isUnique": false
         }
       },
@@ -2224,23 +2047,16 @@
         "journal_entries_user_id_users_id_fk": {
           "name": "journal_entries_user_id_users_id_fk",
           "tableFrom": "journal_entries",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "journal_entries_user_id_id_pk": {
-          "columns": [
-            "user_id",
-            "id"
-          ],
+          "columns": ["user_id", "id"],
           "name": "journal_entries_user_id_id_pk"
         }
       },
@@ -2303,11 +2119,7 @@
       "indexes": {
         "idx_library_changes_item": {
           "name": "idx_library_changes_item",
-          "columns": [
-            "item_type",
-            "item_id",
-            "changed_at"
-          ],
+          "columns": ["item_type", "item_id", "changed_at"],
           "isUnique": false
         }
       },
@@ -2397,10 +2209,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "library_items_type_id_pk": {
-          "columns": [
-            "type",
-            "id"
-          ],
+          "columns": ["type", "id"],
           "name": "library_items_type_id_pk"
         }
       },
@@ -2507,11 +2316,7 @@
       "indexes": {
         "idx_library_media_item": {
           "name": "idx_library_media_item",
-          "columns": [
-            "item_type",
-            "item_id",
-            "position"
-          ],
+          "columns": ["item_type", "item_id", "position"],
           "isUnique": false
         }
       },
@@ -2557,24 +2362,16 @@
         "membership_days_user_id_users_id_fk": {
           "name": "membership_days_user_id_users_id_fk",
           "tableFrom": "membership_days",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "membership_days_user_id_membership_id_from_week_pk": {
-          "columns": [
-            "user_id",
-            "membership_id",
-            "from_week"
-          ],
+          "columns": ["user_id", "membership_id", "from_week"],
           "name": "membership_days_user_id_membership_id_from_week_pk"
         }
       },
@@ -2647,23 +2444,16 @@
         "memberships_user_id_users_id_fk": {
           "name": "memberships_user_id_users_id_fk",
           "tableFrom": "memberships",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "memberships_user_id_id_pk": {
-          "columns": [
-            "user_id",
-            "id"
-          ],
+          "columns": ["user_id", "id"],
           "name": "memberships_user_id_id_pk"
         }
       },
@@ -2735,24 +2525,16 @@
         "plan_changes_user_id_users_id_fk": {
           "name": "plan_changes_user_id_users_id_fk",
           "tableFrom": "plan_changes",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "plan_changes_user_id_membership_id_planned_on_pk": {
-          "columns": [
-            "user_id",
-            "membership_id",
-            "planned_on"
-          ],
+          "columns": ["user_id", "membership_id", "planned_on"],
           "name": "plan_changes_user_id_membership_id_planned_on_pk"
         }
       },
@@ -2794,9 +2576,7 @@
       "indexes": {
         "idx_session_climb_links_climb": {
           "name": "idx_session_climb_links_climb",
-          "columns": [
-            "climb_id"
-          ],
+          "columns": ["climb_id"],
           "isUnique": false
         }
       },
@@ -2804,24 +2584,16 @@
         "session_climb_links_user_id_users_id_fk": {
           "name": "session_climb_links_user_id_users_id_fk",
           "tableFrom": "session_climb_links",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "session_climb_links_user_id_fingerprint_climb_slug_pk": {
-          "columns": [
-            "user_id",
-            "fingerprint",
-            "climb_slug"
-          ],
+          "columns": ["user_id", "fingerprint", "climb_slug"],
           "name": "session_climb_links_user_id_fingerprint_climb_slug_pk"
         }
       },
@@ -2856,10 +2628,7 @@
       "indexes": {
         "idx_session_tags_user_tag": {
           "name": "idx_session_tags_user_tag",
-          "columns": [
-            "user_id",
-            "tag_id"
-          ],
+          "columns": ["user_id", "tag_id"],
           "isUnique": false
         }
       },
@@ -2867,24 +2636,16 @@
         "session_tags_user_id_users_id_fk": {
           "name": "session_tags_user_id_users_id_fk",
           "tableFrom": "session_tags",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "session_tags_user_id_fingerprint_tag_id_pk": {
-          "columns": [
-            "user_id",
-            "fingerprint",
-            "tag_id"
-          ],
+          "columns": ["user_id", "fingerprint", "tag_id"],
           "name": "session_tags_user_id_fingerprint_tag_id_pk"
         }
       },
@@ -3113,10 +2874,7 @@
       "indexes": {
         "idx_sessions_user_start": {
           "name": "idx_sessions_user_start",
-          "columns": [
-            "user_id",
-            "start_at"
-          ],
+          "columns": ["user_id", "start_at"],
           "isUnique": false
         }
       },
@@ -3124,23 +2882,16 @@
         "sessions_user_id_users_id_fk": {
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "sessions_user_id_fingerprint_pk": {
-          "columns": [
-            "user_id",
-            "fingerprint"
-          ],
+          "columns": ["user_id", "fingerprint"],
           "name": "sessions_user_id_fingerprint_pk"
         }
       },
@@ -3206,23 +2957,16 @@
         "store_entitlements_user_id_users_id_fk": {
           "name": "store_entitlements_user_id_users_id_fk",
           "tableFrom": "store_entitlements",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "store_entitlements_user_id_entitlement_pk": {
-          "columns": [
-            "user_id",
-            "entitlement"
-          ],
+          "columns": ["user_id", "entitlement"],
           "name": "store_entitlements_user_id_entitlement_pk"
         }
       },
@@ -3311,13 +3055,9 @@
         "strava_connections_user_id_users_id_fk": {
           "name": "strava_connections_user_id_users_id_fk",
           "tableFrom": "strava_connections",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -3356,13 +3096,9 @@
         "sync_state_user_id_users_id_fk": {
           "name": "sync_state_user_id_users_id_fk",
           "tableFrom": "sync_state",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -3413,10 +3149,7 @@
       "indexes": {
         "idx_tags_user_slug": {
           "name": "idx_tags_user_slug",
-          "columns": [
-            "user_id",
-            "slug"
-          ],
+          "columns": ["user_id", "slug"],
           "isUnique": true
         }
       },
@@ -3424,23 +3157,16 @@
         "tags_user_id_users_id_fk": {
           "name": "tags_user_id_users_id_fk",
           "tableFrom": "tags",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "tags_user_id_id_pk": {
-          "columns": [
-            "user_id",
-            "id"
-          ],
+          "columns": ["user_id", "id"],
           "name": "tags_user_id_id_pk"
         }
       },
@@ -3512,23 +3238,16 @@
         "training_blocks_user_id_users_id_fk": {
           "name": "training_blocks_user_id_users_id_fk",
           "tableFrom": "training_blocks",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "training_blocks_user_id_id_pk": {
-          "columns": [
-            "user_id",
-            "id"
-          ],
+          "columns": ["user_id", "id"],
           "name": "training_blocks_user_id_id_pk"
         }
       },
@@ -3591,10 +3310,7 @@
       "indexes": {
         "idx_user_climb_notes_climb": {
           "name": "idx_user_climb_notes_climb",
-          "columns": [
-            "user_id",
-            "climb_id"
-          ],
+          "columns": ["user_id", "climb_id"],
           "isUnique": false
         }
       },
@@ -3602,23 +3318,16 @@
         "user_climb_notes_user_id_users_id_fk": {
           "name": "user_climb_notes_user_id_users_id_fk",
           "tableFrom": "user_climb_notes",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "user_climb_notes_user_id_id_pk": {
-          "columns": [
-            "user_id",
-            "id"
-          ],
+          "columns": ["user_id", "id"],
           "name": "user_climb_notes_user_id_id_pk"
         }
       },
@@ -3718,10 +3427,7 @@
       "indexes": {
         "idx_user_climbs_user_name": {
           "name": "idx_user_climbs_user_name",
-          "columns": [
-            "user_id",
-            "name_key"
-          ],
+          "columns": ["user_id", "name_key"],
           "isUnique": true
         }
       },
@@ -3729,23 +3435,16 @@
         "user_climbs_user_id_users_id_fk": {
           "name": "user_climbs_user_id_users_id_fk",
           "tableFrom": "user_climbs",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "user_climbs_user_id_id_pk": {
-          "columns": [
-            "user_id",
-            "id"
-          ],
+          "columns": ["user_id", "id"],
           "name": "user_climbs_user_id_id_pk"
         }
       },
@@ -3951,23 +3650,16 @@
         "workouts_user_id_users_id_fk": {
           "name": "workouts_user_id_users_id_fk",
           "tableFrom": "workouts",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
         "workouts_user_id_id_pk": {
-          "columns": [
-            "user_id",
-            "id"
-          ],
+          "columns": ["user_id", "id"],
           "name": "workouts_user_id_id_pk"
         }
       },
