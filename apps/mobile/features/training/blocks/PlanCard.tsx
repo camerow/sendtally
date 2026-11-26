@@ -33,9 +33,12 @@ export function PlanCard({
 }: PlanCardProps): React.ReactElement {
   const head = (
     <>
-      <Title size={20} color={locked ? colors.textMuted : colors.gunmetal}>
-        {title}
-      </Title>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <Title size={20} color={locked ? colors.textMuted : colors.gunmetal} style={{ flex: 1 }}>
+          {title}
+        </Title>
+        {locked && <Lock />}
+      </View>
       {subtitle !== undefined && (
         <Text style={[type.mono, { fontSize: 12, color: colors.textSecondary }]}>{subtitle}</Text>
       )}
@@ -62,11 +65,7 @@ export function PlanCard({
           style={pressRow({ flexDirection: "row", alignItems: "center", gap: 12 })}
         >
           <View style={{ flex: 1, gap: 4 }}>{head}</View>
-          {locked ? (
-            <Lock />
-          ) : (
-            <Icon name="chevron" size={14} strokeWidth={2} color="rgba(64,63,76,0.45)" />
-          )}
+          {!locked && <Icon name="chevron" size={14} strokeWidth={2} color="rgba(64,63,76,0.45)" />}
         </Pressable>
       )}
       {children}

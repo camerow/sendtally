@@ -141,6 +141,7 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
             <LinkRow
               key={w.id}
               label={w.name}
+              locked={locks.workout(w)}
               onPress={() => router.push({ pathname: "/workout/[id]", params: { id: w.id } })}
             />
           ))}

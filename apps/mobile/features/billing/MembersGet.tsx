@@ -52,7 +52,7 @@ export function MembersGet({
   onBecomeMember?: () => void;
 }): React.ReactElement {
   const { width } = useWindowDimensions();
-  const cardWidth = Math.min(width - 76, 360);
+  const cardWidth = Math.min(width - 102, 300);
   const art = {
     blocks: { background: colors.gunmetal, content: <LoadBars bars={view.bars} height={44} /> },
     workouts: { background: colors.surfaceSoft, content: <SampleWorkout view={view} /> },
@@ -105,7 +105,7 @@ export function MembersGet({
               accessibilityElementsHidden
               importantForAccessibility="no-hide-descendants"
               style={{
-                height: ART_HEIGHT,
+                minHeight: ART_HEIGHT,
                 justifyContent: "center",
                 paddingHorizontal: 16,
                 backgroundColor: art[card.key].background,
@@ -137,6 +137,7 @@ export function MembersGet({
         <View
           style={{
             flexDirection: "row",
+            flexWrap: "wrap",
             alignItems: "center",
             gap: 10,
             paddingTop: 14,
@@ -144,7 +145,7 @@ export function MembersGet({
             borderTopColor: colors.dataBarEmpty,
           }}
         >
-          <View style={{ flex: 1, gap: 2 }}>
+          <View style={{ flexGrow: 1, flexBasis: 120, gap: 2 }}>
             <Text
               style={{
                 fontFamily: fonts.sansSemiBold,

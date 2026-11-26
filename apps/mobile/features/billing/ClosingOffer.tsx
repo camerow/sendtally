@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { Text, View } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import type { SendtallyApi } from "@sendtally/api-client";
 import { colors, fonts, radius } from "@sendtally/design/tokens";
 import { alwaysFree, trialPanel, useMembersGet } from "@sendtally/features/billing";
@@ -14,6 +14,7 @@ import { useBilling } from "./useBilling";
 export function ClosingOffer({ api }: { api: SendtallyApi }): React.ReactElement | null {
   const view = useMembersGet(api);
   const state = useBilling()?.membership.state;
+  const oneColumn = useWindowDimensions().fontScale >= 2;
   if (view === null || state?.status !== "ready") return null;
   const trial = trialPanel(state.data);
   return (
@@ -55,7 +56,7 @@ export function ClosingOffer({ api }: { api: SendtallyApi }): React.ReactElement
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 8,
-                ...(i === 0 ? { width: "100%" } : { flexBasis: "40%", flexGrow: 1 }),
+                ...(i === 0 || oneColumn ? { width: "100%" } : { flexBasis: "40%", flexGrow: 1 }),
               }}
             >
               <Icon name="check" size={16} strokeWidth={3} color={colors.fern} />

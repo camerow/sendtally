@@ -54,6 +54,7 @@ function Detail({ exercise, all }: DetailProps): React.ReactElement {
   const api = useApi();
   const series = useExerciseSeries(api);
   const library = useLibrary().state;
+  const locks = useLocks();
   const unit = useWeightUnit(api);
   const [merging, setMerging] = React.useState(false);
   const merge = useMergeExercise();
@@ -137,6 +138,7 @@ function Detail({ exercise, all }: DetailProps): React.ReactElement {
             <LinkRow
               key={w.id}
               label={w.name}
+              locked={locks.workout(w)}
               onPress={() => router.push({ pathname: "/workout/[id]", params: { id: w.id } })}
             />
           ))}

@@ -18,7 +18,7 @@ import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { CategoryMark } from "../library/CategoryMark";
 import { useLibrary } from "../library/useLibrary";
-import { useCreateGate } from "../locks";
+import { useCreateGate, useLocks } from "../locks";
 import { useAddToWorkout } from "./useAddToWorkout";
 import { useExerciseInPlan } from "./useExerciseInPlan";
 import { useMakeExercise } from "./useMakeExercise";
@@ -29,6 +29,7 @@ export type BuiltInExerciseScreenProps = { builtIn: BuiltInExercise };
 export function BuiltInExerciseScreen({ builtIn }: BuiltInExerciseScreenProps): React.ReactElement {
   const pick = pickWith(useMakeExercise());
   const library = useLibrary().state;
+  const locks = useLocks();
   const usedIn =
     library.status === "ready" ? workoutsUsing(library.data.workouts, builtIn.name) : [];
   const addTo = useAddToWorkout({
@@ -66,6 +67,7 @@ export function BuiltInExerciseScreen({ builtIn }: BuiltInExerciseScreenProps): 
             <LinkRow
               key={w.id}
               label={w.name}
+              locked={locks.workout(w)}
               onPress={() => router.push({ pathname: "/workout/[id]", params: { id: w.id } })}
             />
           ))}
