@@ -1,5 +1,9 @@
 export const onboarding = {
-  "onboarding.intro.eyebrow": "What is sendtally?",
+  "onboarding.intro.title": "What is sendtally?",
+  "onboarding.intro.body":
+    "Sendtally is both a training plan builder and a climbing log. You can create custom training blocks, schedule recurring workouts, build a hangboard workout with a custom timer and more. You can also track your climbing over time to see your pyramids and yearly / all-time climbing trends.",
+  "onboarding.intro.why":
+    "Sendtally helps you keep an active role in building your plan, and you're more likely to complete training plans that you spent time building and crafting.",
   "onboarding.firstRun.step": "{n} of {total}",
   "onboarding.firstRun.skip": "Skip",
   "onboarding.firstRun.logQuestion": "Do you keep a log already?",

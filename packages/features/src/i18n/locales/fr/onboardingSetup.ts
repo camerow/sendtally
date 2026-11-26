@@ -8,6 +8,5 @@ export const onboardingSetup = {
   "onboarding.setup.soFarCount_one": "Ta grimpe jusqu'ici · {count} voie",
   "onboarding.setup.soFarCount_other": "Ta grimpe jusqu'ici · {count} voies",
   "onboarding.setup.stravaArtName": "Séance du soir",
-  "onboarding.setup.welcomeTitle": "Note ta grimpe. Planifie ton entraînement.",
   "onboarding.setup.historyMore": "Ajoute d'autres voies, ou vois tout.",
 } as const;

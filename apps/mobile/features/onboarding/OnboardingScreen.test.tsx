@@ -16,7 +16,11 @@ describe("signed-out onboarding screen", () => {
     await render(<Onboarding />);
     expect(screen.getByText("Create account")).toBeTruthy();
     expect(screen.getByText("Sign in")).toBeTruthy();
-    expect(screen.getByText("Log your climbing. Plan your training.")).toBeTruthy();
+    expect(screen.getByText("What is sendtally?")).toBeTruthy();
+    expect(
+      screen.getByText(/^Sendtally is both a training plan builder and a climbing log\./)
+    ).toBeTruthy();
+    expect(screen.getByText(/^Sendtally helps you keep an active role/)).toBeTruthy();
     const text = texts(screen.toJSON() as unknown as Node).join(" ");
     expect(text).not.toMatch(/\bfree\b|price|no card|trial|member|subscri/i);
   });

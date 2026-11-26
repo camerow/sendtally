@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { t } from "@sendtally/features/i18n";
 import { colors } from "@sendtally/design/tokens";
@@ -8,8 +8,10 @@ import { Logo } from "../components/Logo";
 import { SignedOutOnly } from "../features/auth/SignedOutOnly";
 import { WelcomeCard } from "../features/onboarding/WelcomeCard";
 import { Button } from "../features/training/components/Button";
-import { Label } from "../features/training/components/Label";
 import { Title } from "../features/training/components/Title";
+import { type } from "../features/training/type";
+
+const body = [type.body, { fontSize: 15, lineHeight: 22, color: colors.gunmetal }];
 
 export default function Onboarding(): React.ReactElement | null {
   return (
@@ -20,13 +22,22 @@ export default function Onboarding(): React.ReactElement | null {
             <Logo size={24} />
           </View>
 
-          <View style={{ flex: 1, justifyContent: "center", gap: 22, paddingHorizontal: 22 }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: "center",
+              gap: 22,
+              paddingHorizontal: 22,
+            }}
+          >
             <WelcomeCard />
             <View style={{ gap: 10 }}>
-              <Label color={colors.gunmetal}>{t("onboarding.intro.eyebrow")}</Label>
-              <Title size={27}>{t("onboarding.setup.welcomeTitle")}</Title>
+              <Title size={27}>{t("onboarding.intro.title")}</Title>
+              <Text style={body}>{t("onboarding.intro.body")}</Text>
+              <Text style={body}>{t("onboarding.intro.why")}</Text>
             </View>
-          </View>
+          </ScrollView>
 
           <View style={{ paddingHorizontal: 22, gap: 10 }}>
             <Button
