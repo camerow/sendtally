@@ -16,7 +16,7 @@ export type FeatureCopy = {
   photo?: { key: PhotoKey; alt: string };
 };
 
-export type CompareCell = boolean | string;
+export type CompareCell = boolean;
 
 export const COPY = {
   meta: {
@@ -226,7 +226,7 @@ export const COPY = {
       points: [
         "Everything you log, live or after",
         "The built-in workouts and exercises",
-        "Stats for the last 7 days",
+        "Your climbing history and Stats",
       ],
       webAccount: "Or create a free account on the web",
     },
@@ -235,11 +235,7 @@ export const COPY = {
       amount: "$23.99",
       suffix: "/year",
       sub: "or $2.99 a month · cancel any time",
-      points: [
-        "Everything in Free",
-        "Your own exercises, workouts and blocks",
-        "All of your climbing and training Stats",
-      ],
+      points: ["Everything in Free", "Custom training blocks", "Custom workouts and exercises"],
       cta: "Start your 14 days",
       note: "Your trial starts with your account",
     },
@@ -254,10 +250,10 @@ export const COPY = {
         { label: "The built-in workout library", free: true, member: true },
         { label: "Plan a day with built-in workouts", free: true, member: true },
         { label: "Strava posting", free: true, member: true },
-        { label: "Your own exercises", free: false, member: true },
-        { label: "Your own workouts", free: false, member: true },
-        { label: "Blocks and templates", free: false, member: true },
-        { label: "Climbing and training Stats", free: "Last 7 days", member: "All time" },
+        { label: "Climbing history and Stats", free: true, member: true },
+        { label: "Custom exercises", free: false, member: true },
+        { label: "Custom workouts", free: false, member: true },
+        { label: "Custom training blocks", free: false, member: true },
       ] as Array<{ label: string; free: CompareCell; member: CompareCell }>,
       note: "For your first 14 days you get the Member column.",
     },

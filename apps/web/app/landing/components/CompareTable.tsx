@@ -4,23 +4,21 @@ import type { CompareCell } from "../copy";
 
 function Cell({ value }: { value: CompareCell }): React.ReactElement {
   const { copy } = useLanding();
-  if (value === true)
+  if (value)
     return (
       <span className="l-compare-cell">
         <span className="l-tick" role="img" aria-label={copy.pricing.compare.included} />
       </span>
     );
-  if (value === false)
-    return (
-      <span
-        className="l-compare-cell l-compare-cell--none"
-        role="img"
-        aria-label={copy.pricing.compare.notIncluded}
-      >
-        <span className="l-compare-dash" aria-hidden="true" />
-      </span>
-    );
-  return <span className="l-compare-cell">{value}</span>;
+  return (
+    <span
+      className="l-compare-cell l-compare-cell--none"
+      role="img"
+      aria-label={copy.pricing.compare.notIncluded}
+    >
+      <span className="l-compare-dash" aria-hidden="true" />
+    </span>
+  );
 }
 
 export function CompareTable(): React.ReactElement {

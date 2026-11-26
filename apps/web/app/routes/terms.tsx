@@ -19,7 +19,7 @@ export default function Terms(): React.ReactElement {
   return (
     <LegalPage
       title="Terms of service"
-      updated="13 NOVEMBER 2026"
+      updated="26 NOVEMBER 2026"
       lede="sendtally is a climbing logbook run by one person. These terms say what you can expect from it, what it expects from you, and what happens if either of us walks away."
     >
       <h2>Agreeing to these terms</h2>
@@ -103,18 +103,21 @@ export default function Terms(): React.ReactElement {
 
       <h2>Free use and membership</h2>
       <p>
-        Logging sessions, keeping your logbook, the effort score on each session and Strava posting
-        are free, and are intended to stay free.
+        Logging climbs, exercises and workouts, your climbing history, the effort score on each
+        session, built-in workouts and Strava posting are free, and are intended to stay free. Every
+        new account starts with 14 days of everything, with no card needed.
       </p>
       <p>
-        Membership is a paid subscription that unlocks the long-term trend screens. It is billed in
-        advance, monthly or yearly, and renews automatically until you cancel. On sendtally.com it
-        is billed through our billing provider, Clerk; in the mobile app it is billed through the
-        app store you bought it from (Google Play or the App Store), under that store&rsquo;s terms.
-        Cancel any time from your account settings on the web, or from your app store subscriptions
-        for a membership bought in the app: your membership then runs to the end of the period you
-        have already paid for and does not renew. A membership bought in one place unlocks the
-        trends everywhere you sign in.
+        Membership is a paid subscription for custom training: custom training blocks, custom
+        workouts and custom exercises. After those 14 days, without a membership, what you made
+        stays in your account, locked and not deleted, and you can still delete it. Membership is
+        billed in advance, monthly or yearly, and renews automatically until you cancel. On
+        sendtally.com it is billed through our billing provider, Clerk; in the mobile app it is
+        billed through the app store you bought it from (Google Play or the App Store), under that
+        store&rsquo;s terms. Cancel any time from your account settings on the web, or from your app
+        store subscriptions for a membership bought in the app: your membership then runs to the end
+        of the period you have already paid for and does not renew. A membership bought in one place
+        works everywhere you sign in.
       </p>
       <p>
         We do not pro-rate or refund part-used periods except where the law requires it. If we
