@@ -68,7 +68,8 @@ export const saveWorkout: ConnectorTool<typeof inputSchema> = {
         ...body,
         items,
       },
-      isGrip
+      isGrip,
+      library
     );
     const { id, name, kind, focus, description, minutes, targetRpe } = workoutOf(row);
     return {

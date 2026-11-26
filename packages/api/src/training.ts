@@ -63,7 +63,10 @@ export const activities = new Hono<AppEnv>()
       const { id } = c.req.valid("param");
       const userId = c.get("userId");
       await repo.ensureUser(c.env.DB, userId);
-      const existing = await repo.getActivity(c.env.DB, userId, id);
+      const [existing, library] = await Promise.all([
+        repo.getActivity(c.env.DB, userId, id),
+        repo.library(c.env.DB, c.env.MEDIA_URL),
+      ]);
       const sent = c.req.valid("json");
       const ran =
         sent.workoutId !== null && sent.done.some(maybeOlderChecklist)
@@ -73,7 +76,7 @@ export const activities = new Hono<AppEnv>()
         ran === undefined
           ? sent
           : { ...sent, done: withWorkoutChecklists(sent.done, workoutOf(ran).items) };
-      const { activity, part } = await repo.saveActivity(c.env.DB, userId, id, body);
+      const { activity, part } = await repo.saveActivity(c.env.DB, userId, id, body, library);
       if (existing === null || existing.strava_activity_id !== null) {
         postAfterResponse(c, id, () => syncActivityToStrava(c.env, userId, id));
       }
@@ -312,8 +315,8 @@ export const workouts = new Hono<AppEnv>()
       if (await customWorkout(c.env.DB, userId, body.items, existing)) await requireAccess(c);
       await repo.ensureUser(c.env.DB, userId);
       const saved = body.kind === undefined ? existing?.kind : undefined;
-      const { workout, isGrip } = await withDerivedKind(c.env.DB, userId, body, saved);
-      const row = await repo.saveWorkout(c.env.DB, userId, { id, ...workout }, isGrip);
+      const { workout, isGrip, library } = await withDerivedKind(c.env.DB, userId, body, saved);
+      const row = await repo.saveWorkout(c.env.DB, userId, { id, ...workout }, isGrip, library);
       if (existing === undefined) await captureWorkoutCreated(c, workout);
       return c.json({ workout: workoutOf(row) });
     }
@@ -339,7 +342,7 @@ export async function saveExercise(
   if (taken !== null && taken.id !== id) {
     if (row !== null || !taken.archived)
       return { exercise: exerciseOf(taken), taken: true, created: false };
-    const restored = await repo.restoreExercise(db, userId, taken);
+    const restored = await repo.restoreExercise(db, userId, taken, body.builtIn);
     return { exercise: exerciseOf(restored), taken: false, created: false };
   }
   await repo.ensureUser(db, userId);

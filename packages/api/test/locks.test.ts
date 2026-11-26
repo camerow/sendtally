@@ -183,6 +183,68 @@ describe("membership locks", () => {
     }
   });
 
+  it("keeps a logged built-in workout's exercises free and makes a name no built-in has the user's own", async () => {
+    const account = lapsed("user_locks_logged");
+    await madeInTrial(account);
+    const done = ["Plank", "hollow HOLD", "Knieheben im Hang", "Wall sit"].map(
+      (exercise, item) => ({
+        item,
+        exercise,
+        sets: [],
+      })
+    );
+    const core = { ...activity, kind: "other", workoutId: "other-core", done };
+    expect((await call(account, "PUT", "/v1/activities/a_core", core)).status).toBe(200);
+    const { exercises } = (await (await call(account, "GET", "/v1/exercises")).json()) as {
+      exercises: {
+        id: string;
+        name: string;
+        kind: string;
+        measure: string;
+        builtIn: string | null;
+      }[];
+    };
+    const named = (name: string) => exercises.find((e) => e.name === name);
+    expect(
+      ["Plank", "hollow HOLD", "Knieheben im Hang", "Wall sit", "Dips", "Pull-up"].map((name) => {
+        const e = named(name);
+        return [name, e?.builtIn, e?.kind, e?.measure];
+      })
+    ).toEqual([
+      ["Plank", "plank", "other", "seconds"],
+      ["hollow HOLD", "hollowHold", "other", "seconds"],
+      ["Knieheben im Hang", "kneeRaises", "other", "reps"],
+      ["Wall sit", null, "other", "rounds"],
+      ["Dips", "dips", "strength", "repsWeight"],
+      ["Pull-up", null, "strength", "reps"],
+    ]);
+    const edit = (name: string) =>
+      call(account, "PUT", `/v1/exercises/${named(name)?.id}`, {
+        name,
+        kind: "other",
+        eachSide: true,
+      });
+    expect((await edit("Plank")).status).toBe(200);
+    expect((await edit("Wall sit")).status).toBe(403);
+  });
+
+  it("links an archived exercise to the built-in picked by its name when it comes back", async () => {
+    const account = trial("user_locks_restore");
+    await madeInTrial(account);
+    expect(
+      (await call(account, "PUT", "/v1/exercises/e_plank", { name: "Plank", kind: "other" })).status
+    ).toBe(200);
+    await call(account, "PUT", "/v1/workouts/w_plank", workout("Core", ["Plank", "Wall sit"]));
+    expect(await (await call(account, "DELETE", "/v1/exercises/e_plank")).json()).toEqual({
+      removed: "archived",
+    });
+    const picked = { name: "Plank", kind: "other", builtIn: "plank" };
+    const res = await call(account, "PUT", "/v1/exercises/e_picked", picked);
+    expect(await res.json()).toMatchObject({
+      exercise: { id: "e_plank", builtIn: "plank", archived: false },
+    });
+  });
+
   it("gives every account at least 14 days from the locks' release", async () => {
     const account = { ...lapsed("user_locks_floor"), signedUp: "2026-01-01T00:00:00Z" };
     await madeInTrial(account);
@@ -269,5 +331,50 @@ describe("membership locks through the connector", () => {
     for (const [name, args] of saves) {
       expect((await tool(account, name, args)).isError, name).toBeUndefined();
     }
+  });
+});
+
+// A one-shot production backfill, exercised against the same SQL the migration applies.
+describe("linking exercises named like a built-in", () => {
+  it("links a shown, undescribed exercise named like an active built-in, in any language, and leaves the rest", async () => {
+    const userId = "user_locks_backfill";
+    const row = (
+      id: string,
+      name: string,
+      builtIn: string | null,
+      archived = 0,
+      text: string | null = null
+    ): D1PreparedStatement =>
+      env.DB.prepare(
+        `INSERT INTO exercises (user_id, id, name, name_key, kind, measure, built_in, description, archived, created_at, updated_at)
+         VALUES (?, ?, ?, ?, 'strength', 'reps', ?, ?, ?, '', '')`
+      ).bind(userId, id, name, name.trim().toLowerCase(), builtIn, text, archived);
+    await env.DB.batch([
+      env.DB.prepare("INSERT INTO users (id, created_at) VALUES (?, '')").bind(userId),
+      row("e1", "Plank", null),
+      row("e2", "Unterarmstütz", null),
+      row("e3", "My squat", "backSquat"),
+      row("e4", "back squat", null),
+      row("e5", "Hollow hold", null, 1),
+      row("e6", "Dead bug", null, 0, "My own cue"),
+      row("e7", "Wall sit", null),
+    ]);
+    const sql = await import("../migrations/0046_link_builtin_exercises.sql?raw");
+    await env.DB.prepare(sql.default).run();
+    const rows = await env.DB.prepare(
+      "SELECT id, name, kind, measure, built_in FROM exercises WHERE user_id = ? ORDER BY id"
+    )
+      .bind(userId)
+      .all();
+    expect(rows.results.map((r) => [r.id, r.built_in])).toEqual([
+      ["e1", "plank"],
+      ["e2", "plank"],
+      ["e3", "backSquat"],
+      ["e4", "backSquat"],
+      ["e5", null],
+      ["e6", null],
+      ["e7", null],
+    ]);
+    expect(rows.results.every((r) => r.kind === "strength" && r.measure === "reps")).toBe(true);
   });
 });

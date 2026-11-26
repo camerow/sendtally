@@ -979,7 +979,7 @@ describe("exercises", () => {
         measure: "repsWeight",
         eachSide: false,
         progress: null,
-        builtIn: null,
+        builtIn: "backSquat",
         description: "",
         archived: false,
       },
