@@ -12,18 +12,20 @@ Free, for everyone:
 · Bouldering and rope climbing, V-scale, Font, YDS or French
 · Effort score on every session
 · Strava sync
-· Session history by month
+· Your climbing history: sessions by month and the grade pyramid
+· Trends: climbing volume, hardest send, flash rate and average grade
+· Built-in workouts
 
-Membership adds the trends:
-· Climbing volume over time
-· Grade pyramid
-· Hardest send
-· Flash rate
-· Average grade
+Every account starts with 14 days of everything, no card needed.
+
+Membership adds custom training:
+· Custom training blocks
+· Custom workouts
+· Custom exercises
 
 We never store your Strava password. Standard OAuth with activity-write scope only, revocable from Strava at any time. Delete your account and every session and token goes with it the same day.
 
-Membership is an auto-renewing subscription, monthly or yearly. Join in the app or on sendtally.com; either one unlocks the trends everywhere."
+Membership is an auto-renewing subscription, monthly or yearly. Join in the app or on sendtally.com; either one works everywhere you sign in."
 de-DE,Sendtally: Kletter-Logbuch,"Boulder- und Klettersessions loggen: Anstrengung, Grad-Trends, Strava.","Sendtally ist ein Session-Logbuch fürs Klettern und Bouldern.
 
 Eine Hallensession oder einen Tag am Fels in etwa einer Minute eintragen: Datum, Zeiten, Grade in V-Skala, Fontainebleau, YDS oder Französisch, Begehungen und Versuche, Anzahl der Versuche und auf Wunsch ein Name für die Route. Jede Session bekommt einen Anstrengungswert von 1 bis 10, gemessen an deinen eigenen letzten acht Wochen statt an einer festen Skala. So liest sich ein harter Abend auch wie ein harter Abend.
@@ -37,18 +39,20 @@ Kostenlos, für alle:
 · Bouldern und Seilklettern, V-Skala, Fontainebleau, YDS oder Französisch
 · Anstrengungswert für jede Session
 · Strava-Sync
-· Sessionverlauf nach Monat
+· Deine Kletterhistorie: Sessions nach Monat und die Gradpyramide
+· Trends: Klettervolumen, härteste Begehung, Flash-Quote und Durchschnittsgrad
+· Eingebaute Workouts
 
-Die Mitgliedschaft bringt die Trends:
-· Klettervolumen über die Zeit
-· Gradpyramide
-· Härteste Begehung
-· Flash-Quote
-· Durchschnittsgrad
+Jedes Konto startet mit allem: 14 Tage kostenlos. Keine Karte nötig.
+
+Die Mitgliedschaft bringt eigenes Training:
+· Eigene Trainingsblöcke
+· Eigene Workouts
+· Eigene Übungen
 
 Wir speichern niemals dein Strava-Passwort. Standard-OAuth, nur mit activity-write-Scope, jederzeit über Strava widerrufbar. Wenn du dein Konto löschst, verschwinden noch am selben Tag alle Sessions und Tokens mit.
 
-Die Mitgliedschaft ist ein automatisch verlängertes Abo, monatlich oder jährlich. Schließ sie in der App oder auf sendtally.com ab; beides schaltet die Trends überall frei."
+Die Mitgliedschaft ist ein automatisch verlängertes Abo, monatlich oder jährlich. Schließ sie in der App oder auf sendtally.com ab; beides gilt überall, wo du dich anmeldest."
 fr-FR,Sendtally : carnet d'escalade,"Enregistrez vos séances de bloc et d'escalade : effort, cotations, Strava.","Sendtally est un carnet de séances pour l'escalade et le bloc.
 
 Enregistrez une séance en salle ou une journée en falaise en une minute environ : date, horaires, cotations en échelle V, Fontainebleau, YDS ou française, réussites et essais, nombre de tentatives, et le nom de la voie si vous le voulez. Chaque séance reçoit une note d'effort de 1 à 10, mesurée par rapport à vos huit dernières semaines plutôt qu'à une échelle fixe : une grosse soirée se lit donc comme une grosse soirée.
@@ -62,18 +66,20 @@ Gratuit, pour tout le monde :
 · Bloc et escalade en tête, échelle V, Fontainebleau, YDS ou française
 · Note d'effort sur chaque séance
 · Synchronisation Strava
-· Historique par mois
+· Votre historique d'escalade : séances par mois et pyramide des cotations
+· Tendances : volume grimpé, croix la plus dure, taux de flash et cotation moyenne
+· Séances intégrées
 
-L'abonnement ajoute les tendances :
-· Volume grimpé dans le temps
-· Pyramide des cotations
-· Croix la plus dure
-· Taux de flash
-· Cotation moyenne
+Chaque compte commence avec tout, 14 jours gratuits. Aucune carte requise.
+
+L'abonnement ajoute l'entraînement personnalisé :
+· Blocs d'entraînement personnalisés
+· Séances personnalisées
+· Exercices personnalisés
 
 Nous ne stockons jamais votre mot de passe Strava. OAuth standard, avec la seule autorisation activity-write, révocable depuis Strava à tout moment. Supprimez votre compte et toutes vos séances et vos jetons partent avec, le jour même.
 
-L'abonnement est à renouvellement automatique, mensuel ou annuel. Souscrivez dans l'application ou sur sendtally.com : l'un comme l'autre débloque les tendances partout."
+L'abonnement est à renouvellement automatique, mensuel ou annuel. Souscrivez dans l'application ou sur sendtally.com : l'un comme l'autre fonctionne partout où vous vous connectez."
 es-ES,Sendtally: diario de escalada,"Registra tus sesiones de búlder y escalada: esfuerzo, grados, Strava.","Sendtally es un diario de sesiones para escalada y búlder.
 
 Registra una sesión en el rocódromo o un día en roca en aproximadamente un minuto: fecha, horas, grados en escala V, Fontainebleau, YDS o francesa, encadenes e intentos, número de pegues y el nombre de la vía si quieres. Cada sesión recibe una puntuación de esfuerzo del 1 al 10, medida contra tus propias últimas ocho semanas en lugar de contra una escala fija, así que una noche dura se lee como una noche dura.
@@ -87,18 +93,20 @@ Gratis, para todo el mundo:
 · Búlder y escalada de cuerda, escala V, Fontainebleau, YDS o francesa
 · Puntuación de esfuerzo en cada sesión
 · Sincronización con Strava
-· Historial de sesiones por mes
+· Tu historial de escalada: sesiones por mes y pirámide de grados
+· Tendencias: volumen de escalada, encadene más duro, porcentaje de flash y grado medio
+· Entrenos integrados
 
-La suscripción añade las tendencias:
-· Volumen de escalada a lo largo del tiempo
-· Pirámide de grados
-· Encadene más duro
-· Porcentaje de flash
-· Grado medio
+Cada cuenta empieza con todo: 14 días gratis. Sin tarjeta.
+
+La suscripción añade entrenamiento propio:
+· Bloques de entrenamiento propios
+· Entrenos propios
+· Ejercicios propios
 
 Nunca guardamos tu contraseña de Strava. OAuth estándar, solo con el permiso activity-write, revocable desde Strava en cualquier momento. Borra tu cuenta y todas las sesiones y tokens se van con ella el mismo día.
 
-La suscripción es de renovación automática, mensual o anual. Suscríbete en la app o en sendtally.com; cualquiera de las dos desbloquea las tendencias en todas partes."
+La suscripción es de renovación automática, mensual o anual. Suscríbete en la app o en sendtally.com; cualquiera de las dos funciona allí donde inicies sesión."
 es-419,Sendtally: diario de escalada,"Registra tus sesiones de boulder y escalada: esfuerzo, grados, Strava.","Sendtally es un diario de sesiones para escalada y boulder.
 
 Registra una sesión en el muro o un día en roca en aproximadamente un minuto: fecha, horas, grados en escala V, Fontainebleau, YDS o francesa, si lo encadenaste o no, cuántos intentos te tomó y el nombre de la vía si quieres. Cada sesión recibe una puntuación de esfuerzo del 1 al 10, medida contra tus propias últimas ocho semanas en lugar de contra una escala fija, así que una noche dura se lee como una noche dura.
@@ -112,15 +120,17 @@ Gratis, para todo el mundo:
 · Boulder y escalada de cuerda, escala V, Fontainebleau, YDS o francesa
 · Puntuación de esfuerzo en cada sesión
 · Sincronización con Strava
-· Historial de sesiones por mes
+· Tu historial de escalada: sesiones por mes y pirámide de grados
+· Tendencias: volumen de escalada, encadene más duro, porcentaje de flash y grado medio
+· Entrenos integrados
 
-La suscripción añade las tendencias:
-· Volumen de escalada a lo largo del tiempo
-· Pirámide de grados
-· Encadene más duro
-· Porcentaje de flash
-· Grado medio
+Cada cuenta empieza con todo: 14 días gratis. Sin tarjeta.
+
+La suscripción añade entrenamiento propio:
+· Bloques de entrenamiento propios
+· Entrenos propios
+· Ejercicios propios
 
 Nunca guardamos tu contraseña de Strava. OAuth estándar, solo con el permiso activity-write, revocable desde Strava en cualquier momento. Borra tu cuenta y todas las sesiones y tokens se van con ella el mismo día.
 
-La suscripción es de renovación automática, mensual o anual. Suscríbete en la app o en sendtally.com; cualquiera de las dos desbloquea las tendencias en todas partes."
+La suscripción es de renovación automática, mensual o anual. Suscríbete en la app o en sendtally.com; cualquiera de las dos funciona allí donde inicies sesión."

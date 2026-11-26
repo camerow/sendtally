@@ -430,12 +430,12 @@ When a screen changes in the app, the matching artboard has to change with it, i
 
 Membership can be bought two ways, and the Worker is the only thing that knows about both.
 
-- On the web, Clerk Billing sells the `member` plan, which carries the `long_term_insights` feature.
+- On the web, Clerk Billing sells the `member` plan, which carries the `long_term_insights` feature: the key is named for the trends membership used to open, and today it opens custom training.
 - In the app, RevenueCat sells the `sendtally_member` entitlement through Google Play, and through the App Store once the iOS app exists.
 
 The app never asks Clerk about billing.
 It asks `GET /v1/entitlements`, which unions the Clerk feature with the `store_entitlements` rows in D1 and answers with one `membership` object.
-The web app asks the same endpoint, so a Play subscriber sees the trends on sendtally.com too.
+The web app asks the same endpoint, so a Play subscriber's custom training opens on sendtally.com too.
 
 The D1 rows are a mirror of RevenueCat, written two ways:
 

@@ -251,7 +251,7 @@ export const COPY_DE: LandingCopy = {
       points: [
         "Everything you log, live or after", // follows en
         "The built-in workouts and exercises", // follows en
-        "Stats for the last 7 days", // follows en
+        "Your climbing history and Stats", // follows en
       ],
       webAccount: "Or create a free account on the web", // follows en
     },
@@ -262,8 +262,8 @@ export const COPY_DE: LandingCopy = {
       sub: "or $2.99 a month · cancel any time", // follows en
       points: [
         "Everything in Free", // follows en
-        "Your own exercises, workouts and blocks", // follows en
-        "All of your climbing and training Stats", // follows en
+        "Custom training blocks", // follows en
+        "Custom workouts and exercises", // follows en
       ],
       cta: "Start your 14 days", // follows en
       note: "Your trial starts with your account", // follows en
@@ -300,24 +300,24 @@ export const COPY_DE: LandingCopy = {
           member: true,
         },
         {
-          label: "Your own exercises", // follows en
+          label: "Climbing history and Stats", // follows en
+          free: true,
+          member: true,
+        },
+        {
+          label: "Custom exercises", // follows en
           free: false,
           member: true,
         },
         {
-          label: "Your own workouts", // follows en
+          label: "Custom workouts", // follows en
           free: false,
           member: true,
         },
         {
-          label: "Blocks and templates", // follows en
+          label: "Custom training blocks", // follows en
           free: false,
           member: true,
-        },
-        {
-          label: "Climbing and training Stats", // follows en
-          free: "Last 7 days", // follows en
-          member: "All time", // follows en
         },
       ],
       note: "For your first 14 days you get the Member column.", // follows en

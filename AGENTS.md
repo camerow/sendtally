@@ -17,7 +17,7 @@ Aurora asked Will to stop, because using their API this way is against their ter
 - Do not describe the product as syncing from boards anywhere (marketing copy, store listings, app strings, docs).
 - Manual entry (`source = "manual"`) is the product. Any future integration must be an officially sanctioned one, agreed with the provider first, and is a decision for Will.
 
-The product is free for users; the monetization path is ad revenue (SEO content pages on the web app first, mobile ads later) plus the paid long-term insights tier.
+The product is free for users; the monetization path is ad revenue (SEO content pages on the web app first, mobile ads later) plus the paid membership for custom training (custom training blocks, custom workouts and custom exercises), after a 14-day free trial of everything.
 The core user value is the effort/RPE trend history - "Strava for climbing effort".
 
 Current scope: sign up, log sessions via the form, session list and detail, trends, optional Strava posting. Journal entries and project tracking are next.
