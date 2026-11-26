@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router";
 import { t } from "@sendtally/features/i18n";
+import { deleteCopy } from "@sendtally/features/training";
 import {
   copyName,
   draftOf,
@@ -12,7 +13,6 @@ import { useToast } from "../../components/Toast";
 import { useAppApi } from "../../lib/useAppApi";
 import { useAddToBlock } from "../blocks/useAddToBlock";
 import { DeleteSheet } from "../components/DeleteSheet";
-import { deleteWorkoutFlow } from "../components/deleteFlows";
 import { useCreateGate } from "../locks";
 import { WORKOUTS_VIEW, workoutPath } from "../library/useLibrary";
 
@@ -34,7 +34,7 @@ export function useWorkoutMenu(workout: LibraryWorkout): WorkoutMenu {
   const [deleting, setDeleting] = React.useState(false);
   const addToBlock = useAddToBlock(workout.name, workout.id);
   const gate = useCreateGate("workout");
-  const flow = deleteWorkoutFlow(workout.name);
+  const flow = deleteCopy("workout", workout.name);
   const duplicate = (): void => {
     const id = crypto.randomUUID();
     void actions.saveWorkout(id, { ...draftOf(workout), name: copyName(workout.name) });

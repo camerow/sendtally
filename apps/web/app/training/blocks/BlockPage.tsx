@@ -9,6 +9,7 @@ import {
   useTrainingLog,
   blockName,
   useBlockPage,
+  deleteCopy,
 } from "@sendtally/features/training";
 import { MoreMenu } from "../../components/MoreMenu";
 import { useToast } from "../../components/Toast";
@@ -17,7 +18,6 @@ import { useAppApi } from "../../lib/useAppApi";
 import { useDiscardGuard } from "../../lib/useDiscardGuard";
 import { useGoBack } from "../../lib/useGoBack";
 import { DeleteSheet } from "../components/DeleteSheet";
-import { deleteBlockFlow } from "../components/deleteFlows";
 import { NameSheet } from "../components/NameSheet";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
@@ -89,7 +89,7 @@ export function BlockPage({ id, fresh = false }: BlockPageProps): React.ReactEle
     });
   };
   const cancel = (): void => guard.ask(draft.cancel);
-  const flow = deleteBlockFlow(name);
+  const flow = deleteCopy("block", name);
   const remove = (): void => {
     leave();
     void actions.deleteBlock(id);

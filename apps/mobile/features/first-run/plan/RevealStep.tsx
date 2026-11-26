@@ -7,7 +7,6 @@ import { shortDate, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   sessionsPerWeek,
-  SETTLE_MS,
   shapeable,
   useOnePress,
   useSeededPlanPath,
@@ -69,7 +68,7 @@ export function RevealStep({
   const shown = reduceMotion ? total : counted;
   const on = reminders.settings?.enabled === true;
 
-  const once = useOnePress(SETTLE_MS);
+  const once = useOnePress(true);
   React.useEffect(() => {
     if (block === undefined || reminders.settings === null) return;
     wizard.capture("onboarding_reveal_viewed", {

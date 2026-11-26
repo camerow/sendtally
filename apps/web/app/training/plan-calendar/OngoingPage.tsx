@@ -4,7 +4,6 @@ import { useNavigate } from "react-router";
 import type { Weekday } from "@sendtally/core/hang";
 import { t } from "@sendtally/features/i18n";
 import {
-  dayLocked,
   daysThisWeek,
   hasDays,
   ongoingMembers,
@@ -24,8 +23,8 @@ import { PlanGrid } from "../components/PlanGrid";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
 import { usePlanActions } from "../data/usePlanActions";
-import { useLibrary, workoutIn, workoutPath } from "../library/useLibrary";
-import { membershipPagePath, useLocks } from "../locks";
+import { workoutPath } from "../library/useLibrary";
+import { useDayLock } from "../locks";
 import { AddWorkoutsSheet } from "../plan-week/AddWorkoutsSheet";
 
 /** The weekly plans in no block: their week, and Edit to set their days, add and take them out. */
@@ -40,10 +39,7 @@ export function OngoingPage(): React.ReactElement {
   const guard = useDiscardGuard(draft.dirty);
   const [adding, setAdding] = React.useState(false);
   const [added, setAdded] = useLit();
-  const locked = {
-    row: dayLocked(useLocks(), workoutIn(useLibrary())),
-    join: () => void navigate(membershipPagePath("plan_day")),
-  };
+  const locked = useDayLock();
 
   if (plan.state.status !== "ready")
     return <LoadState state={plan.state} onRetry={() => void plan.reload()} />;

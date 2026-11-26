@@ -14,12 +14,12 @@ import {
   milestoneRows,
 } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
+import { deleteCopy } from "@sendtally/features/training";
 import { MoreMenu, type MoreMenuItem } from "../../components/MoreMenu";
 import { DetailFrame } from "../../components/detail/DetailFrame";
 import { SummaryTiles } from "../../components/detail/SummaryTiles";
 import { CategoryMark } from "../components/CategoryMark";
 import { DeleteSheet } from "../components/DeleteSheet";
-import { archiveGripFlow } from "../components/deleteFlows";
 import { DashedPanel } from "../components/DashedPanel";
 import { Description } from "../components/Description";
 import { UsedIn } from "../components/UsedIn";
@@ -77,7 +77,7 @@ export function GripPage({ id }: { id: string }): React.ReactElement {
     ...(grip !== undefined && !grip.hidden
       ? [
           {
-            label: archiveGripFlow(name).item,
+            label: deleteCopy("grip", name).item,
             onSelect: () => setArchiving(true),
             destructive: true,
           },
@@ -135,7 +135,7 @@ export function GripPage({ id }: { id: string }): React.ReactElement {
       {addTo.sheet}
       {grip !== undefined && archiving && (
         <DeleteSheet
-          flow={archiveGripFlow(name)}
+          flow={deleteCopy("grip", name)}
           onClose={() => setArchiving(false)}
           onDelete={() => {
             back();

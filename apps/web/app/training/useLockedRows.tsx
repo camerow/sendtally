@@ -6,19 +6,12 @@ import {
 } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { useExerciseSeries } from "@sendtally/features/statistics";
-import type { LockSource } from "@sendtally/features/training";
+import { deleteCopy, type DeleteCopy, type LockSource } from "@sendtally/features/training";
 import { useWorkoutActions, type LibraryWorkout } from "@sendtally/features/workouts";
 import { MoreMenu } from "../components/MoreMenu";
 import { useToast } from "../components/Toast";
 import { useAppApi } from "../lib/useAppApi";
 import { DeleteSheet } from "./components/DeleteSheet";
-import {
-  archiveGripFlow,
-  deleteBlockFlow,
-  deleteWorkoutFlow,
-  removeExerciseFlow,
-  type DeleteFlow,
-} from "./components/deleteFlows";
 import { useHangData } from "./data/HangDataContext";
 import { usePlanActions } from "./data/usePlanActions";
 import { useLibrary } from "./library/useLibrary";
@@ -33,7 +26,7 @@ export type LockedRows<T> = {
   sheet: React.ReactNode;
 };
 
-type Removal = { flow: DeleteFlow; onDelete: () => void };
+type Removal = { flow: DeleteCopy; onDelete: () => void };
 
 function useLockedRows<T>(
   source: LockSource,
@@ -77,7 +70,7 @@ export function useLockedWorkouts(): LockedRows<LibraryWorkout> {
   const locks = useLocks();
   const actions = useWorkoutActions(useAppApi(), useFailed());
   return useLockedRows<LibraryWorkout>("workout", locks.workout, (w) => ({
-    flow: deleteWorkoutFlow(w.name),
+    flow: deleteCopy("workout", w.name),
     onDelete: () => void actions.deleteWorkout(w.id),
   }));
 }
@@ -99,9 +92,9 @@ export function useLockedExercises(): LockedRows<LockedExercise> {
       return (
         r &&
         ("grip" in r
-          ? { flow: archiveGripFlow(name), onDelete: () => void actions.archiveGrip(r.grip) }
+          ? { flow: deleteCopy("grip", name), onDelete: () => void actions.archiveGrip(r.grip) }
           : {
-              flow: removeExerciseFlow(name, r.inUse),
+              flow: deleteCopy("exercise", name, r.inUse),
               onDelete: () => void exercises.remove(r.exercise.id),
             })
       );
@@ -115,6 +108,6 @@ export function useLockedBlocks(): LockedRows<{ id: string; name: string }> {
   return useLockedRows<{ id: string; name: string }>(
     "block",
     () => locks.block,
-    (b) => ({ flow: deleteBlockFlow(b.name), onDelete: () => void actions.deleteBlock(b.id) })
+    (b) => ({ flow: deleteCopy("block", b.name), onDelete: () => void actions.deleteBlock(b.id) })
   );
 }

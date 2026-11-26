@@ -2,6 +2,7 @@ import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 import { t } from "@sendtally/features/i18n";
+import { deleteCopy } from "@sendtally/features/training";
 import {
   copyName,
   draftOf,
@@ -10,10 +11,10 @@ import {
 } from "@sendtally/features/workouts";
 import { useApi } from "../../../lib/api";
 import type { DetailActionsProps } from "../components/DetailActions";
-import { deleteWorkoutRow } from "../components/deleteRow";
+import { deleteRow } from "../components/deleteRow";
 import type { DetailMenuRow } from "../components/types";
 import type { AddToMenu } from "../components/useAddToMenu";
-import { lockedRow, useLocks } from "../locks";
+import { useCreateGate } from "../locks";
 import { useAddToBlock } from "./useAddToBlock";
 
 const reportFailure = (): void => Alert.alert(t("workouts.saveFailed"));
@@ -36,8 +37,7 @@ export function useWorkoutDetailActions(
   const actions = useWorkoutActions(useApi(), reportFailure);
   const addToBlock = useAddToBlock(workout.name, workout.id);
   const mine = workout.source === "mine";
-  const locked = useLocks().create;
-  const gate = (row: DetailMenuRow): DetailMenuRow => (locked ? lockedRow(row, "workout") : row);
+  const gate = useCreateGate("workout");
   const duplicate: DetailMenuRow = {
     icon: "copy",
     title: t("workouts.duplicate"),
@@ -47,7 +47,10 @@ export function useWorkoutDetailActions(
       router.replace({ pathname: "/workout/[id]", params: { id } });
     },
   };
-  const remove = deleteWorkoutRow(workout.name, () => void actions.deleteWorkout(workout.id));
+  const remove = deleteRow(
+    deleteCopy("workout", workout.name),
+    () => void actions.deleteWorkout(workout.id)
+  );
   const menu = [
     ...(addToBlock.row === null ? [] : [gate(addToBlock.row)]),
     gate(duplicate),

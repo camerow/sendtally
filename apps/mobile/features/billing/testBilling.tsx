@@ -3,6 +3,8 @@ import type { Entitlements, SendtallyApi } from "@sendtally/api-client";
 import { hasAccess, membershipVM, type MembershipFeature } from "@sendtally/features/billing";
 import { BillingContext } from "./context";
 
+import { hangingApi } from "@sendtally/features/billing/testing";
+
 export { ENTITLEMENTS } from "@sendtally/features/billing/testing";
 
 export function billingFeature(entitlements: Entitlements): MembershipFeature {
@@ -18,17 +20,7 @@ export function billingFeature(entitlements: Entitlements): MembershipFeature {
 }
 
 export const apiWith = (entitlements: Entitlements): SendtallyApi =>
-  new Proxy(
-    {},
-    {
-      get: (_, key) =>
-        key === "then"
-          ? undefined
-          : key === "entitlements"
-            ? () => Promise.resolve(entitlements)
-            : () => new Promise(() => {}),
-    }
-  ) as SendtallyApi;
+  hangingApi({ entitlements: () => Promise.resolve(entitlements) });
 
 export const withBilling = (
   ui: React.ReactElement,

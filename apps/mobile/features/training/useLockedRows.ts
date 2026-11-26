@@ -7,15 +7,10 @@ import {
 } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
 import { useExerciseSeries } from "@sendtally/features/statistics";
-import type { LockSource } from "@sendtally/features/training";
+import { deleteCopy, type LockSource } from "@sendtally/features/training";
 import { useWorkoutActions, type LibraryWorkout } from "@sendtally/features/workouts";
 import { useApi } from "../../lib/api";
-import {
-  archiveGripRow,
-  deleteBlockRow,
-  deleteWorkoutRow,
-  removeExerciseRow,
-} from "./components/deleteRow";
+import { deleteRow } from "./components/deleteRow";
 import type { DetailMenuRow, LongPress } from "./components/types";
 import { useHoldMenu } from "./components/useHoldMenu";
 import { useHangData } from "./data/HangDataContext";
@@ -58,7 +53,7 @@ export function useLockedWorkouts(): LockedRows<LibraryWorkout> {
   const locks = useLocks();
   const actions = useWorkoutActions(useApi(), failed);
   return useLockedRows<LibraryWorkout>("workout", locks.workout, (w) =>
-    deleteWorkoutRow(w.name, () => void actions.deleteWorkout(w.id), true)
+    deleteRow(deleteCopy("workout", w.name), () => void actions.deleteWorkout(w.id), true)
   );
 }
 
@@ -79,8 +74,12 @@ export function useLockedExercises(): LockedRows<LockedExercise> {
       return r === undefined
         ? undefined
         : "grip" in r
-          ? archiveGripRow(name, () => void actions.archiveGrip(r.grip), true)
-          : removeExerciseRow(name, r.inUse, () => void exercises.remove(r.exercise.id), true);
+          ? deleteRow(deleteCopy("grip", name), () => void actions.archiveGrip(r.grip), true)
+          : deleteRow(
+              deleteCopy("exercise", name, r.inUse),
+              () => void exercises.remove(r.exercise.id),
+              true
+            );
     }
   );
 }
@@ -91,6 +90,6 @@ export function useLockedBlocks(): LockedRows<{ id: string; name: string }> {
   return useLockedRows(
     "block",
     () => locks.block,
-    (b) => deleteBlockRow(b.name, () => void actions.deleteBlock(b.id), true)
+    (b) => deleteRow(deleteCopy("block", b.name), () => void actions.deleteBlock(b.id), true)
   );
 }

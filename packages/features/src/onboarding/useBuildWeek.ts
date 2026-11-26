@@ -11,6 +11,7 @@ import {
   placedWorkouts,
   setPlanPath,
   STARTERS,
+  usePlanPath,
   withDay,
   pickToggled,
   type PlanPath,
@@ -34,6 +35,31 @@ export function buildWeekRows(
       ? []
       : [{ workout: w, picked: p.workouts.includes(id), days: p.days[id] ?? [] }];
   });
+}
+
+export function useMemberWeek(
+  api: SendtallyApi,
+  library: WorkoutLibraryQuery["state"]
+): { week: (WorkoutKind[] | null)[]; sessions: number } {
+  const path = usePlanPath();
+  const plan = usePlan(api).state;
+  const members =
+    plan.status === "ready" && library.status === "ready"
+      ? plan.data.memberships
+          .filter((m) => m.blockId !== null && m.blockId === path.blockId)
+          .sort((a, b) => a.position - b.position)
+      : [];
+  const placed = members.flatMap((m) => {
+    const workout = library.status === "ready" ? library.data.workout(m.workoutId) : undefined;
+    return workout === undefined ? [] : [{ days: m.weekdays, kind: workout.kind }];
+  });
+  return {
+    week: WEEKDAYS.map((d) => {
+      const kinds = placed.filter((p) => p.days.includes(d)).map((p) => p.kind);
+      return kinds.length > 0 ? kinds : null;
+    }),
+    sessions: sessionsPerWeek(Object.fromEntries(members.map((m) => [m.id, m.weekdays]))),
+  };
 }
 
 /** The week card: each day with the kinds placed on it, or null when nothing is. */

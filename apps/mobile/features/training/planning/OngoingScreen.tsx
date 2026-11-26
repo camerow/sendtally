@@ -5,7 +5,6 @@ import type { Weekday } from "@sendtally/core/hang";
 import { colors } from "@sendtally/design/tokens";
 import { t } from "@sendtally/features/i18n";
 import {
-  dayLocked,
   daysThisWeek,
   hasDays,
   scheduleOf,
@@ -24,8 +23,7 @@ import { EditorHeader } from "../components/EditorHeader";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
 import { LoadState } from "../data/LoadState";
-import { useLibrary } from "../library/useLibrary";
-import { openMembershipPage, useLocks } from "../locks";
+import { useDayLock } from "../locks";
 import { PlanGrid } from "../plan/PlanGrid";
 import { openMembership } from "../plan/openMembership";
 import { type } from "../type";
@@ -50,13 +48,7 @@ export function OngoingScreen({ back }: OngoingScreenProps): React.ReactElement 
   const release = useDiscardGuard(draft.dirty);
   const [adding, setAdding] = React.useState(false);
   const [added, setAdded] = useLit();
-  const library = useLibrary().state;
-  const locked = {
-    row: dayLocked(useLocks(), (id) =>
-      library.status === "ready" ? library.data.workout(id) : undefined
-    ),
-    join: () => openMembershipPage("plan_day"),
-  };
+  const locked = useDayLock();
 
   if (plan.state.status !== "ready")
     return <LoadState state={plan.state} onRetry={() => void plan.reload()} framed />;

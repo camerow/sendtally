@@ -1,6 +1,6 @@
 import React from "react";
 import { Sheet } from "../../components/Sheet";
-import type { DeleteFlow } from "./deleteFlows";
+import type { DeleteCopy } from "@sendtally/features/training";
 
 /** The confirm a ··· delete opens: closes, then deletes. */
 export function DeleteSheet({
@@ -8,7 +8,7 @@ export function DeleteSheet({
   onClose,
   onDelete,
 }: {
-  flow: DeleteFlow;
+  flow: DeleteCopy;
   onClose: () => void;
   onDelete: () => void;
 }): React.ReactElement {

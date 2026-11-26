@@ -15,6 +15,7 @@ import {
 import { kindLabel } from "@sendtally/features/activities";
 import { workoutsWithGrip } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
+import { deleteCopy } from "@sendtally/features/training";
 import { LinkRow } from "../../../components/LinkRow";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
@@ -22,7 +23,7 @@ import { AddToSheet } from "../components/AddToSheet";
 import { DashedPanel } from "../components/DashedPanel";
 import { DetailActions } from "../components/DetailActions";
 import { Description } from "../components/Description";
-import { archiveGripRow } from "../components/deleteRow";
+import { deleteRow } from "../components/deleteRow";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import type { DetailMenuRow } from "../components/types";
@@ -33,7 +34,7 @@ import { useAddToWorkout } from "../exercises/useAddToWorkout";
 import { CategoryMark } from "../library/CategoryMark";
 import { useLibrary } from "../library/useLibrary";
 import { LockedPage } from "../components/LockedPage";
-import { lockedRow, useLocks } from "../locks";
+import { useCreateGate, useLocks } from "../locks";
 import { SummaryTiles } from "../summary/SummaryTiles";
 import { TrendCard } from "../trends/TrendCard";
 import { insight } from "@sendtally/features/hang";
@@ -76,11 +77,9 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
     usedIn,
   });
   const locks = useLocks();
-  const locked = locks.create;
+  const gate = useCreateGate("exercise");
   const menu: DetailMenuRow[] =
-    addTo.row === null || grip?.hidden === true
-      ? []
-      : [locked ? lockedRow(addTo.row, "exercise") : addTo.row];
+    addTo.row === null || grip?.hidden === true ? [] : [gate(addTo.row)];
   if (canCompareGrips(model.sessions))
     menu.push({
       icon: "insights",
@@ -88,7 +87,7 @@ export function GripScreen({ id }: GripScreenProps): React.ReactElement {
       onPress: () => router.push("/grip/compare"),
     });
   if (grip !== undefined && !grip.hidden)
-    menu.push(archiveGripRow(name, () => void actions.archiveGrip(grip)));
+    menu.push(deleteRow(deleteCopy("grip", name), () => void actions.archiveGrip(grip)));
 
   if (grip !== undefined && locks.exercise({ grip })) return <LockedPage source="exercise" />;
   return (

@@ -1,5 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
-import type { Entitlements, Plan, SendtallyApi, WorkoutRecord } from "@sendtally/api-client";
+import type { Entitlements, Plan, WorkoutRecord } from "@sendtally/api-client";
+import { hangingApi as hanging } from "@sendtally/features/billing/testing";
 import { TEST_LIBRARY } from "@sendtally/features/library/testing";
 import { queries } from "@sendtally/features/query";
 import { hangData } from "../training/data/testHang";
@@ -14,11 +15,7 @@ const EMPTY_PLAN: Plan = {
   membershipDays: [],
 };
 
-/** An API whose every call hangs, so a test reads only what its client was seeded with. */
-export const hangingApi = new Proxy(
-  {},
-  { get: (_, key) => (key === "then" ? undefined : () => new Promise(() => {})) }
-) as SendtallyApi;
+export const hangingApi = hanging();
 
 /** A query client holding an account's entitlements and training, as a loaded app would. */
 export function seededClient(

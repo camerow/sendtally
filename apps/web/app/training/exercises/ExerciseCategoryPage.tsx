@@ -21,6 +21,7 @@ import { useHangData, type HangData } from "../data/HangDataContext";
 import { membershipPagePath, useLocks } from "../locks";
 import { useLockedExercises, type RowLink } from "../useLockedRows";
 import { EXERCISES_VIEW, sourcePath } from "./paths";
+import { LockedRow } from "../components/LockedRow";
 
 const mine = ({ source }: PickerEntry): boolean =>
   "exercise" in source || ("grip" in source && source.grip.custom);
@@ -62,14 +63,7 @@ function EntryRow({
       {body}
     </Link>
   );
-  return menu === undefined ? (
-    row
-  ) : (
-    <div className="locked-row">
-      {row}
-      {menu}
-    </div>
-  );
+  return <LockedRow menu={menu}>{row}</LockedRow>;
 }
 
 /** All of one category's exercises, the user's own badged among the starter ones, the most used first, to search. */

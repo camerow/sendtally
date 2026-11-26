@@ -8,7 +8,6 @@ import { t } from "@sendtally/features/i18n";
 import {
   blockGroups,
   blockMembers,
-  dayLocked,
   daysThisWeek,
   useTrainingLog,
   ongoingMembers,
@@ -24,8 +23,7 @@ import { PlanCard } from "../blocks/PlanCard";
 import { DashedPanel } from "../components/DashedPanel";
 import { Title } from "../components/Title";
 import { useHangData } from "../data/HangDataContext";
-import { useLibrary } from "../library/useLibrary";
-import { openMembershipPage, useLocks } from "../locks";
+import { useDayLock } from "../locks";
 import { PlanGrid } from "../plan/PlanGrid";
 import { openMembership } from "../plan/openMembership";
 import { useLockedBlocks } from "../useLockedRows";
@@ -60,17 +58,11 @@ export function BlocksList(): React.ReactElement {
   const { log } = useTrainingLog(useApi());
   const { plan, workout } = log;
   const { current, upcoming, templates, past } = blockGroups(plan.blocks, today);
-  const locks = useLocks();
-  const library = useLibrary().state;
+  const dayLock = useDayLock();
   const ongoing = planGridRows(ongoingMembers(plan, today), workout, model, {
     exercises,
     open: (m) => openMembership(m),
-    locked: {
-      row: dayLocked(locks, (id) =>
-        library.status === "ready" ? library.data.workout(id) : undefined
-      ),
-      join: () => openMembershipPage("plan_day"),
-    },
+    locked: dayLock,
   });
   const weeks = (n: number): string => t("calendar.weeks", { count: n });
   const locked = useLockedBlocks();

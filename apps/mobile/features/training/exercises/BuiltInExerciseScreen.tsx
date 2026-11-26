@@ -18,7 +18,7 @@ import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { CategoryMark } from "../library/CategoryMark";
 import { useLibrary } from "../library/useLibrary";
-import { lockedRow, useLocks } from "../locks";
+import { useCreateGate } from "../locks";
 import { useAddToWorkout } from "./useAddToWorkout";
 import { useExerciseInPlan } from "./useExerciseInPlan";
 import { useMakeExercise } from "./useMakeExercise";
@@ -39,11 +39,9 @@ export function BuiltInExerciseScreen({ builtIn }: BuiltInExerciseScreenProps): 
   });
   const inPlan = useExerciseInPlan({ kind: builtIn.kind, name: builtIn.name, source: { builtIn } });
   const toast = addTo.toast ?? inPlan.block.toast;
-  const locked = useLocks().create;
+  const gate = useCreateGate("exercise");
   const menu = [
-    ...[addTo.row, inPlan.block.row]
-      .filter((r) => r !== null)
-      .map((r) => (locked ? lockedRow(r, "exercise") : r)),
+    ...[addTo.row, inPlan.block.row].filter((r) => r !== null).map(gate),
     inPlan.schedule,
   ];
   return (

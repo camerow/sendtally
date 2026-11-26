@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router";
 import { useMembership } from "@sendtally/features/billing";
 import { useExercises } from "@sendtally/features/statistics";
-import { locks, type LockSource, type Locks } from "@sendtally/features/training";
+import { dayLocked, locks, type LockSource, type Locks } from "@sendtally/features/training";
 import type { MoreMenuItem } from "../components/MoreMenu";
 import { useAppApi } from "../lib/useAppApi";
+import { useLibrary, workoutIn } from "./library/useLibrary";
 
 /** Where every locked press goes, saying where it was. */
 export const membershipPagePath = (source: LockSource): string =>
@@ -21,4 +22,12 @@ export function useCreateGate(source: LockSource): (item: MoreMenuItem) => MoreM
   const navigate = useNavigate();
   return (item) =>
     locked ? { ...item, locked, onSelect: () => void navigate(membershipPagePath(source)) } : item;
+}
+
+export function useDayLock(): { row: ReturnType<typeof dayLocked>; join: () => void } {
+  const navigate = useNavigate();
+  return {
+    row: dayLocked(useLocks(), workoutIn(useLibrary())),
+    join: () => void navigate(membershipPagePath("plan_day")),
+  };
 }

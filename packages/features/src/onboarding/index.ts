@@ -53,6 +53,6 @@ export {
   type AddOutcome,
 } from "./addClimb";
 export { shapeable, useBlockStep, type BlockStepState } from "./useBlockStep";
-export { useBuildWeek } from "./useBuildWeek";
-export { SETTLE_MS, useOnePress } from "./useOnePress";
+export { useBuildWeek, useMemberWeek } from "./useBuildWeek";
+export { useOnePress } from "./useOnePress";
 export { defaultBlockName, defaultWorkoutName } from "./defaultNames";

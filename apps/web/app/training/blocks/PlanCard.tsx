@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { Lock } from "../../components/Lock";
+import { LockedRow } from "../components/LockedRow";
 
 export type PlanCardProps = {
   title: string;
@@ -50,13 +51,8 @@ export function PlanCard({
     <div className="group-card">
       {link === false ? (
         <div className="group-card-head">{head}</div>
-      ) : menu === undefined ? (
-        link
       ) : (
-        <div className="locked-row">
-          {link}
-          {menu}
-        </div>
+        <LockedRow menu={menu}>{link}</LockedRow>
       )}
       {children}
     </div>

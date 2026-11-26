@@ -4,6 +4,7 @@ import { t } from "@sendtally/features/i18n";
 import { Icon } from "../../components/Icon";
 import { Lock } from "../../components/Lock";
 import { blockPath } from "./paths";
+import { LockedRow } from "../components/LockedRow";
 
 export type BlockRowProps = {
   id: string;
@@ -50,12 +51,5 @@ export function BlockRow({
         {body}
       </button>
     );
-  return menu === undefined ? (
-    row
-  ) : (
-    <div className="locked-row">
-      {row}
-      {menu}
-    </div>
-  );
+  return <LockedRow menu={menu}>{row}</LockedRow>;
 }

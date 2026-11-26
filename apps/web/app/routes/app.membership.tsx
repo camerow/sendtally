@@ -8,6 +8,7 @@ import {
   membershipVM,
   storeChipName,
   useMembersGet,
+  usePaywallShown,
 } from "@sendtally/features/billing";
 import { t } from "@sendtally/features/i18n";
 import billingStyles from "../billing/billing.css?url";
@@ -81,12 +82,7 @@ export default function MembershipRoute(): React.ReactElement {
   const members = useMembersGet(useAppApi());
   const [params] = useSearchParams();
   const source = membershipSource(params.get("source"));
-  const sent = React.useRef(false);
-  React.useEffect(() => {
-    if (source === null || vm.active || sent.current) return;
-    sent.current = true;
-    capture("paywall_shown", { source });
-  }, [source, vm.active]);
+  usePaywallShown(source, !vm.active, capture);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>

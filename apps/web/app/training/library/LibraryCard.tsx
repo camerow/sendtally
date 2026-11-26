@@ -21,6 +21,7 @@ import {
 } from "@sendtally/features/workouts";
 import { Lock } from "../../components/Lock";
 import { PhaseBar } from "../components/PhaseBar";
+import { LockedRow } from "../components/LockedRow";
 
 export type LibraryCardProps = {
   workout: LibraryWorkout;
@@ -85,12 +86,9 @@ export function LibraryCard({
       {phases !== null && <PhaseBar phases={phases} height={12} />}
     </Link>
   );
-  return menu === undefined ? (
-    card
-  ) : (
-    <div className="locked-row locked-row--card">
+  return (
+    <LockedRow menu={menu} card>
       {card}
-      {menu}
-    </div>
+    </LockedRow>
   );
 }

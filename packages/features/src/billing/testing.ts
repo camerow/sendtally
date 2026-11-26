@@ -1,4 +1,4 @@
-import type { Entitlements } from "@sendtally/api-client";
+import type { Entitlements, SendtallyApi } from "@sendtally/api-client";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -17,3 +17,16 @@ export const ENTITLEMENTS = {
     trial: { endsAt: new Date(Date.now() - DAY).toISOString() },
   },
 } satisfies Record<string, Entitlements>;
+
+export const hangingApi = (overrides: Record<string, unknown> = {}): SendtallyApi =>
+  new Proxy(
+    {},
+    {
+      get: (_, key) =>
+        key === "then"
+          ? undefined
+          : typeof key === "string" && key in overrides
+            ? overrides[key]
+            : () => new Promise(() => {}),
+    }
+  ) as SendtallyApi;

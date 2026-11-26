@@ -3,6 +3,7 @@ import React from "react";
 import {
   membershipSource,
   useMembersGet,
+  usePaywallShown,
   type MembershipFeature,
 } from "@sendtally/features/billing";
 import { useCapture } from "../features/analytics/useCapture";
@@ -20,14 +21,11 @@ function MembershipWithBilling({
   const purchase = usePurchase(membership.refresh);
   const members = useMembersGet(useApi());
   const source = membershipSource(useLocalSearchParams<{ source?: string }>().source);
-  const capture = useCapture();
-  const free = membership.state.status === "ready" && membership.active === false;
-  const sent = React.useRef(false);
-  React.useEffect(() => {
-    if (source === null || !free || sent.current) return;
-    sent.current = true;
-    capture("paywall_shown", { source });
-  }, [source, free, capture]);
+  usePaywallShown(
+    source,
+    membership.state.status === "ready" && membership.active === false,
+    useCapture()
+  );
   return (
     <MembershipView
       membership={membership}

@@ -4,7 +4,6 @@ import { shortDate, useGrips } from "@sendtally/features/hang";
 import { t } from "@sendtally/features/i18n";
 import {
   sessionsPerWeek,
-  SETTLE_MS,
   shapeable,
   useOnePress,
   useSeededPlanPath,
@@ -43,7 +42,7 @@ export const RevealStep: StepComponent = ({ wizard, api }) => {
   const total = sessionsPerWeek(days) * weeks;
   const shown = Math.round(useTween(block === undefined ? null : total, 900) ?? 0);
 
-  const once = useOnePress(SETTLE_MS);
+  const once = useOnePress(true);
   React.useEffect(() => {
     if (block === undefined) return;
     wizard.capture("onboarding_reveal_viewed", {

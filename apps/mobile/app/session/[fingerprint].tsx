@@ -52,14 +52,14 @@ export default function SessionDetailScreen(): React.ReactElement {
       />
     );
   const { vm, strava } = state.data;
-  const remove = deleteRow({
-    title: t("sessions.deleteSession"),
-    confirm: {
+  const remove = deleteRow(
+    {
+      item: t("sessions.deleteSession"),
       title: t("sessions.deleteTitle"),
       body: strava?.kind === "posted" ? t("summary.deleteHintStrava") : t("sessions.deleteBody"),
     },
-    onDelete: () => sessions.remove(fingerprint ?? ""),
-  });
+    () => sessions.remove(fingerprint ?? "")
+  );
   const editRow = {
     icon: "pencil" as const,
     title: t("logSession.editTitle"),

@@ -6,6 +6,7 @@ import { t } from "@sendtally/features/i18n";
 import { KIND_LOOK } from "@sendtally/features/training";
 import { Lock } from "../../components/Lock";
 import { KindTile } from "./KindTile";
+import { LockedRow } from "./LockedRow";
 
 export type CategoryRowProps = {
   kind: WorkoutKind;
@@ -80,12 +81,5 @@ export function CategoryRow({
         {body}
       </Link>
     );
-  return menu === undefined ? (
-    row
-  ) : (
-    <div className="locked-row">
-      {row}
-      {menu}
-    </div>
-  );
+  return <LockedRow menu={menu}>{row}</LockedRow>;
 }

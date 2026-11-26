@@ -12,6 +12,7 @@ import {
   useExerciseActions,
 } from "@sendtally/features/exercises";
 import { t } from "@sendtally/features/i18n";
+import { deleteCopy } from "@sendtally/features/training";
 import {
   exerciseKey,
   useExerciseSeries,
@@ -26,12 +27,12 @@ import { AddToSheet } from "../components/AddToSheet";
 import { DashedPanel } from "../components/DashedPanel";
 import { Description } from "../components/Description";
 import { DetailActions } from "../components/DetailActions";
-import { removeExerciseRow } from "../components/deleteRow";
+import { deleteRow } from "../components/deleteRow";
 import { Label } from "../components/Label";
 import { Title } from "../components/Title";
 import { LoadState } from "../data/LoadState";
 import { LockedPage } from "../components/LockedPage";
-import { lockedRow, useLocks } from "../locks";
+import { useCreateGate, useLocks } from "../locks";
 import { pickedOf } from "../exercise-picker/usePick";
 import { CategoryMark } from "../library/CategoryMark";
 import { useLibrary } from "../library/useLibrary";
@@ -72,7 +73,7 @@ function Detail({ exercise, all }: DetailProps): React.ReactElement {
   });
 
   const inPlan = useExerciseInPlan({ kind: exercise.kind, name, source: { exercise } });
-  const locked = useLocks().create;
+  const gate = useCreateGate("exercise");
   const toast = addTo.toast ?? inPlan.block.toast;
   const inUse = usedIn.length > 0 || logged !== undefined;
   const mergeRow = {
@@ -80,13 +81,14 @@ function Detail({ exercise, all }: DetailProps): React.ReactElement {
     title: t("workouts.mergeExercise"),
     onPress: () => setMerging(true),
   } as const;
-  const remove = removeExerciseRow(name, inUse, () => void actions.remove(exercise.id));
+  const remove = deleteRow(
+    deleteCopy("exercise", name, inUse),
+    () => void actions.remove(exercise.id)
+  );
   const menu = exercise.archived
     ? [mergeRow]
     : [
-        ...[addTo.row, inPlan.block.row]
-          .filter((r) => r !== null)
-          .map((r) => (locked ? lockedRow(r, "exercise") : r)),
+        ...[addTo.row, inPlan.block.row].filter((r) => r !== null).map(gate),
         inPlan.schedule,
         mergeRow,
         remove,

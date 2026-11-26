@@ -13,5 +13,6 @@ export {
   storeName,
 } from "./transforms";
 export { useMembersGet } from "./useMembersGet";
+export { usePaywallShown } from "./usePaywallShown";
 export { useMembership, type MembershipFeature } from "./useMembership";
 export type { MembershipManagedIn, MembershipPlan, MembershipSource, MembershipVM } from "./types";

@@ -12,6 +12,7 @@ import {
   blockDateRange,
   blockName,
   useBlockPage,
+  deleteCopy,
 } from "@sendtally/features/training";
 import { ScreenFrame } from "../../../components/ScreenFrame";
 import { Toast } from "../../../components/Toast";
@@ -20,7 +21,7 @@ import { confirmDiscard, useDiscardGuard } from "../../../lib/useDiscardGuard";
 import { Button } from "../components/Button";
 import { DetailActions } from "../components/DetailActions";
 import { EditorHeader } from "../components/EditorHeader";
-import { deleteBlockRow } from "../components/deleteRow";
+import { deleteRow } from "../components/deleteRow";
 import { Label } from "../components/Label";
 import { NameSheet } from "../components/NameSheet";
 import { Title } from "../components/Title";
@@ -120,7 +121,7 @@ export function BlockScreen({
                     onPress: () => setNaming(true),
                   },
                 ]),
-            deleteBlockRow(blockName(block), () => void actions.deleteBlock(id)),
+            deleteRow(deleteCopy("block", blockName(block)), () => void actions.deleteBlock(id)),
           ]}
         />
       }
