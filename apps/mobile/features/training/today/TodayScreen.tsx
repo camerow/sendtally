@@ -131,6 +131,20 @@ export function TodayScreen(): React.ReactElement {
       onOffset={changeWeek}
     />
   );
+  const pressableCopyOverStuckStrip = stuck && (
+    <View
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        paddingHorizontal: 18,
+        backgroundColor: colors.white,
+      }}
+    >
+      {weekStrip}
+    </View>
+  );
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
@@ -206,22 +220,7 @@ export function TodayScreen(): React.ReactElement {
           </View>
         ))}
       </ScrollView>
-      {/* A stuck sticky header keeps its unstuck touch area, so a press on it is dropped; this
-          copy sits where the strip sticks and takes the presses. */}
-      {stuck && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            paddingHorizontal: 18,
-            backgroundColor: colors.white,
-          }}
-        >
-          {weekStrip}
-        </View>
-      )}
+      {pressableCopyOverStuckStrip}
       {scheduled === null && asked.imported === undefined && (
         <Fab label={t("plan.schedule")} onPress={() => setAdding(true)} />
       )}

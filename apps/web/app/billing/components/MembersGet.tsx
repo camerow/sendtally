@@ -3,28 +3,8 @@ import { Link } from "react-router";
 import type { MembersGet as MembersGetView } from "@sendtally/features/billing";
 import { t } from "@sendtally/features/i18n";
 import { LoadBars } from "../../first-run/plan/components/LoadBars";
-import { YoursTag } from "../../first-run/plan/components/YoursTag";
-import { RestPreview } from "../../training/players/RestPreview";
 import { panelButton } from "./MembershipPanel";
-
-function SampleWorkout({ view }: { view: MembersGetView }): React.ReactElement {
-  const head = (e: MembersGetView["exercises"][number]): React.ReactElement => (
-    <span className="members-get-exercise">
-      <span className="members-get-exercise-name">
-        {e.name}
-        {e.yours && <YoursTag />}
-      </span>
-      <span className="members-get-exercise-work">{e.work}</span>
-    </span>
-  );
-  return (
-    <>
-      {head(view.exercises[0])}
-      <RestPreview seconds={view.restS} />
-      {head(view.exercises[1])}
-    </>
-  );
-}
+import { SampleWorkout } from "./SampleWorkout";
 
 /** What membership opens, as two cards; on the closing screen, given `onJoin`, a scroll-snap row with the support row under it. */
 export function MembersGet({
@@ -32,7 +12,7 @@ export function MembersGet({
   onJoin,
 }: {
   view: MembersGetView;
-  onJoin?: () => void;
+  onJoin?: React.MouseEventHandler;
 }): React.ReactElement {
   const closing = onJoin !== undefined;
   const art = {
